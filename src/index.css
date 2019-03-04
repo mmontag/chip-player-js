@@ -357,3 +357,7 @@ body,#root {
 .TimeSlider-time { display: flex; flex-direction: row; justify-content: space-between; }
 .TimeSlider-elapsed {}
 .TimeSlider-total {}
+
+.Song-now-playing {
+    background-color: #6666dd;
+}

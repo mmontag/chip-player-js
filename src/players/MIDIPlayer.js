@@ -157,6 +157,7 @@ export default class MIDIPlayer extends Player {
     }
 
     this.connect();
+    this.resume();
   }
 
   isPlaying() {

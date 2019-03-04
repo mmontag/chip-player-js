@@ -20,6 +20,7 @@ export default class Search extends PureComponent {
     this.handleGroupClick = this.handleGroupClick.bind(this);
     this.handleStatus = this.handleStatus.bind(this);
     this.handleClear = this.handleClear.bind(this);
+    this.renderResultItem = this.renderResultItem.bind(this);
 
     this.textInput = React.createRef();
 
@@ -108,10 +109,12 @@ export default class Search extends PureComponent {
   }
 
   handleSearchResults(payload) {
+    const results = payload.results.map(result => result.file).sort();
     this.setState({
       searching: true,
       resultsCount: payload.count,
-      results: this.groupResults(payload.results.map(result => result.file).sort()),
+      results: results,
+      resultsHeadings: this.extractHeadings(results),
     });
   }
 
@@ -127,6 +130,24 @@ export default class Search extends PureComponent {
 
   showEmptyState() {
     this.setState({searching: false, results: {}})
+  }
+
+  extractHeadings(sortedResults) {
+    // Results input must be sorted. Returns a map of indexes to headings.
+    // {
+    //   0: 'Nintendo\A Boy And His Blob',
+    //   12: 'Sega Genesis\A Boy And His Blob',
+    // }
+    const headings = {};
+    let currHeading = null;
+    sortedResults.forEach((result, i) => {
+      const heading = result.substring(0, result.lastIndexOf('/') + 1);
+      if (heading !== currHeading) {
+        currHeading = heading;
+        headings[i] = currHeading;
+      }
+    });
+    return headings;
   }
 
   groupResults(results) {
@@ -150,25 +171,66 @@ export default class Search extends PureComponent {
     this.onSearchInputChange(query);
   }
 
+  renderResultItem(result, i) {
+    let headingFragment = null;
+    if (this.state.resultsHeadings[i]) {
+      const heading = this.state.resultsHeadings[i];
+      const headingQuery = heading.replace(/[^a-zA-Z0-9]+/g, ' ');
+      headingFragment = (
+        <h5 className="Search-results-group-heading">
+          <a href={'?q=' + headingQuery}
+             onClick={(e) => this.handleGroupClick(e, headingQuery)}>
+            {this.state.resultsHeadings[i]}
+          </a>
+        </h5>
+      );
+    }
+    // XXX: Escape immediately: the escaped URL is considered canonical.
+    //      The URL must be decoded for display from here on out.
+    const href = CATALOG_PREFIX + result.replace('%', '%25').replace('#', '%23');
+    const resultTitle = result.substring(result.lastIndexOf('/') + 1);
+    const isPlaying = this.props.currContext === this.state.results && this.props.currIdx === i;
+    return (
+      <div>
+        {headingFragment}
+        <div className="Search-results-group-item" key={i}>
+          {this.props.favorites &&
+          <FavoriteButton favorites={this.props.favorites}
+                          toggleFavorite={this.props.toggleFavorite}
+                          href={href}/>}
+          <a className={isPlaying ? 'Song-now-playing' : ''}
+             onClick={this.props.onClick(href, this.state.results, i)}
+             href={href}>
+            {resultTitle}
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   render() {
     const placeholder = this.state.totalSongs ?
       `${this.state.totalSongs} tunes` : 'Loading catalog...';
+    const currContext = this.props.currContext;
+    const currIdx = this.props.currIdx;
     return (
       <div className="Search">
         <div>
-          <label className="Search-label">Search: <input type="text"
-                                placeholder={placeholder}
-                                spellCheck="false"
-                                autoComplete="off"
-                                autoCorrect="false"
-                                autoCapitalize="none"
-                                ref={this.textInput}
-                                value={this.state.totalSongs ? this.state.query || '' : ''}
-                                onChange={this.onChange}/>
+          <label className="Search-label">Search:{' '}
+            <input type="text"
+                   placeholder={placeholder}
+                   spellCheck="false"
+                   autoComplete="off"
+                   autoCorrect="false"
+                   autoCapitalize="none"
+                   ref={this.textInput}
+                   value={this.state.totalSongs ? this.state.query || '' : ''}
+                   onChange={this.onChange}/>
             {
               this.state.searching &&
               <span>
-                <button className="Search-button-clear" onClick={this.handleClear}/>{' '}
+                <button className="Search-button-clear" onClick={this.handleClear}/>
+                {' '}
                 {this.state.resultsCount} result{this.state.resultsCount !== 1 && 's'}
               </span>
             }
@@ -177,32 +239,7 @@ export default class Search extends PureComponent {
         {
           this.state.searching ?
             <div className="Search-results">
-              {this.state.results.map((group, i) => {
-                const groupQuery = group.title.replace(/[^a-zA-Z0-9]+/g, ' ');
-                return (
-                  <div key={i}>
-                    <h5 className="Search-results-group-heading">
-                      <a href={'?q=' + groupQuery} onClick={(e) => this.handleGroupClick(e, groupQuery)}>
-                        {group.title}
-                      </a>
-                    </h5>
-                    {group.items.map((result, i) => {
-                      // XXX: Escape immediately: the escaped URL is considered canonical.
-                      //      The URL must be decoded for display from here on out.
-                      const href = CATALOG_PREFIX + group.title + result.replace('%', '%25').replace('#', '%23');
-                      return (
-                        <div className="Search-results-group-item" key={i}>
-                          {this.props.favorites &&
-                          <FavoriteButton favorites={this.props.favorites}
-                                          toggleFavorite={this.props.toggleFavorite}
-                                          href={href}/>}
-                          <a onClick={this.props.onClick(href)} href={href}>{result}</a>
-                        </div>
-                      )
-                    })}
-                  </div>
-                );
-              })}
+              {this.state.results.map(this.renderResultItem)}
             </div>
             :
             this.props.children

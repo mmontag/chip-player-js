@@ -20,6 +20,7 @@ import Visualizer from './Visualizer';
 import FavoriteButton from "./FavoriteButton";
 import AppHeader from "./AppHeader";
 import Favorites from "./Favorites";
+import Sequencer from "./Sequencer";
 
 const MAX_VOICES = 64;
 const CATALOG_PREFIX = 'https://gifx.co/music/';
@@ -74,17 +75,19 @@ class App extends PureComponent {
     this.toggleSettings = this.toggleSettings.bind(this);
     this.displayLoop = this.displayLoop.bind(this);
     this.loadCatalog = this.loadCatalog.bind(this);
-    this.playSong = this.playSong.bind(this);
-    this.playSubtune = this.playSubtune.bind(this);
+    this.playContext = this.playContext.bind(this);
+    this.prevSong = this.prevSong.bind(this);
+    this.nextSong = this.nextSong.bind(this);
     this.prevSubtune = this.prevSubtune.bind(this);
     this.nextSubtune = this.nextSubtune.bind(this);
     this.handleTimeSliderChange = this.handleTimeSliderChange.bind(this);
     this.handleTempoChange = this.handleTempoChange.bind(this);
     this.handleSetVoices = this.handleSetVoices.bind(this);
     this.handlePlayerStateUpdate = this.handlePlayerStateUpdate.bind(this);
+    this.handlePlayerError = this.handlePlayerError.bind(this);
     this.handleDoSearch = this.handleDoSearch.bind(this);
     this.handlePlayRandom = this.handlePlayRandom.bind(this);
-    this.handleFileClick = this.handleFileClick.bind(this);
+    this.handleSongClick = this.handleSongClick.bind(this);
     this.handleLogin = this.handleLogin.bind(this);
     this.handleLogout = this.handleLogout.bind(this);
     this.handleToggleFavorite = this.handleToggleFavorite.bind(this);
@@ -124,11 +127,11 @@ class App extends PureComponent {
         return prefix + path;
       },
       onRuntimeInitialized: () => {
-        this.players = [
-          new GMEPlayer(audioCtx, playerNode, chipCore, this.handlePlayerStateUpdate),
-          new XMPPlayer(audioCtx, playerNode, chipCore, this.handlePlayerStateUpdate),
-          new MIDIPlayer(audioCtx, playerNode, chipCore, this.handlePlayerStateUpdate),
-        ];
+        this.sequencer.setPlayers([
+          new GMEPlayer(audioCtx, playerNode, chipCore),
+          new XMPPlayer(audioCtx, playerNode, chipCore),
+          new MIDIPlayer(audioCtx, playerNode, chipCore),
+        ]);
         this.setState({loading: false});
 
         const urlParams = queryString.parse(window.location.search.substr(1));
@@ -143,8 +146,8 @@ class App extends PureComponent {
             if (urlParams.t) {
               //
               setTimeout(() => {
-                if (this.player) {
-                  this.player.seekMs(parseInt(urlParams.t, 10));
+                if (this.sequencer.getPlayer()) {
+                  this.sequencer.getPlayer().seekMs(parseInt(urlParams.t, 10));
                 }
               }, 100);
             }
@@ -153,8 +156,8 @@ class App extends PureComponent {
       },
     });
 
-    this.player = null;
-    this.songRequest = null;
+    this.sequencer = new Sequencer([], this.handlePlayerStateUpdate, this.handlePlayerError);
+
     this.state = {
       catalog: null,
       loading: true,
@@ -198,9 +201,9 @@ class App extends PureComponent {
   }
 
   displayLoop() {
-    if (this.player) {
+    if (this.sequencer && this.sequencer.getPlayer()) {
       this.setState({
-        currentSongPositionMs: Math.min(this.player.getPositionMs(), this.state.currentSongDurationMs),
+        currentSongPositionMs: Math.min(this.sequencer.getPlayer().getPositionMs(), this.state.currentSongDurationMs),
       });
     }
     // requestAnimationFrame(this.displayLoop);
@@ -216,99 +219,25 @@ class App extends PureComponent {
       });
   }
 
-  playSong(url) {
+  playContext(context, index) {
     this.setState({playerError: null});
-    if (this.player !== null) {
-      this.player.stop();
-    }
-    this.player = null;
-    const filepath = url.replace(CATALOG_PREFIX, '');
-    const ext = url.split('.').pop().toLowerCase();
-    const pathParts = url.split('/');
-    pathParts.pop();
-
-    const urlParams = {
-      ...queryString.parse(window.location.search.substr(1)),
-      play: filepath,
-    };
-    delete urlParams.t;
-    const stateUrl = '?' + queryString.stringify(urlParams)
-      .replace(/%20/g, '+') // I don't care about escaping these characters
-      .replace(/%2C/g, ',')
-      .replace(/%2F/g, '/');
-    window.history.replaceState(null, '', stateUrl);
-
-    for (let i = 0; i < this.players.length; i++) {
-      if (this.players[i].canPlay(ext)) {
-        this.player = this.players[i];
-        break;
-      }
-    }
-    if (this.player === null) {
-      console.error(`None of the Player engines can handle the ".${ext}" file format.`);
-      return;
-    }
-
-    const imageUrl = [...pathParts, 'image.jpg'].join('/');
-    if (this.imageRequest) this.imageRequest.abort();
-    this.imageRequest = promisify(new XMLHttpRequest());
-    this.imageRequest.open('HEAD', imageUrl);
-    console.log('requesting image', imageUrl);
-    this.imageRequest.send()
-      .then(xhr => {
-        console.log(xhr.status);
-        if (xhr.status >= 200 && xhr.status < 400) {
-          console.log('set state', {imageUrl: imageUrl});
-          this.setState({imageUrl: imageUrl});
-        }
-      })
-      .catch(e => {
-        this.setState({imageUrl: null});
-      });
-
-    // Cancel any outstanding request so that playback doesn't happen out of order
-    if (this.songRequest) this.songRequest.abort();
-    this.songRequest = promisify(new XMLHttpRequest());
-    this.songRequest.responseType = 'arraybuffer';
-    this.songRequest.open('GET', url);
-    this.songRequest.send()
-      // .then(response => response.arrayBuffer())
-      .then(xhr => xhr.response)
-      .then(buffer => {
-        let uint8Array;
-        uint8Array = new Uint8Array(buffer);
-
-        try {
-          this.player.loadData(uint8Array, filepath);
-        } catch (e) {
-          this.setState({
-            playerError: e.message,
-          });
-          return;
-        }
-
-        const numVoices = this.player.getNumVoices();
-        this.player.setTempo(this.state.tempo);
-        this.player.setVoices([...Array(numVoices)].fill(true));
-        this.player.resume();
-
-        this.setState({
-          paused: false,
-          currentSongMetadata: this.player.getMetadata(),
-          currentSongDurationMs: this.player.getDurationMs(),
-          currentSongNumVoices: numVoices,
-          currentSongNumSubtunes: this.player.getNumSubtunes(),
-          currentSongPositionMs: 0,
-          currentSongSubtune: 0,
-          voiceNames: [...Array(numVoices)].map((_, i) => this.player.getVoiceName(i)),
-          voices: [...Array(numVoices)].fill(true),
-          songUrl: url,
-        });
-      });
+    this.sequencer.playContext(context, index);
   }
 
-  playSubtune(subtune) {
-    this.player.playSubtune(subtune);
+  prevSong() {
+    this.sequencer.prevSong();
+  }
+
+  nextSong() {
+    this.sequencer.nextSong();
+  }
+
+  prevSubtune() {
+    this.sequencer.prevSubtune();
+  }
+
+  nextSubtune() {
+    this.sequencer.nextSubtune();
   }
 
   handlePlayerStateUpdate(isStopped) {
@@ -325,36 +254,45 @@ class App extends PureComponent {
         songUrl: null,
       });
     } else {
+      // // Update application URL (window.history API)
+      // const filepath = url.replace(CATALOG_PREFIX, '');
+      // const ext = url.split('.').pop().toLowerCase();
+      // const pathParts = url.split('/');
+      // pathParts.pop();
+      // const urlParams = {
+      //   ...queryString.parse(window.location.search.substr(1)),
+      //   play: filepath,
+      // };
+      // delete urlParams.t;
+      // const stateUrl = '?' + queryString.stringify(urlParams)
+      //   .replace(/%20/g, '+') // I don't care about escaping these characters
+      //   .replace(/%2C/g, ',')
+      //   .replace(/%2F/g, '/');
+      // window.history.replaceState(null, '', stateUrl);
+      const player = this.sequencer.getPlayer();
+
       this.setState({
         ejected: false,
-        paused: this.player.isPaused(),
-        currentSongSubtune: this.player.getSubtune(),
-        currentSongMetadata: this.player.getMetadata(),
-        currentSongNumVoices: this.player.getNumVoices(),
-        currentSongPositionMs: this.player.getPositionMs(),
-        currentSongDurationMs: this.player.getDurationMs(),
-        currentSongNumSubtunes: this.player.getNumSubtunes(),
-        // voiceNames: [...Array(this.player.getNumVoices())].map((_, i) => this.player.getVoiceName(i)),
+        paused: player.isPaused(),
+        currentSongSubtune: player.getSubtune(),
+        currentSongMetadata: player.getMetadata(),
+        currentSongNumVoices: player.getNumVoices(),
+        currentSongPositionMs: player.getPositionMs(),
+        currentSongDurationMs: player.getDurationMs(),
+        currentSongNumSubtunes: player.getNumSubtunes(),
+        voiceNames: [...Array(player.getNumVoices())].map((_, i) => player.getVoiceName(i)),
       });
     }
   }
 
-  prevSubtune() {
-    const subtune = this.player.getSubtune() - 1;
-    if (subtune < 0) return;
-    this.playSubtune(subtune);
-  }
-
-  nextSubtune() {
-    const subtune = this.player.getSubtune() + 1;
-    if (subtune >= this.player.getNumSubtunes()) return;
-    this.playSubtune(subtune);
+  handlePlayerError(error) {
+    this.setState({playerError: error});
   }
 
   togglePause() {
-    if (!this.player) return;
+    if (!this.sequencer.getPlayer()) return;
 
-    this.setState({paused: this.player.togglePause()});
+    this.setState({paused: this.sequencer.getPlayer().togglePause()});
   }
 
   toggleSettings() {
@@ -362,7 +300,7 @@ class App extends PureComponent {
   }
 
   handleTimeSliderChange(event) {
-    if (!this.player) return;
+    if (!this.sequencer.getPlayer()) return;
 
     const pos = event.target ? event.target.value : event;
 
@@ -375,31 +313,31 @@ class App extends PureComponent {
     window.history.replaceState(null, '', stateUrl);
 
     // Seek in song
-    this.player.seekMs(seekMs);
+    this.sequencer.getPlayer().seekMs(seekMs);
     this.setState({
       currentSongPositionMs: pos * this.state.currentSongDurationMs, // Smooth
     });
     setTimeout(() => {
-      if (this.player.isPlaying()) {
+      if (this.sequencer.getPlayer().isPlaying()) {
         this.setState({
-          currentSongPositionMs: this.player.getPositionMs(), // Accurate
+          currentSongPositionMs: this.sequencer.getPlayer().getPositionMs(), // Accurate
         });
       }
     }, 100);
   }
 
   handleSetVoices(voices) {
-    if (!this.player) return;
+    if (!this.sequencer.getPlayer()) return;
 
-    this.player.setVoices(voices);
+    this.sequencer.getPlayer().setVoices(voices);
     this.setState({voices: [...voices]});
   }
 
   handleTempoChange(event) {
-    if (!this.player) return;
+    if (!this.sequencer.getPlayer()) return;
 
     const tempo = parseFloat((event.target ? event.target.value : event)) || 1.0;
-    this.player.setTempo(tempo);
+    this.sequencer.getPlayer().setTempo(tempo);
     this.setState({
       tempo: tempo
     });
@@ -413,10 +351,15 @@ class App extends PureComponent {
     }
   }
 
-  handleFileClick(filename) {
+  handleSongClick(url, context, index) {
     return (e) => {
       e.preventDefault();
-      this.playSong(filename);
+      if (context) {
+        this.playContext(context, index);
+      } else {
+        // this will cause disaster
+        this.sequencer.playSong(url);
+      }
     }
   }
 
@@ -448,6 +391,8 @@ class App extends PureComponent {
 
   render() {
     const {title, subtitle} = App.titlesFromMetadata(this.state.currentSongMetadata);
+    const currContext = this.sequencer.getCurrContext();
+    const currIdx = this.sequencer.getCurrIdx();
     return (
       <div className="App">
         <AppHeader user={this.state.user}
@@ -461,17 +406,21 @@ class App extends PureComponent {
             <Search
               initialQuery={this.state.initialQuery}
               catalog={this.state.catalog}
+              currContext={currContext}
+              currIdx={currIdx}
               toggleFavorite={this.handleToggleFavorite}
               favorites={this.state.favorites}
-              onClick={this.handleFileClick}>
+              onClick={this.handleSongClick}>
               {this.state.loadingUser ?
                 <p>Loading user data...</p>
                 :
                 <Favorites
                   user={this.state.user}
                   handleLogin={this.handleLogin}
+                  onClick={this.handleSongClick}
+                  currContext={currContext}
+                  currIdx={currIdx}
                   toggleFavorite={this.handleToggleFavorite}
-                  onClick={this.handleFileClick}
                   favorites={this.state.favorites}/>}
               <h1>Top Level Folders</h1>
               {
@@ -504,10 +453,22 @@ class App extends PureComponent {
         }
         <div className="App-footer">
           <div className="App-footer-main">
+            <button onClick={this.prevSong}
+                    className="box-button"
+                    disabled={this.state.ejected}>
+              &lt;
+            </button>
+            {' '}
             <button onClick={this.togglePause}
                     className="box-button"
                     disabled={this.state.ejected}>
               {this.state.paused ? 'Resume' : 'Pause'}
+            </button>
+            {' '}
+            <button onClick={this.nextSong}
+                    className="box-button"
+                    disabled={this.state.ejected}>
+              &gt;
             </button>
             {' '}
             {this.state.currentSongNumSubtunes > 1 &&
@@ -542,7 +503,7 @@ class App extends PureComponent {
               currentSongPositionMs={this.state.currentSongPositionMs}
               currentSongDurationMs={this.state.currentSongDurationMs}
               onChange={this.handleTimeSliderChange}/>
-            {this.state.songUrl &&
+            {!this.state.ejected &&
             <div className="SongDetails">
               {this.state.favorites &&
               <div style={{float: 'left', marginBottom: '58px'}}>
@@ -556,7 +517,7 @@ class App extends PureComponent {
           </div>
           {this.state.showSettings &&
           <div className="App-footer-settings">
-            {this.player ?
+            {this.sequencer.getPlayer() ?
               <PlayerParams
                 ejected={this.state.ejected}
                 tempo={this.state.tempo}
@@ -566,9 +527,9 @@ class App extends PureComponent {
                 handleTempoChange={this.handleTempoChange}
                 handleSetVoices={this.handleSetVoices}
                 toggleSettings={this.toggleSettings}
-                getParameter={this.player.getParameter}
-                setParameter={this.player.setParameter}
-                params={this.player.getParameters()}/>
+                getParameter={this.sequencer.getPlayer().getParameter}
+                setParameter={this.sequencer.getPlayer().setParameter}
+                params={this.sequencer.getPlayer().getParameters()}/>
               :
               <div>--</div>}
           </div>}

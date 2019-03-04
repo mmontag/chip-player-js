@@ -119,7 +119,12 @@ export default class Player {
   }
 
   suspend() {
+    this.stopped = true;
     this.paused = true;
+  }
+
+  setOnPlayerStateUpdate(fn) {
+    this.onPlayerStateUpdate = fn;
   }
 
   setAudioProcess(fn) {
