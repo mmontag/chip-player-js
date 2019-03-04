@@ -110,17 +110,6 @@ class App extends PureComponent {
     const audioCtx = this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const gainNode = audioCtx.createGain();
     gainNode.gain.value = 1;
-
-    // const compressorNode = audioCtx.createDynamicsCompressor();
-    // compressorNode.threshold.value = -60;
-    // compressorNode.knee.value = 40;
-    // compressorNode.ratio.value = 16;
-    // compressorNode.attack.value = 0;
-    // compressorNode.release.value = 4;
-    // gainNode.connect(compressorNode);
-    // compressorNode.connect(audioCtx.destination);
-    // this.playerNode = compressorNode;
-
     gainNode.connect(audioCtx.destination);
     var playerNode = this.playerNode = gainNode;
 
