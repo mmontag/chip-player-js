@@ -142,9 +142,8 @@ class App extends PureComponent {
           // Allow a little time for initial page render before starting the song.
           // This is not absolutely necessary but helps prevent stuttering.
           setTimeout(() => {
-            this.playSong(CATALOG_PREFIX + urlParams.play);
+            this.sequencer.playSonglist([urlParams.play]);
             if (urlParams.t) {
-              //
               setTimeout(() => {
                 if (this.sequencer.getPlayer()) {
                   this.sequencer.getPlayer().seekMs(parseInt(urlParams.t, 10));
@@ -219,7 +218,7 @@ class App extends PureComponent {
       });
   }
 
-  playContext(context, index) {
+  playContext(context, index = 0) {
     this.setState({playerError: null});
     this.sequencer.playContext(context, index);
   }
@@ -281,6 +280,7 @@ class App extends PureComponent {
         currentSongDurationMs: player.getDurationMs(),
         currentSongNumSubtunes: player.getNumSubtunes(),
         voiceNames: [...Array(player.getNumVoices())].map((_, i) => player.getVoiceName(i)),
+        songUrl: this.sequencer.getCurrUrl(),
       });
     }
   }
@@ -357,8 +357,7 @@ class App extends PureComponent {
       if (context) {
         this.playContext(context, index);
       } else {
-        // this will cause disaster
-        this.sequencer.playSong(url);
+        this.sequencer.playSonglist([url]);
       }
     }
   }

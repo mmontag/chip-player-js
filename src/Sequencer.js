@@ -13,9 +13,11 @@ export default class Sequencer {
     this.prevSubtune = this.prevSubtune.bind(this);
     this.nextSubtune = this.nextSubtune.bind(this);
     this.toggleShuffle = this.toggleShuffle.bind(this);
+    this.getCurrUrl = this.getCurrUrl.bind(this);
     this.getCurrContext = this.getCurrContext.bind(this);
     this.getCurrIdx = this.getCurrIdx.bind(this);
     this.setPlayers = this.setPlayers.bind(this);
+    this.setShuffle = this.setShuffle.bind(this);
 
     this.player = null;
     this.players = players;
@@ -24,6 +26,7 @@ export default class Sequencer {
 
     this.currIdx = 0;
     this.context = null;
+    this.currUrl = null;
     this.tempo = 1;
     this.shuffle = false;
     this.songRequest = null;
@@ -37,22 +40,33 @@ export default class Sequencer {
   }
 
   onPlayerStateUpdate(isStopped) {
-    if (isStopped && this.context) {
-      this.nextSong();
+    if (isStopped) {
+      this.currUrl = null;
+      if (this.context) {
+        this.nextSong();
+      }
     }
     // State update bubbles to owner
     // ignore stopped for now TODO
     this.onStateUpdate();
   }
 
-  playContext(context, index) {
-    this.currIdx = index || 0;
+  playContext(context, index = 0) {
+    this.currIdx = index;
     this.context = context;
     this.playSong(context[index]);
   }
 
+  playSonglist(urls) {
+    this.playContext(urls, 0);
+  }
+
   toggleShuffle() {
-    this.shuffle = !this.shuffle;
+    this.setShuffle(!this.shuffle);
+  }
+
+  setShuffle(shuffle) {
+    this.shuffle = !!shuffle;
   }
 
   advanceSong(direction) {
@@ -102,6 +116,10 @@ export default class Sequencer {
 
   getCurrIdx() {
     return this.currIdx;
+  }
+
+  getCurrUrl() {
+    return this.currUrl;
   }
 
   playSong(url) {
@@ -183,6 +201,7 @@ export default class Sequencer {
         const numVoices = this.player.getNumVoices();
         this.player.setTempo(this.tempo);
         this.player.setVoices([...Array(numVoices)].fill(true));
+        this.currUrl = url;
 
         this.onPlayerStateUpdate();
       });
