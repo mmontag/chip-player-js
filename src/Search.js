@@ -191,9 +191,9 @@ export default class Search extends PureComponent {
     const resultTitle = result.substring(result.lastIndexOf('/') + 1);
     const isPlaying = this.props.currContext === this.state.results && this.props.currIdx === i;
     return (
-      <div>
+      <div key={i}>
         {headingFragment}
-        <div className="Search-results-group-item" key={i}>
+        <div className="Search-results-group-item">
           {this.props.favorites &&
           <FavoriteButton favorites={this.props.favorites}
                           toggleFavorite={this.props.toggleFavorite}
