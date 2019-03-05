@@ -346,8 +346,8 @@ class App extends PureComponent {
   handlePlayRandom() {
     const catalog = this.state.catalog;
     if (catalog) {
-      const idx = (Math.random() * catalog.length) | 0;
-      this.playSong(CATALOG_PREFIX + catalog[idx]);
+      const idx = Math.floor(Math.random() * catalog.length);
+      this.sequencer.playContext(catalog, idx);
     }
   }
 
