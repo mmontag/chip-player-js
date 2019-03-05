@@ -10,7 +10,6 @@ import ChipCore from './chip-core';
 import GMEPlayer from './players/GMEPlayer';
 import MIDIPlayer from './players/MIDIPlayer';
 import XMPPlayer from './players/XMPPlayer';
-import promisify from './promisifyXhr';
 import {trieToList} from './ResigTrie';
 
 import PlayerParams from './PlayerParams';
@@ -23,7 +22,6 @@ import Favorites from "./Favorites";
 import Sequencer from "./Sequencer";
 
 const MAX_VOICES = 64;
-const CATALOG_PREFIX = 'https://gifx.co/music/';
 
 class App extends PureComponent {
   handleLogin() {

@@ -211,8 +211,6 @@ export default class Search extends PureComponent {
   render() {
     const placeholder = this.state.totalSongs ?
       `${this.state.totalSongs} tunes` : 'Loading catalog...';
-    const currContext = this.props.currContext;
-    const currIdx = this.props.currIdx;
     return (
       <div className="Search">
         <div>
