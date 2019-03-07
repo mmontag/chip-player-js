@@ -234,8 +234,8 @@ extern void tp_open_tsf(tsf *t, const void *data, int length, int sampleRate) {
   tml_get_info(g_FirstEvt, NULL, NULL, NULL, &firstNoteTimeMs, NULL);
   g_MidiTimeMs = (double)firstNoteTimeMs;
 
-//  EM_ASM_({ console.log('Tiny MIDI Player loaded %d bytes.', $0); }, length);
-//  EM_ASM_({ console.log('First note appears at %d ms.', $0); }, g_MidiTimeMs);
+  EM_ASM_({ console.log('Tiny MIDI Player loaded %d bytes.', $0); }, length);
+  EM_ASM_({ console.log('First note appears at %d ms.', $0); }, g_MidiTimeMs);
 }
 
 extern void tp_open(const void *data, int length) {
@@ -254,8 +254,8 @@ extern void tp_open(const void *data, int length) {
   tml_get_info(g_FirstEvt, NULL, NULL, NULL, &firstNoteTimeMs, NULL);
   g_MidiTimeMs = (double)firstNoteTimeMs;
 
-//  EM_ASM_({ console.log('Tiny MIDI Player loaded %d bytes.', $0); }, length);
-//  EM_ASM_({ console.log('First note appears at %d ms.', $0); }, g_MidiTimeMs);
+  EM_ASM_({ console.log('Tiny MIDI Player loaded %d bytes.', $0); }, length);
+  EM_ASM_({ console.log('First note appears at %d ms.', $0); }, g_MidiTimeMs);
 }
 
 // TODO: TinySoundFont not implemented
