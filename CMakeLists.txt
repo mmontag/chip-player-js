@@ -42,11 +42,11 @@ set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -D_DEBUG")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wextra")
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wpedantic")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-parameter -Wno-unused-but-set-variable -Wno-long-long")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-parameter -Wno-unused-but-set-variable -Wno-long-long -Wno-unused-value")
 
 # silence typical sound core warnings
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wno-unknown-pragmas")
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wno-unused-value -Wno-sign-compare")
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wno-sign-compare")
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wno-unused-variable -Wno-unused-const-variable -Wno-unused-function")
 
 # additional warnings from http://blog.httrack.com/blog/2014/03/09/what-are-your-gcc-flags/

@@ -48,7 +48,6 @@ UINT8 OSSignal_Init(OS_SIGNAL** retSignal, UINT8 initState)
 
 void OSSignal_Deinit(OS_SIGNAL* sig)
 {
-	pthread_mutex_unlock(&sig->hMutex);
 	pthread_mutex_destroy(&sig->hMutex);
 	pthread_cond_destroy(&sig->hCond);
 	

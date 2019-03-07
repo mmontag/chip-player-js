@@ -193,7 +193,7 @@
     <ClCompile Include="player\s98player.cpp" />
     <ClCompile Include="player\vgmplayer.cpp" />
     <ClCompile Include="player\vgmplayer_cmdhandler.cpp" />
-    <ClCompile Include="utils\StrUtils-CPConv_IConv.c" />
+    <ClCompile Include="utils\StrUtils-CPConv_Win.c" />
     <ClCompile Include="vgmtest.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>

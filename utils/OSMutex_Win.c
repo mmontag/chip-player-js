@@ -36,7 +36,6 @@ UINT8 OSMutex_Init(OS_MUTEX** retMutex, UINT8 initLocked)
 
 void OSMutex_Deinit(OS_MUTEX* mtx)
 {
-	OSMutex_Unlock(mtx);
 	CloseHandle(mtx->hMutex);
 	free(mtx);
 	

@@ -89,7 +89,7 @@
     <ClCompile Include="utils\FileLoader.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="utils\StrUtils-CPConv_IConv.c">
+    <ClCompile Include="utils\StrUtils-CPConv_Win.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
   </ItemGroup>

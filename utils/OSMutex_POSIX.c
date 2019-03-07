@@ -40,7 +40,6 @@ UINT8 OSMutex_Init(OS_MUTEX** retMutex, UINT8 initLocked)
 
 void OSMutex_Deinit(OS_MUTEX* mtx)
 {
-	OSMutex_Unlock(mtx);
 	pthread_mutex_destroy(&mtx->hMutex);
 	free(mtx);
 	

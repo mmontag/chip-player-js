@@ -94,6 +94,9 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 	argbase = 1;
+#ifdef _WIN32
+	SetConsoleOutputCP(65001);	// set UTF-8 codepage
+#endif
 	
 	retVal = InitAudioSystem();
 	if (retVal)
