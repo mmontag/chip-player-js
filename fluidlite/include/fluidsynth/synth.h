@@ -699,6 +699,8 @@ FLUIDSYNTH_API void fluid_synth_start_voice(fluid_synth_t* synth, fluid_voice_t*
 FLUIDSYNTH_API void fluid_synth_get_voicelist(fluid_synth_t* synth, 
 					    fluid_voice_t* buf[], int bufsize, int ID);
 
+FLUIDSYNTH_API int fluid_synth_all_notes_off(fluid_synth_t* synth, int chan);
+FLUIDSYNTH_API int fluid_synth_all_sounds_off(fluid_synth_t* synth, int chan);
 
 //midi router disabled
 //  /** This is a hack to get command handlers working */
