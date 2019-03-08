@@ -132,6 +132,17 @@ class App extends PureComponent {
         ]);
         this.setState({loading: false});
 
+        // Experimental: Split Module Support
+        //
+        // chipCore.loadDynamicLibrary('./xmp.wasm', {
+        //     loadAsync: true,
+        //     global: true,
+        //     nodelete: true,
+        //   })
+        //   .then(() => {
+        //     return this.sequencer.setPlayers([new XMPPlayer(audioCtx, playerNode, chipCore)]);
+        //   });
+
         const urlParams = queryString.parse(window.location.search.substr(1));
         if (urlParams.q) {
           this.setState({initialQuery: urlParams.q});
