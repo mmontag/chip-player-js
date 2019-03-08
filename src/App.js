@@ -278,6 +278,7 @@ class App extends PureComponent {
         currentSongDurationMs: player.getDurationMs(),
         currentSongNumSubtunes: player.getNumSubtunes(),
         voiceNames: [...Array(player.getNumVoices())].map((_, i) => player.getVoiceName(i)),
+        voices: [...Array(player.getNumVoices())].fill(true),
         songUrl: this.sequencer.getCurrUrl(),
       });
     }
