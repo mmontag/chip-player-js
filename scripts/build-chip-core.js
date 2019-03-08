@@ -228,9 +228,9 @@ var flags = [
   '-s', 'EXPORT_NAME=CHIP_CORE',
   '-s', 'ENVIRONMENT=web',
   '-s', 'USE_ZLIB=1',
-  '-O2',
+  '-Os',
   // '--closure', '1',
-  // '--llvm-lto', '3',
+  '--llvm-lto', '3',
   '-o', js_file,
 
   '-DVGM_YM2612_MAME=1',     // fast and accurate, but suffers on some GYM files
