@@ -161,24 +161,6 @@ export default class Sequencer {
       return;
     }
 
-    // // Fetch artwork for this file (cancelable request)
-    // const imageUrl = [...pathParts, 'image.jpg'].join('/');
-    // if (this.imageRequest) this.imageRequest.abort();
-    // this.imageRequest = promisify(new XMLHttpRequest());
-    // this.imageRequest.open('HEAD', imageUrl);
-    // console.log('requesting image', imageUrl);
-    // this.imageRequest.send()
-    //   .then(xhr => {
-    //     console.log(xhr.status);
-    //     if (xhr.status >= 200 && xhr.status < 400) {
-    //       console.log('set state', {imageUrl: imageUrl});
-    //       this.setState({imageUrl: imageUrl});
-    //     }
-    //   })
-    //   .catch(e => {
-    //     this.setState({imageUrl: null});
-    //   });
-
     // Fetch the song file (cancelable request)
     // Cancel any outstanding request so that playback doesn't happen out of order
     if (this.songRequest) this.songRequest.abort();

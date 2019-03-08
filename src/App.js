@@ -11,6 +11,7 @@ import GMEPlayer from './players/GMEPlayer';
 import MIDIPlayer from './players/MIDIPlayer';
 import XMPPlayer from './players/XMPPlayer';
 import {trieToList} from './ResigTrie';
+import promisify from "./promisifyXhr";
 
 import PlayerParams from './PlayerParams';
 import Search from './Search';
@@ -22,6 +23,7 @@ import Favorites from "./Favorites";
 import Sequencer from "./Sequencer";
 
 const MAX_VOICES = 64;
+const CATALOG_PREFIX = 'https://gifx.co/music/';
 
 class App extends PureComponent {
   handleLogin() {
@@ -262,22 +264,44 @@ class App extends PureComponent {
         songUrl: null,
       });
     } else {
-      // // Update application URL (window.history API)
-      // const filepath = url.replace(CATALOG_PREFIX, '');
-      // const ext = url.split('.').pop().toLowerCase();
-      // const pathParts = url.split('/');
-      // pathParts.pop();
-      // const urlParams = {
-      //   ...queryString.parse(window.location.search.substr(1)),
-      //   play: filepath,
-      // };
-      // delete urlParams.t;
-      // const stateUrl = '?' + queryString.stringify(urlParams)
-      //   .replace(/%20/g, '+') // I don't care about escaping these characters
-      //   .replace(/%2C/g, ',')
-      //   .replace(/%2F/g, '/');
-      // window.history.replaceState(null, '', stateUrl);
       const player = this.sequencer.getPlayer();
+      const url = this.sequencer.getCurrUrl();
+
+      if (url) {
+        const pathParts = url.split('/');
+        pathParts.pop();
+
+        // // Update application URL (window.history API)
+        // const filepath = url.replace(CATALOG_PREFIX, '');
+        // const urlParams = {
+        //   ...queryString.parse(window.location.search.substr(1)),
+        //   play: filepath,
+        // };
+        // delete urlParams.t;
+        // const stateUrl = '?' + queryString.stringify(urlParams)
+        //   .replace(/%20/g, '+') // I don't care about escaping these characters
+        //   .replace(/%2C/g, ',')
+        //   .replace(/%2F/g, '/');
+        // window.history.replaceState(null, '', stateUrl);
+
+        // Fetch artwork for this file (cancelable request)
+        const imageUrl = [...pathParts, 'image.jpg'].join('/');
+        if (this.imageRequest) this.imageRequest.abort();
+        this.imageRequest = promisify(new XMLHttpRequest());
+        this.imageRequest.open('HEAD', imageUrl);
+        console.log('requesting image', imageUrl);
+        this.imageRequest.send()
+          .then(xhr => {
+            console.log(xhr.status);
+            if (xhr.status >= 200 && xhr.status < 400) {
+              console.log('set state', {imageUrl: imageUrl});
+              this.setState({imageUrl: imageUrl});
+            }
+          })
+          .catch(e => {
+            this.setState({imageUrl: null});
+          });
+      }
 
       this.setState({
         ejected: false,
@@ -290,7 +314,7 @@ class App extends PureComponent {
         currentSongNumSubtunes: player.getNumSubtunes(),
         voiceNames: [...Array(player.getNumVoices())].map((_, i) => player.getVoiceName(i)),
         voices: [...Array(player.getNumVoices())].fill(true),
-        songUrl: this.sequencer.getCurrUrl(),
+        songUrl: url,
       });
     }
   }
