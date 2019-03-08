@@ -10,7 +10,7 @@ Chip Player JS is a work in progress. Goals:
 - [x] Simple music management (at least the ability to save favorites) like Winamp/Spotify
 - [x] High-quality MIDI playback with JS wavetable synthesis
     * [x] Bonus: user-selectable soundbanks
-- [ ] Track sequencer with player controls and shuffle mode
+- [x] Track sequencer with player controls and shuffle mode
 - [ ] Media key support in Chrome
 - [ ] High performance
    - [ ] Cold cache time-to-play under 500 ms (i.e. https://mmontag.github.io/chip-player-js/?play=ModArchives/aryx.s3m in incognito window)
