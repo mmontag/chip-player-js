@@ -133,6 +133,7 @@ endif()
 
 if (DISABLE_SF3)
     target_compile_definitions(${PROJECT_NAME} PUBLIC SF3_SUPPORT=0)
+    target_compile_definitions(${PROJECT_NAME}-static PUBLIC SF3_SUPPORT=0)
 endif()
 
 configure_file(fluidlite.pc.in ${CMAKE_BINARY_DIR}/fluidlite.pc @ONLY)
