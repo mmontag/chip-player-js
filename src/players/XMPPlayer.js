@@ -82,9 +82,9 @@ export default class XMPPlayer extends Player {
     const xmp_module_infoPtr = xmp._malloc(2048);
     xmp._xmp_get_module_info(this.xmpCtx, xmp_module_infoPtr);
     const xmp_modulePtr = xmp.getValue(xmp_module_infoPtr + 20, '*');
-    meta.title = xmp.Pointer_stringify(xmp_modulePtr, 256);
-    meta.system = xmp.Pointer_stringify(xmp_modulePtr + 64, 256);
-    meta.comment = xmp.Pointer_stringify(xmp.getValue(xmp_module_infoPtr + 24, '*'), 512);
+    meta.title = xmp.UTF8ToString(xmp_modulePtr, 256);
+    meta.system = xmp.UTF8ToString(xmp_modulePtr + 64, 256);
+    meta.comment = xmp.UTF8ToString(xmp.getValue(xmp_module_infoPtr + 24, '*'), 512);
 
     const infoPtr = this.xmp_frame_infoPtr;
     xmp._xmp_get_frame_info(this.xmpCtx, infoPtr);

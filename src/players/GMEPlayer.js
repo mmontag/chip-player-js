@@ -175,7 +175,7 @@ export default class GMEPlayer extends Player {
   }
 
   getVoiceName(index) {
-    if (emu) return libgme.Pointer_stringify(libgme._gme_voice_name(emu, index));
+    if (emu) return libgme.UTF8ToString(libgme._gme_voice_name(emu, index));
   }
 
   getNumVoices() {
