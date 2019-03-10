@@ -115,7 +115,6 @@ export default class Player {
       throw Error('Player.setAudioProcess has not been called.');
     }
     this.audioNode.connect(this.destinationNode);
-    this.onPlayerStateUpdate(false);
   }
 
   suspend() {
