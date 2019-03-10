@@ -86,6 +86,25 @@ module.exports = function(proxy, allowedHost) {
       // it used the same host and port.
       // https://github.com/facebookincubator/create-react-app/issues/2272#issuecomment-302832432
       app.use(noopServiceWorkerMiddleware());
+
+      // =============================================
+      // use proper mime-type for wasm files
+      // =============================================
+      app.get('*.wasm', (req, res, next) => {
+        let options = {
+          root: paths.appPublic,
+          dotfiles: 'deny',
+          headers: {
+            'Content-Type': 'application/wasm'
+          }
+        };
+
+        res.sendFile(req.url, options, (err) => {
+          if (err) {
+            next(err);
+          }
+        });
+      });
     },
   };
 };
