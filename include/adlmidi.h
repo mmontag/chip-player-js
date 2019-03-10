@@ -714,6 +714,7 @@ extern ADLMIDI_DECLSPEC const char *adl_errorInfo(struct ADL_MIDIPlayer *device)
  * Tip 1: You can initialize multiple instances and run them in parallel
  * Tip 2: Library is NOT thread-safe, therefore don't use same instance in different threads or use mutexes
  * Tip 3: Changing of sample rate on the fly is not supported. Re-create the instance again.
+ * Top 4: To generate output in OPL chip native sample rate, please initialize it with sample rate value as `ADL_CHIP_SAMPLE_RATE`
  *
  * @param sample_rate Output sample rate
  * @return Instance of the library. If NULL was returned, check the `adl_errorString` message for more info.
