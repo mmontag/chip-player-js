@@ -229,7 +229,7 @@ export default class GMEPlayer extends Player {
 
   seekMs(positionMs) {
     if (emu) {
-      Player.muteAudioDuringCall(this.audioNode, () =>
+      this.muteAudioDuringCall(this.audioNode, () =>
         libgme._gme_seek_scaled(emu, positionMs));
     }
   }

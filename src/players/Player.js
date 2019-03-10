@@ -22,7 +22,7 @@ export default class Player {
   constructor(audioCtx, destNode, chipCore, onPlayerStateUpdate) {
     this._outerAudioProcess = this._outerAudioProcess.bind(this);
 
-    this.paused = false;
+    this.paused = true;
     this.fileExtensions = [];
     this.metadata = {};
     this.audioCtx = audioCtx;
@@ -159,8 +159,8 @@ export default class Player {
     }
   }
 
-  static muteAudioDuringCall(audioNode, fn) {
-    if (audioNode) {
+  muteAudioDuringCall(audioNode, fn) {
+    if (audioNode && audioNode.context.state === 'running' && this.paused === false) {
       const audioprocess = audioNode.onaudioprocess;
       // Workaround to eliminate stuttering:
       // Temporarily swap the audio process callback, and do the
