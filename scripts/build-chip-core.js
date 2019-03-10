@@ -1,12 +1,12 @@
-var glob = require('glob');
 const { spawn, execSync } = require('child_process');
-var fs = require('fs');
+const fs = require('fs');
+const chalk = require('chalk');
 const paths = require('../config/paths');
 
 /**
  * Compile the C libraries with emscripten.
  */
-var empp = process.env.EMPP_BIN || 'em++';
+var compiler = process.env.EMPP_BIN || 'em++';
 
 var gme_dir = './game-music-emu/gme';
 // var unrar_dir = './unrar';
@@ -220,6 +220,9 @@ var runtime_methods = [
 ];
 
 var flags = [
+  // '--closure', '1',
+  '--llvm-lto', '3',
+  '--no-heap-copy',
   '-s', 'EXPORTED_FUNCTIONS=[' + exported_functions.join(',') + ']',
   '-s', 'EXPORTED_RUNTIME_METHODS=[' + runtime_methods.join(',') + ']',
   '-s', 'ALLOW_MEMORY_GROWTH=1',
@@ -229,8 +232,6 @@ var flags = [
   '-s', 'ENVIRONMENT=web',
   '-s', 'USE_ZLIB=1',
   '-Os',
-  // '--closure', '1',
-  '--llvm-lto', '3',
   '-o', js_file,
 
   '-DVGM_YM2612_MAME=1',     // fast and accurate, but suffers on some GYM files
@@ -250,7 +251,7 @@ var flags = [
 var args = [].concat(flags, source_files);
 
 console.log('Compiling to %s...', js_file);
-var build_proc = spawn(empp, args, {stdio: 'inherit'});
+var build_proc = spawn(compiler, args, {stdio: 'inherit'});
 build_proc.on('exit', function (code) {
   if (code === 0) {
     console.log('Moving %s to %s.', wasm_file, wasm_dir);
