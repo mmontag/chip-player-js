@@ -23,7 +23,6 @@ import Favorites from "./Favorites";
 import Sequencer from "./Sequencer";
 
 const MAX_VOICES = 64;
-const CATALOG_PREFIX = 'https://gifx.co/music/';
 
 class App extends PureComponent {
   handleLogin() {
@@ -267,7 +266,7 @@ class App extends PureComponent {
       const player = this.sequencer.getPlayer();
       const url = this.sequencer.getCurrUrl();
 
-      if (url) {
+      if (url && url !== this.state.songUrl) {
         const pathParts = url.split('/');
         pathParts.pop();
 
@@ -285,22 +284,22 @@ class App extends PureComponent {
         // window.history.replaceState(null, '', stateUrl);
 
         // Fetch artwork for this file (cancelable request)
-        const imageUrl = [...pathParts, 'image.jpg'].join('/');
-        if (this.imageRequest) this.imageRequest.abort();
-        this.imageRequest = promisify(new XMLHttpRequest());
-        this.imageRequest.open('HEAD', imageUrl);
-        console.log('requesting image', imageUrl);
-        this.imageRequest.send()
-          .then(xhr => {
-            console.log(xhr.status);
-            if (xhr.status >= 200 && xhr.status < 400) {
-              console.log('set state', {imageUrl: imageUrl});
-              this.setState({imageUrl: imageUrl});
-            }
-          })
-          .catch(e => {
-            this.setState({imageUrl: null});
-          });
+        const imageUrl = [...pathParts, 'image.jpg'].join('/').replace(/ /g, '%20');
+
+        if (imageUrl !== this.state.imageUrl) {
+          if (this.imageRequest) this.imageRequest.abort();
+          this.imageRequest = promisify(new XMLHttpRequest());
+          this.imageRequest.open('HEAD', imageUrl);
+          this.imageRequest.send()
+            .then(xhr => {
+              if (xhr.status >= 200 && xhr.status < 400) {
+                this.setState({imageUrl: imageUrl});
+              }
+            })
+            .catch(e => {
+              this.setState({imageUrl: null});
+            });
+        }
       }
 
       this.setState({
