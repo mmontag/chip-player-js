@@ -119,6 +119,7 @@ export default class Search extends PureComponent {
   }
 
   handleClear() {
+    window.history.replaceState(null, '', '/');
     this.setState({
       query: null,
       searching: false,
@@ -148,22 +149,6 @@ export default class Search extends PureComponent {
       }
     });
     return headings;
-  }
-
-  groupResults(results) {
-    // convert to nested results - one level deep
-    const grouped = [];
-    let current = {title: null, items: []};
-    results.forEach(result => {
-      const prefix = result.substring(0, result.lastIndexOf('/') + 1);
-      const suffix = result.substring(result.lastIndexOf('/') + 1);
-      if (prefix !== current.title) {
-        current = {title: prefix, items: []};
-        grouped.push(current);
-      }
-      current.items.push(suffix);
-    });
-    return grouped;
   }
 
   handleGroupClick(e, query) {
