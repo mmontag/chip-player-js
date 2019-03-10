@@ -39,6 +39,7 @@ extern "C" {
         ADLMIDI_TOSTR(ADLMIDI_VERSION_MINOR) "." \
         ADLMIDI_TOSTR(ADLMIDI_VERSION_PATCHLEVEL)
 
+#define ADL_CHIP_SAMPLE_RATE        49716
 
 #include <stddef.h>
 
