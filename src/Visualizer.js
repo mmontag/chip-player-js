@@ -12,7 +12,10 @@ const WEIGHTING_MODES = [
 ];
 
 const FFT_SIZES = [
-  512, 1024, 2048, 4096, 8192, 16384
+  512, 1024, 2048, 4096, 8192
+];
+const FFT_LABELS = [
+  '512', '1K', '2K', '4K', '8K', '16K'
 ];
 
 export default class Visualizer extends PureComponent {
@@ -48,26 +51,30 @@ export default class Visualizer extends PureComponent {
     this.spectrogram.setPaused(this.state.enabled ? this.props.paused : true);
   }
 
+  handleModeClick = (e) => {
+    const mode = parseInt(e.target.value, 10);
+    this.setState({vizMode: mode});
+    this.spectrogram.setMode(mode);
+  };
+
+  handleWeightingModeClick = (e) => {
+    const mode = parseInt(e.target.value, 10);
+    this.setState({weightingMode: mode});
+    this.spectrogram.setWeighting(mode);
+  };
+
+  handleFFTSizeClick = (e) => {
+    const size = parseInt(e.target.value, 10);
+    this.setState({fftSize: size});
+    this.spectrogram.setFFTSize(size);
+  };
+
+  handleToggleVisualizer = (e) => {
+    const enabled = e.target.value === 'true';
+    this.setState({enabled: enabled});
+  };
+
   render() {
-    const handleModeClick = (e) => {
-      const mode = parseInt(e.target.value, 10);
-      this.setState({vizMode: mode});
-      this.spectrogram.setMode(mode);
-    };
-    const handleWeightingModeClick = (e) => {
-      const mode = parseInt(e.target.value, 10);
-      this.setState({weightingMode: mode});
-      this.spectrogram.setWeighting(mode);
-    };
-    const handleFFTSizeClick = (e) => {
-      const size = parseInt(e.target.value, 10);
-      this.setState({fftSize: size});
-      this.spectrogram.setFFTSize(size);
-    };
-    const handleToggleVisualizer = (e) => {
-      const enabled = e.target.value === 'true';
-      this.setState({enabled: enabled});
-    };
     const enabledStyle = {
       display: this.state.enabled ? 'block' : 'none',
     };
@@ -75,12 +82,12 @@ export default class Visualizer extends PureComponent {
       <div className='Visualizer'>
         <h3 className='Visualizer-toggle'>
           Visualizer{' '}
-          <label><input onClick={handleToggleVisualizer}
+          <label><input onClick={this.handleToggleVisualizer}
                         type='radio'
                         value={true}
                         defaultChecked={this.state.enabled === true}
                         name='visualizer-enabled'/>On</label>
-          <label><input onClick={handleToggleVisualizer}
+          <label><input onClick={this.handleToggleVisualizer}
                         type='radio'
                         value={false}
                         defaultChecked={this.state.enabled === false}
@@ -90,7 +97,7 @@ export default class Visualizer extends PureComponent {
           Mode:{' '}
           {
             SPECTROGRAM_MODES.map((mode, i) =>
-              <label key={i}><input onClick={handleModeClick}
+              <label key={i}><input onClick={this.handleModeClick}
                                     type='radio'
                                     name='spectrogram-mode'
                                     defaultChecked={this.state.vizMode === i}
@@ -98,31 +105,33 @@ export default class Visualizer extends PureComponent {
             )
           }
           <br/>
-          Weighting:{' '}
-          {
-            WEIGHTING_MODES.map((mode, i) =>
-              <label title={mode.description} key={i}>
-                <input onClick={handleWeightingModeClick}
-                       type='radio'
-                       name='weighting-mode'
-                       defaultChecked={this.state.weightingMode === i}
-                       value={i}/>{mode.label}</label>
-            )
-          }
-          <br/>
-          {this.state.vizMode !== 2 &&
-          <div>
-            FFT Size:{' '}
-            {
-              FFT_SIZES.map((size, i) =>
-                <label key={i}><input onClick={handleFFTSizeClick}
-                                      type='radio'
-                                      name='fft-size'
-                                      defaultChecked={this.state.fftSize === size}
-                                      value={size}/>{size}</label>
-              )
-            }
-          </div>
+          {this.state.vizMode === 2 ?
+            <div>
+              Weighting:{' '}
+              {
+                WEIGHTING_MODES.map((mode, i) =>
+                  <label title={mode.description} key={i}>
+                    <input onClick={this.handleWeightingModeClick}
+                           type='radio'
+                           name='weighting-mode'
+                           defaultChecked={this.state.weightingMode === i}
+                           value={i}/>{mode.label}</label>
+                )
+              }
+            </div>
+            :
+            <div>
+              FFT Size:{' '}
+              {
+                FFT_SIZES.map((size, i) =>
+                  <label key={i}><input onClick={this.handleFFTSizeClick}
+                                        type='radio'
+                                        name='fft-size'
+                                        defaultChecked={this.state.fftSize === size}
+                                        value={size}/>{FFT_LABELS[i]}</label>
+                )
+              }
+            </div>
           }
         </div>
         <canvas style={enabledStyle} className='Visualizer-analyzer' width={448} height={60}

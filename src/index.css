@@ -346,7 +346,7 @@ body,#root {
     background: initial;
 }
 
-.Visualizer { position: relative; display: flex; flex-direction: column; }
+.Visualizer { position: relative; display: flex; flex-direction: column; align-items: flex-end }
 .Visualizer-overlay { position: absolute; top: 76px; image-rendering: pixelated; }
 .Visualizer-options { padding: 19px; text-align: right; }
 .Visualizer-toggle { position: fixed; top: 0; right: 19px; }
