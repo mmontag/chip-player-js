@@ -3,6 +3,7 @@
 // using Windows API
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <stddef.h>
 #include <ctype.h>
@@ -13,6 +14,7 @@
 #define strdup		_strdup
 #define stricmp		_stricmp
 #define strnicmp	_strnicmp
+#define snprintf	_snprintf
 #endif
 
 #include <stdtype.h>
@@ -36,6 +38,15 @@ static const char* REGKEY_CP_LIST = "SOFTWARE\\Classes\\MIME\\Database\\Charset"
 
 static UINT GetCodepageFromStr(const char* codepageName)
 {
+	char fullKeyPath[MAX_PATH];
+	char cpAlias[0x80];
+	HKEY hKey;
+	DWORD keyType;
+	DWORD keyValSize;
+	DWORD codepageID;
+	int retI;
+	LSTATUS retS;
+
 	// catch a few encodings that Windows calls differently from iconv
 	if (! stricmp(codepageName, "UTF-16LE"))
 		codepageName = "unicode";
@@ -45,12 +56,45 @@ static UINT GetCodepageFromStr(const char* codepageName)
 	if (! strnicmp(codepageName, "CP", 2) && isdigit((unsigned char)codepageName[2]))
 		return (UINT)atoi(&codepageName[2]);
 	
-	if (! stricmp(codepageName, "UTF-8"))
-		return 65001;
-	else if (! stricmp(codepageName, "unicode"))
-		return 12000;
-	else
+	retI = snprintf(fullKeyPath, MAX_PATH, "%s\\%s", REGKEY_CP_LIST, codepageName);
+	if (retI <= 0 || retI >= MAX_PATH)
 		return 0;
+	codepageID = 0;
+	while(1)
+	{
+		retS = RegOpenKeyExA(HKEY_LOCAL_MACHINE, fullKeyPath, 0x00, KEY_QUERY_VALUE, &hKey);
+		if (retS != ERROR_SUCCESS)
+			return 0;
+		
+		// At first, try the keys that have the codepage ID.
+		// "InternetEncoding" seems to be a bit more accurate than "Codepage". (e.g. for UTF-8)
+		keyValSize = sizeof(DWORD);
+		retS = RegQueryValueExA(hKey, "InternetEncoding", NULL, &keyType, (LPBYTE)&codepageID, &keyValSize);
+		if (retS == ERROR_SUCCESS && keyType == REG_DWORD)
+			break;
+		keyValSize = sizeof(DWORD);
+		retS = RegQueryValueExA(hKey, "Codepage", NULL, &keyType, (LPBYTE)&codepageID, &keyValSize);
+		if (retS == ERROR_SUCCESS && keyType == REG_DWORD)
+			break;
+		
+		keyValSize = 0x80;
+		retS = RegQueryValueExA(hKey, "AliasForCharset", NULL, &keyType, (LPBYTE)cpAlias, &keyValSize);
+		if (retS != ERROR_SUCCESS || keyType != REG_SZ)
+			break;
+		if (keyValSize >= 0x80)
+			keyValSize = 0x7F;
+		cpAlias[keyValSize] = '\0';	// ensure '\0' termination
+		RegCloseKey(hKey);
+		
+		// generate new RegKey path and try all the stuff again
+		retI = snprintf(fullKeyPath, MAX_PATH, "%s\\%s", REGKEY_CP_LIST, cpAlias);
+		if (retI <= 0 || retI >= MAX_PATH)
+			return 0;
+	}
+	
+	RegCloseKey(hKey);
+	
+	return (UINT)codepageID;
 }
 
 UINT8 CPConv_Init(CPCONV** retCPC, const char* cpFrom, const char* cpTo)
