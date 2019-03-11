@@ -46,24 +46,46 @@ class App extends PureComponent {
   handleToggleFavorite(path) {
     const user = this.state.user;
     if (user) {
-      const favorites = Object.assign({}, this.state.favorites);
-      const id = favorites[path];
-      const favoritesRef = this.db.collection('users').doc(user.uid).collection('favorites');
-      if (id && id !== 'pending') {
-        delete favorites[path];
-        this.setState({favorites: favorites});
-        favoritesRef.doc(id).delete().then(() => {
-          console.log('Deleted favorite %s.', path);
-        });
+      // Faves using Array field
+      // -----------------------
+      const userRef = this.db.collection('users').doc(user.uid);
+      let newFaves, favesOp;
+      const oldFaves = this.state.faves;
+      const exists = oldFaves.includes(path);
+      if (exists) {
+        newFaves = oldFaves.filter(fave => fave !== path);
+        favesOp = firebase.firestore.FieldValue.arrayRemove(path);
       } else {
-        favorites[path] = 'pending';
-        this.setState({favorites: favorites});
-        favoritesRef.add({path: path}).then((ref) => {
-          console.log('Added favorite %s.', path);
-          favorites[path] = ref.id;
-          this.setState({favorites: favorites});
-        });
+        newFaves = [...oldFaves, path];
+        favesOp = firebase.firestore.FieldValue.arrayUnion(path);
       }
+      // Optimistic update
+      this.setState({faves: newFaves});
+      userRef.update({faves: favesOp}).catch((e) => {
+        this.setState({faves: oldFaves});
+        console.log('Couldn\'t update favorites in Firebase.', e);
+      });
+
+      // Favorites using Collection/ids
+      // ------------------------------
+      // const favorites = Object.assign({}, this.state.favorites);
+      // const id = favorites[path];
+      // const favoritesRef = this.db.collection('users').doc(user.uid).collection('favorites');
+      // if (id && id !== 'pending') {
+      //   delete favorites[path];
+      //   this.setState({favorites: favorites});
+      //   favoritesRef.doc(id).delete().then(() => {
+      //     console.log('Deleted favorite %s.', path);
+      //   });
+      // } else {
+      //   favorites[path] = 'pending';
+      //   this.setState({favorites: favorites});
+      //   favoritesRef.add({path: path}).then((ref) => {
+      //     console.log('Added favorite %s.', path);
+      //     favorites[path] = ref.id;
+      //     this.setState({favorites: favorites});
+      //   });
+      // }
     }
   }
 
@@ -96,14 +118,32 @@ class App extends PureComponent {
     firebase.auth().onAuthStateChanged(user => {
       this.setState({user: user, loadingUser: !!user});
       if (user) {
-        this.db.collection('users').doc(user.uid).collection('favorites').get().then(docs => {
-          // invert the collection
-          const favorites = {};
-          docs.forEach(doc => {
-            favorites[doc.data().path] = doc.id;
+        // Faves using Array field
+        this.db
+          .collection('users')
+          .doc(user.uid)
+          .get()
+          .then(doc => {
+            console.log(doc.data());
+            this.setState({
+              faves: doc.data().faves || [],
+              loadingUser: false,
+            });
           });
-          this.setState({favorites: favorites, loadingUser: false});
-        });
+        // Favorites using Collection/ids
+        // this.db
+        //   .collection('users')
+        //   .doc(user.uid)
+        //   .collection('favorites')
+        //   .get()
+        //   .then(docs => {
+        //     // invert the collection
+        //     const favorites = {};
+        //     docs.forEach(doc => {
+        //       favorites[doc.data().path] = doc.id;
+        //     });
+        //     this.setState({favorites: favorites, loadingUser: false});
+        //   });
       }
     });
     this.db = firebase.firestore();
@@ -188,6 +228,7 @@ class App extends PureComponent {
       showSettings: false,
       user: null,
       favorites: null,
+      faves: [],
       songUrl: null,
     };
 
@@ -221,9 +262,12 @@ class App extends PureComponent {
   loadCatalog() {
     fetch('./catalog.json')
       .then(response => response.json())
-      .then(trie => trieToList(trie))
-      .then(list => {
-        console.log('Loaded catalog.json (%d items).', list.length);
+      .then(trie => {
+        console.log('Loaded catalog.json trie.');
+        const start = performance.now();
+        const list = trieToList(trie);
+        const time = (performance.now() - start).toFixed(1);
+        console.log('Converted trie to list (%d items) in %s ms.', list.length, time);
         this.setState({catalog: list});
       });
   }
@@ -441,7 +485,7 @@ class App extends PureComponent {
               currContext={currContext}
               currIdx={currIdx}
               toggleFavorite={this.handleToggleFavorite}
-              favorites={this.state.favorites}
+              favorites={this.state.faves}
               onClick={this.handleSongClick}>
               {this.state.loadingUser ?
                 <p>Loading user data...</p>
@@ -453,7 +497,7 @@ class App extends PureComponent {
                   currContext={currContext}
                   currIdx={currIdx}
                   toggleFavorite={this.handleToggleFavorite}
-                  favorites={this.state.favorites}/>}
+                  favorites={this.state.faves}/>}
               <h1>Top Level Folders</h1>
               {
                 [
@@ -537,9 +581,9 @@ class App extends PureComponent {
               onChange={this.handleTimeSliderChange}/>
             {!this.state.ejected &&
             <div className="SongDetails">
-              {this.state.favorites &&
+              {this.state.faves &&
               <div style={{float: 'left', marginBottom: '58px'}}>
-                <FavoriteButton favorites={this.state.favorites}
+                <FavoriteButton favorites={this.state.faves}
                                 toggleFavorite={this.handleToggleFavorite}
                                 href={this.state.songUrl}/>
               </div>}
