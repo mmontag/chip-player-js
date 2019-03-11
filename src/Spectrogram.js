@@ -120,12 +120,15 @@ export default class Spectrogram {
     const tempCtx = this.tempCtx;
     freqCtx.fillStyle = 'black';
     freqCtx.fillRect(0, 0, this.freqCanvas.width, this.freqCanvas.height);
+    tempCtx.fillStyle = '#000033';
+    tempCtx.fillRect(0, 0, this.tempCanvas.width, specSpeed);
     const _start = performance.now();
     const dataHeap = new Float32Array(this.lib.HEAPF32.buffer, this.dataPtr, this.cqtSize);
+    const bins = this.fftSize / 2;
 
     if (this.mode === MODE_LINEAR) {
       analyserNode.getByteFrequencyData(data);
-      for (let x = 0; x < data.length && x < canvasWidth; ++x) {
+      for (let x = 0; x < bins && x < canvasWidth; ++x) {
         const style = colorMap(data[x]).hex();
         const h =     data[x] * hCoeff | 0;
         freqCtx.fillStyle = style;
@@ -135,12 +138,12 @@ export default class Spectrogram {
       }
     } else if (this.mode === MODE_LOG) {
       analyserNode.getByteFrequencyData(data);
-      const logmax = Math.log(data.length);
-      for (let i = 0; i < data.length && i < canvasWidth; i++) {
-        const x =        (Math.log(i) / logmax) * canvasWidth | 0;
-        const binWidth = (Math.log(i + 1) / logmax) * canvasWidth - x | 0;
-        const h =        data[i] * hCoeff | 0;
-        const style =    colorMap(data[i]).hex();
+      const logmax = Math.log(bins);
+      for (let i = 0; i < bins; i++) {
+        const x =        (Math.log(i + 1) / logmax) * canvasWidth | 0;
+        const binWidth = (Math.log(i + 2) / logmax) * canvasWidth - x | 0;
+        const h =        (data[i] * hCoeff) | 0;
+        const style =    colorMap(data[i] || 0).hex();
         freqCtx.fillStyle = style;
         freqCtx.fillRect(x, fqHeight - h, binWidth, h);
         tempCtx.fillStyle = style;
