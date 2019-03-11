@@ -251,6 +251,7 @@ var flags = [
 var args = [].concat(flags, source_files);
 
 console.log('Compiling to %s...', js_file);
+console.log(`Invocation:\n${compiler} ${chalk.blue(flags.join(' '))} ${chalk.gray(source_files.join(' '))}\n`);
 var build_proc = spawn(compiler, args, {stdio: 'inherit'});
 build_proc.on('exit', function (code) {
   if (code === 0) {

@@ -2,13 +2,7 @@ import React, {PureComponent} from "react";
 import FavoriteButton from "./FavoriteButton";
 
 export default class Favorites extends PureComponent {
-  constructor(props) {
-    super(props);
-    // this.favorites = props.favorites ? Object.keys(props.favorites) : [];
-  }
-
   render() {
-    // const favorites = this.props.favorites ? Object.keys(this.props.favorites) : [];
     const favorites = this.props.favorites;
     const currContext = this.props.currContext;
     const currIdx = this.props.currIdx;

@@ -38,7 +38,7 @@ class App extends PureComponent {
     firebase.auth().signOut().then(() => {
       this.setState({
         user: null,
-        favorites: null,
+        faves: [],
       });
     });
   }
@@ -46,8 +46,6 @@ class App extends PureComponent {
   handleToggleFavorite(path) {
     const user = this.state.user;
     if (user) {
-      // Faves using Array field
-      // -----------------------
       const userRef = this.db.collection('users').doc(user.uid);
       let newFaves, favesOp;
       const oldFaves = this.state.faves;
@@ -65,27 +63,6 @@ class App extends PureComponent {
         this.setState({faves: oldFaves});
         console.log('Couldn\'t update favorites in Firebase.', e);
       });
-
-      // Favorites using Collection/ids
-      // ------------------------------
-      // const favorites = Object.assign({}, this.state.favorites);
-      // const id = favorites[path];
-      // const favoritesRef = this.db.collection('users').doc(user.uid).collection('favorites');
-      // if (id && id !== 'pending') {
-      //   delete favorites[path];
-      //   this.setState({favorites: favorites});
-      //   favoritesRef.doc(id).delete().then(() => {
-      //     console.log('Deleted favorite %s.', path);
-      //   });
-      // } else {
-      //   favorites[path] = 'pending';
-      //   this.setState({favorites: favorites});
-      //   favoritesRef.add({path: path}).then((ref) => {
-      //     console.log('Added favorite %s.', path);
-      //     favorites[path] = ref.id;
-      //     this.setState({favorites: favorites});
-      //   });
-      // }
     }
   }
 
@@ -118,7 +95,6 @@ class App extends PureComponent {
     firebase.auth().onAuthStateChanged(user => {
       this.setState({user: user, loadingUser: !!user});
       if (user) {
-        // Faves using Array field
         this.db
           .collection('users')
           .doc(user.uid)
@@ -130,20 +106,6 @@ class App extends PureComponent {
               loadingUser: false,
             });
           });
-        // Favorites using Collection/ids
-        // this.db
-        //   .collection('users')
-        //   .doc(user.uid)
-        //   .collection('favorites')
-        //   .get()
-        //   .then(docs => {
-        //     // invert the collection
-        //     const favorites = {};
-        //     docs.forEach(doc => {
-        //       favorites[doc.data().path] = doc.id;
-        //     });
-        //     this.setState({favorites: favorites, loadingUser: false});
-        //   });
       }
     });
     this.db = firebase.firestore();
@@ -227,7 +189,6 @@ class App extends PureComponent {
       imageUrl: null,
       showSettings: false,
       user: null,
-      favorites: null,
       faves: [],
       songUrl: null,
     };
