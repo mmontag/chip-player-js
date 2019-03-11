@@ -316,6 +316,7 @@ class App extends PureComponent {
         currentSongPositionMs: player.getPositionMs(),
         currentSongDurationMs: player.getDurationMs(),
         currentSongNumSubtunes: player.getNumSubtunes(),
+        tempo: 1,
         voiceNames: [...Array(player.getNumVoices())].map((_, i) => player.getVoiceName(i)),
         voices: [...Array(player.getNumVoices())].fill(true),
         songUrl: url,
