@@ -226,7 +226,7 @@ struct _YMF278BChip
 	UINT32 tl_int_cnt;
 	UINT8 tl_int_step;	// modulo 3 counter
 
-	INT32 memadr;
+	UINT32 memadr;
 
 	INT32 fm_l, fm_r;
 	INT32 pcm_l, pcm_r;

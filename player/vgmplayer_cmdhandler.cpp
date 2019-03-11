@@ -1133,20 +1133,56 @@ void VGMPlayer::Cmd_QSound_Reg(void)
 	UINT8 chipType = _CMD_INFO[fData[0x00]].chipType;
 	UINT8 chipID = 0;
 	CHIP_DEVICE* cDev = GetDevicePtr(chipType, chipID);
-	if (cDev == NULL)
+	QSOUND_WORK* qsWork = &_qsWork[chipID];
+	if (cDev == NULL || qsWork->write == NULL)
 		return;
 	
-	if (cDev->writeD16 != NULL)
+	if (cDev->flags & 0x01)	// enable hacks for proper playback of old VGMs with a good QSound core
 	{
-		cDev->writeD16(cDev->base.defInf.dataPtr, fData[0x03], ReadBE16(&fData[0x01]));
-	}
-	else if (cDev->write8 != NULL)
-	{
-		cDev->write8(cDev->base.defInf.dataPtr, 0x00, fData[0x01]);	// Data MSB
-		cDev->write8(cDev->base.defInf.dataPtr, 0x01, fData[0x02]);	// Data LSB
-		cDev->write8(cDev->base.defInf.dataPtr, 0x02, fData[0x03]);	// Register
+		UINT8 offset = fData[0x03];
+		// need to handle three cases, as vgm_cmp can remove writes to both phase and bank
+		// registers, depending on version.
+		// - start address was written before end/loop, but phase register is written
+		// - as above, but phase is not written (we use bank as a backup then)
+		// - voice parameters are written during a note (we can't rewrite the address then)
+		if (offset < 0x80)
+		{
+			UINT8 chn = offset >> 3;
+			UINT16 data = ReadBE16(&fData[0x01]);
+			
+			switch(offset & 0x07)
+			{
+			case 0x01:	// Start Address
+				qsWork->startAddrCache[chn] = data;
+				break;
+			case 0x02:	// Pitch
+				// old HLE assumed writing a non-zero value after a zero value was Key On
+				if (! qsWork->pitchCache[chn] && data)
+					qsWork->write(cDev, (chn << 3) | 0x01, qsWork->startAddrCache[chn]);
+				qsWork->pitchCache[chn] = data;
+				break;
+			case 0x03: // Phase (old HLE also assumed this was Key On)
+				qsWork->write(cDev, (chn << 3) | 0x01, qsWork->startAddrCache[chn]);
+				break;
+			}
+		}
 	}
 	
+	qsWork->write(cDev, fData[0x03], ReadBE16(&fData[0x01]));
+	return;
+}
+
+/*static*/ void VGMPlayer::WriteQSound_A(CHIP_DEVICE* cDev, UINT8 ofs, UINT16 data)
+{
+	cDev->writeD16(cDev->base.defInf.dataPtr, ofs, data);
+	return;
+}
+
+/*static*/ void VGMPlayer::WriteQSound_B(CHIP_DEVICE* cDev, UINT8 ofs, UINT16 data)
+{
+	cDev->write8(cDev->base.defInf.dataPtr, 0x00, (data >> 8) & 0xFF);	// Data MSB
+	cDev->write8(cDev->base.defInf.dataPtr, 0x01, (data >> 0) & 0xFF);	// Data LSB
+	cDev->write8(cDev->base.defInf.dataPtr, 0x02, ofs);	// Register
 	return;
 }
 

@@ -875,9 +875,10 @@ void VGMPlayer::InitDevices(void)
 				break;
 			case DEVID_C140:
 				{
+					chipDev.flags = 0x00;
 					if (_hdrBuffer[0x96] == 2)	// Namco ASIC 219
 					{
-						chipDev.flags = 0x01;	// enable 16-bit byteswap patch on all ROM data
+						chipDev.flags |= 0x01;	// enable 16-bit byteswap patch on all ROM data
 						if (devCfg.clock == 44100)
 							devCfg.clock = 25056500;
 						else if (devCfg.clock < 1000000)	// if < 1 MHz, then it's the (incorrect) sample rate, not the clock
@@ -886,7 +887,6 @@ void VGMPlayer::InitDevices(void)
 					}
 					else
 					{
-						chipDev.flags = 0x00;
 						if (devCfg.clock == 21390)
 							devCfg.clock = 12288000;
 						else if (devCfg.clock < 1000000)	// if < 1 MHz, then it's the (incorrect) sample rate, not the clock
@@ -914,6 +914,7 @@ void VGMPlayer::InitDevices(void)
 				}
 				break;
 			case DEVID_QSOUND:
+				chipDev.flags = 0x00;
 				if (devCfg.clock < 5000000)	// QSound clock used to be 4 MHz
 					devCfg.clock = devCfg.clock * 15;	// 4 MHz -> 60 MHz
 				devCfg.emuCore = FCC_CTR_;
@@ -924,6 +925,16 @@ void VGMPlayer::InitDevices(void)
 				SndEmu_GetDeviceFunc(devInf->devDef, RWF_REGISTER | RWF_QUICKWRITE, DEVRW_A8D16, 0, (void**)&chipDev.writeD16);
 				SndEmu_GetDeviceFunc(devInf->devDef, RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, (void**)&chipDev.romSize);
 				SndEmu_GetDeviceFunc(devInf->devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&chipDev.romWrite);
+				
+				memset(&_qsWork[chipID], 0x00, sizeof(QSOUND_WORK));
+				if (devCfg.emuCore != FCC_MAME)
+					chipDev.flags |= 0x01;	// enable QSound hacks for all cores but MAME's old HLE
+				if (chipDev.writeD16 != NULL)
+					_qsWork[chipID].write = &VGMPlayer::WriteQSound_A;
+				else if (chipDev.write8 != NULL)
+					_qsWork[chipID].write = &VGMPlayer::WriteQSound_B;
+				else
+					_qsWork[chipID].write = NULL;
 				break;
 			case DEVID_WSWAN:
 				retVal = SndEmu_Start(chipType, &devCfg, devInf);

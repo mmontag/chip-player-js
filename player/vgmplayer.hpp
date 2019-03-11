@@ -103,6 +103,13 @@ private:
 		COMMAND_FUNC func;
 	};
 	
+	struct QSOUND_WORK
+	{
+		void (*write)(CHIP_DEVICE*, UINT8, UINT16);	// pointer to WriteQSound_A/B
+		UINT16 startAddrCache[16];	// QSound register 0x01
+		UINT16 pitchCache[16];		// QSound register 0x02
+	};
+	
 public:
 	VGMPlayer();
 	~VGMPlayer();
@@ -199,6 +206,8 @@ private:
 	void Cmd_RF5C_Reg(void);				// command B0/B1 - RF5C68/164 register write
 	void Cmd_PWM_Reg(void);					// command B2 - PWM register write (4-bit offset, 12-bit data)
 	void Cmd_QSound_Reg(void);				// command C4 - QSound register write (16-bit data, 8-bit offset)
+	static void WriteQSound_A(CHIP_DEVICE* cDev, UINT8 ofs, UINT16 data);	// write by calling write8
+	static void WriteQSound_B(CHIP_DEVICE* cDev, UINT8 ofs, UINT16 data);	// write by calling writeD16
 	void Cmd_WSwan_Reg(void);				// command BC - WonderSwan register write (Reg8_Data8 with remapping)
 	void Cmd_NES_Reg(void);					// command B4 - NES APU register write (Reg8_Data8 with remapping)
 	void Cmd_YMW_Bank(void);				// command C3 - YMW258 bank write (Ofs8_Data16 with remapping)
@@ -262,6 +271,7 @@ private:
 	
 	UINT32 _ym2612pcm_bnkPos;
 	UINT8 _rf5cBank[2][2];	// [0 RF5C68 / 1 RF5C164][chipID]
+	QSOUND_WORK _qsWork[2];
 };
 
 #endif	// __VGMPLAYER_HPP__
