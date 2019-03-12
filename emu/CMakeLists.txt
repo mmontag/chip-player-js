@@ -573,6 +573,7 @@ endif()
 
 
 add_library(${PROJECT_NAME} STATIC ${EMU_FILES})
+set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE 1)
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC ${EMU_DEFS})
 
