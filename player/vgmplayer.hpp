@@ -8,7 +8,7 @@
 #include "helper.h"
 #include "playerbase.hpp"
 #include "../utils/FileLoader.hpp"
-#include "../vgm/dblk_compr.h"
+#include "dblk_compr.h"
 #include <vector>
 #include <string>
 

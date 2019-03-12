@@ -11,7 +11,7 @@
 #include <emu/dac_control.h>
 #include <emu/cores/sn764intf.h>	// for SN76496_W constants
 
-#include "../vgm/dblk_compr.h"
+#include "dblk_compr.h"
 #include "helper.h"
 
 #define fData	(&_fileData[_filePos])	// used by command handlers for better readability
