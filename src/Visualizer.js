@@ -94,23 +94,24 @@ export default class Visualizer extends PureComponent {
                         name='visualizer-enabled'/>Off</label>
         </h3>
         <div className='Visualizer-options' style={enabledStyle}>
-          Mode:{' '}
-          {
-            SPECTROGRAM_MODES.map((mode, i) =>
-              <label key={i}><input onClick={this.handleModeClick}
-                                    type='radio'
-                                    name='spectrogram-mode'
-                                    defaultChecked={this.state.vizMode === i}
-                                    value={i}/>{mode}</label>
-            )
-          }
-          <br/>
+          <div>
+            Mode:{' '}
+            {
+              SPECTROGRAM_MODES.map((mode, i) =>
+                <label key={'m_'+i}><input onClick={this.handleModeClick}
+                                      type='radio'
+                                      name='spectrogram-mode'
+                                      defaultChecked={this.state.vizMode === i}
+                                      value={i}/>{mode}</label>
+              )
+            }
+          </div>
           {this.state.vizMode === 2 ?
             <div>
               Weighting:{' '}
               {
                 WEIGHTING_MODES.map((mode, i) =>
-                  <label title={mode.description} key={i}>
+                  <label title={mode.description} key={'w_'+i}>
                     <input onClick={this.handleWeightingModeClick}
                            type='radio'
                            name='weighting-mode'
@@ -124,7 +125,7 @@ export default class Visualizer extends PureComponent {
               FFT Size:{' '}
               {
                 FFT_SIZES.map((size, i) =>
-                  <label key={i}><input onClick={this.handleFFTSizeClick}
+                  <label key={'f_'+i}><input onClick={this.handleFFTSizeClick}
                                         type='radio'
                                         name='fft-size'
                                         defaultChecked={this.state.fftSize === size}
