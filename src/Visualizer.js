@@ -5,12 +5,10 @@ import React, {PureComponent} from 'react';
 const SPECTROGRAM_MODES = [
   'Linear FFT', 'Log FFT', 'Constant Q'
 ];
-
 const WEIGHTING_MODES = [
   {label: 'None', description: 'No attenuation'},
-  {label: 'A Weighting', description: 'Darkens low and high frequencies to approximate sensitivity of human hearing.'}
+  {label: 'A-Weighting', description: 'Darkens low and high frequencies to approximate sensitivity of human hearing.'}
 ];
-
 const FFT_SIZES = [
   512, 1024, 2048, 4096, 8192
 ];
@@ -144,7 +142,7 @@ export default class Visualizer extends PureComponent {
              ref={this.pianoKeysRef}
              alt='Piano keys'
              style={{
-               display: this.state.vizMode === 2 ? 'block' : 'none'
+               display: (this.state.enabled && this.state.vizMode === 2) ? 'block' : 'none'
              }}/>
       </div>
     );

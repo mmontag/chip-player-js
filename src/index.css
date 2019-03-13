@@ -105,6 +105,7 @@ input[type=radio]:focus,
 input[type=range]:focus { background: #00f; }
 
 label { display: inline-block; margin-right: 8px; }
+label:last-child, label:last-of-type { margin-right: 0; }
 input[type=checkbox],
 input[type=radio] {
     -webkit-appearance: none;
@@ -180,9 +181,13 @@ body,#root {
 
 .App .App-header {
     border-bottom: 1px solid yellow;
-    padding: 19px 19px 0 19px;
+    padding: 19px;
     margin: 0 -19px;
     flex-grow: 0;
+}
+
+.App-subtitle {
+    margin: 19px 0 0 0;
 }
 
 .App-title, .App-title:visited, .App-title:link {
@@ -238,10 +243,6 @@ body,#root {
 
 .PlayerParams h3 {
     margin-top: 0;
-}
-
-.App-label {
-    margin: 0 8px 0 0;
 }
 
 .App-voice-label {

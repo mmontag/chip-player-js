@@ -1,4 +1,4 @@
-import React, {PureComponent} from 'react';
+import React from 'react';
 import isMobile from 'ismobilejs';
 import queryString from 'querystring';
 import * as firebase from 'firebase/app';
@@ -24,7 +24,7 @@ import Sequencer from "./Sequencer";
 
 const MAX_VOICES = 64;
 
-class App extends PureComponent {
+class App extends React.Component {
   handleLogin() {
     const provider = new firebase.auth.FacebookAuthProvider();
     firebase.auth().signInWithPopup(provider).then(result => {
@@ -91,7 +91,7 @@ class App extends PureComponent {
     this.handleToggleFavorite = this.handleToggleFavorite.bind(this);
 
     // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
+    if(firebase.apps.length === 0) firebase.initializeApp(firebaseConfig);
     firebase.auth().onAuthStateChanged(user => {
       this.setState({user: user, loadingUser: !!user});
       if (user) {
@@ -120,55 +120,6 @@ class App extends PureComponent {
     this._unlockAudioContext(audioCtx);
     console.log('Sample rate: %d hz', audioCtx.sampleRate);
 
-    // Load the chip-core Emscripten runtime
-    const chipCore = this.chipCore = new ChipCore({
-      // Look for .wasm file in web root, not the same location as the app bundle (static/js).
-      locateFile: (path, prefix) => {
-        if (path.endsWith('.wasm') || path.endsWith('.wast')) return './' + path;
-        return prefix + path;
-      },
-      onRuntimeInitialized: () => {
-        this.sequencer.setPlayers([
-          new GMEPlayer(audioCtx, playerNode, chipCore),
-          new XMPPlayer(audioCtx, playerNode, chipCore),
-          new MIDIPlayer(audioCtx, playerNode, chipCore),
-        ]);
-        this.setState({loading: false});
-
-        // Experimental: Split Module Support
-        //
-        // chipCore.loadDynamicLibrary('./xmp.wasm', {
-        //     loadAsync: true,
-        //     global: true,
-        //     nodelete: true,
-        //   })
-        //   .then(() => {
-        //     return this.sequencer.setPlayers([new XMPPlayer(audioCtx, playerNode, chipCore)]);
-        //   });
-
-        const urlParams = queryString.parse(window.location.search.substr(1));
-        if (urlParams.q) {
-          this.setState({initialQuery: urlParams.q});
-        }
-        if (urlParams.play) {
-          // Allow a little time for initial page render before starting the song.
-          // This is not absolutely necessary but helps prevent stuttering.
-          setTimeout(() => {
-            this.sequencer.playSonglist([urlParams.play]);
-            if (urlParams.t) {
-              setTimeout(() => {
-                if (this.sequencer.getPlayer()) {
-                  this.sequencer.getPlayer().seekMs(parseInt(urlParams.t, 10));
-                }
-              }, 100);
-            }
-          }, 500);
-        }
-      },
-    });
-
-    this.sequencer = new Sequencer([], this.handlePlayerStateUpdate, this.handlePlayerError);
-
     this.state = {
       catalog: null,
       loading: true,
@@ -192,6 +143,63 @@ class App extends PureComponent {
       faves: [],
       songUrl: null,
     };
+
+    // Load the chip-core Emscripten runtime
+    try {
+      const chipCore = this.chipCore = new ChipCore({
+        // Look for .wasm file in web root, not the same location as the app bundle (static/js).
+        locateFile: (path, prefix) => {
+          if (path.endsWith('.wasm') || path.endsWith('.wast')) return './' + path;
+          return prefix + path;
+        },
+        onRuntimeInitialized: () => {
+          this.sequencer.setPlayers([
+            new GMEPlayer(audioCtx, playerNode, chipCore),
+            new XMPPlayer(audioCtx, playerNode, chipCore),
+            new MIDIPlayer(audioCtx, playerNode, chipCore),
+          ]);
+          this.setState({loading: false});
+
+          // Experimental: Split Module Support
+          //
+          // chipCore.loadDynamicLibrary('./xmp.wasm', {
+          //     loadAsync: true,
+          //     global: true,
+          //     nodelete: true,
+          //   })
+          //   .then(() => {
+          //     return this.sequencer.setPlayers([new XMPPlayer(audioCtx, playerNode, chipCore)]);
+          //   });
+
+          const urlParams = queryString.parse(window.location.search.substr(1));
+          if (urlParams.q) {
+            this.setState({initialQuery: urlParams.q});
+          }
+          if (urlParams.play) {
+            // Allow a little time for initial page render before starting the song.
+            // This is not absolutely necessary but helps prevent stuttering.
+            setTimeout(() => {
+              this.sequencer.playSonglist([urlParams.play]);
+              if (urlParams.t) {
+                setTimeout(() => {
+                  if (this.sequencer.getPlayer()) {
+                    this.sequencer.getPlayer().seekMs(parseInt(urlParams.t, 10));
+                  }
+                }, 100);
+              }
+            }, 500);
+          }
+        },
+      });
+    } catch (e) {
+      // Browser doesn't support WASM (Safari in iOS Simulator)
+      Object.assign(this.state, {
+        playerError: 'Error loading player engine.',
+        loading: false
+      });
+    }
+
+    this.sequencer = new Sequencer([], this.handlePlayerStateUpdate, this.handlePlayerError);
 
     // Load the song catalog
     this.loadCatalog();
