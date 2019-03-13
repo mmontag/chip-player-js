@@ -23,7 +23,7 @@
 #include <emu/cores/es5503.h>
 #include <emu/cores/es5506.h>
 
-#include "../vgm/dblk_compr.h"
+#include "dblk_compr.h"
 #include "../utils/StrUtils.h"
 #include "helper.h"
 

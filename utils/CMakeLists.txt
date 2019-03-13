@@ -49,6 +49,7 @@ set(UTIL_LIBS ${UTIL_LIBS} Iconv::Iconv)
 
 
 add_library(${PROJECT_NAME} STATIC ${UTIL_FILES})
+set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE 1)
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC ${UTIL_DEFS})
 

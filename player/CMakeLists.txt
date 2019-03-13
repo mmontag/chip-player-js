@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 2.8)
 
 set(PLAYER_DEFS)
 set(PLAYER_FILES
+	dblk_compr.c
 	helper.c
 	playerbase.cpp
 	droplayer.cpp
@@ -13,6 +14,7 @@ set(PLAYER_FILES
 )
 # export headers
 set(PLAYER_HEADERS
+	dblk_compr.h
 	helper.h
 	playerbase.hpp
 	droplayer.hpp
@@ -23,6 +25,7 @@ set(PLAYER_INCLUDES)
 set(PLAYER_LIBS)
 
 add_library(${PROJECT_NAME} STATIC ${PLAYER_FILES})
+set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE 1)
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC ${PLAYER_DEFS})
 

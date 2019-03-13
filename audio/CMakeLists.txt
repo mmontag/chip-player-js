@@ -2,6 +2,8 @@
 project(vgm-audio)
 cmake_minimum_required(VERSION 2.8)
 
+set(CMAKE_MODULE_PATH ${vgm-audio_SOURCE_DIR}/cmake)
+
 set(AUDIO_DEFS)
 set(AUDIO_FILES
 	AudioStream.c
@@ -39,6 +41,8 @@ else()
 	find_package(PulseAudio QUIET)
 endif()
 
+find_package(LibAO QUIET)
+
 option(AUDIODRV_WAVEWRITE "Audio Driver: Wave Writer" ON)
 
 option(AUDIODRV_WINMM "Audio Driver: WinMM [Windows]" ${ADRV_WIN_ALL})
@@ -50,7 +54,7 @@ option(AUDIODRV_OSS "Audio Driver: OSS (Open Sound System) [Linux]" ${ADRV_LINUX
 option(AUDIODRV_SADA "Audio Driver: SADA (Solaris Audio Device Architecture) [Solaris/BSD]" OFF)
 option(AUDIODRV_ALSA "Audio Driver: ALSA (Advanced Linux Sound Architecture) [Linux]" ${ALSA_FOUND})
 option(AUDIODRV_PULSE "Audio Driver: PulseAudio [Linux]" ${PULSEAUDIO_FOUND})
-option(AUDIODRV_LIBAO "Audio Driver: libao" ${ADRV_NO_WIN})
+option(AUDIODRV_LIBAO "Audio Driver: libao" ${LIBAO_FOUND})
 
 
 if(AUDIODRV_WAVEWRITE)
@@ -112,11 +116,13 @@ endif()
 if(AUDIODRV_LIBAO)
 	set(AUDIO_DEFS ${AUDIO_DEFS} " AUDDRV_LIBAO")
 	set(AUDIO_FILES ${AUDIO_FILES} AudDrv_libao.c)
-	set(AUDIO_LIBS ${AUDIO_LIBS} ao)
+	set(AUDIO_INCLUDES ${AUDIO_INCLUDES} ${LIBAO_INCLUDE_DIR})
+	set(AUDIO_LIBS ${AUDIO_LIBS} ${LIBAO_LIBRARIES})
 endif()
 
 
 add_library(${PROJECT_NAME} STATIC ${AUDIO_FILES})
+set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE 1)
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC ${AUDIO_DEFS})
 

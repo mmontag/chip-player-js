@@ -40,7 +40,7 @@ int __cdecl _getch(void);	// from conio.h
 #include "emu/cores/es5503.h"
 #include "emu/cores/es5506.h"
 
-#include "vgm/dblk_compr.h"
+#include "player/dblk_compr.h"
 
 
 typedef struct _vgm_file_header
