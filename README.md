@@ -70,6 +70,7 @@ emmake make
 Proceed to build libxmp-lite:
 
 ```
+emmake make -f Makefile.lite     # this will have some errors, but they can be ignored
 cd libxmp-lite-stagedir/
 autoconf
 emconfigure ./configure --enable-static --disable-shared
@@ -86,8 +87,8 @@ cd chip-player-js/fluidlite/     # navigate to fluidlite root
 source ~/src/emsdk/emsdk_env.sh  # load the emscripten environment variables
 mkdir build                      # create a build folder for Cmake output
 cd build                         
-emcmake cmake ..                 # Cmake will generate a Makefile by default
-emmake make
+emcmake cmake -DDISABLE_SF3=1 .. # Cmake will generate a Makefile by default
+emmake make fluidlite-static
 ```
 
 Once these are in place we can build the parent project.
