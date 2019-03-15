@@ -59,7 +59,7 @@ User account management is provided through Firebase Cloud Firestore. You must o
 Our goal is to produce **libxmp/libxmp-lite-stagedir/lib/libxmp-lite.a**.
 Build libxmp (uses GNU make):
 
-```
+```sh
 cd chip-player-js/libxmp/        # navigate to libxmp root
 source ~/src/emsdk/emsdk_env.sh  # load the emscripten environment variables
 autoconf
@@ -69,7 +69,7 @@ emmake make
 
 Proceed to build libxmp-lite:
 
-```
+```sh
 emmake make -f Makefile.lite     # this will have some errors, but they can be ignored
 cd libxmp-lite-stagedir/
 autoconf
@@ -82,7 +82,7 @@ emmake make
 Our goal is to produce **fluidlite/build/libfluidlite.a**.
 Build fluidlite (uses Cmake):
 
-```
+```sh
 cd chip-player-js/fluidlite/     # navigate to fluidlite root
 source ~/src/emsdk/emsdk_env.sh  # load the emscripten environment variables
 mkdir build                      # create a build folder for Cmake output
@@ -94,7 +94,7 @@ emmake make fluidlite-static
 Once these are in place we can build the parent project.
 Our goal is to produce **public/chip-core.wasm**.
 
-```
+```sh
 cd chip-player-js/
 yarn run build-chip-core
 ```
@@ -103,19 +103,19 @@ This will use object files created in the previous steps and link them into chip
 If you change some C/C++ component of the subprojects, you'll need to redo this process.
 Once we have chip-core.wasm, we can proceed to develop JavaScript interactively on localhost:
 
-```
+```sh
 yarn start
 ```
 
 Build the entire project:
 
-```
+```sh
 yarn build
 ```
 
 Or deploy to Github Pages:
 
-```
+```sh
 yarn deploy
 ```
 
