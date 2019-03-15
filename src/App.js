@@ -89,6 +89,9 @@ class App extends React.Component {
     this.handleLogin = this.handleLogin.bind(this);
     this.handleLogout = this.handleLogout.bind(this);
     this.handleToggleFavorite = this.handleToggleFavorite.bind(this);
+    this.attachMediaKeyHandlers = this.attachMediaKeyHandlers.bind(this);
+
+    this.attachMediaKeyHandlers();
 
     // Initialize Firebase
     if(firebase.apps.length === 0) firebase.initializeApp(firebaseConfig);
@@ -238,6 +241,27 @@ class App extends React.Component {
         console.log('Converted trie to list (%d items) in %s ms.', list.length, time);
         this.setState({catalog: list});
       });
+  }
+
+  attachMediaKeyHandlers() {
+    if ('mediasession' in navigator) {
+      navigator.mediaSession.metadata = new window.MediaMetadata(
+        {
+          title: 'Placeholder Title',
+          artist: 'Chip Player JS',
+          album: 'Placeholder Album',
+        }
+      );
+      navigator.mediaSession.playbackState = 'playing';
+      navigator.mediaSession.setActionHandler('play', this.togglePause);
+      navigator.mediaSession.setActionHandler('pause', this.togglePause);
+      navigator.mediaSession.setActionHandler('previoustrack', this.prevSong);
+      navigator.mediaSession.setActionHandler('nexttrack', (e) => { console.log('hey', e); this.nextSong(); });
+      navigator.mediaSession.setActionHandler('seekbackward', function() {});
+      navigator.mediaSession.setActionHandler('seekforward', function() {});
+      return true;
+    }
+    return false;
   }
 
   playContext(context, index = 0) {
