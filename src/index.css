@@ -53,6 +53,7 @@ a {
     padding: 0;
     line-height: 24px;
     color: #ff0;
+    cursor: pointer;
 }
 
 a:focus   { background: #00f; }
@@ -202,7 +203,7 @@ body,#root {
     flex-grow: 1;
     display: flex;
     flex-direction: row;
-    /*overflow-y: auto;*/
+    overflow: auto;
     height: 100%;
     margin: 0 -19px;
 }
@@ -297,7 +298,12 @@ body,#root {
 
 .SongDetails {}
 .SongDetails-title {color: white;}
-.SongDetails-subtitle {}
+.SongDetails-subtitle, .SongDetails-subtitle, .SongDetails-filepath {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.SongDetails-filepath a {color: #aaa;}
 
 .Search {
     flex-grow: 1;
@@ -334,6 +340,13 @@ body,#root {
 
 .Search-results-group-item {
     margin-left: 16px;
+    text-indent: -24px;
+    white-space: nowrap;
+}
+
+.Search-results-group-item a {
+    overflow-wrap: break-word;
+    white-space: normal;
 }
 
 .Favorite-button::before { content: ' ' }

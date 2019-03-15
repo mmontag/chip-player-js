@@ -100,7 +100,6 @@ class App extends React.Component {
           .doc(user.uid)
           .get()
           .then(doc => {
-            console.log(doc.data());
             this.setState({
               faves: doc.data().faves || [],
               loadingUser: false,
@@ -435,10 +434,22 @@ class App extends React.Component {
     return str;
   }
 
+  pathToLinks(path) {
+    if (!path) return null;
+
+    path = path.replace(/^https?:\/\/[a-z0-9\-.]+\//, '');
+    path = path.replace(/^music\//, '');
+    path = path.split('/').slice(0, -1).join('/');
+    const handler = this.handleDoSearch;
+    const query = path.replace(/[^a-zA-Z0-9]+/g, ' ');
+    return <a href="#" onClick={(e) => handler(e, query)}>&#x221E; {path}/</a>;
+  }
+
   render() {
     const {title, subtitle} = App.titlesFromMetadata(this.state.currentSongMetadata);
     const currContext = this.sequencer.getCurrContext();
     const currIdx = this.sequencer.getCurrIdx();
+    const pathLinks = this.pathToLinks(this.state.songUrl);
     return (
       <div className="App">
         <AppHeader user={this.state.user}
@@ -559,6 +570,7 @@ class App extends React.Component {
               </div>}
               <div className="SongDetails-title">{title}</div>
               <div className="SongDetails-subtitle">{subtitle}</div>
+              <div className="SongDetails-filepath">{pathLinks}</div>
             </div>}
           </div>
           {this.state.showSettings &&

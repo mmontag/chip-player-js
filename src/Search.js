@@ -160,6 +160,7 @@ export default class Search extends PureComponent {
     let headingFragment = null;
     if (this.state.resultsHeadings[i]) {
       const heading = this.state.resultsHeadings[i];
+      // HACK: in lieu of a browse capability, search for the directory
       const headingQuery = heading.replace(/[^a-zA-Z0-9]+/g, ' ');
       headingFragment = (
         <h5 className="Search-results-group-heading">
