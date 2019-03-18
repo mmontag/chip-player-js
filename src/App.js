@@ -250,7 +250,7 @@ class App extends React.Component {
 
       // Limitations of MediaSession: there must always be an active audio element :(
       const audio = document.createElement('audio');
-      audio.src = '/5-seconds-of-silence.mp3';
+      audio.src = './5-seconds-of-silence.mp3';
       audio.loop = true;
       audio.volume = 0;
       audio.play();
