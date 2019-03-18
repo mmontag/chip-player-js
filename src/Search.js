@@ -163,12 +163,12 @@ export default class Search extends PureComponent {
       // HACK: in lieu of a browse capability, search for the directory
       const headingQuery = heading.replace(/[^a-zA-Z0-9]+/g, ' ');
       headingFragment = (
-        <h5 className="Search-results-group-heading">
+        <div className="Search-results-group-heading">
           <a href={'?q=' + headingQuery}
              onClick={(e) => this.handleGroupClick(e, headingQuery)}>
             {this.state.resultsHeadings[i]}
           </a>
-        </h5>
+        </div>
       );
     }
     // XXX: Escape immediately: the escaped URL is considered canonical.

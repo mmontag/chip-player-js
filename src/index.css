@@ -324,14 +324,11 @@ body,#root {
     /*height: 100%;*/
 }
 
-.Search-results div {
+.Search-results-group-heading {
+    margin: 0;
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
-}
-
-.Search-results-group-heading {
-    margin: 0;
 }
 
 .Search-results-group-heading a {
