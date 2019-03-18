@@ -74,11 +74,13 @@
   "scripts": {
     "start": "node scripts/start.js",
     "build": "npm run build-catalog; npm run build-chip-core; node scripts/build.js",
+    "build-lite": "node scripts/build.js",
     "test": "node scripts/test.js --env=jsdom",
     "build-chip-core": "source ~/src/emsdk/emsdk_env.sh; node scripts/build-chip-core.js",
     "build-catalog": "node $NODE_DEBUG_OPTION scripts/build-catalog.js",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
+    "deploy-lite": "npm run build-lite; gh-pages -d build",
     "prepare": "patch-package",
     "fixvgm": "node $NODE_DEBUG_OPTION scripts/fixvgm.js"
   },
