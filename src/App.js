@@ -213,6 +213,7 @@ class App extends React.Component {
 
   _unlockAudioContext(context) {
     // https://hackernoon.com/unlocking-web-audio-the-smarter-way-8858218c0e09
+    console.log('AudioContext initial state is %s.', context.state);
     if (context.state === 'suspended') {
       const events = ['touchstart', 'touchend', 'mousedown', 'mouseup'];
       const unlock = () => context.resume()
@@ -244,24 +245,21 @@ class App extends React.Component {
   }
 
   attachMediaKeyHandlers() {
-    if ('mediasession' in navigator) {
-      navigator.mediaSession.metadata = new window.MediaMetadata(
-        {
-          title: 'Placeholder Title',
-          artist: 'Chip Player JS',
-          album: 'Placeholder Album',
-        }
-      );
-      navigator.mediaSession.playbackState = 'playing';
-      navigator.mediaSession.setActionHandler('play', this.togglePause);
-      navigator.mediaSession.setActionHandler('pause', this.togglePause);
-      navigator.mediaSession.setActionHandler('previoustrack', this.prevSong);
-      navigator.mediaSession.setActionHandler('nexttrack', (e) => { console.log('hey', e); this.nextSong(); });
-      navigator.mediaSession.setActionHandler('seekbackward', function() {});
-      navigator.mediaSession.setActionHandler('seekforward', function() {});
-      return true;
+    if ('mediaSession' in navigator) {
+      console.log('Attaching Media Key event handlers.');
+
+      // Limitations of MediaSession: there must always be an active audio element :(
+      const audio = document.createElement('audio');
+      audio.src = '/5-seconds-of-silence.mp3';
+      audio.loop = true;
+      audio.volume = 0;
+      audio.play();
+
+      navigator.mediaSession.setActionHandler('play', () => { console.log('Media Key: play'); this.togglePause(); });
+      navigator.mediaSession.setActionHandler('pause', () => { console.log('Media Key: pause'); this.togglePause(); });
+      navigator.mediaSession.setActionHandler('previoustrack', () => { console.log('Media Key: previoustrack'); this.prevSong(); });
+      navigator.mediaSession.setActionHandler('nexttrack', () => { console.log('Media Key: nexttrack'); this.nextSong(); });
     }
-    return false;
   }
 
   playContext(context, index = 0) {
