@@ -122,11 +122,11 @@ endif()
 
 
 add_library(${PROJECT_NAME} STATIC ${AUDIO_FILES})
-set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE 1)
+set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC ${AUDIO_DEFS})
 
-target_include_directories(${PROJECT_NAME} PUBLIC
+target_include_directories(${PROJECT_NAME} PRIVATE
 	${CMAKE_SOURCE_DIR}
 	${CMAKE_SOURCE_DIR}/libs/include
 )
@@ -144,7 +144,7 @@ elseif(MSVC)
 		)
 	endif()
 endif()
-target_include_directories(${PROJECT_NAME} PUBLIC ${AUDIO_INCLUDES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${AUDIO_INCLUDES})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${AUDIO_LIBS} vgm-utils)
 

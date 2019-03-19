@@ -49,11 +49,11 @@ set(UTIL_LIBS ${UTIL_LIBS} Iconv::Iconv)
 
 
 add_library(${PROJECT_NAME} STATIC ${UTIL_FILES})
-set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE 1)
+set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC ${UTIL_DEFS})
 
-target_include_directories(${PROJECT_NAME} PUBLIC
+target_include_directories(${PROJECT_NAME} PRIVATE
 	${CMAKE_SOURCE_DIR}
 	${CMAKE_SOURCE_DIR}/libs/include
 )
@@ -71,7 +71,7 @@ elseif(MSVC)
 		)
 	endif()
 endif()
-target_include_directories(${PROJECT_NAME} PUBLIC ${UTIL_INCLUDES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${UTIL_INCLUDES})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${UTIL_LIBS})
 
 install(TARGETS ${PROJECT_NAME}
