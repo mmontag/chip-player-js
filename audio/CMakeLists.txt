@@ -2,8 +2,6 @@
 project(vgm-audio)
 cmake_minimum_required(VERSION 2.8)
 
-set(CMAKE_MODULE_PATH ${vgm-audio_SOURCE_DIR}/cmake)
-
 set(AUDIO_DEFS)
 set(AUDIO_FILES
 	AudioStream.c
@@ -40,7 +38,6 @@ else()
 	find_package(ALSA QUIET)
 	find_package(PulseAudio QUIET)
 endif()
-
 find_package(LibAO QUIET)
 
 option(AUDIODRV_WAVEWRITE "Audio Driver: Wave Writer" ON)
@@ -114,10 +111,10 @@ if(AUDIODRV_PULSE)
 endif()
 
 if(AUDIODRV_LIBAO)
+	find_package(LibAO REQUIRED)
 	set(AUDIO_DEFS ${AUDIO_DEFS} " AUDDRV_LIBAO")
 	set(AUDIO_FILES ${AUDIO_FILES} AudDrv_libao.c)
-	set(AUDIO_INCLUDES ${AUDIO_INCLUDES} ${LIBAO_INCLUDE_DIR})
-	set(AUDIO_LIBS ${AUDIO_LIBS} ${LIBAO_LIBRARIES})
+	set(AUDIO_LIBS ${AUDIO_LIBS} libao::libao)
 endif()
 
 
