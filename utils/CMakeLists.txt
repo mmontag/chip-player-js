@@ -16,13 +16,17 @@ set(UTIL_INCLUDES)
 set(UTIL_LIBS)
 
 
+
 # File Functions
+# --------------
 find_package(ZLIB REQUIRED)
 set(UTIL_FILES ${UTIL_FILES} FileLoader.cpp)
 set(UTIL_LIBS ${UTIL_LIBS} ZLIB::ZLIB)
 
 
+
 # Threads and Synchronization
+# ---------------------------
 find_package(Threads REQUIRED)
 
 if(CMAKE_USE_WIN32_THREADS_INIT)
@@ -41,11 +45,29 @@ endif()
 set(UTIL_LIBS ${UTIL_LIBS} Threads::Threads)
 
 
-# String Codepage Conversion
-find_package(Iconv REQUIRED)
 
-set(UTIL_FILES ${UTIL_FILES} StrUtils-CPConv_IConv.c)
-set(UTIL_LIBS ${UTIL_LIBS} Iconv::Iconv)
+# String Codepage Conversion
+# --------------------------
+find_package(Iconv QUIET)
+if(WIN32)
+	set(CAN_WINAPI NOT ${ICONV_FOUND})
+else()
+	set(CAN_WINAPI OFF)
+endif()
+
+
+option(UTIL_CHARCNV_ICONV "Charset Conversion: iconv" ${ICONV_FOUND})
+option(UTIL_CHARCNV_WINAPI "Charset Conversion: WinAPI" ${CAN_WINAPI})
+
+
+if(UTIL_CHARCNV_WINAPI)
+	set(UTIL_FILES ${UTIL_FILES} StrUtils-CPConv_Win.c)
+else()
+	find_package(Iconv REQUIRED)
+	set(UTIL_FILES ${UTIL_FILES} StrUtils-CPConv_IConv.c)
+	set(UTIL_LIBS ${UTIL_LIBS} Iconv::Iconv)
+endif()
+
 
 
 add_library(${PROJECT_NAME} STATIC ${UTIL_FILES})
