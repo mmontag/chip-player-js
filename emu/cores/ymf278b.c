@@ -928,7 +928,10 @@ static void ymf278b_C_w(YMF278BChip* chip, UINT8 reg, UINT8 data)
 			//      See also getSample()
 			buf = ymf278b_getMemPtr(chip, base);
 			if (buf == NULL)
+			{
+				slot->bits = ~0;	// set invalid value to mute the sample
 				break;
+			}
 			
 			slot->bits = (buf[0] & 0xC0) >> 6;
 			slot->startaddr = buf[2] | (buf[1] << 8) | ((buf[0] & 0x3F) << 16);
