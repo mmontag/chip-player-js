@@ -119,7 +119,7 @@ export default class Search extends PureComponent {
   }
 
   handleClear() {
-    window.history.replaceState(null, '', '/');
+    window.history.replaceState(null, '', './');
     this.setState({
       query: null,
       searching: false,

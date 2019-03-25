@@ -4,7 +4,7 @@ export default class AppHeader extends PureComponent {
   render() {
     return (
       <header className="App-header">
-        <a className="App-title" href="/">Chip Player JS</a>{' '}
+        <a className="App-title" href="./">Chip Player JS</a>{' '}
         {this.props.user ?
           <span>
               • Logged in as {this.props.user.displayName}.{' '}
