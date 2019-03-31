@@ -2,6 +2,7 @@
 project(vgm-emu)
 cmake_minimum_required(VERSION 2.8)
 
+set(LIBVGM_SOURCE_DIR ${PROJECT_SOURCE_DIR}/..)
 
 # Note: If multiple cores are present for a device, the core chosed by default is marked with *.
 
@@ -577,11 +578,10 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC ${EMU_DEFS})
 
-target_include_directories(${PROJECT_NAME} PRIVATE
-	${CMAKE_SOURCE_DIR}
-	${CMAKE_SOURCE_DIR}/libs/include
+target_include_directories(${PROJECT_NAME}
+	PUBLIC ${LIBVGM_SOURCE_DIR}
+	PRIVATE ${LIBVGM_SOURCE_DIR}/libs/include
 )
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR})
 
 if(CMAKE_COMPILER_IS_GNUCC OR UNIX)
 	# link Math library

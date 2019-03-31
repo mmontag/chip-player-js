@@ -2,11 +2,11 @@
 project(libVgmTest)
 cmake_minimum_required(VERSION 3.1)
 
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/libs/cmake_modules/")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/libs/cmake_modules/")
 
 if(MSVC)
 	set(CMAKE_DEBUG_POSTFIX "d")
@@ -22,9 +22,9 @@ if(MSVC)
 	set(CMAKE_MINSIZEREL_POSTFIX "_${MSVC_POSTFIX}${CMAKE_MINSIZEREL_POSTFIX}")
 	set(CMAKE_RELWITHDEBINFO_POSTFIX "_${MSVC_POSTFIX}${CMAKE_RELWITHDEBINFO_POSTFIX}")
 	
-	set(ZLIB_ROOT "${CMAKE_SOURCE_DIR}/libs" CACHE PATH "ZLib directory")
-	set(Iconv_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/libs/iconv/include" CACHE PATH "directory with iconv headers")
-	set(Iconv_LIBRARY "${CMAKE_SOURCE_DIR}/libs/iconv/lib/libiconv.lib" CACHE FILEPATH "iconv library")
+	set(ZLIB_ROOT "${PROJECT_SOURCE_DIR}/libs" CACHE PATH "ZLib directory")
+	set(Iconv_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/libs/iconv/include" CACHE PATH "directory with iconv headers")
+	set(Iconv_LIBRARY "${PROJECT_SOURCE_DIR}/libs/iconv/lib/libiconv.lib" CACHE FILEPATH "iconv library")
 	
 	if(NOT MSVC_VERSION LESS 1400)
 		add_definitions("/D _CRT_SECURE_NO_WARNINGS")
@@ -88,24 +88,24 @@ endif()
 if(BUILD_TESTS)
 
 add_executable(audiotest audiotest.c)
-target_include_directories(audiotest PRIVATE ${CMAKE_SOURCE_DIR})
+target_include_directories(audiotest PRIVATE ${PROJECT_SOURCE_DIR})
 target_link_libraries(audiotest PRIVATE vgm-audio)
 add_sanitizers(audiotest)
 
 add_executable(emutest emutest.c)
-target_include_directories(emutest PRIVATE ${CMAKE_SOURCE_DIR})
+target_include_directories(emutest PRIVATE ${PROJECT_SOURCE_DIR})
 target_link_libraries(emutest PRIVATE vgm-emu)
 add_sanitizers(emutest)
 
 add_executable(audemutest audemutest.c)
-target_include_directories(audemutest PRIVATE ${CMAKE_SOURCE_DIR})
+target_include_directories(audemutest PRIVATE ${PROJECT_SOURCE_DIR})
 target_link_libraries(audemutest PRIVATE vgm-audio vgm-emu)
 add_sanitizers(audemutest)
 
 find_package(ZLIB REQUIRED)
 
 add_executable(vgmtest vgmtest.c player/dblk_compr.c)
-target_include_directories(vgmtest PRIVATE ${CMAKE_SOURCE_DIR})
+target_include_directories(vgmtest PRIVATE ${PROJECT_SOURCE_DIR})
 target_link_libraries(vgmtest PRIVATE ZLIB::ZLIB vgm-audio vgm-emu)
 add_sanitizers(vgmtest)
 
@@ -113,7 +113,7 @@ endif(BUILD_TESTS)
 
 if(BUILD_PLAYER)
 add_executable(player player.cpp player/dblk_compr.c)
-target_include_directories(player PRIVATE ${CMAKE_SOURCE_DIR})
+target_include_directories(player PRIVATE ${PROJECT_SOURCE_DIR})
 target_link_libraries(player PRIVATE vgm-audio vgm-player)
 add_sanitizers(player)
 endif()

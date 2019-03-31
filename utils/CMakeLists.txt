@@ -2,6 +2,8 @@
 project(vgm-utils)
 cmake_minimum_required(VERSION 3.1)
 
+set(LIBVGM_SOURCE_DIR ${PROJECT_SOURCE_DIR}/..)
+
 set(UTIL_DEFS)
 set(UTIL_FILES)
 # export headers
@@ -76,20 +78,20 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(${PROJECT_NAME} PUBLIC ${UTIL_DEFS})
 
 target_include_directories(${PROJECT_NAME} PRIVATE
-	${CMAKE_SOURCE_DIR}
-	${CMAKE_SOURCE_DIR}/libs/include
+	PUBLIC ${LIBVGM_SOURCE_DIR}
+	PRIVATE ${LIBVGM_SOURCE_DIR}/libs/include
 )
 if(WIN32 AND NOT MSVC)
 	target_include_directories(${PROJECT_NAME} PRIVATE
-		${CMAKE_SOURCE_DIR}/libs/include_mingw
+		${LIBVGM_SOURCE_DIR}/libs/include_mingw
 	)
 elseif(MSVC)
 	target_include_directories(${PROJECT_NAME} PRIVATE
-		${CMAKE_SOURCE_DIR}/libs/include_vc
+		${LIBVGM_SOURCE_DIR}/libs/include_vc
 	)
 	if(MSVC_VERSION LESS 1400)
 		target_include_directories(${PROJECT_NAME} PRIVATE
-			${CMAKE_SOURCE_DIR}/libs/include_vc6
+			${LIBVGM_SOURCE_DIR}/libs/include_vc6
 		)
 	endif()
 endif()
