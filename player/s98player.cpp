@@ -88,33 +88,33 @@ const char* S98Player::GetPlayerName(void) const
 	return "S98";
 }
 
-/*static*/ UINT8 S98Player::IsMyFile(FileLoader& fileLoader)
+/*static*/ UINT8 S98Player::IsMyFile(FILE_LOADER *fileLoader)
 {
-	fileLoader.ReadUntil(0x20);
-	if (fileLoader.GetFileSize() < 0x20)
+	FileLoader_ReadUntil(fileLoader,0x20);
+	if (FileLoader_GetFileSize(fileLoader) < 0x20)
 		return 0xF1;	// file too small
-	if (memcmp(&fileLoader.GetFileData()[0x00], "S98", 3))
+	if (memcmp(FileLoader_GetFileData(fileLoader), "S98", 3))
 		return 0xF0;	// invalid signature
 	return 0x00;
 }
 
-UINT8 S98Player::LoadFile(FileLoader& fileLoader)
+UINT8 S98Player::LoadFile(FILE_LOADER *fileLoader)
 {
 	UINT32 devCount;
 	UINT32 curDev;
 	UINT32 curPos;
 	
 	_fLoad = NULL;
-	fileLoader.ReadUntil(0x20);
-	_fileData = &fileLoader.GetFileData()[0];
-	if (fileLoader.GetFileSize() < 0x20 || memcmp(&_fileData[0x00], "S98", 3))
+	FileLoader_ReadUntil(fileLoader,0x20);
+	_fileData = FileLoader_GetFileData(fileLoader);
+	if (FileLoader_GetFileSize(fileLoader) < 0x20 || memcmp(_fileData, "S98", 3))
 		return 0xF0;	// invalid file
 	if (! (_fileData[0x03] >= '0' && _fileData[0x03] <= '3'))
 		return 0xF1;	// unsupported version
 	
-	_fLoad = &fileLoader;
-	_fLoad->ReadFullFile();
-	_fileData = &fileLoader.GetFileData()[0];
+	_fLoad = fileLoader;
+	FileLoader_ReadFullFile(_fLoad);
+	_fileData = FileLoader_GetFileData(fileLoader);
 	
 	_fileHdr.fileVer = _fileData[0x03] - '0';
 	_fileHdr.tickMult = ReadLE32(&_fileData[0x04]);
@@ -197,7 +197,7 @@ void S98Player::CalcSongLength(void)
 	
 	fileEnd = false;
 	filePos = _fileHdr.dataOfs;
-	while(! fileEnd && filePos < _fLoad->GetFileSize())
+	while(! fileEnd && filePos < FileLoader_GetFileSize(_fLoad))
 	{
 		if (filePos == _fileHdr.loopOfs)
 			_loopTick = _totalTicks;
@@ -235,9 +235,9 @@ UINT8 S98Player::LoadTags(void)
 	
 	// find end of string (can be either '\0' or EOF)
 	startPtr = (const char*)&_fileData[_fileHdr.tagOfs];
-	endPtr = (const char*)memchr(startPtr, '\0', _fLoad->GetFileSize() - _fileHdr.tagOfs);
+	endPtr = (const char*)memchr(startPtr, '\0', FileLoader_GetFileSize(_fLoad) - _fileHdr.tagOfs);
 	if (endPtr == NULL)
-		endPtr = (const char*)_fileData + _fLoad->GetFileSize();
+		endPtr = (const char*)_fileData + FileLoader_GetFileSize(_fLoad);
 	
 	if (_fileHdr.fileVer < 3)
 	{
@@ -718,13 +718,13 @@ void S98Player::ParseFile(UINT32 ticks)
 
 void S98Player::DoCommand(void)
 {
-	if (_filePos >= _fLoad->GetFileSize())
+	if (_filePos >= FileLoader_GetFileSize(_fLoad))
 	{
 		_playState |= PLAYSTATE_END;
 		_psTrigger |= PLAYSTATE_END;
 		if (_eventCbFunc != NULL)
 			_eventCbFunc(this, _eventCbParam, PLREVT_END, NULL);
-		fprintf(stderr, "S98 file ends early! (filePos 0x%06X, fileSize 0x%06X)\n", _filePos, _fLoad->GetFileSize());
+		fprintf(stderr, "S98 file ends early! (filePos 0x%06X, fileSize 0x%06X)\n", _filePos, FileLoader_GetFileSize(_fLoad));
 		return;
 	}
 	

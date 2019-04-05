@@ -208,6 +208,7 @@ int main(int argc, char* argv[])
 	UINT32 idWavWrt;
 	AUDDRV_INFO* drvInfo;
 	AUDIO_OPTS* opts;
+	const AUDIO_DEV_LIST *devList;
 	UINT32 tempData[2];
 	
 	if (argc < 2)
@@ -277,6 +278,7 @@ int main(int argc, char* argv[])
 	if (drvInfo->drvSig == ADRVSIG_DSOUND)
 		SetupDirectSound(audDrv);
 #endif
+	devList = AudioDrv_GetDeviceList(audDrv);
 	
 	sampleRate = 44100;
 	
@@ -291,7 +293,7 @@ int main(int argc, char* argv[])
 	
 	canRender = false;
 	AudioDrv_SetCallback(audDrv, FillBuffer, NULL);
-	printf("Opening Device %u ...\n", idWavOutDev);
+	printf("Opening Device %u (%s) ...\n", idWavOutDev,devList->devNames[idWavOutDev]);
 	retVal = AudioDrv_Start(audDrv, idWavOutDev);
 	if (retVal)
 	{

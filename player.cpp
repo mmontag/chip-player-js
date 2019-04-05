@@ -24,7 +24,7 @@ extern "C" int __cdecl _kbhit(void);
 #endif
 
 #include <common_def.h>
-#include "utils/FileLoader.hpp"
+#include "utils/FileLoader.h"
 #include "player/playerbase.hpp"
 #include "player/s98player.hpp"
 #include "player/droplayer.hpp"
@@ -36,7 +36,7 @@ extern "C" int __cdecl _kbhit(void);
 
 
 int main(int argc, char* argv[]);
-static UINT8 GetPlayerForFile(const char* fileName, FileLoader& fLoad, PlayerBase** retPlayer);
+static UINT8 GetPlayerForFile(const char* fileName, FILE_LOADER *fLoad, PlayerBase** retPlayer);
 static const char* GetFileTitle(const char* filePath);
 static UINT32 CalcCurrentVolume(UINT32 playbackSmpl);
 static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void* Data);
@@ -84,9 +84,11 @@ int main(int argc, char* argv[])
 {
 	int argbase;
 	UINT8 retVal;
-	FileLoader fLoad;
+	FILE_LOADER fLoad;
 	PlayerBase* player;
 	int curSong;
+
+	FileLoader_Init(&fLoad);
 	
 	if (argc < 2)
 	{
@@ -115,10 +117,10 @@ int main(int argc, char* argv[])
 	printf("Loading %s ...  ", GetFileTitle(argv[curSong]));
 	fflush(stdout);
 	player = NULL;
-	retVal = GetPlayerForFile(argv[curSong], fLoad, &player);
+	retVal = GetPlayerForFile(argv[curSong], &fLoad, &player);
 	if (retVal)
 	{
-		fLoad.CancelLoading();
+		FileLoader_CancelLoading(&fLoad);
 		if (player != NULL)
 			delete player;
 		fprintf(stderr, "Error 0x%02X loading file!\n", retVal);
@@ -276,14 +278,14 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
-static UINT8 GetPlayerForFile(const char* fileName, FileLoader& fLoad, PlayerBase** retPlayer)
+static UINT8 GetPlayerForFile(const char* fileName, FILE_LOADER *fLoad, PlayerBase** retPlayer)
 {
 	UINT8 retVal;
 	PlayerBase* player;
 	
-	fLoad.CancelLoading();	// cancel loading, just in case
-	fLoad.SetPreloadBytes(0x100);
-	retVal = fLoad.LoadFile(fileName);
+	FileLoader_CancelLoading(fLoad);	// cancel loading, just in case
+	FileLoader_SetPreloadBytes(fLoad,0x100);
+	retVal = FileLoader_LoadFile(fLoad,fileName);
 	if (retVal)
 		return retVal;
 	
