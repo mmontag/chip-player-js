@@ -9,6 +9,18 @@ const searchWorker = new SearchWorker();
 const CATALOG_PREFIX = 'https://gifx.co/music/';
 const MAX_RESULTS = 200;
 
+function getSearch(query, limit) {
+  const q = encodeURIComponent(query);
+  const l = limit || MAX_RESULTS;
+  return fetch(`https://gifx.co/chip/search?query=${q}&limit=${l}`)
+    .then(response => response.json());
+}
+
+function getTotal() {
+  return fetch(`https://gifx.co/chip/total`)
+    .then(response => response.json());
+}
+
 export default class Search extends PureComponent {
   constructor(props) {
     super(props);
@@ -36,7 +48,11 @@ export default class Search extends PureComponent {
       resultsCount: 0,
       totalSongs: 0,
       query: null,
-    }
+    };
+
+    getTotal()
+      .then(json => this.setState({ totalSongs: json.total }))
+      .catch(_ => this.setState({ totalSongs: 99999 }));
   }
 
   componentDidUpdate(prevProps) {
@@ -50,6 +66,7 @@ export default class Search extends PureComponent {
   }
 
   loadCatalog(catalog) {
+    if (window.BACKEND_SEARCH) return;
     console.log('Posting catalog load message to worker...');
     this.catalogLoaded = true;
     searchWorker.postMessage({
@@ -77,14 +94,19 @@ export default class Search extends PureComponent {
   }
 
   doSearch(val) {
-    const query = val.trim().split(' ').filter(n => n !== '');
-    searchWorker.postMessage({
-      type: 'search',
-      payload: {
-        query: query,
-        maxResults: MAX_RESULTS
-      }
-    });
+    if (window.BACKEND_SEARCH) {
+      getSearch(val)
+        .then(json => this.handleSearchResults(json));
+    } else {
+      const query = val.trim().split(' ').filter(n => n !== '');
+      searchWorker.postMessage({
+        type: 'search',
+        payload: {
+          query: query,
+          maxResults: MAX_RESULTS
+        }
+      });
+    }
   }
 
   handleMessage(data) {
