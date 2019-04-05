@@ -8,6 +8,7 @@ const {listToTrie} = require('../src/ResigTrie');
 //     chip-player-js $ ln -s ~/Downloads/catalog catalog
 const catalogRoot = 'catalog/';
 const outputPath = 'public/catalog.json';
+const trieOutputPath = 'public/catalog-trie.json';
 const formats = 'spc,vgm,vgz,nsf,nsfe,mid,s3m,it,mod,xm,ay';
 
 if(!fs.existsSync(catalogRoot)) {
@@ -18,7 +19,12 @@ if(!fs.existsSync(catalogRoot)) {
 const files = glob.sync(`${catalogRoot}**/*.{${formats}}`, {nocase: true},)
   .map(file => file.replace(catalogRoot, ''));
 
-const trie = listToTrie(files);
-const data = JSON.stringify(trie);
+const data = JSON.stringify(files);
 fs.writeSync(fs.openSync(outputPath, 'w+'), data);
 console.log('Wrote %d entries in %s (%d bytes).', files.length, outputPath, data.length);
+
+const trie = listToTrie(files);
+
+const trieData = JSON.stringify(trie);
+fs.writeSync(fs.openSync(trieOutputPath, 'w+'), trieData);
+console.log('Wrote %d entries in %s (%d bytes).', files.length, trieOutputPath, trieData.length);

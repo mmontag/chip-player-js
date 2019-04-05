@@ -27,6 +27,8 @@ onmessage = (message) => {
 };
 
 function search(query, maxResults) {
+  if (!Array.isArray(query))
+    query = query.trim().split(' ').filter(n => n !== '');
   let results = trie.get(query, TrieSearch.UNION_REDUCER) || [];
   const count = results.length;
   if (maxResults) {

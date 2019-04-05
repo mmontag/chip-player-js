@@ -23,6 +23,7 @@ import Favorites from "./Favorites";
 import Sequencer from "./Sequencer";
 
 const MAX_VOICES = 64;
+window.BACKEND_SEARCH = true;
 
 class App extends React.Component {
   handleLogin() {
@@ -234,10 +235,15 @@ class App extends React.Component {
   }
 
   loadCatalog() {
-    fetch('./catalog.json')
+    if (window.BACKEND_SEARCH) {
+      this.setState({catalog: []});
+      return;
+    }
+    const catalogTrie = './catalog-trie.json';
+    fetch(catalogTrie)
       .then(response => response.json())
       .then(trie => {
-        console.log('Loaded catalog.json trie.');
+        console.log('Loaded %s trie.', catalogTrie);
         const start = performance.now();
         const list = trieToList(trie);
         const time = (performance.now() - start).toFixed(1);
@@ -492,58 +498,55 @@ class App extends React.Component {
                    handleLogout={this.handleLogout}
                    handleLogin={this.handleLogin}
                    isPhone={isMobile.phone}/>
-        {this.state.loading ?
-          <p>Loading player engine...</p>
-          :
-          <div className="App-content-area">
-            <Search
-              initialQuery={this.state.initialQuery}
-              catalog={this.state.catalog}
-              currContext={currContext}
-              currIdx={currIdx}
-              toggleFavorite={this.handleToggleFavorite}
-              favorites={this.state.faves}
-              onClick={this.handleSongClick}>
-              {this.state.loadingUser ?
-                <p>Loading user data...</p>
-                :
-                <Favorites
-                  user={this.state.user}
-                  handleLogin={this.handleLogin}
-                  onClick={this.handleSongClick}
-                  currContext={currContext}
-                  currIdx={currIdx}
-                  toggleFavorite={this.handleToggleFavorite}
-                  favorites={this.state.faves}/>}
-              <h1>Top Level Folders</h1>
-              {
-                [
-                  'Classical MIDI',
-                  'Exotica',
-                  'Famicompo',
-                  'Game MIDI',
-                  'Game Mods',
-                  'MIDI',
-                  'ModArchives',
-                  'Nintendo',
-                  'Nintendo SNES',
-                  'Piano E-Competition MIDI',
-                  'Project AY',
-                  'Sega Game Gear',
-                  'Sega Genesis',
-                  'Sega Master System',
-                  'Ubiktune',
-                  'VGM Rips',
-                ].map(t => <a key={t} href="#" onClick={(e) => this.handleDoSearch(e, t)}>{t}</a>)
-              }
-            </Search>
-            {!isMobile.phone &&
-            <Visualizer audioCtx={this.audioCtx}
-                        sourceNode={this.playerNode}
-                        chipCore={this.chipCore}
-                        paused={this.state.ejected || this.state.paused}/>}
-          </div>
-        }
+        <div className="App-content-area">
+          <Search
+            initialQuery={this.state.initialQuery}
+            catalog={this.state.catalog}
+            currContext={currContext}
+            currIdx={currIdx}
+            toggleFavorite={this.handleToggleFavorite}
+            favorites={this.state.faves}
+            onClick={this.handleSongClick}>
+            { this.state.loading && <p>Loading player engine...</p> }
+            { this.state.loadingUser ?
+              <p>Loading user data...</p>
+              :
+              <Favorites
+                user={this.state.user}
+                handleLogin={this.handleLogin}
+                onClick={this.handleSongClick}
+                currContext={currContext}
+                currIdx={currIdx}
+                toggleFavorite={this.handleToggleFavorite}
+                favorites={this.state.faves}/>}
+            <h1>Top Level Folders</h1>
+            {
+              [
+                'Classical MIDI',
+                'Exotica',
+                'Famicompo',
+                'Game MIDI',
+                'Game Mods',
+                'MIDI',
+                'ModArchives',
+                'Nintendo',
+                'Nintendo SNES',
+                'Piano E-Competition MIDI',
+                'Project AY',
+                'Sega Game Gear',
+                'Sega Genesis',
+                'Sega Master System',
+                'Ubiktune',
+                'VGM Rips',
+              ].map(t => <a key={t} href="#" onClick={(e) => this.handleDoSearch(e, t)}>{t}</a>)
+            }
+          </Search>
+          {!isMobile.phone && !this.state.loading &&
+          <Visualizer audioCtx={this.audioCtx}
+                      sourceNode={this.playerNode}
+                      chipCore={this.chipCore}
+                      paused={this.state.ejected || this.state.paused}/>}
+        </div>
         <div className="App-footer">
           <div className="App-footer-main">
             <button onClick={this.prevSong}
