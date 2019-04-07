@@ -7,7 +7,7 @@
 #include "../utils/StrUtils.h"
 #include "helper.h"
 #include "playerbase.hpp"
-#include "../utils/FileLoader.hpp"
+#include "../utils/FileLoader.h"
 #include "dblk_compr.h"
 #include <vector>
 #include <string>
@@ -116,8 +116,8 @@ public:
 	
 	UINT32 GetPlayerType(void) const;
 	const char* GetPlayerName(void) const;
-	static UINT8 IsMyFile(FileLoader& fileLoader);
-	UINT8 LoadFile(FileLoader& fileLoader);
+	static UINT8 IsMyFile(FILE_LOADER *fileLoader);
+	UINT8 LoadFile(FILE_LOADER *fileLoader);
 	UINT8 UnloadFile(void);
 	const VGM_HEADER* GetFileHeader(void) const;
 	const char* GetSongTitle(void);
@@ -215,7 +215,7 @@ private:
 	void Cmd_AY_Stereo(void);				// command 30 - set AY8910 stereo mask
 	
 	CPCONV* _cpcUTF16;	// UTF-16 LE -> UTF-8 codepage conversion
-	FileLoader* _fLoad;
+	FILE_LOADER *_fLoad;
 	const UINT8* _fileData;	// data pointer for quick access, equals _fLoad->GetFileData().data()
 	
 	enum

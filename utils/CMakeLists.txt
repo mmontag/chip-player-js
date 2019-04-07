@@ -8,7 +8,7 @@ set(UTIL_DEFS)
 set(UTIL_FILES)
 # export headers
 set(UTIL_HEADERS
-	FileLoader.hpp
+	FileLoader.h
 	OSMutex.h
 	OSSignal.h
 	OSThread.h
@@ -22,7 +22,7 @@ set(UTIL_LIBS)
 # File Functions
 # --------------
 find_package(ZLIB REQUIRED)
-set(UTIL_FILES ${UTIL_FILES} FileLoader.cpp)
+set(UTIL_FILES ${UTIL_FILES} FileLoader.c)
 set(UTIL_LIBS ${UTIL_LIBS} ZLIB::ZLIB)
 
 
