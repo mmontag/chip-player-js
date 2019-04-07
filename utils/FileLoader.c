@@ -1,155 +1,80 @@
 #include "FileLoader.h"
+
+#include <zlib.h>
+#include <stdio.h>
+#include <stdtype.h>
 #include <stdlib.h>
 #include <string.h>
 
-FILE_LOADER *FileLoader_New(void) {
-	FILE_LOADER *loader = (FILE_LOADER *)malloc(sizeof(FILE_LOADER));
-	if(loader != NULL) {
-		FileLoader_Init(loader);
-	}
-	return loader;
-}
-
-UINT8 FileLoader_FreeData(FILE_LOADER *loader)
+enum
 {
-	if (loader->_status == FLSTAT_EMPTY) return 1;
+	// mode: compression
+	FLMODE_CMP_RAW = 0x00,
+	FLMODE_CMP_GZ = 0x10
+};
 
-	FileLoader_CancelLoading(loader);
 
-	if(loader->_data) {
-		free(loader->_data);
-		loader->_data = NULL;
-		loader->_bytesLoaded = 0;
-	}
-
-	loader->_status = FLSTAT_EMPTY;
-
-	return 0;
-
-}
-
-UINT8 FileLoader_Init(FILE_LOADER *loader) {
-	loader->_data = NULL;
-	loader->_hLoad->dataPtr = NULL;
-	loader->_modeSrc = 0x00;
-	loader->_modeCompr = 0x00;
-	loader->_status = FLSTAT_EMPTY;
-	loader->_readStopOfs = (UINT32)-1;
-
-	return 0;
-}
-
-void FileLoader_Delete(FILE_LOADER *loader) {
-	FileLoader_FreeData(loader);
-	free(loader);
-}
-
-UINT8 *FileLoader_GetFileData(FILE_LOADER *loader) {
-	return loader->_data;
-}
-
-UINT32 FileLoader_GetTotalFileSize(FILE_LOADER *loader) {
-	return loader->_bytesTotal;
-}
-
-UINT32 FileLoader_GetFileSize(FILE_LOADER *loader) {
-	return loader->_bytesLoaded;
-}
-
-UINT8 FileLoader_GetMode(FILE_LOADER *loader) {
-	return loader->_modeSrc | loader->_modeCompr;
-}
-
-UINT8 FileLoader_GetStatus(FILE_LOADER *loader) {
-	return loader->_status;
-}
-
-UINT8 FileLoader_CancelLoading(FILE_LOADER *loader)
+union LoaderHandles
 {
-	if(loader->_status != FLSTAT_LOADING) return 0x01;
-	switch(loader->_modeSrc)
-	{
-	case FLMODE_SRC_MEMORY:
-		if (loader->_hLoad->dataPtr == NULL)
-			return 0x01;
-		loader->_hLoad->dataPtr = NULL;
-		break;
-	case FLMODE_SRC_FILE:
-		switch(loader->_modeCompr)
-		{
-		case FLMODE_CMP_RAW:
-			if (loader->_hLoad->hFileRaw == NULL)
-				return 0x01;
-			fclose(loader->_hLoad->hFileRaw);
-			loader->_hLoad->hFileRaw = NULL;
-			break;
-		case FLMODE_CMP_GZ:
-			if (loader->_hLoad->hFileGZ == NULL)
-				return 0x01;
-			gzclose(loader->_hLoad->hFileGZ);
-			loader->_hLoad->hFileGZ = NULL;
-			break;
-		}
-		break;
-	}
-	loader->_status = FLSTAT_LOADED;
-	
-	return 0x00;
+	FILE *hFileRaw;
+	gzFile hFileGZ;
+};
 
-}
+typedef union LoaderHandles LOADER_HANDLES;
 
-UINT8 FileLoader_LoadData(FILE_LOADER *loader, UINT32 dataSize, const UINT8 *data)
+struct FileLoader {
+	UINT8 _modeCompr;
+	UINT32 _bytesTotal;
+	LOADER_HANDLES _hLoad[1];
+};
+
+typedef struct FileLoader FILE_LOADER;
+
+static void *FileLoader_dopen(void *context, const void *uri)
 {
-	FileLoader_CancelLoading(loader);
-	
-	loader->_modeSrc = FLMODE_SRC_MEMORY;
-	loader->_modeCompr = FLMODE_CMP_RAW;
-
-	loader->_hLoad->dataPtr = data;
-	loader->_bytesTotal = dataSize;
-	loader->_bytesLoaded = 0x00;
-	loader->_status = FLSTAT_LOADING;
-	
-	if (loader->_readStopOfs > 0)
-		return FileLoader_ReadData(loader, loader->_readStopOfs);
-	
-	return 0x00;
-}
-
-UINT8 FileLoader_LoadFile(FILE_LOADER *loader, const char* fileName)
-{
-	if (loader->_status == FLSTAT_LOADING)
-		return 0x01;
-	
 	UINT8 fileHdr[4];
 	size_t readBytes;
-	
-	FileLoader_FreeData(loader);
+	const char *fileName = (const char *)uri;
+
+	FILE_LOADER *loader = (FILE_LOADER *)malloc(sizeof(FILE_LOADER));
+
+	if(loader == NULL) return NULL;
+	memset(loader,0,sizeof(FILE_LOADER));
 	
 	loader->_hLoad->hFileRaw = fopen(fileName, "rb");
 	if (loader->_hLoad->hFileRaw == NULL)
-		return 0xFF;
+	{
+		free(loader);
+		return NULL;
+	}
 	
 	readBytes = fread(fileHdr, 0x01, 4, loader->_hLoad->hFileRaw);
 	if (readBytes < 4)
 	{
 		fclose(loader->_hLoad->hFileRaw);
-		return 0xFF;
+		free(loader);
+		return NULL;
 	}
-	loader->_modeSrc = FLMODE_SRC_FILE;
 	
 	if (fileHdr[0] == 31 && fileHdr[1] == 139)
 	{
+		UINT32 totalSize;
 		fseek(loader->_hLoad->hFileRaw, -4, SEEK_END);
-		fread(&loader->_bytesTotal, 0x04, 0x01, loader->_hLoad->hFileRaw);
+		fread(&totalSize, 0x04, 0x01, loader->_hLoad->hFileRaw);
+		loader->_bytesTotal = (UINT32)totalSize;
 		if (loader->_bytesTotal < ftell(loader->_hLoad->hFileRaw) / 2)
-			loader->_bytesTotal = (UINT32)-1;
+		{
+			loader->_bytesTotal = 0;
+		}
 		fclose(loader->_hLoad->hFileRaw);
 		loader->_hLoad->hFileRaw = NULL;
 		
 		loader->_hLoad->hFileGZ = gzopen(fileName, "rb");
 		if (loader->_hLoad->hFileGZ == NULL)
-			return 0xFF;
+		{
+			free(loader);
+			return NULL;
+		}
 		loader->_modeCompr = FLMODE_CMP_GZ;
 	}
 	else
@@ -159,106 +84,66 @@ UINT8 FileLoader_LoadFile(FILE_LOADER *loader, const char* fileName)
 		rewind(loader->_hLoad->hFileRaw);
 		loader->_modeCompr = FLMODE_CMP_RAW;
 	}
-	if(loader->_data) free(loader->_data);
-	loader->_bytesLoaded = 0x00;
-	loader->_status = FLSTAT_LOADING;
 	
-	if (loader->_readStopOfs > 0)
-		FileLoader_ReadData(loader,loader->_readStopOfs);
-	
-	return 0x00;
+	return (void *)loader;
 }
 
-void FileLoader_SetPreloadBytes(FILE_LOADER *loader, UINT32 byteCount)
+static UINT32 FileLoader_dread(void *context, UINT8 *buffer, UINT32 numBytes)
 {
-	loader->_readStopOfs = byteCount;
-	return;
-}
-
-void FileLoader_ReadUntil(FILE_LOADER *loader, UINT32 fileOffset)
-{
-	if (fileOffset > loader->_bytesLoaded)
-		FileLoader_ReadData(loader,fileOffset);
-	return;
-}
-
-void FileLoader_ReadFullFile(FILE_LOADER *loader)
-{
-	FileLoader_ReadData(loader,(UINT32)-1);
-	return;
-}
-
-UINT8 FileLoader_ReadData(FILE_LOADER *loader, UINT32 numBytes)
-{
-	if (loader->_status != FLSTAT_LOADING)
-		return 1;
-	
-	UINT32 endOfs;
-	
-	endOfs = loader->_bytesLoaded + numBytes;
-	if (endOfs < loader->_bytesLoaded)
-		endOfs = (UINT32)-1;
-	if (endOfs > loader->_bytesTotal)
-		endOfs = loader->_bytesTotal;
-
-	if(loader->_data == NULL) {
-		loader->_data = (UINT8 *)malloc(endOfs);
-	} else {
-		loader->_data = (UINT8 *)realloc(loader->_data,endOfs);
-	}
-
-	if(loader->_data == NULL) {
-		return 1;
-	}
-	
-	numBytes = endOfs - loader->_bytesLoaded;
-
-	if (loader->_modeSrc == FLMODE_SRC_MEMORY)
+	FILE_LOADER *loader = (FILE_LOADER *)context;
+	if (loader->_modeCompr == FLMODE_CMP_RAW)
 	{
-		const UINT8* dataPtr = (const UINT8*)loader->_hLoad->dataPtr;
-		memcpy(&loader->_data[loader->_bytesLoaded], &dataPtr[loader->_bytesLoaded], numBytes);
-		loader->_bytesLoaded = endOfs;
+		return  fread(buffer, 0x01, numBytes, loader->_hLoad->hFileRaw);
 	}
-	else if (loader->_modeSrc == FLMODE_SRC_FILE)
-	{
-		if (loader->_modeCompr == FLMODE_CMP_RAW)
-		{
-			UINT32 readBytes;
-			
-			readBytes = fread(&loader->_data[loader->_bytesLoaded], 0x01, numBytes, loader->_hLoad->hFileRaw);
-			loader->_bytesLoaded += readBytes;
-		}
-		else if (loader->_modeCompr == FLMODE_CMP_GZ)
-		{
-			UINT32 readBytes;
-			
-			if (endOfs != (UINT32)-1)
-			{
-				readBytes = gzread(loader->_hLoad->hFileGZ, &loader->_data[loader->_bytesLoaded], numBytes);
-				loader->_bytesLoaded += readBytes;
-			}
-			else
-			{
-				UINT32 blkSize = 0x4000;
-				if (blkSize > numBytes)
-					blkSize = numBytes;
-				do
-				{
-					loader->_data = (UINT8 *)realloc(loader->_data, loader->_bytesLoaded + blkSize);
-					if(loader->_data == NULL) return 1;
-					readBytes = gzread(loader->_hLoad->hFileGZ, &loader->_data[loader->_bytesLoaded], blkSize);
-					loader->_bytesLoaded += readBytes;
-				} while(readBytes >= blkSize && loader->_bytesLoaded < endOfs);
-				if (readBytes < blkSize)	// reached EOF
-					loader->_bytesTotal = loader->_bytesLoaded;
-			}
-		}
-	}
-	if (loader->_bytesLoaded >= loader->_bytesTotal)
-	{
-		FileLoader_CancelLoading(loader);
-		loader->_status = FLSTAT_LOADED;
-	}
-	
-	return 0;
+		
+	return gzread(loader->_hLoad->hFileGZ,buffer,numBytes);
 }
+
+static UINT8 FileLoader_dseek(void *context, UINT32 offset, UINT8 whence)
+{
+	FILE_LOADER *loader = (FILE_LOADER *)context;
+	if(loader->_modeCompr == FLMODE_CMP_RAW) return fseek(loader->_hLoad->hFileRaw, offset, whence);
+	if(whence == SEEK_END) return 0;
+	return gzseek(loader->_hLoad->hFileGZ, offset, whence);
+
+}
+
+static void *FileLoader_dclose(void *context) {
+	if(context == NULL) return 0;
+	FILE_LOADER *loader = (FILE_LOADER *)context;
+	if(loader->_modeCompr == FLMODE_CMP_RAW) fclose(loader->_hLoad->hFileRaw);
+	else gzclose(loader->_hLoad->hFileGZ);
+	free(loader);
+	return NULL;
+}
+
+static INT32 FileLoader_dtell(void *context) {
+	FILE_LOADER *loader = (FILE_LOADER *)context;
+	if(loader->_modeCompr == FLMODE_CMP_RAW)
+	{
+		return ftell(loader->_hLoad->hFileRaw);
+	}
+	return gztell(loader->_hLoad->hFileGZ);
+}
+
+static UINT32 FileLoader_dlength(void *context) {
+	FILE_LOADER *loader = (FILE_LOADER *)context;
+	return loader->_bytesTotal;
+}
+
+static UINT8 FileLoader_deof(void *context) {
+	FILE_LOADER *loader = (FILE_LOADER *)context;
+	if(loader->_modeCompr == FLMODE_CMP_RAW) return feof(loader->_hLoad->hFileRaw);
+	return gzeof(loader->_hLoad->hFileGZ);
+}
+
+const DATA_LOADER_CALLBACKS fileLoader = {
+	.type    = "Default File Loader",
+	.dopen   = FileLoader_dopen,
+	.dread   = FileLoader_dread,
+	.dseek   = FileLoader_dseek,
+	.dclose  = FileLoader_dclose,
+	.dtell   = FileLoader_dtell,
+	.dlength = FileLoader_dlength,
+	.deof    = FileLoader_deof,
+};

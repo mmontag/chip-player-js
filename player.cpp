@@ -24,7 +24,9 @@ extern "C" int __cdecl _kbhit(void);
 #endif
 
 #include <common_def.h>
+#include "utils/DataLoader.h"
 #include "utils/FileLoader.h"
+#include "utils/MemoryLoader.h"
 #include "player/playerbase.hpp"
 #include "player/s98player.hpp"
 #include "player/droplayer.hpp"
@@ -34,9 +36,12 @@ extern "C" int __cdecl _kbhit(void);
 #include "emu/Resampler.h"
 #include "utils/OSMutex.h"
 
+/* define to use the in-memory loader */
+/* #define USE_MEMORY_LOADER 1 */
 
 int main(int argc, char* argv[]);
-static UINT8 GetPlayerForFile(const char* fileName, FILE_LOADER *fLoad, PlayerBase** retPlayer);
+static UINT8 *SlurpFile(const char *fileName, UINT32 *fileSize);
+static UINT8 GetPlayerForFile(const void* loadParam, DATA_LOADER *dLoad, PlayerBase** retPlayer);
 static const char* GetFileTitle(const char* filePath);
 static UINT32 CalcCurrentVolume(UINT32 playbackSmpl);
 static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void* Data);
@@ -84,11 +89,10 @@ int main(int argc, char* argv[])
 {
 	int argbase;
 	UINT8 retVal;
-	FILE_LOADER fLoad;
+	DATA_LOADER dLoad;
 	PlayerBase* player;
 	int curSong;
 
-	FileLoader_Init(&fLoad);
 	
 	if (argc < 2)
 	{
@@ -117,10 +121,19 @@ int main(int argc, char* argv[])
 	printf("Loading %s ...  ", GetFileTitle(argv[curSong]));
 	fflush(stdout);
 	player = NULL;
-	retVal = GetPlayerForFile(argv[curSong], &fLoad, &player);
+
+#ifdef USE_MEMORY_LOADER
+	UINT32 fileSize;
+	UINT8 *fileData = SlurpFile(argv[curSong],&fileSize);
+	DataLoader_Init(&dLoad,&memoryLoader,fileData);
+	retVal = GetPlayerForFile(&fileSize, &dLoad, &player);
+#else
+	DataLoader_Init(&dLoad,&fileLoader,NULL);
+	retVal = GetPlayerForFile(argv[curSong], &dLoad, &player);
+#endif
 	if (retVal)
 	{
-		FileLoader_CancelLoading(&fLoad);
+		DataLoader_CancelLoading(&dLoad);
 		if (player != NULL)
 			delete player;
 		fprintf(stderr, "Error 0x%02X loading file!\n", retVal);
@@ -261,6 +274,9 @@ int main(int argc, char* argv[])
 	
 	player->Stop();
 	player->UnloadFile();
+#ifdef USE_MEMORY_LOADER
+	free(fileData);
+#endif
 	delete player;	player = NULL;
 	
 	}	// end for(curSong)
@@ -278,27 +294,47 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
-static UINT8 GetPlayerForFile(const char* fileName, FILE_LOADER *fLoad, PlayerBase** retPlayer)
+static UINT8 *SlurpFile(const char *fileName, UINT32 *fileSize)
+{
+	*fileSize = 0;
+	FILE *hFile = fopen(fileName,"rb");
+	UINT32 hFileSize;
+	UINT8 *fileData;
+	if(hFile == NULL) return NULL;
+	fseek(hFile,0,SEEK_END);
+	hFileSize = ftell(hFile);
+	rewind(hFile);
+	fileData = (UINT8 *)malloc(hFileSize);
+	if(fileData == NULL) return NULL;
+	if(fread(fileData,1,hFileSize,hFile) != hFileSize)
+	{
+		free(fileData);
+		return NULL;
+	}
+	*fileSize = hFileSize;
+	return fileData;
+}
+
+static UINT8 GetPlayerForFile(const void* loadParam, DATA_LOADER *dLoad, PlayerBase** retPlayer)
 {
 	UINT8 retVal;
 	PlayerBase* player;
 	
-	FileLoader_CancelLoading(fLoad);	// cancel loading, just in case
-	FileLoader_SetPreloadBytes(fLoad,0x100);
-	retVal = FileLoader_LoadFile(fLoad,fileName);
+	DataLoader_SetPreloadBytes(dLoad,0x100);
+	retVal = DataLoader_Load(dLoad,loadParam);
 	if (retVal)
 		return retVal;
 	
-	if (! VGMPlayer::IsMyFile(fLoad))
+	if (! VGMPlayer::IsMyFile(dLoad))
 		player = new VGMPlayer;
-	else if (! S98Player::IsMyFile(fLoad))
+	else if (! S98Player::IsMyFile(dLoad))
 		player = new S98Player;
-	else if (! DROPlayer::IsMyFile(fLoad))
+	else if (! DROPlayer::IsMyFile(dLoad))
 		player = new DROPlayer;
 	else
 		return 0xFF;
 	
-	retVal = player->LoadFile(fLoad);
+	retVal = player->LoadFile(dLoad);
 	if (retVal < 0x80)
 		*retPlayer = player;
 	else

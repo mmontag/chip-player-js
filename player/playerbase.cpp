@@ -21,7 +21,7 @@ const char* PlayerBase::GetPlayerName(void) const
 	return "";
 }
 
-/*static*/ UINT8 IsMyFile(FILE_LOADER *fileLoader)
+/*static*/ UINT8 IsMyFile(DATA_LOADER *dataLoader)
 {
 	return 0xFF;
 }

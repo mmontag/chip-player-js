@@ -1,5 +1,5 @@
-#ifndef __FILELOADER_H__
-#define __FILELOADER_H__
+#ifndef __MEMORYLOADER_H__
+#define __MEMORYLOADER_H__
 
 #include "DataLoader.h"
 
@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-extern const DATA_LOADER_CALLBACKS fileLoader;
+extern const DATA_LOADER_CALLBACKS memoryLoader;
 
 #ifdef __cplusplus
 }
