@@ -41,7 +41,7 @@ extern "C" int __cdecl _kbhit(void);
 
 int main(int argc, char* argv[]);
 static UINT8 *SlurpFile(const char *fileName, UINT32 *fileSize);
-static UINT8 GetPlayerForFile(const void* loadParam, DATA_LOADER *dLoad, PlayerBase** retPlayer);
+static UINT8 GetPlayerForFile(DATA_LOADER *dLoad, PlayerBase** retPlayer);
 static const char* GetFileTitle(const char* filePath);
 static UINT32 CalcCurrentVolume(UINT32 playbackSmpl);
 static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void* Data);
@@ -125,12 +125,24 @@ int main(int argc, char* argv[])
 #ifdef USE_MEMORY_LOADER
 	UINT32 fileSize;
 	UINT8 *fileData = SlurpFile(argv[curSong],&fileSize);
-	DataLoader_Init(&dLoad,&memoryLoader,fileData);
-	retVal = GetPlayerForFile(&fileSize, &dLoad, &player);
+	DataLoader_Init(&dLoad,&memoryLoader);
+	DataLoader_SetPreloadBytes(&dLoad,0x100);
+	if(DataLoader_Load(&dLoad,(void *)fileData,(void *)&fileSize))
+	{
+		DataLoader_CancelLoading(&dLoad);
+		continue;
+	}
+	
 #else
-	DataLoader_Init(&dLoad,&fileLoader,NULL);
-	retVal = GetPlayerForFile(argv[curSong], &dLoad, &player);
+	DataLoader_Init(&dLoad,&fileLoader);
+	DataLoader_SetPreloadBytes(&dLoad,0x100);
+	if(DataLoader_Load(&dLoad,(void *)argv[curSong]))
+	{
+		DataLoader_CancelLoading(&dLoad);
+		continue;
+	}
 #endif
+	retVal = GetPlayerForFile(&dLoad, &player);
 	if (retVal)
 	{
 		DataLoader_CancelLoading(&dLoad);
@@ -315,15 +327,10 @@ static UINT8 *SlurpFile(const char *fileName, UINT32 *fileSize)
 	return fileData;
 }
 
-static UINT8 GetPlayerForFile(const void* loadParam, DATA_LOADER *dLoad, PlayerBase** retPlayer)
+static UINT8 GetPlayerForFile(DATA_LOADER *dLoad, PlayerBase** retPlayer)
 {
 	UINT8 retVal;
 	PlayerBase* player;
-	
-	DataLoader_SetPreloadBytes(dLoad,0x100);
-	retVal = DataLoader_Load(dLoad,loadParam);
-	if (retVal)
-		return retVal;
 	
 	if (! VGMPlayer::IsMyFile(dLoad))
 		player = new VGMPlayer;

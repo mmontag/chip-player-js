@@ -3,6 +3,7 @@
 
 #include <stdtype.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -11,7 +12,7 @@ extern "C" {
 struct DataLoaderCallbacks
 {
 	const char *type; /* for storing a human-readable file loader type */
-	void * (* dopen   )(void *context, const void *param); /* open a file, URL, piece of memory, return a pointer to it, NULL on error */
+	void * (* dopen   )(void *context, va_list argp); /* open a file, URL, piece of memory, return a pointer to it, NULL on error */
 	UINT32 (* dread   )(void *context, UINT8 *buffer, UINT32 numBytes); /* read bytes into buffer */
 	UINT8  (* dseek   )(void *context, UINT32 offset, UINT8 whence); /* seek to byte offset */
 	void * (* dclose  )(void *context); /* closes out file, return NULL context if appropriate */
@@ -41,9 +42,9 @@ struct DataLoader {
 
 typedef struct DataLoader DATA_LOADER;
 
-DATA_LOADER *DataLoader_New(const DATA_LOADER_CALLBACKS *callbacks, void *context);
+DATA_LOADER *DataLoader_New(const DATA_LOADER_CALLBACKS *callbacks);
 void DataLoader_Delete(DATA_LOADER *loader);
-UINT8 DataLoader_Init(DATA_LOADER *loader, const DATA_LOADER_CALLBACKS *callbacks, void *context);
+UINT8 DataLoader_Init(DATA_LOADER *loader, const DATA_LOADER_CALLBACKS *callbacks);
 UINT8 *DataLoader_GetData(DATA_LOADER *loader);
 UINT32 DataLoader_GetTotalSize(DATA_LOADER *loader);
 UINT32 DataLoader_GetSize(DATA_LOADER *loader);
@@ -51,7 +52,7 @@ UINT8 DataLoader_GetMode(DATA_LOADER *loader);
 UINT8 DataLoader_GetStatus(DATA_LOADER *loader);
 UINT32 DataLoader_Read(DATA_LOADER *loader, UINT32 numBytes);
 UINT8 DataLoader_CancelLoading(DATA_LOADER *loader);
-UINT8 DataLoader_Load(DATA_LOADER *loader, const void *loadParam);
+UINT8 DataLoader_Load(DATA_LOADER *loader, ...);
 UINT8 DataLoader_Free(DATA_LOADER *loader);
 void DataLoader_SetPreloadBytes(DATA_LOADER *loader, UINT32 byteCount);
 void DataLoader_ReadUntil(DATA_LOADER *loader, UINT32 fileOffset);

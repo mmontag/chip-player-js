@@ -30,11 +30,11 @@ struct FileLoader {
 
 typedef struct FileLoader FILE_LOADER;
 
-static void *FileLoader_dopen(void *context, const void *uri)
+static void *FileLoader_dopen(void *context, va_list argp)
 {
 	UINT8 fileHdr[4];
 	size_t readBytes;
-	const char *fileName = (const char *)uri;
+	const char *fileName = (const char *)va_arg(argp,void *);
 
 	FILE_LOADER *loader = (FILE_LOADER *)malloc(sizeof(FILE_LOADER));
 

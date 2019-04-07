@@ -1,11 +1,12 @@
 #include "DataLoader.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 
-DATA_LOADER *DataLoader_New(const DATA_LOADER_CALLBACKS *callbacks, void *context) {
+DATA_LOADER *DataLoader_New(const DATA_LOADER_CALLBACKS *callbacks) {
 	DATA_LOADER *loader = (DATA_LOADER *)malloc(sizeof(DATA_LOADER));
 	if(loader != NULL) {
-		DataLoader_Init(loader,callbacks,context);
+		DataLoader_Init(loader,callbacks);
 	}
 	return loader;
 }
@@ -28,12 +29,12 @@ UINT8 DataLoader_Free(DATA_LOADER *loader)
 
 }
 
-UINT8 DataLoader_Init(DATA_LOADER *loader,const DATA_LOADER_CALLBACKS *callbacks, void *context) {
+UINT8 DataLoader_Init(DATA_LOADER *loader,const DATA_LOADER_CALLBACKS *callbacks) {
 	loader->_data = NULL;
+	loader->_context = NULL;
 	loader->_status = DLSTAT_EMPTY;
 	loader->_readStopOfs = (UINT32)-1;
 	loader->_callbacks = callbacks;
-	loader->_context = context;
 
 	return 0;
 }
@@ -69,13 +70,17 @@ UINT8 DataLoader_CancelLoading(DATA_LOADER *loader)
 
 }
 
-UINT8 DataLoader_Load(DATA_LOADER *loader, const void *loadParam)
+UINT8 DataLoader_Load(DATA_LOADER *loader, ...)
 {
 	if (loader->_status == DLSTAT_LOADING)
 		return 0x01;
 	
 	DataLoader_Free(loader);
-	loader->_context = loader->_callbacks->dopen(loader->_context, loadParam);
+
+	va_list argp;
+	va_start(argp,loader);
+	loader->_context = loader->_callbacks->dopen(loader->_context, argp);
+	va_end(argp);
 	if(loader->_context == NULL) {
 		return 0x01;
 	}

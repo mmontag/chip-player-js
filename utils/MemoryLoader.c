@@ -4,6 +4,7 @@
 #include <stdtype.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 
 enum
 {
@@ -28,18 +29,22 @@ static inline UINT32 ReadLE32(const UINT8 *data)
 			(data[0x01] <<  8) | (data[0x00] <<  0);
 }
 
-static void *MemoryLoader_dopen(void *context, const void *params)
+static void *MemoryLoader_dopen(void *context, va_list argp)
 {
+	UINT8 *mem = NULL;
+	UINT32 *memSize = NULL;
+	mem = (UINT8 *)va_arg(argp,void *);
+	memSize = (UINT32 *)va_arg(argp,void *);
 	/* context will be the initial, user-supplied memory buffer */
 	/* params will be a pointer to an integer, specifying the buffer length */
-	if (((const UINT32 *)params)[0] < 4) return NULL;
+	if (*memSize < 4) return NULL;
 
 	MEMORY_LOADER *loader = (MEMORY_LOADER *)malloc(sizeof(MEMORY_LOADER));
 	if(loader == NULL) return NULL;
 
-	loader->_data = (UINT8 *)context;
+	loader->_data = mem;
 	loader->_pos = 0;
-	loader->_length = ((UINT32 *)params)[0];
+	loader->_length = *memSize;
 	if(loader->_data[0] == 31 && loader->_data[1] == 139)
 	{
 		loader->_modeCompr = MLMODE_CMP_GZ;
