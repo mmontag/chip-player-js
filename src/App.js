@@ -597,6 +597,12 @@ class App extends React.Component {
           </div>
           {this.state.showSettings &&
           <div className="App-footer-settings">
+            <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '19px'}}>
+              <h3 style={{margin: '0 8px 0 0'}}>Player Settings</h3>
+              <button className='box-button' onClick={this.toggleSettings}>
+                Close
+              </button>
+            </div>
             {this.sequencer.getPlayer() ?
               <PlayerParams
                 ejected={this.state.ejected}
@@ -606,12 +612,11 @@ class App extends React.Component {
                 voiceNames={this.state.voiceNames}
                 handleTempoChange={this.handleTempoChange}
                 handleSetVoices={this.handleSetVoices}
-                toggleSettings={this.toggleSettings}
                 getParameter={this.sequencer.getPlayer().getParameter}
                 setParameter={this.sequencer.getPlayer().setParameter}
                 params={this.sequencer.getPlayer().getParameters()}/>
               :
-              <div>--</div>}
+              <div>(No active player)</div>}
           </div>}
           {this.state.imageUrl &&
           <div className="App-footer-art" style={{backgroundImage: `url("${this.state.imageUrl}")`}}/>}

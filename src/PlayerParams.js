@@ -31,10 +31,6 @@ export default class PlayerParams extends PureComponent {
   render() {
     return (
       <div className='PlayerParams'>
-        <button style={{float: 'right'}} className='box-button' onClick={this.props.toggleSettings}>
-          Close
-        </button>
-        <h3>Player Settings</h3>
         Speed:{' '}
         <input
           disabled={this.props.ejected}
