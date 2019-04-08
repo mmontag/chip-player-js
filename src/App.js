@@ -103,8 +103,10 @@ class App extends React.Component {
           .doc(user.uid)
           .get()
           .then(doc => {
+            const data = doc.data();
             this.setState({
-              faves: doc.data().faves || [],
+              faves: data.faves || [],
+              showPlayerSettings: data.settings ? data.settings.showPlayerSettings : false,
               loadingUser: false,
             });
           });
@@ -140,7 +142,7 @@ class App extends React.Component {
       voiceNames: Array(MAX_VOICES).fill(''),
       initialQuery: null,
       imageUrl: null,
-      showSettings: false,
+      showPlayerSettings: false,
       user: null,
       faves: [],
       songUrl: null,
@@ -364,7 +366,19 @@ class App extends React.Component {
   }
 
   toggleSettings() {
-    this.setState({showSettings: !this.state.showSettings});
+    let showPlayerSettings = !this.state.showPlayerSettings;
+    // Optimistic update
+    this.setState({showPlayerSettings: showPlayerSettings});
+
+    const user = this.state.user;
+    if (user) {
+      const userRef = this.db.collection('users').doc(user.uid);
+      userRef
+        .update({settings: {showPlayerSettings: showPlayerSettings}})
+        .catch((e) => {
+          console.log('Couldn\'t update settings in Firebase.', e);
+        });
+    }
   }
 
   handleTimeSliderChange(event) {
@@ -570,7 +584,7 @@ class App extends React.Component {
                 I'm Feeling Lucky
               </button>
               {' '}
-              {!this.state.showSettings &&
+              {!this.state.showPlayerSettings &&
               <button className="box-button" onClick={this.toggleSettings}>
                 Player Settings >
               </button>}
@@ -595,7 +609,7 @@ class App extends React.Component {
               <div className="SongDetails-filepath">{pathLinks}</div>
             </div>}
           </div>
-          {this.state.showSettings &&
+          {this.state.showPlayerSettings &&
           <div className="App-footer-settings">
             <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '19px'}}>
               <h3 style={{margin: '0 8px 0 0'}}>Player Settings</h3>
