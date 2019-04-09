@@ -5,7 +5,7 @@ import * as firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
 import firebaseConfig from './config/firebaseConfig';
-import {API_BASE, MAX_VOICES, USE_BACKEND_SEARCH} from "./config";
+import {API_BASE, MAX_VOICES, REPLACE_STATE_ON_SEEK, USE_BACKEND_SEARCH} from "./config";
 
 import ChipCore from './chip-core';
 import GMEPlayer from './players/GMEPlayer';
@@ -390,12 +390,16 @@ class App extends React.Component {
     const pos = event.target ? event.target.value : event;
 
     const seekMs = Math.floor(pos * this.state.currentSongDurationMs);
-    const urlParams = {
-      ...queryString.parse(window.location.search.substr(1)),
-      t: seekMs,
-    };
-    const stateUrl = '?' + queryString.stringify(urlParams).replace(/%20/g, '+').replace(/%2F/g, '/');
-    window.history.replaceState(null, '', stateUrl);
+    if (REPLACE_STATE_ON_SEEK) {
+      const urlParams = {
+        ...queryString.parse(window.location.search.substr(1)),
+        t: seekMs,
+      };
+      const stateUrl = '?' + queryString.stringify(urlParams)
+        .replace(/%20/g, '+')
+        .replace(/%2F/g, '/');
+      window.history.replaceState(null, '', stateUrl);
+    }
 
     // Seek in song
     this.sequencer.getPlayer().seekMs(seekMs);
@@ -616,14 +620,19 @@ class App extends React.Component {
             </div>}
           </div>
           {this.state.showPlayerSettings &&
-          <div className="App-footer-settings">
-            <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '19px'}}>
-              <h3 style={{margin: '0 8px 0 0'}}>Player Settings</h3>
-              <button className='box-button' onClick={this.toggleSettings}>
-                Close
-              </button>
-            </div>
-            {this.sequencer.getPlayer() ?
+           <div className="App-footer-settings">
+             <div style={{
+               display: 'flex',
+               justifyContent: 'space-between',
+               alignItems: 'start',
+               marginBottom: '19px'
+             }}>
+               <h3 style={{margin: '0 8px 0 0'}}>Player Settings</h3>
+               <button className='box-button' onClick={this.toggleSettings}>
+                 Close
+               </button>
+             </div>
+             {this.sequencer.getPlayer() ?
               <PlayerParams
                 ejected={this.state.ejected}
                 tempo={this.state.tempo}
