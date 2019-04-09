@@ -3,18 +3,13 @@ import React, {PureComponent} from 'react';
 import SearchWorker from 'worker-loader!./SearchWorker';
 import queryString from 'querystring';
 import FavoriteButton from "./FavoriteButton";
+import debounce from 'lodash/debounce';
+import promisify from "./promisifyXhr";
 import {API_BASE, USE_BACKEND_SEARCH, CATALOG_PREFIX} from "./config";
 
 const searchWorker = new SearchWorker();
 
 const MAX_RESULTS = 200;
-
-function getSearch(query, limit) {
-  const q = encodeURIComponent(query);
-  const l = limit || MAX_RESULTS;
-  return fetch(`https://gifx.co/chip/search?query=${q}&limit=${l}`)
-    .then(response => response.json());
-}
 
 function getTotal() {
   return fetch(`${API_BASE}/total`)
@@ -26,6 +21,7 @@ export default class Search extends PureComponent {
     super(props);
 
     this.doSearch = this.doSearch.bind(this);
+    this.debouncedDoSearch = debounce(this.doSearch, 150);
     this.onChange = this.onChange.bind(this);
     this.onSearchInputChange = this.onSearchInputChange.bind(this);
     this.handleSearchResults = this.handleSearchResults.bind(this);
@@ -60,7 +56,7 @@ export default class Search extends PureComponent {
       this.loadCatalog(this.props.catalog);
     } else {
       if (this.props.initialQuery !== prevProps.initialQuery) {
-        this.onSearchInputChange(this.props.initialQuery);
+        this.onSearchInputChange(this.props.initialQuery, true);
       }
     }
   }
@@ -79,7 +75,7 @@ export default class Search extends PureComponent {
     this.onSearchInputChange(e.target.value);
   }
 
-  onSearchInputChange(val) {
+  onSearchInputChange(val, immediate = false) {
     this.setState({query: val});
     const urlParams = {
       q: val ? val.trim() : undefined,
@@ -87,15 +83,30 @@ export default class Search extends PureComponent {
     const stateUrl = '?' + queryString.stringify(urlParams).replace(/%20/g, '+');
     window.history.replaceState(null, '', stateUrl);
     if (val.length) {
-      this.doSearch(val);
+      if (immediate) {
+        this.doSearch(val);
+      } else {
+        this.debouncedDoSearch(val);
+      }
     } else {
       this.showEmptyState();
     }
   }
 
   doSearch(val) {
-      getSearch(val)
     if (USE_BACKEND_SEARCH) {
+      const q = encodeURIComponent(val);
+      const l = 100;
+      const url = `${API_BASE}/search?query=${q}&limit=${l}`;
+      if (this.searchRequest) this.searchRequest.abort();
+      this.searchRequest = promisify(new XMLHttpRequest());
+      this.searchRequest.open('GET', url);
+      // this.searchRequest.responseType = 'json';
+      this.searchRequest.send()
+        .then(response => {
+          this.searchRequest = null;
+          return JSON.parse(response.responseText);
+        })
         .then(json => this.handleSearchResults(json));
     } else {
       const query = val.trim().split(' ').filter(n => n !== '');
@@ -131,10 +142,11 @@ export default class Search extends PureComponent {
   }
 
   handleSearchResults(payload) {
-    const results = payload.results.map(result => result.file).sort();
+    const { items, total } = payload;
+    const results = items.map(item => item.file).sort();
     this.setState({
       searching: true,
-      resultsCount: payload.count,
+      resultsCount: total,
       results: results,
       resultsHeadings: this.extractHeadings(results),
     });
@@ -175,7 +187,7 @@ export default class Search extends PureComponent {
 
   handleGroupClick(e, query) {
     e.preventDefault();
-    this.onSearchInputChange(query);
+    this.onSearchInputChange(query, true);
   }
 
   renderResultItem(result, i) {
