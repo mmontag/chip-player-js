@@ -108,6 +108,9 @@ class App extends React.Component {
               showPlayerSettings: data.settings ? data.settings.showPlayerSettings : false,
               loadingUser: false,
             });
+          })
+          .catch(() => {
+            this.setState({loadingUser: false});
           });
       }
     });
@@ -124,7 +127,7 @@ class App extends React.Component {
     console.log('Sample rate: %d hz', audioCtx.sampleRate);
 
     this.state = {
-      catalog: null,
+      catalog: [],
       loading: true,
       loadingUser: true,
       paused: true,
@@ -486,8 +489,9 @@ class App extends React.Component {
   pathToLinks(path) {
     if (!path) return null;
 
-    path = path.replace(/^https?:\/\/[a-z0-9\-.]+\//, '');
+    path = path.replace(/^https?:\/\/[a-z0-9\-.:]+\//, '');
     path = path.replace(/^music\//, '');
+    path = path.replace(/^catalog\//, '');
     path = path.split('/').slice(0, -1).join('/');
     const handler = this.handleDoSearch;
     const query = path.replace(/[^a-zA-Z0-9]+/g, ' ');
