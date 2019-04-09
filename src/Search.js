@@ -3,10 +3,10 @@ import React, {PureComponent} from 'react';
 import SearchWorker from 'worker-loader!./SearchWorker';
 import queryString from 'querystring';
 import FavoriteButton from "./FavoriteButton";
+import {API_BASE, USE_BACKEND_SEARCH, CATALOG_PREFIX} from "./config";
 
 const searchWorker = new SearchWorker();
 
-const CATALOG_PREFIX = 'https://gifx.co/music/';
 const MAX_RESULTS = 200;
 
 function getSearch(query, limit) {
@@ -17,7 +17,7 @@ function getSearch(query, limit) {
 }
 
 function getTotal() {
-  return fetch(`https://gifx.co/chip/total`)
+  return fetch(`${API_BASE}/total`)
     .then(response => response.json());
 }
 
@@ -56,7 +56,7 @@ export default class Search extends PureComponent {
   }
 
   componentDidUpdate(prevProps) {
-    if (!this.catalogLoaded && this.props.catalog) {
+    if (!USE_BACKEND_SEARCH && !this.catalogLoaded && this.props.catalog) {
       this.loadCatalog(this.props.catalog);
     } else {
       if (this.props.initialQuery !== prevProps.initialQuery) {
@@ -66,7 +66,7 @@ export default class Search extends PureComponent {
   }
 
   loadCatalog(catalog) {
-    if (window.BACKEND_SEARCH) return;
+    if (USE_BACKEND_SEARCH) return;
     console.log('Posting catalog load message to worker...');
     this.catalogLoaded = true;
     searchWorker.postMessage({
@@ -94,8 +94,8 @@ export default class Search extends PureComponent {
   }
 
   doSearch(val) {
-    if (window.BACKEND_SEARCH) {
       getSearch(val)
+    if (USE_BACKEND_SEARCH) {
         .then(json => this.handleSearchResults(json));
     } else {
       const query = val.trim().split(' ').filter(n => n !== '');

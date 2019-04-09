@@ -1,5 +1,5 @@
 import promisify from "./promisifyXhr";
-const CATALOG_PREFIX = 'https://gifx.co/music/';
+import {CATALOG_PREFIX} from "./config";
 
 export default class Sequencer {
   constructor(players, onStateUpdate, onError) {

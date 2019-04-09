@@ -5,6 +5,7 @@ import * as firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
 import firebaseConfig from './config/firebaseConfig';
+import {API_BASE, MAX_VOICES, USE_BACKEND_SEARCH} from "./config";
 
 import ChipCore from './chip-core';
 import GMEPlayer from './players/GMEPlayer';
@@ -21,9 +22,6 @@ import FavoriteButton from "./FavoriteButton";
 import AppHeader from "./AppHeader";
 import Favorites from "./Favorites";
 import Sequencer from "./Sequencer";
-
-const MAX_VOICES = 64;
-window.BACKEND_SEARCH = true;
 
 class App extends React.Component {
   handleLogin() {
@@ -235,8 +233,7 @@ class App extends React.Component {
   }
 
   loadCatalog() {
-    if (window.BACKEND_SEARCH) {
-      this.setState({catalog: []});
+    if (USE_BACKEND_SEARCH) {
       return;
     }
     const catalogTrie = './catalog-trie.json';
@@ -432,10 +429,16 @@ class App extends React.Component {
   }
 
   handlePlayRandom() {
-    const catalog = this.state.catalog;
-    if (catalog) {
-      const idx = Math.floor(Math.random() * catalog.length);
-      this.sequencer.playContext(catalog, idx);
+    if (USE_BACKEND_SEARCH) {
+      fetch(`${API_BASE}/random?limit=100`)
+        .then(response => response.json())
+        .then(json => this.sequencer.playContext(json.items.map(item => item.file)));
+    } else {
+      const catalog = this.state.catalog;
+      if (catalog) {
+        const idx = Math.floor(Math.random() * catalog.length);
+        this.sequencer.playContext(catalog, idx);
+      }
     }
   }
 
