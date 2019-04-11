@@ -67,6 +67,12 @@ export default class GMEPlayer extends Player {
 
       if (this.subtune >= libgme._gme_track_count(emu) || this.playSubtune(this.subtune) !== 0) {
         this.suspend();
+        console.log(
+          'GMEPlayer.gmeAudioProcess(): _gme_track_ended == %s and subtune (%s) > _gme_track_count (%s).',
+          libgme._gme_track_ended(emu),
+          this.subtune,
+          libgme._gme_track_count(emu)
+        );
         this.onPlayerStateUpdate(true);
       }
     }
@@ -82,6 +88,7 @@ export default class GMEPlayer extends Player {
     this.fadingOut = false;
     this.subtune = subtune;
     this.metadata = this._parseMetadata(subtune);
+    console.log('GMEPlayer.playSubtune(subtune=%s)', subtune);
     this.onPlayerStateUpdate(false);
     return libgme._gme_start_track(emu, subtune);
   }
@@ -238,6 +245,7 @@ export default class GMEPlayer extends Player {
     this.suspend();
     if (emu) libgme._gme_delete(emu);
     emu = null;
+    console.log('GMEPlayer.stop()');
     this.onPlayerStateUpdate(true);
   }
 }

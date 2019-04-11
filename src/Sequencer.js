@@ -2,7 +2,7 @@ import promisify from "./promisifyXhr";
 import {CATALOG_PREFIX} from "./config";
 
 export default class Sequencer {
-  constructor(players, onStateUpdate, onError) {
+  constructor(players, onSequencerStateUpdate, onError) {
     this.playSong = this.playSong.bind(this);
     this.getPlayer = this.getPlayer.bind(this);
     this.onPlayerStateUpdate = this.onPlayerStateUpdate.bind(this);
@@ -21,7 +21,7 @@ export default class Sequencer {
 
     this.player = null;
     this.players = players;
-    this.onStateUpdate = onStateUpdate;
+    this.onSequencerStateUpdate = onSequencerStateUpdate;
     this.onPlayerError = onError;
 
     this.currIdx = 0;
@@ -40,6 +40,7 @@ export default class Sequencer {
   }
 
   onPlayerStateUpdate(isStopped) {
+    console.log('Sequencer.onPlayerStateUpdate(isStopped=%s)', isStopped);
     if (isStopped) {
       this.currUrl = null;
       if (this.context) {
@@ -47,8 +48,8 @@ export default class Sequencer {
       }
     }
     // State update bubbles to owner
-    // ignore stopped for now TODO
-    this.onStateUpdate();
+    // ignore stopped for now TODO because isStopped is always tru
+    this.onSequencerStateUpdate();
   }
 
   playContext(context, index = 0) {
@@ -73,10 +74,11 @@ export default class Sequencer {
     this.currIdx += direction;
 
     if (this.currIdx < 0 || this.currIdx >= this.context.length) {
+      console.log('Sequencer.advanceSong(direction=%s) %s passed end of context length %s', direction, this.currIdx, this.context.length);
       this.currIdx = 0;
       this.context = null;
       this.player.stop();
-      this.onStateUpdate(true);
+      this.onSequencerStateUpdate(true);
     } else {
       this.playSong(this.context[this.currIdx]);
     }
@@ -185,6 +187,7 @@ export default class Sequencer {
         this.player.setVoices([...Array(numVoices)].fill(true));
         this.currUrl = url;
 
+        console.log('Sequencer.playSong(...) song request completed');
         this.onPlayerStateUpdate();
       });
   }

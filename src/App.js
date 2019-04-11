@@ -80,7 +80,7 @@ class App extends React.Component {
     this.handleTimeSliderChange = this.handleTimeSliderChange.bind(this);
     this.handleTempoChange = this.handleTempoChange.bind(this);
     this.handleSetVoices = this.handleSetVoices.bind(this);
-    this.handlePlayerStateUpdate = this.handlePlayerStateUpdate.bind(this);
+    this.handleSequencerStateUpdate = this.handleSequencerStateUpdate.bind(this);
     this.handlePlayerError = this.handlePlayerError.bind(this);
     this.handleDoSearch = this.handleDoSearch.bind(this);
     this.handlePlayRandom = this.handlePlayRandom.bind(this);
@@ -205,7 +205,7 @@ class App extends React.Component {
       });
     }
 
-    this.sequencer = new Sequencer([], this.handlePlayerStateUpdate, this.handlePlayerError);
+    this.sequencer = new Sequencer([], this.handleSequencerStateUpdate, this.handlePlayerError);
 
     // Load the song catalog
     this.loadCatalog();
@@ -291,7 +291,9 @@ class App extends React.Component {
     this.sequencer.nextSubtune();
   }
 
-  handlePlayerStateUpdate(isStopped) {
+  handleSequencerStateUpdate(isStopped) {
+    console.log('App.handleSequencerStateUpdate(isStopped=%s)', isStopped);
+
     if (isStopped) {
       this.setState({
         ejected: true,
