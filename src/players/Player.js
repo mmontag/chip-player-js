@@ -1,7 +1,7 @@
 //
 // Player can be viewed as a state machine with
 // 3 states (playing, paused, stopped) and 5 transitions
-// (open, pause, unpause, seek, close).
+// (open, pause, unpause, seek, stop).
 // If the player has reached end of the song,
 // it is in the terminal "stopped" state and is
 // no longer playable:

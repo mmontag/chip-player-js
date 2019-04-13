@@ -27,9 +27,9 @@ class App extends React.Component {
   handleLogin() {
     const provider = new firebase.auth.FacebookAuthProvider();
     firebase.auth().signInWithPopup(provider).then(result => {
-      console.log('firebase auth result:', result);
+      console.log('Firebase auth result:', result);
     }).catch(error => {
-      console.log('firebase auth error:', error);
+      console.log('Firebase auth error:', error);
     });
   }
 
@@ -263,10 +263,10 @@ class App extends React.Component {
       audio.volume = 0;
       audio.play();
 
-      navigator.mediaSession.setActionHandler('play', () => { console.log('Media Key: play'); this.togglePause(); });
-      navigator.mediaSession.setActionHandler('pause', () => { console.log('Media Key: pause'); this.togglePause(); });
-      navigator.mediaSession.setActionHandler('previoustrack', () => { console.log('Media Key: previoustrack'); this.prevSong(); });
-      navigator.mediaSession.setActionHandler('nexttrack', () => { console.log('Media Key: nexttrack'); this.nextSong(); });
+      navigator.mediaSession.setActionHandler('play', () => { console.debug('Media Key: play'); this.togglePause(); });
+      navigator.mediaSession.setActionHandler('pause', () => { console.debug('Media Key: pause'); this.togglePause(); });
+      navigator.mediaSession.setActionHandler('previoustrack', () => { console.debug('Media Key: previoustrack'); this.prevSong(); });
+      navigator.mediaSession.setActionHandler('nexttrack', () => { console.debug('Media Key: nexttrack'); this.nextSong(); });
     }
   }
 
@@ -291,10 +291,10 @@ class App extends React.Component {
     this.sequencer.nextSubtune();
   }
 
-  handleSequencerStateUpdate(isStopped) {
-    console.log('App.handleSequencerStateUpdate(isStopped=%s)', isStopped);
+  handleSequencerStateUpdate(isEjected) {
+    console.debug('App.handleSequencerStateUpdate(isEjected=%s)', isEjected);
 
-    if (isStopped) {
+    if (isEjected) {
       this.setState({
         ejected: true,
         currentSongSubtune: 0,

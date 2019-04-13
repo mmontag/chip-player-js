@@ -137,6 +137,7 @@ export default class XMPPlayer extends Player {
 
     this.connect();
     this.resume();
+    this.onPlayerStateUpdate(false);
   }
 
   setVoices(voices) {
@@ -205,6 +206,7 @@ export default class XMPPlayer extends Player {
   stop() {
     this.suspend();
     this.lib._xmp_stop_module(this.xmpCtx);
+    console.debug('XMPPlayer.stop()');
     this.onPlayerStateUpdate(true);
   }
 }

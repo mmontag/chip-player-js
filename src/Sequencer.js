@@ -40,16 +40,15 @@ export default class Sequencer {
   }
 
   onPlayerStateUpdate(isStopped) {
-    console.log('Sequencer.onPlayerStateUpdate(isStopped=%s)', isStopped);
+    console.debug('Sequencer.onPlayerStateUpdate(isStopped=%s)', isStopped);
     if (isStopped) {
       this.currUrl = null;
       if (this.context) {
         this.nextSong();
       }
+    } else {
+      this.onSequencerStateUpdate(false);
     }
-    // State update bubbles to owner
-    // ignore stopped for now TODO because isStopped is always tru
-    this.onSequencerStateUpdate();
   }
 
   playContext(context, index = 0) {
@@ -74,10 +73,11 @@ export default class Sequencer {
     this.currIdx += direction;
 
     if (this.currIdx < 0 || this.currIdx >= this.context.length) {
-      console.log('Sequencer.advanceSong(direction=%s) %s passed end of context length %s', direction, this.currIdx, this.context.length);
+      console.debug('Sequencer.advanceSong(direction=%s) %s passed end of context length %s',
+        direction, this.currIdx, this.context.length);
       this.currIdx = 0;
       this.context = null;
-      this.player.stop();
+      this.player.suspend();
       this.onSequencerStateUpdate(true);
     } else {
       this.playSong(this.context[this.currIdx]);
@@ -125,12 +125,9 @@ export default class Sequencer {
   }
 
   playSong(url) {
-    // Stop and unset current player
     if (this.player !== null) {
       this.player.suspend();
     }
-    // this.player = null;
-    //
 
     // Normalize url - paths are assumed to live under CATALOG_PREFIX
     url = url.startsWith('http') ? url : CATALOG_PREFIX + url;
@@ -175,6 +172,7 @@ export default class Sequencer {
         let uint8Array;
         uint8Array = new Uint8Array(buffer);
 
+        this.currUrl = url;
         try {
           this.player.loadData(uint8Array, filepath);
         } catch (e) {
@@ -185,10 +183,8 @@ export default class Sequencer {
         const numVoices = this.player.getNumVoices();
         this.player.setTempo(this.tempo);
         this.player.setVoices([...Array(numVoices)].fill(true));
-        this.currUrl = url;
 
-        console.log('Sequencer.playSong(...) song request completed');
-        this.onPlayerStateUpdate();
+        console.debug('Sequencer.playSong(...) song request completed');
       });
   }
 }

@@ -67,7 +67,7 @@ export default class GMEPlayer extends Player {
 
       if (this.subtune >= libgme._gme_track_count(emu) || this.playSubtune(this.subtune) !== 0) {
         this.suspend();
-        console.log(
+        console.debug(
           'GMEPlayer.gmeAudioProcess(): _gme_track_ended == %s and subtune (%s) > _gme_track_count (%s).',
           libgme._gme_track_ended(emu),
           this.subtune,
@@ -88,7 +88,7 @@ export default class GMEPlayer extends Player {
     this.fadingOut = false;
     this.subtune = subtune;
     this.metadata = this._parseMetadata(subtune);
-    console.log('GMEPlayer.playSubtune(subtune=%s)', subtune);
+    console.debug('GMEPlayer.playSubtune(subtune=%s)', subtune);
     this.onPlayerStateUpdate(false);
     return libgme._gme_start_track(emu, subtune);
   }
@@ -97,7 +97,6 @@ export default class GMEPlayer extends Player {
     this.subtune = 0;
     this.fadingOut = false;
     this.filepathMeta = Player.metadataFromFilepath(filepath);
-    this.connect();
 
     if (libgme.ccall(
       "gme_open_data",
@@ -110,12 +109,13 @@ export default class GMEPlayer extends Player {
       throw Error('Unable to load this file!');
     }
     emu = libgme.getValue(this.emuPtr, "i32");
+
+    this.connect();
+    this.resume();
     if (this.playSubtune(this.subtune) !== 0) {
       console.error("gme_start_track failed.");
       throw Error('Unable to play this subtune!');
     }
-
-    this.resume();
   }
 
   _parseMetadata(subtune) {
@@ -245,7 +245,7 @@ export default class GMEPlayer extends Player {
     this.suspend();
     if (emu) libgme._gme_delete(emu);
     emu = null;
-    console.log('GMEPlayer.stop()');
+    console.debug('GMEPlayer.stop()');
     this.onPlayerStateUpdate(true);
   }
 }

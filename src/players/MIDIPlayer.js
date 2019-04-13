@@ -158,6 +158,7 @@ export default class MIDIPlayer extends Player {
 
     this.connect();
     this.resume();
+    this.onPlayerStateUpdate(false);
   }
 
   isPlaying() {
@@ -172,6 +173,7 @@ export default class MIDIPlayer extends Player {
   stop() {
     this.suspend();
     lib._tp_stop();
+    console.debug('MIDIPlayer.stop()');
     this.onPlayerStateUpdate(true);
   }
 
