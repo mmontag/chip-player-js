@@ -37,13 +37,14 @@ const routes = {
     const limit = parseInt(params.limit, 10);
     const query = params.query;
     const start = performance.now();
-    let results = trie.get(query, TrieSearch.UNION_REDUCER) || [];
-    if (limit) results = results.slice(0, limit);
+    let items = trie.get(query, TrieSearch.UNION_REDUCER) || [];
+    const total = items.length;
+    if (limit) items = items.slice(0, limit);
     const time = (performance.now() - start).toFixed(1);
-    console.log('Returned %s results in %s ms.', results.length, time);
+    console.log('Returned %s results in %s ms.', items.length, time);
     return {
-      results: results,
-      count: results.length,
+      items: items,
+      total: total,
     };
   },
 
@@ -52,8 +53,14 @@ const routes = {
   },
 
   'random': (params) => {
+    const limit = parseInt(params.limit, 10) || 1;
     const idx = Math.floor(Math.random() * files.length);
-    return files[idx];
+    const items = files.slice(idx, idx + limit);
+    const total = items.length;
+    return {
+      items: items,
+      total: total,
+    }
   },
 };
 
@@ -64,7 +71,12 @@ http.createServer(function (req, res) {
   if (route) {
     const params = url.query || {};
     const json = route(params);
-    res.writeHead(200, {'Content-Type': 'application/json'});
+    res.writeHead(200, {
+      // If running behind a proxy such as nginx,
+      // configure it to ignore this CORS header
+      'Access-Control-Allow-Origin': '*',
+      'Content-Type': 'application/json',
+    });
     res.end(JSON.stringify(json));
   }  else {
     res.writeHead(404);
