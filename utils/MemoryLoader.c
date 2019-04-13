@@ -29,22 +29,10 @@ static inline UINT32 ReadLE32(const UINT8 *data)
 			(data[0x01] <<  8) | (data[0x00] <<  0);
 }
 
-static void *MemoryLoader_dopen(void *context, va_list argp)
+static UINT8 MemoryLoader_dopen(void *context)
 {
-	UINT8 *mem = NULL;
-	UINT32 *memSize = NULL;
-	mem = (UINT8 *)va_arg(argp,void *);
-	memSize = (UINT32 *)va_arg(argp,void *);
-	/* context will be the initial, user-supplied memory buffer */
-	/* params will be a pointer to an integer, specifying the buffer length */
-	if (*memSize < 4) return NULL;
-
-	MEMORY_LOADER *loader = (MEMORY_LOADER *)malloc(sizeof(MEMORY_LOADER));
-	if(loader == NULL) return NULL;
-
-	loader->_data = mem;
+	MEMORY_LOADER *loader = (MEMORY_LOADER *)context;
 	loader->_pos = 0;
-	loader->_length = *memSize;
 	if(loader->_data[0] == 31 && loader->_data[1] == 139)
 	{
 		loader->_modeCompr = MLMODE_CMP_GZ;
@@ -55,15 +43,14 @@ static void *MemoryLoader_dopen(void *context, va_list argp)
 		loader->_stream.next_in = loader->_data;
 		loader->_length = ReadLE32((const UINT8 *)&loader->_data[loader->_length - 4]);
 		if(inflateInit2(&loader->_stream,47) != Z_OK) {
-			free(loader);
-			return NULL;
+			return 0x01;
 		}
 	}
 	else
 	{
 		loader->_modeCompr = MLMODE_CMP_RAW;
 	}
-	return loader;
+	return 0x00;
 }
 
 static UINT32 MemoryLoader_dread(void *context, UINT8 *buffer, UINT32 numBytes)
@@ -100,22 +87,25 @@ static UINT32 MemoryLoader_dlength(void *context)
 
 static INT32 MemoryLoader_dtell(void *context)
 {
+	(void)context;
 	return -1; /* TODO */
 }
 
 static UINT8 MemoryLoader_dseek(void *context, UINT32 offset, UINT8 whence)
 {
+	(void)context;
+	(void)offset;
+	(void)whence;
 	return 0; /* TODO */
 }
 
-static void *MemoryLoader_dclose(void *context)
+static UINT8 MemoryLoader_dclose(void *context)
 {
 	MEMORY_LOADER *loader = (MEMORY_LOADER *)context;
 	if(loader->_modeCompr == MLMODE_CMP_GZ) {
 		inflateEnd(&loader->_stream);
 	}
-	free(context);
-	return NULL;
+	return 0x00;
 }
 
 static UINT8 MemoryLoader_deof(void *context) {
@@ -125,12 +115,42 @@ static UINT8 MemoryLoader_deof(void *context) {
 }
 
 const DATA_LOADER_CALLBACKS memoryLoader = {
-	.type    = "Default Memory Loader",
+	.type	= "Default Memory Loader",
 	.dopen   = MemoryLoader_dopen,
 	.dread   = MemoryLoader_dread,
 	.dseek   = MemoryLoader_dseek,
 	.dclose  = MemoryLoader_dclose,
 	.dtell   = MemoryLoader_dtell,
 	.dlength = MemoryLoader_dlength,
-	.deof    = MemoryLoader_deof,
+	.deof	= MemoryLoader_deof,
 };
+
+DATA_LOADER *MemoryLoader_Init(UINT8 *buffer, UINT32 length)
+{
+	DATA_LOADER *dLoader = (DATA_LOADER *)malloc(sizeof(DATA_LOADER));
+	if(dLoader == NULL) return NULL;
+	memset(dLoader,0,sizeof(DATA_LOADER));
+
+	MEMORY_LOADER *mLoader = (MEMORY_LOADER *)malloc(sizeof(MEMORY_LOADER));
+	if(mLoader == NULL)
+	{
+		MemoryLoader_Deinit(dLoader);
+		return NULL;
+	}
+	memset(mLoader,0,sizeof(MEMORY_LOADER));
+
+	mLoader->_data = buffer;
+	mLoader->_length = length;
+
+	DataLoader_Setup(dLoader,&memoryLoader,mLoader);
+
+	return dLoader;
+}
+
+void MemoryLoader_Deinit(DATA_LOADER *dLoader)
+{
+	if(dLoader == NULL) return;
+	DataLoader_Reset(dLoader);
+	if(dLoader->_context) free(dLoader->_context);
+	free(dLoader);
+}

@@ -89,7 +89,7 @@ int main(int argc, char* argv[])
 {
 	int argbase;
 	UINT8 retVal;
-	DATA_LOADER dLoad;
+	DATA_LOADER *dLoad;
 	PlayerBase* player;
 	int curSong;
 
@@ -125,27 +125,22 @@ int main(int argc, char* argv[])
 #ifdef USE_MEMORY_LOADER
 	UINT32 fileSize;
 	UINT8 *fileData = SlurpFile(argv[curSong],&fileSize);
-	DataLoader_Init(&dLoad,&memoryLoader);
-	DataLoader_SetPreloadBytes(&dLoad,0x100);
-	if(DataLoader_Load(&dLoad,(void *)fileData,(void *)&fileSize))
-	{
-		DataLoader_CancelLoading(&dLoad);
-		continue;
-	}
-	
+	dLoad = MemoryLoader_Init(fileData, fileSize);
 #else
-	DataLoader_Init(&dLoad,&fileLoader);
-	DataLoader_SetPreloadBytes(&dLoad,0x100);
-	if(DataLoader_Load(&dLoad,(void *)argv[curSong]))
+	dLoad = FileLoader_Init(argv[curSong]);
+#endif
+
+	if(dLoad == NULL) continue;
+	DataLoader_SetPreloadBytes(dLoad,0x100);
+	if(DataLoader_Load(dLoad))
 	{
-		DataLoader_CancelLoading(&dLoad);
+		DataLoader_CancelLoading(dLoad);
 		continue;
 	}
-#endif
-	retVal = GetPlayerForFile(&dLoad, &player);
+	retVal = GetPlayerForFile(dLoad, &player);
 	if (retVal)
 	{
-		DataLoader_CancelLoading(&dLoad);
+		DataLoader_CancelLoading(dLoad);
 		if (player != NULL)
 			delete player;
 		fprintf(stderr, "Error 0x%02X loading file!\n", retVal);
@@ -287,9 +282,11 @@ int main(int argc, char* argv[])
 	player->Stop();
 	player->UnloadFile();
 #ifdef USE_MEMORY_LOADER
-	free(fileData);
+	MemoryLoader_Deinit(dLoad);
+#else
+	FileLoader_Deinit(dLoad);
 #endif
-	delete player;	player = NULL;
+	delete player;	player = NULL; dLoad = NULL;
 	
 	}	// end for(curSong)
 	

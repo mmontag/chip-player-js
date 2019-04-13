@@ -22,40 +22,33 @@ union LoaderHandles
 
 typedef union LoaderHandles LOADER_HANDLES;
 
-struct FileLoader {
+struct FileLoader
+{
 	UINT8 _modeCompr;
 	UINT32 _bytesTotal;
 	LOADER_HANDLES _hLoad[1];
+	const char *fileName;
 };
 
 typedef struct FileLoader FILE_LOADER;
 
-static void *FileLoader_dopen(void *context, va_list argp)
+static UINT8 FileLoader_dopen(void *context)
 {
+	FILE_LOADER *loader = (FILE_LOADER *)context;
 	UINT8 fileHdr[4];
 	size_t readBytes;
-	const char *fileName = (const char *)va_arg(argp,void *);
 
-	FILE_LOADER *loader = (FILE_LOADER *)malloc(sizeof(FILE_LOADER));
+	loader->_hLoad->hFileRaw = fopen(loader->fileName, "rb");
+	if (loader->_hLoad->hFileRaw == NULL) return 0x01;
 
-	if(loader == NULL) return NULL;
-	memset(loader,0,sizeof(FILE_LOADER));
-	
-	loader->_hLoad->hFileRaw = fopen(fileName, "rb");
-	if (loader->_hLoad->hFileRaw == NULL)
-	{
-		free(loader);
-		return NULL;
-	}
-	
 	readBytes = fread(fileHdr, 0x01, 4, loader->_hLoad->hFileRaw);
 	if (readBytes < 4)
 	{
 		fclose(loader->_hLoad->hFileRaw);
-		free(loader);
-		return NULL;
+		loader->_hLoad->hFileRaw = NULL;
+		return 0x01;
 	}
-	
+
 	if (fileHdr[0] == 31 && fileHdr[1] == 139)
 	{
 		UINT32 totalSize;
@@ -68,12 +61,11 @@ static void *FileLoader_dopen(void *context, va_list argp)
 		}
 		fclose(loader->_hLoad->hFileRaw);
 		loader->_hLoad->hFileRaw = NULL;
-		
-		loader->_hLoad->hFileGZ = gzopen(fileName, "rb");
+
+		loader->_hLoad->hFileGZ = gzopen(loader->fileName, "rb");
 		if (loader->_hLoad->hFileGZ == NULL)
 		{
-			free(loader);
-			return NULL;
+			return 0x01;
 		}
 		loader->_modeCompr = FLMODE_CMP_GZ;
 	}
@@ -84,8 +76,8 @@ static void *FileLoader_dopen(void *context, va_list argp)
 		rewind(loader->_hLoad->hFileRaw);
 		loader->_modeCompr = FLMODE_CMP_RAW;
 	}
-	
-	return (void *)loader;
+
+	return 0x00;
 }
 
 static UINT32 FileLoader_dread(void *context, UINT8 *buffer, UINT32 numBytes)
@@ -95,7 +87,7 @@ static UINT32 FileLoader_dread(void *context, UINT8 *buffer, UINT32 numBytes)
 	{
 		return  fread(buffer, 0x01, numBytes, loader->_hLoad->hFileRaw);
 	}
-		
+
 	return gzread(loader->_hLoad->hFileGZ,buffer,numBytes);
 }
 
@@ -108,16 +100,17 @@ static UINT8 FileLoader_dseek(void *context, UINT32 offset, UINT8 whence)
 
 }
 
-static void *FileLoader_dclose(void *context) {
-	if(context == NULL) return 0;
+static UINT8 FileLoader_dclose(void *context)
+{
 	FILE_LOADER *loader = (FILE_LOADER *)context;
 	if(loader->_modeCompr == FLMODE_CMP_RAW) fclose(loader->_hLoad->hFileRaw);
 	else gzclose(loader->_hLoad->hFileGZ);
-	free(loader);
-	return NULL;
+
+	return 0x00;
 }
 
-static INT32 FileLoader_dtell(void *context) {
+static INT32 FileLoader_dtell(void *context)
+{
 	FILE_LOADER *loader = (FILE_LOADER *)context;
 	if(loader->_modeCompr == FLMODE_CMP_RAW)
 	{
@@ -126,24 +119,55 @@ static INT32 FileLoader_dtell(void *context) {
 	return gztell(loader->_hLoad->hFileGZ);
 }
 
-static UINT32 FileLoader_dlength(void *context) {
+static UINT32 FileLoader_dlength(void *context)
+{
 	FILE_LOADER *loader = (FILE_LOADER *)context;
 	return loader->_bytesTotal;
 }
 
-static UINT8 FileLoader_deof(void *context) {
+static UINT8 FileLoader_deof(void *context)
+{
 	FILE_LOADER *loader = (FILE_LOADER *)context;
 	if(loader->_modeCompr == FLMODE_CMP_RAW) return feof(loader->_hLoad->hFileRaw);
 	return gzeof(loader->_hLoad->hFileGZ);
 }
 
 const DATA_LOADER_CALLBACKS fileLoader = {
-	.type    = "Default File Loader",
+	.type	= "Default File Loader",
 	.dopen   = FileLoader_dopen,
 	.dread   = FileLoader_dread,
 	.dseek   = FileLoader_dseek,
 	.dclose  = FileLoader_dclose,
 	.dtell   = FileLoader_dtell,
 	.dlength = FileLoader_dlength,
-	.deof    = FileLoader_deof,
+	.deof	= FileLoader_deof,
 };
+
+DATA_LOADER *FileLoader_Init(const char *fileName)
+{
+	DATA_LOADER *dLoader = (DATA_LOADER *)malloc(sizeof(DATA_LOADER));
+	if(dLoader == NULL) return NULL;
+	memset(dLoader,0,sizeof(DATA_LOADER));
+
+	FILE_LOADER *fLoader = (FILE_LOADER *)malloc(sizeof(FILE_LOADER));
+	if(fLoader == NULL)
+	{
+		FileLoader_Deinit(dLoader);
+		return NULL;
+	}
+	memset(fLoader,0,sizeof(FILE_LOADER));
+
+	fLoader->fileName = fileName;
+
+	DataLoader_Setup(dLoader,&fileLoader,fLoader);
+
+	return dLoader;
+}
+
+void FileLoader_Deinit(DATA_LOADER *dLoader)
+{
+	if(dLoader == NULL) return;
+	if(dLoader->_context) free(dLoader->_context);
+	free(dLoader);
+}
+
