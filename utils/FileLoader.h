@@ -10,7 +10,6 @@ extern "C" {
 extern const DATA_LOADER_CALLBACKS fileLoader;
 
 DATA_LOADER *FileLoader_Init(const char *fileName);
-void FileLoader_Deinit(DATA_LOADER *);
 
 #define FileLoader_Load(c) DataLoader_Load(c)
 #define FileLoader_Reset(c) DataLoader_Reset(c)
@@ -24,6 +23,7 @@ void FileLoader_Deinit(DATA_LOADER *);
 #define FileLoader_SetPreloadBytes(c) DataLoader_SetPreloadBytes(c)
 #define FileLoader_ReadUntil(c) DataLoader_ReadUntil(c)
 #define FileLoader_ReadAll(c) DataLoader_ReadAll(c)
+#define FileLoader_Deinit(c) DataLoader_Deinit(c)
 
 #ifdef __cplusplus
 }

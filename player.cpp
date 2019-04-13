@@ -281,11 +281,7 @@ int main(int argc, char* argv[])
 	
 	player->Stop();
 	player->UnloadFile();
-#ifdef USE_MEMORY_LOADER
-	MemoryLoader_Deinit(dLoad);
-#else
-	FileLoader_Deinit(dLoad);
-#endif
+	DataLoader_Deinit(dLoad);
 	delete player;	player = NULL; dLoad = NULL;
 	
 	}	// end for(curSong)

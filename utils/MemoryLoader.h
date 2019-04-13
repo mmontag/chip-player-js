@@ -10,7 +10,6 @@ extern "C" {
 extern const DATA_LOADER_CALLBACKS memoryLoader;
 
 DATA_LOADER *MemoryLoader_Init(UINT8 *buffer, UINT32 length);
-void MemoryLoader_Deinit(DATA_LOADER *);
 
 #define MemoryLoader_Load(c) DataLoader_Load(c)
 #define MemoryLoader_Reset(c) DataLoader_Reset(c)
@@ -24,6 +23,7 @@ void MemoryLoader_Deinit(DATA_LOADER *);
 #define MemoryLoader_SetPreloadBytes(c) DataLoader_SetPreloadBytes(c)
 #define MemoryLoader_ReadUntil(c) DataLoader_ReadUntil(c)
 #define MemoryLoader_ReadAll(c) DataLoader_ReadAll(c)
+#define MemoryLoader_Deinit(c) DataLoader_Deinit(c)
 
 #ifdef __cplusplus
 }

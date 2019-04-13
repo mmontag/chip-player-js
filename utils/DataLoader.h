@@ -83,6 +83,9 @@ void DataLoader_ReadAll(DATA_LOADER *loader);
 /* convenience function for MemoryLoader,FileLoader, etc */
 void DataLoader_Setup(DATA_LOADER *loader, const DATA_LOADER_CALLBACKS *callbacks, void *context);
 
+/* tear-down function */
+void DataLoader_Deinit(DATA_LOADER *loader);
+
 
 #ifdef __cplusplus
 }

@@ -147,10 +147,3 @@ DATA_LOADER *MemoryLoader_Init(UINT8 *buffer, UINT32 length)
 	return dLoader;
 }
 
-void MemoryLoader_Deinit(DATA_LOADER *dLoader)
-{
-	if(dLoader == NULL) return;
-	DataLoader_Reset(dLoader);
-	if(dLoader->_context) free(dLoader->_context);
-	free(dLoader);
-}

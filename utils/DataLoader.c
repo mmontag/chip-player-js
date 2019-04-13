@@ -123,6 +123,14 @@ UINT32 DataLoader_Read(DATA_LOADER *loader, UINT32 numBytes)
 	return readBytes;
 }
 
+void DataLoader_Deinit(DATA_LOADER *dLoader)
+{
+	if(dLoader == NULL) return;
+	DataLoader_Reset(dLoader);
+	if(dLoader->_context) free(dLoader->_context);
+	free(dLoader);
+}
+
 void DataLoader_Setup(DATA_LOADER *loader, const DATA_LOADER_CALLBACKS *callbacks, void *context) {
 	loader->_data = NULL;
 	loader->_status = DLSTAT_EMPTY;

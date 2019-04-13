@@ -164,10 +164,3 @@ DATA_LOADER *FileLoader_Init(const char *fileName)
 	return dLoader;
 }
 
-void FileLoader_Deinit(DATA_LOADER *dLoader)
-{
-	if(dLoader == NULL) return;
-	if(dLoader->_context) free(dLoader->_context);
-	free(dLoader);
-}
-
