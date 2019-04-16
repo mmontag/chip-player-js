@@ -137,27 +137,27 @@ const char* VGMPlayer::GetPlayerName(void) const
 	return "VGM";
 }
 
-/*static*/ UINT8 VGMPlayer::IsMyFile(FILE_LOADER *fileLoader)
+/*static*/ UINT8 VGMPlayer::IsMyFile(DATA_LOADER *dataLoader)
 {
-	FileLoader_ReadUntil(fileLoader,0x38);
-	if (FileLoader_GetFileSize(fileLoader) < 0x38)
+	DataLoader_ReadUntil(dataLoader,0x38);
+	if (DataLoader_GetSize(dataLoader) < 0x38)
 		return 0xF1;	// file too small
-	if (memcmp(FileLoader_GetFileData(fileLoader), "Vgm ", 4))
+	if (memcmp(DataLoader_GetData(dataLoader), "Vgm ", 4))
 		return 0xF0;	// invalid signature
 	return 0x00;
 }
 
-UINT8 VGMPlayer::LoadFile(FILE_LOADER *fileLoader)
+UINT8 VGMPlayer::LoadFile(DATA_LOADER *dataLoader)
 {
-	_fLoad = NULL;
-	FileLoader_ReadUntil(fileLoader,0x38);
-	_fileData = FileLoader_GetFileData(fileLoader);
-	if (FileLoader_GetFileSize(fileLoader) < 0x38 || memcmp(_fileData, "Vgm ", 4))
+	_dLoad = NULL;
+	DataLoader_ReadUntil(dataLoader,0x38);
+	_fileData = DataLoader_GetData(dataLoader);
+	if (DataLoader_GetSize(dataLoader) < 0x38 || memcmp(_fileData, "Vgm ", 4))
 		return 0xF0;	// invalid file
 	
-	_fLoad = fileLoader;
-	FileLoader_ReadFullFile(_fLoad);
-	_fileData = FileLoader_GetFileData(fileLoader);
+	_dLoad = dataLoader;
+	DataLoader_ReadAll(_dLoad);
+	_fileData = DataLoader_GetData(dataLoader);
 	
 	// parse main header
 	ParseHeader();
@@ -220,8 +220,8 @@ UINT8 VGMPlayer::ParseHeader(void)
 			_fileHdr.xhChpVolOfs = ReadRelOfs(_fileData, _fileHdr.extraHdrOfs + 0x08);
 	}
 	
-	if (! _fileHdr.eofOfs || _fileHdr.eofOfs > FileLoader_GetFileSize(_fLoad))
-		_fileHdr.eofOfs = FileLoader_GetFileSize(_fLoad);	// catch invalid EOF values
+	if (! _fileHdr.eofOfs || _fileHdr.eofOfs > DataLoader_GetSize(_dLoad))
+		_fileHdr.eofOfs = DataLoader_GetSize(_dLoad);	// catch invalid EOF values
 	_fileHdr.dataEnd = _fileHdr.eofOfs;
 	// command data ends at the GD3 offset if:
 	//	GD3 is used && GD3 offset < EOF (just to be sure) && GD3 offset > dataOfs (catch files with GD3 between header and data)
@@ -234,7 +234,7 @@ UINT8 VGMPlayer::ParseHeader(void)
 void VGMPlayer::ParseXHdr_Data32(UINT32 fileOfs, std::vector<XHDR_DATA32>& xData)
 {
 	xData.clear();
-	if (! fileOfs || fileOfs >= FileLoader_GetFileSize(_fLoad))
+	if (! fileOfs || fileOfs >= DataLoader_GetSize(_dLoad))
 		return;
 	
 	UINT32 curPos = fileOfs;
@@ -243,7 +243,7 @@ void VGMPlayer::ParseXHdr_Data32(UINT32 fileOfs, std::vector<XHDR_DATA32>& xData
 	xData.resize(_fileData[curPos]);	curPos ++;
 	for (curChip = 0; curChip < xData.size(); curChip ++, curPos += 0x05)
 	{
-		if (curPos + 0x05 > FileLoader_GetFileSize(_fLoad))
+		if (curPos + 0x05 > DataLoader_GetSize(_dLoad))
 		{
 			xData.resize(curChip);
 			break;
@@ -260,7 +260,7 @@ void VGMPlayer::ParseXHdr_Data32(UINT32 fileOfs, std::vector<XHDR_DATA32>& xData
 void VGMPlayer::ParseXHdr_Data16(UINT32 fileOfs, std::vector<XHDR_DATA16>& xData)
 {
 	xData.clear();
-	if (! fileOfs || fileOfs >= FileLoader_GetFileSize(_fLoad))
+	if (! fileOfs || fileOfs >= DataLoader_GetSize(_dLoad))
 		return;
 	
 	UINT32 curPos = fileOfs;
@@ -269,7 +269,7 @@ void VGMPlayer::ParseXHdr_Data16(UINT32 fileOfs, std::vector<XHDR_DATA16>& xData
 	xData.resize(_fileData[curPos]);	curPos ++;
 	for (curChip = 0; curChip < xData.size(); curChip ++, curPos += 0x04)
 	{
-		if (curPos + 0x04 > FileLoader_GetFileSize(_fLoad))
+		if (curPos + 0x04 > DataLoader_GetSize(_dLoad))
 		{
 			xData.resize(curChip);
 			break;
@@ -346,7 +346,7 @@ UINT8 VGMPlayer::UnloadFile(void)
 		return 0xFF;
 	
 	_playState = 0x00;
-	_fLoad = NULL;
+	_dLoad = NULL;
 	_fileData = NULL;
 	_fileHdr.fileVer = 0xFFFFFFFF;
 	_fileHdr.dataOfs = 0x00;

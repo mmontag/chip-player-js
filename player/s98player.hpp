@@ -7,7 +7,7 @@
 #include "../utils/StrUtils.h"
 #include "helper.h"
 #include "playerbase.hpp"
-#include "../utils/FileLoader.h"
+#include "../utils/DataLoader.h"
 #include <vector>
 #include <map>
 #include <string>
@@ -48,8 +48,8 @@ public:
 	
 	UINT32 GetPlayerType(void) const;
 	const char* GetPlayerName(void) const;
-	static UINT8 IsMyFile(FILE_LOADER *fileLoader);
-	UINT8 LoadFile(FILE_LOADER *fileLoader);
+	static UINT8 IsMyFile(DATA_LOADER *dataLoader);
+	UINT8 LoadFile(DATA_LOADER *dataLoader);
 	UINT8 UnloadFile(void);
 	const S98_HEADER* GetFileHeader(void) const;
 	const char* GetSongTitle(void);
@@ -91,8 +91,8 @@ private:
 	void DoCommand(void);
 	
 	CPCONV* _cpcSJIS;	// ShiftJIS -> UTF-8 codepage conversion
-	FILE_LOADER *_fLoad;
-	const UINT8* _fileData;	// data pointer for quick access, equals _fLoad->GetFileData().data()
+	DATA_LOADER *_dLoad;
+	const UINT8* _fileData;	// data pointer for quick access, equals _dLoad->GetFileData().data()
 	
 	S98_HEADER _fileHdr;
 	std::vector<S98_DEVICE> _devHdrs;
