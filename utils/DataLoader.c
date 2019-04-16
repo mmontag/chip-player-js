@@ -1,6 +1,8 @@
-#include "DataLoader.h"
 #include <stdlib.h>
 #include <string.h>
+
+#include <stdtype.h>
+#include "DataLoader.h"
 
 UINT8 DataLoader_Reset(DATA_LOADER *loader)
 {
@@ -18,7 +20,6 @@ UINT8 DataLoader_Reset(DATA_LOADER *loader)
 
 	return 0;
 }
-
 
 UINT8 *DataLoader_GetData(DATA_LOADER *loader) {
 	return loader->_data;
@@ -44,7 +45,6 @@ UINT8 DataLoader_CancelLoading(DATA_LOADER *loader)
 	loader->_status = DLSTAT_LOADED;
 
 	return 0x00;
-
 }
 
 UINT8 DataLoader_Load(DATA_LOADER *loader)
@@ -103,7 +103,6 @@ UINT32 DataLoader_Read(DATA_LOADER *loader, UINT32 numBytes)
 		endOfs = loader->_bytesTotal;
 
 	loader->_data = (UINT8 *)realloc(loader->_data,endOfs);
-
 	if(loader->_data == NULL) {
 		return 0;
 	}
@@ -137,4 +136,3 @@ void DataLoader_Setup(DATA_LOADER *loader, const DATA_LOADER_CALLBACKS *callback
 	loader->_context = context;
 	loader->_callbacks = callbacks;
 }
-

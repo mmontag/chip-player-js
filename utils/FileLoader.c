@@ -1,10 +1,10 @@
-#include "FileLoader.h"
-
-#include <zlib.h>
 #include <stdio.h>
-#include <stdtype.h>
 #include <stdlib.h>
 #include <string.h>
+#include <zlib.h>
+
+#include <common_def.h>
+#include "FileLoader.h"
 
 enum
 {
@@ -28,7 +28,7 @@ typedef struct file_loader
 	const char *fileName;
 } FILE_LOADER;
 
-static inline UINT32 ReadLE32(const UINT8 *data)
+INLINE UINT32 ReadLE32(const UINT8 *data)
 {
 	return	(data[0x03] << 24) | (data[0x02] << 16) |
 			(data[0x01] <<  8) | (data[0x00] <<  0);
@@ -90,10 +90,9 @@ static UINT32 FileLoader_dread(void *context, UINT8 *buffer, UINT32 numBytes)
 static UINT8 FileLoader_dseek(void *context, UINT32 offset, UINT8 whence)
 {
 	FILE_LOADER *loader = (FILE_LOADER *)context;
-	if(loader->modeCompr == FLMODE_CMP_RAW) return fseek(loader->hLoad.hFileRaw, offset, whence);
+	if(loader->modeCompr == FLMODE_CMP_RAW) return (UINT8)fseek(loader->hLoad.hFileRaw, offset, whence);
 	if(whence == SEEK_END) return 0;
-	return gzseek(loader->hLoad.hFileGZ, offset, whence);
-
+	return (gzseek(loader->hLoad.hFileGZ, offset, whence) == -1) ? 0x01 : 0x00;
 }
 
 static UINT8 FileLoader_dclose(void *context)
@@ -149,12 +148,12 @@ DATA_LOADER *FileLoader_Init(const char *fileName)
 }
 
 const DATA_LOADER_CALLBACKS fileLoader = {
-	.type	= "Default File Loader",
-	.dopen   = FileLoader_dopen,
-	.dread   = FileLoader_dread,
-	.dseek   = FileLoader_dseek,
-	.dclose  = FileLoader_dclose,
-	.dtell   = FileLoader_dtell,
-	.dlength = FileLoader_dlength,
-	.deof	= FileLoader_deof,
+	"Default File Loader",
+	FileLoader_dopen,
+	FileLoader_dread,
+	FileLoader_dseek,
+	FileLoader_dclose,
+	FileLoader_dtell,
+	FileLoader_dlength,
+	FileLoader_deof,
 };

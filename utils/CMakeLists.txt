@@ -70,7 +70,7 @@ option(UTIL_CHARCNV_WINAPI "Charset Conversion: WinAPI" ${CAN_WINAPI})
 
 if(UTIL_CHARCNV_WINAPI)
 	set(UTIL_FILES ${UTIL_FILES} StrUtils-CPConv_Win.c)
-else()
+elseif(UTIL_CHARCNV_ICONV)
 	find_package(Iconv REQUIRED)
 	set(UTIL_FILES ${UTIL_FILES} StrUtils-CPConv_IConv.c)
 	set(UTIL_LIBS ${UTIL_LIBS} Iconv::Iconv)

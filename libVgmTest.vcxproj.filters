@@ -39,13 +39,13 @@
     <ClInclude Include="player\vgmplayer.hpp">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="utils\DataLoader.hpp">
+    <ClInclude Include="utils\DataLoader.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="utils\FileLoader.hpp">
+    <ClInclude Include="utils\FileLoader.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="utils\MemoryLoader.hpp">
+    <ClInclude Include="utils\MemoryLoader.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="utils\StrUtils.h">
@@ -65,7 +65,7 @@
     <ClCompile Include="vgmtest.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="vgm\dblk_compr.c">
+    <ClCompile Include="player\dblk_compr.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
     <ClCompile Include="vgm_dbcompr_bench.c">
@@ -92,13 +92,13 @@
     <ClCompile Include="player\vgmplayer_cmdhandler.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="utils\DataLoader.cpp">
+    <ClCompile Include="utils\DataLoader.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="utils\FileLoader.cpp">
+    <ClCompile Include="utils\FileLoader.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="utils\MemoryLoader.cpp">
+    <ClCompile Include="utils\MemoryLoader.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
     <ClCompile Include="utils\StrUtils-CPConv_Win.c">

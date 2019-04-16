@@ -1,10 +1,9 @@
-#include "MemoryLoader.h"
-
-#include <zlib.h>
-#include <stdtype.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdarg.h>
+#include <zlib.h>
+
+#include <common_def.h>
+#include "MemoryLoader.h"
 
 enum
 {
@@ -23,7 +22,7 @@ struct MemoryLoader {
 
 typedef struct MemoryLoader MEMORY_LOADER;
 
-static inline UINT32 ReadLE32(const UINT8 *data)
+INLINE UINT32 ReadLE32(const UINT8 *data)
 {
 	return	(data[0x03] << 24) | (data[0x02] << 16) |
 			(data[0x01] <<  8) | (data[0x00] <<  0);
@@ -138,12 +137,12 @@ DATA_LOADER *MemoryLoader_Init(const UINT8 *buffer, UINT32 length)
 }
 
 const DATA_LOADER_CALLBACKS memoryLoader = {
-	.type	= "Default Memory Loader",
-	.dopen   = MemoryLoader_dopen,
-	.dread   = MemoryLoader_dread,
-	.dseek   = MemoryLoader_dseek,
-	.dclose  = MemoryLoader_dclose,
-	.dtell   = MemoryLoader_dtell,
-	.dlength = MemoryLoader_dlength,
-	.deof	= MemoryLoader_deof,
+	"Default Memory Loader",
+	MemoryLoader_dopen,
+	MemoryLoader_dread,
+	MemoryLoader_dseek,
+	MemoryLoader_dclose,
+	MemoryLoader_dtell,
+	MemoryLoader_dlength,
+	MemoryLoader_deof,
 };
