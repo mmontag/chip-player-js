@@ -157,7 +157,9 @@
   <ItemGroup>
     <ClInclude Include="common_def.h" />
     <ClInclude Include="player\droplayer.hpp" />
+    <ClInclude Include="utils\DataLoader.hpp" />
     <ClInclude Include="utils\FileLoader.hpp" />
+    <ClInclude Include="utils\MemoryLoader.hpp" />
     <ClInclude Include="player\helper.h" />
     <ClInclude Include="player\playerbase.hpp" />
     <ClInclude Include="player\s98player.hpp" />
@@ -187,7 +189,9 @@
     </ClCompile>
     <ClCompile Include="player.cpp" />
     <ClCompile Include="player\droplayer.cpp" />
+    <ClCompile Include="utils\DataLoader.cpp" />
     <ClCompile Include="utils\FileLoader.cpp" />
+    <ClCompile Include="utils\MemoryLoader.cpp" />
     <ClCompile Include="player\helper.c" />
     <ClCompile Include="player\playerbase.cpp" />
     <ClCompile Include="player\s98player.cpp" />

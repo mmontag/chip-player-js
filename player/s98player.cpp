@@ -93,7 +93,7 @@ const char* S98Player::GetPlayerName(void) const
 	DataLoader_ReadUntil(dataLoader,0x20);
 	if (DataLoader_GetSize(dataLoader) < 0x20)
 		return 0xF1;	// file too small
-	if (memcmp(DataLoader_GetData(dataLoader), "S98", 3))
+	if (memcmp(&DataLoader_GetData(dataLoader)[0x00], "S98", 3))
 		return 0xF0;	// invalid signature
 	return 0x00;
 }
@@ -107,7 +107,7 @@ UINT8 S98Player::LoadFile(DATA_LOADER *dataLoader)
 	_dLoad = NULL;
 	DataLoader_ReadUntil(dataLoader,0x20);
 	_fileData = DataLoader_GetData(dataLoader);
-	if (DataLoader_GetSize(dataLoader) < 0x20 || memcmp(_fileData, "S98", 3))
+	if (DataLoader_GetSize(dataLoader) < 0x20 || memcmp(&_fileData[0x00], "S98", 3))
 		return 0xF0;	// invalid file
 	if (! (_fileData[0x03] >= '0' && _fileData[0x03] <= '3'))
 		return 0xF1;	// unsupported version

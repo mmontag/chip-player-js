@@ -243,19 +243,21 @@ AUDEMU_MAINOBJS = \
 	$(OBJ)/audemutest.o
 
 VGMTEST_MAINOBJS = \
-	$(OBJ)/vgm/dblk_compr.o \
+	$(OBJ)/player/dblk_compr.o \
 	$(OBJ)/vgmtest.o
 
 PLAYER_MAINOBJS = \
 	$(OBJ)/player/helper.o \
+	$(UTILOBJ)/DataLoader.o \
 	$(UTILOBJ)/FileLoader.o \
+	$(UTILOBJ)/MemoryLoader.o \
 	$(UTILOBJ)/StrUtils-CPConv_IConv.o \
 	$(OBJ)/player/playerbase.o \
 	$(OBJ)/player/s98player.o \
 	$(OBJ)/player/droplayer.o \
 	$(OBJ)/player/vgmplayer.o \
 	$(OBJ)/player/vgmplayer_cmdhandler.o \
-	$(OBJ)/vgm/dblk_compr.o \
+	$(OBJ)/player/dblk_compr.o \
 	$(OBJ)/player.o
 
 all:	audiotest emutest audemutest vgmtest plrtest

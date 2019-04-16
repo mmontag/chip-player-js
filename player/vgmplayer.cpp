@@ -142,7 +142,7 @@ const char* VGMPlayer::GetPlayerName(void) const
 	DataLoader_ReadUntil(dataLoader,0x38);
 	if (DataLoader_GetSize(dataLoader) < 0x38)
 		return 0xF1;	// file too small
-	if (memcmp(DataLoader_GetData(dataLoader), "Vgm ", 4))
+	if (memcmp(&DataLoader_GetData(dataLoader)[0x00], "Vgm ", 4))
 		return 0xF0;	// invalid signature
 	return 0x00;
 }
@@ -152,7 +152,7 @@ UINT8 VGMPlayer::LoadFile(DATA_LOADER *dataLoader)
 	_dLoad = NULL;
 	DataLoader_ReadUntil(dataLoader,0x38);
 	_fileData = DataLoader_GetData(dataLoader);
-	if (DataLoader_GetSize(dataLoader) < 0x38 || memcmp(_fileData, "Vgm ", 4))
+	if (DataLoader_GetSize(dataLoader) < 0x38 || memcmp(&_fileData[0x00], "Vgm ", 4))
 		return 0xF0;	// invalid file
 	
 	_dLoad = dataLoader;
@@ -177,7 +177,6 @@ UINT8 VGMPlayer::ParseHeader(void)
 	memset(&_fileHdr, 0x00, sizeof(VGM_HEADER));
 	
 	_fileHdr.fileVer = ReadLE32(&_fileData[0x08]);
-
 	
 	_fileHdr.dataOfs = (_fileHdr.fileVer >= 0x150) ? ReadRelOfs(_fileData, 0x34) : 0x00;
 	if (! _fileHdr.dataOfs)

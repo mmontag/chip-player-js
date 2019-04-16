@@ -92,7 +92,6 @@ int main(int argc, char* argv[])
 	DATA_LOADER *dLoad;
 	PlayerBase* player;
 	int curSong;
-
 	
 	if (argc < 2)
 	{
@@ -283,6 +282,9 @@ int main(int argc, char* argv[])
 	player->UnloadFile();
 	DataLoader_Deinit(dLoad);
 	delete player;	player = NULL; dLoad = NULL;
+#ifdef USE_MEMORY_LOADER
+	free(fileData);
+#endif
 	
 	}	// end for(curSong)
 	

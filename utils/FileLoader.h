@@ -1,32 +1,30 @@
 #ifndef __FILELOADER_H__
 #define __FILELOADER_H__
 
-#include "DataLoader.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-extern const DATA_LOADER_CALLBACKS fileLoader;
+#include "DataLoader.h"
 
 DATA_LOADER *FileLoader_Init(const char *fileName);
+#define FileLoader_Load				DataLoader_Load
+#define FileLoader_Reset			DataLoader_Reset
+#define FileLoader_GetData			DataLoader_GetData
+#define FileLoader_GetTotalSize		DataLoader_GetTotalSize
+#define FileLoader_GetSize			DataLoader_GetSize
+#define FileLoader_GetStatus		DataLoader_GetStatus
+#define FileLoader_Read				DataLoader_Read
+#define FileLoader_CancelLoading	DataLoader_CancelLoading
+#define FileLoader_SetPreloadBytes	DataLoader_SetPreloadBytes
+#define FileLoader_ReadUntil		DataLoader_ReadUntil
+#define FileLoader_ReadAll			DataLoader_ReadAll
+#define FileLoader_Deinit			DataLoader_Deinit
 
-#define FileLoader_Load(c) DataLoader_Load(c)
-#define FileLoader_Reset(c) DataLoader_Reset(c)
-#define FileLoader_GetData(c) DataLoader_GetData(c)
-#define FileLoader_GetTotalSize(c) DataLoader_GetTotalSize(c)
-#define FileLoader_GetSize(c) DataLoader_GetSize(c)
-#define FileLoader_GetSize(c) DataLoader_GetSize(c)
-#define FileLoader_GetStatus(c) DataLoader_GetStatus(c)
-#define FileLoader_Read(c) DataLoader_Read(c)
-#define FileLoader_CancelLoading(c) DataLoader_CancelLoading(c)
-#define FileLoader_SetPreloadBytes(c) DataLoader_SetPreloadBytes(c)
-#define FileLoader_ReadUntil(c) DataLoader_ReadUntil(c)
-#define FileLoader_ReadAll(c) DataLoader_ReadAll(c)
-#define FileLoader_Deinit(c) DataLoader_Deinit(c)
+extern const DATA_LOADER_CALLBACKS fileLoader;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif
+#endif	// __FILELOADER_H__

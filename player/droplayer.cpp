@@ -66,7 +66,7 @@ const char* DROPlayer::GetPlayerName(void) const
 	DataLoader_ReadUntil(dataLoader,0x10);
 	if (DataLoader_GetSize(dataLoader) < 0x10)
 		return 0xF1;	// file too small
-	if (memcmp(DataLoader_GetData(dataLoader), "DBRAWOPL", 8))
+	if (memcmp(&DataLoader_GetData(dataLoader)[0x00], "DBRAWOPL", 8))
 		return 0xF0;	// invalid signature
 	return 0x00;
 }
@@ -78,7 +78,7 @@ UINT8 DROPlayer::LoadFile(DATA_LOADER *dataLoader)
 	_dLoad = NULL;
 	DataLoader_ReadUntil(dataLoader,0x10);
 	_fileData = DataLoader_GetData(dataLoader);
-	if (DataLoader_GetSize(dataLoader) < 0x10 || memcmp(_fileData, "DBRAWOPL", 8))
+	if (DataLoader_GetSize(dataLoader) < 0x10 || memcmp(&_fileData[0x00], "DBRAWOPL", 8))
 		return 0xF0;	// invalid file
 	
 	// --- try to detect the DRO version ---

@@ -17,7 +17,7 @@ struct MemoryLoader {
 	UINT8 _modeCompr;
 	UINT32 _pos;
 	UINT32 _length;
-	UINT8 *_data;
+	const UINT8 *_data;
 	z_stream _stream;
 };
 
@@ -40,8 +40,8 @@ static UINT8 MemoryLoader_dopen(void *context)
 		loader->_stream.zfree = Z_NULL;
 		loader->_stream.opaque = Z_NULL;
 		loader->_stream.avail_in = loader->_length;
-		loader->_stream.next_in = loader->_data;
-		loader->_length = ReadLE32((const UINT8 *)&loader->_data[loader->_length - 4]);
+		loader->_stream.next_in = (z_const Bytef *)loader->_data;
+		loader->_length = ReadLE32(&loader->_data[loader->_length - 4]);
 		if(inflateInit2(&loader->_stream,47) != Z_OK) {
 			return 0x01;
 		}
@@ -56,6 +56,9 @@ static UINT8 MemoryLoader_dopen(void *context)
 static UINT32 MemoryLoader_dread(void *context, UINT8 *buffer, UINT32 numBytes)
 {
 	MEMORY_LOADER *loader = (MEMORY_LOADER *)context;
+	int ret = 0;
+	UINT32 bytesWritten = 0;
+
 	if(loader->_pos >= loader->_length) return 0;
 	if(loader->_pos + numBytes > loader->_length)
 		numBytes = loader->_length - loader->_pos;
@@ -65,8 +68,6 @@ static UINT32 MemoryLoader_dread(void *context, UINT8 *buffer, UINT32 numBytes)
 		loader->_pos += numBytes;
 		return numBytes;
 	}
-	int ret = 0;
-	UINT32 bytesWritten = 0;
 
 	loader->_stream.avail_out = numBytes;
 	loader->_stream.next_out = buffer;
@@ -111,7 +112,29 @@ static UINT8 MemoryLoader_dclose(void *context)
 static UINT8 MemoryLoader_deof(void *context) {
 	MEMORY_LOADER *loader = (MEMORY_LOADER *)context;
 	return loader->_pos == loader->_length;
+}
 
+DATA_LOADER *MemoryLoader_Init(const UINT8 *buffer, UINT32 length)
+{
+	DATA_LOADER *dLoader;
+	MEMORY_LOADER *mLoader;
+
+	dLoader = (DATA_LOADER *)calloc(1, sizeof(DATA_LOADER));
+	if(dLoader == NULL) return NULL;
+
+	mLoader = (MEMORY_LOADER *)calloc(1, sizeof(MEMORY_LOADER));
+	if(mLoader == NULL)
+	{
+		MemoryLoader_Deinit(dLoader);
+		return NULL;
+	}
+
+	mLoader->_data = buffer;
+	mLoader->_length = length;
+
+	DataLoader_Setup(dLoader,&memoryLoader,mLoader);
+
+	return dLoader;
 }
 
 const DATA_LOADER_CALLBACKS memoryLoader = {
@@ -124,26 +147,3 @@ const DATA_LOADER_CALLBACKS memoryLoader = {
 	.dlength = MemoryLoader_dlength,
 	.deof	= MemoryLoader_deof,
 };
-
-DATA_LOADER *MemoryLoader_Init(UINT8 *buffer, UINT32 length)
-{
-	DATA_LOADER *dLoader = (DATA_LOADER *)malloc(sizeof(DATA_LOADER));
-	if(dLoader == NULL) return NULL;
-	memset(dLoader,0,sizeof(DATA_LOADER));
-
-	MEMORY_LOADER *mLoader = (MEMORY_LOADER *)malloc(sizeof(MEMORY_LOADER));
-	if(mLoader == NULL)
-	{
-		MemoryLoader_Deinit(dLoader);
-		return NULL;
-	}
-	memset(mLoader,0,sizeof(MEMORY_LOADER));
-
-	mLoader->_data = buffer;
-	mLoader->_length = length;
-
-	DataLoader_Setup(dLoader,&memoryLoader,mLoader);
-
-	return dLoader;
-}
-

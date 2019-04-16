@@ -24,15 +24,15 @@ UINT8 *DataLoader_GetData(DATA_LOADER *loader) {
 	return loader->_data;
 }
 
-UINT32 DataLoader_GetTotalSize(DATA_LOADER *loader) {
+UINT32 DataLoader_GetTotalSize(const DATA_LOADER *loader) {
 	return loader->_bytesTotal;
 }
 
-UINT32 DataLoader_GetSize(DATA_LOADER *loader) {
+UINT32 DataLoader_GetSize(const DATA_LOADER *loader) {
 	return loader->_bytesLoaded;
 }
 
-UINT8 DataLoader_GetStatus(DATA_LOADER *loader) {
+UINT8 DataLoader_GetStatus(const DATA_LOADER *loader) {
 	return loader->_status;
 }
 
@@ -84,18 +84,17 @@ void DataLoader_ReadUntil(DATA_LOADER *loader, UINT32 fileOffset)
 void DataLoader_ReadAll(DATA_LOADER *loader)
 {
 	while(DataLoader_Read(loader,loader->_bytesTotal - loader->_bytesLoaded) >0)
-	{
-	}
+		;
 	return;
 }
 
 UINT32 DataLoader_Read(DATA_LOADER *loader, UINT32 numBytes)
 {
-	if (loader->_status != DLSTAT_LOADING)
-		return 0;
-
 	UINT32 endOfs;
 	UINT32 readBytes;
+
+	if (loader->_status != DLSTAT_LOADING)
+		return 0;
 
 	endOfs = loader->_bytesLoaded + numBytes;
 	if (endOfs < loader->_bytesLoaded)

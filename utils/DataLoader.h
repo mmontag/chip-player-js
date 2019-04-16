@@ -1,13 +1,11 @@
 #ifndef __DATALOADER_H__
 #define __DATALOADER_H__
 
-#include <stdtype.h>
-#include <stdio.h>
-#include <stdarg.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include <stdtype.h>
 
 struct DataLoaderCallbacks
 {
@@ -56,13 +54,13 @@ UINT8 DataLoader_Reset(DATA_LOADER *loader);
 UINT8 *DataLoader_GetData(DATA_LOADER *loader);
 
 /* returns _bytesTotal */
-UINT32 DataLoader_GetTotalSize(DATA_LOADER *loader);
+UINT32 DataLoader_GetTotalSize(const DATA_LOADER *loader);
 
 /* returns _bytesLoaded */
-UINT32 DataLoader_GetSize(DATA_LOADER *loader);
+UINT32 DataLoader_GetSize(const DATA_LOADER *loader);
 
 /* returns _status */
-UINT8 DataLoader_GetStatus(DATA_LOADER *loader);
+UINT8 DataLoader_GetStatus(const DATA_LOADER *loader);
 
 /* calls dread, then deof
  * if deof > 0, also calls CancelLoading (dclose) */
