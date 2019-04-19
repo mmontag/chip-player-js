@@ -13,6 +13,13 @@ enum
 	FLMODE_CMP_GZ = 0x10
 };
 
+typedef struct file_loader FILE_LOADER;
+
+typedef UINT8 (*FLOAD_GENERIC)(FILE_LOADER *loader);
+typedef UINT32 (*FLOAD_READ)(FILE_LOADER *loader, UINT8 *buffer, UINT32 numBytes);
+typedef UINT8 (*FLOAD_SEEK)(FILE_LOADER *loader, UINT32 offset, UINT8 whence);
+typedef INT32 (*FLOAD_TELL)(FILE_LOADER *loader);
+typedef UINT32 (*FLOAD_LENGTH)(FILE_LOADER *loader);
 
 typedef union loader_handles
 {
@@ -20,13 +27,43 @@ typedef union loader_handles
 	gzFile hFileGZ;
 } LOADER_HANDLES;
 
-typedef struct file_loader
+struct file_loader
 {
 	UINT8 modeCompr;
 	UINT32 bytesTotal;
 	LOADER_HANDLES hLoad;
 	const char *fileName;
-} FILE_LOADER;
+
+	FLOAD_READ Read;
+	FLOAD_SEEK Seek;
+	FLOAD_GENERIC Close;
+	FLOAD_TELL Tell;
+	FLOAD_GENERIC Eof;
+};
+
+
+static UINT8 FileLoader_dopen(void *context);
+static UINT32 FileLoader_dread(void *context, UINT8 *buffer, UINT32 numBytes);
+static UINT8 FileLoader_dseek(void *context, UINT32 offset, UINT8 whence);
+static UINT8 FileLoader_dclose(void *context);
+static INT32 FileLoader_dtell(void *context);
+static UINT32 FileLoader_dlength(void *context);
+static UINT8 FileLoader_deof(void *context);
+
+static UINT32 FileLoader_ReadRaw(FILE_LOADER *loader, UINT8 *buffer, UINT32 numBytes);
+static UINT8 FileLoader_SeekRaw(FILE_LOADER *loader, UINT32 offset, UINT8 whence);
+static UINT8 FileLoader_CloseRaw(FILE_LOADER *loader);
+static INT32 FileLoader_TellRaw(FILE_LOADER *loader);
+static UINT8 FileLoader_EofRaw(FILE_LOADER *loader);
+
+static UINT32 FileLoader_ReadGZ(FILE_LOADER *loader, UINT8 *buffer, UINT32 numBytes);
+static UINT8 FileLoader_SeekGZ(FILE_LOADER *loader, UINT32 offset, UINT8 whence);
+static UINT8 FileLoader_CloseGZ(FILE_LOADER *loader);
+static INT32 FileLoader_TellGZ(FILE_LOADER *loader);
+static UINT8 FileLoader_EofGZ(FILE_LOADER *loader);
+
+//DATA_LOADER *FileLoader_Init(const char *fileName);
+
 
 INLINE UINT32 ReadLE32(const UINT8 *data)
 {
@@ -45,19 +82,15 @@ static UINT8 FileLoader_dopen(void *context)
 
 	readBytes = fread(fileHdr, 0x01, 4, loader->hLoad.hFileRaw);
 	if (readBytes < 4)
-	{
-		fclose(loader->hLoad.hFileRaw);
-		loader->hLoad.hFileRaw = NULL;
-		return 0x01;
-	}
+		memset(&fileHdr[readBytes], 0x00, 4 - readBytes);
 
-	if (fileHdr[0] == 31 && fileHdr[1] == 139)
+	if (fileHdr[0] == 31 && fileHdr[1] == 139)	// check for .gz file header
 	{
 		UINT8 sizeBuffer[4];
 		fseek(loader->hLoad.hFileRaw, -4, SEEK_END);
 		fread(sizeBuffer, 0x04, 0x01, loader->hLoad.hFileRaw);
 		loader->bytesTotal = ReadLE32(sizeBuffer);
-		if (loader->bytesTotal < ftell(loader->hLoad.hFileRaw) / 2)
+		if (loader->bytesTotal < (UINT32)ftell(loader->hLoad.hFileRaw) / 2)
 			loader->bytesTotal = 0;
 		fclose(loader->hLoad.hFileRaw);
 		loader->hLoad.hFileRaw = NULL;
@@ -66,14 +99,24 @@ static UINT8 FileLoader_dopen(void *context)
 		if (loader->hLoad.hFileGZ == NULL)
 			return 0x01;
 		loader->modeCompr = FLMODE_CMP_GZ;
+		loader->Read = &FileLoader_ReadGZ;
+		loader->Seek = &FileLoader_SeekGZ;
+		loader->Close = &FileLoader_CloseGZ;
+		loader->Tell = &FileLoader_TellGZ;
+		loader->Eof = &FileLoader_EofGZ;
+		return 0x00;
 	}
-	else
-	{
-		fseek(loader->hLoad.hFileRaw, 0, SEEK_END);
-		loader->bytesTotal = ftell(loader->hLoad.hFileRaw);
-		rewind(loader->hLoad.hFileRaw);
-		loader->modeCompr = FLMODE_CMP_RAW;
-	}
+
+	fseek(loader->hLoad.hFileRaw, 0, SEEK_END);
+	loader->bytesTotal = ftell(loader->hLoad.hFileRaw);
+	rewind(loader->hLoad.hFileRaw);
+
+	loader->modeCompr = FLMODE_CMP_RAW;
+	loader->Read = &FileLoader_ReadRaw;
+	loader->Seek = &FileLoader_SeekRaw;
+	loader->Close = &FileLoader_CloseRaw;
+	loader->Tell = &FileLoader_TellRaw;
+	loader->Eof = &FileLoader_EofRaw;
 
 	return 0x00;
 }
@@ -81,35 +124,25 @@ static UINT8 FileLoader_dopen(void *context)
 static UINT32 FileLoader_dread(void *context, UINT8 *buffer, UINT32 numBytes)
 {
 	FILE_LOADER *loader = (FILE_LOADER *)context;
-	if (loader->modeCompr == FLMODE_CMP_RAW)
-		return fread(buffer, 0x01, numBytes, loader->hLoad.hFileRaw);
-
-	return gzread(loader->hLoad.hFileGZ,buffer,numBytes);
+	return loader->Read(loader, buffer, numBytes);
 }
 
 static UINT8 FileLoader_dseek(void *context, UINT32 offset, UINT8 whence)
 {
 	FILE_LOADER *loader = (FILE_LOADER *)context;
-	if(loader->modeCompr == FLMODE_CMP_RAW) return (UINT8)fseek(loader->hLoad.hFileRaw, offset, whence);
-	if(whence == SEEK_END) return 0;
-	return (gzseek(loader->hLoad.hFileGZ, offset, whence) == -1) ? 0x01 : 0x00;
+	return loader->Seek(loader, offset, whence);
 }
 
 static UINT8 FileLoader_dclose(void *context)
 {
 	FILE_LOADER *loader = (FILE_LOADER *)context;
-	if(loader->modeCompr == FLMODE_CMP_RAW) fclose(loader->hLoad.hFileRaw);
-	else gzclose(loader->hLoad.hFileGZ);
-
-	return 0x00;
+	return loader->Close(loader);
 }
 
 static INT32 FileLoader_dtell(void *context)
 {
 	FILE_LOADER *loader = (FILE_LOADER *)context;
-	if(loader->modeCompr == FLMODE_CMP_RAW)
-		return ftell(loader->hLoad.hFileRaw);
-	return gztell(loader->hLoad.hFileGZ);
+	return loader->Tell(loader);
 }
 
 static UINT32 FileLoader_dlength(void *context)
@@ -121,9 +154,66 @@ static UINT32 FileLoader_dlength(void *context)
 static UINT8 FileLoader_deof(void *context)
 {
 	FILE_LOADER *loader = (FILE_LOADER *)context;
-	if(loader->modeCompr == FLMODE_CMP_RAW) return feof(loader->hLoad.hFileRaw);
+	return loader->Eof(loader);
+}
+
+
+static UINT32 FileLoader_ReadRaw(FILE_LOADER *loader, UINT8 *buffer, UINT32 numBytes)
+{
+	return fread(buffer, 0x01, numBytes, loader->hLoad.hFileRaw);
+}
+
+static UINT8 FileLoader_SeekRaw(FILE_LOADER *loader, UINT32 offset, UINT8 whence)
+{
+	return (UINT8)fseek(loader->hLoad.hFileRaw, offset, whence);
+}
+
+static UINT8 FileLoader_CloseRaw(FILE_LOADER *loader)
+{
+	fclose(loader->hLoad.hFileRaw);
+	loader->hLoad.hFileRaw = NULL;
+	return 0x00;
+}
+
+static INT32 FileLoader_TellRaw(FILE_LOADER *loader)
+{
+	return ftell(loader->hLoad.hFileRaw);
+}
+
+static UINT8 FileLoader_EofRaw(FILE_LOADER *loader)
+{
+	return feof(loader->hLoad.hFileRaw);
+}
+
+
+static UINT32 FileLoader_ReadGZ(FILE_LOADER *loader, UINT8 *buffer, UINT32 numBytes)
+{
+	return gzread(loader->hLoad.hFileGZ, buffer, numBytes);
+}
+
+static UINT8 FileLoader_SeekGZ(FILE_LOADER *loader, UINT32 offset, UINT8 whence)
+{
+	if(whence == SEEK_END) return 0;
+	return (gzseek(loader->hLoad.hFileGZ, offset, whence) == -1) ? 0x01 : 0x00;
+}
+
+static UINT8 FileLoader_CloseGZ(FILE_LOADER *loader)
+{
+	gzclose(loader->hLoad.hFileGZ);
+	loader->hLoad.hFileGZ = NULL;
+	return 0x00;
+}
+
+static INT32 FileLoader_TellGZ(FILE_LOADER *loader)
+{
+	return gztell(loader->hLoad.hFileGZ);
+}
+
+static UINT8 FileLoader_EofGZ(FILE_LOADER *loader)
+{
 	return gzeof(loader->hLoad.hFileGZ);
 }
+
 
 DATA_LOADER *FileLoader_Init(const char *fileName)
 {
@@ -136,7 +226,7 @@ DATA_LOADER *FileLoader_Init(const char *fileName)
 	fLoader = (FILE_LOADER *)calloc(1, sizeof(FILE_LOADER));
 	if(fLoader == NULL)
 	{
-		FileLoader_Deinit(dLoader);
+		free(dLoader);
 		return NULL;
 	}
 
@@ -148,7 +238,8 @@ DATA_LOADER *FileLoader_Init(const char *fileName)
 }
 
 const DATA_LOADER_CALLBACKS fileLoader = {
-	"Default File Loader",
+	0x46494C45,		// "FILE"
+	"File Loader",
 	FileLoader_dopen,
 	FileLoader_dread,
 	FileLoader_dseek,

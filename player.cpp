@@ -36,8 +36,7 @@ extern "C" int __cdecl _kbhit(void);
 #include "emu/Resampler.h"
 #include "utils/OSMutex.h"
 
-/* define to use the in-memory loader */
-/* #define USE_MEMORY_LOADER 1 */
+//#define USE_MEMORY_LOADER 1	// define to use the in-memory loader
 
 int main(int argc, char* argv[]);
 static UINT8 *SlurpFile(const char *fileName, UINT32 *fileSize);

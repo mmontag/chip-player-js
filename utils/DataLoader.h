@@ -7,19 +7,24 @@ extern "C" {
 
 #include <stdtype.h>
 
-struct DataLoaderCallbacks
-{
-	const char *type; /* for storing a human-readable file loader type */
-	UINT8  (* dopen   )(void *context ); /* open a file, URL, piece of memory, return 0 on success */
-	UINT32 (* dread   )(void *context, UINT8 *buffer, UINT32 numBytes); /* read bytes into buffer */
-	UINT8  (* dseek   )(void *context, UINT32 offset, UINT8 whence); /* seek to byte offset */
-	UINT8  (* dclose  )(void *context); /* closes out file, return 0 on success */
-	INT32  (* dtell   )(void *context); /* returns the current position of the data */
-	UINT32 (* dlength )(void *context); /* returns the length of the data, in bytes */
-	UINT8  (* deof	  )(void *context); /* determines if we've seen eof or not (return 1 for eof) */
-};
+typedef UINT8 (*DLOADCB_GENERIC)(void *context);
+typedef UINT32 (*DLOADCB_READ)(void *context, UINT8 *buffer, UINT32 numBytes);
+typedef UINT8 (*DLOADCB_SEEK)(void *context, UINT32 offset, UINT8 whence);
+typedef INT32 (*DLOADCB_TELL)(void *context);
+typedef UINT32 (*DLOADCB_LENGTH)(void *context);
 
-typedef struct DataLoaderCallbacks DATA_LOADER_CALLBACKS;
+typedef struct data_loader_callbacks
+{
+	UINT32 type;            /* 4-character-code for the file loader */
+	const char *name;       /* human-readable name of the file loader */
+	DLOADCB_GENERIC dopen;  /* open a file, URL, piece of memory, return 0 on success */
+	DLOADCB_READ dread;     /* read bytes into buffer */
+	DLOADCB_SEEK dseek;     /* seek to byte offset */
+	DLOADCB_GENERIC dclose; /* closes out file, return 0 on success */
+	DLOADCB_TELL dtell;     /* returns the current position of the data */
+	DLOADCB_LENGTH dlength; /* returns the length of the data, in bytes */
+	DLOADCB_GENERIC deof;   /* determines if we've seen eof or not (return 1 for eof) */
+} DATA_LOADER_CALLBACKS;
 
 enum
 {
@@ -28,7 +33,8 @@ enum
 	DLSTAT_LOADED = 2
 };
 
-struct DataLoader {
+typedef struct data_loader
+{
 	UINT8 _status;
 	UINT32 _bytesTotal;
 	UINT32 _bytesLoaded;
@@ -36,9 +42,7 @@ struct DataLoader {
 	UINT8 *_data;
 	const DATA_LOADER_CALLBACKS *_callbacks;
 	void *_context;
-};
-
-typedef struct DataLoader DATA_LOADER;
+} DATA_LOADER;
 
 /* calls the dopen and dlength functions
  * by default, loads whole file into memory, use
