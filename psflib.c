@@ -363,7 +363,7 @@ static psf_tag * process_tag_line(psf_tag * tags, char * line)
 	if (value == end) return tags;
 
 	--end;
-	while (end > value && *value > 0 && *value <= ' ') --end;
+	while (end > value && *end > 0 && *end <= ' ') --end;
 	end[1] = '\0';
 
 	if (*name == '_')
