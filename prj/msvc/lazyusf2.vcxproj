@@ -252,7 +252,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;DYNAREC;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>../..;../../rsp_hle/msvc-compat;../../../foobar/zlib</AdditionalIncludeDirectories>
       <EnableEnhancedInstructionSet>NoExtensions</EnableEnhancedInstructionSet>
       <AdditionalOptions>/d2notypeopt %(AdditionalOptions)</AdditionalOptions>
@@ -271,7 +271,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_WIN32_WINNT=0x501;WIN32;DYNAREC;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FloatingPointModel>Fast</FloatingPointModel>
       <AdditionalIncludeDirectories>../..;../../rsp_hle/msvc-compat;../../../foobar/zlib</AdditionalIncludeDirectories>
       <BufferSecurityCheck>false</BufferSecurityCheck>
