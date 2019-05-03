@@ -5,7 +5,8 @@ import queryString from 'querystring';
 import FavoriteButton from "./FavoriteButton";
 import debounce from 'lodash/debounce';
 import promisify from "./promisifyXhr";
-import {API_BASE, USE_BACKEND_SEARCH, CATALOG_PREFIX} from "./config";
+import {API_BASE, CATALOG_PREFIX, USE_BACKEND_SEARCH} from "./config";
+import {DirectoryLink} from "./DirectoryLink";
 
 const searchWorker = new SearchWorker();
 
@@ -25,7 +26,6 @@ export default class Search extends PureComponent {
     this.onChange = this.onChange.bind(this);
     this.onSearchInputChange = this.onSearchInputChange.bind(this);
     this.handleSearchResults = this.handleSearchResults.bind(this);
-    this.handleGroupClick = this.handleGroupClick.bind(this);
     this.handleStatus = this.handleStatus.bind(this);
     this.handleClear = this.handleClear.bind(this);
     this.renderResultItem = this.renderResultItem.bind(this);
@@ -185,11 +185,6 @@ export default class Search extends PureComponent {
     return headings;
   }
 
-  handleGroupClick(e, query) {
-    e.preventDefault();
-    this.onSearchInputChange(query, true);
-  }
-
   renderResultItem(result, i) {
     let headingFragment = null;
     if (this.state.resultsHeadings[i]) {
@@ -198,10 +193,7 @@ export default class Search extends PureComponent {
       const headingQuery = heading.replace(/[^a-zA-Z0-9]+/g, ' ');
       headingFragment = (
         <div className="Search-results-group-heading">
-          <a href={'?q=' + headingQuery}
-             onClick={(e) => this.handleGroupClick(e, headingQuery)}>
-            {this.state.resultsHeadings[i]}
-          </a>
+          <DirectoryLink to={'/browse/' + heading}>{heading}</DirectoryLink>
         </div>
       );
     }
