@@ -11,6 +11,8 @@ scripts/untracked/
 src/-catalog-tests/
 src/chip-core.js
 public/catalog.json
+public/catalog-trie.json
+public/directories.json
 catalog
 public/music
 src/config/firebaseConfig.js
