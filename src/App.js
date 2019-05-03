@@ -532,7 +532,6 @@ class App extends React.Component {
                    handleLogin={this.handleLogin}
                    isPhone={isMobile.phone}/>
         <div className="App-content-area">
-          {/*
           <Search
             initialQuery={this.state.initialQuery}
             catalog={this.state.catalog}
@@ -542,40 +541,16 @@ class App extends React.Component {
             favorites={this.state.faves}
             onClick={this.handleSongClick}>
             { this.state.loading && <p>Loading player engine...</p> }
-            { this.state.loadingUser ?
-              <p>Loading user data...</p>
-              :
-              <Favorites
-                user={this.state.user}
-                handleLogin={this.handleLogin}
-                onClick={this.handleSongClick}
-                currContext={currContext}
-                currIdx={currIdx}
-                toggleFavorite={this.handleToggleFavorite}
-                favorites={this.state.faves}/>}
-            <h1>Top Level Folders</h1>
-            {
-              [
-                'Classical MIDI',
-                'Exotica',
-                'Famicompo',
-                'Game MIDI',
-                'Game Mods',
-                'MIDI',
-                'ModArchives',
-                'Nintendo',
-                'Nintendo SNES',
-                'Piano E-Competition MIDI',
-                'Project AY',
-                'Sega Game Gear',
-                'Sega Genesis',
-                'Sega Master System',
-                'Ubiktune',
-                'VGM Rips',
-              ].map(t => <a key={t} href="#" onClick={(e) => this.handleDoSearch(e, t)}>{t}</a>)
-            }
           </Search>
-          */}
+          <Favorites
+            user={this.state.user}
+            loadingUser={this.state.loadingUser}
+            handleLogin={this.handleLogin}
+            onClick={this.handleSongClick}
+            currContext={currContext}
+            currIdx={currIdx}
+            toggleFavorite={this.handleToggleFavorite}
+            favorites={this.state.faves}/>
           <Browse currContext={currContext}
                   currIdx={currIdx}
                   directories={this.state.directories}
