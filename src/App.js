@@ -161,7 +161,8 @@ class App extends React.Component {
       const chipCore = this.chipCore = new ChipCore({
         // Look for .wasm file in web root, not the same location as the app bundle (static/js).
         locateFile: (path, prefix) => {
-          if (path.endsWith('.wasm') || path.endsWith('.wast')) return '/' + path;
+          if (path.endsWith('.wasm') || path.endsWith('.wast'))
+            return `${process.env.PUBLIC_URL}/${path}`;
           return prefix + path;
         },
         onRuntimeInitialized: () => {
@@ -533,7 +534,7 @@ class App extends React.Component {
                    handleLogout={this.handleLogout}
                    handleLogin={this.handleLogin}
                    isPhone={isMobile.phone}/>
-        <Router>
+        <Router basename={process.env.PUBLIC_URL}>
           <Link to="/">Search</Link>
           <Link to="/favorites">Favorites</Link>
           <Link to="/browse">Browse</Link>
