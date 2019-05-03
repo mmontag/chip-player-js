@@ -24,7 +24,7 @@ export default class Visualizer extends PureComponent {
       vizMode: 2,
       weightingMode: 1,
       fftSize: 2048,
-      enabled: true,
+      enabled: false,
     };
 
     this.freqCanvasRef = React.createRef();
