@@ -5,6 +5,7 @@ import * as firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
 import firebaseConfig from './config/firebaseConfig';
+import {BrowserRouter as Router, Route, Link} from 'react-router-dom';
 import {API_BASE, MAX_VOICES, REPLACE_STATE_ON_SEEK, USE_BACKEND_SEARCH} from "./config";
 
 import ChipCore from './chip-core';
@@ -23,6 +24,7 @@ import AppHeader from "./AppHeader";
 import Favorites from "./Favorites";
 import Sequencer from "./Sequencer";
 import Browse from "./Browse";
+import {Switch} from "react-router";
 
 class App extends React.Component {
   handleLogin() {
@@ -473,7 +475,7 @@ class App extends React.Component {
   }
 
   fetchDirectory(path) {
-    fetch(`${API_BASE}/browse?path=${encodeURIComponent(path)}`)
+    fetch(`${API_BASE}/browse?path=%2F${encodeURIComponent(path)}`)
       .then(response => response.json())
       .then(json => {
         const directories = {
@@ -531,39 +533,53 @@ class App extends React.Component {
                    handleLogout={this.handleLogout}
                    handleLogin={this.handleLogin}
                    isPhone={isMobile.phone}/>
+        <Router>
+          <Link to="/">Search</Link>
+          <Link to="/favorites">Favorites</Link>
+          <Link to="/browse">Browse</Link>
         <div className="App-content-area">
-          <Search
-            initialQuery={this.state.initialQuery}
-            catalog={this.state.catalog}
-            currContext={currContext}
-            currIdx={currIdx}
-            toggleFavorite={this.handleToggleFavorite}
-            favorites={this.state.faves}
-            onClick={this.handleSongClick}>
-            { this.state.loading && <p>Loading player engine...</p> }
-          </Search>
-          <Favorites
-            user={this.state.user}
-            loadingUser={this.state.loadingUser}
-            handleLogin={this.handleLogin}
-            onClick={this.handleSongClick}
-            currContext={currContext}
-            currIdx={currIdx}
-            toggleFavorite={this.handleToggleFavorite}
-            favorites={this.state.faves}/>
-          <Browse currContext={currContext}
-                  currIdx={currIdx}
-                  directories={this.state.directories}
-                  fetchDirectory={this.fetchDirectory}
-                  handleSongClick={this.handleSongClick}
-                  favorites={this.state.faves}
-                  toggleFavorite={this.handleToggleFavorite}/>
-          {!isMobile.phone && !this.state.loading && false &&
+          <Switch>
+            <Route path="/" exact render={() => (
+              <Search
+                initialQuery={this.state.initialQuery}
+                catalog={this.state.catalog}
+                currContext={currContext}
+                currIdx={currIdx}
+                toggleFavorite={this.handleToggleFavorite}
+                favorites={this.state.faves}
+                onClick={this.handleSongClick}>
+                { this.state.loading && <p>Loading player engine...</p> }
+              </Search>
+            )}/>
+            <Route path="/favorites" render={() => (
+              <Favorites
+                user={this.state.user}
+                loadingUser={this.state.loadingUser}
+                handleLogin={this.handleLogin}
+                onClick={this.handleSongClick}
+                currContext={currContext}
+                currIdx={currIdx}
+                toggleFavorite={this.handleToggleFavorite}
+                favorites={this.state.faves}/>
+            )}/>
+            <Route path="/browse/:browsePath*" render={({match}) => (
+              <Browse currContext={currContext}
+                      currIdx={currIdx}
+                      browsePath={match.params.browsePath || ''}
+                      directories={this.state.directories}
+                      fetchDirectory={this.fetchDirectory}
+                      handleSongClick={this.handleSongClick}
+                      favorites={this.state.faves}
+                      toggleFavorite={this.handleToggleFavorite}/>
+            )}/>
+          </Switch>
+          {!isMobile.phone && !this.state.loading &&
           <Visualizer audioCtx={this.audioCtx}
                       sourceNode={this.playerNode}
                       chipCore={this.chipCore}
                       paused={this.state.ejected || this.state.paused}/>}
         </div>
+        </Router>
         <div className="App-footer">
           <div className="App-footer-main">
             <button onClick={this.prevSong}

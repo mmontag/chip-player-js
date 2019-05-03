@@ -18,7 +18,7 @@ export default class Favorites extends PureComponent {
       loadingUser ?
         <p>Loading user data...</p>
         :
-        <>
+        <div>
           <h3>
             My Favorites <span>({favorites.length})</span>
           </h3>
@@ -52,7 +52,7 @@ export default class Favorites extends PureComponent {
               login or signup</a> to save favorites.
             </span>
           }
-        </>
+        </div>
     );
   }
 }
