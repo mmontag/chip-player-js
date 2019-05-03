@@ -1,48 +1,37 @@
-import React, {PureComponent} from 'react';
-import PropTypes from 'prop-types';
-import prettyBytes from 'pretty-bytes';
+import React, {Fragment, PureComponent} from 'react';
+import bytes from 'bytes';
 import FavoriteButton from "./FavoriteButton";
 import {CATALOG_PREFIX} from "./config";
-import folder from './images/folder.png';
+import {DirectoryLink} from "./DirectoryLink";
+
+const dirToken = <Fragment>&nbsp;&nbsp;&lt;DIR&gt;&nbsp;&nbsp;</Fragment>;
 
 export default class Browse extends PureComponent {
   constructor(props) {
     super(props);
 
-    this.handleDirectoryClick = this.handleDirectoryClick.bind(this);
-    this.handleNavigate = this.handleNavigate.bind(this);
-
-    this.state = {
-      browsePath: '/',
-    };
+    this.navigate = this.navigate.bind(this);
 
     this.contexts = {};
   }
 
   componentDidMount() {
-    this.handleNavigate(this.state.browsePath);
+    this.navigate();
   }
 
   componentDidUpdate() {
-    const browsePath = this.state.browsePath;
+    this.navigate();
+  }
+
+  navigate() {
+    const browsePath = this.props.browsePath;
     const directories = this.props.directories;
+    const fetchDirectory = this.props.fetchDirectory;
+    if (!directories[browsePath]) {
+      fetchDirectory(browsePath);
+    }
     if (directories[browsePath] && !this.contexts[browsePath]) {
       this.contexts[browsePath] = directories[browsePath].map(item => item.path);
-    }
-  }
-
-  handleDirectoryClick(e, path) {
-    e.preventDefault();
-    this.handleNavigate(path);
-  }
-
-  handleNavigate(path) {
-    this.setState({
-      browsePath: path,
-    });
-
-    if (!this.props.directories[path]) {
-      this.props.fetchDirectory(path);
     }
   }
 
@@ -54,39 +43,47 @@ export default class Browse extends PureComponent {
       favorites,
       toggleFavorite,
       handleSongClick,
+      browsePath,
     } = this.props;
-    const {browsePath} = this.state;
     const dirListing = directories[browsePath] || [];
+    const parentPath = browsePath.substr(0, browsePath.lastIndexOf('/'));
 
     return (
-      <table style={css.directoryTable}><tbody>
+      <table style={css.directoryTable}>
+        <tbody>
+        { browsePath ?
+          <tr key={browsePath}>
+            <td>
+              <DirectoryLink to={'/browse/' + parentPath}>..</DirectoryLink>
+            </td>
+            <td>{dirToken}</td>
+            <td></td>
+          </tr> : null }
         {
           dirListing.map((item, i) => {
-            const isPlaying = currContext === this.contexts[browsePath] && currIdx === i;
+            // XXX: Escape immediately: the escaped URL is considered canonical.
+            //      The URL must be decoded for display from here on out.
+            const path = item.path.replace('%', '%25').replace('#', '%23');
             const name = item.path.split('/').pop();
+            const isPlaying = currContext === this.contexts[browsePath] && currIdx === i;
             if (item.type === 'directory') {
               return (
                 <tr key={name}>
                   <td style={css.tdClip}>
                     <div style={css.textClip}>
-                    <a href={'?path=' + item.path}
-                       onClick={(e) => this.handleDirectoryClick(e, item.path)}>
-                       <img style={css.folderImg} src={folder}/>{name}
-                    </a>
+                      <DirectoryLink to={'/browse' + path}>{name}</DirectoryLink>
                     </div>
                   </td>
                   <td>
-                    &nbsp;&nbsp;&lt;DIR&gt;&nbsp;&nbsp;
+                    {dirToken}
                   </td>
                   <td style={css.rightAlign}>
-                    {prettyBytes(item.size)}
+                    {bytes(item.size, {unitSeparator: ' '})}
                   </td>
                 </tr>
               );
             } else {
-              // XXX: Escape immediately: the escaped URL is considered canonical.
-              //      The URL must be decoded for display from here on out.
-              const href = CATALOG_PREFIX + item.path.replace('%', '%25').replace('#', '%23');
+              const href = CATALOG_PREFIX + path;
               return (
                 <tr key={name}>
                   <td style={css.tdClip}>
@@ -99,20 +96,21 @@ export default class Browse extends PureComponent {
                          onClick={handleSongClick(href, this.contexts[browsePath], i)}
                          href='#'>
                         {name}
-                    </a>
+                      </a>
                     </div>
                   </td>
                   <td>
                   </td>
                   <td style={css.rightAlign}>
-                    {prettyBytes(item.size)}
+                    {bytes(item.size, {unitSeparator: ' '})}
                   </td>
                 </tr>
               );
             }
           })
         }
-      </tbody></table>
+        </tbody>
+      </table>
     );
   }
 }
@@ -142,8 +140,5 @@ const css = {
     top: 0,
     left: 0,
     right: 0,
-  },
-  folderImg: {
-    verticalAlign: 'bottom',
   },
 };
