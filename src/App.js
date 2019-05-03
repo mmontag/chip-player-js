@@ -159,7 +159,7 @@ class App extends React.Component {
       const chipCore = this.chipCore = new ChipCore({
         // Look for .wasm file in web root, not the same location as the app bundle (static/js).
         locateFile: (path, prefix) => {
-          if (path.endsWith('.wasm') || path.endsWith('.wast')) return './' + path;
+          if (path.endsWith('.wasm') || path.endsWith('.wast')) return '/' + path;
           return prefix + path;
         },
         onRuntimeInitialized: () => {
