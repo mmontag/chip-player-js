@@ -9,15 +9,20 @@
  *
  */
 
-const CATALOG = './catalog.json';
 const http = require('http');
 const URL = require('url');
 const TrieSearch = require('trie-search');
-const catalog = require(CATALOG);
 const { performance } = require('perf_hooks');
 
+const CATALOG_PATH = './catalog.json';
+const catalog = require(CATALOG_PATH);
+const DIRECTORIES_PATH = './directories.json';
+const directories = require(DIRECTORIES_PATH);
+
+console.log('Found %s entries in %s.', Object.entries(directories).length, DIRECTORIES_PATH);
+
 if (!Array.isArray(catalog)) {
-  console.log('%s must be a json file with root-level array.', CATALOG);
+  console.log('%s must be a json file with root-level array.', CATALOG_PATH);
   process.exit(1);
 }
 
@@ -62,6 +67,10 @@ const routes = {
       total: total,
     }
   },
+
+  'browse': (params) => {
+    return directories[params.path];
+  },
 };
 
 http.createServer(function (req, res) {
@@ -70,18 +79,30 @@ http.createServer(function (req, res) {
   const route = routes[lastPathComponent];
   if (route) {
     const params = url.query || {};
-    const json = route(params);
-    res.writeHead(200, {
-      // If running behind a proxy such as nginx,
-      // configure it to ignore this CORS header
-      'Access-Control-Allow-Origin': '*',
-      'Content-Type': 'application/json',
-    });
-    res.end(JSON.stringify(json));
-  }  else {
-    res.writeHead(404);
-    res.end('Not found');
+    try {
+      const json = route(params);
+      if (json) {
+        res.writeHead(200, {
+          // If running behind a proxy such as nginx,
+          // configure it to ignore this CORS header
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json',
+        });
+        res.end(JSON.stringify(json));
+
+        return;
+      } else {
+        res.writeHead(404);
+        res.end('Not found');
+      }
+    } catch (e) {
+      res.writeHead(500);
+      res.end('Server error');
+      console.log('Error processing request:', req.url, e);
+    }
   }
+  res.writeHead(404);
+  res.end('Route not found');
 }).listen(8080, 'localhost');
 
 console.log('Server running at http://localhost:8080/.');
