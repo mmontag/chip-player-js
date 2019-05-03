@@ -22,6 +22,7 @@ import FavoriteButton from "./FavoriteButton";
 import AppHeader from "./AppHeader";
 import Favorites from "./Favorites";
 import Sequencer from "./Sequencer";
+import Browse from "./Browse";
 
 class App extends React.Component {
   handleLogin() {
@@ -89,6 +90,7 @@ class App extends React.Component {
     this.handleLogout = this.handleLogout.bind(this);
     this.handleToggleFavorite = this.handleToggleFavorite.bind(this);
     this.attachMediaKeyHandlers = this.attachMediaKeyHandlers.bind(this);
+    this.fetchDirectory = this.fetchDirectory.bind(this);
 
     this.attachMediaKeyHandlers();
 
@@ -148,6 +150,8 @@ class App extends React.Component {
       user: null,
       faves: [],
       songUrl: null,
+
+      directories: {},
     };
 
     // Load the chip-core Emscripten runtime
@@ -468,6 +472,22 @@ class App extends React.Component {
     return false;
   }
 
+  fetchDirectory(path) {
+    fetch(`${API_BASE}/browse?path=${encodeURIComponent(path)}`)
+      .then(response => response.json())
+      .then(json => {
+        const directories = {
+          ...this.state.directories,
+          [path]: json.sort((a, b) => {
+            if (a.type < b.type) return -1;
+            if (a.type > b.type) return 1;
+            return 0;
+          }),
+        };
+        this.setState({ directories });
+      });
+  }
+
   static titlesFromMetadata(metadata) {
     if (metadata.formatted) {
       return metadata.formatted;
@@ -512,6 +532,7 @@ class App extends React.Component {
                    handleLogin={this.handleLogin}
                    isPhone={isMobile.phone}/>
         <div className="App-content-area">
+          {/*
           <Search
             initialQuery={this.state.initialQuery}
             catalog={this.state.catalog}
@@ -554,7 +575,15 @@ class App extends React.Component {
               ].map(t => <a key={t} href="#" onClick={(e) => this.handleDoSearch(e, t)}>{t}</a>)
             }
           </Search>
-          {!isMobile.phone && !this.state.loading &&
+          */}
+          <Browse currContext={currContext}
+                  currIdx={currIdx}
+                  directories={this.state.directories}
+                  fetchDirectory={this.fetchDirectory}
+                  handleSongClick={this.handleSongClick}
+                  favorites={this.state.faves}
+                  toggleFavorite={this.handleToggleFavorite}/>
+          {!isMobile.phone && !this.state.loading && false &&
           <Visualizer audioCtx={this.audioCtx}
                       sourceNode={this.playerNode}
                       chipCore={this.chipCore}
