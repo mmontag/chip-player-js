@@ -449,7 +449,7 @@ class App extends React.Component {
     if (USE_BACKEND_SEARCH) {
       fetch(`${API_BASE}/random?limit=100`)
         .then(response => response.json())
-        .then(json => this.sequencer.playContext(json.items.map(item => item.file)));
+        .then(json => this.sequencer.playContext(json.items.map(item => item.file), 10));
     } else {
       const catalog = this.state.catalog;
       if (catalog) {
