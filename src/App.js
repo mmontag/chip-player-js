@@ -26,6 +26,7 @@ import Sequencer from "./Sequencer";
 import Browse from "./Browse";
 import {Switch} from "react-router";
 import {DirectoryLink} from "./DirectoryLink";
+import dice from './images/dice.png';
 
 class App extends React.Component {
   handleLogin() {
@@ -618,12 +619,13 @@ class App extends React.Component {
             </span>}
             <span style={{float: 'right'}}>
               <button className="box-button" onClick={this.handlePlayRandom}>
-                I'm Feeling Lucky
+                <img src={dice} style={{ verticalAlign: 'bottom' }}/>
+                Random
               </button>
               {' '}
               {!this.state.showPlayerSettings &&
               <button className="box-button" onClick={this.toggleSettings}>
-                Player Settings >
+                Settings &gt;
               </button>}
             </span>
             {this.state.playerError &&

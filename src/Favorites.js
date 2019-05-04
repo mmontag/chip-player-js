@@ -20,7 +20,7 @@ export default class Favorites extends PureComponent {
         :
         <div>
           <h3>
-            My Favorites <span>({favorites.length})</span>
+            Favorite Songs <span>({favorites.length})</span>
           </h3>
           {user ?
             favorites.length > 0 ?
