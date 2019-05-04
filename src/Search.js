@@ -224,7 +224,7 @@ export default class Search extends PureComponent {
     const placeholder = this.state.totalSongs ?
       `${this.state.totalSongs} tunes` : 'Loading catalog...';
     return (
-      <div className="Search">
+      <div>
         <div>
           <label className="Search-label">Search:{' '}
             <input type="text"

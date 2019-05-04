@@ -538,42 +538,44 @@ class App extends React.Component {
           <Link to="/">Search</Link>
           <Link to="/favorites">Favorites</Link>
           <Link to="/browse">Browse</Link>
-        <div className="App-content-area">
-          <Switch>
-            <Route path="/" exact render={() => (
-              <Search
-                initialQuery={this.state.initialQuery}
-                catalog={this.state.catalog}
-                currContext={currContext}
-                currIdx={currIdx}
-                toggleFavorite={this.handleToggleFavorite}
-                favorites={this.state.faves}
-                onClick={this.handleSongClick}>
-                { this.state.loading && <p>Loading player engine...</p> }
-              </Search>
-            )}/>
-            <Route path="/favorites" render={() => (
-              <Favorites
-                user={this.state.user}
-                loadingUser={this.state.loadingUser}
-                handleLogin={this.handleLogin}
-                onClick={this.handleSongClick}
-                currContext={currContext}
-                currIdx={currIdx}
-                toggleFavorite={this.handleToggleFavorite}
-                favorites={this.state.faves}/>
-            )}/>
-            <Route path="/browse/:browsePath*" render={({match}) => (
-              <Browse currContext={currContext}
-                      currIdx={currIdx}
-                      browsePath={match.params.browsePath || ''}
-                      directories={this.state.directories}
-                      fetchDirectory={this.fetchDirectory}
-                      handleSongClick={this.handleSongClick}
-                      favorites={this.state.faves}
-                      toggleFavorite={this.handleToggleFavorite}/>
-            )}/>
-          </Switch>
+        <div className="App-main">
+          <div className="App-main-content-area">
+            <Switch>
+              <Route path="/" exact render={() => (
+                <Search
+                  initialQuery={this.state.initialQuery}
+                  catalog={this.state.catalog}
+                  currContext={currContext}
+                  currIdx={currIdx}
+                  toggleFavorite={this.handleToggleFavorite}
+                  favorites={this.state.faves}
+                  onClick={this.handleSongClick}>
+                  { this.state.loading && <p>Loading player engine...</p> }
+                </Search>
+              )}/>
+              <Route path="/favorites" render={() => (
+                <Favorites
+                  user={this.state.user}
+                  loadingUser={this.state.loadingUser}
+                  handleLogin={this.handleLogin}
+                  onClick={this.handleSongClick}
+                  currContext={currContext}
+                  currIdx={currIdx}
+                  toggleFavorite={this.handleToggleFavorite}
+                  favorites={this.state.faves}/>
+              )}/>
+              <Route path="/browse/:browsePath*" render={({match}) => (
+                <Browse currContext={currContext}
+                        currIdx={currIdx}
+                        browsePath={match.params.browsePath || ''}
+                        directories={this.state.directories}
+                        fetchDirectory={this.fetchDirectory}
+                        handleSongClick={this.handleSongClick}
+                        favorites={this.state.faves}
+                        toggleFavorite={this.handleToggleFavorite}/>
+              )}/>
+            </Switch>
+          </div>
           {!isMobile.phone && !this.state.loading &&
           <Visualizer audioCtx={this.audioCtx}
                       sourceNode={this.playerNode}

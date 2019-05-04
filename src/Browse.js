@@ -118,7 +118,6 @@ export default class Browse extends PureComponent {
 const css = {
   directoryTable: {
     flexGrow: 1,
-    padding: '19px 16px',
     borderSpacing: 0,
     tableLayout: 'fixed',
   },
