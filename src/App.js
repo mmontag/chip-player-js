@@ -519,7 +519,7 @@ class App extends React.Component {
     path = path.replace(/^music\//, '');
     path = path.replace(/^catalog\//, '');
     path = path.split('/').slice(0, -1).join('/') + '/';
-    return <DirectoryLink to={'/browse/' + path}>{path}</DirectoryLink>;
+    return <DirectoryLink dim to={'/browse/' + path}>{path}</DirectoryLink>;
   }
 
   render() {

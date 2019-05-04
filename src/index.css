@@ -4,6 +4,8 @@
     --charW1:      8px;
     --charW2:     16px;
     --charW2neg: -16px;
+    --charW3:     24px;
+    --charW3neg: -24px;
 
     --clickable:  #ff0;
     --active:     #800;
@@ -336,20 +338,9 @@ body,#root {
     /*height: 100%;*/
 }
 
-.Search-results-group-heading {
-    margin: 0;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
-}
-
-.Search-results-group-heading a {
-    color: var(--neutral2);
-}
-
 .Search-results-group-item {
-    margin-left: var(--charW2);
-    text-indent: -24px;
+    margin-left: var(--charW3);
+    text-indent: var(--charW3neg);
     white-space: nowrap;
 }
 
