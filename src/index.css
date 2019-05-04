@@ -63,13 +63,7 @@ h1, h2, h3, h4, h5, h6 {
 p { margin: 0 0 var(--charH) 0; }
 
 a {
-    font-size: 24px;
-    font-weight: normal;
     text-decoration: none;
-    -webkit-font-smoothing: none;
-    margin: 0;
-    padding: 0;
-    line-height: 24px;
     color: var(--clickable);
     cursor: pointer;
 }

@@ -25,6 +25,7 @@ import Favorites from "./Favorites";
 import Sequencer from "./Sequencer";
 import Browse from "./Browse";
 import {Switch} from "react-router";
+import {DirectoryLink} from "./DirectoryLink";
 
 class App extends React.Component {
   handleLogin() {
@@ -517,10 +518,8 @@ class App extends React.Component {
     path = path.replace(/^https?:\/\/[a-z0-9\-.:]+\//, '');
     path = path.replace(/^music\//, '');
     path = path.replace(/^catalog\//, '');
-    path = path.split('/').slice(0, -1).join('/');
-    const handler = this.handleDoSearch;
-    const query = path.replace(/[^a-zA-Z0-9]+/g, ' ');
-    return <a href="#" onClick={(e) => handler(e, query)}>&#x221E; {path}/</a>;
+    path = path.split('/').slice(0, -1).join('/') + '/';
+    return <DirectoryLink to={'/browse/' + path}>{path}</DirectoryLink>;
   }
 
   render() {
@@ -529,12 +528,12 @@ class App extends React.Component {
     const currIdx = this.sequencer.getCurrIdx();
     const pathLinks = this.pathToLinks(this.state.songUrl);
     return (
+      <Router basename={process.env.PUBLIC_URL}>
       <div className="App">
         <AppHeader user={this.state.user}
                    handleLogout={this.handleLogout}
                    handleLogin={this.handleLogin}
                    isPhone={isMobile.phone}/>
-        <Router basename={process.env.PUBLIC_URL}>
           <Link to="/">Search</Link>
           <Link to="/favorites">Favorites</Link>
           <Link to="/browse">Browse</Link>
@@ -582,7 +581,6 @@ class App extends React.Component {
                       chipCore={this.chipCore}
                       paused={this.state.ejected || this.state.paused}/>}
         </div>
-        </Router>
         <div className="App-footer">
           <div className="App-footer-main">
             <button onClick={this.prevSong}
@@ -680,6 +678,7 @@ class App extends React.Component {
           <div className="App-footer-art" style={{backgroundImage: `url("${this.state.imageUrl}")`}}/>}
         </div>
       </div>
+      </Router>
     );
   }
 }
