@@ -32,8 +32,8 @@ export default class Search extends PureComponent {
 
     this.textInput = React.createRef();
 
+    // SearchWorker
     searchWorker.onmessage = (message) => this.handleMessage(message.data);
-
     if (props.catalog) {
       this.loadCatalog(props.catalog);
     }
@@ -51,13 +51,9 @@ export default class Search extends PureComponent {
       .catch(_ => this.setState({ totalSongs: 99999 }));
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate() {
     if (!USE_BACKEND_SEARCH && !this.catalogLoaded && this.props.catalog) {
       this.loadCatalog(this.props.catalog);
-    } else {
-      if (this.props.initialQuery !== prevProps.initialQuery) {
-        this.onSearchInputChange(this.props.initialQuery, true);
-      }
     }
   }
 
@@ -109,6 +105,7 @@ export default class Search extends PureComponent {
         })
         .then(json => this.handleSearchResults(json));
     } else {
+      // SearchWorker
       const query = val.trim().split(' ').filter(n => n !== '');
       searchWorker.postMessage({
         type: 'search',
@@ -120,6 +117,7 @@ export default class Search extends PureComponent {
     }
   }
 
+  // SearchWorker
   handleMessage(data) {
     switch (data.type) {
       case 'results':
@@ -132,10 +130,8 @@ export default class Search extends PureComponent {
     }
   }
 
+  // SearchWorker
   handleStatus(data) {
-    if (data.numRecords && this.props.initialQuery) {
-      this.onSearchInputChange(this.props.initialQuery);
-    }
     this.setState({
       totalSongs: data.numRecords,
     });

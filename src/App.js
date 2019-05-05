@@ -87,7 +87,6 @@ class App extends React.Component {
     this.handleSetVoices = this.handleSetVoices.bind(this);
     this.handleSequencerStateUpdate = this.handleSequencerStateUpdate.bind(this);
     this.handlePlayerError = this.handlePlayerError.bind(this);
-    this.handleDoSearch = this.handleDoSearch.bind(this);
     this.handlePlayRandom = this.handlePlayRandom.bind(this);
     this.handleSongClick = this.handleSongClick.bind(this);
     this.handleLogin = this.handleLogin.bind(this);
@@ -148,7 +147,6 @@ class App extends React.Component {
       tempo: 1,
       voices: Array(MAX_VOICES).fill(true),
       voiceNames: Array(MAX_VOICES).fill(''),
-      initialQuery: null,
       imageUrl: null,
       showPlayerSettings: false,
       user: null,
@@ -187,9 +185,6 @@ class App extends React.Component {
           //   });
 
           const urlParams = queryString.parse(window.location.search.substr(1));
-          if (urlParams.q) {
-            this.setState({initialQuery: urlParams.q});
-          }
           if (urlParams.play) {
             // Allow a little time for initial page render before starting the song.
             // This is not absolutely necessary but helps prevent stuttering.
@@ -471,12 +466,6 @@ class App extends React.Component {
     }
   }
 
-  handleDoSearch(e, query) {
-    this.setState({initialQuery: query});
-    e.preventDefault();
-    return false;
-  }
-
   fetchDirectory(path) {
     fetch(`${API_BASE}/browse?path=%2F${encodeURIComponent(path)}`)
       .then(response => response.json())
@@ -544,7 +533,6 @@ class App extends React.Component {
             <Switch>
               <Route path="/" exact render={() => (
                 <Search
-                  initialQuery={this.state.initialQuery}
                   catalog={this.state.catalog}
                   currContext={currContext}
                   currIdx={currIdx}
