@@ -7,7 +7,7 @@ export default class Favorites extends PureComponent {
       favorites,
       currContext,
       currIdx,
-      onClick,
+      onSongClick,
       toggleFavorite,
       user,
       loadingUser,
@@ -35,7 +35,7 @@ export default class Favorites extends PureComponent {
                                         toggleFavorite={toggleFavorite}
                                         href={href}/>
                         <a className={isPlaying ? 'Song-now-playing' : ''}
-                           onClick={onClick(href, favorites, i)} href={href}>{title}</a>
+                           onClick={onSongClick(href, favorites, i)} href={href}>{title}</a>
                       </div>
                     );
                   })

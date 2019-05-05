@@ -143,7 +143,10 @@ export default class Search extends PureComponent {
 
   handleSearchResults(payload) {
     const { items, total } = payload;
-    const results = items.map(item => item.file).sort();
+    const results = items
+      .map(item => item.file)
+      .map(result => result.replace('%', '%25').replace('#', '%23'))
+      .sort();
     this.setState({
       searching: true,
       resultsCount: total,
@@ -170,8 +173,8 @@ export default class Search extends PureComponent {
   extractHeadings(sortedResults) {
     // Results input must be sorted. Returns a map of indexes to headings.
     // {
-    //   0: 'Nintendo\A Boy And His Blob',
-    //   12: 'Sega Genesis\A Boy And His Blob',
+    //   0: 'Nintendo/A Boy And His Blob',
+    //   12: 'Sega Genesis/A Boy And His Blob',
     // }
     const headings = {};
     let currHeading = null;
@@ -188,17 +191,13 @@ export default class Search extends PureComponent {
   renderResultItem(result, i) {
     let headingFragment = null;
     if (this.state.resultsHeadings[i]) {
-      const heading = this.state.resultsHeadings[i];
-      // HACK: in lieu of a browse capability, search for the directory
-      const headingQuery = heading.replace(/[^a-zA-Z0-9]+/g, ' ');
+      const href = this.state.resultsHeadings[i];
       headingFragment = (
-        <DirectoryLink dim to={'/browse/' + heading}>{heading}</DirectoryLink>
+        <DirectoryLink dim to={'/browse/' + href}>{decodeURI(href)}</DirectoryLink>
       );
     }
-    // XXX: Escape immediately: the escaped URL is considered canonical.
-    //      The URL must be decoded for display from here on out.
-    const href = CATALOG_PREFIX + result.replace('%', '%25').replace('#', '%23');
-    const resultTitle = result.substring(result.lastIndexOf('/') + 1);
+    const href = CATALOG_PREFIX + result;
+    const resultTitle = decodeURI(result.substring(result.lastIndexOf('/') + 1));
     const isPlaying = this.props.currContext === this.state.results && this.props.currIdx === i;
     return (
       <div key={i}>
@@ -209,7 +208,7 @@ export default class Search extends PureComponent {
                           toggleFavorite={this.props.toggleFavorite}
                           href={href}/>}
           <a className={isPlaying ? 'Song-now-playing' : ''}
-             onClick={this.props.onClick(href, this.state.results, i)}
+             onClick={this.props.onSongClick(href, this.state.results, i)}
              href={href}>
             {resultTitle}
           </a>
