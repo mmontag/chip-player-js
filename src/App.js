@@ -5,14 +5,13 @@ import * as firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
 import firebaseConfig from './config/firebaseConfig';
-import {BrowserRouter as Router, Route, Link, NavLink} from 'react-router-dom';
-import {API_BASE, MAX_VOICES, REPLACE_STATE_ON_SEEK, USE_BACKEND_SEARCH} from "./config";
+import {BrowserRouter as Router, Route, NavLink} from 'react-router-dom';
+import {API_BASE, MAX_VOICES, REPLACE_STATE_ON_SEEK } from "./config";
 
 import ChipCore from './chip-core';
 import GMEPlayer from './players/GMEPlayer';
 import MIDIPlayer from './players/MIDIPlayer';
 import XMPPlayer from './players/XMPPlayer';
-import {trieToList} from './ResigTrie';
 import promisify from "./promisifyXhr";
 
 import PlayerParams from './PlayerParams';
@@ -76,7 +75,6 @@ class App extends React.Component {
     this.togglePause = this.togglePause.bind(this);
     this.toggleSettings = this.toggleSettings.bind(this);
     this.displayLoop = this.displayLoop.bind(this);
-    this.loadCatalog = this.loadCatalog.bind(this);
     this.playContext = this.playContext.bind(this);
     this.prevSong = this.prevSong.bind(this);
     this.nextSong = this.nextSong.bind(this);
@@ -132,7 +130,6 @@ class App extends React.Component {
     console.log('Sample rate: %d hz', audioCtx.sampleRate);
 
     this.state = {
-      catalog: [],
       loading: true,
       loadingUser: true,
       paused: true,
@@ -211,9 +208,6 @@ class App extends React.Component {
 
     this.sequencer = new Sequencer([], this.handleSequencerStateUpdate, this.handlePlayerError);
 
-    // Load the song catalog
-    this.loadCatalog();
-
     // Start display loop
     setInterval(this.displayLoop, 46); //  46 ms = 2048/44100 sec or 21.5 fps
                                        // 400 ms = 2.5 fps
@@ -237,23 +231,6 @@ class App extends React.Component {
       });
     }
     // requestAnimationFrame(this.displayLoop);
-  }
-
-  loadCatalog() {
-    if (USE_BACKEND_SEARCH) {
-      return;
-    }
-    const catalogTrie = './catalog-trie.json';
-    fetch(catalogTrie)
-      .then(response => response.json())
-      .then(trie => {
-        console.log('Loaded %s trie.', catalogTrie);
-        const start = performance.now();
-        const list = trieToList(trie);
-        const time = (performance.now() - start).toFixed(1);
-        console.log('Converted trie to list (%d items) in %s ms.', list.length, time);
-        this.setState({catalog: list});
-      });
   }
 
   attachMediaKeyHandlers() {
@@ -442,17 +419,9 @@ class App extends React.Component {
   }
 
   handlePlayRandom() {
-    if (USE_BACKEND_SEARCH) {
-      fetch(`${API_BASE}/random?limit=100`)
-        .then(response => response.json())
-        .then(json => this.sequencer.playContext(json.items.map(item => item.file), 10));
-    } else {
-      const catalog = this.state.catalog;
-      if (catalog) {
-        const idx = Math.floor(Math.random() * catalog.length);
-        this.sequencer.playContext(catalog, idx);
-      }
-    }
+    fetch(`${API_BASE}/random?limit=100`)
+      .then(response => response.json())
+      .then(json => this.sequencer.playContext(json.items.map(item => item.file), 10));
   }
 
   handleSongClick(url, context, index) {
@@ -533,7 +502,6 @@ class App extends React.Component {
             <Switch>
               <Route path="/" exact render={() => (
                 <Search
-                  catalog={this.state.catalog}
                   currContext={currContext}
                   currIdx={currIdx}
                   toggleFavorite={this.handleToggleFavorite}

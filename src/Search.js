@@ -1,16 +1,13 @@
 /* eslint import/no-webpack-loader-syntax: off */
 import React, {PureComponent} from 'react';
-import SearchWorker from 'worker-loader!./SearchWorker';
 import queryString from 'querystring';
 import FavoriteButton from "./FavoriteButton";
 import debounce from 'lodash/debounce';
 import promisify from "./promisifyXhr";
-import {API_BASE, CATALOG_PREFIX, USE_BACKEND_SEARCH} from "./config";
+import {API_BASE, CATALOG_PREFIX} from "./config";
 import {DirectoryLink} from "./DirectoryLink";
 
-const searchWorker = new SearchWorker();
-
-const MAX_RESULTS = 200;
+const MAX_RESULTS = 100;
 
 function getTotal() {
   return fetch(`${API_BASE}/total`)
@@ -26,17 +23,10 @@ export default class Search extends PureComponent {
     this.onChange = this.onChange.bind(this);
     this.onSearchInputChange = this.onSearchInputChange.bind(this);
     this.handleSearchResults = this.handleSearchResults.bind(this);
-    this.handleStatus = this.handleStatus.bind(this);
     this.handleClear = this.handleClear.bind(this);
     this.renderResultItem = this.renderResultItem.bind(this);
 
     this.textInput = React.createRef();
-
-    // SearchWorker
-    searchWorker.onmessage = (message) => this.handleMessage(message.data);
-    if (props.catalog) {
-      this.loadCatalog(props.catalog);
-    }
 
     this.state = {
       searching: false,
@@ -49,22 +39,6 @@ export default class Search extends PureComponent {
     getTotal()
       .then(json => this.setState({ totalSongs: json.total }))
       .catch(_ => this.setState({ totalSongs: 99999 }));
-  }
-
-  componentDidUpdate() {
-    if (!USE_BACKEND_SEARCH && !this.catalogLoaded && this.props.catalog) {
-      this.loadCatalog(this.props.catalog);
-    }
-  }
-
-  loadCatalog(catalog) {
-    if (USE_BACKEND_SEARCH) return;
-    console.log('Posting catalog load message to worker...');
-    this.catalogLoaded = true;
-    searchWorker.postMessage({
-      type: 'load',
-      payload: JSON.stringify(catalog),
-    });
   }
 
   onChange(e) {
@@ -90,51 +64,18 @@ export default class Search extends PureComponent {
   }
 
   doSearch(val) {
-    if (USE_BACKEND_SEARCH) {
-      const q = encodeURIComponent(val);
-      const l = 100;
-      const url = `${API_BASE}/search?query=${q}&limit=${l}`;
-      if (this.searchRequest) this.searchRequest.abort();
-      this.searchRequest = promisify(new XMLHttpRequest());
-      this.searchRequest.open('GET', url);
-      // this.searchRequest.responseType = 'json';
-      this.searchRequest.send()
-        .then(response => {
-          this.searchRequest = null;
-          return JSON.parse(response.responseText);
-        })
-        .then(json => this.handleSearchResults(json));
-    } else {
-      // SearchWorker
-      const query = val.trim().split(' ').filter(n => n !== '');
-      searchWorker.postMessage({
-        type: 'search',
-        payload: {
-          query: query,
-          maxResults: MAX_RESULTS
-        }
-      });
-    }
-  }
-
-  // SearchWorker
-  handleMessage(data) {
-    switch (data.type) {
-      case 'results':
-        this.handleSearchResults(data.payload);
-        break;
-      case 'status':
-        this.handleStatus(data.payload);
-        break;
-      default:
-    }
-  }
-
-  // SearchWorker
-  handleStatus(data) {
-    this.setState({
-      totalSongs: data.numRecords,
-    });
+    const q = encodeURIComponent(val);
+    const url = `${API_BASE}/search?query=${q}&limit=${MAX_RESULTS}`;
+    if (this.searchRequest) this.searchRequest.abort();
+    this.searchRequest = promisify(new XMLHttpRequest());
+    this.searchRequest.open('GET', url);
+    // this.searchRequest.responseType = 'json';
+    this.searchRequest.send()
+      .then(response => {
+        this.searchRequest = null;
+        return JSON.parse(response.responseText);
+      })
+      .then(json => this.handleSearchResults(json));
   }
 
   handleSearchResults(payload) {
