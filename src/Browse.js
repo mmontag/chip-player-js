@@ -49,16 +49,19 @@ export default class Browse extends PureComponent {
     const parentPath = browsePath.substr(0, browsePath.lastIndexOf('/'));
 
     return (
+      <Fragment>
+      <div>
+        /{browsePath}
+      </div>
       <table style={css.directoryTable}>
         <tbody>
-        { browsePath ?
-          <tr key={browsePath}>
+        <tr key={browsePath}>
             <td>
               <DirectoryLink to={'/browse/' + parentPath}>..</DirectoryLink>
             </td>
             <td>{dirToken}</td>
             <td></td>
-          </tr> : null }
+          </tr>
         {
           dirListing.map((item, i) => {
             // XXX: Escape immediately: the escaped URL is considered canonical.
@@ -111,6 +114,7 @@ export default class Browse extends PureComponent {
         }
         </tbody>
       </table>
+      </Fragment>
     );
   }
 }
