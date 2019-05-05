@@ -5,7 +5,7 @@ import * as firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
 import firebaseConfig from './config/firebaseConfig';
-import {BrowserRouter as Router, Route, Link} from 'react-router-dom';
+import {BrowserRouter as Router, Route, Link, NavLink} from 'react-router-dom';
 import {API_BASE, MAX_VOICES, REPLACE_STATE_ON_SEEK, USE_BACKEND_SEARCH} from "./config";
 
 import ChipCore from './chip-core';
@@ -516,11 +516,10 @@ class App extends React.Component {
   pathToLinks(path) {
     if (!path) return null;
 
-    path = path.replace(/^https?:\/\/[a-z0-9\-.:]+\//, '');
-    path = path.replace(/^music\//, '');
-    path = path.replace(/^catalog\//, '');
-    path = path.split('/').slice(0, -1).join('/') + '/';
-    return <DirectoryLink dim to={'/browse/' + path}>{path}</DirectoryLink>;
+    path = path
+      .replace(/^https?:\/\/[a-z0-9\-.:]+\/(music|catalog)\//, '/')
+      .split('/').slice(0, -1).join('/') + '/';
+    return <DirectoryLink dim to={'/browse' + path}>{decodeURI(path)}</DirectoryLink>;
   }
 
   render() {
@@ -535,11 +534,13 @@ class App extends React.Component {
                    handleLogout={this.handleLogout}
                    handleLogin={this.handleLogin}
                    isPhone={isMobile.phone}/>
-          <Link to="/">Search</Link>
-          <Link to="/favorites">Favorites</Link>
-          <Link to="/browse">Browse</Link>
         <div className="App-main">
           <div className="App-main-content-area">
+            <div className="tab-container">
+              <NavLink className="tab" activeClassName="tab-selected" to="/" exact>Search</NavLink>
+              <NavLink className="tab" activeClassName="tab-selected" to="/browse">Browse</NavLink>
+              <NavLink className="tab" activeClassName="tab-selected" to="/favorites">Favorites</NavLink>
+            </div>
             <Switch>
               <Route path="/" exact render={() => (
                 <Search
@@ -549,7 +550,7 @@ class App extends React.Component {
                   currIdx={currIdx}
                   toggleFavorite={this.handleToggleFavorite}
                   favorites={this.state.faves}
-                  onClick={this.handleSongClick}>
+                  onSongClick={this.handleSongClick}>
                   { this.state.loading && <p>Loading player engine...</p> }
                 </Search>
               )}/>
@@ -558,7 +559,7 @@ class App extends React.Component {
                   user={this.state.user}
                   loadingUser={this.state.loadingUser}
                   handleLogin={this.handleLogin}
-                  onClick={this.handleSongClick}
+                  onSongClick={this.handleSongClick}
                   currContext={currContext}
                   currIdx={currIdx}
                   toggleFavorite={this.handleToggleFavorite}

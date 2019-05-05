@@ -1,6 +1,7 @@
 /* MSDOS 6.22 CSS Theme */
 :root {
     --charH:      19px;
+    --charHneg:  -19px;
     --charW1:      8px;
     --charW2:     16px;
     --charW2neg: -16px;
@@ -195,7 +196,6 @@ body,#root {
 }
 
 .App-header {
-    border-bottom: 1px solid var(--clickable);
     padding: var(--charH) var(--charW2);
     margin: 0 var(--charW2neg);
     flex-grow: 0;
@@ -378,3 +378,27 @@ body,#root {
 
 td { padding: 0 }
 img { image-rendering: pixelated; }
+
+.tab-container {
+    border-bottom: 1px solid var(--clickable);
+    margin: var(--charHneg) var(--charW2neg) var(--charH) var(--charW2neg);
+    padding: 0 var(--charW2);
+    position: sticky;
+    top: var(--charHneg);
+    background: var(--background);
+    z-index: 10;
+}
+
+.tab {
+    display: inline-block;
+    padding: 0 15px 0 15px;
+    border: 1px solid yellow;
+    border-bottom: none;
+    margin: 0 8px 0 0;
+    border-radius: 3px 3px 0 0;
+}
+
+.tab-selected {
+    border-bottom: 1px solid var(--background);
+    margin-bottom: -1px;
+}
