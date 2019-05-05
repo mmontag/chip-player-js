@@ -41,6 +41,14 @@ export default class Search extends PureComponent {
       .catch(_ => this.setState({ totalSongs: 99999 }));
   }
 
+  componentDidMount() {
+    const {q} = queryString.parse(window.location.search.substr(1));
+    if (q) {
+      this.setState({query: q});
+      this.doSearch(q);
+    }
+  }
+
   onChange(e) {
     this.onSearchInputChange(e.target.value);
   }
