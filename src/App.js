@@ -74,7 +74,6 @@ class App extends React.Component {
 
     this.togglePause = this.togglePause.bind(this);
     this.toggleSettings = this.toggleSettings.bind(this);
-    this.displayLoop = this.displayLoop.bind(this);
     this.playContext = this.playContext.bind(this);
     this.prevSong = this.prevSong.bind(this);
     this.nextSong = this.nextSong.bind(this);
@@ -207,10 +206,6 @@ class App extends React.Component {
     }
 
     this.sequencer = new Sequencer([], this.handleSequencerStateUpdate, this.handlePlayerError);
-
-    // Start display loop
-    setInterval(this.displayLoop, 46); //  46 ms = 2048/44100 sec or 21.5 fps
-                                       // 400 ms = 2.5 fps
   }
 
   _unlockAudioContext(context) {
@@ -222,15 +217,6 @@ class App extends React.Component {
         .then(() => events.forEach(event => document.body.removeEventListener(event, unlock)));
       events.forEach(event => document.body.addEventListener(event, unlock, false));
     }
-  }
-
-  displayLoop() {
-    if (this.sequencer && this.sequencer.getPlayer()) {
-      this.setState({
-        currentSongPositionMs: Math.min(this.sequencer.getPlayer().getPositionMs(), this.state.currentSongDurationMs),
-      });
-    }
-    // requestAnimationFrame(this.displayLoop);
   }
 
   attachMediaKeyHandlers() {
@@ -589,8 +575,14 @@ class App extends React.Component {
             <div className="App-error">ERROR: {this.state.playerError}</div>
             }
             <TimeSlider
-              currentSongPositionMs={this.state.currentSongPositionMs}
               currentSongDurationMs={this.state.currentSongDurationMs}
+              getCurrentPositionMs={() => {
+                const sequencer = this.sequencer;
+                if (sequencer && sequencer.getPlayer()) {
+                  return sequencer.getPlayer().getPositionMs();
+                }
+                return 0;
+              }}
               onChange={this.handleTimeSliderChange}/>
             {!this.state.ejected &&
             <div className="SongDetails">

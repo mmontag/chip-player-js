@@ -1,7 +1,11 @@
-import React, {PureComponent} from 'react';
+import React, {Component} from 'react';
 import Slider from "./Slider";
 
-export default class TimeSlider extends PureComponent {
+//  46 ms = 2048/44100 sec or 21.5 fps
+// 400 ms = 2.5 fps
+const UPDATE_INTERVAL_MS = 46;
+
+export default class TimeSlider extends Component {
   constructor(props) {
     super(props);
 
@@ -12,17 +16,32 @@ export default class TimeSlider extends PureComponent {
 
     this.state = {
       draggedSongPositionMs: -1,
+      currentSongPositionMs: 0,
     };
+    this.timer = null;
+  }
+
+  componentDidMount() {
+    this.timer = setInterval(() => {
+      const {getCurrentPositionMs, currentSongDurationMs} = this.props;
+      this.setState({
+        currentSongPositionMs: Math.min(getCurrentPositionMs(), currentSongDurationMs),
+      });
+    }, UPDATE_INTERVAL_MS);
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.timer);
   }
 
   getSongPos() {
-    return this.props.currentSongPositionMs / this.props.currentSongDurationMs;
+    return this.state.currentSongPositionMs / this.props.currentSongDurationMs;
   }
 
   getTimeLabel() {
     const val = this.state.draggedSongPositionMs >= 0 ?
       this.state.draggedSongPositionMs :
-      this.props.currentSongPositionMs;
+      this.state.currentSongPositionMs;
     return this.getTime(val);
   }
 
