@@ -63,7 +63,10 @@ export default class PlayerParams extends PureComponent {
                 <div key={param.id}>
                   {param.label}:{' '}
                   <select
-                    onChange={(e) => this.props.setParameter(param.id, e.target.value)}
+                    onChange={(e) => {
+                      this.props.setParameter(param.id, e.target.value);
+                      this.forceUpdate();
+                    }}
                     defaultValue={this.props.getParameter(param.id)}>
                     {param.options.map(optgroup =>
                       <optgroup key={optgroup.label} label={optgroup.label}>
@@ -82,7 +85,10 @@ export default class PlayerParams extends PureComponent {
                   <input type='range'
                          min={param.min} max={param.max} step={param.step}
                          value={this.props.getParameter(param.id)}
-                         onChange={(e) => this.props.setParameter(param.id, e.target.value)}>
+                         onChange={(e) => {
+                           this.props.setParameter(param.id, e.target.value);
+                           this.forceUpdate();
+                         }}>
                   </input>
                 </div>
               );
