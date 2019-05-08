@@ -58,11 +58,11 @@ export default class Browse extends PureComponent {
         <table style={css.directoryTable}>
           <tbody>
           <tr key={browsePath}>
-            <td>
+            <td style={css.tdClip}>
               <DirectoryLink to={'/browse/' + parentPath}>..</DirectoryLink>
             </td>
-            <td>{dirToken}</td>
-            <td/>
+            <td style={css.tdDir}>{dirToken}</td>
+            <td style={css.rightAlign}/>
           </tr>
           {
             dirListing.map((item, i) => {
@@ -79,7 +79,7 @@ export default class Browse extends PureComponent {
                         <DirectoryLink to={'/browse/' + path}>{name}</DirectoryLink>
                       </div>
                     </td>
-                    <td>
+                    <td style={css.tdDir}>
                       {dirToken}
                     </td>
                     <td style={css.rightAlign}>
@@ -91,7 +91,7 @@ export default class Browse extends PureComponent {
                 const href = CATALOG_PREFIX + path;
                 return (
                   <tr key={name}>
-                    <td style={css.tdClip}>
+                    <td style={css.tdClip} colSpan={2}>
                       <div style={css.textClip}>
                         {favorites &&
                         <FavoriteButton favorites={favorites}
@@ -103,8 +103,6 @@ export default class Browse extends PureComponent {
                           {name}
                         </a>
                       </div>
-                    </td>
-                    <td>
                     </td>
                     <td style={css.rightAlign}>
                       {bytes(item.size, {unitSeparator: ' '})}
@@ -127,15 +125,15 @@ const css = {
     borderSpacing: 0,
     tableLayout: 'fixed',
   },
-  rightAlign: {
-    textAlign: 'right',
-    textTransform: 'uppercase',
-    whiteSpace: 'nowrap',
-  },
   tdClip: {
     width: '100%',
     position: 'relative',
     padding: 0,
+  },
+  rightAlign: {
+    textAlign: 'right',
+    textTransform: 'uppercase',
+    whiteSpace: 'nowrap',
   },
   textClip: {
     overflowX: 'hidden',
