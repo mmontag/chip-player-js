@@ -12,6 +12,8 @@ const fileExtensions = [
   'vgm',
   'vgz',
   'ay',
+  'sgc',
+  'kss',
 ];
 
 export default class GMEPlayer extends Player {
