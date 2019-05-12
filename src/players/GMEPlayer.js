@@ -1,5 +1,6 @@
 import Player from "./Player.js";
 import App from "../App";
+import SubBass from "../effects/SubBass";
 
 let emu = null;
 let libgme = null;
@@ -19,15 +20,21 @@ const fileExtensions = [
 export default class GMEPlayer extends Player {
   constructor(audioCtx, destNode, chipCore, onPlayerStateUpdate) {
     super(audioCtx, destNode, chipCore, onPlayerStateUpdate);
+    this.setParameter = this.setParameter.bind(this);
+    this.getParameter = this.getParameter.bind(this);
+    this.getParameters = this.getParameters.bind(this);
 
     libgme = chipCore;
     this.paused = false;
     this.fileExtensions = fileExtensions;
     this.subtune = 0;
     this.tempo = 1.0;
+    this.params = { subbass: 1 };
 
     this.buffer = libgme.allocate(this.bufferSize * 16, 'i16', libgme.ALLOC_NORMAL);
     this.emuPtr = libgme.allocate(1, 'i32', libgme.ALLOC_NORMAL);
+
+    this.subBass = new SubBass(audioCtx.sampleRate);
 
     this.setAudioProcess(this.gmeAudioProcess);
   }
@@ -62,6 +69,14 @@ export default class GMEPlayer extends Player {
             i * 2 * 2 +             // frame offset   * bytes per sample * num channels +
             channel * 2,            // channel offset * bytes per sample
             'i16') / INT16_MAX;     // convert int16 to float
+        }
+      }
+
+      if (this.params.subbass > 0) {
+        for (i = 0; i < this.bufferSize; i++) {
+          const sub = this.subBass.process(channels[0][i]) * this.params.subbass;
+          channels[0][i] += sub;
+          channels[1][i] += sub;
         }
       }
     } else {
@@ -99,6 +114,10 @@ export default class GMEPlayer extends Player {
     this.subtune = 0;
     this.fadingOut = false;
     this.filepathMeta = Player.metadataFromFilepath(filepath);
+    const formatNeedsBass = filepath.match(
+      /(\.sgc$|\.kss$|\.nsfe?$|\.ay$|Master System|Game Gear)/i
+    );
+    this.params.subbass = formatNeedsBass ? 1 : 0;
 
     if (libgme.ccall(
       "gme_open_data",
@@ -211,6 +230,34 @@ export default class GMEPlayer extends Player {
 
   getMetadata() {
     return this.metadata;
+  }
+
+  getParameter(id) {
+    return this.params[id];
+  }
+
+  getParameters() {
+    return [
+      {
+        id: 'subbass',
+        label: 'Sub Bass',
+        type: 'number',
+        min: 0.0,
+        max: 2.0,
+        step: 0.01,
+        value: 1.0,
+      },
+    ];
+  }
+
+  setParameter(id, value) {
+    switch (id) {
+      case 'subbass':
+        this.params[id] = value;
+        break;
+      default:
+        console.warn('GMEPlayer has no parameter with id "%s".', id);
+    }
   }
 
   isPlaying() {
