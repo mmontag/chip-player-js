@@ -1,10 +1,10 @@
-import Fili from 'fili';
+import { CalcCascades, IirFilter } from 'fili';
 
 export default class SubBass {
   constructor(sampleRate) {
-    const iirCalculator = new Fili.CalcCascades();
+    const iirCalculator = new CalcCascades();
     const lowpass1Coeffs = iirCalculator.lowpass({
-      order: 3,
+      order: 5,
       characteristic: 'butterworth',
       Fs: sampleRate,
       Fc: 200,
@@ -27,83 +27,52 @@ export default class SubBass {
       gain: 0,
     });
 
-    const lowpass1 = new Fili.IirFilter(lowpass1Coeffs);
-    const lowpass2 = new Fili.IirFilter(lowpass2Coeffs);
-    const highpass = new Fili.IirFilter(highpassCoeffs);
+    const lowpass1 = new IirFilter(lowpass1Coeffs);
+    const lowpass2 = new IirFilter(lowpass2Coeffs);
+    const highpass = new IirFilter(highpassCoeffs);
+    const numOctaves = 1;
+    const dcResponseTime = 0.16;
+    const envResponseTime = 0.016;
 
-    // Test signal
-    // let s = 0;
-    // const TWO_PI = 2 * Math.PI;
-    // const sr = 48000;
-    // const f0 = 600 * TWO_PI;
-    // const fd = 300 * TWO_PI;
-    // const fm = 0.5 * TWO_PI;
-
-    let n0 = 0;
-    let n1 = 0;
-    let kloop = 0;
-    let adown1 = 0;
-    let adown2 = 0;
-
-    const dcResponseTime = 0.2;
+    let sCurr = 0;
+    let sPrev = 0;
+    let cycleCounter = 0;
     let dcAvg = 0;
     let dcWeight = Math.exp(-1 / (sampleRate * dcResponseTime));
-    function removeDC(sample) {
+    let envAvg = 0;
+    let envWeight = Math.exp(-1 / (sampleRate * envResponseTime));
+
+    function removeDcStep(sample) {
       dcAvg = dcWeight * dcAvg + (1 - dcWeight) * sample;
       return sample - dcAvg;
     }
 
-    const envResponseTime = 0.016;
-    let envAvg = 0;
-    let envWeight = Math.exp(-1 / (sampleRate * envResponseTime));
-    function envelope(sample) {
-      sample = removeDC(sample);
+    function envelopeStep(sample) {
+      sample = removeDcStep(sample);
       envAvg = envWeight * envAvg + (1 - envWeight) * Math.abs(sample);
       return envAvg * 1.414; // invert sine RMS
     }
 
-    this.process = (input) => {
-      // Test signal
-      // const t = s++ / sr;
-      // const sin1 = Math.sin(f0 * t + fd / fm * Math.sin(fm * t));
-      // const sin2 = Math.sin(f0 * t + fd / 1.1 * Math.sin(1.1 * t));
-      // const aTest = sin1 + sin2;
+    this.process = (sample) => {
+      const sBass = lowpass1.singleStep(sample);
+      const env = envelopeStep(sBass);
 
-      const abass = lowpass1.singleStep(input);
-      const env = envelope(abass);
-
-      n1 = n0;
-      n0 = abass;
+      sPrev = sCurr;
+      sCurr = sBass;
 
       // detect zero crossing (low to high)
-      if (n1 < 0 && n0 >= 0) {
-        kloop = (kloop + 1) % 4;
+      if (sPrev < 0 && sCurr >= 0) {
+        cycleCounter = (cycleCounter + 1) % Math.pow(2, numOctaves);
       }
 
-      switch (kloop) {
-        case 0:
-          adown1 = 1;
-          adown2 = 1;
-          break;
-        case 1:
-          adown1 = -1;
-          adown2 = 1;
-          break;
-        case 2:
-          adown1 = 1;
-          adown2 = -1;
-          break;
-        case 3:
-          adown1 = -1;
-          adown2 = -1;
-          break;
-        default:
+      let sOctaves = 0;
+      for (let i = 0; i < numOctaves; i++) {
+        const bit = cycleCounter & (1 << i);
+        sOctaves += bit ? 1 : -1;
       }
 
-      const asub = highpass.singleStep(lowpass2.singleStep(adown1));
-      const out = asub * env;
-
-      return out;
+      const sSub = highpass.singleStep(lowpass2.singleStep(sOctaves));
+      return sSub * env;
     }
   }
 }
