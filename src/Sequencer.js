@@ -4,6 +4,8 @@ import {CATALOG_PREFIX} from "./config";
 export default class Sequencer {
   constructor(players, onSequencerStateUpdate, onError) {
     this.playSong = this.playSong.bind(this);
+    this.playSongBuffer = this.playSongBuffer.bind(this);
+    this.playSongFile = this.playSongFile.bind(this);
     this.getPlayer = this.getPlayer.bind(this);
     this.onPlayerStateUpdate = this.onPlayerStateUpdate.bind(this);
     this.playContext = this.playContext.bind(this);
@@ -169,22 +171,51 @@ export default class Sequencer {
     this.songRequest.send()
       .then(xhr => xhr.response)
       .then(buffer => {
-        let uint8Array;
-        uint8Array = new Uint8Array(buffer);
-
         this.currUrl = url;
-        try {
-          this.player.loadData(uint8Array, filepath);
-        } catch (e) {
-          this.onPlayerError(e.message);
-          return;
-        }
-
-        const numVoices = this.player.getNumVoices();
-        this.player.setTempo(this.tempo);
-        this.player.setVoices([...Array(numVoices)].fill(true));
-
-        console.debug('Sequencer.playSong(...) song request completed');
+        this.playSongBuffer(filepath, buffer)
       });
+  }
+
+  playSongFile(filepath, songData) {
+    if (this.player !== null) {
+      this.player.suspend();
+    }
+
+    const ext = filepath.split('.').pop().toLowerCase();
+
+    // Find a player that can play this filetype
+    for (let i = 0; i < this.players.length; i++) {
+      if (this.players[i].canPlay(ext)) {
+        this.player = this.players[i];
+        break;
+      }
+    }
+    if (this.player === null) {
+      this.onPlayerError(`The file format ".${ext}" was not recognized.`);
+      return;
+    }
+
+    this.context = [];
+    this.currUrl = null;
+    this.playSongBuffer(filepath, songData);
+  }
+
+  playSongBuffer(filepath, buffer) {
+    let uint8Array;
+    uint8Array = new Uint8Array(buffer);
+
+    try {
+      this.player.loadData(uint8Array, filepath);
+    } catch (e) {
+      this.onPlayerError(e.message);
+      return;
+    }
+    this.onPlayerError(null);
+
+    const numVoices = this.player.getNumVoices();
+    this.player.setTempo(this.tempo);
+    this.player.setVoices([...Array(numVoices)].fill(true));
+
+    console.debug('Sequencer.playSong(...) song request completed');
   }
 }

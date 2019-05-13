@@ -5,7 +5,7 @@ import FavoriteButton from "./FavoriteButton";
 import debounce from 'lodash/debounce';
 import promisify from "./promisifyXhr";
 import {API_BASE, CATALOG_PREFIX} from "./config";
-import {DirectoryLink} from "./DirectoryLink";
+import DirectoryLink from "./DirectoryLink";
 
 const MAX_RESULTS = 100;
 

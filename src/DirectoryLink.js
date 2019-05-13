@@ -3,7 +3,7 @@ import folder from "./images/folder.png";
 import * as PropTypes from "prop-types";
 import React from "react";
 
-export function DirectoryLink(props) {
+export default function DirectoryLink(props) {
   const linkStyle = props.dim ? css.linkDim : null;
   const folderStyle = props.dim ? css.folderImgDim : css.folderImg;
   return <Link to={props.to} style={linkStyle}>

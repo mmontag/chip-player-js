@@ -5,13 +5,15 @@ import * as firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
 import firebaseConfig from './config/firebaseConfig';
-import {BrowserRouter as Router, Route, NavLink} from 'react-router-dom';
-import {API_BASE, MAX_VOICES, REPLACE_STATE_ON_SEEK } from "./config";
+import {BrowserRouter as Router, NavLink, Route} from 'react-router-dom';
+import {API_BASE, MAX_VOICES, REPLACE_STATE_ON_SEEK} from "./config";
+import {Switch} from 'react-router';
+import Dropzone from 'react-dropzone';
 
 import ChipCore from './chip-core';
 import GMEPlayer from './players/GMEPlayer';
-import MIDIPlayer from './players/MIDIPlayer';
 import XMPPlayer from './players/XMPPlayer';
+import MIDIPlayer from './players/MIDIPlayer';
 import promisify from "./promisifyXhr";
 
 import PlayerParams from './PlayerParams';
@@ -23,9 +25,9 @@ import AppHeader from "./AppHeader";
 import Favorites from "./Favorites";
 import Sequencer from "./Sequencer";
 import Browse from "./Browse";
-import {Switch} from "react-router";
-import {DirectoryLink} from "./DirectoryLink";
+import DirectoryLink from "./DirectoryLink";
 import dice from './images/dice.png';
+import DropMessage from "./DropMessage";
 
 class App extends React.Component {
   handleLogin() {
@@ -238,7 +240,6 @@ class App extends React.Component {
   }
 
   playContext(context, index = 0) {
-    this.setState({playerError: null});
     this.sequencer.playContext(context, index);
   }
 
@@ -466,6 +467,16 @@ class App extends React.Component {
     return <DirectoryLink dim to={'/browse' + path}>{decodeURI(path)}</DirectoryLink>;
   }
 
+  onDrop = (droppedFiles) => {
+    const reader = new FileReader();
+    const file = droppedFiles[0];
+    reader.onload = () => {
+      const songData = reader.result;
+      this.sequencer.playSongFile(file.name, songData);
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
   render() {
     const {title, subtitle} = App.titlesFromMetadata(this.state.currentSongMetadata);
     const currContext = this.sequencer.getCurrContext();
@@ -473,13 +484,19 @@ class App extends React.Component {
     const pathLinks = this.pathToLinks(this.state.songUrl);
     return (
       <Router basename={process.env.PUBLIC_URL}>
+      <Dropzone
+        disableClick
+        style={{}}
+        onDrop={this.onDrop}>{dropzoneProps => (
       <div className="App">
+        <DropMessage dropzoneProps={dropzoneProps}/>
         <AppHeader user={this.state.user}
                    handleLogout={this.handleLogout}
                    handleLogin={this.handleLogin}
                    isPhone={isMobile.phone}/>
         <div className="App-main">
           <div className="App-main-content-area">
+            {JSON.stringify(dropzoneProps)}
             <div className="tab-container">
               <NavLink className="tab" activeClassName="tab-selected" to="/" exact>Search</NavLink>
               <NavLink className="tab" activeClassName="tab-selected" to="/browse">Browse</NavLink>
@@ -493,7 +510,7 @@ class App extends React.Component {
                   toggleFavorite={this.handleToggleFavorite}
                   favorites={this.state.faves}
                   onSongClick={this.handleSongClick}>
-                  { this.state.loading && <p>Loading player engine...</p> }
+                  {this.state.loading && <p>Loading player engine...</p>}
                 </Search>
               )}/>
               <Route path="/favorites" render={() => (
@@ -562,7 +579,7 @@ class App extends React.Component {
             </span>}
             <span style={{float: 'right'}}>
               <button className="box-button" onClick={this.handlePlayRandom}>
-                <img src={dice} style={{ verticalAlign: 'bottom' }}/>
+                <img src={dice} style={{verticalAlign: 'bottom'}}/>
                 Random
               </button>
               {' '}
@@ -598,19 +615,19 @@ class App extends React.Component {
             </div>}
           </div>
           {this.state.showPlayerSettings &&
-           <div className="App-footer-settings">
-             <div style={{
-               display: 'flex',
-               justifyContent: 'space-between',
-               alignItems: 'start',
-               marginBottom: '19px'
-             }}>
-               <h3 style={{margin: '0 8px 0 0'}}>Player Settings</h3>
-               <button className='box-button' onClick={this.toggleSettings}>
-                 Close
-               </button>
-             </div>
-             {this.sequencer.getPlayer() ?
+          <div className="App-footer-settings">
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'start',
+              marginBottom: '19px'
+            }}>
+              <h3 style={{margin: '0 8px 0 0'}}>Player Settings</h3>
+              <button className='box-button' onClick={this.toggleSettings}>
+                Close
+              </button>
+            </div>
+            {this.sequencer.getPlayer() ?
               <PlayerParams
                 ejected={this.state.ejected}
                 tempo={this.state.tempo}
@@ -629,6 +646,7 @@ class App extends React.Component {
           <div className="App-footer-art" style={{backgroundImage: `url("${this.state.imageUrl}")`}}/>}
         </div>
       </div>
+      )}</Dropzone>
       </Router>
     );
   }

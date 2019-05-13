@@ -402,3 +402,52 @@ img { image-rendering: pixelated; }
     border-bottom: 1px solid var(--background);
     margin-bottom: -1px;
 }
+
+.drop-message-outer {
+    position: absolute;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    pointer-events: none;
+    top: 0;
+    left: 0;
+}
+
+.drop-message-outer[hidden] {
+    visibility: hidden;
+}
+
+.drop-message {
+    background-color: var(--button);
+    width: calc(60 * var(--charW1));
+    height: calc(7 * var(--charH) + 1px);
+    padding: var(--charH) var(--charW2);
+    box-shadow: var(--charW1) var(--charW1) var(--shadow);
+    box-sizing: border-box;
+    display: flex;
+    transition: all 250ms steps(5);
+    visibility: visible;
+    overflow: hidden;
+}
+
+.drop-message[hidden] {
+    width: 0;
+    height: 0;
+    visibility: hidden;
+}
+
+.drop-message-inner {
+    color: var(--clickable);
+    border: 1px solid var(--clickable);
+    text-align: center;
+    display: flex;
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    white-space: nowrap;
+}
+

@@ -2,7 +2,7 @@ import React, {Fragment, PureComponent} from 'react';
 import bytes from 'bytes';
 import FavoriteButton from "./FavoriteButton";
 import {CATALOG_PREFIX} from "./config";
-import {DirectoryLink} from "./DirectoryLink";
+import DirectoryLink from "./DirectoryLink";
 
 const dirToken = <Fragment>&nbsp;&nbsp;&lt;DIR&gt;&nbsp;&nbsp;</Fragment>;
 
