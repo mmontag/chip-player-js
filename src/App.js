@@ -496,7 +496,6 @@ class App extends React.Component {
                    isPhone={isMobile.phone}/>
         <div className="App-main">
           <div className="App-main-content-area">
-            {JSON.stringify(dropzoneProps)}
             <div className="tab-container">
               <NavLink className="tab" activeClassName="tab-selected" to="/" exact>Search</NavLink>
               <NavLink className="tab" activeClassName="tab-selected" to="/browse">Browse</NavLink>
