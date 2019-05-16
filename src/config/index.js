@@ -4,3 +4,18 @@ export const CATALOG_PREFIX = 'https://gifx.co/music/';
 // export const CATALOG_PREFIX = 'http://localhost:3000/catalog/';
 export const MAX_VOICES = 64;
 export const REPLACE_STATE_ON_SEEK = false;
+export const FORMATS =  [
+  'ay',
+  'it',
+  'mid',
+  'mod',
+  'nsf',
+  'nsfe',
+  'sgc',
+  'spc',
+  'kss',
+  's3m',
+  'vgm',
+  'vgz',
+  'xm',
+];
