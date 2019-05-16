@@ -173,6 +173,7 @@ extern void tp_seek(int ms) {
         break;
       case TML_CONTROL_CHANGE:
         if (g_FluidSynth) {
+          if (g_MidiEvt->control == 91) break; // ignore reverb CC from MIDI files
           fluid_synth_cc(g_FluidSynth, g_MidiEvt->channel, g_MidiEvt->control, g_MidiEvt->control_value);
         } else {
           tsf_channel_midi_control(g_TSF, g_MidiEvt->channel, g_MidiEvt->control, g_MidiEvt->control_value);
