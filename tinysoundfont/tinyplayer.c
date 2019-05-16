@@ -259,14 +259,22 @@ extern void tp_open(const void *data, int length) {
   EM_ASM_({ console.log('First note appears at %d ms.', $0); }, g_MidiTimeMs);
 }
 
-// TODO: TinySoundFont not implemented
-extern int tp_load_soundfont(const char *filename) {
+extern void tp_unload_soundfont() {
   if (fluid_synth_sfcount(g_FluidSynth) > 0) {
     fluid_sfont_t *sfont = fluid_synth_get_sfont(g_FluidSynth, 0);
     fluid_synth_remove_sfont(g_FluidSynth, sfont);
     // Causes a crash related to pthreads in Emscripten.
     // fluid_synth_sfunload(g_FluidSynth, (unsigned)g_SoundFontID, 1);
   }
+}
+
+// TODO: TinySoundFont not implemented
+extern int tp_load_soundfont(const char *filename) {
+  tp_unload_soundfont();
+  return fluid_synth_sfload(g_FluidSynth, filename, 1);
+}
+
+extern int tp_add_soundfont(const char *filename) {
   return fluid_synth_sfload(g_FluidSynth, filename, 1);
 }
 
