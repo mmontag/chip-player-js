@@ -3,7 +3,7 @@ import GENERAL_MIDI_PATCH_MAP from '../gm-patch-map';
 
 let lib = null;
 const MOUNTPOINT = '/soundfonts';
-const SOUNDFONT_URL_PATH = 'soundfonts';
+const SOUNDFONT_URL_PATH = `${process.env.PUBLIC_URL}/soundfonts`;
 const SOUNDFONTS = [
   {
     label: 'Small Soundfonts',
