@@ -10,9 +10,10 @@
  */
 
 const fs = require('fs');
-const glob = require('glob');
-const http = require('http');
 const URL = require('url');
+const glob = require('glob');
+const path = require('path');
+const http = require('http');
 const TrieSearch = require('trie-search');
 const { performance } = require('perf_hooks');
 
@@ -21,10 +22,12 @@ const catalog = require(CATALOG_PATH);
 const DIRECTORIES_PATH = './directories.json';
 const directories = require(DIRECTORIES_PATH);
 
-const LOCAL_CATALOG_ROOT = '/var/www/gifx.co/public_html/music';
-// const LOCAL_CATALOG_ROOT = '/Users/montag/Music/Chip Archive';
 const PUBLIC_CATALOG_URL = 'https://gifx.co/music';
+const LOCAL_CATALOG_ROOT = process.env.DEV ?
+  '/Users/montag/Music/Chip Archive' :
+  '/var/www/gifx.co/public_html/music';
 
+console.log('Local catalog at %s', LOCAL_CATALOG_ROOT);
 console.log('Found %s entries in %s.', Object.entries(directories).length, DIRECTORIES_PATH);
 
 if (!Array.isArray(catalog)) {
@@ -77,6 +80,20 @@ const routes = {
   'browse': (params) => {
     return directories[params.path];
   },
+
+  'image': (params) => {
+    const dir = params.path;
+    const images = glob.sync(`${LOCAL_CATALOG_ROOT + dir}/*.{gif,png,jpg,jpeg}`, {nocase: true});
+    let imageUrl = null;
+    if (images.length > 0) {
+      const imageFile = encodeURI(path.basename(images[0]));
+      const imageDir = encodeURI(dir);
+      imageUrl = `${PUBLIC_CATALOG_URL}${imageDir}/${imageFile}`;
+    }
+    return {
+      imageUrl: imageUrl,
+    };
+  },
 };
 
 http.createServer(function (req, res) {
@@ -85,19 +102,6 @@ http.createServer(function (req, res) {
     const params = url.query || {};
     const lastPathComponent = url.pathname.split('/').pop();
     const route = routes[lastPathComponent];
-    if (lastPathComponent === 'image') {
-      const path = LOCAL_CATALOG_ROOT + params.path;
-      const images = glob.sync(`${path}/*.{gif,png,jpg,jpeg}`, {nocase: true});
-      if (images.length > 0) {
-        const imageFile = encodeURIComponent(images[0].split('/').pop());
-        const path = encodeURI(params.path);
-        res.writeHead(301, {
-          Location: `${PUBLIC_CATALOG_URL}${path}/${imageFile}`,
-        });
-        res.end();
-        return;
-      }
-    }
     if (route) {
       try {
         const json = route(params);
@@ -107,12 +111,17 @@ http.createServer(function (req, res) {
             // configure it to ignore this CORS header
             'Access-Control-Allow-Origin': '*',
             'Content-Type': 'application/json',
+            // Cache for 1 hour
+            'Cache-Control': 'public, max-age=3600',
           });
           res.end(JSON.stringify(json));
 
           return;
         } else {
-          res.writeHead(404);
+          res.writeHead(404, {
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json',
+          });
           res.end('Not found');
         }
       } catch (e) {
@@ -125,7 +134,7 @@ http.createServer(function (req, res) {
     res.end('Route not found');
   } catch (e) {
     res.writeHead(500);
-    res.end('Server error ' + e);
+    res.end(`Server error\n${e}\n`);
   }
 }).listen(8080, 'localhost');
 
