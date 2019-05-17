@@ -278,10 +278,9 @@ class App extends React.Component {
     } else {
       const player = this.sequencer.getPlayer();
       const url = this.sequencer.getCurrUrl();
-      const imageDir = pathParse(url.replace(CATALOG_PREFIX, '/')).dir;
-      const getImageUrl = `${API_BASE}/image?path=${encodeURIComponent(imageDir)}`;
-
       if (url && url !== this.state.songUrl) {
+        const imageDir = pathParse(url.replace(CATALOG_PREFIX, '/')).dir;
+        const getImageUrl = `${API_BASE}/image?path=${encodeURIComponent(imageDir)}`;
         const pathParts = url.split('/');
         pathParts.pop();
 
@@ -603,7 +602,7 @@ class App extends React.Component {
               onChange={this.handleTimeSliderChange}/>
             {!this.state.ejected &&
             <div className="SongDetails">
-              {this.state.faves &&
+              {this.state.faves && this.state.songUrl &&
               <div style={{float: 'left', marginBottom: '58px'}}>
                 <FavoriteButton favorites={this.state.faves}
                                 toggleFavorite={this.handleToggleFavorite}
