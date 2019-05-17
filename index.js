@@ -9,8 +9,11 @@
  *
  */
 
-const http = require('http');
+const fs = require('fs');
 const URL = require('url');
+const glob = require('glob');
+const path = require('path');
+const http = require('http');
 const TrieSearch = require('trie-search');
 const { performance } = require('perf_hooks');
 
@@ -19,6 +22,12 @@ const catalog = require(CATALOG_PATH);
 const DIRECTORIES_PATH = './directories.json';
 const directories = require(DIRECTORIES_PATH);
 
+const PUBLIC_CATALOG_URL = 'https://gifx.co/music';
+const LOCAL_CATALOG_ROOT = process.env.DEV ?
+  '/Users/montag/Music/Chip Archive' :
+  '/var/www/gifx.co/public_html/music';
+
+console.log('Local catalog at %s', LOCAL_CATALOG_ROOT);
 console.log('Found %s entries in %s.', Object.entries(directories).length, DIRECTORIES_PATH);
 
 if (!Array.isArray(catalog)) {
@@ -71,38 +80,62 @@ const routes = {
   'browse': (params) => {
     return directories[params.path];
   },
+
+  'image': (params) => {
+    const dir = params.path;
+    const images = glob.sync(`${LOCAL_CATALOG_ROOT + dir}/*.{gif,png,jpg,jpeg}`, {nocase: true});
+    let imageUrl = null;
+    if (images.length > 0) {
+      const imageFile = encodeURI(path.basename(images[0]));
+      const imageDir = encodeURI(dir);
+      imageUrl = `${PUBLIC_CATALOG_URL}${imageDir}/${imageFile}`;
+    }
+    return {
+      imageUrl: imageUrl,
+    };
+  },
 };
 
 http.createServer(function (req, res) {
-  const url = URL.parse(req.url, true);
-  const lastPathComponent = url.pathname.split('/').pop();
-  const route = routes[lastPathComponent];
-  if (route) {
+  try {
+    const url = URL.parse(req.url, true);
     const params = url.query || {};
-    try {
-      const json = route(params);
-      if (json) {
-        res.writeHead(200, {
-          // If running behind a proxy such as nginx,
-          // configure it to ignore this CORS header
-          'Access-Control-Allow-Origin': '*',
-          'Content-Type': 'application/json',
-        });
-        res.end(JSON.stringify(json));
+    const lastPathComponent = url.pathname.split('/').pop();
+    const route = routes[lastPathComponent];
+    if (route) {
+      try {
+        const json = route(params);
+        if (json) {
+          res.writeHead(200, {
+            // If running behind a proxy such as nginx,
+            // configure it to ignore this CORS header
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json',
+            // Cache for 1 hour
+            'Cache-Control': 'public, max-age=3600',
+          });
+          res.end(JSON.stringify(json));
 
-        return;
-      } else {
-        res.writeHead(404);
-        res.end('Not found');
+          return;
+        } else {
+          res.writeHead(404, {
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json',
+          });
+          res.end('Not found');
+        }
+      } catch (e) {
+        res.writeHead(500);
+        res.end('Server error');
+        console.log('Error processing request:', req.url, e);
       }
-    } catch (e) {
-      res.writeHead(500);
-      res.end('Server error');
-      console.log('Error processing request:', req.url, e);
     }
+    res.writeHead(404);
+    res.end('Route not found');
+  } catch (e) {
+    res.writeHead(500);
+    res.end(`Server error\n${e}\n`);
   }
-  res.writeHead(404);
-  res.end('Route not found');
 }).listen(8080, 'localhost');
 
 console.log('Server running at http://localhost:8080/.');
