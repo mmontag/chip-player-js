@@ -1,12 +1,13 @@
 import React from 'react';
 import isMobile from 'ismobilejs';
+import pathParse from 'path-parse';
 import queryString from 'querystring';
 import * as firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
 import firebaseConfig from './config/firebaseConfig';
 import {BrowserRouter as Router, NavLink, Route} from 'react-router-dom';
-import {API_BASE, MAX_VOICES, REPLACE_STATE_ON_SEEK} from "./config";
+import {API_BASE, CATALOG_PREFIX, MAX_VOICES, REPLACE_STATE_ON_SEEK} from "./config";
 import {Switch} from 'react-router';
 import Dropzone from 'react-dropzone';
 
@@ -277,6 +278,8 @@ class App extends React.Component {
     } else {
       const player = this.sequencer.getPlayer();
       const url = this.sequencer.getCurrUrl();
+      const imageDir = pathParse(url.replace(CATALOG_PREFIX, '/')).dir;
+      const getImageUrl = `${API_BASE}/image?path=${encodeURIComponent(imageDir)}`;
 
       if (url && url !== this.state.songUrl) {
         const pathParts = url.split('/');
@@ -296,22 +299,20 @@ class App extends React.Component {
         // window.history.replaceState(null, '', stateUrl);
 
         // Fetch artwork for this file (cancelable request)
-        const imageUrl = [...pathParts, 'image.jpg'].join('/').replace(/ /g, '%20');
-
-        if (imageUrl !== this.state.imageUrl) {
-          if (this.imageRequest) this.imageRequest.abort();
-          this.imageRequest = promisify(new XMLHttpRequest());
-          this.imageRequest.open('HEAD', imageUrl);
-          this.imageRequest.send()
-            .then(xhr => {
-              if (xhr.status >= 200 && xhr.status < 400) {
-                this.setState({imageUrl: imageUrl});
-              }
-            })
-            .catch(e => {
-              this.setState({imageUrl: null});
-            });
-        }
+        if (this.imageRequest) this.imageRequest.abort();
+        this.imageRequest = promisify(new XMLHttpRequest());
+        this.imageRequest.responseType = 'json';
+        this.imageRequest.open('GET', getImageUrl);
+        this.imageRequest.send()
+          .then(xhr => {
+            if (xhr.status >= 200 && xhr.status < 400) {
+              const imageUrl = xhr.response.imageUrl;
+              this.setState({imageUrl: imageUrl});
+            }
+          })
+          .catch(e => {
+            this.setState({imageUrl: null});
+          });
       }
 
       this.setState({
