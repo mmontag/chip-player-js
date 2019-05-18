@@ -1,15 +1,25 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Chip Player",
+  "name": "Chip Player JS",
   "icons": [
     {
-      "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
+      "src": "./chip-player-js.ico",
+      "sizes": "64x64 16x16",
       "type": "image/x-icon"
+    },
+    {
+      "src": "./icon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "./icon-64x64.png",
+      "sizes": "64x64",
+      "type": "image/png"
     }
   ],
   "start_url": "./index.html",
   "display": "standalone",
   "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "background_color": "#000088"
 }
