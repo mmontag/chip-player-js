@@ -7055,6 +7055,13 @@ react-router@5.0.0:
     tiny-invariant "^1.0.2"
     tiny-warning "^1.0.0"
 
+react-virtual-list@^2.3.0:
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/react-virtual-list/-/react-virtual-list-2.3.0.tgz#84ebba7f954bafc4de435e4b29d69fdd371b9cda"
+  integrity sha1-hOu6f5VLr8TeQ15LKdaf3TcbnNo=
+  dependencies:
+    prop-types "^15.5.10"
+
 react@^16.8.0:
   version "16.8.6"
   resolved "https://registry.yarnpkg.com/react/-/react-16.8.6.tgz#ad6c3a9614fd3a4e9ef51117f54d888da01f2bbe"

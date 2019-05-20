@@ -1,10 +1,29 @@
 import React, {Fragment, PureComponent} from 'react';
-import bytes from 'bytes';
-import FavoriteButton from "./FavoriteButton";
-import {CATALOG_PREFIX} from "./config";
-import DirectoryLink from "./DirectoryLink";
+import VirtualList from 'react-virtual-list';
+import BrowseList from './BrowseList';
 
-const dirToken = <Fragment>&nbsp;&nbsp;&lt;DIR&gt;&nbsp;&nbsp;</Fragment>;
+const mapToVirtualProps = (props, state) => {
+  const { items, itemHeight } = props;
+  const { firstItemIndex, lastItemIndex } = state;
+  const visibleItems = lastItemIndex > -1 ? items.slice(firstItemIndex, lastItemIndex + 1) : [];
+
+  // style
+  const height = items.length * itemHeight;
+  const paddingTop = firstItemIndex * itemHeight;
+
+  return {
+    ...props,
+    virtual: {
+      items: visibleItems,
+      style: {
+        paddingTop,
+        minHeight: height,
+        height: height,
+        boxSizing: 'border-box',
+      },
+    },
+  };
+};
 
 export default class Browse extends PureComponent {
   constructor(props) {
@@ -37,111 +56,30 @@ export default class Browse extends PureComponent {
     }
   }
 
+  VirtualDirectoryListing = VirtualList({
+    container: this.props.scrollContainerRef.current,
+  }, mapToVirtualProps)(BrowseList);
+
   render() {
     const {
       directories,
-      currContext,
-      currIdx,
-      favorites,
-      toggleFavorite,
-      handleSongClick,
       browsePath,
     } = this.props;
     const dirListing = directories[browsePath] || [];
-    const parentPath = browsePath.substr(0, browsePath.lastIndexOf('/'));
 
     return (
       <Fragment>
         <div>
           /{browsePath}
         </div>
-        <table style={css.directoryTable}>
-          <tbody>
-          <tr key={browsePath}>
-            <td style={css.tdClip}>
-              <DirectoryLink to={'/browse/' + parentPath}>..</DirectoryLink>
-            </td>
-            <td style={css.tdDir}>{dirToken}</td>
-            <td style={css.rightAlign}/>
-          </tr>
-          {
-            dirListing.map((item, i) => {
-              // XXX: Escape immediately: the escaped URL is considered canonical.
-              //      The URL must be decoded for display from here on out.
-              const path = item.path.replace('%', '%25').replace('#', '%23').replace(/^\//, '');
-              const name = item.path.split('/').pop();
-              const isPlaying = currContext === this.contexts[browsePath] && currIdx === i;
-              if (item.type === 'directory') {
-                return (
-                  <tr key={name}>
-                    <td style={css.tdClip}>
-                      <div style={css.textClip}>
-                        <DirectoryLink to={'/browse/' + path}>{name}</DirectoryLink>
-                      </div>
-                    </td>
-                    <td style={css.tdDir}>
-                      {dirToken}
-                    </td>
-                    <td style={css.rightAlign}>
-                      {bytes(item.size, {unitSeparator: ' '})}
-                    </td>
-                  </tr>
-                );
-              } else {
-                const href = CATALOG_PREFIX + path;
-                return (
-                  <tr key={name}>
-                    <td style={css.tdClip} colSpan={2}>
-                      <div style={css.textClip}>
-                        {favorites &&
-                        <FavoriteButton favorites={favorites}
-                                        href={href}
-                                        toggleFavorite={toggleFavorite}/>}
-                        <a className={isPlaying ? 'Song-now-playing' : ''}
-                           onClick={(e) => handleSongClick(href, this.contexts[browsePath], i)(e)}
-                           href='#'>
-                          {name}
-                        </a>
-                      </div>
-                    </td>
-                    <td style={css.rightAlign}>
-                      {bytes(item.size, {unitSeparator: ' '})}
-                    </td>
-                  </tr>
-                );
-              }
-            })
-          }
-          </tbody>
-        </table>
+        <this.VirtualDirectoryListing
+          key={browsePath}
+          {...this.props}
+          contexts={this.contexts}
+          items={dirListing}
+          itemHeight={19}
+        />
       </Fragment>
     );
   }
 }
-
-const css = {
-  directoryTable: {
-    flexGrow: 1,
-    borderSpacing: 0,
-    tableLayout: 'fixed',
-  },
-  tdClip: {
-    width: '100%',
-    position: 'relative',
-    padding: 0,
-  },
-  rightAlign: {
-    textAlign: 'right',
-    textTransform: 'uppercase',
-    whiteSpace: 'nowrap',
-  },
-  textClip: {
-    overflowX: 'hidden',
-    whiteSpace: 'nowrap',
-    textOverflow: 'ellipsis',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-  },
-};

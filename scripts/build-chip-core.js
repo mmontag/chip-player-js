@@ -133,6 +133,8 @@ var source_files = [
   'Z80_Cpu.cpp',
 ].map(file => gme_dir + '/' + file);
 
+// Complete LibXMP build:
+// source_files.push('libxmp/lib/libxmp.a');
 source_files.push('libxmp/libxmp-lite-stagedir/lib/libxmp-lite.a');
 source_files.push('fluidlite/build/libfluidlite.a');
 source_files.push('tinysoundfont/tinyplayer.c');

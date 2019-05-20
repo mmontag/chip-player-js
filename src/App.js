@@ -96,6 +96,7 @@ class App extends React.Component {
     this.fetchDirectory = this.fetchDirectory.bind(this);
 
     this.attachMediaKeyHandlers();
+    this.contentAreaRef = React.createRef();
 
     // Initialize Firebase
     if(firebase.apps.length === 0) firebase.initializeApp(firebaseConfig);
@@ -495,7 +496,7 @@ class App extends React.Component {
                    handleLogin={this.handleLogin}
                    isPhone={isMobile.phone}/>
         <div className="App-main">
-          <div className="App-main-content-area">
+          <div className="App-main-content-area" ref={this.contentAreaRef}>
             <div className="tab-container">
               <NavLink className="tab" activeClassName="tab-selected" to="/" exact>Search</NavLink>
               <NavLink className="tab" activeClassName="tab-selected" to="/browse">Browse</NavLink>
@@ -524,12 +525,14 @@ class App extends React.Component {
                   favorites={this.state.faves}/>
               )}/>
               <Route path="/browse/:browsePath*" render={({match}) => (
+                this.contentAreaRef.current &&
                 <Browse currContext={currContext}
                         currIdx={currIdx}
                         browsePath={match.params.browsePath || ''}
                         directories={this.state.directories}
                         fetchDirectory={this.fetchDirectory}
                         handleSongClick={this.handleSongClick}
+                        scrollContainerRef={this.contentAreaRef}
                         favorites={this.state.faves}
                         toggleFavorite={this.handleToggleFavorite}/>
               )}/>
