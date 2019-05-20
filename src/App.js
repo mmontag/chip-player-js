@@ -427,13 +427,19 @@ class App extends React.Component {
     fetch(`${API_BASE}/browse?path=%2F${encodeURIComponent(path)}`)
       .then(response => response.json())
       .then(json => {
-        const directories = {
-          ...this.state.directories,
-          [path]: json.sort((a, b) => {
+        const items = json
+          .sort((a, b) => {
             if (a.type < b.type) return -1;
             if (a.type > b.type) return 1;
             return 0;
-          }),
+          })
+          .map((item, i) => {
+            item.idx = i;
+            return item;
+          });
+        const directories = {
+          ...this.state.directories,
+          [path]: items,
         };
         this.setState({ directories });
       });

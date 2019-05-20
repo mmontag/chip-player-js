@@ -28,12 +28,12 @@ export default function BrowseList({ virtual, ...props }) {
         <div style={css.colSize}/>
       </div>
       <div style={virtual.style}>
-        {virtual.items.map((item, i) => {
+        {virtual.items.map(item => {
           // XXX: Escape immediately: the escaped URL is considered canonical.
           //      The URL must be decoded for display from here on out.
           const path = item.path.replace('%', '%25').replace('#', '%23').replace(/^\//, '');
           const name = item.path.split('/').pop();
-          const isPlaying = currContext === contexts[browsePath] && currIdx === i;
+          const isPlaying = currContext === contexts[browsePath] && currIdx === item.idx;
           if (item.type === 'directory') {
             return (
               <div key={name} style={css.row}>
@@ -58,7 +58,7 @@ export default function BrowseList({ virtual, ...props }) {
                                   href={href}
                                   toggleFavorite={toggleFavorite}/>}
                   <a className={isPlaying ? 'Song-now-playing' : ''}
-                     onClick={(e) => handleSongClick(href, contexts[browsePath], i)(e)}
+                     onClick={(e) => handleSongClick(href, contexts[browsePath], item.idx)(e)}
                      href='#'>
                     {name}
                   </a>
