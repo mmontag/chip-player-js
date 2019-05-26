@@ -35,6 +35,13 @@ if (!Array.isArray(catalog)) {
   process.exit(1);
 }
 
+const HEADERS = {
+  // If running behind a proxy such as nginx,
+  // configure it to ignore this CORS header
+  'Access-Control-Allow-Origin': '*',
+  'Content-Type': 'application/json',
+};
+
 const trie = new TrieSearch('file', {
   indexField: 'id',
   idFieldOrFunction: 'id',
@@ -105,23 +112,16 @@ http.createServer(function (req, res) {
     if (route) {
       try {
         const json = route(params);
+        const headers = { ...HEADERS };
+        if (lastPathComponent !== 'random') {
+          headers['Cache-Control'] = 'public, max-age=3600';
+        }
         if (json) {
-          res.writeHead(200, {
-            // If running behind a proxy such as nginx,
-            // configure it to ignore this CORS header
-            'Access-Control-Allow-Origin': '*',
-            'Content-Type': 'application/json',
-            // Cache for 1 hour
-            'Cache-Control': 'public, max-age=3600',
-          });
+          res.writeHead(200, headers);
           res.end(JSON.stringify(json));
-
           return;
         } else {
-          res.writeHead(404, {
-            'Access-Control-Allow-Origin': '*',
-            'Content-Type': 'application/json',
-          });
+          res.writeHead(404, headers);
           res.end('Not found');
         }
       } catch (e) {
