@@ -75,7 +75,7 @@
     "tmp": "^0.0.33",
     "trie-search": "1.2.8",
     "unzipper": "^0.9.3",
-    "webpack-bundle-analyzer": "^2.13.1",
+    "webpack-bundle-analyzer": "^3.3.2",
     "worker-loader": "^2.0.0"
   },
   "homepage": "http://mmontag.github.io/chip-player-js",
