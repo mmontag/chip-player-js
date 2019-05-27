@@ -349,8 +349,6 @@ body,#root {
     white-space: normal;
 }
 
-.Favorite-button::before { content: ' ' }
-.Favorite-button::after { content: ' ' }
 .Favorite-button:active { color: var(--clickable); }
 .Favorite-button.added { color: var(--clickable); }
 .Favorite-button {
