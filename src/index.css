@@ -353,6 +353,7 @@ body,#root {
 
 .Song-now-playing {
     background-color: var(--button);
+    color: var(--neutral3);
 }
 
 td { padding: 0 }

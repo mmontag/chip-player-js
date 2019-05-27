@@ -86,7 +86,6 @@ const css = {
   },
   colDir: {
     flexShrink: 0,
-    color: 'var(--neutral2)',
   },
   colSize: {
     textAlign: 'right',
@@ -94,6 +93,5 @@ const css = {
     whiteSpace: 'nowrap',
     flexShrink: 0,
     minWidth: '80px',
-    color: 'var(--neutral2)',
   },
 };
