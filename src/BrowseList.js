@@ -51,14 +51,13 @@ export default function BrowseList({ virtual, ...props }) {
           } else {
             const href = CATALOG_PREFIX + path;
             return (
-              <div key={name} style={css.row}>
+              <div key={name} style={css.row} className={isPlaying ? 'Song-now-playing' : ''}>
                 <div style={css.colName}>
                   {favorites &&
                   <FavoriteButton favorites={favorites}
                                   href={href}
                                   toggleFavorite={toggleFavorite}/>}
-                  <a className={isPlaying ? 'Song-now-playing' : ''}
-                     onClick={(e) => handleSongClick(href, contexts[browsePath], item.idx)(e)}
+                  <a onClick={(e) => handleSongClick(href, contexts[browsePath], item.idx)(e)}
                      href='#'>
                     {name}
                   </a>
@@ -87,6 +86,7 @@ const css = {
   },
   colDir: {
     flexShrink: 0,
+    color: 'var(--neutral2)',
   },
   colSize: {
     textAlign: 'right',
@@ -94,5 +94,6 @@ const css = {
     whiteSpace: 'nowrap',
     flexShrink: 0,
     minWidth: '80px',
+    color: 'var(--neutral2)',
   },
 };

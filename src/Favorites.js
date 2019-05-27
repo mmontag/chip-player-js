@@ -30,12 +30,11 @@ export default class Favorites extends PureComponent {
                     const title = decodeURIComponent(href.split('/').pop());
                     const isPlaying = currContext === favorites && currIdx === i;
                     return (
-                      <div className="Search-results-group-item" key={i}>
+                      <div className={isPlaying ? 'Song-now-playing' : ''} key={i}>
                         <FavoriteButton favorites={favorites}
                                         toggleFavorite={toggleFavorite}
                                         href={href}/>
-                        <a className={isPlaying ? 'Song-now-playing' : ''}
-                           onClick={onSongClick(href, favorites, i)} href={href}>{title}</a>
+                        <a onClick={onSongClick(href, favorites, i)} href={href}>{title}</a>
                       </div>
                     );
                   })

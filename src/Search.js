@@ -1,5 +1,5 @@
 /* eslint import/no-webpack-loader-syntax: off */
-import React, {PureComponent} from 'react';
+import React, {Fragment, PureComponent} from 'react';
 import queryString from 'querystring';
 import FavoriteButton from "./FavoriteButton";
 import debounce from 'lodash/debounce';
@@ -145,20 +145,19 @@ export default class Search extends PureComponent {
     const resultTitle = decodeURI(result.substring(result.lastIndexOf('/') + 1));
     const isPlaying = this.props.currContext === this.state.results && this.props.currIdx === i;
     return (
-      <div key={i}>
+      <Fragment key={i}>
         {headingFragment}
-        <div className="Search-results-group-item">
+        <div className={isPlaying ? 'Song-now-playing' : '' }>
           {this.props.favorites &&
           <FavoriteButton favorites={this.props.favorites}
                           toggleFavorite={this.props.toggleFavorite}
                           href={href}/>}
-          <a className={isPlaying ? 'Song-now-playing' : ''}
-             onClick={this.props.onSongClick(href, this.state.results, i)}
+          <a onClick={this.props.onSongClick(href, this.state.results, i)}
              href={href}>
             {resultTitle}
           </a>
         </div>
-      </div>
+      </Fragment>
     );
   }
 
@@ -166,7 +165,7 @@ export default class Search extends PureComponent {
     const placeholder = this.state.totalSongs ?
       `${this.state.totalSongs} tunes` : 'Loading catalog...';
     return (
-      <div>
+      <Fragment>
         <div>
           <label className="Search-label">Search:{' '}
             <input type="text"
@@ -176,27 +175,40 @@ export default class Search extends PureComponent {
                    autoCorrect="false"
                    autoCapitalize="none"
                    ref={this.textInput}
+                   style={css.textInput}
                    value={this.state.totalSongs ? this.state.query || '' : ''}
                    onChange={this.onChange}/>
             {
               this.state.searching &&
-              <span>
+              <Fragment>
                 <button className="Search-button-clear" onClick={this.handleClear}/>
                 {' '}
-                {this.state.resultsCount} result{this.state.resultsCount !== 1 && 's'}
-              </span>
+                <span style={css.resultsLabel}>
+                  {this.state.resultsCount} result{this.state.resultsCount !== 1 && 's'}
+                </span>
+              </Fragment>
             }
           </label>
         </div>
         {
           this.state.searching ?
-            <div className="Search-results">
+            <div style={css.searchResults}>
               {this.state.results.map(this.renderResultItem)}
             </div>
             :
             this.props.children
         }
-      </div>
+      </Fragment>
     );
   }
 }
+
+const css = {
+  searchResults: {
+    marginTop: 'var(--charH)',
+  },
+  resultsLabel: { whiteSpace: 'nowrap' },
+  textInput: {
+    width: 'calc(var(--charW) * 20)',
+  }
+};

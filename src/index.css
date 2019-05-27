@@ -33,9 +33,8 @@
     font-family: VGA_SquarePx, monospace !important;
     -webkit-font-smoothing: none;
     -webkit-tap-highlight-color: rgba(0,0,0,0);
-    line-height: var(--charH) !important;
+    line-height: var(--charH);
     text-decoration: none;
-    color: var(--neutral2);
 }
 
 *::selection {
@@ -53,6 +52,7 @@
 body {
     background: var(--background);
     overflow: hidden;
+    color: var(--neutral2);
 }
 
 /* Margins in one direction (bottom) */
@@ -315,10 +315,6 @@ body,#root {
     box-shadow: none;
 }
 
-.App .Search-results {
-    margin-top: var(--charH);
-}
-
 .SongDetails {}
 .SongDetails-title {color: var(--neutral4);}
 .SongDetails-subtitle, .SongDetails-subtitle, .SongDetails-filepath {
@@ -333,22 +329,7 @@ body,#root {
 .Search-button-clear::before { content: ' ×'; }
 .Search-button-clear::after  { content: ' '; }
 
-.Search-results {
-    /*overflow-y: auto;*/
-    /*height: 100%;*/
-}
-
-.Search-results-group-item {
-    margin-left: var(--charW3);
-    text-indent: var(--charW3neg);
-    white-space: nowrap;
-}
-
-.Search-results-group-item a {
-    overflow-wrap: break-word;
-    white-space: normal;
-}
-
+.Song-now-playing .Favorite-button { color: var(--background); }
 .Favorite-button:active { color: var(--clickable); }
 .Favorite-button.added { color: var(--clickable); }
 .Favorite-button {
