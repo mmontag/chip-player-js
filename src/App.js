@@ -587,7 +587,7 @@ class App extends React.Component {
             </span>}
             <span style={{float: 'right'}}>
               <button className="box-button" onClick={this.handlePlayRandom}>
-                <img src={dice} style={{verticalAlign: 'bottom'}}/>
+                <img alt="Roll the dice" src={dice} style={{verticalAlign: 'bottom'}}/>
                 Random
               </button>
               {' '}
