@@ -160,11 +160,11 @@ export default class XMPPlayer extends Player {
     const maxBPM = 255;
     const targetBPM = Math.floor(Math.max(Math.min(this.metadata.initialBPM * this.tempoScale, maxBPM), minBPM));
 
-    if (this.tempoScale === 1 || targetBPM === measuredBPM) return;
+    if (targetBPM === measuredBPM) return;
 
     console.log('Injecting %d BPM into libxmp. (Initial: %d)', targetBPM, this.metadata.initialBPM);
     const xmp_eventPtr = xmp._malloc(8);
-    xmp._memset(xmp_eventPtr, 0, 8);
+    for (let i = 0; i < 8; i++) xmp.setValue(xmp_eventPtr + i, 0, 'i8');
     xmp.setValue(xmp_eventPtr + 3, 0x87, 'i8');
     xmp.setValue(xmp_eventPtr + 4, targetBPM, 'i32');
     xmp._xmp_inject_event(this.xmpCtx, 0, xmp_eventPtr);
