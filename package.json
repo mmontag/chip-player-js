@@ -36,7 +36,7 @@
     "immutability-helper": "^2.7.1",
     "ismobilejs": "^0.4.1",
     "jest": "20.0.4",
-    "lodash": "latest",
+    "lodash": "^4.17.11",
     "node-unrar-js": "^0.8.1",
     "object-assign": "4.1.1",
     "path-parse": "^1.0.6",
@@ -44,7 +44,7 @@
     "postcss-loader": "2.0.8",
     "promise": "8.0.1",
     "raf": "3.4.0",
-    "raw-loader": "^2.0.0",
+    "raw-loader": "^0.5.1",
     "react": "^16.8.0",
     "react-dev-utils": "^5.0.1",
     "react-dom": "^16.8.0",
@@ -61,6 +61,8 @@
     "whatwg-fetch": "2.0.3"
   },
   "devDependencies": {
+    "@firebase/app-types": "0.x",
+    "@firebase/util": "0.x",
     "cheerio": "^1.0.0-rc.2",
     "child_process": "^1.0.2",
     "gh-pages": "^1.2.0",
@@ -76,7 +78,7 @@
     "tmp": "^0.0.33",
     "trie-search": "1.2.8",
     "unzipper": "^0.9.3",
-    "webpack-bundle-analyzer": "^2.13.1",
+    "webpack-bundle-analyzer": "^3.3.2",
     "worker-loader": "^2.0.0"
   },
   "homepage": "http://mmontag.github.io/chip-player-js",
