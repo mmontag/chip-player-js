@@ -1,0 +1,20 @@
+# This is a sample build configuration for C++.
+# Check our guides at https://confluence.atlassian.com/x/VYk8Lw for more examples.
+# Only use spaces to indent your .yml configuration.
+# -----
+# You can specify a custom docker image from Docker Hub as your build environment.
+image: gcc:6.1
+
+pipelines:
+  default:
+    - step:
+        script: # Modify the commands below to build your repository.
+          - apt install software-properties-common
+          - add-apt-repository --yes ppa:george-edison55/cmake-3.x
+          - apt-get update
+          - apt-get install -y libsdl2-dev ninja-build cmake
+          - mkdir build
+          - cd build
+          - cmake -G "Ninja" -DCMAKE_INSTALL_PREFIX=output -DCMAKE_BUILD_TYPE=Release -DlibADLMIDI_STATIC=YES -DlibADLMIDI_SHARED=YES -DWITH_MIDIPLAY=ON ..
+          - cmake --build . --config Release --target install -- -j 4
+

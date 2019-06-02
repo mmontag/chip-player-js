@@ -1,0 +1,12 @@
+*.obj
+*.lib
+*.exe
+*.elf
+*.lb1
+*.ERR
+*.err
+*.mk
+*.mk1
+*.lk1
+*.map
+*.sym

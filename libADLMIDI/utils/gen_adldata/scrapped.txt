@@ -1,0 +1,263 @@
+
+#ifdef HARD_BANKS
+static const char *const banknames[] =
+{
+    // 0
+    "AIL (Star Control 3, Albion, Empire 2, Sensible Soccer, Settlers 2, many others)",
+    "Bisqwit (selection of 4op and 2op)",
+    "HMI (Descent, Asterix)", //melodic,drum
+    "HMI (Descent:: Int)",    //intmelo,intdrum
+    "HMI (Descent:: Ham)",    //hammelo,hamdrum
+    "HMI (Descent:: Rick)",   //rickmelo,rickdrum
+    "HMI (Descent 2)",        //d2melo,d2drum
+    "HMI (Normality)",        //normmelo,normdrum
+    "HMI (Shattered Steel)",  //ssmelo,ssdrum
+    "HMI (Theme Park)", // file131, file132
+    // 10
+    "HMI (3d Table Sports, Battle Arena Toshinden)", //file133, file134
+    "HMI (Aces of the Deep)", //file142, file143
+    "HMI (Earthsiege)", //file144, file145
+    "HMI (Anvil of Dawn)", //file167,file168
+    "DMX (Doom           :: partially pseudo 4op)",
+    "DMX (Hexen, Heretic :: partially pseudo 4op)",
+    "DMX (MUS Play       :: partially pseudo 4op)",
+    "AIL (Discworld, Grandest Fleet, Pocahontas, Slob Zone 3d, Ultima 4, Zorro)", // file17
+    "AIL (Warcraft 2)",
+    "AIL (Syndicate)", // file19
+    // 20
+    "AIL (Guilty, Orion Conspiracy, Terra Nova Strike Force Centauri :: 4op)", // file20
+    "AIL (Magic Carpet 2)", // file21
+    "AIL (Nemesis)",
+    "AIL (Jagged Alliance)", //file23
+    "AIL (When Two Worlds War :: 4op, MISSING INSTRUMENTS)", //file24
+    "AIL (Bards Tale Construction :: MISSING INSTRUMENTS)", //file25
+    "AIL (Return to Zork)", //file26
+    "AIL (Theme Hospital)", //file27
+    "AIL (National Hockey League PA)",
+    "AIL (Inherit The Earth)", //file29
+    // 30
+    "AIL (Inherit The Earth, file two)", //file30
+    "AIL (Little Big Adventure :: 4op)", //file31
+    "AIL (Wreckin Crew)", //file32
+    "AIL (Death Gate)", // file13
+    "AIL (FIFA International Soccer)", //file34
+    "AIL (Starship Invasion)", //file35
+    "AIL (Super Street Fighter 2 :: 4op)", //file36
+    "AIL (Lords of the Realm :: MISSING INSTRUMENTS)", //file37
+    "AIL (SimFarm, SimHealth :: 4op)",
+    "AIL (SimFarm, Settlers, Serf City)",
+    // 40
+    "AIL (Caesar 2 :: partially 4op, MISSING INSTRUMENTS)",   // file12
+    "AIL (Syndicate Wars)", //file41
+    "AIL (Bubble Bobble Feat. Rainbow Islands, Z)", //file42
+    "AIL (Warcraft)", //file47
+    "AIL (Terra Nova Strike Force Centuri :: partially 4op)", //file48
+    "AIL (System Shock :: partially 4op)", //file49
+    "AIL (Advanced Civilization)", //file50
+    "AIL (Battle Chess 4000 :: partially 4op, melodic only)", //file53
+    "AIL (Ultimate Soccer Manager :: partially 4op)", //file54
+    "AIL (Air Bucks, Blue And The Gray, America Invades, Terminator 2029)", // sample.ad
+    // 50
+    "AIL (Ultima Underworld 2)", // sample.opl
+    "AIL (Kasparov's Gambit)", // file15
+    "AIL (High Seas Trader :: MISSING INSTRUMENTS)", // file16
+    "AIL (Master of Magic, Master of Orion 2 :: 4op, std percussion)", //file159
+    "AIL (Master of Magic, Master of Orion 2 :: 4op, orchestral percussion)", //file159
+    "SB (Action Soccer)",
+    "SB (3d Cyberpuck :: melodic only)",
+    "SB (Simon the Sorcerer :: melodic only)",
+    "OP3 (The Fat Man 2op set)",
+    "OP3 (The Fat Man 4op set)",
+    // 60
+    "OP3 (JungleVision 2op set :: melodic only)",
+    "OP3 (Wallace 2op set, Nitemare 3D :: melodic only)",
+    "TMB (Duke Nukem 3D)",
+    "TMB (Shadow Warrior)",
+    "DMX (Raptor)",
+    "OP3 (Modded GMOPL by Wohlstand)",
+    "SB (Jamie O'Connell's bank)",
+    "TMB (Default bank of Build Engine)",
+    "OP3 (4op bank by James Alan Nguyen)",
+    "TMB (Blood)",
+    // 70
+    "TMB (Lee)",
+    "TMB (Nam)",
+    "DMX (Bank by Sneakernets)"
+};
+
+const char *prev = "";
+const char *prev_prefix = "";
+size_t      prev_index = 0;
+
+enum IniType
+{
+    INI_Both,
+    INI_Melodic,
+    INI_Drums
+};
+
+void writeIni(const char * format, const char * filepath, const char * prefix, size_t index, int type, const char*filter_mel = 0, const char *filter_perc = 0)
+{
+    if(type == INI_Both)
+    {
+        FILE *ini = fopen("banks.ini", "a");
+        fprintf(ini, "[bank-%lu]\n", index);
+        fprintf(ini, "name     = \"%s\"\n", banknames[index]);
+        fprintf(ini, "format   = %s\n", format);
+        fprintf(ini, "file     = \"%s\"\n", filepath);
+        fprintf(ini, "prefix   = \"%s\"\n", prefix);
+        if(filter_mel) fprintf(ini, "filter-m = \"%s\"\n", filter_mel);
+        if(filter_perc) fprintf(ini, "filter-p = \"%s\"\n", filter_perc);
+        fprintf(ini, "\n");
+        fclose(ini);
+    }
+
+    if(type == INI_Drums)
+    {
+        FILE *ini = fopen("banks.ini", "a");
+        fprintf(ini, "[bank-%lu]\n", index);
+        fprintf(ini, "name     = \"%s\"\n", banknames[index]);
+        fprintf(ini, "format   = %s\n", format);
+        fprintf(ini, "file     = \"%s\"\n", prev);
+        fprintf(ini, "file-p   = \"%s\"\n", filepath);
+        fprintf(ini, "prefix   = \"%s\"\n", prev_prefix);
+        fprintf(ini, "prefix-p = \"%s\"\n", prefix);
+        fprintf(ini, "\n");
+        fclose(ini);
+    }
+
+    prev = filepath;
+    prev_prefix = prefix;
+    prev_index = index;
+}
+#endif
+
+
+
+#ifdef HARD_BANKS
+LoadMiles("fm_banks/opl_files/sc3.opl",  0, "G"); // Our "standard" bank! Same as file22.opl
+
+LoadBisqwit("fm_banks/op3_files/bisqwit.adlraw", 1, "Bisq");
+
+LoadBNK("fm_banks/bnk_files/melodic.bnk", 2, "HMIGM", false, false); // same as file156.bnk
+LoadBNK("fm_banks/bnk_files/drum.bnk",    2, "HMIGP", false, true);
+
+LoadBNK("fm_banks/bnk_files/intmelo.bnk", 3, "intM", false, false);
+LoadBNK("fm_banks/bnk_files/intdrum.bnk", 3, "intP", false, true);
+
+LoadBNK("fm_banks/bnk_files/hammelo.bnk", 4, "hamM", false, false);
+LoadBNK("fm_banks/bnk_files/hamdrum.bnk", 4, "hamP", false, true);
+
+LoadBNK("fm_banks/bnk_files/rickmelo.bnk", 5, "rickM", false, false);
+LoadBNK("fm_banks/bnk_files/rickdrum.bnk", 5, "rickP", false, true);
+
+LoadBNK("fm_banks/bnk_files/d2melo.bnk",  6, "b6M", false, false);
+LoadBNK("fm_banks/bnk_files/d2drum.bnk",  6, "b6P", false, true);
+
+LoadBNK("fm_banks/bnk_files/normmelo.bnk", 7, "b7M", false, false);
+LoadBNK("fm_banks/bnk_files/normdrum.bnk", 7, "b7P", false, true); // same as file122.bnk
+
+LoadBNK("fm_banks/bnk_files/ssmelo.bnk",  8, "b8M", false, false);
+LoadBNK("fm_banks/bnk_files/ssdrum.bnk",  8, "b8P", false, true);
+
+LoadTMB("fm_banks/bnk_files/themepark.tmb", 9, "b9MP");
+//LoadBNK("fm_banks/bnk_files/file131.bnk", 9, "b9M", false, false);
+//LoadBNK("fm_banks/bnk_files/file132.bnk", 9, "b9P", false, true);
+
+LoadBNK("fm_banks/bnk_files/file133.bnk", 10, "b10P", false, true);
+LoadBNK("fm_banks/bnk_files/file134.bnk", 10, "b10M", false, false);
+
+LoadBNK("fm_banks/bnk_files/file142.bnk", 11, "b11P", false, true);
+LoadBNK("fm_banks/bnk_files/file143.bnk", 11, "b11M", false, false);
+
+LoadBNK("fm_banks/bnk_files/file145.bnk", 12, "b12M", false, false);//file145 is MELODIC
+LoadBNK("fm_banks/bnk_files/file144.bnk", 12, "b12P", false, true);//file144  is DRUMS
+
+LoadBNK("fm_banks/bnk_files/file167.bnk", 13, "b13P", false, true);
+LoadBNK("fm_banks/bnk_files/file168.bnk", 13, "b13M", false, false);
+
+LoadDoom("fm_banks/doom2/genmidi.op2", 14, "dM");
+LoadDoom("fm_banks/doom2/genmidi.htc", 15, "hxM"); // same as genmidi.hxn
+LoadDoom("fm_banks/doom2/default.op2", 16, "mus");
+
+LoadMiles("fm_banks/opl_files/file17.opl", 17, "f17G");
+LoadMiles("fm_banks/opl_files/warcraft.ad", 18, "sG"); // same as file44, warcraft.opl
+LoadMiles("fm_banks/opl_files/file19.opl", 19, "f19G");
+LoadMiles("fm_banks/opl_files/file20.opl", 20, "f20G");
+LoadMiles("fm_banks/opl_files/file21.opl", 21, "f21G");
+LoadMiles("fm_banks/opl_files/nemesis.opl", 22, "nem");
+LoadMiles("fm_banks/opl_files/file23.opl", 23, "f23G");
+LoadMiles("fm_banks/opl_files/file24.opl", 24, "f24G");
+LoadMiles("fm_banks/opl_files/file25.opl", 25, "f25G");
+LoadMiles("fm_banks/opl_files/file26.opl", 26, "f26G");
+LoadMiles("fm_banks/opl_files/file27.opl", 27, "f27G");
+LoadMiles("fm_banks/opl_files/nhlpa.opl", 28, "nhl");
+LoadMiles("fm_banks/opl_files/file29.opl", 29, "f29G");
+LoadMiles("fm_banks/opl_files/file30.opl", 30, "f30G");
+LoadMiles("fm_banks/opl_files/file31.opl", 31, "f31G");
+LoadMiles("fm_banks/opl_files/file32.opl", 32, "f32G");
+LoadMiles("fm_banks/opl_files/file13.opl", 33, "f13G");
+LoadMiles("fm_banks/opl_files/file34.opl", 34, "f34G");
+LoadMiles("fm_banks/opl_files/file35.opl", 35, "f35G");
+LoadMiles("fm_banks/opl_files/file36.opl", 36, "f36G");
+LoadMiles("fm_banks/opl_files/file37.opl", 37, "f37G");
+LoadMiles("fm_banks/opl_files/simfarm.opl", 38, "qG");
+LoadMiles("fm_banks/opl_files/simfarm.ad", 39, "mG"); // same as file18.opl
+LoadMiles("fm_banks/opl_files/file12.opl", 40, "f12G");
+LoadMiles("fm_banks/opl_files/file41.opl", 41, "f41G");
+LoadMiles("fm_banks/opl_files/file42.opl", 42, "f42G");
+LoadMiles("fm_banks/opl_files/file47.opl", 43, "f47G");
+LoadMiles("fm_banks/opl_files/file48.opl", 44, "f48G");
+LoadMiles("fm_banks/opl_files/file49.opl", 45, "f49G");
+LoadMiles("fm_banks/opl_files/file50.opl", 46, "f50G");
+LoadMiles("fm_banks/opl_files/file53.opl", 47, "f53G");
+LoadBNK("fm_banks/bnk_files/file144.bnk", 47, "f53GD", false, true);//Attempt to append missing drums
+LoadMiles("fm_banks/opl_files/file54.opl", 48, "f54G");
+
+LoadMiles("fm_banks/opl_files/sample.ad",  49, "MG"); // same as file51.opl
+LoadMiles("fm_banks/opl_files/sample.opl", 50, "oG"); // same as file40.opl
+LoadMiles("fm_banks/opl_files/file15.opl", 51, "f15G");
+LoadMiles("fm_banks/opl_files/file16.opl", 52, "f16G");
+
+LoadBNK2("fm_banks/bnk_files/file159.bnk", 53, "b50", "gm", "gps"); // fat-opl3
+LoadBNK2("fm_banks/bnk_files/file159.bnk", 54, "b51", "gm", "gpo");
+
+LoadIBK("fm_banks/ibk_files/soccer-genmidi.ibk", 55, "b55M", false);
+LoadIBK("fm_banks/ibk_files/soccer-percs.ibk",   55, "b55P", true);
+LoadIBK("fm_banks/ibk_files/game.ibk",           56, "b56", false);
+LoadIBK("fm_banks/ibk_files/mt_fm.ibk",          57, "b57", false);
+
+LoadJunglevision("fm_banks/op3_files/fat2.op3", 58, "fat2");
+LoadJunglevision("fm_banks/op3_files/fat4.op3", 59, "fat4");
+LoadJunglevision("fm_banks/op3_files/jv_2op.op3", 60, "b60");
+LoadJunglevision("fm_banks/op3_files/wallace.op3", 61, "b61");
+
+LoadTMB("fm_banks/tmb_files/d3dtimbr.tmb", 62, "duke");
+LoadTMB("fm_banks/tmb_files/swtimbr.tmb",  63, "sw");
+
+LoadDoom("fm_banks/raptor/genmidi.op2", 64, "rapt");
+
+//LoadJunglevision("fm_banks/op3_files/fat2_modded.op3", 65, "b65M");
+LoadTMB("fm_banks/op3_files/gmopl_wohl_mod.tmb",  65, "b65");
+
+//LoadIBK("fm_banks/ibk_files/JOconnel.IBK",        66, "b66M", false);
+//LoadIBK("fm_banks/ibk_files/my-gmopldrums.IBK", 66, "b66P", true);
+LoadTMB("fm_banks/op3_files/gmoconel.tmb",  66, "b66");
+
+LoadTMB("fm_banks/tmb_files/default.tmb",  67, "3drm67");
+//LoadDoom("fm_banks/doom2/wolfinstein.op2", 67, "wolf"); //Small experiment!
+
+//LoadJunglevision("fm_banks/op3_files/2x2.op3", 68, "2x2byJAN");
+LoadMiles("fm_banks/op3_files/2x2.opl", 68, "2x2byJAN");
+
+LoadTMB("fm_banks/tmb_files/bloodtmb.tmb",  69, "apgblood");
+LoadTMB("fm_banks/tmb_files/lee.tmb",  70, "apglee");
+LoadTMB("fm_banks/tmb_files/nam.tmb",  71, "apgnam");
+
+LoadDoom("fm_banks/doom2/DMXOPL-by-sneakernets.op2", 72, "sneakernets");
+
+//LoadBNK("bnk_files/grassman1.bnk", 63, "b63", false);
+//LoadBNK("bnk_files/grassman2.bnk", 64, "b64", false);
+
+//LoadIBK("ibk_files/nitemare_3d.ibk",  65, "b65G", false); // Seems to be identical to wallace.op3 despite different format!
+#endif

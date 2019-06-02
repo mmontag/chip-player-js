@@ -1,0 +1,164 @@
+version: 1.3.{build}
+
+environment:
+  global:
+    PLATFORMTOOLSET: "v140"
+    CMAKEPREFIXPATH: "."
+    VLC_PLUGIN: OFF
+    BUILD_SHARED: ON
+    BUILD_STATIC: ON
+    VLC_TARBALL_x32: "https://mirror.yandex.ru/mirrors/ftp.videolan.org/vlc/3.0.4/win32/vlc-3.0.4-win32.7z"
+    VLC_TARBALL_x64: "https://mirror.yandex.ru/mirrors/ftp.videolan.org/vlc/3.0.4/win64/vlc-3.0.4-win64.7z"
+    SEVENZIP: "C:\\Program Files\\7-Zip\\7z.exe"
+    WGET_BIN: "C:\\msys64\\usr\\bin\\wget.exe"
+    VLC_DIR: "vlc-3.0.4"
+  matrix:
+    - BUILD_TYPE: Release
+      COMPILER: MinGW-w32
+      COMPILER_FAMILY: MinGW
+      GENERATOR: "MinGW Makefiles"
+      PLATFORM: Win32
+      CMAKEPREFIXPATH: "C:/mingw-w64/i686-6.3.0-posix-dwarf-rt_v5-rev1/mingw32"
+      TOOLCHAIN_BIN: "C:\\mingw-w64\\i686-6.3.0-posix-dwarf-rt_v5-rev1\\mingw32\\bin"
+      VLC_PLUGIN: ON
+      BUILD_SHARED: OFF
+      VLC_TARBALL: ${VLC_TARBALL_x32}
+    - BUILD_TYPE: Release
+      COMPILER: MinGW-w64
+      COMPILER_FAMILY: MinGW
+      GENERATOR: "MinGW Makefiles"
+      PLATFORM: x64
+      CMAKEPREFIXPATH: "C:/mingw-w64/x86_64-6.3.0-posix-seh-rt_v5-rev1/mingw64"
+      TOOLCHAIN_BIN: "C:\\mingw-w64\\x86_64-6.3.0-posix-seh-rt_v5-rev1\\mingw64\\bin"
+      VLC_PLUGIN: ON
+      BUILD_SHARED: OFF
+      VLC_TARBALL: ${VLC_TARBALL_x64}
+    - BUILD_TYPE: Debug
+      COMPILER: MinGW
+      COMPILER_FAMILY: MinGW
+      GENERATOR: "MinGW Makefiles"
+      PLATFORM: Win32
+      CMAKEPREFIXPATH: "C:/MinGW"
+      TOOLCHAIN_BIN: "C:\\MinGW\\bin"
+    - BUILD_TYPE: Release
+      COMPILER: MinGW
+      COMPILER_FAMILY: MinGW
+      GENERATOR: "MinGW Makefiles"
+      PLATFORM: Win32
+      CMAKEPREFIXPATH: "C:/MinGW"
+      TOOLCHAIN_BIN: "C:\\MinGW\\bin"
+    - BUILD_TYPE: Debug
+      COMPILER: MinGW-w32
+      COMPILER_FAMILY: MinGW
+      GENERATOR: "MinGW Makefiles"
+      PLATFORM: Win32
+      CMAKEPREFIXPATH: "C:/mingw-w64/i686-6.3.0-posix-dwarf-rt_v5-rev1/mingw32"
+      TOOLCHAIN_BIN: "C:\\mingw-w64\\i686-6.3.0-posix-dwarf-rt_v5-rev1\\mingw32\\bin"
+    - BUILD_TYPE: Release
+      COMPILER: MinGW-w32
+      COMPILER_FAMILY: MinGW
+      GENERATOR: "MinGW Makefiles"
+      PLATFORM: Win32
+      CMAKEPREFIXPATH: "C:/mingw-w64/i686-6.3.0-posix-dwarf-rt_v5-rev1/mingw32"
+      TOOLCHAIN_BIN: "C:\\mingw-w64\\i686-6.3.0-posix-dwarf-rt_v5-rev1\\mingw32\\bin"
+    - BUILD_TYPE: Debug
+      COMPILER: MinGW-w64
+      COMPILER_FAMILY: MinGW
+      GENERATOR: "MinGW Makefiles"
+      PLATFORM: x64
+      CMAKEPREFIXPATH: "C:/mingw-w64/x86_64-6.3.0-posix-seh-rt_v5-rev1/mingw64"
+      TOOLCHAIN_BIN: "C:\\mingw-w64\\x86_64-6.3.0-posix-seh-rt_v5-rev1\\mingw64\\bin"
+    - BUILD_TYPE: Release
+      COMPILER: MinGW-w64
+      COMPILER_FAMILY: MinGW
+      GENERATOR: "MinGW Makefiles"
+      PLATFORM: x64
+      CMAKEPREFIXPATH: "C:/mingw-w64/x86_64-6.3.0-posix-seh-rt_v5-rev1/mingw64"
+      TOOLCHAIN_BIN: "C:\\mingw-w64\\x86_64-6.3.0-posix-seh-rt_v5-rev1\\mingw64\\bin"
+    - BUILD_TYPE: Debug
+      COMPILER: MSVC15
+      COMPILER_FAMILY: MSVC
+      GENERATOR: "Visual Studio 14 2015 Win64"
+      APPVEYOR_BUILD_WORKER_IMAGE: "Visual Studio 2015"
+      PLATFORM: x64
+      PLATFORMTOOLSET: "v140_xp"
+    - BUILD_TYPE: Release
+      COMPILER: MSVC15
+      COMPILER_FAMILY: MSVC
+      GENERATOR: "Visual Studio 14 2015 Win64"
+      APPVEYOR_BUILD_WORKER_IMAGE: "Visual Studio 2015"
+      PLATFORM: x64
+      PLATFORMTOOLSET: "v140_xp"
+    - BUILD_TYPE: Debug
+      COMPILER: MSVC15
+      COMPILER_FAMILY: MSVC
+      GENERATOR: "Visual Studio 14 2015"
+      APPVEYOR_BUILD_WORKER_IMAGE: "Visual Studio 2015"
+      PLATFORM: Win32
+      PLATFORMTOOLSET: "v140_xp"
+    - BUILD_TYPE: Release
+      COMPILER: MSVC15
+      COMPILER_FAMILY: MSVC
+      GENERATOR: "Visual Studio 14 2015"
+      APPVEYOR_BUILD_WORKER_IMAGE: "Visual Studio 2015"
+      PLATFORM: Win32
+      PLATFORMTOOLSET: "v140_xp"
+    - BUILD_TYPE: Debug
+      COMPILER: MSVC17
+      COMPILER_FAMILY: MSVC
+      GENERATOR: "Visual Studio 15 2017 Win64"
+      APPVEYOR_BUILD_WORKER_IMAGE: "Visual Studio 2017"
+      PLATFORM: x64
+      PLATFORMTOOLSET: "v141_xp"
+    - BUILD_TYPE: Release
+      COMPILER: MSVC17
+      COMPILER_FAMILY: MSVC
+      GENERATOR: "Visual Studio 15 2017 Win64"
+      APPVEYOR_BUILD_WORKER_IMAGE: "Visual Studio 2017"
+      PLATFORM: x64
+      PLATFORMTOOLSET: "v141_xp"
+    - BUILD_TYPE: Debug
+      COMPILER: MSVC17
+      COMPILER_FAMILY: MSVC
+      GENERATOR: "Visual Studio 15 2017"
+      APPVEYOR_BUILD_WORKER_IMAGE: "Visual Studio 2017"
+      PLATFORM: Win32
+      PLATFORMTOOLSET: "v141_xp"
+    - BUILD_TYPE: Release
+      COMPILER: MSVC17
+      COMPILER_FAMILY: MSVC
+      GENERATOR: "Visual Studio 15 2017"
+      APPVEYOR_BUILD_WORKER_IMAGE: "Visual Studio 2017"
+      PLATFORM: Win32
+      PLATFORMTOOLSET: "v141_xp"
+
+build_script:
+  - if [%VLC_PLUGIN%]==[ON] md C:\vlc-temp
+  - if [%VLC_PLUGIN%]==[ON] "%WGET_BIN%" --quiet %VLC_TARBALL% -O C:\vlc-temp\vlcsdk.7z
+  - if [%VLC_PLUGIN%]==[ON] "%SEVENZIP%" x C:\vlc-temp\vlcsdk.7z -oC:\vlc-temp
+  - if [%VLC_PLUGIN%]==[ON] xcopy /S /E /Y "C:\vlc-temp\%VLC_DIR%\sdk\*" "%TOOLCHAIN_BIN%\.."
+  - md build-%COMPILER%-%BUILD_TYPE%-%PLATFORM%
+  - cd build-%COMPILER%-%BUILD_TYPE%-%PLATFORM%
+  - if NOT [%TOOLCHAIN_BIN%]==[] set PATH=%TOOLCHAIN_BIN%;%PATH:C:\Program Files\Git\usr\bin;=%
+  - cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DCMAKE_PREFIX_PATH=%CMAKEPREFIXPATH% -DCMAKE_INSTALL_PREFIX=libADLMIDI -DWITH_OLD_UTILS=ON -DWITH_GENADLDATA=OFF -DlibADLMIDI_STATIC=%BUILD_STATIC% -DlibADLMIDI_SHARED=%BUILD_SHARED% -DWITH_VLC_PLUGIN=%VLC_PLUGIN% -DVLC_PLUGIN_NOINSTALL=ON ..
+  - if [%COMPILER_FAMILY%]==[MinGW] cmake --build . --config %BUILD_TYPE% -- -j 2
+  - if [%COMPILER_FAMILY%]==[MinGW] mingw32-make install
+  - if [%COMPILER_FAMILY%]==[MSVC] cmake --build . --config %BUILD_TYPE% --target install
+  - if [%VLC_PLUGIN%]==[OFF] 7z a -t7z -mx9 "libADLMIDI-%COMPILER%-%BUILD_TYPE%-%PLATFORM%.7z" "libADLMIDI"
+  - if [%VLC_PLUGIN%]==[OFF] appveyor PushArtifact "libADLMIDI-%COMPILER%-%BUILD_TYPE%-%PLATFORM%.7z"
+#  - if [%VLC_PLUGIN%]==[OFF] move "libADLMIDI-%COMPILER%-%BUILD_TYPE%-%PLATFORM%.7z" ..
+  - if [%VLC_PLUGIN%]==[ON] 7z a -t7z -mx9 "libADLMIDI-%VLC_DIR%-codec-%PLATFORM%.7z" "libadlmidi_plugin.dll"
+  - if [%VLC_PLUGIN%]==[ON] appveyor PushArtifact "libADLMIDI-%VLC_DIR%-codec-%PLATFORM%.7z"
+#  - if [%VLC_PLUGIN%]==[ON] move "libADLMIDI-%VLC_DIR%-codec-%PLATFORM%.7z" ..
+
+#artifacts:
+#  - path: 'libADLMIDI-$(COMPILER)-$(BUILD_TYPE)-$(PLATFORM).7z'
+#  - path: 'libADLMIDI-$(VLC_DIR)-codec-$(PLATFORM).7z'
+
+deploy:
+  - provider: Environment
+    name: WohlnetFTP
+
+#on_finish:
+#  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+
