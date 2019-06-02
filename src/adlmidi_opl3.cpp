@@ -29,7 +29,10 @@
 #ifdef ADLMIDI_HW_OPL
 static const unsigned OPLBase = 0x388;
 #else
-#   if defined(ADLMIDI_DISABLE_NUKED_EMULATOR) && defined(ADLMIDI_DISABLE_DOSBOX_EMULATOR)
+#   if defined(ADLMIDI_DISABLE_NUKED_EMULATOR) && \
+       defined(ADLMIDI_DISABLE_DOSBOX_EMULATOR) && \
+       defined(ADLMIDI_DISABLE_OPAL_EMULATOR) && \
+       defined(ADLMIDI_DISABLE_JAVA_EMULATOR)
 #       error "No emulators enabled. You must enable at least one emulator to use this library!"
 #   endif
 
