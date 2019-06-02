@@ -26,7 +26,7 @@ var source_files = [
   'Classic_Emu.cpp',
   'dac_control.c',
   'Data_Reader.cpp',
-  'dbopl.cpp',
+  // 'dbopl.cpp', // Currently using later version of dbopl.cpp from libADLMIDI
   'Downsampler.cpp',
   'Dual_Resampler.cpp',
   'Effects_Buffer.cpp',
@@ -133,6 +133,23 @@ var source_files = [
   'Z80_Cpu.cpp',
 ].map(file => gme_dir + '/' + file);
 
+
+const libADLMIDI_files = [
+  'chips/dosbox_opl3.cpp',
+  'chips/dosbox/dbopl.cpp',
+  // 'chips/opal_opl3.cpp',
+  // 'chips/java_opl3.cpp',
+  'wopl/wopl_file.c',
+  'adldata.cpp',
+  'adlmidi.cpp',
+  'adlmidi_load.cpp',
+  'adlmidi_midiplay.cpp',
+  'adlmidi_opl3.cpp',
+  'adlmidi_private.cpp',
+].map(file => 'libADLMIDI/src/' + file);
+
+source_files = source_files.concat(libADLMIDI_files);
+
 // Complete LibXMP build:
 // source_files.push('libxmp/lib/libxmp.a');
 source_files.push('libxmp/libxmp-lite-stagedir/lib/libxmp-lite.a');
@@ -205,6 +222,24 @@ var exported_functions = [
   '_tp_get_channel_in_use',
   '_tp_get_channel_program',
   '_tp_set_channel_mute',
+  '_tp_set_bank',
+  '_tp_set_synth_engine',
+
+  '_adl_init',
+  '_adl_panic',
+  '_adl_generate',
+  '_adl_getBankNames',
+  '_adl_getBanksCount',
+  '_adl_setBank',
+  '_adl_getNumChips',
+  '_adl_setNumChips',
+  '_adl_setSoftPanEnabled',
+  '_adl_rt_controllerChange',
+  '_adl_rt_noteOff',
+  '_adl_rt_noteOn',
+  '_adl_rt_patchChange',
+  '_adl_rt_pitchBend',
+  '_adl_rt_resetState',
 
   // From showcqtbar.c
   '_cqt_init',
@@ -235,6 +270,7 @@ var flags = [
   '-s', 'EXPORT_NAME=CHIP_CORE',
   '-s', 'ENVIRONMENT=web',
   '-s', 'USE_ZLIB=1',
+  '-s', 'BINARYEN_TRAP_MODE=clamp',
   '-Os',
   '-o', js_file,
 
@@ -243,6 +279,15 @@ var flags = [
   // '-DVGM_YM2612_GENS=1',  // very fast but inaccurate
   '-DHAVE_ZLIB_H',
   '-DHAVE_STDINT_H',
+
+  '-IlibADLMIDI/include',
+  '-DBWMIDI_DISABLE_XMI_SUPPORT',
+  '-DBWMIDI_DISABLE_MUS_SUPPORT',
+  '-DADLMIDI_DISABLE_MIDI_SEQUENCER',
+  '-DADLMIDI_DISABLE_NUKED_EMULATOR',
+  '-DADLMIDI_DISABLE_JAVA_EMULATOR',
+  '-DADLMIDI_DISABLE_OPAL_EMULATOR',
+  // '-DADLMIDI_DISABLE_DOSBOX_EMULATOR', // DOSBOX is recommended OPL3 core
 
   '-Qunused-arguments',
   '-Wno-deprecated',
