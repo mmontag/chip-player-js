@@ -65,6 +65,51 @@ const fileExtensions = [
 ];
 
 export default class MIDIPlayer extends Player {
+  paramDefs = [
+    {
+      id: 'synthengine',
+      label: 'Synth Engine',
+      type: 'enum',
+      options: [{
+        label: 'MIDI Synthesis Engine',
+        items: [
+          {
+            label: 'SoundFont (libFluidLite)',
+            value: 0,
+          },
+          {
+            label: 'Adlib/OPL3 (libADLMIDI)',
+            value: 1,
+          },
+        ],
+      }],
+      value: 0,
+    },
+    {
+      id: 'soundfont',
+      label: 'Soundfont',
+      type: 'enum',
+      options: SOUNDFONTS,
+      value: DEFAULT_SOUNDFONT,
+    },
+    {
+      id: 'reverb',
+      label: 'Reverb',
+      type: 'number',
+      min: 0.0,
+      max: 1.0,
+      step: 0.01,
+      value: 0.6,
+    },
+    {
+      id: 'opl3bank',
+      label: 'OPL3 Bank',
+      type: 'enum',
+      options: [],
+      value: 0,
+    },
+  ];
+
   constructor(audioCtx, destNode, chipCore, onPlayerStateUpdate = function() {}) {
     super(audioCtx, destNode, chipCore, onPlayerStateUpdate);
     this.setParameter = this.setParameter.bind(this);
@@ -89,6 +134,21 @@ export default class MIDIPlayer extends Player {
     this.params = {};
     this.buffer = lib.allocate(this.bufferSize * 8, 'i32', lib.ALLOC_NORMAL);
     this.filepathMeta = {};
+
+    // Populate OPL3 banks
+    const numBanks = lib._adl_getBanksCount();
+    console.log(numBanks, 'banks');
+    const ptr = lib._adl_getBankNames();
+    const oplBanks = [];
+    for (let i = 0; i < numBanks; i++) {
+      oplBanks.push({
+        label: lib.UTF8ToString(lib.getValue(ptr + i * 4, '*')),
+        value: i,
+      });
+    }
+    console.log(oplBanks);
+    this.paramDefs.find(def => def.id === 'opl3bank').options =
+      [{ label: 'OPL3 Bank', items: oplBanks }];
 
     this.setAudioProcess(this.midiAudioProcess);
   }
@@ -221,28 +281,15 @@ export default class MIDIPlayer extends Player {
   }
 
   getParameters() {
-    return [
-      {
-        id: 'soundfont',
-        label: 'Soundfont',
-        type: 'enum',
-        options: SOUNDFONTS,
-        value: DEFAULT_SOUNDFONT,
-      },
-      {
-        id: 'reverb',
-        label: 'Reverb',
-        type: 'number',
-        min: 0.0,
-        max: 1.0,
-        step: 0.01,
-        value: 0.6,
-      },
-    ];
+    return this.paramDefs;
   }
 
   setParameter(id, value) {
     switch (id) {
+      case 'synthengine':
+        lib._tp_set_synth_engine(value);
+        this.params[id] = value;
+        break;
       case 'soundfont':
         const url = `${SOUNDFONT_URL_PATH}/${value}`;
         this._ensureFile(`${MOUNTPOINT}/${value}`, url)
@@ -250,7 +297,13 @@ export default class MIDIPlayer extends Player {
         this.params[id] = value;
         break;
       case 'reverb':
+        value = parseFloat(value);
         lib._tp_set_reverb(value);
+        this.params[id] = value;
+        break;
+      case 'opl3bank':
+        value = parseInt(value, 10);
+        lib._tp_set_bank(value);
         this.params[id] = value;
         break;
       default:
