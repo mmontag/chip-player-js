@@ -3,7 +3,7 @@
 #include "Ym3812_Emu.h"
 
 #include <math.h>
-#include "dbopl.h"
+#include "../../libADLMIDI/src/chips/dosbox/dbopl.h"
 
 Ym3812_Emu::Ym3812_Emu() { opl = 0; }
 
@@ -30,7 +30,7 @@ int Ym3812_Emu::set_rate( int sample_rate, int clock_rate )
 
 void Ym3812_Emu::reset()
 {
-	opl->Setup( clock_rate, sample_rate );
+	opl->Setup( sample_rate );
 }
 
 void Ym3812_Emu::write( int addr, int data )

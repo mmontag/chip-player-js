@@ -3,7 +3,7 @@
 #include "Ymf262_Emu.h"
 
 #include <math.h>
-#include "dbopl.h"
+#include "../../libADLMIDI/src/chips/dosbox/dbopl.h"
 
 Ymf262_Emu::Ymf262_Emu() { opl = 0; }
 
@@ -30,7 +30,7 @@ int Ymf262_Emu::set_rate( int sample_rate, int clock_rate )
 
 void Ymf262_Emu::reset()
 {
-	opl->Setup( clock_rate, sample_rate );
+	opl->Setup( sample_rate );
 }
 
 void Ymf262_Emu::write0( int addr, int data )
