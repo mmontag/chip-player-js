@@ -121,7 +121,6 @@ class App extends React.Component {
       }
     });
     this.db = firebase.firestore();
-    this.db.settings({timestampsInSnapshots: true});
     // Initialize audio graph
     const audioCtx = this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const gainNode = audioCtx.createGain();
