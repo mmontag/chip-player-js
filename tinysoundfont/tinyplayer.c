@@ -110,7 +110,7 @@ void adlControlChange(int channel, int control, int value) {
   adl_rt_controllerChange(g_adlSynth, channel, control, value);
 }
 void adlChannelPressure(int channel, int value) {
-  adl_rt_channelPressure(g_adlSynth, channel, value);
+  adl_rt_channelAfterTouch(g_adlSynth, channel, value);
 }
 void adlRender(float *buffer, int samples) {
   adl_generateFormat(g_adlSynth, samples, (ADL_UInt8 *)buffer, (ADL_UInt8 *)(buffer + 1), &adl_AudioFormat);
@@ -347,11 +347,10 @@ extern int tp_set_synth_engine(int synthId) {
   if (g_synthId == synthId) return 0;
   if (synthId < 0 || synthId > NUM_SYNTHS) return -1;
   g_synth.panic();
-  g_synth.reset();
   g_synthId = synthId;
   g_synth = g_Synths[g_synthId];
   // restore state
-  if (g_MidiEvt != NULL)
+  if (g_MidiEvt != NULL && g_MidiEvt != g_FirstEvt)
     tp_seek((int)tp_get_position_ms() - 1);
   return 0;
 }

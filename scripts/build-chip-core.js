@@ -235,6 +235,7 @@ var exported_functions = [
   '_adl_setNumChips',
   '_adl_setSoftPanEnabled',
   '_adl_rt_controllerChange',
+  '_adl_rt_channelAfterTouch',
   '_adl_rt_noteOff',
   '_adl_rt_noteOn',
   '_adl_rt_patchChange',
