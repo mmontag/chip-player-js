@@ -44,7 +44,7 @@ export default class PlayerParams extends PureComponent {
         <div style={{display: 'flex', flexWrap: 'wrap', marginRight: '-8px'}}>
           {[...Array(this.props.numVoices)].map((_, i) => {
             return (
-              <label className='App-voice-label' key={i}>
+              <label className='App-voice-label inline' key={i}>
                 <input
                   title='Alt+click to solo. Alt+click again to unmute all.'
                   type='checkbox'

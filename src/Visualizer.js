@@ -80,12 +80,12 @@ export default class Visualizer extends PureComponent {
       <div className='Visualizer'>
         <h3 className='Visualizer-toggle'>
           Visualizer{' '}
-          <label><input onClick={this.handleToggleVisualizer}
+          <label className='inline'><input onClick={this.handleToggleVisualizer}
                         type='radio'
                         value={true}
                         defaultChecked={this.state.enabled === true}
                         name='visualizer-enabled'/>On</label>
-          <label><input onClick={this.handleToggleVisualizer}
+          <label className='inline'><input onClick={this.handleToggleVisualizer}
                         type='radio'
                         value={false}
                         defaultChecked={this.state.enabled === false}
@@ -96,7 +96,7 @@ export default class Visualizer extends PureComponent {
             Mode:{' '}
             {
               SPECTROGRAM_MODES.map((mode, i) =>
-                <label key={'m_'+i}><input onClick={this.handleModeClick}
+                <label key={'m_'+i} className='inline'><input onClick={this.handleModeClick}
                                       type='radio'
                                       name='spectrogram-mode'
                                       defaultChecked={this.state.vizMode === i}
@@ -109,7 +109,7 @@ export default class Visualizer extends PureComponent {
               Weighting:{' '}
               {
                 WEIGHTING_MODES.map((mode, i) =>
-                  <label title={mode.description} key={'w_'+i}>
+                  <label title={mode.description} key={'w_'+i} className='inline'>
                     <input onClick={this.handleWeightingModeClick}
                            type='radio'
                            name='weighting-mode'
@@ -123,7 +123,7 @@ export default class Visualizer extends PureComponent {
               FFT Size:{' '}
               {
                 FFT_SIZES.map((size, i) =>
-                  <label key={'f_'+i}><input onClick={this.handleFFTSizeClick}
+                  <label key={'f_'+i} className='inline'><input onClick={this.handleFFTSizeClick}
                                         type='radio'
                                         name='fft-size'
                                         defaultChecked={this.state.fftSize === size}
