@@ -65,7 +65,7 @@ export default class PlayerParams extends PureComponent {
           switch (param.type) {
             case 'enum':
               return (
-                <label key={param.id} title={param.hint}>
+                <label key={param.id} title={param.hint} style={css.paramLabel}>
                   {param.label}:{' '}
                   <select
                     onChange={(e) => {
@@ -85,7 +85,7 @@ export default class PlayerParams extends PureComponent {
               );
             case 'number':
               return (
-                <label key={param.id} title={param.hint}>
+                <label key={param.id} title={param.hint} style={css.paramLabel}>
                   {param.label}:{' '}
                   <input type='range'
                          title={param.hint}
@@ -101,7 +101,7 @@ export default class PlayerParams extends PureComponent {
               );
             case 'toggle':
               return (
-                <label key={param.id} title={param.hint}>
+                <label key={param.id} title={param.hint} style={css.paramLabel}>
                   <input type='checkbox'
                          onChange={(e) => {
                            this.props.setParameter(param.id, e.target.checked);
@@ -119,3 +119,9 @@ export default class PlayerParams extends PureComponent {
     );
   }
 }
+
+const css = {
+  paramLabel: {
+    display: 'block',
+  },
+};
