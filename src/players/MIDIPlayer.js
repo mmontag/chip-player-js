@@ -71,17 +71,18 @@ export default class MIDIPlayer extends Player {
       options: [{
         label: 'MIDI Synthesis Engine',
         items: [
-          {
-            label: 'SoundFont (libFluidLite)',
-            value: 0,
-          },
-          {
-            label: 'Adlib/OPL3 (libADLMIDI)',
-            value: 1,
-          },
+          {label: 'SoundFont (libFluidLite)', value: 0},
+          {label: 'Adlib/OPL3 (libADLMIDI)', value: 1},
         ],
       }],
       defaultValue: 0,
+    },
+    {
+      id: 'autoengine',
+      label: 'Auto Synth Engine Switching',
+      hint: 'Switch synth engine based on filenames. Files containing "FM" will play through Adlib/OPL3 synth.',
+      type: 'toggle',
+      defaultValue: true,
     },
     {
       id: 'soundfont',
@@ -224,6 +225,15 @@ export default class MIDIPlayer extends Player {
       if (lib._tp_get_channel_in_use(i)) this.activeChannels.push(i);
     }
 
+    // Switch to OPL3 engine if filepath contains 'FM'
+    if (this.getParameter('autoengine')) {
+      if (filepath.match(/FM\b/i)) {
+        this.setParameter('synthengine', 1);
+      } else {
+        this.setParameter('synthengine', 0);
+      }
+    }
+
     this.connect();
     this.resume();
     this.onPlayerStateUpdate(false);
@@ -297,27 +307,27 @@ export default class MIDIPlayer extends Player {
       case 'synthengine':
         value = parseInt(value, 10);
         lib._tp_set_synth_engine(value);
-        this.params[id] = value;
         break;
       case 'soundfont':
         const url = `${SOUNDFONT_URL_PATH}/${value}`;
         this._ensureFile(`${MOUNTPOINT}/${value}`, url)
           .then(filename => this._loadSoundfont(filename));
-        this.params[id] = value;
         break;
       case 'reverb':
         value = parseFloat(value);
         lib._tp_set_reverb(value);
-        this.params[id] = value;
         break;
       case 'opl3bank':
         value = parseInt(value, 10);
         lib._tp_set_bank(value);
-        this.params[id] = value;
+        break;
+      case 'autoengine':
+        value = !!value;
         break;
       default:
         console.warn('MIDIPlayer has no parameter with id "%s".', id);
     }
+    this.params[id] = value;
   }
 
   _ensureFile(filename, url) {

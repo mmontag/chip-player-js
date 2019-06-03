@@ -59,14 +59,13 @@ export default class PlayerParams extends PureComponent {
         {this.props.paramDefs.map(param => {
           const value = this.props.getParameter(param.id);
           const dependsOn = param.dependsOn;
-          if (dependsOn) {
-            if (this.props.getParameter(dependsOn.param) !== param.dependsOn.value)
-              return;
+          if (dependsOn && this.props.getParameter(dependsOn.param) !== dependsOn.value) {
+              return null;
           }
           switch (param.type) {
             case 'enum':
               return (
-                <div key={param.id}>
+                <label key={param.id} title={param.hint}>
                   {param.label}:{' '}
                   <select
                     onChange={(e) => {
@@ -82,29 +81,41 @@ export default class PlayerParams extends PureComponent {
                       </optgroup>
                     )}
                   </select>
-                </div>
+                </label>
               );
             case 'number':
               return (
-                <div key={param.id}>
+                <label key={param.id} title={param.hint}>
                   {param.label}:{' '}
                   <input type='range'
+                         title={param.hint}
                          min={param.min} max={param.max} step={param.step}
-                         value={value}
                          onChange={(e) => {
                            this.props.setParameter(param.id, e.target.value);
                            this.forceUpdate();
-                         }}>
+                         }}
+                         value={value}>
                   </input>{' '}
                   {value !== undefined && value.toFixed(2)}
-                </div>
+                </label>
+              );
+            case 'toggle':
+              return (
+                <label key={param.id} title={param.hint}>
+                  <input type='checkbox'
+                         onChange={(e) => {
+                           this.props.setParameter(param.id, e.target.checked);
+                           this.forceUpdate();
+                         }}
+                         checked={value}/>
+                  {param.label}
+                </label>
               );
             default:
               return null;
           }
         })}
       </div>
-
     );
   }
 }
