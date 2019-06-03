@@ -156,7 +156,7 @@ export default class MIDIPlayer extends Player {
         value: i,
       });
     }
-    this.paramDefs.find(param => param.id === 'opl3bank').options =
+    this.paramDefs.find(def => def.id === 'opl3bank').options =
       [{ label: 'OPL3 Bank', items: oplBanks }];
 
     this.setAudioProcess(this.midiAudioProcess);
@@ -231,6 +231,35 @@ export default class MIDIPlayer extends Player {
         this.setParameter('synthengine', 1);
       } else {
         this.setParameter('synthengine', 0);
+      }
+
+      // Crude bank matching for a few specific games. :D
+      const fp = filepath.toLowerCase();
+      const opl3def = this.paramDefs.find(def => def.id === 'opl3bank');
+      if (opl3def) {
+        const opl3banks = opl3def.options[0].items;
+        const findBank = (str) => opl3banks.findIndex(bank => bank.label.indexOf(str) > -1);
+        let bankId = 0;
+        if (fp.indexOf('[rick]') > -1) {
+          bankId = findBank('Descent: Rick');
+        } else if (fp.indexOf('[ham]') > -1) {
+          bankId = findBank('Descent: Ham');
+        } else if (fp.indexOf('[int]') > -1) {
+          bankId = findBank('Descent: Int');
+        } else if (fp.indexOf('magic carpet') > -1) {
+          bankId = findBank('Magic Carpet');
+        } else if (fp.indexOf('wacky wheels') > -1) {
+          bankId = findBank('Apogee IMF');
+        } else if (fp.indexOf('warcraft 2') > -1) {
+          bankId = findBank('Warcraft 2');
+        } else if (fp.indexOf('warcraft') > -1) {
+          bankId = findBank('Warcraft');
+        } else if (fp.indexOf('system shock') > -1) {
+          bankId = findBank('System Shock');
+        }
+        if (bankId > -1) {
+          this.setParameter('opl3bank', bankId);
+        }
       }
     }
 
