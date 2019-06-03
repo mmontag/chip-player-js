@@ -106,7 +106,7 @@ export default class Player {
     }
   }
 
-  getParameters() {
+  getParamDefs() {
     return [];
   }
 

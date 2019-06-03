@@ -645,7 +645,7 @@ class App extends React.Component {
                 handleSetVoices={this.handleSetVoices}
                 getParameter={this.sequencer.getPlayer().getParameter}
                 setParameter={this.sequencer.getPlayer().setParameter}
-                params={this.sequencer.getPlayer().getParameters()}/>
+                paramDefs={this.sequencer.getPlayer().getParamDefs()}/>
               :
               <div>(No active player)</div>}
           </div>}

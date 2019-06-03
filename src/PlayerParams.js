@@ -56,8 +56,13 @@ export default class PlayerParams extends PureComponent {
           })}
         </div>
 
-        {this.props.params.map(param => {
+        {this.props.paramDefs.map(param => {
           const value = this.props.getParameter(param.id);
+          const dependsOn = param.dependsOn;
+          if (dependsOn) {
+            if (this.props.getParameter(dependsOn.param) !== param.dependsOn.value)
+              return;
+          }
           switch (param.type) {
             case 'enum':
               return (
@@ -68,7 +73,7 @@ export default class PlayerParams extends PureComponent {
                       this.props.setParameter(param.id, e.target.value);
                       this.forceUpdate();
                     }}
-                    defaultValue={value}>
+                    value={value}>
                     {param.options.map(optgroup =>
                       <optgroup key={optgroup.label} label={optgroup.label}>
                         {optgroup.items.map(option =>
@@ -85,7 +90,7 @@ export default class PlayerParams extends PureComponent {
                   {param.label}:{' '}
                   <input type='range'
                          min={param.min} max={param.max} step={param.step}
-                         defaultValue={value}
+                         value={value}
                          onChange={(e) => {
                            this.props.setParameter(param.id, e.target.value);
                            this.forceUpdate();

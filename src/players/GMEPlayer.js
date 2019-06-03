@@ -22,7 +22,7 @@ export default class GMEPlayer extends Player {
     super(audioCtx, destNode, chipCore, onPlayerStateUpdate);
     this.setParameter = this.setParameter.bind(this);
     this.getParameter = this.getParameter.bind(this);
-    this.getParameters = this.getParameters.bind(this);
+    this.getParamDefs = this.getParamDefs.bind(this);
 
     libgme = chipCore;
     this.paused = false;
@@ -236,7 +236,7 @@ export default class GMEPlayer extends Player {
     return this.params[id];
   }
 
-  getParameters() {
+  getParamDefs() {
     return [
       {
         id: 'subbass',

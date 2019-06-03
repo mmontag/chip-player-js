@@ -57,8 +57,6 @@ const SOUNDFONTS = [
   },
 ];
 
-const DEFAULT_SOUNDFONT = SOUNDFONTS[0].items[0].value;
-const DEFAULT_REVERB = 0.33;
 const fileExtensions = [
   'mid',
   'midi',
@@ -83,14 +81,18 @@ export default class MIDIPlayer extends Player {
           },
         ],
       }],
-      value: 0,
+      defaultValue: 0,
     },
     {
       id: 'soundfont',
       label: 'Soundfont',
       type: 'enum',
       options: SOUNDFONTS,
-      value: DEFAULT_SOUNDFONT,
+      defaultValue: SOUNDFONTS[0].items[0].value,
+      dependsOn: {
+        param: 'synthengine',
+        value: 0,
+      },
     },
     {
       id: 'reverb',
@@ -99,14 +101,22 @@ export default class MIDIPlayer extends Player {
       min: 0.0,
       max: 1.0,
       step: 0.01,
-      value: 0.6,
+      defaultValue: 0.33,
+      dependsOn: {
+        param: 'synthengine',
+        value: 0,
+      },
     },
     {
       id: 'opl3bank',
       label: 'OPL3 Bank',
       type: 'enum',
       options: [],
-      value: 0,
+      defaultValue: 0,
+      dependsOn: {
+        param: 'synthengine',
+        value: 1,
+      },
     },
   ];
 
@@ -114,7 +124,7 @@ export default class MIDIPlayer extends Player {
     super(audioCtx, destNode, chipCore, onPlayerStateUpdate);
     this.setParameter = this.setParameter.bind(this);
     this.getParameter = this.getParameter.bind(this);
-    this.getParameters = this.getParameters.bind(this);
+    this.getParamDefs = this.getParamDefs.bind(this);
 
     lib = chipCore;
     lib._tp_init(audioCtx.sampleRate);
@@ -125,8 +135,8 @@ export default class MIDIPlayer extends Player {
       if (err) {
         console.log('Error populating FS from indexeddb.', err);
       }
-      this.setParameter('soundfont', DEFAULT_SOUNDFONT);
-      this.setParameter('reverb', DEFAULT_REVERB);
+      // Wait until filesystem is mounted to initialize parameters
+      this.paramDefs.forEach(param => this.setParameter(param.id, param.defaultValue));
     });
 
     this.fileExtensions = fileExtensions;
@@ -137,7 +147,6 @@ export default class MIDIPlayer extends Player {
 
     // Populate OPL3 banks
     const numBanks = lib._adl_getBanksCount();
-    console.log(numBanks, 'banks');
     const ptr = lib._adl_getBankNames();
     const oplBanks = [];
     for (let i = 0; i < numBanks; i++) {
@@ -146,8 +155,7 @@ export default class MIDIPlayer extends Player {
         value: i,
       });
     }
-    console.log(oplBanks);
-    this.paramDefs.find(def => def.id === 'opl3bank').options =
+    this.paramDefs.find(param => param.id === 'opl3bank').options =
       [{ label: 'OPL3 Bank', items: oplBanks }];
 
     this.setAudioProcess(this.midiAudioProcess);
@@ -280,13 +288,14 @@ export default class MIDIPlayer extends Player {
     return this.params[id];
   }
 
-  getParameters() {
+  getParamDefs() {
     return this.paramDefs;
   }
 
   setParameter(id, value) {
     switch (id) {
       case 'synthengine':
+        value = parseInt(value, 10);
         lib._tp_set_synth_engine(value);
         this.params[id] = value;
         break;
