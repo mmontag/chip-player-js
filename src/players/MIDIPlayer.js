@@ -246,6 +246,8 @@ export default class MIDIPlayer extends Player {
           bankId = findBank('Descent: Ham');
         } else if (fp.indexOf('[int]') > -1) {
           bankId = findBank('Descent: Int');
+        } else if (fp.indexOf('descent 2') > -1) {
+          bankId = findBank('Descent 2');
         } else if (fp.indexOf('magic carpet') > -1) {
           bankId = findBank('Magic Carpet');
         } else if (fp.indexOf('wacky wheels') > -1) {
