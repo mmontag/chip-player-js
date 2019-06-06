@@ -372,7 +372,7 @@ img { image-rendering: pixelated; }
 .tab {
     display: inline-block;
     padding: 0 15px 0 15px;
-    border: 1px solid yellow;
+    border: 1px solid var(--clickable);
     border-bottom: none;
     margin: 0 8px 0 0;
     border-radius: 3px 3px 0 0;
