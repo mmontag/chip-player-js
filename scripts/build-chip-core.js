@@ -260,18 +260,19 @@ var runtime_methods = [
 ];
 
 var flags = [
-  // '--closure', '1',
+  // '--closure', '1',       // causes TypeError: lib.FS.mkdir is not a function
   '--llvm-lto', '3',
   '--no-heap-copy',
   '-s', 'EXPORTED_FUNCTIONS=[' + exported_functions.join(',') + ']',
   '-s', 'EXPORTED_RUNTIME_METHODS=[' + runtime_methods.join(',') + ']',
   '-s', 'ALLOW_MEMORY_GROWTH=1',
-  '-s', 'ASSERTIONS=1',
+  '-s', 'ASSERTIONS=0',      // assertions increase runtime size about 100K
   '-s', 'MODULARIZE=1',
   '-s', 'EXPORT_NAME=CHIP_CORE',
   '-s', 'ENVIRONMENT=web',
   '-s', 'USE_ZLIB=1',
   '-s', 'BINARYEN_TRAP_MODE=clamp',
+  '-s', 'EXPORT_ES6=1',
   '-Os',
   '-o', js_file,
 
