@@ -169,7 +169,10 @@ extern int tp_write_audio(float *buffer, int bufferSize) {
       switch (g_MidiEvt->type) {
         case TML_NOTE_ON:
           if (g_ChannelsMuted[g_MidiEvt->channel]) break;
-          g_synth.noteOn(g_MidiEvt->channel, g_MidiEvt->key, g_MidiEvt->velocity);
+          if (g_MidiEvt->velocity == 0)
+            g_synth.noteOff(g_MidiEvt->channel, g_MidiEvt->key);
+          else
+            g_synth.noteOn(g_MidiEvt->channel, g_MidiEvt->key, g_MidiEvt->velocity);
           break;
         case TML_NOTE_OFF:
           if (g_ChannelsMuted[g_MidiEvt->channel]) break;
