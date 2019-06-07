@@ -253,7 +253,7 @@ export default class GMEPlayer extends Player {
   setParameter(id, value) {
     switch (id) {
       case 'subbass':
-        this.params[id] = value;
+        this.params[id] = parseFloat(value);
         break;
       default:
         console.warn('GMEPlayer has no parameter with id "%s".', id);
