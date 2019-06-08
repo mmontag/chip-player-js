@@ -1,6 +1,8 @@
 //
 // TinyPlayer
-// a tiny wrapper for TinySoundFont and TinyMidiLoader.
+//
+// A tiny wrapper for TinyMidiLoader.
+// Uses synth engines from libFluidSynth and libADLMIDI.
 // Created by Matt Montag on 9/4/18.
 //
 #define TML_NO_STDIO
@@ -129,7 +131,6 @@ void adlReset() {
 Synth adlSynth = {adlNoteOn, adlNoteOff, adlProgramChange, adlPitchBend, adlControlChange,
                   adlChannelPressure, adlRender, adlPanic, adlPanicChannel, adlReset};
 
-// TODO: TinySoundFont not implemented
 extern void tp_init(int sampleRate) {
   g_SampleRate = sampleRate;
 
@@ -143,8 +144,8 @@ extern void tp_init(int sampleRate) {
     fluid_synth_set_interp_method(g_FluidSynth, -1, FLUID_INTERP_LINEAR);
 
   g_adlSynth = adl_init(sampleRate);
-    adl_setSoftPanEnabled(g_adlSynth, 1);
-    adl_setNumChips(g_adlSynth, 4);
+  adl_setSoftPanEnabled(g_adlSynth, 1);
+  adl_setNumChips(g_adlSynth, 4);
 
   g_Synths[0] = fluidSynth;
   g_Synths[1] = adlSynth;
@@ -178,7 +179,7 @@ extern int tp_write_audio(float *buffer, int bufferSize) {
           if (g_ChannelsMuted[g_MidiEvt->channel]) break;
           g_synth.noteOff(g_MidiEvt->channel, g_MidiEvt->key);
           break;
-        case TML_PROGRAM_CHANGE: // program change (special handling for 10th MIDI channel with drums)
+        case TML_PROGRAM_CHANGE:
           g_synth.programChange(g_MidiEvt->channel, g_MidiEvt->program);
           break;
         case TML_PITCH_BEND:
@@ -239,7 +240,7 @@ extern void tp_seek(int ms) {
   while (g_MidiEvt && g_MidiEvt->time < ms) {
     switch (g_MidiEvt->type) {
       // Ignore note on/note off events during seek
-      case TML_PROGRAM_CHANGE: // program change (special handling for 10th MIDI channel with drums)
+      case TML_PROGRAM_CHANGE:
         g_synth.programChange(g_MidiEvt->channel, g_MidiEvt->program);
         break;
       case TML_PITCH_BEND:
