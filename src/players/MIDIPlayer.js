@@ -136,13 +136,10 @@ export default class MIDIPlayer extends Player {
       if (err) {
         console.log('Error populating FS from indexeddb.', err);
       }
-      // Wait until filesystem is mounted to initialize parameters
-      this.paramDefs.forEach(param => this.setParameter(param.id, param.defaultValue));
     });
 
     this.fileExtensions = fileExtensions;
     this.activeChannels = [];
-    this.params = {};
     this.buffer = lib.allocate(this.bufferSize * 8, 'i32', lib.ALLOC_NORMAL);
     this.filepathMeta = {};
 
@@ -158,6 +155,10 @@ export default class MIDIPlayer extends Player {
     }
     this.paramDefs.find(def => def.id === 'opl3bank').options =
       [{ label: 'OPL3 Bank', items: oplBanks }];
+
+    // Initialize parameters
+    this.params = {};
+    this.paramDefs.forEach(param => this.setParameter(param.id, param.defaultValue));
 
     this.setAudioProcess(this.midiAudioProcess);
   }
