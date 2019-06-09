@@ -134,23 +134,8 @@ export default class Sequencer {
     // Normalize url - paths are assumed to live under CATALOG_PREFIX
     url = url.startsWith('http') ? url : CATALOG_PREFIX + url;
 
-    // Update application URL (window.history API)
-    const filepath = url.replace(CATALOG_PREFIX, '');
-    const ext = url.split('.').pop().toLowerCase();
-    // const pathParts = url.split('/');
-    // pathParts.pop();
-    // const urlParams = {
-    //   ...queryString.parse(window.location.search.substr(1)),
-    //   play: filepath,
-    // };
-    // delete urlParams.t;
-    // const stateUrl = '?' + queryString.stringify(urlParams)
-    //   .replace(/%20/g, '+') // I don't care about escaping these characters
-    //   .replace(/%2C/g, ',')
-    //   .replace(/%2F/g, '/');
-    // window.history.replaceState(null, '', stateUrl);
-
     // Find a player that can play this filetype
+    const ext = url.split('.').pop().toLowerCase();
     for (let i = 0; i < this.players.length; i++) {
       if (this.players[i].canPlay(ext)) {
         this.player = this.players[i];
@@ -172,6 +157,7 @@ export default class Sequencer {
       .then(xhr => xhr.response)
       .then(buffer => {
         this.currUrl = url;
+        const filepath = url.replace(CATALOG_PREFIX, '');
         this.playSongBuffer(filepath, buffer)
       });
   }

@@ -56,6 +56,7 @@ export default class Search extends PureComponent {
   onSearchInputChange(val, immediate = false) {
     this.setState({query: val});
     const urlParams = {
+      ...queryString.parse(window.location.search.substr(1)),
       q: val ? val.trim() : undefined,
     };
     const stateUrl = '?' + queryString.stringify(urlParams).replace(/%20/g, '+');
@@ -101,7 +102,10 @@ export default class Search extends PureComponent {
   }
 
   handleClear() {
-    window.history.replaceState(null, '', './');
+    const urlParams = queryString.parse(window.location.search.substr(1));
+    delete urlParams.q;
+    const search = queryString.stringify(urlParams);
+    window.history.replaceState(null, '', search ? `?${search}` : './');
     this.setState({
       query: null,
       searching: false,

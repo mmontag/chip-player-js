@@ -275,6 +275,10 @@ class App extends React.Component {
         imageUrl: null,
         songUrl: null,
       });
+      const urlParams = queryString.parse(window.location.search.substr(1));
+      delete urlParams.play;
+      const search = queryString.stringify(urlParams);
+      window.history.replaceState(null, '', search ? `?${search}` : './');
     } else {
       const player = this.sequencer.getPlayer();
       const url = this.sequencer.getCurrUrl();
@@ -284,18 +288,16 @@ class App extends React.Component {
         const pathParts = url.split('/');
         pathParts.pop();
 
-        // // Update application URL (window.history API)
-        // const filepath = url.replace(CATALOG_PREFIX, '');
-        // const urlParams = {
-        //   ...queryString.parse(window.location.search.substr(1)),
-        //   play: filepath,
-        // };
-        // delete urlParams.t;
-        // const stateUrl = '?' + queryString.stringify(urlParams)
-        //   .replace(/%20/g, '+') // I don't care about escaping these characters
-        //   .replace(/%2C/g, ',')
-        //   .replace(/%2F/g, '/');
-        // window.history.replaceState(null, '', stateUrl);
+        // Update application URL (window.history API)
+        // TODO: clean up, combine with URL updating in Search component
+        const filepath = url.replace(CATALOG_PREFIX, '');
+        const urlParams = {
+          ...queryString.parse(window.location.search.substr(1)),
+          play: filepath,
+        };
+        delete urlParams.t;
+        const stateUrl = '?' + queryString.stringify(urlParams);
+        window.history.replaceState(null, '', stateUrl);
 
         // Fetch artwork for this file (cancelable request)
         if (this.imageRequest) this.imageRequest.abort();
@@ -488,6 +490,7 @@ class App extends React.Component {
     const currContext = this.sequencer.getCurrContext();
     const currIdx = this.sequencer.getCurrIdx();
     const pathLinks = this.pathToLinks(this.state.songUrl);
+    const search = { search: window.location.search };
     return (
       <Router basename={process.env.PUBLIC_URL}>
       <Dropzone
@@ -503,9 +506,9 @@ class App extends React.Component {
         <div className="App-main">
           <div className="App-main-content-area" ref={this.contentAreaRef}>
             <div className="tab-container">
-              <NavLink className="tab" activeClassName="tab-selected" to="/" exact>Search</NavLink>
-              <NavLink className="tab" activeClassName="tab-selected" to="/browse">Browse</NavLink>
-              <NavLink className="tab" activeClassName="tab-selected" to="/favorites">Favorites</NavLink>
+              <NavLink className="tab" activeClassName="tab-selected" to={{ pathname: "/", ...search }} exact>Search</NavLink>
+              <NavLink className="tab" activeClassName="tab-selected" to={{ pathname: "/browse", ...search }}>Browse</NavLink>
+              <NavLink className="tab" activeClassName="tab-selected" to={{ pathname: "/favorites", ...search }}>Favorites</NavLink>
             </div>
             <Switch>
               <Route path="/" exact render={() => (
