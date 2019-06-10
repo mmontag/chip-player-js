@@ -228,14 +228,14 @@ export default class MIDIPlayer extends Player {
 
     // Switch to OPL3 engine if filepath contains 'FM'
     if (this.getParameter('autoengine')) {
-      if (filepath.match(/FM\b/i)) {
+      const fp = filepath.toLowerCase().replace('_', ' ');
+      if (fp.match(/(\bfm|fm\b)/i)) {
         this.setParameter('synthengine', 1);
       } else {
         this.setParameter('synthengine', 0);
       }
 
       // Crude bank matching for a few specific games. :D
-      const fp = filepath.toLowerCase();
       const opl3def = this.paramDefs.find(def => def.id === 'opl3bank');
       if (opl3def) {
         const opl3banks = opl3def.options[0].items;
