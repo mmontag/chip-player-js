@@ -222,6 +222,12 @@ body,#root {
     margin: 0 var(--charW2neg);
 }
 
+.App-main-inner {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
 .App-main-content-area {
     flex-grow: 1;
     display: flex;
@@ -362,12 +368,7 @@ img { image-rendering: pixelated; }
 
 .tab-container {
     border-bottom: 1px solid var(--clickable);
-    margin: var(--charHneg) var(--charW2neg) var(--charH) var(--charW2neg);
     padding: 0 var(--charW2);
-    position: sticky;
-    top: var(--charHneg);
-    background: var(--background);
-    z-index: 10;
 }
 
 .tab {
@@ -381,6 +382,7 @@ img { image-rendering: pixelated; }
 
 .tab-selected {
     border-bottom: 1px solid var(--background);
+    background: var(--background);
     margin-bottom: -1px;
 }
 

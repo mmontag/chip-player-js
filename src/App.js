@@ -507,47 +507,49 @@ class App extends React.Component {
                    handleLogin={this.handleLogin}
                    isPhone={isMobile.phone}/>
         <div className="App-main">
-          <div className="App-main-content-area" ref={this.contentAreaRef}>
+          <div className="App-main-inner">
             <div className="tab-container">
               <NavLink className="tab" activeClassName="tab-selected" to={{ pathname: "/", ...search }} exact>Search</NavLink>
               <NavLink className="tab" activeClassName="tab-selected" to={{ pathname: "/browse", ...search }}>Browse</NavLink>
               <NavLink className="tab" activeClassName="tab-selected" to={{ pathname: "/favorites", ...search }}>Favorites</NavLink>
             </div>
-            <Switch>
-              <Route path="/" exact render={() => (
-                <Search
-                  currContext={currContext}
-                  currIdx={currIdx}
-                  toggleFavorite={this.handleToggleFavorite}
-                  favorites={this.state.faves}
-                  onSongClick={this.handleSongClick}>
-                  {this.state.loading && <p>Loading player engine...</p>}
-                </Search>
-              )}/>
-              <Route path="/favorites" render={() => (
-                <Favorites
-                  user={this.state.user}
-                  loadingUser={this.state.loadingUser}
-                  handleLogin={this.handleLogin}
-                  onSongClick={this.handleSongClick}
-                  currContext={currContext}
-                  currIdx={currIdx}
-                  toggleFavorite={this.handleToggleFavorite}
-                  favorites={this.state.faves}/>
-              )}/>
-              <Route path="/browse/:browsePath*" render={({match}) => (
-                this.contentAreaRef.current &&
-                <Browse currContext={currContext}
-                        currIdx={currIdx}
-                        browsePath={match.params.browsePath || ''}
-                        directories={this.state.directories}
-                        fetchDirectory={this.fetchDirectory}
-                        handleSongClick={this.handleSongClick}
-                        scrollContainerRef={this.contentAreaRef}
-                        favorites={this.state.faves}
-                        toggleFavorite={this.handleToggleFavorite}/>
-              )}/>
-            </Switch>
+            <div className="App-main-content-area" ref={this.contentAreaRef}>
+              <Switch>
+                <Route path="/" exact render={() => (
+                  <Search
+                    currContext={currContext}
+                    currIdx={currIdx}
+                    toggleFavorite={this.handleToggleFavorite}
+                    favorites={this.state.faves}
+                    onSongClick={this.handleSongClick}>
+                    {this.state.loading && <p>Loading player engine...</p>}
+                  </Search>
+                )}/>
+                <Route path="/favorites" render={() => (
+                  <Favorites
+                    user={this.state.user}
+                    loadingUser={this.state.loadingUser}
+                    handleLogin={this.handleLogin}
+                    onSongClick={this.handleSongClick}
+                    currContext={currContext}
+                    currIdx={currIdx}
+                    toggleFavorite={this.handleToggleFavorite}
+                    favorites={this.state.faves}/>
+                )}/>
+                <Route path="/browse/:browsePath*" render={({match}) => (
+                  this.contentAreaRef.current &&
+                  <Browse currContext={currContext}
+                          currIdx={currIdx}
+                          browsePath={match.params.browsePath || ''}
+                          directories={this.state.directories}
+                          fetchDirectory={this.fetchDirectory}
+                          handleSongClick={this.handleSongClick}
+                          scrollContainerRef={this.contentAreaRef}
+                          favorites={this.state.faves}
+                          toggleFavorite={this.handleToggleFavorite}/>
+                )}/>
+              </Switch>
+            </div>
           </div>
           {!isMobile.phone && !this.state.loading &&
           <Visualizer audioCtx={this.audioCtx}
