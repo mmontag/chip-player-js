@@ -16,22 +16,16 @@ export default function BrowseList({ virtual, ...props }) {
     browsePath,
     contexts,
   } = props;
-  const parentPath = browsePath.substr(0, browsePath.lastIndexOf('/'));
 
   return (
     <div style={{position: 'relative'}}>
-      <div key={browsePath} style={css.row}>
-        <div style={css.colName}>
-          <DirectoryLink to={'/browse/' + parentPath}>..</DirectoryLink>
-        </div>
-        <div style={css.colDir}>{dirToken}</div>
-        <div style={css.colSize}/>
-      </div>
       <div style={virtual.style}>
         {virtual.items.map(item => {
           // XXX: Escape immediately: the escaped URL is considered canonical.
           //      The URL must be decoded for display from here on out.
-          const path = item.path.replace('%', '%25').replace('#', '%23').replace(/^\//, '');
+          const path = item.path === '..' ?
+            browsePath.substr(0, browsePath.lastIndexOf('/')) : // parent path
+            item.path.replace('%', '%25').replace('#', '%23').replace(/^\//, '');
           const name = item.path.split('/').pop();
           const isPlaying = currContext === contexts[browsePath] && currIdx === item.idx;
           if (item.type === 'directory') {
@@ -44,7 +38,7 @@ export default function BrowseList({ virtual, ...props }) {
                   {dirToken}
                 </div>
                 <div style={css.colSize}>
-                  {bytes(item.size, {unitSeparator: ' '})}
+                  {item.size != null && bytes(item.size, {unitSeparator: ' '})}
                 </div>
               </div>
             );

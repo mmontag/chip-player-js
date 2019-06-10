@@ -65,7 +65,11 @@ export default class Browse extends PureComponent {
       directories,
       browsePath,
     } = this.props;
-    const dirListing = directories[browsePath] || [];
+    const listing = directories[browsePath] || [];
+    const listingWithParent = [{
+      path: '..',
+      type: 'directory',
+    }, ...listing];
 
     return (
       <Fragment>
@@ -76,8 +80,9 @@ export default class Browse extends PureComponent {
           key={browsePath}
           {...this.props}
           contexts={this.contexts}
-          items={dirListing}
+          items={listingWithParent}
           itemHeight={19}
+          itemBuffer={10}
         />
       </Fragment>
     );
