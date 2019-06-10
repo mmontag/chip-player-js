@@ -229,6 +229,7 @@ body,#root {
     min-width: 0;
     padding: var(--charH) var(--charW2);
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .App-footer {
