@@ -314,6 +314,9 @@ class App extends React.Component {
           .catch(e => {
             this.setState({imageUrl: null});
           });
+      } else {
+        // Drag & dropped files reach this branch
+        this.setState({imageUrl: null});
       }
 
       this.setState({
