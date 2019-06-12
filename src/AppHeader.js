@@ -25,7 +25,7 @@ export default class AppHeader extends PureComponent {
           Powered by{' '}
           <a href="https://bitbucket.org/mpyne/game-music-emu/wiki/Home">Game Music Emu</a>,{' '}
           <a href="https://github.com/cmatsuoka/libxmp">LibXMP</a>, and{' '}
-          <a href="https://github.com/schellingb/TinySoundFont">TinySoundFont</a>.
+          <a href="https://github.com/divideconcept/FluidLite">FluidLite</a>.
         </p>}
       </header>
     );
