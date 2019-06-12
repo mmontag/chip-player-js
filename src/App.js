@@ -32,7 +32,7 @@ import DropMessage from "./DropMessage";
 
 class App extends React.Component {
   handleLogin() {
-    const provider = new firebase.auth.FacebookAuthProvider();
+    const provider = new firebase.auth.GoogleAuthProvider();
     firebase.auth().signInWithPopup(provider).then(result => {
       console.log('Firebase auth result:', result);
     }).catch(error => {
