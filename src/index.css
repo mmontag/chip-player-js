@@ -259,9 +259,15 @@ body,#root {
 
 .App-footer-main {
     flex-grow: 1;
+    overflow: auto;
+}
+
+/*
+ Required due to strange flexbox/padding behavior in Safari.
+ https://stackoverflow.com/questions/42802717
+*/
+.App-footer-main-inner {
     padding: var(--charH) var(--charW2);
-    overflow-y: auto;
-    overflow-x: hidden;
 }
 
 .App-footer-settings {

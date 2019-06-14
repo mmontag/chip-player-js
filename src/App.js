@@ -559,6 +559,7 @@ class App extends React.Component {
         </div>
         <div className="App-footer">
           <div className="App-footer-main">
+            <div className="App-footer-main-inner">
             <button onClick={this.prevSong}
                     className="box-button"
                     disabled={this.state.ejected}>
@@ -628,6 +629,7 @@ class App extends React.Component {
               <div className="SongDetails-subtitle">{subtitle}</div>
               <div className="SongDetails-filepath">{pathLinks}</div>
             </div>}
+          </div>
           </div>
           {this.state.showPlayerSettings &&
           <div className="App-footer-settings">
