@@ -285,6 +285,9 @@ UINT8 S98Player::LoadTags(void)
 
 std::string S98Player::GetUTF8String(const char* startPtr, const char* endPtr)
 {
+	if (startPtr == endPtr)
+		return std::string();
+	
 	if (_cpcSJIS != NULL)
 	{
 		size_t convSize = 0;

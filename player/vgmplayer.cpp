@@ -121,6 +121,12 @@ VGMPlayer::VGMPlayer() :
 
 VGMPlayer::~VGMPlayer()
 {
+	_eventCbFunc = NULL;	// prevent any callbacks during destruction
+	
+	if (_playState & PLAYSTATE_PLAY)
+		Stop();
+	UnloadFile();
+	
 	if (_cpcUTF16 != NULL)
 		CPConv_Deinit(_cpcUTF16);
 	
@@ -157,7 +163,7 @@ UINT8 VGMPlayer::LoadFile(DATA_LOADER *dataLoader)
 	
 	_dLoad = dataLoader;
 	DataLoader_ReadAll(_dLoad);
-	_fileData = DataLoader_GetData(dataLoader);
+	_fileData = DataLoader_GetData(_dLoad);
 	
 	// parse main header
 	ParseHeader();
@@ -303,17 +309,19 @@ UINT8 VGMPlayer::LoadTags(void)
 	
 	_tagData.resize(tagCount);
 	eotPos = ReadLE32(&_fileData[_fileHdr.gd3Ofs + 0x08]);
+	curPos = _fileHdr.gd3Ofs + 0x0C;
+	eotPos += curPos;
 	if (eotPos > _fileHdr.eofOfs)
 		eotPos = _fileHdr.eofOfs;
 	
-	curPos = _fileHdr.gd3Ofs + 0x0C;
-	eotPos += curPos;
 	for (size_t curTag = 0; curTag < tagCount; curTag ++)
 	{
 		UINT32 startPos = curPos;
+		if (curPos >= eotPos)
+			break;
 		
 		// search for UTF-16 L'\0' character
-		while(curPos < eotPos && *(UINT16*)&_fileData[curPos] != 0x0000)
+		while(curPos < eotPos && ReadLE16(&_fileData[curPos]) != L'\0')
 			curPos += 0x02;
 		_tagData[curTag] = GetUTF8String(&_fileData[startPos], &_fileData[curPos]);
 		curPos += 0x02;	// skip '\0'
@@ -324,7 +332,7 @@ UINT8 VGMPlayer::LoadTags(void)
 
 std::string VGMPlayer::GetUTF8String(const UINT8* startPtr, const UINT8* endPtr)
 {
-	if (_cpcUTF16 == NULL)
+	if (_cpcUTF16 == NULL || startPtr == endPtr)
 		return std::string();
 	
 	size_t convSize = 0;

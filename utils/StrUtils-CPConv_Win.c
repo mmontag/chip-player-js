@@ -33,8 +33,8 @@ struct _codepage_conversion
 
 static const char* REGKEY_CP_LIST = "SOFTWARE\\Classes\\MIME\\Database\\Charset";
 
-#define UTF16_NE	12000	// UTF-16 LE ("native endian")
-#define UTF16_OE	12001	// UTF-16 BE ("opposite endian")
+#define CP_UTF16_NE	1200	// UTF-16 LE ("native endian")
+#define CP_UTF16_OE	1201	// UTF-16 BE ("opposite endian")
 
 static UINT GetCodepageFromStr(const char* codepageName)
 {
@@ -143,13 +143,13 @@ UINT8 CPConv_StrConvert(CPCONV* cpc, size_t* outSize, char** outStr, size_t inSi
 		return 0x02;	// nothing to convert
 	}
 
-	if (cpc->cpiFrom == UTF16_NE)	// UTF-16, native endian
+	if (cpc->cpiFrom == CP_UTF16_NE)	// UTF-16, native endian
 	{
 		wcBufSize = inSize / sizeof(wchar_t);
 		wcBuf = NULL;
 		wcStr = (const wchar_t*)inStr;
 	}
-	else if (cpc->cpiFrom == UTF16_OE)	// UTF-16, opposite endian
+	else if (cpc->cpiFrom == CP_UTF16_OE)	// UTF-16, opposite endian
 	{
 		size_t curChrPos;
 		char* wcBufPtr;
