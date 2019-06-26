@@ -58,7 +58,7 @@ public:
 		UINT32 flags;
 	};
 	
-private:
+protected:
 	struct HDR_CHIP_DEF
 	{
 		UINT8 devType;
@@ -146,7 +146,7 @@ public:
 	UINT32 Render(UINT32 smplCnt, WAVE_32BS* data);
 	//UINT8 Seek(...); // TODO
 	
-private:
+protected:
 	UINT8 ParseHeader(void);
 	void ParseXHdr_Data32(UINT32 fileOfs, std::vector<XHDR_DATA32>& xData);
 	void ParseXHdr_Data16(UINT32 fileOfs, std::vector<XHDR_DATA16>& xData);

@@ -74,6 +74,12 @@ S98Player::S98Player() :
 
 S98Player::~S98Player()
 {
+	_eventCbFunc = NULL;	// prevent any callbacks during destruction
+	
+	if (_playState & PLAYSTATE_PLAY)
+		Stop();
+	UnloadFile();
+	
 	if (_cpcSJIS != NULL)
 		CPConv_Deinit(_cpcSJIS);
 }
@@ -114,7 +120,7 @@ UINT8 S98Player::LoadFile(DATA_LOADER *dataLoader)
 	
 	_dLoad = dataLoader;
 	DataLoader_ReadAll(_dLoad);
-	_fileData = DataLoader_GetData(dataLoader);
+	_fileData = DataLoader_GetData(_dLoad);
 	
 	_fileHdr.fileVer = _fileData[0x03] - '0';
 	_fileHdr.tickMult = ReadLE32(&_fileData[0x04]);

@@ -13,7 +13,7 @@ enum
 	FLMODE_CMP_GZ = 0x10
 };
 
-typedef struct file_loader FILE_LOADER;
+typedef struct _file_loader FILE_LOADER;
 
 typedef UINT8 (*FLOAD_GENERIC)(FILE_LOADER *loader);
 typedef UINT32 (*FLOAD_READ)(FILE_LOADER *loader, UINT8 *buffer, UINT32 numBytes);
@@ -21,13 +21,13 @@ typedef UINT8 (*FLOAD_SEEK)(FILE_LOADER *loader, UINT32 offset, UINT8 whence);
 typedef INT32 (*FLOAD_TELL)(FILE_LOADER *loader);
 typedef UINT32 (*FLOAD_LENGTH)(FILE_LOADER *loader);
 
-typedef union loader_handles
+typedef union _loader_handles
 {
 	FILE *hFileRaw;
 	gzFile hFileGZ;
 } LOADER_HANDLES;
 
-struct file_loader
+struct _file_loader
 {
 	UINT8 modeCompr;
 	UINT32 bytesTotal;

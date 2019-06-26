@@ -49,6 +49,11 @@ DROPlayer::DROPlayer() :
 
 DROPlayer::~DROPlayer()
 {
+	_eventCbFunc = NULL;	// prevent any callbacks during destruction
+	
+	if (_playState & PLAYSTATE_PLAY)
+		Stop();
+	UnloadFile();
 }
 
 UINT32 DROPlayer::GetPlayerType(void) const
@@ -106,7 +111,7 @@ UINT8 DROPlayer::LoadFile(DATA_LOADER *dataLoader)
 	
 	_dLoad = dataLoader;
 	DataLoader_ReadAll(_dLoad);
-	_fileData = DataLoader_GetData(dataLoader);
+	_fileData = DataLoader_GetData(_dLoad);
 	
 	switch(_fileHdr.verMajor)
 	{

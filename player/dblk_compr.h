@@ -8,7 +8,7 @@ extern "C"
 
 #include <stdtype.h>
 
-typedef struct pcm_compression_table
+typedef struct _pcm_compression_table
 {
 	UINT8 comprType;
 	UINT8 cmpSubType;
@@ -22,7 +22,7 @@ typedef struct pcm_compression_table
 	} values;
 } PCM_COMPR_TBL;
 
-typedef struct compression_parameters
+typedef struct _compression_parameters
 {
 	// Compression Types:
 	//	00 - bit packing
@@ -35,7 +35,7 @@ typedef struct compression_parameters
 	const PCM_COMPR_TBL* comprTbl;
 } PCM_CMP_INF;
 
-typedef struct pcm_compr_datablk_info
+typedef struct _pcm_compr_datablk_info
 {
 	// general data
 	UINT32 hdrSize;		// number of bytes taken by the compression header in the VGM *1

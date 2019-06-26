@@ -10,12 +10,12 @@ extern "C"
 #include "snddef.h"	// for DEV_SMPL
 #include "EmuStructs.h"
 
-typedef struct waveform_32bit_stereo
+typedef struct _waveform_32bit_stereo
 {
 	DEV_SMPL L;
 	DEV_SMPL R;
 } WAVE_32BS;
-typedef struct resampling_state
+typedef struct _resampling_state
 {
 	UINT32 smpRateSrc;
 	UINT32 smpRateDst;

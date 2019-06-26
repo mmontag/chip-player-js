@@ -13,7 +13,7 @@ typedef UINT8 (*DLOADCB_SEEK)(void *context, UINT32 offset, UINT8 whence);
 typedef INT32 (*DLOADCB_TELL)(void *context);
 typedef UINT32 (*DLOADCB_LENGTH)(void *context);
 
-typedef struct data_loader_callbacks
+typedef struct _data_loader_callbacks
 {
 	UINT32 type;            /* 4-character-code for the file loader */
 	const char *name;       /* human-readable name of the file loader */
@@ -33,7 +33,7 @@ enum
 	DLSTAT_LOADED = 2
 };
 
-typedef struct data_loader
+typedef struct _data_loader
 {
 	UINT8 _status;
 	UINT32 _bytesTotal;

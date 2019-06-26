@@ -13,11 +13,11 @@ enum
 	MLMODE_CMP_GZ = 0x10
 };
 
-typedef struct memory_loader MEMORY_LOADER;
+typedef struct _memory_loader MEMORY_LOADER;
 
 typedef UINT32 (*MLOAD_READ)(MEMORY_LOADER *loader, UINT8 *buffer, UINT32 numBytes);
 
-struct memory_loader
+struct _memory_loader
 {
 	UINT8 modeCompr;
 	UINT32 srcSize;	// size of source data
