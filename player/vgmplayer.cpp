@@ -233,6 +233,15 @@ UINT8 VGMPlayer::ParseHeader(void)
 	if (_fileHdr.gd3Ofs && (_fileHdr.gd3Ofs < _fileHdr.dataEnd && _fileHdr.gd3Ofs >= _fileHdr.dataOfs))
 		_fileHdr.dataEnd = _fileHdr.gd3Ofs;
 	
+	if (_fileHdr.loopOfs)
+	{
+		if (_fileHdr.loopOfs < _fileHdr.dataOfs || _fileHdr.loopOfs >= _fileHdr.dataEnd)
+		{
+			fprintf(stderr, "Invalid VGM loop offset 0x%06X - ignoring!\n", _fileHdr.loopOfs);
+			_fileHdr.loopOfs = 0x00;
+		}
+	}
+	
 	return 0x00;
 }
 
@@ -1178,12 +1187,21 @@ void VGMPlayer::ParseFile(UINT32 ticks)
 	if (_playState & PLAYSTATE_END)
 		return;
 	
-	while(_fileTick <= _playTick && ! (_playState & PLAYSTATE_END))
+	while(_filePos < _fileHdr.dataEnd && _fileTick <= _playTick && ! (_playState & PLAYSTATE_END))
 	{
 		UINT8 curCmd = _fileData[_filePos];
 		COMMAND_FUNC func = _CMD_INFO[curCmd].func;
 		(this->*func)();
 		_filePos += _CMD_INFO[curCmd].cmdLen;
+	}
+	
+	if (_filePos >= _fileHdr.dataEnd)
+	{
+		_playState |= PLAYSTATE_END;
+		_psTrigger |= PLAYSTATE_END;
+		if (_eventCbFunc != NULL)
+			_eventCbFunc(this, _eventCbParam, PLREVT_END, NULL);
+		fprintf(stderr, "VGM file ends early! (filePos 0x%06X, end at 0x%06X)\n", _filePos, _fileHdr.dataEnd);
 	}
 	
 	return;
