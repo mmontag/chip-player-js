@@ -320,6 +320,12 @@ const char* DROPlayer::GetSongTitle(void)
 	return NULL;
 }
 
+const char* const* DROPlayer::GetSongTags(void)
+{
+	static const char* const tagList[] = { NULL };
+	return tagList;
+}
+
 UINT8 DROPlayer::SetSampleRate(UINT32 sampleRate)
 {
 	if (_playState & PLAYSTATE_PLAY)

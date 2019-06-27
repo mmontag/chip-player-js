@@ -121,6 +121,7 @@ public:
 	UINT8 UnloadFile(void);
 	const VGM_HEADER* GetFileHeader(void) const;
 	const char* GetSongTitle(void);
+	const char* const* GetSongTags(void);
 	
 	//UINT32 GetSampleRate(void) const;
 	UINT8 SetSampleRate(UINT32 sampleRate);
@@ -231,7 +232,24 @@ protected:
 	UINT8 _hdrBuffer[_HDR_BUF_SIZE];	// buffer containing the file header
 	UINT32 _hdrLenFile;
 	UINT32 _tagVer;
-	std::vector<std::string> _tagData;
+	
+	enum
+	{
+		_TAG_TRACK_NAME_EN,
+		_TAG_TRACK_NAME_JP,
+		_TAG_GAME_NAME_EN,
+		_TAG_GAME_NAME_JP,
+		_TAG_SYSTEM_NAME_EN,
+		_TAG_SYSTEM_NAME_JP,
+		_TAG_ARTIST_EN,
+		_TAG_ARTIST_JP,
+		_TAG_GAME_RELEASE_DATE,
+		_TAG_VGM_CREATOR,
+		_TAG_NOTES,
+		_TAG_COUNT,
+	};
+	std::string _tagData[_TAG_COUNT];
+	const char* _tagList[2 * _TAG_COUNT + 1];
 	
 	//UINT32 _outSmplRate;
 	
