@@ -307,7 +307,7 @@ UINT8 S98Player::LoadTags(void)
 		std::transform(curKey.begin(), curKey.end(), curKey.begin(), ::toupper);
 		
 		const char *tagName = NULL;
-		for (const char* const* t = S98_TAG_MAPPING; *t != '\0'; t += 2)
+		for (const char* const* t = S98_TAG_MAPPING; *t != NULL; t += 2)
 		{
 			if (curKey == t[0])
 			{
