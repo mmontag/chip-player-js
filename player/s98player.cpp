@@ -46,6 +46,20 @@ static const UINT8 S98_DEV_LIST[S98DEV_END] = {
 	0xFF, 0xFF, DEVID_AY8910, DEVID_SN76496,
 };
 
+static const char* const S98_TAG_MAPPING[] =
+{
+	"TITLE", "TITLE",
+	"ARTIST", "ARTIST",
+	"GAME", "GAME",
+	"YEAR", "DATE",
+	"GENRE", "GENRE",
+	"COMMENT", "COMMENT",
+	"COPYRIGHT", "COPYRIGHT",
+	"S98BY", "ENCODED_BY",
+	"SYSTEM", "SYSTEM",
+	NULL,
+};
+
 
 INLINE UINT16 ReadLE16(const UINT8* data)
 {
@@ -292,32 +306,21 @@ UINT8 S98Player::LoadTags(void)
 		std::string curKey = mapIt->first;
 		std::transform(curKey.begin(), curKey.end(), curKey.begin(), ::toupper);
 		
-		const char *tagMapping[] =
-		{
-			"TITLE", "TITLE",
-			"ARTIST", "ARTIST",
-			"GAME", "GAME",
-			"YEAR", "DATE",
-			"GENRE", "GENRE",
-			"COMMENT", "COMMENT",
-			"COPYRIGHT", "COPYRIGHT",
-			"S98BY", "ENCODED_BY",
-			"SYSTEM", "SYSTEM",
-			NULL,
-		};
-		
 		const char *tagName = NULL;
-		for (const char **t = tagMapping; !tagName && *t; t += 2)
+		for (const char* const* t = S98_TAG_MAPPING; *t != '\0'; t += 2)
 		{
 			if (curKey == t[0])
+			{
 				tagName = t[1];
+				break;
+			}
 		}
 		
 		if (tagName)
-		{
 			_tagList.push_back(tagName);
-			_tagList.push_back(mapIt->second.c_str());
-		}
+		else
+			_tagList.push_back(curKey.c_str());
+		_tagList.push_back(mapIt->second.c_str());
 	}
 	
 	_tagList.push_back(NULL);
@@ -446,18 +449,7 @@ const S98_HEADER* S98Player::GetFileHeader(void) const
 	return &_fileHdr;
 }
 
-const char* S98Player::GetSongTitle(void)
-{
-	std::map<std::string, std::string>::const_iterator mapIt;
-	
-	mapIt = _tagData.find("TITLE");
-	if (mapIt != _tagData.end())
-		return mapIt->second.c_str();
-	else
-		return NULL;
-}
-
-const char* const* S98Player::GetSongTags(void)
+const char* const* S98Player::GetTags(void)
 {
 	return _tagList.data();
 }

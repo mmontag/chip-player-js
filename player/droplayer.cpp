@@ -315,12 +315,7 @@ const DRO_HEADER* DROPlayer::GetFileHeader(void) const
 	return &_fileHdr;
 }
 
-const char* DROPlayer::GetSongTitle(void)
-{
-	return NULL;
-}
-
-const char* const* DROPlayer::GetSongTags(void)
+const char* const* DROPlayer::GetTags(void)
 {
 	static const char* const tagList[] = { NULL };
 	return tagList;

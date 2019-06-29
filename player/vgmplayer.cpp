@@ -65,6 +65,17 @@
 	0x100,
 };
 
+/*static*/ const char* const VGMPlayer::_TAG_TYPE_LIST[_TAG_COUNT] =
+{
+	"TITLE", "TITLE-JPN",
+	"GAME", "GAME-JPN",
+	"SYSTEM", "SYSTEM-JPN",
+	"ARTIST", "ARTIST-JPN",
+	"DATE",
+	"ENCODED_BY",
+	"COMMENT",
+};
+
 
 INLINE UINT16 ReadLE16(const UINT8* data)
 {
@@ -323,7 +334,6 @@ UINT8 VGMPlayer::LoadTags(void)
 		eotPos = _fileHdr.eofOfs;
 	
 	const char **tagListEnd = _tagList;
-	
 	for (size_t curTag = 0; curTag < _TAG_COUNT; curTag ++)
 	{
 		UINT32 startPos = curPos;
@@ -336,30 +346,11 @@ UINT8 VGMPlayer::LoadTags(void)
 		_tagData[curTag] = GetUTF8String(&_fileData[startPos], &_fileData[curPos]);
 		curPos += 0x02;	// skip '\0'
 		
-		const char *tagName = NULL;
-		switch (curTag)
-		{
-		case _TAG_TRACK_NAME_EN: tagName = "TITLE"; break;
-		case _TAG_TRACK_NAME_JP: tagName = "TITLE-JPN"; break;
-		case _TAG_GAME_NAME_EN: tagName = "GAME"; break;
-		case _TAG_GAME_NAME_JP: tagName = "GAME-JPN"; break;
-		case _TAG_SYSTEM_NAME_EN: tagName = "SYSTEM"; break;
-		case _TAG_SYSTEM_NAME_JP: tagName = "SYSTEM-JPN"; break;
-		case _TAG_ARTIST_EN: tagName = "ARTIST"; break;
-		case _TAG_ARTIST_JP: tagName = "ARTIST-JPN"; break;
-		case _TAG_GAME_RELEASE_DATE: tagName = "DATE"; break;
-		case _TAG_VGM_CREATOR: tagName = "ENCODED_BY"; break;
-		case _TAG_NOTES: tagName = "COMMENT"; break;
-		}
-		
-		if (tagName)
-		{
-			*tagListEnd++ = tagName;
-			*tagListEnd++ = _tagData[curTag].c_str();
-		}
+		*(tagListEnd++) = _TAG_TYPE_LIST[curTag];
+		*(tagListEnd++) = _tagData[curTag].c_str();
 	}
 	
-	*tagListEnd++ = NULL;
+	*tagListEnd = NULL;
 	
 	return 0x00;
 }
@@ -404,12 +395,7 @@ const VGM_HEADER* VGMPlayer::GetFileHeader(void) const
 	return &_fileHdr;
 }
 
-const char* VGMPlayer::GetSongTitle(void)
-{
-	return _tagData[0].c_str();
-}
-
-const char* const* VGMPlayer::GetSongTags(void)
+const char* const* VGMPlayer::GetTags(void)
 {
 	return _tagList;
 }

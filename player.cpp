@@ -188,7 +188,7 @@ int main(int argc, char* argv[])
 	const char* songDate = NULL;
 	const char* songComment = NULL;
 	
-	const char* const* tagList = player->GetSongTags();
+	const char* const* tagList = player->GetTags();
 	for (const char* const* t = tagList; *t; t += 2)
 	{
 		if (!strcmp(t[0], "TITLE"))

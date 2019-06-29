@@ -120,8 +120,7 @@ public:
 	UINT8 LoadFile(DATA_LOADER *fileLoader);
 	UINT8 UnloadFile(void);
 	const VGM_HEADER* GetFileHeader(void) const;
-	const char* GetSongTitle(void);
-	const char* const* GetSongTags(void);
+	const char* const* GetTags(void);
 	
 	//UINT32 GetSampleRate(void) const;
 	UINT8 SetSampleRate(UINT32 sampleRate);
@@ -248,6 +247,7 @@ protected:
 		_TAG_NOTES,
 		_TAG_COUNT,
 	};
+	static const char* const _TAG_TYPE_LIST[_TAG_COUNT];
 	std::string _tagData[_TAG_COUNT];
 	const char* _tagList[2 * _TAG_COUNT + 1];
 	

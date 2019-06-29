@@ -52,8 +52,7 @@ public:
 	UINT8 LoadFile(DATA_LOADER *dataLoader);
 	UINT8 UnloadFile(void);
 	const S98_HEADER* GetFileHeader(void) const;
-	const char* GetSongTitle(void);
-	const char* const* GetSongTags(void);
+	const char* const* GetTags(void);
 	
 	//UINT32 GetSampleRate(void) const;
 	UINT8 SetSampleRate(UINT32 sampleRate);
