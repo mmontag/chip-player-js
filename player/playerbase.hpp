@@ -36,6 +36,7 @@ public:
 	virtual UINT8 LoadFile(DATA_LOADER *dataLoader) = 0;
 	virtual UINT8 UnloadFile(void) = 0;
 	virtual const char* GetSongTitle(void) = 0;
+	virtual const char* const* GetSongTags(void) = 0;
 	
 	virtual UINT32 GetSampleRate(void) const;
 	virtual UINT8 SetSampleRate(UINT32 sampleRate);

@@ -53,6 +53,7 @@ public:
 	UINT8 UnloadFile(void);
 	const S98_HEADER* GetFileHeader(void) const;
 	const char* GetSongTitle(void);
+	const char* const* GetSongTags(void);
 	
 	//UINT32 GetSampleRate(void) const;
 	UINT8 SetSampleRate(UINT32 sampleRate);
@@ -99,6 +100,7 @@ private:
 	UINT32 _totalTicks;
 	UINT32 _loopTick;
 	std::map<std::string, std::string> _tagData;
+	std::vector<const char*> _tagList;
 	
 	//UINT32 _outSmplRate;
 	

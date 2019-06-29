@@ -70,6 +70,8 @@ S98Player::S98Player() :
 	UINT8 retVal = CPConv_Init(&_cpcSJIS, "CP932", "UTF-8");
 	if (retVal)
 		_cpcSJIS = NULL;
+	_tagList.reserve(16);
+	_tagList.push_back(NULL);
 }
 
 S98Player::~S98Player()
@@ -233,6 +235,8 @@ void S98Player::CalcSongLength(void)
 UINT8 S98Player::LoadTags(void)
 {
 	_tagData.clear();
+	_tagList.clear();
+	_tagList.push_back(NULL);
 	if (! _fileHdr.tagOfs)
 		return 0x00;
 	
@@ -279,6 +283,44 @@ UINT8 S98Player::LoadTags(void)
 			tagData.assign(startPtr, endPtr);
 		ParsePSFTags(tagData);
 	}
+	
+	_tagList.clear();
+	
+	std::map<std::string, std::string>::const_iterator mapIt;
+	for (mapIt = _tagData.begin(); mapIt != _tagData.end(); ++ mapIt)
+	{
+		std::string curKey = mapIt->first;
+		std::transform(curKey.begin(), curKey.end(), curKey.begin(), ::toupper);
+		
+		const char *tagMapping[] =
+		{
+			"TITLE", "TITLE",
+			"ARTIST", "ARTIST",
+			"GAME", "GAME",
+			"YEAR", "DATE",
+			"GENRE", "GENRE",
+			"COMMENT", "COMMENT",
+			"COPYRIGHT", "COPYRIGHT",
+			"S98BY", "ENCODED_BY",
+			"SYSTEM", "SYSTEM",
+			NULL,
+		};
+		
+		const char *tagName = NULL;
+		for (const char **t = tagMapping; !tagName && *t; t += 2)
+		{
+			if (curKey == t[0])
+				tagName = t[1];
+		}
+		
+		if (tagName)
+		{
+			_tagList.push_back(tagName);
+			_tagList.push_back(mapIt->second.c_str());
+		}
+	}
+	
+	_tagList.push_back(NULL);
 	
 	return 0x00;
 }
@@ -413,6 +455,11 @@ const char* S98Player::GetSongTitle(void)
 		return mapIt->second.c_str();
 	else
 		return NULL;
+}
+
+const char* const* S98Player::GetSongTags(void)
+{
+	return _tagList.data();
 }
 
 UINT8 S98Player::SetSampleRate(UINT32 sampleRate)

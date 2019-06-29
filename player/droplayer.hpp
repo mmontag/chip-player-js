@@ -78,6 +78,7 @@ public:
 	UINT8 UnloadFile(void);
 	const DRO_HEADER* GetFileHeader(void) const;
 	const char* GetSongTitle(void);
+	const char* const* GetSongTags(void);
 	
 	//UINT32 GetSampleRate(void) const;
 	UINT8 SetSampleRate(UINT32 sampleRate);
