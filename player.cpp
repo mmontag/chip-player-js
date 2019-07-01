@@ -77,7 +77,7 @@ static UINT32 idWavOut;
 static UINT32 idWavOutDev;
 static UINT32 idWavWrt;
 
-static INT32 AudioOutDrv = 1;
+static INT32 AudioOutDrv = 0;
 static INT32 WaveWrtDrv = -1;
 
 static UINT32 masterVol = 0x10000;	// fixed point 16.16
