@@ -85,6 +85,7 @@ typedef struct _audio_driver
 #define ADRVSIG_SADA	0x21	// [NetBSD] Solaris Audio Device Architecture (/dev/audio)
 #define ADRVSIG_ALSA 	0x22	// [Linux] Advanced Linux Sound Architecture
 #define ADRVSIG_PULSE 	0x23	// [Linux] PulseAudio
+#define ADRVSIG_CA      0x24    // [macOS] Core Audio
 #define ADRVSIG_LIBAO	0x40	// libao
 
 
