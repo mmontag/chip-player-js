@@ -19,6 +19,10 @@ extern "C"
 #define AUDDRV_WASAPI	// no WASAPI for MS VC6 or MinGW
 #endif
 
+#elif defined(APPLE)
+
+#define AUDDRV_CA
+
 #else
 
 #define AUDDRV_OSS
