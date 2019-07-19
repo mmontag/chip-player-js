@@ -28,8 +28,8 @@ typedef struct _coreaudio_driver
 	UINT32 bufNum;
 	
 	OS_MUTEX* hMutex;
-    AudioQueueRef audioQueue;
-    AudioQueueBufferRef *buffers;
+	AudioQueueRef audioQueue;
+	AudioQueueBufferRef *buffers;
 
 	void* userParam;
 	AUDFUNC_FILLBUF FillBuffer;
@@ -193,6 +193,7 @@ UINT8 CoreAudio_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* 
 	int retVal;
 	UINT8 retVal8;
 	OSStatus res;
+	UINT32 i;
 	
 	if (drv->devState != 0)
 		return 0xD0;	// already running
@@ -217,11 +218,11 @@ UINT8 CoreAudio_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* 
 	
 	res = AudioQueueNewOutput(&drv->waveFmt, CoreAudio_RenderOutputBuffer, drv, NULL, NULL, 0, &drv->audioQueue);
 	if (res || drv->audioQueue == NULL)
-		return 0xC0;		// open() failed
+		return AERR_API_ERR;
 	
 	drv->buffers = (AudioQueueBufferRef*) calloc(drv->bufCount, sizeof(AudioQueueBufferRef));
 
-	for (uint i = 0; i < drv->bufCount; i++) {
+	for (i = 0; i < drv->bufCount; i++) {
 		res = AudioQueueAllocateBuffer(drv->audioQueue, drv->bufSize, drv->buffers + i);
 		if (res || drv->buffers[i] == NULL) {
 			res = AudioQueueDispose(drv->audioQueue, true);
@@ -230,14 +231,15 @@ UINT8 CoreAudio_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* 
 		}
 		drv->buffers[i]->mAudioDataByteSize = drv->bufSize;
 		// Prime the buffer allocated
-		CoreAudio_RenderOutputBuffer(drv, NULL, drv->buffers[i]);
+		memset(drv->buffers[i]->mAudioData, 0, drv->buffers[i]->mAudioDataByteSize);
+		AudioQueueEnqueueBuffer(drv->audioQueue, drv->buffers[i], 0, NULL);
 	}
 
 	res = AudioQueueStart(drv->audioQueue, NULL);
 	if (res) {
 		res = AudioQueueDispose(drv->audioQueue, true);
 		drv->audioQueue = NULL;
-		return 0xC0;	// open() failed
+		return AERR_API_ERR;
 	}
 
 	drv->devState = 1;
@@ -361,17 +363,15 @@ UINT32 CoreAudio_GetLatency(void* drvObj)
 // The callback that does the actual audio feeding
 void CoreAudio_RenderOutputBuffer(void *userData, AudioQueueRef queue, AudioQueueBufferRef buffer) {
 	DRV_CA *drv = (DRV_CA *)userData;
-	if (queue == NULL && drv != NULL) {
-		// Priming the buffers, skip timestamp handling
-		queue = drv->audioQueue;
-	}
 
+	OSMutex_Lock(drv->hMutex);
 	if (drv->FillBuffer == NULL) {
 		memset(buffer->mAudioData, 0, buffer->mAudioDataByteSize);
 	}
 	else {
 		drv->FillBuffer(drv, drv->userParam, buffer->mAudioDataByteSize, buffer->mAudioData);
 	}
+	OSMutex_Unlock(drv->hMutex);
 
 	AudioQueueEnqueueBuffer(queue, buffer, 0, NULL);
 }
