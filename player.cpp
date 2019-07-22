@@ -91,6 +91,7 @@ int main(int argc, char* argv[])
 	DATA_LOADER *dLoad;
 	PlayerBase* player;
 	int curSong;
+	bool needRefresh;
 	
 	if (argc < 2)
 	{
@@ -238,21 +239,35 @@ int main(int argc, char* argv[])
 	changemode(1);
 #endif
 	playState &= ~PLAYSTATE_END;
+	needRefresh = true;
 	while(! (playState & PLAYSTATE_END))
 	{
 		if (! (playState & PLAYSTATE_PAUSE))
+			needRefresh = true;	// always update when playing
+		if (needRefresh)
 		{
-			printf("Playing %.2f / %.2f ...   \r", player->Sample2Second(player->GetCurSample()),
+			const char* pState;
+			
+			if (playState & PLAYSTATE_PAUSE)
+				pState = "Paused";
+			else if (fadeSmplStart != (UINT32)-1)
+				pState = "Fading";
+			else
+				pState = "Playing";
+			printf("%s %.2f / %.2f ...   \r", pState, player->Sample2Second(player->GetCurSample()),
 					player->Tick2Second(player->GetTotalPlayTicks(maxLoops)));
 			fflush(stdout);
+			needRefresh = false;
 		}
 		
-		if (! manualRenderLoop || (playState & PLAYSTATE_PAUSE))
-			Sleep(50);
-		else
+		if (manualRenderLoop && ! (playState & PLAYSTATE_PAUSE))
 		{
 			UINT32 wrtBytes = FillBuffer(audDrvLog, &player, localAudBufSize, localAudBuffer);
 			AudioDrv_WriteData(audDrvLog, wrtBytes, localAudBuffer);
+		}
+		else
+		{
+			Sleep(50);
 		}
 		
 		if (_kbhit())
@@ -275,6 +290,7 @@ int main(int argc, char* argv[])
 			{
 				OSMutex_Lock(renderMtx);
 				player->Reset();
+				fadeSmplStart = (UINT32)-1;
 				OSMutex_Unlock(renderMtx);
 			}
 			else if (letter == 'B')	// previous file
@@ -299,6 +315,7 @@ int main(int argc, char* argv[])
 			{
 				fadeSmplStart = player->GetCurSample();
 			}
+			needRefresh = true;
 		}
 	}
 #ifndef _WIN32
