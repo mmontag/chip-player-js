@@ -130,9 +130,11 @@ int main(int argc, char* argv[])
 
 	if(dLoad == NULL) continue;
 	DataLoader_SetPreloadBytes(dLoad,0x100);
-	if(DataLoader_Load(dLoad))
+	retVal = DataLoader_Load(dLoad);
+	if (retVal)
 	{
 		DataLoader_CancelLoading(dLoad);
+		fprintf(stderr, "Error 0x%02X loading file!\n", retVal);
 		continue;
 	}
 	retVal = GetPlayerForFile(dLoad, &player);

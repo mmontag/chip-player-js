@@ -4,6 +4,8 @@
 #include <stdtype.h>
 #include "emu/EmuStructs.h"
 #include "emu/SoundEmu.h"
+#include "emu/SoundDevs.h"
+#include "emu/EmuCores.h"
 #include "emu/cores/sn764intf.h"
 
 int main(int argc, char* argv[])
@@ -15,7 +17,7 @@ int main(int argc, char* argv[])
 	UINT8 retVal;
 	UINT8 curReg;
 	
-	devCfg.emuCore = 1;
+	devCfg.emuCore = 0;	// default core
 	devCfg.srMode = DEVRI_SRMODE_NATIVE;
 	devCfg.flags = 0x00;
 	devCfg.clock = 3579545;
@@ -29,7 +31,7 @@ int main(int argc, char* argv[])
 	snCfg.segaPSG = 0;
 	snCfg.t6w28_tone = NULL;
 	
-	retVal = SndEmu_Start(0x00, (DEV_GEN_CFG*)&snCfg, &snDefInf);
+	retVal = SndEmu_Start(DEVID_SN76496, (DEV_GEN_CFG*)&snCfg, &snDefInf);
 	if (retVal)
 		return 1;
 	

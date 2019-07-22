@@ -43,6 +43,7 @@ static DEV_INFO okiDefInf;
 static DEV_INFO opllDefInf;
 static RESMPL_STATE snResmpl;
 static RESMPL_STATE okiResmpl;
+static RESMPL_STATE opllResmpl;
 static UINT32 smplAlloc;
 static DEV_SMPL* smplData[2];
 static volatile bool canRender;
@@ -65,11 +66,9 @@ int main(int argc, char* argv[])
 	
 	DEV_GEN_CFG devCfg;
 	SN76496_CFG snCfg;
-	//DEV_INFO snDefInf;
 	DEVFUNC_WRITE_A8D8 snWrite;
 	DEVFUNC_WRITE_A8D8 okiWrite;
 	DEVFUNC_WRITE_A8D8 opllWrite;
-	//UINT8 curReg;
 	
 	Audio_Init();
 	drvCount = Audio_GetDriverCount();
@@ -106,6 +105,9 @@ int main(int argc, char* argv[])
 		SetupDirectSound(audDrv);
 #endif
 	
+	
+	// --- sound emulation setup ---
+	// setup SN76496 (Maxim emulator)
 	devCfg.emuCore = FCC_MAXM;
 	devCfg.srMode = DEVRI_SRMODE_NATIVE;
 	devCfg.flags = 0x00;
@@ -124,7 +126,8 @@ int main(int argc, char* argv[])
 		goto Exit_AudDrvDeinit;
 	}
 	
-	devCfg.emuCore = 0;
+	// setup OKIM6295
+	devCfg.emuCore = 0;	// default core
 	devCfg.srMode = DEVRI_SRMODE_NATIVE;
 	devCfg.flags = 0x00;
 	devCfg.clock = 0x101D00;
@@ -145,6 +148,7 @@ int main(int argc, char* argv[])
 			fread(fileData, 0x01, fileLen, hFile);
 			fclose(hFile);
 			
+			// load sample ROM to sound chip
 			SndEmu_GetDeviceFunc(okiDefInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, (void**)&okiRomSize);
 			SndEmu_GetDeviceFunc(okiDefInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&okiRomWrite);
 			okiRomSize(okiDefInf.dataPtr, fileLen);
@@ -152,12 +156,16 @@ int main(int argc, char* argv[])
 			free(fileData);
 		}
 	}
+	
+	// setup YM2413 (EMU2413)
 	devCfg.emuCore = FCC_EMU_;
-	devCfg.srMode = DEVRI_SRMODE_NATIVE;
+	devCfg.srMode = DEVRI_SRMODE_CUSTOM;	// TODO: DEVRI_SRMODE_NATIVE ?
 	devCfg.flags = 0x00;
 	devCfg.clock = 3579545;
 	retVal = SndEmu_Start(DEVID_YM2413, &devCfg, &opllDefInf);
 	
+	
+	// --- audio output setup ---
 	opts = AudioDrv_GetOptions(audDrv);
 	//opts->sampleRate = snDefInf.sampleRate;
 	//opts->sampleRate = 96000;
@@ -175,6 +183,8 @@ int main(int argc, char* argv[])
 		goto Exit_SndDrvDeinit;
 	}
 	
+	
+	// setup resampler
 	smplAlloc = AudioDrv_GetBufferSize(audDrv) / smplSize;
 	smplData[0] = (DEV_SMPL*)malloc(smplAlloc * sizeof(DEV_SMPL) * 2);
 	smplData[1] = &smplData[0][smplAlloc];
@@ -183,38 +193,47 @@ int main(int argc, char* argv[])
 	okiDefInf.devDef->Reset(okiDefInf.dataPtr);
 	opllDefInf.devDef->Reset(opllDefInf.dataPtr);
 	
-	Resmpl_SetVals(&snResmpl, 0xFF, 0x100, opts->sampleRate);
-	//Resmpl_DevConnect(&snResmpl, &snDefInf);
-	Resmpl_DevConnect(&snResmpl, &opllDefInf);
+	Resmpl_SetVals(&snResmpl, 0xFF, 0xC0, opts->sampleRate);
+	Resmpl_DevConnect(&snResmpl, &snDefInf);
 	Resmpl_Init(&snResmpl);
 	
 	Resmpl_SetVals(&okiResmpl, 0xFF, 0x100, opts->sampleRate);
 	Resmpl_DevConnect(&okiResmpl, &okiDefInf);
 	Resmpl_Init(&okiResmpl);
+	
+	Resmpl_SetVals(&opllResmpl, 0xFF, 0x100, opts->sampleRate);
+	Resmpl_DevConnect(&opllResmpl, &opllDefInf);
+	Resmpl_Init(&opllResmpl);
 	canRender = true;
 	
+	// get functions for executing sound chip register writes
 	SndEmu_GetDeviceFunc(snDefInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&snWrite);
 	SndEmu_GetDeviceFunc(okiDefInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&okiWrite);
 	SndEmu_GetDeviceFunc(opllDefInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&opllWrite);
-	snWrite(snDefInf.dataPtr, 0, 0x8B);
-	snWrite(snDefInf.dataPtr, 0, 0x06);
-	snWrite(snDefInf.dataPtr, 0, 0x93);
-	OPLL_Write(opllWrite, opllDefInf.dataPtr, 0x30, 0x70);
-	OPLL_Write(opllWrite, opllDefInf.dataPtr, 0x10, 0x80);
-	OPLL_Write(opllWrite, opllDefInf.dataPtr, 0x20, 0x17);
+	
+	// write data to the sound chip registers, so that they make sound
+	snWrite(snDefInf.dataPtr, 0, 0x8B);	// PSG channel 1 frequency 0x06B (lower 4 bits)
+	snWrite(snDefInf.dataPtr, 0, 0x06);	// frequency 0x06B (upper 6 bits)
+	snWrite(snDefInf.dataPtr, 0, 0x93);	// PSG channel 1 volume 0x3
+	OPLL_Write(opllWrite, opllDefInf.dataPtr, 0x30, 0x70);	// OPLL channel 0 instrument 7, volume 0
+	OPLL_Write(opllWrite, opllDefInf.dataPtr, 0x10, 0x80);	// channel 0 frequency 0x180 (lower 8 bits)
+	OPLL_Write(opllWrite, opllDefInf.dataPtr, 0x20, 0x17);	// channel 0 frequency 0x180 (upper 1 bit), octave 3, key on
 	Sleep(250);
-	okiWrite(okiDefInf.dataPtr, 0, 0x80 | 0x0D);	// sample 0D
+	okiWrite(okiDefInf.dataPtr, 0, 0x80 | 0x0D);	// OKI6295 sample 0D
 	okiWrite(okiDefInf.dataPtr, 0, 0x10);	// channel 0 (mask 0x1), volume 0x0
 	Sleep(400);
 	okiWrite(okiDefInf.dataPtr, 0x0C, 1);	// set pin 7 = high
 	okiWrite(okiDefInf.dataPtr, 0, 0x80 | 0x0D);	// sample 0D
-	okiWrite(okiDefInf.dataPtr, 0, 0x20);	// channel 2 (mask 0x2), volume 0x0
+	okiWrite(okiDefInf.dataPtr, 0, 0x20);	// channel 1 (mask 0x2), volume 0x0
+	Sleep(1000);
+	snWrite(snDefInf.dataPtr, 0, 0x99);
 	
 	getchar();
 	
 	retVal = AudioDrv_Stop(audDrv);
 	Resmpl_Deinit(&snResmpl);
 	Resmpl_Deinit(&okiResmpl);
+	Resmpl_Deinit(&opllResmpl);
 	free(smplData[0]);
 	smplData[0] = NULL;	smplData[1] = NULL;
 	
@@ -252,18 +271,15 @@ static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void*
 	smplCount = bufSize / smplSize;
 	memset(smplData[0], 0, bufSize);
 	memset(smplData[1], 0, bufSize);
-	//snDefInf.Update(snDefInf.dataPtr, smplCount, smplData);
+	// emulate the sound chips
+	// The resampler requests samples when needed and mixes everything into the smplDataW buffer.
 	Resmpl_Execute(&snResmpl, smplCount, smplDataW);
 	Resmpl_Execute(&okiResmpl, smplCount, smplDataW);
+	Resmpl_Execute(&opllResmpl, smplCount, smplDataW);
 	switch(smplSize)
 	{
 	case 4:
 		SmplPtr16 = (INT16*)data;
-		/*for (curSmpl = 0; curSmpl < smplCount; curSmpl ++, SmplPtr16 += 2)
-		{
-			SmplPtr16[0] = smplData[0][curSmpl];
-			SmplPtr16[1] = smplData[1][curSmpl];
-		}*/
 		for (curSmpl = 0; curSmpl < smplCount; curSmpl ++, SmplPtr16 += 2)
 		{
 			SmplPtr16[0] = smplDataW[curSmpl].L >> 8;
