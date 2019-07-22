@@ -253,6 +253,7 @@ struct _gb_sound_t
 
 	UINT8 gbMode;
 	UINT8 BoostWaveChn;
+	UINT8 NoWaveCorrupt;
 	UINT8 LegacyMode;
 };
 
@@ -734,7 +735,7 @@ static void gb_sound_w(void *chip, UINT8 offset, UINT8 data)
 
 static void gb_corrupt_wave_ram(gb_sound_t *gb)
 {
-	if (gb->gbMode != GBMODE_DMG)
+	if (gb->gbMode != GBMODE_DMG || gb->NoWaveCorrupt)
 		return;
 
 	if (gb->snd_3.offset < 8)
@@ -1189,6 +1190,7 @@ static UINT8 device_start_gameboy_sound(const DEV_GEN_CFG* cfg, DEV_INFO* retDev
 
 	gameboy_sound_set_mute_mask(gb, 0x00);
 	gb->BoostWaveChn = 0x00;
+	gb->NoWaveCorrupt = 0x00;
 	gb->LegacyMode = 0x00;
 
 	gb->_devData.chipInf = gb;
@@ -1305,6 +1307,7 @@ static void gameboy_sound_set_options(void *chip, UINT32 Flags)
 	gb_sound_t *gb = (gb_sound_t *)chip;
 	
 	gb->BoostWaveChn = (Flags & 0x01) >> 0;
+	gb->NoWaveCorrupt = (Flags & 0x02) >> 1;
 	gb->LegacyMode = (Flags & 0x80) >> 7;
 	
 	return;
