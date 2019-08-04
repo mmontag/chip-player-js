@@ -101,11 +101,14 @@ static UINT32 MemoryLoader_ReadDataGZ(MEMORY_LOADER *loader, UINT8 *buffer, UINT
 	loader->zStream.avail_out = numBytes;
 	loader->zStream.next_out = (Bytef *)buffer;
 	ret = inflate(&loader->zStream, Z_SYNC_FLUSH);
-	if(ret != Z_OK)
-		return 0;
+	// usually returns Z_OK or Z_STREAM_END (when encountering EOF)
+	// but even in case of errors, we'll just return the amount of bytes read.
+	// TODO: maybe return 0 when getting errors in order to prevent playing garbage data.
 
 	bytesWritten = loader->zStream.total_out - loader->pos;
 	loader->pos = loader->zStream.total_out;
+	if (ret == Z_STREAM_END)
+		loader->decSize = loader->pos;
 	return bytesWritten;
 }
 
