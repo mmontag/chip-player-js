@@ -10,6 +10,7 @@ import {BrowserRouter as Router, NavLink, Route} from 'react-router-dom';
 import {API_BASE, CATALOG_PREFIX, MAX_VOICES, REPLACE_STATE_ON_SEEK} from "./config";
 import {Switch} from 'react-router';
 import Dropzone from 'react-dropzone';
+import { toArabic } from 'roman-numerals';
 
 import ChipCore from './chip-core';
 import GMEPlayer from './players/GMEPlayer';
@@ -29,6 +30,8 @@ import Browse from "./Browse";
 import DirectoryLink from "./DirectoryLink";
 import dice from './images/dice.png';
 import DropMessage from "./DropMessage";
+
+const NUMERIC_COLLATOR = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'});
 
 class App extends React.Component {
   handleLogin() {
@@ -427,11 +430,46 @@ class App extends React.Component {
     }
   }
 
+  romanToArabicSubstrings(str) {
+    // Works up to 399 (CCCXCIX)
+    try {
+      str = str.replace(/\b([IVXLC]+|[ivxlc]+)[-.,)]/, (a, match, c, d) => {
+        const numeric = String(toArabic(match)).padStart(4, '0');
+        console.log('===', match, numeric);
+        return numeric;
+      });
+      console.log(str);
+      return str;
+    } catch (e) {
+      // Ignore false positives like 'mill.', 'did-', or 'mix,'
+      console.error(e);
+      return str;
+    }
+  }
+
   fetchDirectory(path) {
     fetch(`${API_BASE}/browse?path=%2F${encodeURIComponent(path)}`)
       .then(response => response.json())
       .then(json => {
+        const arabicMap = {};
+        const needsRomanNumeralSort = json.some(item => {
+          // Only convert Roman numerals if the list sort could benefit from it.
+          // Roman numerals less than 9 would be sorted incidentally.
+          // This assumes that
+          // - Roman numerals are formatted with a period.
+          // - Roman numeral ranges don't have gaps.
+          return item.path.toLowerCase().indexOf('ix') > -1;
+        });
+        if (needsRomanNumeralSort) {
+          json.forEach(item => arabicMap[item.path] = this.romanToArabicSubstrings(item.path));
+        }
         const items = json
+          .sort((a, b) => {
+            const [strA, strB] = needsRomanNumeralSort ?
+              [arabicMap[a.path], arabicMap[b.path]] :
+              [a.path, b.path];
+            return NUMERIC_COLLATOR.compare(strA, strB);
+          })
           .sort((a, b) => {
             if (a.type < b.type) return -1;
             if (a.type > b.type) return 1;
