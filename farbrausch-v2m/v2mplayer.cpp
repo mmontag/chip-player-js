@@ -16,27 +16,23 @@
 #define UPDATENT(n, v, p, w)  if ((n) < (w)) { (v) = m_state.time + GETDELTA((p), (w)); if ((v) < m_state.nexttime) m_state.nexttime = (v); }
 #define UPDATENT2(n, v, p, w) if ((n) < (w) && GETDELTA((p), (w))) { (v) = m_state.time + GETDELTA((p), (w)); }
 #define UPDATENT3(n, v, p, w) if ((n) < (w) && (v) < m_state.nexttime) m_state.nexttime = (v);
-#define PUTSTAT(s) { uint8_t bla = (s); if (laststat != bla) { laststat = bla; *mptr ++= (uint8_t)laststat; }};
+#define PUTSTAT(s) { uint8_t bla = (s); if (laststat != bla) { laststat = bla; *midibuf ++= (uint8_t)laststat; }};
 
-#ifdef EMSCRIPTEN
 extern uint32_t readUint(const uint8_t *buf);
 extern int readInt(const uint8_t *buf);
 extern void writeUint(uint8_t *buf, uint32_t value);
-
-#endif
 
 namespace
 {
     void UpdateSampleDelta(uint32_t nexttime, uint32_t time, uint32_t usecs, uint32_t td2, uint32_t *smplrem, uint32_t *smpldelta)
     {
-        // performs 64bit (nexttime-time)*usecs/td2 and a 32.32bit addition to smpldelta:smplrem
+        // performs 64bit (nexttime-time)*usecs/td2 and a 32.32bit addition to smpl_delta:smpl_rem
         uint64_t t = ((nexttime - time) * (uint64_t) usecs) / td2;
         uint32_t r = readUint((uint8_t*)smplrem);
-//      *smplrem   += (t >> 32);         // bits 32-63
-		writeUint((uint8_t*)smplrem, r+(t >> 32)); // bits 32-63
-		
-//      *smpldelta += (t & 0xffffffff); 							// bits 00-31
-		writeUint((uint8_t*)smpldelta, readUint((uint8_t*)smpldelta)+(t & 0xffffffff)); // bits 00-31
+//        *smpl_rem   += (t >> 32);         // bits 32-63
+        writeUint((uint8_t*)smplrem, r+(t >> 32u)); // bits 32-63
+//        *smpl_delta += (t & 0xffffffff);  // bits 00-31
+        writeUint((uint8_t*)smpldelta, readUint((uint8_t*)smpldelta)+(t & 0xffffffff)); // bits 00-31
         if (readUint((uint8_t*)smplrem) < r)
         {
             writeUint((uint8_t*)smpldelta, readUint((uint8_t*)smpldelta) + 1);
@@ -46,40 +42,40 @@ namespace
 
 bool V2MPlayer::InitBase(const void *a_v2m)
 {
-    const uint8_t *d = (const uint8_t*)a_v2m;
+    const auto *d = (const uint8_t*)a_v2m;
 
     m_base.timediv  = readUint(d);
-    m_base.timediv2 = 10000*m_base.timediv;
+    m_base.timediv2 = 10000 * m_base.timediv;
     m_base.maxtime  = readUint(d + 4);
-    m_base.gdnum    = readUint(d + 8);
+    m_base.gd_num    = readUint(d + 8);
 
     d += 12;
     m_base.gptr = d;
-    d += 10*m_base.gdnum;
+    d += 10*m_base.gd_num;
     for (int ch = 0; ch < 16; ch++)
     {
         V2MBase::Channel &c=m_base.chan[ch];
-        c.notenum= readUint(d);
+        c.note_num= readUint(d);
         d += 4;
-        if (c.notenum)
+        if (c.note_num)
         {
-            c.noteptr=d;
-            d += 5*c.notenum;
-            c.pcnum = readUint(d);
+            c.note_ptr=d;
+            d += 5*c.note_num;
+            c.pc_num = readUint(d);
             d += 4;
-            c.pcptr = d;
-            d += 4*c.pcnum;
-            c.pbnum = readUint(d);
+            c.pc_ptr = d;
+            d += 4*c.pc_num;
+            c.pb_num = readUint(d);
             d += 4;
-            c.pbptr = d;
-            d += 5*c.pbnum;
+            c.pb_ptr = d;
+            d += 5*c.pb_num;
             for (int cn = 0; cn < 7; cn++)
             {
                 V2MBase::Channel::CC &cc = c.ctl[cn];
-                cc.ccnum = readUint(d);
+                cc.cc_num = readUint(d);
                 d += 4;
-                cc.ccptr = d;
-                d += 4*cc.ccnum;
+                cc.cc_ptr = d;
+                d += 4*cc.cc_num;
             }
         }
     }
@@ -122,34 +118,34 @@ bool V2MPlayer::InitBase(const void *a_v2m)
 void V2MPlayer::Reset()
 {
     m_state.time = 0;
-    m_state.nexttime = (uint32_t)-1;
+    m_state.nexttime = (uint32_t)-1; // 4.2 billion
 
     m_state.gptr = m_base.gptr;
     m_state.gnr  = 0;
-    UPDATENT(m_state.gnr, m_state.gnt, m_state.gptr, m_base.gdnum);
+    UPDATENT(m_state.gnr, m_state.gnt, m_state.gptr, m_base.gd_num);
     for (int ch = 0; ch < 16; ch++)
     {
         V2MBase::Channel &bc = m_base.chan[ch];
         PlayerState::Channel &sc = m_state.chan[ch];
 
-        if (!bc.notenum)
+        if (!bc.note_num)
             continue;
-        sc.noteptr = bc.noteptr;
-        sc.notenr  = sc.lastnte = sc.lastvel = 0;
-        UPDATENT(sc.notenr,sc.notent, sc.noteptr, bc.notenum);
-        sc.pcptr = bc.pcptr;
-        sc.pcnr  = sc.lastpc=0;
-        UPDATENT(sc.pcnr,sc.pcnt, sc.pcptr, bc.pcnum);
-        sc.pbptr = bc.pbptr;
-        sc.pbnr  = sc.lastpb0 = sc.lastpb1 = 0;
-        UPDATENT(sc.pbnr,sc.pbnt, sc.pbptr, bc.pcnum);
+        sc.note_ptr = bc.note_ptr;
+        sc.note_nr  = sc.last_nte = sc.last_vel = 0;
+        UPDATENT(sc.note_nr,sc.note_nt, sc.note_ptr, bc.note_num);
+        sc.pc_ptr = bc.pc_ptr;
+        sc.pc_nr  = sc.last_pc=0;
+        UPDATENT(sc.pc_nr,sc.pc_nt, sc.pc_ptr, bc.pc_num);
+        sc.pb_ptr = bc.pb_ptr;
+        sc.pb_nr  = sc.last_pb0 = sc.last_pb1 = 0;
+        UPDATENT(sc.pb_nr,sc.pb_nt, sc.pb_ptr, bc.pc_num);
         for (int cn = 0; cn < 7; cn++)
         {
             V2MBase::Channel::CC &bcc = bc.ctl[cn];
             PlayerState::Channel::CC &scc = sc.ctl[cn];
-            scc.ccptr = bcc.ccptr;
-            scc.ccnr  = scc.lastcc=0;
-            UPDATENT(scc.ccnr, scc.ccnt, scc.ccptr, bcc.ccnum);
+            scc.cc_ptr = bcc.cc_ptr;
+            scc.cc_nr  = scc.last_cc=0;
+            UPDATENT(scc.cc_nr, scc.cc_nt, scc.cc_ptr, bcc.cc_num);
         }
     }
     m_state.usecs = 5000*m_samplerate;
@@ -159,7 +155,7 @@ void V2MPlayer::Reset()
     m_state.bar   = 0;
     m_state.beat  = 0;
     m_state.tick  = 0;
-    m_state.smplrem = 0;
+    m_state.smpl_rem = 0;
 
     if (m_samplerate)
     {
@@ -174,6 +170,11 @@ void V2MPlayer::Tick()
     if (m_state.state != PlayerState::PLAYING)
         return;
 
+    // Look at the number of MIDI ticks we will be processing here.
+    // This isn't used any further than to track the bar/beat/tick.
+    // ticks = nexttime - time
+    // beats = ticks / timediv
+    // bars = beats / 4 (for example)
     m_state.tick += m_state.nexttime-m_state.time;
     while (m_state.tick >= m_base.timediv)
     {
@@ -187,82 +188,84 @@ void V2MPlayer::Tick()
         m_state.bar++;
     }
 
+    // Ok, we are done with using m_state.time
     m_state.time = m_state.nexttime;
-    m_state.nexttime = (uint32_t)-1;
-    uint8_t *mptr = m_midibuf;
+    m_state.nexttime = (uint32_t)-1; // 4.2 billion
+    uint8_t *midibuf = m_midibuf;
     uint32_t laststat = -1;
 
-    if (m_state.gnr<m_base.gdnum && m_state.time==m_state.gnt) // neues global-event?
+    // If we encounter new "global" event
+    if (m_state.gnr < m_base.gd_num && m_state.time == m_state.gnt) // neues global-event?
     {
-        m_state.usecs = readUint(m_state.gptr + 3*m_base.gdnum + 4*m_state.gnr)*(m_samplerate/100);
-        m_state.num = m_state.gptr[7*m_base.gdnum + m_state.gnr];
-        m_state.den = m_state.gptr[8*m_base.gdnum + m_state.gnr];
-        m_state.tpq = m_state.gptr[9*m_base.gdnum + m_state.gnr];
+        m_state.usecs = readUint(m_state.gptr + 3*m_base.gd_num + 4*m_state.gnr)*(m_samplerate/100);
+        m_state.num = m_state.gptr[7*m_base.gd_num + m_state.gnr];
+        m_state.den = m_state.gptr[8*m_base.gd_num + m_state.gnr];
+        m_state.tpq = m_state.gptr[9*m_base.gd_num + m_state.gnr];
         m_state.gnr++;
-        UPDATENT2(m_state.gnr, m_state.gnt, m_state.gptr + m_state.gnr, m_base.gdnum);
+        UPDATENT2(m_state.gnr, m_state.gnt, m_state.gptr + m_state.gnr, m_base.gd_num);
     }
-    UPDATENT3(m_state.gnr, m_state.gnt, m_state.gptr + m_state.gnr, m_base.gdnum);
+    UPDATENT3(m_state.gnr, m_state.gnt, m_state.gptr + m_state.gnr, m_base.gd_num);
 
     for (int ch = 0; ch < 16; ch++)
     {
         V2MBase::Channel &bc = m_base.chan[ch];
         PlayerState::Channel &sc = m_state.chan[ch];
-        if (!bc.notenum)
+        if (!bc.note_num)
             continue;
         // 1. process pgm change events
-        if (sc.pcnr < bc.pcnum && m_state.time == sc.pcnt)
+        if (sc.pc_nr < bc.pc_num && m_state.time == sc.pc_nt)
         {
             PUTSTAT(0xc0 | ch)
-            *mptr ++= (sc.lastpc += sc.pcptr[3*bc.pcnum]);
-            sc.pcnr++;
-            sc.pcptr++;
-            UPDATENT2(sc.pcnr, sc.pcnt, sc.pcptr, bc.pcnum);
+            *midibuf ++= (sc.last_pc += sc.pc_ptr[3*bc.pc_num]);
+            sc.pc_nr++;
+            sc.pc_ptr++;
+            UPDATENT2(sc.pc_nr, sc.pc_nt, sc.pc_ptr, bc.pc_num);
         }
-        UPDATENT3(sc.pcnr, sc.pcnt, sc.pcptr, bc.pcnum);
+        UPDATENT3(sc.pc_nr, sc.pc_nt, sc.pc_ptr, bc.pc_num);
 
         // 2. process control changes
         for (int cn = 0; cn < 7; cn++)
         {
                 V2MBase::Channel::CC &bcc = bc.ctl[cn];
                 PlayerState::Channel::CC &scc = sc.ctl[cn];
-                if (scc.ccnr < bcc.ccnum && m_state.time == scc.ccnt)
+                if (scc.cc_nr < bcc.cc_num && m_state.time == scc.cc_nt)
                 {
                     PUTSTAT(0xb0 | ch)
-                    *mptr ++= cn+1;
-                    *mptr ++= (scc.lastcc += scc.ccptr[3*bcc.ccnum]);
-                    scc.ccnr++;
-                    scc.ccptr++;
-                    UPDATENT2(scc.ccnr, scc.ccnt, scc.ccptr, bcc.ccnum);
+                    *midibuf ++= cn+1;
+                    *midibuf ++= (scc.last_cc += scc.cc_ptr[3*bcc.cc_num]);
+                    scc.cc_nr++;
+                    scc.cc_ptr++;
+                    UPDATENT2(scc.cc_nr, scc.cc_nt, scc.cc_ptr, bcc.cc_num);
                 }
-                UPDATENT3(scc.ccnr, scc.ccnt, scc.ccptr, bcc.ccnum);
+                UPDATENT3(scc.cc_nr, scc.cc_nt, scc.cc_ptr, bcc.cc_num);
         }
 
         // 3. process pitch bends
-        if (sc.pbnr < bc.pbnum && m_state.time == sc.pbnt)
+        if (sc.pb_nr < bc.pb_num && m_state.time == sc.pb_nt)
         {
             PUTSTAT(0xe0|ch)
-            *mptr ++= (sc.lastpb0 += sc.pbptr[3*bc.pcnum]);
-            *mptr ++= (sc.lastpb1 += sc.pbptr[4*bc.pcnum]);
-            sc.pbnr++;
-            sc.pbptr++;
-            UPDATENT2(sc.pbnr,sc.pbnt,sc.pbptr,bc.pbnum);
+            *midibuf ++= (sc.last_pb0 += sc.pb_ptr[3*bc.pc_num]);
+            *midibuf ++= (sc.last_pb1 += sc.pb_ptr[4*bc.pc_num]);
+            sc.pb_nr++;
+            sc.pb_ptr++;
+            UPDATENT2(sc.pb_nr,sc.pb_nt,sc.pb_ptr,bc.pb_num);
         }
-        UPDATENT3(sc.pbnr,sc.pbnt,sc.pbptr,bc.pbnum);
+        UPDATENT3(sc.pb_nr,sc.pb_nt,sc.pb_ptr,bc.pb_num);
 
         // 4. process notes
-        while (sc.notenr < bc.notenum && m_state.time==sc.notent)
+        while (sc.note_nr < bc.note_num && m_state.time==sc.note_nt)
         {
             PUTSTAT(0x90 | ch)
-            *mptr ++= (sc.lastnte += sc.noteptr[3*bc.notenum]);
-            *mptr ++= (sc.lastvel += sc.noteptr[4*bc.notenum]);
-            sc.notenr++;
-            sc.noteptr++;
-            UPDATENT2(sc.notenr, sc.notent, sc.noteptr, bc.notenum);
+            *midibuf ++= (sc.last_nte += sc.note_ptr[3*bc.note_num]);
+            *midibuf ++= (sc.last_vel += sc.note_ptr[4*bc.note_num]);
+            sc.note_nr++;
+            sc.note_ptr++;
+            UPDATENT2(sc.note_nr, sc.note_nt, sc.note_ptr, bc.note_num);
         }
-        UPDATENT3(sc.notenr, sc.notent, sc.noteptr, bc.notenum);
+        UPDATENT3(sc.note_nr, sc.note_nt, sc.note_ptr, bc.note_num);
     }
 
-    *mptr ++= 0xfd;
+    *midibuf ++= 0xfd;
 
     synthProcessMIDI(m_synth, m_midibuf);
 
@@ -310,20 +313,20 @@ void V2MPlayer::Play(uint32_t a_time)
     }
 
     m_state.state = PlayerState::PLAYING;
-    m_state.smpldelta = 0;
-    m_state.smplrem = 0;
-    while ((cursmpl + m_state.smpldelta) < destsmpl && m_state.state == PlayerState::PLAYING)
+    m_state.smpl_delta = 0;
+    m_state.smpl_rem = 0;
+    while ((cursmpl + m_state.smpl_delta) < destsmpl && m_state.state == PlayerState::PLAYING)
     {
-        cursmpl += m_state.smpldelta;
+        cursmpl += m_state.smpl_delta;
         Tick();
         if (m_state.state == PlayerState::PLAYING)
         {
-            UpdateSampleDelta(m_state.nexttime, m_state.time, m_state.usecs, m_base.timediv2, &m_state.smplrem, &m_state.smpldelta);
+            UpdateSampleDelta(m_state.nexttime, m_state.time, m_state.usecs, m_base.timediv2, &m_state.smpl_rem, &m_state.smpl_delta);
         } else
-            m_state.smpldelta = -1;
+            m_state.smpl_delta = -1;
     }
-    m_state.smpldelta -= (destsmpl - cursmpl);
-    m_timeoffset = cursmpl-m_state.cursmpl;
+    m_state.smpl_delta -= (destsmpl - cursmpl);
+    m_timeoffset = cursmpl-m_state.smpl_cur;
     m_fadeval    = 1.0f;
     m_fadedelta  = 0.0f;
     m_base.valid = sTRUE;
@@ -357,22 +360,27 @@ void V2MPlayer::Render(float *a_buffer, uint32_t a_len, bool a_add)
         uint32_t todo=a_len;
         while (todo)
         {
-            int torender = (todo > m_state.smpldelta) ? m_state.smpldelta : todo;
+            // how many samples to render?
+            // whichever is less of SMPLDELTA or TODO
+            int torender = (todo > m_state.smpl_delta) ? m_state.smpl_delta : todo;
             if (torender)
             {
-                synthRender(m_synth, a_buffer, torender, 0, a_add);
+                synthRender(m_synth, a_buffer, torender, nullptr, a_add);
                 a_buffer += 2*torender;
                 todo -= torender;
-                m_state.smpldelta -= torender;
-                m_state.cursmpl   += torender;
+                m_state.smpl_delta -= torender;
+                m_state.smpl_cur   += torender;
             }
-            if (!m_state.smpldelta)
+            // Several consecutive Render calls could complete before entering this branch
+            if (!m_state.smpl_delta)
             {
+              // Events are drained. We caught up to new events, and need to process them.
                 Tick();
                 if (m_state.state == PlayerState::PLAYING)
-                    UpdateSampleDelta(m_state.nexttime, m_state.time, m_state.usecs, m_base.timediv2, &m_state.smplrem, &m_state.smpldelta);
+                  // after Tick, we have a new nexttime, time usecs,
+                    UpdateSampleDelta(m_state.nexttime, m_state.time, m_state.usecs, m_base.timediv2, &m_state.smpl_rem, &m_state.smpl_delta);
                 else
-                    m_state.smpldelta = -1;
+                    m_state.smpl_delta = -1;
             }
         }
     }
@@ -380,12 +388,12 @@ void V2MPlayer::Render(float *a_buffer, uint32_t a_len, bool a_add)
     {
         if (!a_add)
         {
-            memset(a_buffer, 0, a_len*sizeof(a_buffer[0])*2);
+            memset(a_buffer, 0, a_len * sizeof(a_buffer[0])*2);
         }
     } else
     {
-        synthRender(m_synth, a_buffer, a_len, 0, a_add);
-        m_state.cursmpl += a_len;
+        synthRender(m_synth, a_buffer, a_len, nullptr, a_add);
+        m_state.smpl_cur += a_len;
     }
 
     if (m_fadedelta)
@@ -404,7 +412,7 @@ void V2MPlayer::Render(float *a_buffer, uint32_t a_len, bool a_add)
 
 bool V2MPlayer::NoEnd()
 {
-    return ((m_base.maxtime * m_base.timediv) > m_state.cursmpl);
+    return ((m_base.maxtime * m_base.timediv) > m_state.smpl_cur);
 }
 
 uint32_t V2MPlayer::Length()
@@ -420,7 +428,7 @@ bool V2MPlayer::IsPlaying()
 
 #ifdef V2MPLAYER_SYNC_FUNCTIONS
 
-uint32_t V2MPlayer::CalcPositions(sS32 **a_dest)
+uint32_t V2MPlayer::CalcPositions(int32_t **a_dest)
 /////////////////////////////////////////////
 {
     if (!a_dest) return 0;
@@ -431,51 +439,53 @@ uint32_t V2MPlayer::CalcPositions(sS32 **a_dest)
     }
 
     // step 1: ende finden
-    sS32 *&dp = *a_dest;
+    int32_t *&dp = *a_dest;
     uint32_t gnr = 0;
-    const uint8_t* gp = m_base.gptr;
+
+    const uint8_t* g_ptr = m_base.gptr;
     uint32_t curbar = 0;
     uint32_t cur32th = 0;
-    uint32_t lastevtime = 0;
-    uint32_t pb32 = 32;
+    uint32_t last_ev_time = 0;
+    uint32_t pb32 = 0;
     uint32_t usecs = 500000;
 
     uint32_t posnum = 0;
-    uint32_t ttime, td, this32;
-    sF64 curtimer = 0;
+    uint32_t ttime, time_delta, this32;
+    double curtimer = 0;
 
-    while (gnr < m_base.gdnum)
+    while (gnr < m_base.gd_num)
     {
-        ttime = lastevtime + (gp[2*m_base.gdnum] << 16) + (gp[m_base.gdnum] << 8) + gp[0];
-        td = ttime - lastevtime;
-        this32 = (td*8/m_base.timediv);
+        ttime = last_ev_time + (g_ptr[2*m_base.gd_num] << 16u) + (g_ptr[m_base.gd_num] << 8u) + g_ptr[0];
+        time_delta = ttime - last_ev_time;
+        this32 = (time_delta*8/m_base.timediv);
         posnum += this32;
-        lastevtime = ttime;
-        pb32=gp[7*m_base.gdnum]*32/gp[8*m_base.gdnum];
+        last_ev_time = ttime;
+        pb32=g_ptr[7*m_base.gd_num]*32/g_ptr[8*m_base.gd_num];
         gnr++;
-        gp++;
+        g_ptr++;
     }
-    td = m_base.maxtime-lastevtime;
-    this32 = (td*8/m_base.timediv);
+    time_delta = m_base.maxtime - last_ev_time;
+    this32 = (time_delta * 8 / m_base.timediv);
     posnum += this32 + 1;
-    dp = new sS32[2*posnum];
+    dp = new int32_t[2 * posnum];
     gnr = 0;
-    gp = m_base.gptr;
-    lastevtime = 0;
+
+    g_ptr = m_base.gptr;
+    last_ev_time = 0;
     pb32 = 32;
     uint32_t pn;
     for (pn = 0; pn < posnum; pn++)
     {
         uint32_t curtime = pn*m_base.timediv/8;
-        if (gnr < m_base.gdnum)
+        if (gnr < m_base.gd_num)
         {
-            ttime = lastevtime + (gp[2*m_base.gdnum+gnr] << 16) + (gp[m_base.gdnum + gnr] << 8) + gp[gnr];
+            ttime = last_ev_time + (g_ptr[2*m_base.gd_num+gnr] << 16u) + (g_ptr[m_base.gd_num + gnr] << 8u) + g_ptr[gnr];
             if (curtime >= ttime)
             {
-                pb32=gp[7*m_base.gdnum + gnr]*32/gp[8*m_base.gdnum + gnr];
-                usecs=*(uint32_t *)(gp + 3*m_base.gdnum + 4*gnr);
+                pb32=g_ptr[7*m_base.gd_num + gnr]*32/g_ptr[8*m_base.gd_num + gnr];
+                usecs=*(uint32_t *)(g_ptr + 3*m_base.gd_num + 4*gnr);
                 gnr++;
-                lastevtime=ttime;
+                last_ev_time=ttime;
             }
         }
         dp[2*pn]     = (uint32_t)curtimer;
@@ -487,7 +497,7 @@ uint32_t V2MPlayer::CalcPositions(sS32 **a_dest)
             cur32th = 0;
             curbar++;
         }
-        curtimer += m_tpc*usecs/8000000.0;
+        curtimer += m_tpc * usecs/8000000.0; // 8 million!?
     }
     return pn;
 }

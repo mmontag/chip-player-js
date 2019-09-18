@@ -21,6 +21,8 @@
 #include <string.h>
 #include "types.h"
 
+#define V2MPLAYER_SYNC_FUNCTIONS
+
 class V2MPlayer
 {
 public:
@@ -65,7 +67,7 @@ public:
     //
     // returns  : flag if playing
     //
-    void Render(float *a_buffer, uint32_t a_len, bool a_add=0);
+    void Render(float *a_buffer, uint32_t a_len, bool a_add=false);
 
     // render proxy for C-style callbacks
     //
@@ -80,7 +82,7 @@ public:
   bool NoEnd();
   uint32_t Length();
 
-  // returns if song is currently playing
+    // returns if song is currently playing
     bool IsPlaying();
 
     #ifdef V2MPLAYER_SYNC_FUNCTIONS
@@ -94,7 +96,7 @@ public:
     //                                                            BBBB is the bar number (starting at 0)
     //                                                            TT   is the number of the 32th tick within the current bar
     //                                                            NN   is the total number of 32th ticks a the current bar has
-    //                                                             (32, normally, may change with different time signatures than 4/4)
+    //                                                            (32, normally, may change with different time signatures than 4/4)
     //         ... and so on for every found position
     //
     // NOTE: it is your responsibility to free the array again.
@@ -122,24 +124,29 @@ private:
         bool valid;
         const uint8_t   *patchmap;
         const uint8_t   *globals;
-        uint32_t    timediv;
+        uint32_t    timediv; // Ticks per Beat
         uint32_t    timediv2;
         uint32_t    maxtime;
-        const uint8_t   *gptr;
-        uint32_t  gdnum;
+        const uint8_t          *gptr;     // Global event pointer
+        uint32_t               gd_num;    // Global event number?
+
         struct Channel
         {
-            uint32_t    notenum;
-            const uint8_t        *noteptr;
-            uint32_t    pcnum;
-            const uint8_t        *pcptr;
-            uint32_t    pbnum;
-            const uint8_t        *pbptr;
+            uint32_t           note_num;  // Note number
+            const uint8_t      *note_ptr; // Note pointer
+
+            uint32_t           pc_num;    // Program change number
+            const uint8_t      *pc_ptr;   // Program change pointer
+
+            uint32_t           pb_num;    // Pitch bend number
+            const uint8_t      *pb_ptr;   // Pitch bend pointer
+
             struct CC {
-                uint32_t    ccnum;
-                const uint8_t        *ccptr;
+                uint32_t       cc_num;    // Control change number
+                const uint8_t  *cc_ptr;   // Control change pointer
             } ctl[7];
         } chan[16];
+
         const char  *speechdata;
         const char  *speechptrs[256];
     };
@@ -148,45 +155,51 @@ private:
     struct PlayerState
     {
         enum { OFF, STOPPED, PLAYING, } state;
-        uint32_t    time;
-        uint32_t    nexttime;
-        const uint8_t        *gptr;
-        uint32_t    gnt;
-        uint32_t    gnr;
-        uint32_t  usecs;
-        uint32_t  num;
-        uint32_t  den;
-        uint32_t    tpq;
-        uint32_t  bar;
-        uint32_t  beat;
-        uint32_t  tick;
+        uint32_t        time;
+        uint32_t        nexttime;
+        const uint8_t   *gptr;
+        uint32_t        gnt;
+        uint32_t        gnr;
+        uint32_t        usecs;
+        uint32_t        num;
+        uint32_t        den;
+        uint32_t        tpq;
+        uint32_t        bar;
+        uint32_t        beat;
+        uint32_t        tick;
+
         struct Channel
         {
-            const uint8_t  *noteptr;
-            uint32_t       notenr;
-            uint32_t       notent;
-            uint8_t        lastnte;
-            uint8_t        lastvel;
-            const uint8_t  *pcptr;
-            uint32_t       pcnr;
-            uint32_t       pcnt;
-            uint8_t        lastpc;
-            const uint8_t  *pbptr;
-            uint32_t       pbnr;
-            uint32_t       pbnt;
-            uint8_t        lastpb0;
-            uint8_t        lastpb1;
+            const uint8_t  *note_ptr;
+            uint32_t       note_nr;
+            uint32_t       note_nt;
+            uint8_t        last_nte;
+            uint8_t        last_vel;
+
+            const uint8_t  *pc_ptr;
+            uint32_t       pc_nr;
+            uint32_t       pc_nt;
+            uint8_t        last_pc;
+
+            const uint8_t  *pb_ptr;
+            uint32_t       pb_nr;
+            uint32_t       pb_nt;
+            uint8_t        last_pb0;
+            uint8_t        last_pb1;
+
             struct CC
             {
-                const uint8_t  *ccptr;
-                uint32_t  ccnt;
-                uint32_t  ccnr;
-                uint8_t   lastcc;
+                const uint8_t  *cc_ptr;
+                uint32_t  cc_nt;
+                uint32_t  cc_nr;
+                uint8_t   last_cc;
             } ctl[7];
+
         } chan[16];
-        uint32_t cursmpl;
-        uint32_t smpldelta;
-        uint32_t smplrem;
+
+        uint32_t smpl_cur;
+        uint32_t smpl_delta;
+        uint32_t smpl_rem;
         uint32_t tdif;
     };
 
