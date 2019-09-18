@@ -103,6 +103,7 @@ class App extends React.Component {
 
     // Initialize Firebase
     if(firebase.apps.length === 0) firebase.initializeApp(firebaseConfig);
+    this.db = firebase.firestore();
     firebase.auth().onAuthStateChanged(user => {
       this.setState({user: user, loadingUser: !!user});
       if (user) {
@@ -110,20 +111,29 @@ class App extends React.Component {
           .collection('users')
           .doc(user.uid)
           .get()
-          .then(doc => {
-            const data = doc.data();
-            this.setState({
-              faves: data.faves || [],
-              showPlayerSettings: data.settings ? data.settings.showPlayerSettings : false,
-              loadingUser: false,
-            });
+          .then(userSnapshot => {
+            if (!userSnapshot.exists) {
+              // Create user
+              this.db.collection('users').doc(user.uid).set({
+                faves: [],
+                settings: {},
+              });
+            } else {
+              // Restore user
+              const data = userSnapshot.data();
+              this.setState({
+                faves: data.faves || [],
+                showPlayerSettings: data.settings ? data.settings.showPlayerSettings : false,
+                loadingUser: false,
+              });
+            }
           })
           .catch(() => {
             this.setState({loadingUser: false});
           });
       }
     });
-    this.db = firebase.firestore();
+
     // Initialize audio graph
     const audioCtx = this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const gainNode = audioCtx.createGain();
