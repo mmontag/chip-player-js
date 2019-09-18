@@ -79,8 +79,12 @@ public:
         reinterpret_cast<V2MPlayer*>(a_this)->Render(a_buffer, a_len);
     }
 
-  bool NoEnd();
-  uint32_t Length();
+    void SetSpeed(float speed);
+
+    uint32_t GetTime();
+
+    bool NoEnd();
+    uint32_t Length();
 
     // returns if song is currently playing
     bool IsPlaying();
@@ -123,6 +127,7 @@ private:
     {
         bool valid;
         const uint8_t   *patchmap;
+        uint32_t    base_timediv;
         const uint8_t   *globals;
         uint32_t    timediv; // Ticks per Beat
         uint32_t    timediv2;
@@ -149,6 +154,7 @@ private:
 
         const char  *speechdata;
         const char  *speechptrs[256];
+        float speed;
     };
 
     // player state

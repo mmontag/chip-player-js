@@ -44,6 +44,8 @@ bool V2MPlayer::InitBase(const void *a_v2m)
 {
     const auto *d = (const uint8_t*)a_v2m;
 
+    m_base.speed = 1.0;
+    m_base.base_timediv = readUint(d);
     m_base.timediv  = readUint(d);
     m_base.timediv2 = 10000 * m_base.timediv;
     m_base.maxtime  = readUint(d + 4);
@@ -176,9 +178,9 @@ void V2MPlayer::Tick()
     // beats = ticks / timediv
     // bars = beats / 4 (for example)
     m_state.tick += m_state.nexttime-m_state.time;
-    while (m_state.tick >= m_base.timediv)
+    while (m_state.tick >= m_base.timediv * m_base.speed)
     {
-        m_state.tick -= m_base.timediv;
+        m_state.tick -= m_base.timediv * m_base.speed;
         m_state.beat++;
     }
     uint32_t qpb=(m_state.num*4/m_state.den);
@@ -309,7 +311,7 @@ void V2MPlayer::Play(uint32_t a_time)
     m_base.valid = sFALSE;
     uint32_t destsmpl, cursmpl = 0;
     {
-        destsmpl = ((uint64_t)a_time * m_samplerate) / m_tpc;
+        destsmpl = m_base.speed * ((uint64_t)a_time * m_samplerate) / m_tpc;
     }
 
     m_state.state = PlayerState::PLAYING;
@@ -321,7 +323,7 @@ void V2MPlayer::Play(uint32_t a_time)
         Tick();
         if (m_state.state == PlayerState::PLAYING)
         {
-            UpdateSampleDelta(m_state.nexttime, m_state.time, m_state.usecs, m_base.timediv2, &m_state.smpl_rem, &m_state.smpl_delta);
+            UpdateSampleDelta(m_state.nexttime, m_state.time, m_state.usecs, m_base.timediv2 * m_base.speed, &m_state.smpl_rem, &m_state.smpl_delta);
         } else
             m_state.smpl_delta = -1;
     }
@@ -378,7 +380,7 @@ void V2MPlayer::Render(float *a_buffer, uint32_t a_len, bool a_add)
                 Tick();
                 if (m_state.state == PlayerState::PLAYING)
                   // after Tick, we have a new nexttime, time usecs,
-                    UpdateSampleDelta(m_state.nexttime, m_state.time, m_state.usecs, m_base.timediv2, &m_state.smpl_rem, &m_state.smpl_delta);
+                    UpdateSampleDelta(m_state.nexttime, m_state.time, m_state.usecs, m_base.timediv2 * m_base.speed, &m_state.smpl_rem, &m_state.smpl_delta);
                 else
                     m_state.smpl_delta = -1;
             }
@@ -423,6 +425,16 @@ uint32_t V2MPlayer::Length()
 bool V2MPlayer::IsPlaying()
 {
     return m_base.valid && m_state.state == PlayerState::PLAYING;
+}
+
+void V2MPlayer::SetSpeed(float speed) {
+  m_base.speed = speed;
+//  m_base.timediv = (uint32_t)(m_base.base_timediv * speed);
+//  m_base.timediv2 = (uint32_t)(m_base.base_timediv * 10000 * speed);
+}
+
+uint32_t V2MPlayer::GetTime() {
+  return m_state.time * m_base.base_timediv;
 }
 
 
