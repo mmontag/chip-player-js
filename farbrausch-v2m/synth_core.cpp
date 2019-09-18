@@ -10,7 +10,7 @@
 // - VU meters?
 
 // Ye olde original V2 bugs you can turn on and off :)
-#define BUG_V2_FM_RANGE 1     // Broken sine range reduction for FM oscis
+#define BUG_V2_FM_RANGE 0     // Broken sine range reduction for FM oscis
 
 // Debugging tools
 #define DEBUGSCOPES 0
@@ -20,7 +20,7 @@
 // Debug scopes
 // --------------------------------------------------------------------------
 
-#if DEBUGSCOPES
+#if DEBUGSCOPES || defined EMSCRIPTEN
 #include "scope.h"
 #define DEBUG_PLOT_OPEN(which, title, rate, w, h) scopeOpen((which), (title), (rate), (w), (h))
 #define DEBUG_PLOT_VAL(which, value) do { float t=value; scopeSubmit((which), &t, 1); } while(0)
@@ -390,7 +390,7 @@ public:
 
     inline float fetch() const
     {
-        return buf[pos];
+        return buf[pos];	// EMSCRIPTEN luckily this seems to be properly aligned
     }
 
     inline void feed(float v)
@@ -2604,6 +2604,9 @@ extern "C" void synthSetLyrics(void *, const char **) {}
 // --------------------------------------------------------------------------
 // Synth
 // --------------------------------------------------------------------------
+#ifdef EMSCRIPTEN
+extern uint32_t readUintAt(const uint8_t *buf, int idx);
+#endif
 
 struct V2ChanInfo
 {
@@ -2677,7 +2680,7 @@ struct V2Synth
         ronanCBSetSR(&ronan, samplerate);
 
         // patch map
-        this->patchmap = (const V2PatchMap*)patchmap;
+        this->patchmap = (const V2PatchMap*)patchmap;	// this may be unaligned shit
 
         // init voices
         for (int i = 0; i < POLY; i++)
@@ -2700,18 +2703,39 @@ struct V2Synth
         compr.init(&instance);
         dcf.init(&instance);
 
+#ifdef EMSCRIPTEN
+		int buf_size= 1024; // keep in sync with output audio buffer  (see SAMPLE_BUF_SIZE in apadper.cpp!)
+		// just copy the output of the different channels
+		DEBUG_PLOT_OPEN(DEBUG_PLOT_CHAN(&chansw[0], 0), "channel 0", buf_size, 0, 0);
+		DEBUG_PLOT_OPEN(DEBUG_PLOT_CHAN(&chansw[1], 0), "channel 1", buf_size, 0, 0);
+		DEBUG_PLOT_OPEN(DEBUG_PLOT_CHAN(&chansw[2], 0), "channel 2", buf_size, 0, 0);
+		DEBUG_PLOT_OPEN(DEBUG_PLOT_CHAN(&chansw[3], 0), "channel 3", buf_size, 0, 0);
+		DEBUG_PLOT_OPEN(DEBUG_PLOT_CHAN(&chansw[4], 0), "channel 4", buf_size, 0, 0);
+		DEBUG_PLOT_OPEN(DEBUG_PLOT_CHAN(&chansw[5], 0), "channel 5", buf_size, 0, 0);
+		DEBUG_PLOT_OPEN(DEBUG_PLOT_CHAN(&chansw[6], 0), "channel 6", buf_size, 0, 0);
+		DEBUG_PLOT_OPEN(DEBUG_PLOT_CHAN(&chansw[7], 0), "channel 7", buf_size, 0, 0);
+		DEBUG_PLOT_OPEN(DEBUG_PLOT_CHAN(&chansw[8], 0), "channel 8", buf_size, 0, 0);
+		DEBUG_PLOT_OPEN(DEBUG_PLOT_CHAN(&chansw[9], 0), "channel 9", buf_size, 0, 0);
+		DEBUG_PLOT_OPEN(DEBUG_PLOT_CHAN(&chansw[10], 0), "channel 10", buf_size, 0, 0);
+		DEBUG_PLOT_OPEN(DEBUG_PLOT_CHAN(&chansw[11], 0), "channel 11", buf_size, 0, 0);
+		DEBUG_PLOT_OPEN(DEBUG_PLOT_CHAN(&chansw[12], 0), "channel 12", buf_size, 0, 0);
+		DEBUG_PLOT_OPEN(DEBUG_PLOT_CHAN(&chansw[13], 0), "channel 13", buf_size, 0, 0);
+		DEBUG_PLOT_OPEN(DEBUG_PLOT_CHAN(&chansw[14], 0), "channel 14", buf_size, 0, 0);
+		DEBUG_PLOT_OPEN(DEBUG_PLOT_CHAN(&chansw[15], 0), "channel 15", buf_size, 0, 0);	
+#endif		
+
         // debug plots (uncomment the ones you want)
         //int sr_plot = 44100/10; // plot rate
         //int sr_lfo = 800;
         //int w = 800, h = 150;
 
-        //DEBUG_PLOT_OPEN(&voicesw[1].osc[0], "Voice 1 VCO 0", sr_plot, w, h);
+        //DEBUG_PLOT_OPEN(&voicesw[1].osc[0], "Voice 1 VCO 0", sr_plot, w, h);	// oscillator - 3 per voice
         //DEBUG_PLOT_OPEN(&voicesw[1].osc[1], "Voice 1 VCO 1", sr_plot, w, h);
         //DEBUG_PLOT_OPEN(&voicesw[1].vcf[0], "Voice 1 VCF 0", sr_plot, w, h);
-        //DEBUG_PLOT_OPEN(&voicesw[1].env[0], "Voice 1 Env 0", sr_lfo, w, h);
+        //DEBUG_PLOT_OPEN(&voicesw[1].env[0], "Voice 1 Env 0", sr_lfo, w, h);	// envelope - 2 per voice
         //DEBUG_PLOT_OPEN(&voicesw[1].lfo[0], "Voice 1 LFO 0", sr_lfo, w, h);
         //DEBUG_PLOT_OPEN(&voicesw[1].dist, "Voice 1 Dist", sr_plot, w, h);
-        //DEBUG_PLOT_OPEN(&voicesw[1], "Voice 1 final", sr_plot, w, h);
+        //DEBUG_PLOT_OPEN(&voicesw[1], "Voice 1 final", sr_plot, w, h);			// voice output
         //DEBUG_PLOT_OPEN(DEBUG_PLOT_CHAN(&chansw[0].dcf1, 0), "Chan 0 DCF1 L", sr_plot, w, h);
         //DEBUG_PLOT_OPEN(DEBUG_PLOT_CHAN(&chansw[0].dcf1, 1), "Chan 0 DCF1 R", sr_plot, w, h);
         //DEBUG_PLOT_OPEN(DEBUG_PLOT_CHAN(&chansw[0], 0), "Channel 0 L", sr_plot, w, h);
@@ -2996,7 +3020,7 @@ struct V2Synth
             return;
 
         // copy over
-        float *globf = (float *)&globals;
+        float *globf = (float *)&globals;		// note: alignment Ok.. structure exclusively made of floats (with some padding at the end)
         for (int i = 0; i < (int)(sizeof(globals)/sizeof(float)); i++)
             globf[i] = para[i];
 
@@ -3008,7 +3032,7 @@ struct V2Synth
         hcfreq = sqr((globals.vhighcut + 1.0f) / 128.0f);
     }
 
-    void getPoly(int *dest)
+    void getPoly(int *dest)	// seems to be unused here (see synthGetPoly)
     {
         for (int i = 0; i <= CHANS; i++)
             dest[i] = 0;
@@ -3024,7 +3048,7 @@ struct V2Synth
         }
     }
 
-    void getPgm(int *dest)
+    void getPgm(int *dest)	// seems to be unused here (see synthGetPgm)
     {
         for (int i = 0; i < CHANS; i++)
             dest[i] = chans[i].pgm;
@@ -3033,8 +3057,8 @@ struct V2Synth
 private:
     const V2Sound *getpatch(int pgm) const
     {
-        assert(pgm >= 0 && pgm < 128);
-        return (const V2Sound *)&patchmap->raw_data[patchmap->offsets[pgm]];
+        assert(pgm >= 0 && pgm < 128);		
+        return (const V2Sound *)&patchmap->raw_data[readUintAt((uint8_t*)patchmap->offsets, pgm)];
     }
 
     float getmodsource(const V2Voice *voice, int chan, int source) const
@@ -3258,6 +3282,13 @@ private:
 // --------------------------------------------------------------------------
 // C-style interface
 // --------------------------------------------------------------------------
+
+#ifdef EMSCRIPTEN
+int *getVoiceMap(void *pthis)
+{
+    return ((V2Synth *)pthis)->voicemap;
+}
+#endif
 
 unsigned int synthGetSize()
 {

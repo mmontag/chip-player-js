@@ -7,7 +7,11 @@
 #include <stdio.h>
 #include <stdint.h>
 
+#ifdef PRINTDBG
+#define printf2 fprintf
+#else
 #define printf2(str, ...)
+#endif
 
 extern const char * const v2mconv_errors[] =
 {
@@ -53,39 +57,71 @@ static struct _ssbase
 
 } base;
 
+
+#ifdef EMSCRIPTEN
+// fix the "unaligned data access" shit
+uint32_t readUint(const uint8_t *buf) {
+	return buf[0]+(buf[1]<<8)+(buf[2]<<16)+(buf[3]<<24);			
+}
+uint32_t readUintAt(const uint8_t *buf, int idx) {
+	return readUint(buf + idx*sizeof(uint32_t));
+}
+int readInt(const uint8_t *buf) {
+	uint32_t u= readUint(buf);
+	return *((int32_t*)&u);
+}
+int readIntAt(int *buf, int idx) {	// just in case it is unaligned
+	return readInt(((const uint8_t*)buf) + idx*sizeof(uint32_t));
+}
+
+void writeUint(uint8_t *buf, uint32_t value) {
+	buf[0]= value & 0xff;
+	buf[1]= (value>>8) & 0xff;
+	buf[2]= (value>>16) & 0xff;
+	buf[3]= (value>>24) & 0xff;	
+}
+void writeInt(uint8_t *buf, int value) {
+	writeUint(buf, *((uint32_t*)&value));
+}
+void writeIntAt(uint8_t *buf, int idx, int value) {
+	writeUint(buf+idx*sizeof(int), *((uint32_t*)&value));
+}
+#endif
+
 static void readfile(const unsigned char *inptr, const int inlen)
 {
     const uint8_t *d = inptr;
     memset(&base, 0, sizeof(base));
 
-    base.timediv  = (*((uint32_t*)(d)));
+    base.timediv  = readUint(d);
     base.timediv2 = 10000*base.timediv;
-    base.maxtime  = *((uint32_t*)(d + 4));
-    base.gdnum    = *((uint32_t*)(d + 8));
+    base.maxtime  = readUint(d + 4);
+    base.gdnum    = readUint(d + 8);
+
     d += 12;
     base.gptr = d;
     d += 10*base.gdnum;
     for (int ch = 0; ch < 16; ch++)
     {
         _ssbase::_basech &c = base.chan[ch];
-        c.notenum = *((uint32_t*)d);
+		c.notenum = readUint(d);
         d += 4;
         if (c.notenum)
         {
             c.noteptr = d;
             d += 5*c.notenum;
-            c.pcnum = *((uint32_t*)d);
+			c.pcnum = readUint(d);
             d += 4;
             c.pcptr = d;
             d += 4*c.pcnum;
-            c.pbnum = *((uint32_t*)d);
+			c.pbnum = readUint(d);
             d += 4;
             c.pbptr = d;
             d += 5*c.pbnum;
             for (int cn = 0; cn < 7; cn++)
             {
                 _ssbase::_basech::_bcctl &cc = c.ctl[cn];
-                cc.ccnum = *((uint32_t*)d);
+				cc.ccnum = readUint(d);
                 d += 4;
                 cc.ccptr = d;
                 d += 4*cc.ccnum;
@@ -93,12 +129,13 @@ static void readfile(const unsigned char *inptr, const int inlen)
         }
     }
     base.midisize = d - inptr;
-    base.globsize = *((uint32_t*)d);
+    base.globsize = readUint(d);
+
     if (base.globsize < 0 || base.globsize > 131072) return;
     d += 4;
     base.globals = d;
     d += base.globsize;
-    base.patchsize = *((uint32_t*)d);
+    base.patchsize = readUint(d);
     if (base.patchsize < 0 || base.patchsize > 1048576) return;
     d += 4;
     base.patchmap = d;
@@ -106,7 +143,7 @@ static void readfile(const unsigned char *inptr, const int inlen)
 
     if (d - inptr < inlen)
     {
-        base.spsize = *((uint32_t*)d);
+		base.spsize = readUint(d);
         d += 4;
         base.speechdata = d;
         d += base.spsize;
@@ -123,8 +160,8 @@ static void readfile(const unsigned char *inptr, const int inlen)
         base.speechdata = 0;
     }
 
-    printf2("after read: est %d, is %d\n", inlen, d - inptr);
-    printf2("midisize: %d, globs: %d, patches: %d\n", base.midisize, base.globsize, base.patchsize);
+    printf2(stderr, "after read: est %d, is %d\n", inlen, d - inptr);
+    printf2(stderr, "midisize: %d, globs: %d, patches: %d\n", base.midisize, base.globsize, base.patchsize);
 }
 
 int patchesused[128];
@@ -190,48 +227,51 @@ int CheckV2MVersion(const unsigned char *inptr, const int inlen)
         }
 
     }
-    printf2("patches used: %d\n", base.maxp);
+    printf2(stderr, "patches used: %d\n", base.maxp);
 
     if (!base.maxp)
         return -1;
 
-    // offset table to ptaches
+    // offset table to patches
     int *poffsets = (int *)base.patchmap;
 
     int matches = 0, best = -1;
     // for each version check...
+	
     for (i = 0; i <= v2version; i++)
     {
         // ... if globals size is correct...
         if (base.globsize == v2gsizes[i])
         {
-            printf2("globsize match: %d\n",i);
+            printf2(stderr, "globsize match: %d [%d]\n",i, v2gsizes[i]);
             // ... and if the size of all patches makes sense
             int p;
             for (p = 0; p < base.maxp - 1; p++)
             {
-                int d = (poffsets[p + 1] - poffsets[p]) - (v2vsizes[i] - 3*255);
-                if (d % 3) break;
+                int d = (readIntAt(poffsets, p + 1) - readIntAt(poffsets, p)) - (v2vsizes[i] - 3*255);
+				
+                if (d % 3)  break;
+
                 d /= 3;
-                if (d != base.patchmap[poffsets[p] + v2vsizes[i] - 3*255 - 1])
-                    break;
+                if (d != base.patchmap[readIntAt(poffsets, p) + v2vsizes[i] - 3*255 - 1]) break;
             }
 
             if (p == base.maxp - 1)
             {
-                printf2("... ok!\n");
+                printf2(stderr, "... ok!\n");
                 best = i;
                 matches++;
             } else
             {
-                printf2("no match!\n");
+                printf2(stderr, "no match!\n");
             }
         }
     }
 
     // if we've got exactly one match, we're quite sure
     int ret = (matches >= 1) ? v2version - best : -2;
-    printf2("found version delta: %d\n", ret);
+    printf2(stderr, "found version delta: %d\n", ret);
+	
     return ret;
 }
 
@@ -243,11 +283,11 @@ int CheckV2MVersion(const unsigned char *inptr, const int inlen)
     int nEnVal = (int)(-log(1.0f - dv)/log(2.0f)*128.0f/11.0f);
     if (nEnVal < 0)
     {
-        printf2("!!clamping enval lower bound!\n");
+        printf2(stderr, "!!clamping enval lower bound!\n");
         nEnVal = 0;
     } else if (nEnVal > 127)
     {
-        printf2("!!clamping enval upper bound!\n");
+        printf2(stderr, "!!clamping enval upper bound!\n");
         nEnVal = 127;
     }
     return nEnVal;
@@ -275,10 +315,10 @@ void ConvertV2M(const unsigned char *inptr, const int inlen, unsigned char **out
     vdelta = v2version - vdelta;
 
     // fake base.maxp
-    int maxp2 = ((int*)base.patchmap)[0]/4;
+    int maxp2 = readIntAt((int*)base.patchmap, 0)/4;
     if (maxp2 != base.maxp)
     {
-        printf2("warning: patch count inconsistency: we:%d, they:%d\n", base.maxp, maxp2);
+        printf2(stderr, "warning: patch count inconsistency: we:%d, they:%d\n", base.maxp, maxp2);
         base.maxp = maxp2;
     }
 
@@ -286,7 +326,7 @@ void ConvertV2M(const unsigned char *inptr, const int inlen, unsigned char **out
     int gdiff = v2gsizes[v2version] - v2gsizes[vdelta];
     int pdiff = v2vsizes[v2version] - v2vsizes[vdelta];
     int newsize = inlen + gdiff + base.maxp*pdiff;
-    printf2("old size: %d, new size: %d\n", inlen, newsize);
+    printf2(stderr, "old size: %d, new size: %d\n", inlen, newsize);
 
     // init new v2m
     *outlen = newsize + 4;
@@ -298,8 +338,9 @@ void ConvertV2M(const unsigned char *inptr, const int inlen, unsigned char **out
 
     // new globals length...
     newptr += base.midisize;
-    *(int *)newptr = v2ngparms;
-    printf2("glob size: old %d, new %d\n", base.globsize, *(int *)newptr);
+    writeInt(newptr, v2ngparms);
+	
+    printf2(stderr, "glob size: old %d, new %d\n", base.globsize, readInt(newptr));
     newptr += 4;
 
     // copy/remap globals
@@ -313,8 +354,8 @@ void ConvertV2M(const unsigned char *inptr, const int inlen, unsigned char **out
     newptr += v2ngparms;
 
     // new patch data length
-    *(int *)newptr = base.patchsize + base.maxp*pdiff;
-    printf2("patch size: old %d, new %d\n", base.patchsize, *(int *)newptr);
+    writeInt(newptr, base.patchsize + base.maxp*pdiff);
+    printf2(stderr, "patch size: old %d, new %d\n", base.patchsize, readInt(newptr));
     newptr += 4;
 
     base.newpatchmap = newptr;
@@ -323,7 +364,7 @@ void ConvertV2M(const unsigned char *inptr, const int inlen, unsigned char **out
     int *noffsets = (int *)newptr;
     //const int ros = v2vsizes[vdelta] - 255*3 - 1;
 
-    //uint8_t *nptr2 = newptr;
+    uint8_t *nptr2 = newptr;
 
     // copy patch table...
     // gcc 5.3 seems to vectorize the loop, but
@@ -331,7 +372,7 @@ void ConvertV2M(const unsigned char *inptr, const int inlen, unsigned char **out
     // adding volatile to the iterator breaks the auto-vec
     for (volatile int q = 0; q < base.maxp; q++)
     {
-        noffsets[q] = poffsets[q] + (q * pdiff);
+        writeIntAt((uint8_t*)noffsets, q, readIntAt(poffsets, q) + (q * pdiff));
     }
 
     newptr += 4*base.maxp;
@@ -339,10 +380,10 @@ void ConvertV2M(const unsigned char *inptr, const int inlen, unsigned char **out
     // for each patch...
     for (p = 0; p < base.maxp; p++)
     {
-        const uint8_t *src = base.patchmap + poffsets[p];
+        const uint8_t *src = base.patchmap + readIntAt(poffsets, p);
 
-        //const uint8_t *dest_soll = nptr2 + noffsets[p];
-        printf2("p%d ist:%08x soll:%08x\n", p, newptr, dest_soll);
+        const uint8_t *dest_soll = nptr2 + readIntAt(noffsets, p);
+        printf2(stderr, "p%d ist:%08x soll:%08x\n", p, newptr, dest_soll);
 
         // fill patch with default values
         memcpy(newptr, v2initsnd, v2nparms);
@@ -352,7 +393,7 @@ void ConvertV2M(const unsigned char *inptr, const int inlen, unsigned char **out
         {
             if (v2parms[i].version <= vdelta)
             {
-                *newptr = *src++;
+                *newptr = *src++;	// char based! 
                 /*
                 if (vdelta < 2 && (i == 33 || i == 36 || i == 39 || i == 42)) // fix envelopes
                     *newptr=transEnv(*newptr); */
@@ -362,7 +403,7 @@ void ConvertV2M(const unsigned char *inptr, const int inlen, unsigned char **out
 
         // copy mod number
         const int modnum = *newptr ++= *src++;
-        //        printf2("patch %d: %d mods\n",p,modnum);
+        //        printf2(stderr, "patch %d: %d mods\n",p,modnum);
 
         // copy/remap modulations
         for (i = 0; i < modnum; i++)
@@ -378,12 +419,13 @@ void ConvertV2M(const unsigned char *inptr, const int inlen, unsigned char **out
     }
 
     // copy speech
-    *(uint32_t*)newptr = base.spsize;
+    writeUint(newptr, base.spsize);
+	
     newptr += 4;
     memcpy(newptr, base.speechdata, base.spsize);
     newptr += base.spsize;
 
-    printf2("est size: %d, real size: %d\n", newsize, newptr - *outptr);
+    printf2(stderr, "est size: %d, real size: %d\n", newsize, newptr - *outptr);
 }
 
 unsigned long GetV2MPatchData(const unsigned char *inptr, const int inlen,
@@ -398,7 +440,7 @@ unsigned long GetV2MPatchData(const unsigned char *inptr, const int inlen,
     int *poffsets = (int*)pm;
     for (int i = 0; i < base.maxp; i++)
     {
-        patchmap[i] = pm + poffsets[i];
+        patchmap[i] = pm + readIntAt(poffsets, i);
     }
     return base.maxp;
 }

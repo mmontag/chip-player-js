@@ -2,6 +2,10 @@
 
 extern "C"
 {
+#ifdef EMSCRIPTEN 
+	extern int *getVoiceMap(void *pthis);
+#endif
+	
     extern unsigned int synthGetSize();
 
     extern void synthInit(void *pthis, const void *patchmap, int samplerate=44100);

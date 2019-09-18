@@ -18,18 +18,28 @@
 #define UPDATENT3(n, v, p, w) if ((n) < (w) && (v) < m_state.nexttime) m_state.nexttime = (v);
 #define PUTSTAT(s) { uint8_t bla = (s); if (laststat != bla) { laststat = bla; *mptr ++= (uint8_t)laststat; }};
 
+#ifdef EMSCRIPTEN
+extern uint32_t readUint(const uint8_t *buf);
+extern int readInt(const uint8_t *buf);
+extern void writeUint(uint8_t *buf, uint32_t value);
+
+#endif
+
 namespace
 {
     void UpdateSampleDelta(uint32_t nexttime, uint32_t time, uint32_t usecs, uint32_t td2, uint32_t *smplrem, uint32_t *smpldelta)
     {
         // performs 64bit (nexttime-time)*usecs/td2 and a 32.32bit addition to smpldelta:smplrem
         uint64_t t = ((nexttime - time) * (uint64_t) usecs) / td2;
-        uint32_t r = *smplrem;
-        *smplrem   += (t >> 32);        // bits 32-63
-        *smpldelta += (t & 0xffffffff); // bits 00-31
-        if (*smplrem < r)
+        uint32_t r = readUint((uint8_t*)smplrem);
+//      *smplrem   += (t >> 32);         // bits 32-63
+		writeUint((uint8_t*)smplrem, r+(t >> 32)); // bits 32-63
+		
+//      *smpldelta += (t & 0xffffffff); 							// bits 00-31
+		writeUint((uint8_t*)smpldelta, readUint((uint8_t*)smpldelta)+(t & 0xffffffff)); // bits 00-31
+        if (readUint((uint8_t*)smplrem) < r)
         {
-            *smpldelta += 1;
+            writeUint((uint8_t*)smpldelta, readUint((uint8_t*)smpldelta) + 1);
         }
     }
 }
@@ -38,10 +48,10 @@ bool V2MPlayer::InitBase(const void *a_v2m)
 {
     const uint8_t *d = (const uint8_t*)a_v2m;
 
-    m_base.timediv  = (*((uint32_t*)(d)));
+    m_base.timediv  = readUint(d);
     m_base.timediv2 = 10000*m_base.timediv;
-    m_base.maxtime  = *((uint32_t*)(d + 4));
-    m_base.gdnum    = *((uint32_t*)(d + 8));
+    m_base.maxtime  = readUint(d + 4);
+    m_base.gdnum    = readUint(d + 8);
 
     d += 12;
     m_base.gptr = d;
@@ -49,44 +59,44 @@ bool V2MPlayer::InitBase(const void *a_v2m)
     for (int ch = 0; ch < 16; ch++)
     {
         V2MBase::Channel &c=m_base.chan[ch];
-        c.notenum=*((uint32_t*)d);
+        c.notenum= readUint(d);
         d += 4;
         if (c.notenum)
         {
             c.noteptr=d;
             d += 5*c.notenum;
-            c.pcnum = *((uint32_t*)d);
+            c.pcnum = readUint(d);
             d += 4;
             c.pcptr = d;
             d += 4*c.pcnum;
-            c.pbnum = *((uint32_t*)d);
+            c.pbnum = readUint(d);
             d += 4;
             c.pbptr = d;
             d += 5*c.pbnum;
             for (int cn = 0; cn < 7; cn++)
             {
                 V2MBase::Channel::CC &cc = c.ctl[cn];
-                cc.ccnum = *((uint32_t*)d);
+                cc.ccnum = readUint(d);
                 d += 4;
                 cc.ccptr = d;
                 d += 4*cc.ccnum;
             }
         }
     }
-    int size = *((uint32_t*)d);
+    int size = readInt(d);
     if (size > 16384 || size < 0)
         return sFALSE;
     d += 4;
     m_base.globals = d;
     d += size;
-    size = *((uint32_t*)d);
+    size = readInt(d);
     if (size > 1048576 || size < 0)
         return sFALSE;
     d += 4;
     m_base.patchmap = d;
     d += size;
 
-    uint32_t spsize = *((uint32_t*)d);
+    uint32_t spsize = readUint(d);
     d += 4;
     if (!spsize || spsize >= 8192)
     {
@@ -97,10 +107,12 @@ bool V2MPlayer::InitBase(const void *a_v2m)
         m_base.speechdata = (const char *)d;
         d += spsize;
         const uint32_t *p32 = (const uint32_t*)m_base.speechdata;
-        uint32_t n = *(p32++);
+ //       uint32_t n = *(p32++);
+        uint32_t n = readUint((uint8_t*)(p32++));	// EMSCRIPTEN might be unaligned shit
         for (uint32_t i = 0; i < n; i++)
         {
-            m_base.speechptrs[i] = m_base.speechdata + *(p32++);
+   //         m_base.speechptrs[i] = m_base.speechdata + *(p32++);
+            m_base.speechptrs[i] = m_base.speechdata + readUint((uint8_t*)(p32++));	//  EMSCRIPTEN
         }
     }
 
@@ -182,7 +194,7 @@ void V2MPlayer::Tick()
 
     if (m_state.gnr<m_base.gdnum && m_state.time==m_state.gnt) // neues global-event?
     {
-        m_state.usecs = (*(uint32_t *)(m_state.gptr + 3*m_base.gdnum + 4*m_state.gnr))*(m_samplerate/100);
+        m_state.usecs = readUint(m_state.gptr + 3*m_base.gdnum + 4*m_state.gnr)*(m_samplerate/100);
         m_state.num = m_state.gptr[7*m_base.gdnum + m_state.gnr];
         m_state.den = m_state.gptr[8*m_base.gdnum + m_state.gnr];
         m_state.tpq = m_state.gptr[9*m_base.gdnum + m_state.gnr];
@@ -254,8 +266,10 @@ void V2MPlayer::Tick()
 
     synthProcessMIDI(m_synth, m_midibuf);
 
-    if ((m_state.nexttime == (uint32_t)-1) || (m_state.time >= m_base.maxtime))
+    if (m_state.nexttime == (uint32_t)-1)
         m_state.state = PlayerState::STOPPED;
+    if(m_state.time >= m_base.maxtime)
+        m_state.state=PlayerState::STOPPED;
 }
 
 bool V2MPlayer::Open(const void *a_v2mptr, uint32_t a_samplerate)
@@ -327,7 +341,12 @@ void V2MPlayer::Stop(uint32_t a_fadetime)
     } else
         m_state.state=PlayerState::OFF;
 }
-
+#ifdef EMSCRIPTEN
+int* V2MPlayer::GetVoiceMap()
+{
+	return getVoiceMap(m_synth);
+}
+#endif
 void V2MPlayer::Render(float *a_buffer, uint32_t a_len, bool a_add)
 {
     if (!a_buffer)

@@ -29,7 +29,7 @@ const int v2nsources = sizeof(v2sources)/sizeof(char *);
 static unsigned char v2clipboard[v2soundsize];
 static char v2clipname[256];
 
-unsigned char *soundmem;
+unsigned char *soundmem= NULL;
 long          *patchoffsets;
 unsigned char *editmem;
 char          patchnames[128][32];
@@ -48,7 +48,13 @@ char          *speechptrs[64];
 
 void sdInit()
 {
+#ifdef EMSCRIPTEN
+	int l= (smsize + v2soundsize)/sizeof(long)+1;
+	soundmem = (unsigned char*)new long[l];				// avoid alignment issues
+#else
     soundmem = new unsigned char [smsize + v2soundsize];
+#endif
+
     patchoffsets = (long *)soundmem;
     unsigned char *sptr = soundmem + 128*4;
 
@@ -139,6 +145,13 @@ void sdClose()
     delete v2vsizes;
     delete v2topics2;
     delete v2gtopics2;
+	
+#ifdef EMSCRIPTEN
+    soundmem= NULL;
+    v2vsizes= NULL;
+    v2topics2= NULL;
+    v2gtopics2= NULL;
+#endif	
 }
 
 #if FILE_IO
