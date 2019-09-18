@@ -126,11 +126,10 @@ class App extends React.Component {
               this.setState({
                 faves: data.faves || [],
                 showPlayerSettings: data.settings ? data.settings.showPlayerSettings : false,
-                loadingUser: false,
               });
             }
           })
-          .catch(() => {
+          .finally(() => {
             this.setState({loadingUser: false});
           });
       }
