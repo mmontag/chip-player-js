@@ -1,0 +1,23 @@
+# v2m-player
+Farbrausch V2M player
+SDL Port by github.com/jgilje
+
+0.20180108
+
+    Fix time play in V2MPlayer::Tick()
+
+0.20171117
+
+    Switch to optimized code https://github.com/lieff/v2m-player
+
+0.20170725
+
+    Add key-mode for player (options)
+
+0.20170714
+
+    Time limit for player
+
+0.20170322
+
+    Library libv2m
