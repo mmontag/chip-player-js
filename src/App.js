@@ -13,10 +13,12 @@ import Dropzone from 'react-dropzone';
 import { toArabic } from 'roman-numerals';
 
 import ChipCore from './chip-core';
+import promisify from './promisifyXhr';
+
 import GMEPlayer from './players/GMEPlayer';
 import XMPPlayer from './players/XMPPlayer';
 import MIDIPlayer from './players/MIDIPlayer';
-import promisify from "./promisifyXhr";
+import V2MPlayer from './players/V2MPlayer';
 
 import PlayerParams from './PlayerParams';
 import Search from './Search';
@@ -182,6 +184,7 @@ class App extends React.Component {
             new GMEPlayer(audioCtx, playerNode, chipCore),
             new XMPPlayer(audioCtx, playerNode, chipCore),
             new MIDIPlayer(audioCtx, playerNode, chipCore),
+            new V2MPlayer(audioCtx, playerNode, chipCore),
           ]);
           this.setState({loading: false});
 

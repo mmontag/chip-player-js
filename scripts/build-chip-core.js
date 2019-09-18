@@ -150,6 +150,18 @@ const libADLMIDI_files = [
 
 source_files = source_files.concat(libADLMIDI_files);
 
+const v2m_files = [
+  'ronan.cpp',
+  'scope.cpp',
+  'v2mplayer.cpp',
+  'v2mconv.cpp',
+  'synth_core.cpp',
+  'sounddef.cpp',
+  'v2mwrapper.cpp',
+].map(file => 'farbrausch-v2m/' + file);
+
+source_files = source_files.concat(v2m_files);
+
 // Complete LibXMP build:
 // source_files.push('libxmp/lib/libxmp.a');
 source_files.push('libxmp/libxmp-lite-stagedir/lib/libxmp-lite.a');
@@ -242,6 +254,14 @@ var exported_functions = [
   '_adl_rt_pitchBend',
   '_adl_rt_resetState',
 
+  '_v2m_open',
+  '_v2m_write_audio',
+  '_v2m_get_position_ms',
+  '_v2m_get_duration_ms',
+  '_v2m_seek_ms',
+  '_v2m_set_speed',
+  '_v2m_close',
+
   // From showcqtbar.c
   '_cqt_init',
   '_cqt_calc',
@@ -261,7 +281,8 @@ var runtime_methods = [
 
 var flags = [
   // '--closure', '1',       // causes TypeError: lib.FS.mkdir is not a function
-  '--llvm-lto', '3',
+  // '--llvm-lto', '3',
+  // '--clear-cache',        // sometimes Emscripten cache gets "poisoned"
   '--no-heap-copy',
   '-s', 'EXPORTED_FUNCTIONS=[' + exported_functions.join(',') + ']',
   '-s', 'EXPORTED_RUNTIME_METHODS=[' + runtime_methods.join(',') + ']',
@@ -298,6 +319,15 @@ var flags = [
   '-Wno-inconsistent-missing-override',
   '-Wno-c++11-narrowing',
   '-std=c++11',
+
+  // V2M
+  '-flto',
+  '-fno-asynchronous-unwind-tables',
+  '-fno-stack-protector',
+  '-ffunction-sections',
+  '-fdata-sections',
+  '-DRONAN',
+  '-s', 'SAFE_HEAP=0',
 ];
 var args = [].concat(flags, source_files);
 
