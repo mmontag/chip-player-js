@@ -45,7 +45,7 @@ const HEADERS = {
 const trie = new TrieSearch('file', {
   indexField: 'id',
   idFieldOrFunction: 'id',
-  splitOnRegEx: /[^A-Za-z0-9]/g,
+  splitOnRegEx: /[^a-zA-Z0-9]|(?<=[a-z])(?=[A-Z])/,
 });
 const start = performance.now();
 const files = catalog.map((file, i) => ({id: i, file: file}));
