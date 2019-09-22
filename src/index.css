@@ -250,10 +250,9 @@ body,#root {
 .App-footer-art {
     width: 210px;
     height: 210px;
-    background-size: contain;
-    background-position: center;
     background-color: var(--neutral0);
-    background-repeat: no-repeat;
+    object-fit: scale-down;
+    image-rendering: unset;
     border-left: 1px solid var(--clickable);
     flex-shrink: 0;
 }
