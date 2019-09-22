@@ -30,6 +30,7 @@ export default class Browse extends PureComponent {
     super(props);
 
     this.navigate = this.navigate.bind(this);
+    this.handleShufflePlay = this.handleShufflePlay.bind(this);
 
     this.contexts = {};
   }
@@ -40,6 +41,10 @@ export default class Browse extends PureComponent {
 
   componentDidUpdate() {
     this.navigate();
+  }
+
+  handleShufflePlay() {
+    this.props.handleShufflePlay(this.props.browsePath);
   }
 
   navigate() {
@@ -73,8 +78,14 @@ export default class Browse extends PureComponent {
 
     return (
       <Fragment>
-        <div>
-          /{browsePath}
+        <div style={css.row}>
+          /{browsePath}{' '}
+          <button
+            className="box-button"
+            title="Shuffle this directory (and all subdirectories)"
+            onClick={this.handleShufflePlay}>
+            Shuffle Play
+          </button>
         </div>
         <this.VirtualDirectoryListing
           key={browsePath}
@@ -88,3 +99,11 @@ export default class Browse extends PureComponent {
     );
   }
 }
+
+const css = {
+  row: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    marginBottom: 'var(--charH)',
+  },
+};

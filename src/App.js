@@ -93,6 +93,7 @@ class App extends React.Component {
     this.handleSequencerStateUpdate = this.handleSequencerStateUpdate.bind(this);
     this.handlePlayerError = this.handlePlayerError.bind(this);
     this.handlePlayRandom = this.handlePlayRandom.bind(this);
+    this.handleShufflePlay = this.handleShufflePlay.bind(this);
     this.handleSongClick = this.handleSongClick.bind(this);
     this.handleLogin = this.handleLogin.bind(this);
     this.handleLogout = this.handleLogout.bind(this);
@@ -431,6 +432,12 @@ class App extends React.Component {
       .then(json => this.sequencer.playContext(json.items.map(item => item.file), 10));
   }
 
+  handleShufflePlay(path) {
+    fetch(`${API_BASE}/shuffle?path=${encodeURI(path)}&limit=100`)
+      .then(response => response.json())
+      .then(json => this.sequencer.playContext(json.items));
+  }
+
   handleSongClick(url, context, index) {
     return (e) => {
       e.preventDefault();
@@ -594,6 +601,7 @@ class App extends React.Component {
                           directories={this.state.directories}
                           fetchDirectory={this.fetchDirectory}
                           handleSongClick={this.handleSongClick}
+                          handleShufflePlay={this.handleShufflePlay}
                           scrollContainerRef={this.contentAreaRef}
                           favorites={this.state.faves}
                           toggleFavorite={this.handleToggleFavorite}/>
