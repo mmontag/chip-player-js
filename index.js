@@ -16,6 +16,7 @@ const path = require('path');
 const http = require('http');
 const TrieSearch = require('trie-search');
 const { performance } = require('perf_hooks');
+const { sampleSize } = require('lodash');
 
 const CATALOG_PATH = './catalog.json';
 const catalog = require(CATALOG_PATH);
@@ -45,7 +46,7 @@ const HEADERS = {
 const trie = new TrieSearch('file', {
   indexField: 'id',
   idFieldOrFunction: 'id',
-  splitOnRegEx: /[^A-Za-z0-9]/g,
+  splitOnRegEx: /[^a-zA-Z0-9]|(?<=[a-z])(?=[A-Z])/,
 });
 const start = performance.now();
 const files = catalog.map((file, i) => ({id: i, file: file}));
@@ -77,11 +78,22 @@ const routes = {
     const limit = parseInt(params.limit, 10) || 1;
     const idx = Math.floor(Math.random() * files.length);
     const items = files.slice(idx, idx + limit);
-    const total = items.length;
     return {
       items: items,
-      total: total,
-    }
+      total: items.length,
+    };
+  },
+
+  'shuffle': (params) => {
+    const limit = parseInt(params.limit, 10) || 100;
+    let path = params.path || '';
+    path = path.replace(/^\/+/, '');
+    const items = catalog.filter(file => file.startsWith(path));
+    const sampled = sampleSize(items, limit);
+    return {
+      items: sampled,
+      total: sampled.length,
+    };
   },
 
   'browse': (params) => {
@@ -89,13 +101,20 @@ const routes = {
   },
 
   'image': (params) => {
-    const dir = params.path;
-    const images = glob.sync(`${LOCAL_CATALOG_ROOT + dir}/*.{gif,png,jpg,jpeg}`, {nocase: true});
     let imageUrl = null;
-    if (images.length > 0) {
-      const imageFile = encodeURI(path.basename(images[0]));
-      const imageDir = encodeURI(dir);
-      imageUrl = `${PUBLIC_CATALOG_URL}${imageDir}/${imageFile}`;
+    if (params.path) {
+      const segments = params.path.split('/');
+      while (segments.length) {
+        const dir = segments.join('/');
+        const images = glob.sync(`${LOCAL_CATALOG_ROOT}/${dir}/*.{gif,png,jpg,jpeg}`, {nocase: true});
+        if (images.length > 0) {
+          const imageFile = encodeURI(path.basename(images[0]));
+          const imageDir = encodeURI(dir);
+          imageUrl = `${PUBLIC_CATALOG_URL}${imageDir}/${imageFile}`;
+          break;
+        }
+        segments.pop();
+      }
     }
     return {
       imageUrl: imageUrl,
@@ -113,7 +132,7 @@ http.createServer(function (req, res) {
       try {
         const json = route(params);
         const headers = { ...HEADERS };
-        if (lastPathComponent !== 'random') {
+        if (!['random', 'shuffle'].includes(lastPathComponent)) {
           headers['Cache-Control'] = 'public, max-age=3600';
         }
         if (json) {
