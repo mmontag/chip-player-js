@@ -10,7 +10,15 @@ patch-package
    }
  };
  
-@@ -139,7 +139,7 @@ TrieSearch.prototype = {
+@@ -85,7 +85,6 @@ TrieSearch.prototype = {
+       if (!val) continue;
+ 
+       val = val.toString();
+-      val = this.options.ignoreCase ? val.toLowerCase() : val;
+ 
+       var expandedValues = this.expandString(val);
+ 
+@@ -139,7 +138,7 @@ TrieSearch.prototype = {
      // if (this.getCache && !this.getCache._list.length) {
      //   return;
      // }
@@ -19,7 +27,7 @@ patch-package
    },
    cleanCache: function () {
      while (this.getCache.all.length > this.options.maxCacheSize)
-@@ -189,7 +189,7 @@ TrieSearch.prototype = {
+@@ -189,7 +188,7 @@ TrieSearch.prototype = {
        this.clearCache();
  
      if (this.options.keepAll) {
@@ -28,7 +36,7 @@ patch-package
        this.indexed.add(value);
      }
  
-@@ -265,7 +265,7 @@ TrieSearch.prototype = {
+@@ -265,7 +264,7 @@ TrieSearch.prototype = {
        if (this.options.min && words[w].length < this.options.min)
          continue;
  
@@ -37,7 +45,7 @@ patch-package
  
        if (node = this.findNode(words[w]))
          aggregate(node, temp);
-@@ -311,7 +311,7 @@ TrieSearch.prototype = {
+@@ -311,7 +310,7 @@ TrieSearch.prototype = {
        if (reducer) {
          accumulator = reducer(accumulator, phrases[i], matches, this);
        } else {
