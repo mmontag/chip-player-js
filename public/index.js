@@ -101,13 +101,20 @@ const routes = {
   },
 
   'image': (params) => {
-    const dir = params.path;
-    const images = glob.sync(`${LOCAL_CATALOG_ROOT + dir}/*.{gif,png,jpg,jpeg}`, {nocase: true});
     let imageUrl = null;
-    if (images.length > 0) {
-      const imageFile = encodeURI(path.basename(images[0]));
-      const imageDir = encodeURI(dir);
-      imageUrl = `${PUBLIC_CATALOG_URL}${imageDir}/${imageFile}`;
+    if (params.path) {
+      const segments = params.path.split('/');
+      while (segments.length) {
+        const dir = segments.join('/');
+        const images = glob.sync(`${LOCAL_CATALOG_ROOT}/${dir}/*.{gif,png,jpg,jpeg}`, {nocase: true});
+        if (images.length > 0) {
+          const imageFile = encodeURI(path.basename(images[0]));
+          const imageDir = encodeURI(dir);
+          imageUrl = `${PUBLIC_CATALOG_URL}${imageDir}/${imageFile}`;
+          break;
+        }
+        segments.pop();
+      }
     }
     return {
       imageUrl: imageUrl,
@@ -125,7 +132,7 @@ http.createServer(function (req, res) {
       try {
         const json = route(params);
         const headers = { ...HEADERS };
-        if (lastPathComponent !== 'random') {
+        if (!['random', 'shuffle'].includes(lastPathComponent)) {
           headers['Cache-Control'] = 'public, max-age=3600';
         }
         if (json) {
