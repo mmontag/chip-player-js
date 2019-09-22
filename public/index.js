@@ -16,6 +16,7 @@ const path = require('path');
 const http = require('http');
 const TrieSearch = require('trie-search');
 const { performance } = require('perf_hooks');
+const { sampleSize } = require('lodash');
 
 const CATALOG_PATH = './catalog.json';
 const catalog = require(CATALOG_PATH);
@@ -77,11 +78,22 @@ const routes = {
     const limit = parseInt(params.limit, 10) || 1;
     const idx = Math.floor(Math.random() * files.length);
     const items = files.slice(idx, idx + limit);
-    const total = items.length;
     return {
       items: items,
-      total: total,
-    }
+      total: items.length,
+    };
+  },
+
+  'shuffle': (params) => {
+    const limit = parseInt(params.limit, 10) || 100;
+    let path = params.path || '';
+    path = path.replace(/^\/+/, '');
+    const items = catalog.filter(file => file.startsWith(path));
+    const sampled = sampleSize(items, limit);
+    return {
+      items: sampled,
+      total: sampled.length,
+    };
   },
 
   'browse': (params) => {
