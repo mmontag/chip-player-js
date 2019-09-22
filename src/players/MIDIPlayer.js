@@ -1,21 +1,21 @@
 import Player from './Player';
 import GENERAL_MIDI_PATCH_MAP from '../gm-patch-map';
+import { SOUNDFONT_URL_PATH } from '../config';
 
 let lib = null;
 const MOUNTPOINT = '/soundfonts';
-const SOUNDFONT_URL_PATH = `${process.env.PUBLIC_URL}/soundfonts`;
 const SOUNDFONTS = [
   {
     label: 'Small Soundfonts',
     items: [
       {label: 'GMGSx Plus (6.2 MB)', value: 'gmgsx-plus.sf2'},
-      {label: 'Roland SC-55 (3.3 MB)', value: 'Roland SC-55.sf2'},
-      {label: 'Roland SCC1 (3.3 MB)', value: 'Scc1t2.sf2'},
+      {label: 'Roland SC-55/SCC1 (3.3 MB)', value: 'Scc1t2.sf2'},
       {label: 'Yamaha DB50XG (3.9 MB)', value: 'Yamaha DB50XG.sf2'},
+      {label: 'Gravis Ultrasound (5.9 MB)', value: 'Gravis_Ultrasound_Classic_PachSet_v1.6.sf2'},
       {label: 'Tim GM (6 MB)', value: 'TimGM6mb.sf2'},
-      {label: '2MBGMGS (2.1 MB)', value: '2MBGMGS.SF2'},
-      {label: '5MBGMGS (4.9 MB)', value: '5MBGMGS.SF2'},
-      {label: '8MBGMGS (8.2 MB)', value: '8MBGMGS.SF2'},
+      {label: 'Alan Chan 5MBGMGS (4.9 MB)', value: '5MBGMGS.SF2'},
+      {label: 'E-mu 2MBGMGS (2.1 MB)', value: '2MBGMGS.SF2'},
+      {label: 'E-mu 8MBGMGS (8.2 MB)', value: '8MBGMGS.SF2'},
     ],
   },
   {
@@ -25,8 +25,10 @@ const SOUNDFONTS = [
       {label: 'GeneralUser GS v1.471 (31.3 MB)', value: 'generaluser.sf2'},
       {label: 'Chorium Revision A (28.9 MB)', value: 'choriumreva.sf2'},
       {label: 'Unison (29.3 MB)', value: 'Unison.SF2'},
+      {label: 'Creative 28MBGM (29.7 MB)', value: '28MBGM.sf2'},
       {label: 'Musica Theoria 2 (30.5 MB)', value: 'mustheory2.sf2'},
       {label: 'Personal Copy Lite (31.4 MB)', value: 'PCLite.sf2'},
+      {label: 'AnotherXG (31.4 MB)', value: 'bennetng_AnotherXG_v2-1.sf2'},
       {label: 'NTONYX 32Mb GM Stereo (32.5 MB)', value: '32MbGMStereo.sf2'},
       {label: 'Weeds GM 3 (54.9 MB)', value: 'weedsgm3.sf2'},
     ],
@@ -46,13 +48,6 @@ const SOUNDFONTS = [
       {label: 'Diddy Kong Racing DS (13.7 MB)', value: 'Diddy_Kong_Racing_DS_Soundfont.sf2'},
       {label: 'Regression FM v1.99g (14.4 MB)', value: 'R_FM_v1.99g-beta.sf2'},
       {label: 'Ultimate Megadrive (63.2 MB)', value: 'The Ultimate Megadrive Soundfont.sf2'},
-    ],
-  },
-  {
-    label: 'SF3 Compressed Soundfonts',
-    items: [
-      {label: 'Fluid R3 Mono SF3 (14.6 MB)', value: 'FluidR3Mono_GM.sf3'},
-      {label: 'MuseScore SF3 (37.7 MB)', value: 'MuseScore_General.sf3'},
     ],
   },
 ];
