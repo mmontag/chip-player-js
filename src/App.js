@@ -718,7 +718,7 @@ class App extends React.Component {
               <div>(No active player)</div>}
           </div>}
           {this.state.imageUrl &&
-          <img className="App-footer-art" src={this.state.imageUrl}/>}
+          <img alt="Cover art" className="App-footer-art" src={this.state.imageUrl}/>}
         </div>
       </div>
       )}</Dropzone>
