@@ -8,6 +8,7 @@ export const MAX_VOICES = 64;
 export const REPLACE_STATE_ON_SEEK = false;
 export const FORMATS =  [
   'ay',
+  'gbs',
   'it',
   'mid',
   'mod',
