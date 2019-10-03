@@ -66,6 +66,17 @@ In building the subprojects, we ultimately invoke `emmake make` instead of `make
 
   ```"build-chip-core": "source ~/src/emsdk/emsdk_env.sh; node scripts/build-chip-core.js",```
 
+
+#### Creating Config File
+
+Chip Player JS needs .env file on project root directly to get some settings.  
+Create your file from sample.env:
+
+```sh
+cd chip-player-js/              # navigate to chip-player-js root
+cp sample.env .env              # create .env file from sample
+```
+
 #### User Accounts and Saved Favorites Functionality
 
 User account management is provided through Firebase Cloud Firestore. You must obtain your own [Google Firebase](https://console.firebase.google.com/) credentials and update [src/config/firebaseConfig.js](src/config/firebaseConfig.js) with these credentials. This file is not tracked. Without these credentials, Login/Favorites functionality won't work.
