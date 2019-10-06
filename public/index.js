@@ -87,8 +87,11 @@ const routes = {
   'shuffle': (params) => {
     const limit = parseInt(params.limit, 10) || 100;
     let path = params.path || '';
-    path = path.replace(/^\/+|\/+$/g, '') + '/';
-    const items = catalog.filter(file => file.startsWith(path));
+    let items = catalog;
+    if (path) {
+      path = path.replace(/^\/+|\/+$/g, '') + '/';
+      items = catalog.filter(file => file.startsWith(path));
+    }
     const sampled = sampleSize(items, limit);
     return {
       items: sampled,
