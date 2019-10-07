@@ -454,10 +454,8 @@ class App extends React.Component {
     try {
       str = str.replace(/\b([IVXLC]+|[ivxlc]+)[-.,)]/, (a, match, c, d) => {
         const numeric = String(toArabic(match)).padStart(4, '0');
-        console.log('===', match, numeric);
         return numeric;
       });
-      console.log(str);
       return str;
     } catch (e) {
       // Ignore false positives like 'mill.', 'did-', or 'mix,'
@@ -480,6 +478,7 @@ class App extends React.Component {
           return item.path.toLowerCase().indexOf('ix') > -1;
         });
         if (needsRomanNumeralSort) {
+          console.log("Roman numeral sort is active for this directory");
           json.forEach(item => arabicMap[item.path] = this.romanToArabicSubstrings(item.path));
         }
         const items = json
