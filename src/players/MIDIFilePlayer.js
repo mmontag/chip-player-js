@@ -57,7 +57,7 @@ MIDIPlayer.prototype.processPlay = function() {
   while(this.events[this.position] && event.playTime - elapsedTime < bufferDelay) {
     param2 = 0;
     if(event.subtype === MIDIEvents.EVENT_MIDI_NOTE_ON) {
-      param2 = Math.floor(event.param1 * ((this.volume || 1) / 100));
+      param2 = Math.floor(event.param2 * ((this.volume || 1) / 100));
       this.notesOn[event.channel].push(event.param1);
     } else if(event.subtype === MIDIEvents.EVENT_MIDI_NOTE_OFF) {
       index = this.notesOn[event.channel].indexOf(event.param1);
