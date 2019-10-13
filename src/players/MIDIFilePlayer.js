@@ -1,5 +1,3 @@
-'use strict';
-
 var MIDIEvents = require('midievents');
 
 // Constants
@@ -140,4 +138,5 @@ MIDIPlayer.prototype.stop = function() {
   return false;
 };
 
-module.exports = MIDIPlayer;
+// module.exports = MIDIPlayer;
+export default MIDIPlayer;
