@@ -3,8 +3,8 @@
 var MIDIEvents = require('midievents');
 
 // Constants
-var PLAY_BUFFER_DELAY = 300;
-var PAGE_HIDDEN_BUFFER_RATIO = 20;
+var PLAY_BUFFER_DELAY = 33;
+var PAGE_HIDDEN_BUFFER_DELAY = 6000;
 
 // MIDIPlayer constructor
 function MIDIPlayer(options) {
@@ -54,11 +54,11 @@ MIDIPlayer.prototype.processPlay = function() {
   var event;
   var index;
   var param2;
-  var bufferDelay = PLAY_BUFFER_DELAY * (
+  var bufferDelay = (
     document.hidden || document.mozHidden || document.webkitHidden ||
     document.msHidden || document.oHidden ?
-      PAGE_HIDDEN_BUFFER_RATIO :
-      1
+      PAGE_HIDDEN_BUFFER_DELAY :
+      PLAY_BUFFER_DELAY
   );
   event = this.events[this.position];
   while(this.events[this.position] && event.playTime - elapsedTime < bufferDelay) {
