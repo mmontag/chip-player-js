@@ -35,6 +35,13 @@ MIDIPlayer.prototype.load = function(midiFile) {
 MIDIPlayer.prototype.play = function(endCallback) {
   this.endCallback = endCallback;
   if(0 === this.position) {
+    // All Sound Off
+    this.output.send([ MIDIEvents.EVENT_MIDI_CONTROLLER << 4, 120, 0 ]);
+    // Reset All Controllers
+    this.output.send([ MIDIEvents.EVENT_MIDI_CONTROLLER << 4, 121, 0 ]);
+    // XG All Parameter Reset
+    // this.output.send([ 0xF0, 0x43, 0x10, 0x4C, 0x00, 0x00, 0x7F, 0x00, 0xF7 ]);
+
     this.startTime = performance.now();
     this.timeout = setTimeout(this.processPlay.bind(this), 0);
     return 1;
@@ -97,6 +104,8 @@ MIDIPlayer.prototype.pause = function() {
     clearTimeout(this.timeout);
     this.timeout = null;
     this.pauseTime = performance.now();
+    // All sound off
+    this.output.send([ MIDIEvents.EVENT_MIDI_CONTROLLER << 4, 120, 0 ]);
     for(i = this.notesOn.length - 1; 0 <= i; i--) {
       for(j = this.notesOn[i].length - 1; 0 <= j; j--) {
         this.output.send([(MIDIEvents.EVENT_MIDI_NOTE_OFF << 4) + i, this.notesOn[i][j],
