@@ -3,6 +3,9 @@ var MIDIEvents = require('midievents');
 // Constants
 var PLAY_BUFFER_DELAY = 33;
 var PAGE_HIDDEN_BUFFER_DELAY = 6000;
+const DELAY_MS_PER_CC_EVENT = 2;
+const DELAY_MS_PER_SYSEX_EVENT = 2;
+const DELAY_MS_PER_XG_SYSTEM_EVENT = 500;
 
 // MIDIPlayer constructor
 function MIDIPlayer(options) {
@@ -11,6 +14,7 @@ function MIDIPlayer(options) {
   options = options || {};
   this.output = options.output || null; // midi output
   this.volume = options.volume || 100; // volume in percents
+  this.skipSilence = options.skipSilence || false; // skip silence at beginning of file
   this.startTime = -1; // ms since page load
   this.pauseTime = -1; // ms elapsed before player paused
   this.events = [];
@@ -41,6 +45,53 @@ MIDIPlayer.prototype.play = function(endCallback) {
     // this.output.send([ 0xF0, 0x43, 0x10, 0x4C, 0x00, 0x00, 0x7F, 0x00, 0xF7 ]);
 
     this.startTime = performance.now();
+    let firstNoteDelay = 0;
+    let messageDelay = 0;
+    let numSysexEvents = 0;
+    if (this.skipSilence) {
+      const firstNote = this.events.find(e => e.subtype === MIDIEvents.EVENT_MIDI_NOTE_ON);
+      if (firstNote && firstNote.playTime > 0) {
+        // Accelerated playback of all events prior to first note
+        var message;
+        while (this.events[this.position] !== firstNote) {
+          const event = this.events[this.position];
+          this.position++;
+
+          // console.log("MIDI Event", event);
+          if (event.type === MIDIEvents.EVENT_SYSEX) {
+            console.log("sysex event:", event);
+            if (event.data && event.data[3] === 0 && event.data[4] === 0) {
+              firstNoteDelay += DELAY_MS_PER_XG_SYSTEM_EVENT;
+            } else {
+              firstNoteDelay += DELAY_MS_PER_SYSEX_EVENT;
+            }
+            numSysexEvents++;
+            message = [MIDIEvents.EVENT_SYSEX, ...event.data];
+          } else if (MIDIEvents.MIDI_1PARAM_EVENTS.indexOf(event.subtype) !== -1) {
+            firstNoteDelay += DELAY_MS_PER_CC_EVENT;
+            messageDelay += DELAY_MS_PER_CC_EVENT;
+            message = [(event.subtype << 4) + event.channel, event.param1];
+          } else if (MIDIEvents.MIDI_2PARAMS_EVENTS.indexOf(event.subtype) !== -1) {
+            firstNoteDelay += DELAY_MS_PER_CC_EVENT;
+            messageDelay += DELAY_MS_PER_CC_EVENT;
+            message = [(event.subtype << 4) + event.channel, event.param1, (event.param2 || 0x00)];
+          } else {
+            continue;
+          }
+          try {
+            this.output.send(message, this.startTime + messageDelay);
+          } catch (e) {
+            console.warn(e);
+          }
+        }
+
+        // Set startTime to a point in the past so that the first note event plays immediately.
+        console.log("Time to first note at %s ms was cut by %s ms (setup time %s ms; %s sysex events)",
+          Math.round(firstNote.playTime), Math.round(firstNote.playTime - firstNoteDelay), firstNoteDelay, numSysexEvents);
+        this.startTime = (this.startTime + firstNoteDelay) - firstNote.playTime;
+      }
+    }
+
     this.timeout = setTimeout(this.processPlay.bind(this), 0);
     return 1;
   }
