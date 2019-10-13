@@ -29,7 +29,7 @@ MIDIPlayer.prototype.load = function(midiFile) {
   this.stop();
   this.position = 0;
   this.midiFile = midiFile;
-  this.events = this.midiFile.getMidiEvents();
+  this.events = this.midiFile.getEvents();
 };
 
 MIDIPlayer.prototype.play = function(endCallback) {
@@ -65,12 +65,18 @@ MIDIPlayer.prototype.processPlay = function() {
         this.notesOn[event.channel].splice(index, 1);
       }
     }
-    this.output.send(
-      -1 !== MIDIEvents.MIDI_1PARAM_EVENTS.indexOf(event.subtype) ?
-        [(event.subtype << 4) + event.channel, event.param1] :
-        [(event.subtype << 4) + event.channel, event.param1, (param2 || event.param2 || 0x00)],
-      Math.floor(event.playTime + this.startTime)
-    );
+
+    var message = null;
+    if (event.subtype === MIDIEvents.EVENT_SYSEX) {
+      message = [MIDIEvents.EVENT_SYSEX, ...event.data];
+    } else if (MIDIEvents.MIDI_1PARAM_EVENTS.indexOf(event.subtype) !== -1) {
+      message = [(event.subtype << 4) + event.channel, event.param1];
+    } else if (MIDIEvents.MIDI_2PARAMS_EVENTS.indexOf(event.subtype) !== -1) {
+      message = [(event.subtype << 4) + event.channel, event.param1, (param2 || event.param2 || 0x00)];
+    }
+    if (message)
+      this.output.send(message, Math.max(0, Math.floor(event.playTime + this.startTime)));
+
     this.lastPlayTime = event.playTime + this.startTime;
     this.position++;
     event = this.events[this.position];
