@@ -19,8 +19,7 @@ function MIDIPlayer(options) {
   this.volume = options.volume || 100; // volume in percents
   this.speed = 1;
   this.skipSilence = options.skipSilence || false; // skip silence at beginning of file
-  this.startTime = -1; // ms since page load
-  this.pauseTime = -1; // ms elapsed before player paused
+  this.lastProcessPlayTimestamp = 0;
   this.events = [];
   this.notesOn = new Array(32); // notesOn[channel][note]
   this.paused = false;
@@ -86,13 +85,13 @@ MIDIPlayer.prototype.doSkipSilence = function() {
       } else {
         continue;
       }
-      this.send(message, this.startTime + messageDelay);
+      this.send(message, this.lastProcessPlayTimestamp + messageDelay);
     }
 
-    // Set startTime to a point in the past so that the first note event plays immediately.
+    // Set lastProcessPlayTimestamp to a point in the past so that the first note event plays immediately.
     console.log("Time to first note at %s ms was cut by %s ms (setup time %s ms; %s sysex events)",
       Math.round(firstNote.playTime), Math.round(firstNote.playTime - firstNoteDelay), firstNoteDelay, numSysexEvents);
-    this.startTime = this.lastProcessPlayTimestamp = (this.startTime + firstNoteDelay) - firstNote.playTime;
+    this.lastProcessPlayTimestamp += (firstNoteDelay - firstNote.playTime);
   }
 };
 
@@ -100,7 +99,7 @@ MIDIPlayer.prototype.play = function(endCallback) {
   this.endCallback = endCallback;
   if(0 === this.position) {
     this.reset();
-    this.startTime = this.lastProcessPlayTimestamp = performance.now();
+    this.lastProcessPlayTimestamp = performance.now();
     if (this.skipSilence) {
       this.doSkipSilence();
     }
@@ -154,7 +153,7 @@ MIDIPlayer.prototype.processPlay = function() {
     }
     if (message) {
       const scaledPlayTime = (event.playTime - this.elapsedTime) / this.speed + this.lastProcessPlayTimestamp;
-      this.send(message, scaledPlayTime); //, Math.max(0, Math.floor(event.playTime + this.startTime)));
+      this.send(message, scaledPlayTime);
       this.lastPlayTime = scaledPlayTime;
     }
 
@@ -263,7 +262,7 @@ MIDIPlayer.prototype.setPosition = function(ms) {
 
   this.elapsedTime = ms;
   this.position = pos;
-  this.startTime = performance.now() - ms;
+  this.lastProcessPlayTimestamp = performance.now() - ms;
 
   const numEvents = Object.values(eventMap).length;
   const messageDelay = numEvents * DELAY_MS_PER_CC_EVENT;
