@@ -23,6 +23,8 @@ function MIDIPlayer(options) {
   this.pauseTime = -1; // ms elapsed before player paused
   this.events = [];
   this.notesOn = new Array(32); // notesOn[channel][note]
+  this.paused = false;
+
   for(i = 31; 0 <= i; i--) {
     this.notesOn[i] = [];
   }
@@ -39,6 +41,7 @@ function MIDIPlayer(options) {
   this.setOutput = this.setOutput.bind(this);
   this.setPosition = this.setPosition.bind(this);
   this.setSpeed = this.setSpeed.bind(this);
+  this.togglePause = this.togglePause.bind(this);
 }
 
 // Parsing all tracks and add their events in a single event queue
@@ -116,6 +119,8 @@ MIDIPlayer.prototype.processPlay = function() {
   const deltaTime = (now - this.lastProcessPlayTimestamp) * this.speed;
   this.lastProcessPlayTimestamp = now;
 
+  if (this.paused) return;
+
   this.elapsedTime += deltaTime;
   var event;
   var index;
@@ -157,48 +162,29 @@ MIDIPlayer.prototype.processPlay = function() {
     event = this.events[this.position];
   }
 
-  if(this.position < this.events.length - 1) {
-    this.timeout = setTimeout(this.processPlay, bufferAhead);
-  }
   if(this.position >= this.events.length)  {
     setTimeout(this.endCallback, BUFFER_AHEAD + 100);
     this.position = 0;
+    this.paused = true;
   }
 };
 
-MIDIPlayer.prototype.pause = function() {
-  if(this.timeout) {
-    clearTimeout(this.timeout);
-    this.timeout = null;
-    this.pauseTime = performance.now();
+MIDIPlayer.prototype.togglePause = function() {
+  this.paused = !this.paused;
+  if (this.paused === true) {
     this.reset(this.lastPlayTime + 10);
-    return true;
   }
-  return false;
+  return this.paused;
 };
 
 MIDIPlayer.prototype.resume = function(endCallback) {
-  this.endCallback = endCallback;
-  if(this.events && this.events[this.position] && !this.timeout) {
-    this.startTime = this.startTime + (performance.now() - this.pauseTime) / this.speed;
-    this.lastProcessPlayTimestamp = performance.now();
-    this.timeout = setTimeout(this.processPlay, 0);
-    return this.events[this.position].playTime;
-  }
-  return 0;
+  this.paused = false;
 };
 
 MIDIPlayer.prototype.stop = function() {
-  var i;
-
-  if(this.pause()) {
-    this.position = 0;
-    for(i = 31; 0 <= i; i--) {
-      this.notesOn[i] = [];
-    }
-    return true;
-  }
-  return false;
+  clearTimeout(this.timeout);
+  this.paused = true;
+  this.reset();
 };
 
 MIDIPlayer.prototype.send = function(message, timestamp) {
@@ -288,5 +274,4 @@ MIDIPlayer.prototype.setPosition = function(ms) {
   }
 };
 
-// module.exports = MIDIPlayer;
 export default MIDIPlayer;
