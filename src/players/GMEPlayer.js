@@ -95,12 +95,6 @@ export default class GMEPlayer extends Player {
     }
   }
 
-  restart() {
-    this.fadingOut = false;
-    libgme._gme_seek(emu, 0);
-    this.resume();
-  }
-
   playSubtune(subtune) {
     this.fadingOut = false;
     this.subtune = subtune;

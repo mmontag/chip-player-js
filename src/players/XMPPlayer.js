@@ -109,11 +109,6 @@ export default class XMPPlayer extends Player {
     return meta;
   }
 
-  restart() {
-    this.lib._xmp_restart_module(this.xmpCtx);
-    this.resume();
-  }
-
   loadData(data, filename) {
     let err;
     this.filepathMeta = Player.metadataFromFilepath(filename);

@@ -270,9 +270,9 @@ export default class MIDIPlayer extends Player {
     return lib && !this.paused;
   }
 
-  restart() {
-    lib._tp_seek(0);
-    this.resume();
+  suspend() {
+    super.suspend();
+    this.midiFilePlayer.stop();
   }
 
   stop() {

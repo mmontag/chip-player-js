@@ -63,10 +63,6 @@ export default class Player {
     throw Error('Player.stop() must be implemented.');
   }
 
-  restart() {
-    throw Error('Player.restart() must be implemented.');
-  }
-
   isPlaying() {
     throw Error('Player.isPlaying() must be implemented.');
   }
