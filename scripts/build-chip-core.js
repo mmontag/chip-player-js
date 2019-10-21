@@ -168,7 +168,6 @@ source_files.push('libxmp/libxmp-lite-stagedir/lib/libxmp-lite.a');
 source_files.push('fluidlite/build/libfluidlite.a');
 source_files.push('tinysoundfont/tinyplayer.c');
 source_files.push('tinysoundfont/showcqtbar.c');
-// source_files.push('tinysoundfont/WebMIDIBridge.js');
 
 var js_file = 'src/chip-core.js';
 var wasm_file = 'src/chip-core.wasm';
@@ -268,18 +267,6 @@ var exported_functions = [
   '_cqt_calc',
   '_cqt_render_line',
   '_cqt_bin_to_freq',
-
-  // WebMIDIBridge.js
-  '_webMidiNoteOn',
-  '_webMidiNoteOff',
-  '_webMidiProgramChange',
-  '_webMidiPitchBend',
-  '_webMidiControlChange',
-  '_webMidiChannelPressure',
-  '_webMidiRender',
-  '_webMidiPanic',
-  '_webMidiPanicChannel',
-  '_webMidiReset',
 ];
 
 var runtime_methods = [
@@ -324,8 +311,6 @@ var flags = [
   '-DADLMIDI_DISABLE_JAVA_EMULATOR',
   '-DADLMIDI_DISABLE_OPAL_EMULATOR',
   // '-DADLMIDI_DISABLE_DOSBOX_EMULATOR', // DOSBOX is recommended OPL3 core
-
-  '--js-library', 'tinysoundfont/WebMIDIBridge.js',
 
   '-Qunused-arguments',
   '-Wno-deprecated',

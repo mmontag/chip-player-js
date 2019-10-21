@@ -52,7 +52,7 @@ typedef struct Synth {
 } Synth;
 
 int g_synthId = 0;
-static const int NUM_SYNTHS = 3;
+static const int NUM_SYNTHS = 2;
 Synth g_Synths[NUM_SYNTHS];
 Synth g_synth;
 
@@ -131,23 +131,6 @@ void adlReset() {
 Synth adlSynth = {adlNoteOn, adlNoteOff, adlProgramChange, adlPitchBend, adlControlChange,
                   adlChannelPressure, adlRender, adlPanic, adlPanicChannel, adlReset};
 
-// Web Browser MIDI Synth *********************************************
-
-extern void webMidiNoteOn(int channel, int key, int velocity);
-extern void webMidiNoteOff(int channel, int key);
-extern void webMidiProgramChange(int channel, int program);
-extern void webMidiPitchBend(int channel, int pitch);
-extern void webMidiControlChange(int channel, int control, int value);
-extern void webMidiChannelPressure(int channel, int value);
-void webMidiRender(float *buffer, int samples) {
-  memset(buffer, 0, samples * sizeof(float));
-};
-extern void webMidiPanic();
-extern void webMidiPanicChannel(int channel);
-extern void webMidiReset();
-Synth webMidiSynth = {webMidiNoteOn, webMidiNoteOff, webMidiProgramChange, webMidiPitchBend, webMidiControlChange,
-                      webMidiChannelPressure, webMidiRender, webMidiPanic, webMidiPanicChannel, webMidiReset};
-
 extern void tp_init(int sampleRate) {
   g_SampleRate = sampleRate;
 
@@ -166,7 +149,6 @@ extern void tp_init(int sampleRate) {
 
   g_Synths[0] = fluidSynth;
   g_Synths[1] = adlSynth;
-  g_Synths[2] = webMidiSynth;
   g_synth = g_Synths[0];
 }
 
@@ -211,6 +193,7 @@ extern int tp_write_audio(float *buffer, int bufferSize) {
         default:
           break;
       }
+
     }
     // Render the block of audio samples in float format
     g_synth.render(buffer, batchSize);
@@ -281,7 +264,7 @@ extern double tp_get_position_ms() {
 }
 
 extern void tp_set_speed(float speed) {
-  g_Speed = fmax(0.1, fmin(10.0, speed));
+  g_Speed = fmax(fmin(speed, 10.0), 0.1);
 }
 
 extern void tp_stop() {
