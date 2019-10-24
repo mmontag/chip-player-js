@@ -1,8 +1,7 @@
-var MIDIEvents = require('midievents');
+const MIDIEvents = require('midievents');
 
 // Constants
-var BUFFER_AHEAD = 33;
-var PAGE_HIDDEN_BUFFER_AHEAD = 6000;
+const BUFFER_AHEAD = 33;
 const DELAY_MS_PER_CC_EVENT = 2;
 const DELAY_MS_PER_SYSEX_EVENT = 2;
 const DELAY_MS_PER_XG_SYSTEM_EVENT = 500;
@@ -12,23 +11,13 @@ const CC_RESET_ALL_CONTROLLERS = 121;
 
 // MIDIPlayer constructor
 function MIDIPlayer(options) {
-  var i;
-
   options = options || {};
   this.output = options.output || null; // midi output
-  this.volume = options.volume || 100; // volume in percents
   this.speed = 1;
   this.skipSilence = options.skipSilence || false; // skip silence at beginning of file
   this.lastProcessPlayTimestamp = 0;
   this.events = [];
-  this.notesOn = new Array(32); // notesOn[channel][note]
   this.paused = false;
-
-  for(i = 31; 0 <= i; i--) {
-    this.notesOn[i] = [];
-  }
-  this.midiFile = null;
-  window.addEventListener('unload', this.stop.bind(this));
 
   this.doSkipSilence = this.doSkipSilence.bind(this);
   this.play = this.play.bind(this);
@@ -37,10 +26,13 @@ function MIDIPlayer(options) {
   this.getPosition = this.getPosition.bind(this);
   this.reset = this.reset.bind(this);
   this.send = this.send.bind(this);
+  this.stop = this.stop.bind(this);
   this.setOutput = this.setOutput.bind(this);
   this.setPosition = this.setPosition.bind(this);
   this.setSpeed = this.setSpeed.bind(this);
   this.togglePause = this.togglePause.bind(this);
+
+  window.addEventListener('unload', this.stop);
 }
 
 // Parsing all tracks and add their events in a single event queue
@@ -48,8 +40,7 @@ MIDIPlayer.prototype.load = function(midiFile) {
   this.stop();
   this.position = 0;
   this.elapsedTime = 0;
-  this.midiFile = midiFile;
-  this.events = this.midiFile.getEvents();
+  this.events = midiFile.getEvents();
 };
 
 MIDIPlayer.prototype.doSkipSilence = function() {
@@ -59,14 +50,14 @@ MIDIPlayer.prototype.doSkipSilence = function() {
   const firstNote = this.events.find(e => e.subtype === MIDIEvents.EVENT_MIDI_NOTE_ON);
   if (firstNote && firstNote.playTime > 0) {
     // Accelerated playback of all events prior to first note
-    var message;
+    let message;
     while (this.events[this.position] !== firstNote) {
       const event = this.events[this.position];
       this.position++;
 
       // console.log("MIDI Event", event);
       if (event.type === MIDIEvents.EVENT_SYSEX) {
-        console.log("sysex event:", event);
+        console.info("Sysex event:", event);
         if (event.data && event.data[3] === 0 && event.data[4] === 0) {
           firstNoteDelay += DELAY_MS_PER_XG_SYSTEM_EVENT;
         } else {
@@ -121,40 +112,20 @@ MIDIPlayer.prototype.processPlay = function() {
   if (this.paused) return;
 
   this.elapsedTime += deltaTime;
-  var event;
-  var index;
-  var param2;
-  var bufferAhead = (
-    document.hidden || document.mozHidden || document.webkitHidden ||
-    document.msHidden || document.oHidden ?
-      PAGE_HIDDEN_BUFFER_AHEAD:
-      BUFFER_AHEAD
-  );
-  event = this.events[this.position];
-  while(this.events[this.position] && event.playTime < this.elapsedTime + bufferAhead) {
-    param2 = 0;
-    if(event.subtype === MIDIEvents.EVENT_MIDI_NOTE_ON) {
-      param2 = Math.floor(event.param2 * ((this.volume || 1) / 100));
-      this.notesOn[event.channel].push(event.param1);
-    } else if(event.subtype === MIDIEvents.EVENT_MIDI_NOTE_OFF) {
-      index = this.notesOn[event.channel].indexOf(event.param1);
-      if(-1 !== index) {
-        this.notesOn[event.channel].splice(index, 1);
-      }
-    }
-
-    var message = null;
+  let event = this.events[this.position];
+  while(this.events[this.position] && event.playTime < this.elapsedTime + BUFFER_AHEAD) {
+    let message = null;
     if (event.subtype === MIDIEvents.EVENT_SYSEX) {
       message = [MIDIEvents.EVENT_SYSEX, ...event.data];
     } else if (MIDIEvents.MIDI_1PARAM_EVENTS.indexOf(event.subtype) !== -1) {
       message = [(event.subtype << 4) + event.channel, event.param1];
     } else if (MIDIEvents.MIDI_2PARAMS_EVENTS.indexOf(event.subtype) !== -1) {
-      message = [(event.subtype << 4) + event.channel, event.param1, (param2 || event.param2 || 0x00)];
+      message = [(event.subtype << 4) + event.channel, event.param1, event.param2 || 0x00];
     }
     if (message) {
       const scaledPlayTime = (event.playTime - this.elapsedTime) / this.speed + this.lastProcessPlayTimestamp;
       this.send(message, scaledPlayTime);
-      this.lastPlayTime = scaledPlayTime;
+      this.lastSendTimestamp = scaledPlayTime;
     }
 
     this.position++;
@@ -171,12 +142,12 @@ MIDIPlayer.prototype.processPlay = function() {
 MIDIPlayer.prototype.togglePause = function() {
   this.paused = !this.paused;
   if (this.paused === true) {
-    this.reset(this.lastPlayTime + 10);
+    this.reset(this.lastSendTimestamp + 10);
   }
   return this.paused;
 };
 
-MIDIPlayer.prototype.resume = function(endCallback) {
+MIDIPlayer.prototype.resume = function() {
   this.paused = false;
 };
 
@@ -217,7 +188,7 @@ MIDIPlayer.prototype.getPosition = function() {
 
 MIDIPlayer.prototype.setOutput = function(output) {
   if (this.timeout) {
-    this.reset(this.lastPlayTime + 10);
+    this.reset(this.lastSendTimestamp + 10);
   }
   this.output = output;
 };
@@ -229,7 +200,7 @@ MIDIPlayer.prototype.setSpeed = function (speed) {
 MIDIPlayer.prototype.setPosition = function(ms) {
   if (ms < 0 || ms > this.getDuration()) return;
 
-  this.reset(this.lastPlayTime + 10);
+  this.reset(this.lastSendTimestamp + 10);
 
   let eventKey = null;
   let eventValue = null;
@@ -257,7 +228,7 @@ MIDIPlayer.prototype.setPosition = function(ms) {
   }
 
   Object.values(eventMap).forEach((message, i) => {
-    this.send(message, this.lastPlayTime + 20 + i * DELAY_MS_PER_CC_EVENT);
+    this.send(message, this.lastSendTimestamp + 20 + i * DELAY_MS_PER_CC_EVENT);
   });
 
   this.elapsedTime = ms;
