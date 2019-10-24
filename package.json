@@ -22,6 +22,7 @@
     "directory-tree": "^2.2.1",
     "dotenv": "4.0.0",
     "dotenv-expand": "4.2.0",
+    "encoding-japanese": "^1.0.30",
     "eslint": "^5.16.0",
     "eslint-config-react-app": "^4.0.1",
     "eslint-loader": "2.1.2",
