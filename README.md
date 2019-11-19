@@ -16,22 +16,22 @@
 
 ```
 
-Play online: [Chip Player JS](https://mmontag.github.io/chip-player-js)
+Play online: [Chip Player JS](https://mmontag.github.io/chip-player-js). Feature requests? [Create an issue](https://github.com/mmontag/chip-player-js/issues/new).
 
-Chip Player JS is a work in progress. Goals:
+### Features
 
-- [x] Support popular game console formats and tracker formats (not exhaustive)
-- [x] Advanced sound control (channel volume, panning, etc.) like [NotSoFatso](https://disch.zophar.net/notsofatso.php)'s stereo and bandlimiting controls
-- [x] Built-in online music library like [Chipmachine](http://sasq64.github.io/chipmachine/)
-- [x] Simple music management (at least the ability to save favorites) like Winamp/Spotify
-- [x] High-quality MIDI playback with JS wavetable synthesis
-    * [x] Bonus: user-selectable soundbanks
-- [x] Track sequencer with player controls and shuffle mode
-- [x] Media key support in Chrome
-- [ ] High performance
-   - [ ] Cold cache time-to-play under 500 ms (i.e. https://mmontag.github.io/chip-player-js/?play=ModArchives/aryx.s3m in incognito window)
-   - [x] Instant search results
-   - [x] CPU usage under 25% in most circumstances
+- Support popular game console formats and tracker formats (not exhaustive)
+- Advanced sound control (channel volume, panning, etc.) like [NotSoFatso](https://disch.zophar.net/notsofatso.php)'s stereo and bandlimiting controls
+- Built-in online music library like [Chipmachine](http://sasq64.github.io/chipmachine/)
+- Simple music management (at least the ability to save favorites) like Winamp/Spotify
+- High-quality MIDI playback with JS wavetable synthesis
+    * Bonus: user-selectable soundbanks
+- Track sequencer with player controls and shuffle mode
+- Media key support in Chrome
+- High performance
+   - Time-to-audio under 500 ms (i.e. https://mmontag.github.io/chip-player-js/?play=ModArchives/aryx.s3m)
+   - Instant search results
+   - CPU usage under 25% in most circumstances
 
 ## Development Notes
 
