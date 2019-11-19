@@ -1,20 +1,6 @@
 # Chip Player JS
 
-```
-                                            _
-                                ________   (_)
-                               / ____/ /_  ______
-                              / /  _/ __ \/ / __ \
-                             / /___/ / / / / /_/ /\
-                        ____ \______/ /_/_/ ____/ /         __ ____
-                       / __ \/ /__ ____  /_/__  _/___      / /‾___/\
-                      / /_/ / /‾__‾ / /\/ /‾_ \/ ‾__/\__  / /\__ \_/
-                     / ____/ / /_/ / {_/ /  __/ /‾ __/ /_/ /___/ /\
-                    /_/ __/_/\__,_/\__  /\___/_/ /   \____//____/ /
-                    \__/  \__/\____│___/ /\_____/     \____\_____/
-                                    \___/
-
-```
+![Screen Shot 2019-11-19 at 1 21 04 PM](https://user-images.githubusercontent.com/946117/69187458-80955600-0acf-11ea-9a1f-e090032dcb00.png)
 
 Play online: [Chip Player JS](https://mmontag.github.io/chip-player-js). Feature requests? [Create an issue](https://github.com/mmontag/chip-player-js/issues/new).
 
