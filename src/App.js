@@ -1,5 +1,6 @@
 import React from 'react';
 import isMobile from 'ismobilejs';
+import clamp from 'lodash/clamp';
 import pathParse from 'path-parse';
 import queryString from 'querystring';
 import * as firebase from 'firebase/app';
@@ -100,6 +101,7 @@ class App extends React.Component {
     this.handleToggleFavorite = this.handleToggleFavorite.bind(this);
     this.attachMediaKeyHandlers = this.attachMediaKeyHandlers.bind(this);
     this.fetchDirectory = this.fetchDirectory.bind(this);
+    this.setSpeedRelative = this.setSpeedRelative.bind(this);
 
     this.attachMediaKeyHandlers();
     this.contentAreaRef = React.createRef();
@@ -162,6 +164,7 @@ class App extends React.Component {
       voices: Array(MAX_VOICES).fill(true),
       voiceNames: Array(MAX_VOICES).fill(''),
       imageUrl: null,
+      infoTexts: [],
       showPlayerSettings: false,
       user: null,
       faves: [],
@@ -254,6 +257,41 @@ class App extends React.Component {
       navigator.mediaSession.setActionHandler('previoustrack', () => { console.debug('Media Key: previoustrack'); this.prevSong(); });
       navigator.mediaSession.setActionHandler('nexttrack', () => { console.debug('Media Key: nexttrack'); this.nextSong(); });
     }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape' && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) return;
+
+      switch (e.key) {
+        case 'Escape':
+          e.target.blur();
+          break;
+        case 'ArrowLeft':
+          this.seekRelative(-5000);
+          break;
+        case 'ArrowRight':
+          this.seekRelative(5000);
+          break;
+        case ' ':
+          if (e.target.tagName !== 'BUTTON') {
+            this.togglePause();
+            e.preventDefault();
+          }
+          break;
+        case '-':
+          this.setSpeedRelative(-0.1);
+          break;
+        case '_':
+          this.setSpeedRelative(-0.01);
+          break;
+        case '=':
+          this.setSpeedRelative(0.1);
+          break;
+        case '+':
+          this.setSpeedRelative(0.01);
+          break;
+        default:
+      }
+    });
   }
 
   playContext(context, index = 0) {
@@ -398,7 +436,27 @@ class App extends React.Component {
     // Seek in song
     this.sequencer.getPlayer().seekMs(seekMs);
     this.setState({
-      currentSongPositionMs: pos * this.state.currentSongDurationMs, // Smooth
+      currentSongPositionMs: seekMs, // Smooth
+    });
+    setTimeout(() => {
+      if (this.sequencer.getPlayer().isPlaying()) {
+        this.setState({
+          currentSongPositionMs: this.sequencer.getPlayer().getPositionMs(), // Accurate
+        });
+      }
+    }, 100);
+  }
+
+  seekRelative(ms) {
+    if (!this.sequencer.getPlayer()) return;
+
+    const durationMs = this.state.currentSongDurationMs;
+    const seekMs = clamp(this.sequencer.getPlayer().getPositionMs() + ms, 0, durationMs);
+
+    // Seek in song
+    this.sequencer.getPlayer().seekMs(seekMs);
+    this.setState({
+      currentSongPositionMs: seekMs, // Smooth
     });
     setTimeout(() => {
       if (this.sequencer.getPlayer().isPlaying()) {
@@ -420,6 +478,16 @@ class App extends React.Component {
     if (!this.sequencer.getPlayer()) return;
 
     const tempo = parseFloat((event.target ? event.target.value : event)) || 1.0;
+    this.sequencer.getPlayer().setTempo(tempo);
+    this.setState({
+      tempo: tempo
+    });
+  }
+
+  setSpeedRelative(delta) {
+    if (!this.sequencer.getPlayer()) return;
+
+    const tempo = clamp(this.state.tempo + delta, 0.1, 2);
     this.sequencer.getPlayer().setTempo(tempo);
     this.setState({
       tempo: tempo
