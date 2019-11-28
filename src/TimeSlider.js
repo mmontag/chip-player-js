@@ -46,10 +46,12 @@ export default class TimeSlider extends Component {
   }
 
   getTime(ms) {
+    const sign = ms < 0 ? '-' : '';
+    ms = Math.abs(ms);
     const pad = n => n < 10 ? '0' + n : n;
     const min = Math.floor(ms / 60000);
     const sec = (Math.floor((ms % 60000) / 100) / 10).toFixed(1);
-    return `${min}:${pad(sec)}`;
+    return `${sign}${min}:${pad(sec)}`;
   }
 
   handlePositionDrag(event) {
