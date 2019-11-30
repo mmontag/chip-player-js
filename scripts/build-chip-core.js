@@ -237,6 +237,17 @@ var exported_functions = [
   '_tp_set_bank',
   '_tp_set_synth_engine',
 
+  '_tp_note_on',
+  '_tp_note_off',
+  '_tp_program_change',
+  '_tp_pitch_bend',
+  '_tp_control_change',
+  '_tp_channel_pressure',
+  '_tp_render',
+  '_tp_panic',
+  '_tp_panic_channel',
+  '_tp_reset',
+
   '_adl_init',
   '_adl_panic',
   '_adl_generate',

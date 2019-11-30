@@ -131,6 +131,40 @@ void adlReset() {
 Synth adlSynth = {adlNoteOn, adlNoteOff, adlProgramChange, adlPitchBend, adlControlChange,
                   adlChannelPressure, adlRender, adlPanic, adlPanicChannel, adlReset};
 
+// TODO: separate wrapper for each synth?
+// Don't want multiple synth C APIs exposed to JavaScript
+extern void tp_note_on(int channel, int key, int velocity) {
+  g_synth.noteOn(channel, key, velocity);
+}
+extern void tp_note_off(int channel, int key) {
+  g_synth.noteOff(channel, key);
+}
+extern void tp_program_change(int channel, int program) {
+  g_synth.programChange(channel, program);
+}
+extern void tp_pitch_bend(int channel, int pitch) {
+  g_synth.pitchBend(channel, pitch);
+}
+extern void tp_control_change(int channel, int control, int value) {
+  g_synth.controlChange(channel, control, value);
+}
+extern void tp_channel_pressure(int channel, int value) {
+  g_synth.channelPressure(channel, value);
+}
+extern void tp_render(float *buffer, int samples) {
+  g_synth.render(buffer, samples);
+}
+extern void tp_panic() {
+  g_synth.panic();
+}
+extern void tp_panic_channel(int channel) {
+  g_synth.panicChannel(channel);
+}
+extern void tp_reset() {
+  g_synth.reset();
+};
+
+// TODO: this will be midi_synth_init
 extern void tp_init(int sampleRate) {
   g_SampleRate = sampleRate;
 
