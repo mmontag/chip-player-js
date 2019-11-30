@@ -1,7 +1,6 @@
 import React from 'react';
 import isMobile from 'ismobilejs';
 import clamp from 'lodash/clamp';
-import pathParse from 'path-parse';
 import queryString from 'querystring';
 import * as firebase from 'firebase/app';
 import 'firebase/auth';
@@ -83,6 +82,7 @@ class App extends React.Component {
 
     this.togglePause = this.togglePause.bind(this);
     this.toggleSettings = this.toggleSettings.bind(this);
+    this.toggleInfo = this.toggleInfo.bind(this);
     this.playContext = this.playContext.bind(this);
     this.prevSong = this.prevSong.bind(this);
     this.nextSong = this.nextSong.bind(this);
@@ -165,6 +165,7 @@ class App extends React.Component {
       voiceNames: Array(MAX_VOICES).fill(''),
       imageUrl: null,
       infoTexts: [],
+      showInfo: false,
       showPlayerSettings: false,
       user: null,
       faves: [],
@@ -263,6 +264,7 @@ class App extends React.Component {
 
       switch (e.key) {
         case 'Escape':
+          this.setState({ showInfo: false });
           e.target.blur();
           break;
         case 'ArrowLeft':
@@ -337,8 +339,8 @@ class App extends React.Component {
       const player = this.sequencer.getPlayer();
       const url = this.sequencer.getCurrUrl();
       if (url && url !== this.state.songUrl) {
-        const imageDir = pathParse(url.replace(CATALOG_PREFIX, '/')).dir;
-        const getImageUrl = `${API_BASE}/image?path=${encodeURIComponent(imageDir)}`;
+        const path = url.replace(CATALOG_PREFIX, '/');
+        const getMetadataUrl = `${API_BASE}/metadata?path=${encodeURIComponent(path)}`;
         const pathParts = url.split('/');
         pathParts.pop();
 
@@ -353,24 +355,24 @@ class App extends React.Component {
         const stateUrl = '?' + queryString.stringify(urlParams);
         window.history.replaceState(null, '', stateUrl);
 
-        // Fetch artwork for this file (cancelable request)
-        if (this.imageRequest) this.imageRequest.abort();
-        this.imageRequest = promisify(new XMLHttpRequest());
-        this.imageRequest.responseType = 'json';
-        this.imageRequest.open('GET', getImageUrl);
-        this.imageRequest.send()
+        // Fetch artwork/info for this file (cancelable request)
+        if (this.metaRequest) this.metaRequest.abort();
+        this.metaRequest = promisify(new XMLHttpRequest());
+        this.metaRequest.responseType = 'json';
+        this.metaRequest.open('GET', getMetadataUrl);
+        this.metaRequest.send()
           .then(xhr => {
             if (xhr.status >= 200 && xhr.status < 400) {
-              const imageUrl = xhr.response.imageUrl;
-              this.setState({imageUrl: imageUrl});
+              const { imageUrl, infoTexts } = xhr.response;
+              this.setState({imageUrl: imageUrl, infoTexts: infoTexts});
             }
           })
           .catch(e => {
-            this.setState({imageUrl: null});
+            this.setState({imageUrl: null, infoTexts: []});
           });
       } else {
         // Drag & dropped files reach this branch
-        this.setState({imageUrl: null});
+        this.setState({imageUrl: null, infoTexts: []});
       }
 
       this.setState({
@@ -517,6 +519,12 @@ class App extends React.Component {
     }
   }
 
+  toggleInfo() {
+    this.setState({
+      showInfo: !this.state.showInfo,
+    });
+  }
+
   romanToArabicSubstrings(str) {
     // Works up to 399 (CCCXCIX)
     try {
@@ -626,6 +634,18 @@ class App extends React.Component {
         onDrop={this.onDrop}>{dropzoneProps => (
       <div className="App">
         <DropMessage dropzoneProps={dropzoneProps}/>
+        <div hidden={!this.state.showInfo} className="message-box-outer">
+          <div hidden={!this.state.showInfo} className="message-box">
+            <div className="message-box-inner">
+              <pre style={{maxHeight: '100%', margin: 0}}>
+                {this.state.infoTexts[0]}
+              </pre>
+            </div>
+            <div className="message-box-footer">
+              <button className="box-button message-box-button" onClick={this.toggleInfo}>Close</button>
+            </div>
+          </div>
+        </div>
         <AppHeader user={this.state.user}
                    handleLogout={this.handleLogout}
                    handleLogin={this.handleLogin}
@@ -750,7 +770,15 @@ class App extends React.Component {
                                 toggleFavorite={this.handleToggleFavorite}
                                 href={this.state.songUrl}/>
               </div>}
-              <div className="SongDetails-title">{title}</div>
+              <div className="SongDetails-title">
+                {title}
+                {' '}
+                {this.state.infoTexts.length > 0 &&
+                <a onClick={(e) => this.toggleInfo(e)} href='#'>
+                  тхт
+                </a>
+                }
+              </div>
               <div className="SongDetails-subtitle">{subtitle}</div>
               <div className="SongDetails-filepath">{pathLinks}</div>
             </div>}

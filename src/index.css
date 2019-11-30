@@ -94,7 +94,7 @@ select {
     background-position: calc(100% - var(--charW2)) 5px, calc(100% - 12px) 5px;
     background-size: 4px 12px, 4px 12px;
     background-repeat: no-repeat;
-    max-width: 264px;
+    max-width: 240px;
 }
 select option                { font-size: 14px; }
 
@@ -392,7 +392,7 @@ img { image-rendering: pixelated; }
     margin-bottom: -1px;
 }
 
-.drop-message-outer {
+.message-box-outer {
     position: absolute;
     z-index: 100;
     display: flex;
@@ -403,16 +403,16 @@ img { image-rendering: pixelated; }
     pointer-events: none;
     top: 0;
     left: 0;
+    padding: var(--charH) var(--charW2);
+    box-sizing: border-box;
 }
 
-.drop-message-outer[hidden] {
+.message-box-outer[hidden] {
     visibility: hidden;
 }
 
-.drop-message {
+.message-box {
     background-color: var(--button);
-    width: calc(60 * var(--charW1));
-    height: calc(7 * var(--charH) + 1px);
     padding: var(--charH) var(--charW2);
     box-shadow: var(--charW1) var(--charW1) var(--shadow);
     box-sizing: border-box;
@@ -420,23 +420,50 @@ img { image-rendering: pixelated; }
     transition: all 250ms steps(5);
     visibility: visible;
     overflow: hidden;
+    max-height: 100%;
+    pointer-events: all;
+    flex-direction: column;
+    width: calc(90 * var(--charW1));
+    height: calc(40 * var(--charH));
 }
 
-.drop-message[hidden] {
+.message-box[hidden] {
     width: 0;
     height: 0;
     visibility: hidden;
 }
 
-.drop-message-inner {
+.message-box[hidden] .message-box-inner {
+    overflow: hidden;
+}
+
+.message-box-inner {
     color: var(--clickable);
     border: 1px solid var(--clickable);
+    padding: var(--charH) var(--charW2);
+    overflow: auto;
+}
+
+.message-box-footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    padding-top: var(--charH);
+}
+
+.drop-message {
+    height: calc(7 * var(--charH) + 1px);
+    width: calc(60 * var(--charW1));
     text-align: center;
+}
+
+.drop-message .message-box-inner {
+    overflow: hidden;
     display: flex;
     flex-grow: 1;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
     white-space: nowrap;
 }
 
+.message-box-button        { background: var(--background); padding: 0 var(--charW2); box-shadow: none; }
