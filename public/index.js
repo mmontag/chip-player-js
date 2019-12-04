@@ -55,7 +55,7 @@ const time = (performance.now() - start).toFixed(1);
 console.log('Added %s items (%s tokens) to search trie in %s ms.', files.length, trie.size, time);
 
 const routes = {
-  'search': (params) => {
+  'search': async (params) => {
     const limit = parseInt(params.limit, 10);
     const query = params.query;
     const start = performance.now();
@@ -70,11 +70,11 @@ const routes = {
     };
   },
 
-  'total': (params) => {
+  'total': async (params) => {
     return { total: files.length };
   },
 
-  'random': (params) => {
+  'random': async (params) => {
     const limit = parseInt(params.limit, 10) || 1;
     const idx = Math.floor(Math.random() * files.length);
     const items = files.slice(idx, idx + limit);
@@ -84,7 +84,7 @@ const routes = {
     };
   },
 
-  'shuffle': (params) => {
+  'shuffle': async (params) => {
     const limit = parseInt(params.limit, 10) || 100;
     let path = params.path || '';
     let items = catalog;
@@ -99,11 +99,12 @@ const routes = {
     };
   },
 
-  'browse': (params) => {
+  'browse': async (params) => {
     return directories[params.path];
   },
 
-  'image': (params) => {
+  // TODO: delete this after massive frontend deploy
+  'image': async (params) => {
     let imageUrl = null;
     if (params.path) {
       const segments = params.path.split('/');
@@ -123,9 +124,48 @@ const routes = {
       imageUrl: imageUrl,
     };
   },
+
+  'metadata': async (params) => {
+    let imageUrl = null;
+    let infoTexts = [];
+    if (params.path) {
+      const { dir, name } = path.parse(params.path);
+
+      // first, try matching same filename for info
+      const infoFiles = glob.sync(`${LOCAL_CATALOG_ROOT}/${dir}/${name}.{text,txt,doc}`, {nocase: true});
+      if (infoFiles.length > 0) {
+        infoTexts.push(fs.readFileSync(infoFiles[0], 'utf8'));
+      }
+
+      const segments = dir.split('/');
+      while (segments.length) {
+        const dir = segments.join('/');
+        if (imageUrl === null) {
+          const imageFiles = glob.sync(`${LOCAL_CATALOG_ROOT}/${dir}/*.{gif,png,jpg,jpeg}`, {nocase: true});
+          if (imageFiles.length > 0) {
+            const imageFile = encodeURI(path.basename(imageFiles[0]));
+            const imageDir = encodeURI(dir);
+            imageUrl = `${PUBLIC_CATALOG_URL}${imageDir}/${imageFile}`;
+          }
+        }
+        if (infoTexts.length === 0) {
+          const infoFiles = glob.sync(`${LOCAL_CATALOG_ROOT}/${dir}/*.{text,txt,doc}`, {nocase: true});
+          infoTexts.push(...infoFiles.map(infoFile => fs.readFileSync(infoFile, 'utf8')));
+        }
+        if (imageUrl !== null && infoTexts.length > 0) {
+          break;
+        }
+        segments.pop();
+      }
+    }
+    return {
+      imageUrl: imageUrl,
+      infoTexts: infoTexts,
+    };
+  },
 };
 
-http.createServer(function (req, res) {
+http.createServer(async function (req, res) {
   try {
     const url = URL.parse(req.url, true);
     const params = url.query || {};
@@ -133,8 +173,8 @@ http.createServer(function (req, res) {
     const route = routes[lastPathComponent];
     if (route) {
       try {
-        const json = route(params);
-        const headers = { ...HEADERS };
+        const json = await route(params);
+        const headers = {...HEADERS};
         if (!['random', 'shuffle'].includes(lastPathComponent)) {
           headers['Cache-Control'] = 'public, max-age=3600';
         }
