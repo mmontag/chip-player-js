@@ -6674,6 +6674,19 @@ micromatch@^3.1.10, micromatch@^3.1.4, micromatch@^3.1.8:
     snapdragon "^0.8.1"
     to-regex "^3.0.2"
 
+midievents@^2.0.0, midievents@latest:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/midievents/-/midievents-2.0.0.tgz#7c4995db7ec4a7941fa92ad8bd63be7a4864fc92"
+  integrity sha512-8ABFjr+IKj1ZMAERj0jo99v/ifXU6kCbx9QKj4lM5GccaU81FPk+OVgt3FptGF9zcEsGJY74pl6juRkXDQJs+A==
+
+midifile@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/midifile/-/midifile-2.0.0.tgz#54638749023c8ca37f6330eee43ce9f720c7d1d8"
+  integrity sha512-JQw8RzJ3auOKR/fWIgt6gqKXKrPdq/AZjToQroqTjL0heBa7Ra0EvzRf/y/RDAC/UGMs6eIwB7jLS3nc9DHxZQ==
+  dependencies:
+    midievents "^2.0.0"
+    utf-8 "^2.0.0"
+
 miller-rabin@^4.0.0:
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/miller-rabin/-/miller-rabin-4.0.1.tgz#f080351c865b0dc562a8462966daa53543c78a4d"
@@ -10016,6 +10029,11 @@ use@^3.1.0:
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/use/-/use-3.1.1.tgz#d50c8cac79a19fbc20f2911f56eb973f4e10070f"
   integrity sha512-cwESVXlO3url9YWlFW/TA9cshCEhtu7IKJ/p5soJ/gGpj7vbvFrAY/eIioQ6Dw23KjZhYgiIo8HOs1nQ2vr/oQ==
+
+utf-8@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/utf-8/-/utf-8-2.0.0.tgz#6c2a309d683958862a01b5bf8e1d2dff46d36bf9"
+  integrity sha512-DItg/Z20ltBzugPrb8Mx1oN0F8CqN5bD38T57YM/pF/GOzUsNVXiellI0PbJPq3e1Z7BEDNoWP1H1+4n7g54Cg==
 
 utf8-byte-length@^1.0.1:
   version "1.0.4"

@@ -39,6 +39,8 @@
     "ismobilejs": "^0.4.1",
     "jest": "20.0.4",
     "lodash": "^4.17.11",
+    "midievents": "latest",
+    "midifile": "^2.0.0",
     "mini-css-extract-plugin": "^0.7.0",
     "node-unrar-js": "^0.8.1",
     "object-assign": "4.1.1",
