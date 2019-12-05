@@ -46,7 +46,6 @@ export default class Spectrogram {
     const fMin = 25.95;
     const fMax = 4504.0;
     const cqtSize = this.lib._cqt_init(audioCtx.sampleRate, cqtBins, db, fMin, fMax, supersample);
-    console.log('cqtSize:', cqtSize);
     if (!cqtSize) throw Error('Error initializing constant Q transform.');
     this.cqtSize = cqtSize;
     this.cqtFreqs = Array(cqtBins).fill().map((_, i) => this.lib._cqt_bin_to_freq(i));
