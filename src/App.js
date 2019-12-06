@@ -365,14 +365,17 @@ class App extends React.Component {
             if (xhr.status >= 200 && xhr.status < 400) {
               const { imageUrl, infoTexts } = xhr.response;
               this.setState({imageUrl: imageUrl, infoTexts: infoTexts});
+              if (infoTexts.length === 0) {
+                this.setState({ showInfo: false });
+              }
             }
           })
           .catch(e => {
-            this.setState({imageUrl: null, infoTexts: []});
+            this.setState({imageUrl: null, infoTexts: [], showInfo: false});
           });
       } else {
         // Drag & dropped files reach this branch
-        this.setState({imageUrl: null, infoTexts: []});
+        this.setState({imageUrl: null, infoTexts: [], showInfo: false});
       }
 
       this.setState({
