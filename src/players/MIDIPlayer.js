@@ -1,3 +1,6 @@
+import MIDIFile from 'midifile';
+import MIDIFilePlayer from './MIDIFilePlayer';
+
 import Player from './Player';
 import GENERAL_MIDI_PATCH_MAP from '../gm-patch-map';
 import { SOUNDFONT_URL_PATH } from '../config';
@@ -52,10 +55,20 @@ const SOUNDFONTS = [
   },
 ];
 
+const dummyMidiOutput = { send: () => {} };
+
+const midiDevices = [
+  dummyMidiOutput,
+];
+
 const fileExtensions = [
   'mid',
   'midi',
 ];
+
+const MIDI_ENGINE_LIBFLUIDLITE = 0;
+const MIDI_ENGINE_LIBADLMIDI = 1;
+const MIDI_ENGINE_WEBMIDI = 2;
 
 export default class MIDIPlayer extends Player {
   paramDefs = [
@@ -66,8 +79,9 @@ export default class MIDIPlayer extends Player {
       options: [{
         label: 'MIDI Synthesis Engine',
         items: [
-          {label: 'SoundFont (libFluidLite)', value: 0},
-          {label: 'Adlib/OPL3 (libADLMIDI)', value: 1},
+          {label: 'SoundFont (libFluidLite)', value: MIDI_ENGINE_LIBFLUIDLITE},
+          {label: 'Adlib/OPL3 FM (libADLMIDI)', value: MIDI_ENGINE_LIBADLMIDI},
+          {label: 'MIDI Device (Web MIDI)', value: MIDI_ENGINE_WEBMIDI},
         ],
       }],
       defaultValue: 0,
@@ -87,7 +101,7 @@ export default class MIDIPlayer extends Player {
       defaultValue: SOUNDFONTS[0].items[0].value,
       dependsOn: {
         param: 'synthengine',
-        value: 0,
+        value: MIDI_ENGINE_LIBFLUIDLITE,
       },
     },
     {
@@ -100,7 +114,7 @@ export default class MIDIPlayer extends Player {
       defaultValue: 0.33,
       dependsOn: {
         param: 'synthengine',
-        value: 0,
+        value: MIDI_ENGINE_LIBFLUIDLITE,
       },
     },
     {
@@ -111,7 +125,21 @@ export default class MIDIPlayer extends Player {
       defaultValue: 0,
       dependsOn: {
         param: 'synthengine',
-        value: 1,
+        value: MIDI_ENGINE_LIBADLMIDI,
+      },
+    },
+    {
+      id: 'mididevice',
+      label: 'MIDI Device',
+      type: 'enum',
+      options: [{
+        label: 'MIDI Output Devices',
+        items: [{ label: 'Dummy device', value: 0 }],
+      }],
+      defaultValue: 0,
+      dependsOn: {
+        param: 'synthengine',
+        value: MIDI_ENGINE_WEBMIDI,
       },
     },
   ];
@@ -121,10 +149,13 @@ export default class MIDIPlayer extends Player {
     this.setParameter = this.setParameter.bind(this);
     this.getParameter = this.getParameter.bind(this);
     this.getParamDefs = this.getParamDefs.bind(this);
+    this.switchSynthBasedOnFilename = this.switchSynthBasedOnFilename.bind(this);
 
     lib = chipCore;
     lib._tp_init(audioCtx.sampleRate);
+    this.sampleRate = audioCtx.sampleRate;
 
+    // Initialize Soundfont filesystem
     lib.FS.mkdir(MOUNTPOINT);
     lib.FS.mount(lib.FS.filesystems.IDBFS, {}, MOUNTPOINT);
     lib.FS.syncfs(true, (err) => {
@@ -137,6 +168,21 @@ export default class MIDIPlayer extends Player {
     this.activeChannels = [];
     this.buffer = lib.allocate(this.bufferSize * 8, 'i32', lib.ALLOC_NORMAL);
     this.filepathMeta = {};
+    this.midiFilePlayer = new MIDIFilePlayer({
+      output: dummyMidiOutput,
+      skipSilence: true,
+      synth: {
+        noteOn: lib._tp_note_on,
+        noteOff: lib._tp_note_off,
+        pitchBend: lib._tp_pitch_bend,
+        controlChange: lib._tp_control_change,
+        programChange: lib._tp_program_change,
+        panic: lib._tp_panic,
+        panicChannel: lib._tp_panic_channel,
+        render: lib._tp_render,
+        reset: lib._tp_reset,
+      },
+    });
 
     // Populate OPL3 banks
     const numBanks = lib._adl_getBanksCount();
@@ -150,6 +196,31 @@ export default class MIDIPlayer extends Player {
     }
     this.paramDefs.find(def => def.id === 'opl3bank').options =
       [{ label: 'OPL3 Bank', items: oplBanks }];
+
+    // Initialize MIDI output devices
+    if (typeof navigator.requestMIDIAccess === 'function') {
+      navigator.requestMIDIAccess({ sysex: true }).then((access) => {
+        if (access.outputs.length === 0) {
+          console.warn('No MIDI output devices found.');
+        } else {
+          [...access.outputs.values()].forEach(midiOutput => {
+            console.log('MIDI Output:', midiOutput);
+            midiDevices.push(midiOutput);
+            this.paramDefs.find(def => def.id === 'mididevice').options[0].items.push({
+              label: midiOutput.name,
+              value: midiDevices.length - 1,
+            });
+          });
+
+          // TODO: remove if removing Dummy Device
+          this.setParameter('mididevice', 1);
+        }
+      });
+    } else {
+      console.warn('Web MIDI API not supported. Try Chrome if you want to use external MIDI output devices.');
+    }
+
+    // this.midiFilePlayer = new MIDIFilePlayer({ output: dummyMidiOutput });
 
     // Initialize parameters
     this.params = {};
@@ -166,26 +237,31 @@ export default class MIDIPlayer extends Player {
       channels[channel] = e.outputBuffer.getChannelData(channel);
     }
 
-    if (this.paused) {
+    const useWebMIDI = this.params['synthengine'] === MIDI_ENGINE_WEBMIDI;
+
+    if (this.midiFilePlayer.paused || useWebMIDI) {
       for (channel = 0; channel < channels.length; channel++) {
         channels[channel].fill(0);
       }
-      return;
     }
 
-    if (lib._tp_write_audio(this.buffer, this.bufferSize)) {
-      for (channel = 0; channel < channels.length; channel++) {
-        for (i = 0; i < this.bufferSize; i++) {
-          channels[channel][i] = lib.getValue(
-            this.buffer +    // Interleaved channel format
-            i * 4 * 2 +      // frame offset   * bytes per sample * num channels +
-            channel * 4,     // channel offset * bytes per sample
-            'float'
-          );
-        }
-      }
+    if (useWebMIDI) {
+      this.midiFilePlayer.processPlay();
     } else {
-      this.stop();
+      if (this.midiFilePlayer.processPlaySynth(this.buffer, this.bufferSize)) {
+        for (channel = 0; channel < channels.length; channel++) {
+          for (i = 0; i < this.bufferSize; i++) {
+            channels[channel][i] = lib.getValue(
+              this.buffer +    // Interleaved channel format
+              i * 4 * 2 +      // frame offset   * bytes per sample * num channels +
+              channel * 4,     // channel offset * bytes per sample
+              'float'
+            );
+          }
+        }
+      } else {
+        this.stop();
+      }
     }
   }
 
@@ -213,52 +289,19 @@ export default class MIDIPlayer extends Player {
   }
 
   loadData(data, filepath) {
-    this.activeChannels = [];
     this.filepathMeta = this.metadataFromFilepath(filepath);
 
-    lib.ccall('tp_open', 'number', ['array', 'number'], [data, data.byteLength]);
-    for(let i = 0; i < 16; i++) {
-      if (lib._tp_get_channel_in_use(i)) this.activeChannels.push(i);
+    if (this.getParameter('autoengine')) {
+      this.switchSynthBasedOnFilename(filepath);
     }
 
-    // Switch to OPL3 engine if filepath contains 'FM'
-    if (this.getParameter('autoengine')) {
-      const fp = filepath.toLowerCase().replace('_', ' ');
-      if (fp.match(/(\bfm|fm\b)/i)) {
-        this.setParameter('synthengine', 1);
-      } else {
-        this.setParameter('synthengine', 0);
-      }
+    const midiFile = new MIDIFile(data);
+    this.midiFilePlayer.load(midiFile);
+    this.midiFilePlayer.play(() => this.onPlayerStateUpdate(true));
 
-      // Crude bank matching for a few specific games. :D
-      const opl3def = this.paramDefs.find(def => def.id === 'opl3bank');
-      if (opl3def) {
-        const opl3banks = opl3def.options[0].items;
-        const findBank = (str) => opl3banks.findIndex(bank => bank.label.indexOf(str) > -1);
-        let bankId = 0;
-        if (fp.indexOf('[rick]') > -1) {
-          bankId = findBank('Descent: Rick');
-        } else if (fp.indexOf('[ham]') > -1) {
-          bankId = findBank('Descent: Ham');
-        } else if (fp.indexOf('[int]') > -1) {
-          bankId = findBank('Descent: Int');
-        } else if (fp.indexOf('descent 2') > -1) {
-          bankId = findBank('Descent 2');
-        } else if (fp.indexOf('magic carpet') > -1) {
-          bankId = findBank('Magic Carpet');
-        } else if (fp.indexOf('wacky wheels') > -1) {
-          bankId = findBank('Apogee IMF');
-        } else if (fp.indexOf('warcraft 2') > -1) {
-          bankId = findBank('Warcraft 2');
-        } else if (fp.indexOf('warcraft') > -1) {
-          bankId = findBank('Warcraft');
-        } else if (fp.indexOf('system shock') > -1) {
-          bankId = findBank('System Shock');
-        }
-        if (bankId > -1) {
-          this.setParameter('opl3bank', bankId);
-        }
-      }
+    this.activeChannels = [];
+    for (let i = 0; i < 16; i++) {
+      if (this.midiFilePlayer.getChannelInUse(i)) this.activeChannels.push(i);
     }
 
     this.connect();
@@ -266,8 +309,48 @@ export default class MIDIPlayer extends Player {
     this.onPlayerStateUpdate(false);
   }
 
+  switchSynthBasedOnFilename(filepath) {
+    // Switch to OPL3 engine if filepath contains 'FM'
+    const fp = filepath.toLowerCase().replace('_', ' ');
+    if (fp.match(/(\bfm|fm\b)/i)) {
+      this.setParameter('synthengine', MIDI_ENGINE_LIBADLMIDI);
+    } else {
+      // this.setParameter('synthengine', MIDI_ENGINE_LIBFLUIDLITE);
+    }
+
+    // Crude bank matching for a few specific games. :D
+    const opl3def = this.paramDefs.find(def => def.id === 'opl3bank');
+    if (opl3def) {
+      const opl3banks = opl3def.options[0].items;
+      const findBank = (str) => opl3banks.findIndex(bank => bank.label.indexOf(str) > -1);
+      let bankId = 0;
+      if (fp.indexOf('[rick]') > -1) {
+        bankId = findBank('Descent: Rick');
+      } else if (fp.indexOf('[ham]') > -1) {
+        bankId = findBank('Descent: Ham');
+      } else if (fp.indexOf('[int]') > -1) {
+        bankId = findBank('Descent: Int');
+      } else if (fp.indexOf('descent 2') > -1) {
+        bankId = findBank('Descent 2');
+      } else if (fp.indexOf('magic carpet') > -1) {
+        bankId = findBank('Magic Carpet');
+      } else if (fp.indexOf('wacky wheels') > -1) {
+        bankId = findBank('Apogee IMF');
+      } else if (fp.indexOf('warcraft 2') > -1) {
+        bankId = findBank('Warcraft 2');
+      } else if (fp.indexOf('warcraft') > -1) {
+        bankId = findBank('Warcraft');
+      } else if (fp.indexOf('system shock') > -1) {
+        bankId = findBank('System Shock');
+      }
+      if (bankId > -1) {
+        this.setParameter('opl3bank', bankId);
+      }
+    }
+  }
+
   isPlaying() {
-    return lib && !this.paused;
+    return !this.midiFilePlayer.paused;
   }
 
   suspend() {
@@ -277,25 +360,28 @@ export default class MIDIPlayer extends Player {
 
   stop() {
     this.suspend();
-    lib._tp_stop();
     console.debug('MIDIPlayer.stop()');
     this.onPlayerStateUpdate(true);
   }
 
+  togglePause() {
+    return this.midiFilePlayer.togglePause();
+  }
+
   getDurationMs() {
-    return lib._tp_get_duration_ms();
+    return this.midiFilePlayer.getDuration();
   }
 
   getPositionMs() {
-    return lib._tp_get_position_ms();
+    return this.midiFilePlayer.getPosition();
   }
 
   seekMs(ms) {
-    lib._tp_seek(ms);
+    return this.midiFilePlayer.setPosition(ms);
   }
 
   setTempo(tempo) {
-    lib._tp_set_speed(tempo);
+    this.midiFilePlayer.setSpeed(tempo);
   }
 
   getNumVoices() {
@@ -307,13 +393,13 @@ export default class MIDIPlayer extends Player {
     if (channel === 9) {
       return 'Drums';
     } else {
-      return GENERAL_MIDI_PATCH_MAP[lib._tp_get_channel_program(channel)];
+      return GENERAL_MIDI_PATCH_MAP[this.midiFilePlayer.getChannelProgramNum(channel)];
     }
   }
 
   setVoices(voices) {
     voices.forEach((isEnabled, i) => {
-      lib._tp_set_channel_mute(this.activeChannels[i], !isEnabled);
+      this.midiFilePlayer.setChannelMute(this.activeChannels[i], !isEnabled);
     });
   }
 
@@ -333,7 +419,13 @@ export default class MIDIPlayer extends Player {
     switch (id) {
       case 'synthengine':
         value = parseInt(value, 10);
-        lib._tp_set_synth_engine(value);
+        this.midiFilePlayer.panic();
+        if (value === MIDI_ENGINE_WEBMIDI) {
+          this.midiFilePlayer.setUseWebMIDI(true);
+        } else {
+          this.midiFilePlayer.setUseWebMIDI(false);
+          lib._tp_set_synth_engine(value);
+        }
         break;
       case 'soundfont':
         const url = `${SOUNDFONT_URL_PATH}/${value}`;
@@ -350,6 +442,9 @@ export default class MIDIPlayer extends Player {
         break;
       case 'autoengine':
         value = !!value;
+        break;
+      case 'mididevice':
+        this.midiFilePlayer.setOutput(midiDevices[value]);
         break;
       default:
         console.warn('MIDIPlayer has no parameter with id "%s".', id);

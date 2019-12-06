@@ -79,7 +79,7 @@ export default class Sequencer {
         direction, this.currIdx, this.context.length);
       this.currIdx = 0;
       this.context = null;
-      this.player.suspend();
+      this.player.stop();
       this.onSequencerStateUpdate(true);
     } else {
       this.playSong(this.context[this.currIdx]);
