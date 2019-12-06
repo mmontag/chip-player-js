@@ -39,7 +39,7 @@
     "immutability-helper": "^2.7.1",
     "ismobilejs": "^0.4.1",
     "jest": "20.0.4",
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.13",
     "midievents": "latest",
     "midifile": "^2.0.0",
     "mini-css-extract-plugin": "^0.7.0",
