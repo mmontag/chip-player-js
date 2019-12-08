@@ -111,6 +111,14 @@ export default class PlayerParams extends PureComponent {
                   {param.label}
                 </label>
               );
+            case 'button':
+              return (
+                <button key={param.id} title={param.hint} className="box-button" onClick={() => {
+                   this.props.setParameter(param.id, true);
+                }}>
+                  {param.label}
+                </button>
+              );
             default:
               return null;
           }
