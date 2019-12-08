@@ -87,13 +87,6 @@ export default class MIDIPlayer extends Player {
       defaultValue: 0,
     },
     {
-      id: 'autoengine',
-      label: 'Auto Synth Engine Switching',
-      hint: 'Switch synth engine based on filenames. Files containing "FM" will play through Adlib/OPL3 synth.',
-      type: 'toggle',
-      defaultValue: true,
-    },
-    {
       id: 'soundfont',
       label: 'Soundfont',
       type: 'enum',
@@ -141,6 +134,13 @@ export default class MIDIPlayer extends Player {
         param: 'synthengine',
         value: MIDI_ENGINE_WEBMIDI,
       },
+    },
+    {
+      id: 'autoengine',
+      label: 'Auto Synth Engine Switching',
+      hint: 'Switch synth engine based on filenames. Files containing "FM" will play through Adlib/OPL3 synth.',
+      type: 'toggle',
+      defaultValue: true,
     },
     {
       id: 'gmreset',
