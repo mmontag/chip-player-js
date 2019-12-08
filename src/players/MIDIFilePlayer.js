@@ -329,14 +329,15 @@ MIDIPlayer.prototype.panic = function(timestamp) {
 };
 
 MIDIPlayer.prototype.reset = function(timestamp) {
-  if (this.synth) {
-    this.synth.reset();
-  } else {
+  if (this.useWebMIDI) {
+    this.send([MIDIEvents.EVENT_SYSEX, ...SYSEX_GM_RESET]);
     for (let ch = 0; ch < 16; ch++) {
       this.send([(MIDIEvents.EVENT_MIDI_CONTROLLER << 4) + ch, CC_SUSTAIN_PEDAL, 0], timestamp);
       this.send([(MIDIEvents.EVENT_MIDI_CONTROLLER << 4) + ch, CC_ALL_SOUND_OFF, 0], timestamp);
       this.send([(MIDIEvents.EVENT_MIDI_CONTROLLER << 4) + ch, CC_RESET_ALL_CONTROLLERS, 0], timestamp);
     }
+  } else {
+    this.synth.reset();
   }
 };
 

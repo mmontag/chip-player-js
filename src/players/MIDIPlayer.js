@@ -142,6 +142,12 @@ export default class MIDIPlayer extends Player {
         value: MIDI_ENGINE_WEBMIDI,
       },
     },
+    {
+      id: 'gmreset',
+      label: 'GM Reset',
+      hint: 'Send a GM Reset sysex and reset all controllers on all channels.',
+      type: 'button',
+    },
   ];
 
   constructor(audioCtx, destNode, chipCore, onPlayerStateUpdate = function() {}) {
@@ -445,6 +451,9 @@ export default class MIDIPlayer extends Player {
         break;
       case 'mididevice':
         this.midiFilePlayer.setOutput(midiDevices[value]);
+        break;
+      case 'gmreset':
+        this.midiFilePlayer.reset();
         break;
       default:
         console.warn('MIDIPlayer has no parameter with id "%s".', id);
