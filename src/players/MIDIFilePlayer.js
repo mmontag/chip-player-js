@@ -126,9 +126,9 @@ MIDIPlayer.prototype.doSkipSilence = function() {
 };
 
 MIDIPlayer.prototype.play = function(endCallback) {
-  this.endCallback = endCallback;
   if(0 === this.position) {
-    this.panic();
+    this.endCallback = endCallback;
+    this.reset();
 
     this.lastProcessPlayTimestamp = performance.now();
     if (this.skipSilence) {
@@ -381,6 +381,7 @@ MIDIPlayer.prototype.setPositionSynth = function(eventList) {
 };
 
 MIDIPlayer.prototype.setPositionWebMidi = function(ms, eventList) {
+  const wasPaused = this.paused;
   this.paused = true;
 
   let message;
@@ -396,7 +397,9 @@ MIDIPlayer.prototype.setPositionWebMidi = function(ms, eventList) {
   const numEvents = eventList.length;
   const messageDelay = numEvents * DELAY_MS_PER_CC_EVENT;
   console.log("Scheduled %s events. Resuming playback in %s ms...", numEvents, messageDelay);
-  setTimeout(this.resume, messageDelay);
+  if (!wasPaused) {
+    setTimeout(this.resume, messageDelay);
+  }
 };
 
 MIDIPlayer.prototype.setPosition = function(ms) {
