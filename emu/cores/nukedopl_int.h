@@ -1,19 +1,16 @@
 //
 // Copyright (C) 2013-2018 Alexey Khokholov (Nuke.YKT)
 //
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
-// This library is distributed in the hope that it will be useful,
+// This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 //  Nuked OPL3 emulator.
 //  Thanks:
@@ -159,11 +156,11 @@ struct _opl3_chip {
 #endif
 };
 
-void OPL3_Generate(opl3_chip *chip, Bit16s *buf);
-void OPL3_GenerateResampled(opl3_chip *chip, Bit16s *buf);
-void OPL3_Reset(opl3_chip *chip, Bit32u samplerate);
-void OPL3_WriteReg(opl3_chip *chip, Bit16u reg, Bit8u v);
-void OPL3_WriteRegBuffered(opl3_chip *chip, Bit16u reg, Bit8u v);
-void OPL3_GenerateStream(opl3_chip *chip, Bit16s *sndptr, Bit32u numsamples);
+void NOPL3_Generate(opl3_chip *chip, Bit32s *buf);
+void NOPL3_GenerateResampled(opl3_chip *chip, Bit32s *buf);
+void NOPL3_Reset(opl3_chip *chip, Bit32u clock, Bit32u samplerate);
+void NOPL3_WriteReg(opl3_chip *chip, Bit16u reg, Bit8u v);
+void NOPL3_WriteRegBuffered(opl3_chip *chip, Bit16u reg, Bit8u v);
+void NOPL3_GenerateStream(opl3_chip *chip, Bit32s *sndptr, Bit32u numsamples);
 
 #endif	// __NUKEDOPL_INT_H__

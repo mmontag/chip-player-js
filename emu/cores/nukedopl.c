@@ -1,19 +1,16 @@
 //
 // Copyright (C) 2013-2018 Alexey Khokholov (Nuke.YKT)
 //
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
-// This library is distributed in the hope that it will be useful,
+// This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 //  Nuked OPL3 emulator.
 //  Thanks:
@@ -1290,7 +1287,10 @@ void NOPL3_Reset(opl3_chip *chip, Bit32u clock, Bit32u samplerate)
     }
     chip->noise = 1;
     //chip->rateratio = (samplerate << RSM_FRAC) / 49716;
-    chip->rateratio = (samplerate << RSM_FRAC) / (clock / 288);
+    // ratio: sampleRate / (clock / 288) * (1 << resamplerFraction)
+    chip->rateratio = (Bit32u)((((Bit64u)288 * samplerate) << RSM_FRAC) / clock);
+    if (abs((Bit32s)chip->rateratio - (1 << RSM_FRAC)) <= 1)
+        chip->rateratio = (1 << RSM_FRAC);
     chip->tremoloshift = 4;
     chip->vibshift = 1;
 

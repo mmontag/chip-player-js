@@ -304,6 +304,7 @@
     <ClInclude Include="emu\cores\ym2612.h" />
     <ClInclude Include="emu\cores\ym2612_int.h" />
     <ClInclude Include="emu\cores\ym3438.h" />
+    <ClInclude Include="emu\cores\ym3438_int.h" />
     <ClInclude Include="emu\cores\ymdeltat.h" />
     <ClInclude Include="emu\cores\ymf262.h" />
     <ClInclude Include="emu\cores\ymf271.h" />

@@ -500,5 +500,8 @@
     <ClInclude Include="emu\cores\nukedopl_int.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
+    <ClInclude Include="emu\cores\ym3438_int.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

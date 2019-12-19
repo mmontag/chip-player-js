@@ -10,12 +10,7 @@ This chip controls 24 channels (C140) or 16 (219) of PCM.
 16 bytes are associated with each channel.
 Channels can be 8 bit signed PCM, or 12 bit signed PCM.
 
-Timer behavior is not yet handled.
-
-Unmapped registers:
-    0x1f8:timer interval?   (Nx0.1 ms)
-    0x1fa:irq ack? timer restart?
-    0x1fe:timer switch?(0:off 1:on)
+TODO: What does the INT0 pin do? Normally Namco tied it to VOL0 (with VOL1 = VCC).
 */
 /*
     2000.06.26  CAB     fixed compressed pcm playback
@@ -219,6 +214,30 @@ static void c140_w(void *chip, UINT16 offset, UINT8 data)
 			{
 				v->key=0;
 			}
+		}
+	}
+	else if (offset == 0x1fa)
+	{
+		//info->int1_callback(CLEAR_LINE);
+
+		// timing not verified
+		//unsigned div = info->REG[0x1f8] != 0 ? info->REG[0x1f8] : 256;
+		//attotime interval = attotime::from_ticks(div * 2, info->baserate);
+		//if (info->REG[0x1fe] & 0x01)
+		//	info->int1_timer->adjust(interval);
+	}
+	else if (offset == 0x1fe)
+	{
+		if (data & 0x01)
+		{
+			// kyukaidk and marvlandj want the first interrupt to happen immediately
+			//if (!info->int1_timer->enabled())
+			//	info->int1_callback(ASSERT_LINE);
+		}
+		else
+		{
+			//info->int1_callback(CLEAR_LINE);
+			//info->int1_timer->enable(false);
 		}
 	}
 }

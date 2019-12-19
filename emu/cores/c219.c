@@ -186,7 +186,7 @@ static UINT8 c219_r(void *chip, UINT16 offset)
 {
 	c219_state *info = (c219_state *)chip;
 	offset &= 0x1ff;
-	if (offset >= 0x1f8)
+	if (offset >= 0x1f8 && (offset & 0x001))
 		offset &= ~0x008;
 	return info->REG[offset];
 }
@@ -197,7 +197,7 @@ static void c219_w(void *chip, UINT16 offset, UINT8 data)
 
 	offset&=0x1ff;
 	// mirror the bank registers on the 219, fixes bkrtmaq (and probably xday2 based on notes in the HLE)
-	if (offset >= 0x1f8)
+	if (offset >= 0x1f8 && (offset & 0x001))
 		offset &= ~0x008;
 
 	info->REG[offset]=data;

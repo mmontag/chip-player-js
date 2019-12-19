@@ -79,8 +79,8 @@ static DEV_DEF devDef_Gens =
 #ifdef EC_YM2612_NUKED
 static DEVDEF_RWFUNC devFunc_Nuked[] =
 {
-	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, NOPN2_WriteBuffered},
-	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, NOPN2_Read},
+	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, nukedopn2_write},
+	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, nukedopn2_read},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef_Nuked =
@@ -90,10 +90,10 @@ static DEV_DEF devDef_Nuked =
 	device_start_ym2612_nuked,
 	nukedopn2_shutdown,
 	nukedopn2_reset_chip,
-	(DEVFUNC_UPDATE)NOPN2_GenerateStream,
+	nukedopn2_update,
 	
-	(DEVFUNC_OPTMASK)NOPN2_SetOptions,	// SetOptionBits
-	(DEVFUNC_OPTMASK)NOPN2_SetMute,
+	nukedopn2_set_options,	// SetOptionBits
+	nukedopn2_set_mutemask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
 	NULL,	// LinkDevice
@@ -174,23 +174,22 @@ static UINT8 device_start_ym2612_gens(const DEV_GEN_CFG* cfg, DEV_INFO* retDevIn
 #ifdef EC_YM2612_NUKED
 static UINT8 device_start_ym2612_nuked(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
-	ym3438_t* opn2;
+	void* chip;
+	DEV_DATA* devData;
 	UINT32 rate;
 	
 	rate = cfg->clock / 2 / 72;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
 	
-	opn2 = (ym3438_t*)calloc(1, sizeof(ym3438_t));
-	if (opn2 == NULL)
+	chip = nukedopn2_init(cfg->clock, rate);
+	if (chip == NULL)
 		return 0xFF;
 	
-	opn2->clock = cfg->clock;
-	opn2->smplRate = rate; // save for reset
+	nukedopn2_set_mutemask(chip, 0x00);
 	
-	NOPN2_SetMute(opn2, 0x00);
-	
-	opn2->_devData.chipInf = opn2;
-	INIT_DEVINF(retDevInf, &opn2->_devData, rate, &devDef_Nuked);
+	devData = (DEV_DATA*)chip;
+	devData->chipInf = chip;
+	INIT_DEVINF(retDevInf, devData, rate, &devDef_Nuked);
 	return 0x00;
 }
 #endif
