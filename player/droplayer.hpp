@@ -77,7 +77,12 @@ public:
 	UINT8 LoadFile(DATA_LOADER *fileLoader);
 	UINT8 UnloadFile(void);
 	const DRO_HEADER* GetFileHeader(void) const;
+	
 	const char* const* GetTags(void);
+	UINT8 GetSongInfo(PLR_SONG_INFO& songInf);
+	UINT8 GetSongDeviceInfo(std::vector<PLR_DEV_INFO>& devInfList) const;
+	UINT8 SetDeviceOptions(UINT8 type, UINT8 id, const PLR_DEV_OPTIONS& devOpts) const;
+	UINT8 GetDeviceOptions(UINT8 type, UINT8 id, PLR_DEV_OPTIONS& devOpts) const;
 	
 	//UINT32 GetSampleRate(void) const;
 	UINT8 SetSampleRate(UINT32 sampleRate);

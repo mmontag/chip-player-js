@@ -321,6 +321,75 @@ const char* const* DROPlayer::GetTags(void)
 	return tagList;
 }
 
+UINT8 DROPlayer::GetSongInfo(PLR_SONG_INFO& songInf)
+{
+	if (_dLoad == NULL)
+		return 0xFF;
+	
+	songInf.format = FCC_DRO;
+	songInf.fileVerMaj = _fileHdr.verMajor;
+	songInf.fileVerMin = _fileHdr.verMinor;
+	songInf.tickRateMul = 1;
+	songInf.tickRateDiv = _tickFreq;
+	songInf.songLen = GetTotalTicks();
+	songInf.loopTick = (UINT32)-1;
+	songInf.deviceCnt = _devTypes.size();
+	
+	return 0x00;
+}
+
+UINT8 DROPlayer::GetSongDeviceInfo(std::vector<PLR_DEV_INFO>& devInfList) const
+{
+	if (_dLoad == NULL)
+		return 0xFF;
+	
+	size_t curDev;
+	
+	devInfList.clear();
+	devInfList.reserve(_devTypes.size());
+	for (curDev = 0; curDev < _devTypes.size(); curDev ++)
+	{
+		PLR_DEV_INFO devInf;
+		memset(&devInf, 0x00, sizeof(PLR_DEV_INFO));
+		
+		devInf.id = curDev;
+		devInf.type = _devTypes[curDev];
+		devInf.instance = 0xFF;
+		devInf.clock = 3579545;
+		devInf.cParams = 0x00;
+		if (devInf.type == DEVID_YMF262)
+			devInf.clock *= 4;
+		if (! _devices.empty())
+		{
+			const VGM_BASEDEV& cDev = _devices[curDev].base;
+			devInf.core = (cDev.defInf.devDef != NULL) ? cDev.defInf.devDef->coreID : 0x00;
+			devInf.volume = (cDev.resmpl.volumeL + cDev.resmpl.volumeR) / 2;
+			devInf.smplRate = cDev.defInf.sampleRate;
+		}
+		else
+		{
+			devInf.core = 0x00;
+			devInf.volume = 0x100;
+			devInf.smplRate = 0;
+		}
+		devInfList.push_back(devInf);
+	}
+	if (! _devices.empty())
+		return 0x01;	// returned "live" data
+	else
+		return 0x00;	// returned data based on file header
+}
+
+UINT8 DROPlayer::SetDeviceOptions(UINT8 type, UINT8 id, const PLR_DEV_OPTIONS& devOpts) const
+{
+	return 0xFF;
+}
+
+UINT8 DROPlayer::GetDeviceOptions(UINT8 type, UINT8 id, PLR_DEV_OPTIONS& devOpts) const
+{
+	return 0xFF;
+}
+
 UINT8 DROPlayer::SetSampleRate(UINT32 sampleRate)
 {
 	if (_playState & PLAYSTATE_PLAY)

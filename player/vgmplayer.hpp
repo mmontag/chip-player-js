@@ -42,7 +42,7 @@ struct VGM_HEADER
 class VGMPlayer : public PlayerBase
 {
 public:
-	struct CHIP_DEVICE
+	struct CHIP_DEVICE	// Note: has to be a POD, because I use memset() on it.
 	{
 		VGM_BASEDEV base;
 		UINT8 vgmChipType;
@@ -120,7 +120,15 @@ public:
 	UINT8 LoadFile(DATA_LOADER *fileLoader);
 	UINT8 UnloadFile(void);
 	const VGM_HEADER* GetFileHeader(void) const;
+	
 	const char* const* GetTags(void);
+	UINT8 GetSongInfo(PLR_SONG_INFO& songInf);
+	UINT8 GetSongDeviceInfo(std::vector<PLR_DEV_INFO>& devInfList) const;
+	UINT8 SetDeviceOptions(UINT8 type, UINT8 id, const PLR_DEV_OPTIONS& devOpts) const;
+	UINT8 GetDeviceOptions(UINT8 type, UINT8 id, PLR_DEV_OPTIONS& devOpts) const;
+	// player-specific options
+	//UINT8 SetPlayerOptions(const ###_PLAY_OPTIONS& playOpts) const;
+	//UINT8 GetPlayerOptions(###_PLAY_OPTIONS& playOpts) const;
 	
 	//UINT32 GetSampleRate(void) const;
 	UINT8 SetSampleRate(UINT32 sampleRate);
@@ -156,11 +164,11 @@ protected:
 	
 	void RefreshTSRates(void);
 	
-	UINT32 GetHeaderChipClock(UINT8 chipType);	// returns raw chip clock value from VGM header
-	inline UINT32 GetChipCount(UINT8 chipType);
-	UINT32 GetChipClock(UINT8 chipType, UINT8 chipID);
-	UINT16 GetChipVolume(UINT8 chipType, UINT8 chipID, UINT8 isLinked);
-	UINT16 EstimateOverallVolume(void);
+	UINT32 GetHeaderChipClock(UINT8 chipType) const;	// returns raw chip clock value from VGM header
+	inline UINT32 GetChipCount(UINT8 chipType) const;
+	UINT32 GetChipClock(UINT8 chipType, UINT8 chipID) const;
+	UINT16 GetChipVolume(UINT8 chipType, UINT8 chipID, UINT8 isLinked) const;
+	UINT16 EstimateOverallVolume(void) const;
 	void NormalizeOverallVolume(UINT16 overallVol);
 	void InitDevices(void);
 	
@@ -280,6 +288,7 @@ protected:
 	
 	size_t _devMap[_CHIP_COUNT][2];	// maps VGM device ID to _devices vector
 	std::vector<CHIP_DEVICE> _devices;
+	std::vector< std::vector<UINT8> > _devCfg;
 	
 	size_t _dacStrmMap[0x100];	// maps VGM DAC stream ID -> _dacStreams vector
 	std::vector<DACSTRM_DEV> _dacStreams;

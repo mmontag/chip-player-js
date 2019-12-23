@@ -4,6 +4,7 @@
 #include <stdtype.h>
 #include <emu/Resampler.h>
 #include "../utils/DataLoader.h"
+#include <vector>
 
 
 #define PLAYSTATE_PLAY	0x01	// is playing
@@ -18,6 +19,35 @@ typedef UINT8 (*PLAYER_EVENT_CB)(PlayerBase* player, void* userParam, UINT8 evtT
 #define PLREVT_LOOP		0x03	// starting next loop [evtParam: UINT32* loopNumber, ret == 0x01 -> stop processing]
 #define PLREVT_END		0x04	// reached the end of the song
 
+struct PLR_SONG_INFO
+{
+	UINT32 format;		// four-character-code for file format
+	UINT16 fileVerMaj;	// file version (major, encoded as BCD)
+	UINT16 fileVerMin;	// file version (minor, encoded as BCD)
+	UINT32 tickRateMul;	// internal ticks per second: numerator
+	UINT32 tickRateDiv;	// internal ticks per second: denumerator
+	// 1 second = 1 tick * tickMult / tickDiv
+	UINT32 songLen;		// song length in ticks
+	UINT32 loopTick;	// tick position where the loop begins
+	UINT32 deviceCnt;	// number of used sound devices
+};
+
+struct PLR_DEV_INFO
+{
+	UINT32 id;		// device ID
+	UINT8 type;		// device type
+	UINT8 instance;	// instance ID of this device type (0xFF -> N/A for this format)
+	UINT16 volume;	// output volume (0x100 = 100%)
+	UINT32 core;	// FCC for device emulation core
+	UINT32 clock;	// chip clock
+	UINT32 cParams;	// additional device configuration parameters (SN76489 params, AY8910 type, ...)
+	UINT32 smplRate;	// current sample rate (0 if not running)
+};
+
+struct PLR_DEV_OPTIONS
+{
+	UINT32 dummy;
+};
 
 
 //	--- concept ---
@@ -35,7 +65,15 @@ public:
 	static UINT8 IsMyFile(DATA_LOADER *dataLoader);
 	virtual UINT8 LoadFile(DATA_LOADER *dataLoader) = 0;
 	virtual UINT8 UnloadFile(void) = 0;
+	
 	virtual const char* const* GetTags(void) = 0;
+	virtual UINT8 GetSongInfo(PLR_SONG_INFO& songInf) = 0;
+	virtual UINT8 GetSongDeviceInfo(std::vector<PLR_DEV_INFO>& devInfList) const = 0;
+	virtual UINT8 SetDeviceOptions(UINT8 type, UINT8 id, const PLR_DEV_OPTIONS& devOpts) const = 0;
+	virtual UINT8 GetDeviceOptions(UINT8 type, UINT8 id, PLR_DEV_OPTIONS& devOpts) const = 0;
+	// player-specific options
+	//virtual UINT8 SetPlayerOptions(const ###_PLAY_OPTIONS& playOpts) const = 0;
+	//virtual UINT8 GetPlayerOptions(###_PLAY_OPTIONS& playOpts) const = 0;
 	
 	virtual UINT32 GetSampleRate(void) const;
 	virtual UINT8 SetSampleRate(UINT32 sampleRate);

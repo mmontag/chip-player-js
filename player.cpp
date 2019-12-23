@@ -38,7 +38,11 @@ extern "C" int __cdecl _kbhit(void);
 
 //#define USE_MEMORY_LOADER 1	// define to use the in-memory loader
 
+#define SHOW_TAGS		1
+#define SHOW_FILE_INFO	1
+
 int main(int argc, char* argv[]);
+static std::string FCC2Str(UINT32 fcc);
 static UINT8 *SlurpFile(const char *fileName, UINT32 *fileSize);
 static UINT8 GetPlayerForFile(DATA_LOADER *dLoad, PlayerBase** retPlayer);
 static const char* GetFileTitle(const char* filePath);
@@ -184,42 +188,45 @@ int main(int argc, char* argv[])
 				player->Tick2Second(player->GetTotalTicks()), hwType);
 	}
 	
-	const char* songTitle = NULL;
-	const char* songAuthor = NULL;
-	const char* songGame = NULL;
-	const char* songSystem = NULL;
-	const char* songDate = NULL;
-	const char* songComment = NULL;
-	
-	const char* const* tagList = player->GetTags();
-	for (const char* const* t = tagList; *t; t += 2)
+	if (SHOW_TAGS)
 	{
-		if (!strcmp(t[0], "TITLE"))
-			songTitle = t[1];
-		else if (!strcmp(t[0], "ARTIST"))
-			songAuthor = t[1];
-		else if (!strcmp(t[0], "GAME"))
-			songGame = t[1];
-		else if (!strcmp(t[0], "SYSTEM"))
-			songSystem = t[1];
-		else if (!strcmp(t[0], "DATE"))
-			songDate = t[1];
-		else if (!strcmp(t[0], "COMMENT"))
-			songComment = t[1];
-	}
+		const char* songTitle = NULL;
+		const char* songAuthor = NULL;
+		const char* songGame = NULL;
+		const char* songSystem = NULL;
+		const char* songDate = NULL;
+		const char* songComment = NULL;
 	
-	if (songTitle != NULL && songTitle[0] != '\0')
-		printf("\nSong Title: %s", songTitle);
-	if (songAuthor != NULL && songAuthor[0] != '\0')
-		printf("\nSong Author: %s", songAuthor);
-	if (songGame != NULL && songGame[0] != '\0')
-		printf("\nSong Game: %s", songGame);
-	if (songSystem != NULL && songSystem[0] != '\0')
-		printf("\nSong System: %s", songSystem);
-	if (songDate != NULL && songDate[0] != '\0')
-		printf("\nSong Date: %s", songDate);
-	if (songComment != NULL && songComment[0] != '\0')
-		printf("\nSong Comment: %s", songComment);
+		const char* const* tagList = player->GetTags();
+		for (const char* const* t = tagList; *t; t += 2)
+		{
+			if (!strcmp(t[0], "TITLE"))
+				songTitle = t[1];
+			else if (!strcmp(t[0], "ARTIST"))
+				songAuthor = t[1];
+			else if (!strcmp(t[0], "GAME"))
+				songGame = t[1];
+			else if (!strcmp(t[0], "SYSTEM"))
+				songSystem = t[1];
+			else if (!strcmp(t[0], "DATE"))
+				songDate = t[1];
+			else if (!strcmp(t[0], "COMMENT"))
+				songComment = t[1];
+		}
+	
+		if (songTitle != NULL && songTitle[0] != '\0')
+			printf("\nSong Title: %s", songTitle);
+		if (songAuthor != NULL && songAuthor[0] != '\0')
+			printf("\nSong Author: %s", songAuthor);
+		if (songGame != NULL && songGame[0] != '\0')
+			printf("\nSong Game: %s", songGame);
+		if (songSystem != NULL && songSystem[0] != '\0')
+			printf("\nSong System: %s", songSystem);
+		if (songDate != NULL && songDate[0] != '\0')
+			printf("\nSong Date: %s", songDate);
+		if (songComment != NULL && songComment[0] != '\0')
+			printf("\nSong Comment: %s", songComment);
+	}
 	
 	putchar('\n');
 	
@@ -227,6 +234,27 @@ int main(int argc, char* argv[])
 	player->Start();
 	fadeSmplTime = player->GetSampleRate() * 4;
 	fadeSmplStart = (UINT32)-1;
+	
+	if (SHOW_FILE_INFO)
+	{
+		PLR_SONG_INFO sInf;
+		std::vector<PLR_DEV_INFO> diList;
+		size_t curDev;
+		
+		player->GetSongInfo(sInf);
+		player->GetSongDeviceInfo(diList);
+		printf("SongInfo: %s v%X.%X, Rate %u/%u, Len %u, Loop at %d, devices: %u\n",
+			FCC2Str(sInf.format).c_str(), sInf.fileVerMaj, sInf.fileVerMin,
+			sInf.tickRateMul, sInf.tickRateDiv, sInf.songLen, sInf.loopTick, sInf.deviceCnt);
+		for (curDev = 0; curDev < diList.size(); curDev ++)
+		{
+			const PLR_DEV_INFO& pdi = diList[curDev];
+			printf(" Dev %u: Type 0x%02X #%d, Core %s, Clock %u, Rate %u, Volume 0x%X\n",
+				pdi.id, pdi.type, (INT8)pdi.instance, FCC2Str(pdi.core).c_str(), pdi.clock, pdi.smplRate, pdi.volume);
+			if (pdi.cParams != 0)
+				printf("        CfgParams: 0x%08X\n", pdi.cParams);
+		}
+	}
 	
 	StartDiskWriter("waveOut.wav");
 	
@@ -349,6 +377,16 @@ int main(int argc, char* argv[])
 #endif
 	
 	return 0;
+}
+
+static std::string FCC2Str(UINT32 fcc)
+{
+	std::string result(4, '\0');
+	result[0] = (char)((fcc >> 24) & 0xFF);
+	result[1] = (char)((fcc >> 16) & 0xFF);
+	result[2] = (char)((fcc >>  8) & 0xFF);
+	result[3] = (char)((fcc >>  0) & 0xFF);
+	return result;
 }
 
 static UINT8 *SlurpFile(const char *fileName, UINT32 *fileSize)
