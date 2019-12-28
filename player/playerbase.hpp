@@ -44,9 +44,20 @@ struct PLR_DEV_INFO
 	UINT32 smplRate;	// current sample rate (0 if not running)
 };
 
-struct PLR_DEV_OPTIONS
+struct PLR_MUTE_OPTS
 {
-	UINT32 dummy;
+	UINT8 disable;		// suspend emulation (0x01 = main device, 0x02 = linked, 0xFF = all)
+	UINT32 chnMute[2];	// channel muting mask ([1] is used for linked devices)
+};
+
+struct PLR_DEV_OPTS
+{
+	UINT32 emuCore;		// enforce a certain sound core (0 = use default)
+	UINT8 srMode;		// sample rate mode (see DEVRI_SRMODE)
+	UINT8 resmplMode;	// resampling mode (0 - high quality, 1 - low quality, 2 - LQ down, HQ up)
+	UINT32 smplRate;	// emulaiton sample rate
+	UINT32 coreOpts;
+	PLR_MUTE_OPTS muteOpts;
 };
 
 
@@ -69,8 +80,11 @@ public:
 	virtual const char* const* GetTags(void) = 0;
 	virtual UINT8 GetSongInfo(PLR_SONG_INFO& songInf) = 0;
 	virtual UINT8 GetSongDeviceInfo(std::vector<PLR_DEV_INFO>& devInfList) const = 0;
-	virtual UINT8 SetDeviceOptions(UINT8 type, UINT8 id, const PLR_DEV_OPTIONS& devOpts) const = 0;
-	virtual UINT8 GetDeviceOptions(UINT8 type, UINT8 id, PLR_DEV_OPTIONS& devOpts) const = 0;
+	static UINT8 InitDeviceOptions(PLR_DEV_OPTS& devOpts);
+	virtual UINT8 SetDeviceOptions(UINT32 id, const PLR_DEV_OPTS& devOpts) = 0;
+	virtual UINT8 GetDeviceOptions(UINT32 id, PLR_DEV_OPTS& devOpts) const = 0;
+	virtual UINT8 SetDeviceMuting(UINT32 id, const PLR_MUTE_OPTS& muteOpts) = 0;
+	virtual UINT8 GetDeviceMuting(UINT32 id, PLR_MUTE_OPTS& muteOpts) const = 0;
 	// player-specific options
 	//virtual UINT8 SetPlayerOptions(const ###_PLAY_OPTIONS& playOpts) const = 0;
 	//virtual UINT8 GetPlayerOptions(###_PLAY_OPTIONS& playOpts) const = 0;

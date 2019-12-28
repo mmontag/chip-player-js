@@ -26,6 +26,19 @@ const char* PlayerBase::GetPlayerName(void) const
 	return 0xFF;
 }
 
+/*static*/ UINT8 PlayerBase::InitDeviceOptions(PLR_DEV_OPTS& devOpts)
+{
+	devOpts.emuCore = 0x00;
+	devOpts.srMode = DEVRI_SRMODE_NATIVE;
+	devOpts.resmplMode = 0x00;
+	devOpts.smplRate = 0;
+	devOpts.coreOpts = 0x00;
+	devOpts.muteOpts.disable = 0x00;
+	devOpts.muteOpts.chnMute[0] = 0x00;
+	devOpts.muteOpts.chnMute[1] = 0x00;
+	return 0x00;
+}
+
 UINT32 PlayerBase::GetSampleRate(void) const
 {
 	return _outSmplRate;

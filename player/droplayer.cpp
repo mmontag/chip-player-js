@@ -44,6 +44,10 @@ DROPlayer::DROPlayer() :
 	_playState(0x00),
 	_psTrigger(0x00)
 {
+	size_t curDev;
+	
+	for (curDev = 0; curDev < 3; curDev ++)
+		InitDeviceOptions(_devOpts[curDev]);
 	_initRegSet.resize(0x200, false);
 }
 
@@ -354,7 +358,7 @@ UINT8 DROPlayer::GetSongDeviceInfo(std::vector<PLR_DEV_INFO>& devInfList) const
 		
 		devInf.id = curDev;
 		devInf.type = _devTypes[curDev];
-		devInf.instance = 0xFF;
+		devInf.instance = curDev;
 		devInf.clock = 3579545;
 		devInf.cParams = 0x00;
 		if (devInf.type == DEVID_YMF262)
@@ -380,14 +384,116 @@ UINT8 DROPlayer::GetSongDeviceInfo(std::vector<PLR_DEV_INFO>& devInfList) const
 		return 0x00;	// returned data based on file header
 }
 
-UINT8 DROPlayer::SetDeviceOptions(UINT8 type, UINT8 id, const PLR_DEV_OPTIONS& devOpts) const
+size_t DROPlayer::DeviceID2OptionID(UINT32 id) const
 {
-	return 0xFF;
+	UINT8 type;
+	UINT8 instance;
+	
+	if (id & 0x80000000)
+	{
+		type = (id >> 0) & 0xFF;
+		instance = (id >> 16) & 0xFF;
+	}
+	else if (id < _devTypes.size())
+	{
+		type = _devTypes[id];
+		instance = (UINT8)id;
+	}
+	else
+	{
+		return (size_t)-1;
+	}
+	
+	if (type == DEVID_YM3812)
+	{
+		if (instance < 2)
+			return 0 + instance;
+	}
+	else if (type == DEVID_YMF262)
+	{
+		if (instance < 1)
+			return 2 + instance;
+	}
+	return (size_t)-1;
 }
 
-UINT8 DROPlayer::GetDeviceOptions(UINT8 type, UINT8 id, PLR_DEV_OPTIONS& devOpts) const
+size_t DROPlayer::OptionID2DeviceID(UINT32 id) const
 {
-	return 0xFF;
+	if (! (_playState & PLAYSTATE_PLAY))
+		return (size_t)-1;
+	
+	UINT8 type;
+	UINT8 instance;
+	
+	if (id < 2)
+	{
+		type = DEVID_YM3812;
+		instance = id - 0;
+	}
+	else if (id < 3)
+	{
+		type = DEVID_YMF262;
+		instance = id - 2;
+	}
+	else
+	{
+		type = 0xFF;
+		instance = 0;
+	}
+	if (instance >= _devices.size() || type != _devTypes[0])
+		return (size_t)-1;
+	return instance;
+}
+
+UINT8 DROPlayer::SetDeviceOptions(UINT32 id, const PLR_DEV_OPTS& devOpts)
+{
+	size_t optID = DeviceID2OptionID(id);
+	if (optID == (UINT32)-1)
+		return 0x80;	// bad device ID
+	
+	_devOpts[optID] = devOpts;
+	// no immediate changes necessary for OPL2/OPL3
+	SetDeviceMuting(id, devOpts.muteOpts);
+	return 0x00;
+}
+
+UINT8 DROPlayer::GetDeviceOptions(UINT32 id, PLR_DEV_OPTS& devOpts) const
+{
+	size_t optID = DeviceID2OptionID(id);
+	if (optID == (UINT32)-1)
+		return 0x80;	// bad device ID
+	
+	devOpts = _devOpts[optID];
+	return 0x00;
+}
+
+UINT8 DROPlayer::SetDeviceMuting(UINT32 id, const PLR_MUTE_OPTS& muteOpts)
+{
+	size_t optID = DeviceID2OptionID(id);
+	if (optID == (UINT32)-1)
+		return 0x80;	// bad device ID
+	
+	PLR_MUTE_OPTS& devMOpt = _devOpts[optID].muteOpts;
+	devMOpt = muteOpts;
+	
+	size_t devID = OptionID2DeviceID(optID);
+	if (devID != (UINT32)-1)
+	{
+		DEV_INFO* devInf = &_devices[devID].base.defInf;
+		if (devInf->dataPtr != NULL && devInf->devDef->SetMuteMask != NULL)
+			devInf->devDef->SetMuteMask(devInf->dataPtr, devMOpt.chnMute[0]);
+	}
+	return 0x00;
+}
+
+UINT8 DROPlayer::GetDeviceMuting(UINT32 id, PLR_MUTE_OPTS& muteOpts) const
+{
+	size_t optID = DeviceID2OptionID(id);
+	if (optID == (UINT32)-1)
+		return 0x80;	// bad device ID
+	
+	muteOpts = _devOpts[optID].muteOpts;
+	return 0x00;
 }
 
 UINT8 DROPlayer::SetSampleRate(UINT32 sampleRate)
@@ -466,17 +572,19 @@ UINT8 DROPlayer::Start(void)
 	for (curDev = 0; curDev < _devTypes.size(); curDev ++)
 	{
 		DRO_CHIPDEV* cDev = &_devices[curDev];
+		PLR_DEV_OPTS* devOpts;
 		DEV_GEN_CFG devCfg;
 		VGM_BASEDEV* clDev;
 		UINT8 deviceID;
 		
+		devOpts = &_devOpts[DeviceID2OptionID(curDev)];
 		cDev->base.defInf.dataPtr = NULL;
 		cDev->base.linkDev = NULL;
-		devCfg.emuCore = 0x00;
-		devCfg.srMode = DEVRI_SRMODE_NATIVE;
+		devCfg.emuCore = devOpts->emuCore;
+		devCfg.srMode = devOpts->srMode;
 		devCfg.flags = 0x00;
 		devCfg.clock = 3579545;
-		devCfg.smplRate = _outSmplRate;
+		devCfg.smplRate = devOpts->smplRate ? devOpts->smplRate : _outSmplRate;
 		
 		deviceID = _devTypes[curDev];
 		if (deviceID == DEVID_YMF262)
@@ -488,12 +596,15 @@ UINT8 DROPlayer::Start(void)
 			cDev->base.defInf.devDef = NULL;
 			continue;
 		}
+		cDev->devOpts = &_devOpts[DeviceID2OptionID(0x80000000 | (curDev << 16) | (deviceID << 0))];
 		SndEmu_GetDeviceFunc(cDev->base.defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&cDev->write);
 		
 		SetupLinkedDevices(&cDev->base, NULL, NULL);
 		
 		for (clDev = &cDev->base; clDev != NULL; clDev = clDev->linkDev)
 		{
+			clDev->defInf.devDef->SetMuteMask(clDev->defInf.dataPtr, devOpts->muteOpts.chnMute[0]);
+			
 			Resmpl_SetVals(&clDev->resmpl, 0xFF, 0x100, _outSmplRate);
 			// do DualOPL2 hard panning by muting either the left or right speaker
 			if (_devPanning[curDev] & 0x02)
@@ -553,6 +664,8 @@ UINT8 DROPlayer::Reset(void)
 	{
 		DRO_CHIPDEV* cDev = &_devices[curDev];
 		VGM_BASEDEV* clDev;
+		if (cDev->base.defInf.dataPtr == NULL)
+			continue;
 		
 		cDev->base.defInf.devDef->Reset(cDev->base.defInf.dataPtr);
 		for (clDev = &cDev->base; clDev != NULL; clDev = clDev->linkDev)
@@ -563,6 +676,9 @@ UINT8 DROPlayer::Reset(void)
 	
 	for (curDev = 0; curDev < _devices.size(); curDev ++)
 	{
+		if (_devices[curDev].base.defInf.dataPtr == NULL)
+			continue;
+		
 		if (_devTypes[curDev] == DEVID_YMF262)
 			WriteReg((curDev << _portShift) | 1, 0x05, 0x01);	// temporary OPL3 enable for proper register reset
 		
@@ -617,10 +733,11 @@ UINT32 DROPlayer::Render(UINT32 smplCnt, WAVE_32BS* data)
 		{
 			DRO_CHIPDEV* cDev = &_devices[curDev];
 			VGM_BASEDEV* clDev;
+			UINT8 disable = _devOpts[DeviceID2OptionID(curDev)].muteOpts.disable;
 			
-			for (clDev = &cDev->base; clDev != NULL; clDev = clDev->linkDev)
+			for (clDev = &cDev->base; clDev != NULL; clDev = clDev->linkDev, disable >>= 1)
 			{
-				if (clDev->defInf.dataPtr != NULL)
+				if (clDev->defInf.dataPtr != NULL && ! (disable & 0x01))
 					Resmpl_Execute(&clDev->resmpl, smplStep, &data[curSmpl]);
 			}
 		}
@@ -764,12 +881,14 @@ void DROPlayer::DoFileEnd(void)
 
 void DROPlayer::WriteReg(UINT8 port, UINT8 reg, UINT8 data)
 {
-	UINT8 devID = port >> _portShift;
+	UINT8 optID = port >> _portShift;
 	
-	if (devID >= _devices.size())
+	if (optID >= _devices.size())
 		return;
-	DRO_CHIPDEV* cDev = &_devices[devID];
+	DRO_CHIPDEV* cDev = &_devices[optID];
 	DEV_DATA* dataPtr = cDev->base.defInf.dataPtr;
+	if (dataPtr == NULL)
+		return;
 	
 	port &= _portMask;
 	cDev->write(dataPtr, (port << 1) | 0, reg);

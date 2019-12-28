@@ -62,6 +62,7 @@ typedef struct _dro_chip_device DRO_CHIPDEV;
 struct _dro_chip_device
 {
 	VGM_BASEDEV base;
+	PLR_DEV_OPTS* devOpts;
 	DEVFUNC_WRITE_A8D8 write;
 };
 
@@ -81,8 +82,10 @@ public:
 	const char* const* GetTags(void);
 	UINT8 GetSongInfo(PLR_SONG_INFO& songInf);
 	UINT8 GetSongDeviceInfo(std::vector<PLR_DEV_INFO>& devInfList) const;
-	UINT8 SetDeviceOptions(UINT8 type, UINT8 id, const PLR_DEV_OPTIONS& devOpts) const;
-	UINT8 GetDeviceOptions(UINT8 type, UINT8 id, PLR_DEV_OPTIONS& devOpts) const;
+	UINT8 SetDeviceOptions(UINT32 id, const PLR_DEV_OPTS& devOpts);
+	UINT8 GetDeviceOptions(UINT32 id, PLR_DEV_OPTS& devOpts) const;
+	UINT8 SetDeviceMuting(UINT32 id, const PLR_MUTE_OPTS& muteOpts);
+	UINT8 GetDeviceMuting(UINT32 id, PLR_MUTE_OPTS& muteOpts) const;
 	
 	//UINT32 GetSampleRate(void) const;
 	UINT8 SetSampleRate(UINT32 sampleRate);
@@ -109,6 +112,9 @@ public:
 	//UINT8 Seek(...); // TODO
 	
 private:
+	size_t DeviceID2OptionID(UINT32 id) const;
+	size_t OptionID2DeviceID(UINT32 id) const;
+	
 	void ScanInitBlock(void);
 	
 	void ParseFile(UINT32 ticks);
@@ -141,6 +147,7 @@ private:
 	UINT64 _tsMult;
 	UINT64 _tsDiv;
 	
+	PLR_DEV_OPTS _devOpts[3];	// 0 = 1st OPL2, 1 = 2nd OPL2, 2 = 1st OPL3
 	std::vector<DRO_CHIPDEV> _devices;
 	UINT32 _filePos;
 	UINT32 _fileTick;

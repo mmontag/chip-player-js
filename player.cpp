@@ -42,6 +42,8 @@ extern "C" int __cdecl _kbhit(void);
 #define SHOW_FILE_INFO	1
 
 int main(int argc, char* argv[]);
+static void DoChipControlMode(PlayerBase* player);
+static void StripNewline(char* str);
 static std::string FCC2Str(UINT32 fcc);
 static UINT8 *SlurpFile(const char *fileName, UINT32 *fileSize);
 static UINT8 GetPlayerForFile(DATA_LOADER *dLoad, PlayerBase** retPlayer);
@@ -88,6 +90,10 @@ static UINT32 masterVol = 0x10000;	// fixed point 16.16
 static UINT32 fadeSmplStart;
 static UINT32 fadeSmplTime;
 
+static DROPlayer* droPlr;
+static S98Player* s98Plr;
+static VGMPlayer* vgmPlr;
+
 int main(int argc, char* argv[])
 {
 	int argbase;
@@ -118,6 +124,10 @@ int main(int argc, char* argv[])
 	}
 	playState = 0x00;
 	
+	droPlr = new DROPlayer;
+	s98Plr = new S98Player;
+	vgmPlr = new VGMPlayer;
+	
 	for (curSong = argbase; curSong < argc; curSong ++)
 	{
 	
@@ -146,8 +156,7 @@ int main(int argc, char* argv[])
 	if (retVal)
 	{
 		DataLoader_CancelLoading(dLoad);
-		if (player != NULL)
-			delete player;
+		player = NULL;
 		fprintf(stderr, "Error 0x%02X loading file!\n", retVal);
 		continue;
 	}
@@ -249,8 +258,8 @@ int main(int argc, char* argv[])
 		for (curDev = 0; curDev < diList.size(); curDev ++)
 		{
 			const PLR_DEV_INFO& pdi = diList[curDev];
-			printf(" Dev %u: Type 0x%02X #%d, Core %s, Clock %u, Rate %u, Volume 0x%X\n",
-				pdi.id, pdi.type, (INT8)pdi.instance, FCC2Str(pdi.core).c_str(), pdi.clock, pdi.smplRate, pdi.volume);
+			printf(" Dev %d: Type 0x%02X #%d, Core %s, Clock %u, Rate %u, Volume 0x%X\n",
+				(int)pdi.id, pdi.type, (INT8)pdi.instance, FCC2Str(pdi.core).c_str(), pdi.clock, pdi.smplRate, pdi.volume);
 			if (pdi.cParams != 0)
 				printf("        CfgParams: 0x%08X\n", pdi.cParams);
 		}
@@ -343,6 +352,10 @@ int main(int argc, char* argv[])
 			{
 				fadeSmplStart = player->GetCurSample();
 			}
+			else if (letter == 'C')	// chip control
+			{
+				DoChipControlMode(player);
+			}
 			needRefresh = true;
 		}
 	}
@@ -359,12 +372,16 @@ int main(int argc, char* argv[])
 	player->Stop();
 	player->UnloadFile();
 	DataLoader_Deinit(dLoad);
-	delete player;	player = NULL; dLoad = NULL;
+	player = NULL; dLoad = NULL;
 #ifdef USE_MEMORY_LOADER
 	free(fileData);
 #endif
 	
 	}	// end for(curSong)
+	
+	delete droPlr;
+	delete s98Plr;
+	delete vgmPlr;
 	
 	StopAudioDevice();
 	DeinitAudioSystem();
@@ -377,6 +394,167 @@ int main(int argc, char* argv[])
 #endif
 	
 	return 0;
+}
+
+static void DoChipControlMode(PlayerBase* player)
+{
+	int letter;
+	int mode;
+	char line[0x80];
+	char* endPtr;
+	int chipID;
+	UINT8 retVal;
+	
+	printf("Chip Control. ");
+	mode = 0;	// start
+	chipID = -1;
+	while(mode >= 0)
+	{
+		if (mode == 0)
+		{
+			PLR_DEV_OPTS devOpts;
+			
+			printf("Sound Chip ID: ");
+			fgets(line, 0x80, stdin);
+			StripNewline(line);
+			if (line[0] == '\0')
+				return;
+			
+			chipID = (int)strtol(line, &endPtr, 0);
+			if (endPtr == line)
+				break;
+			
+			retVal = player->GetDeviceOptions((UINT32)chipID, devOpts);
+			if (retVal & 0x80)
+			{
+				printf("Invalid sound chip ID.\n");
+				continue;
+			}
+			
+			printf("Cfg: Core %s, Opts 0x%X, srMode 0x%02X, sRate %u, resampleMode 0x%02X\n",
+				FCC2Str(devOpts.emuCore).c_str(), devOpts.coreOpts, devOpts.srMode,
+				devOpts.smplRate, devOpts.resmplMode);
+			printf("Muting: Chip %s [0x%02X], Channel Mask: 0x%02X\n",
+				(devOpts.muteOpts.disable & 0x01) ? "Off" : "On", devOpts.muteOpts.disable,
+				devOpts.muteOpts.chnMute[0]);
+			mode = 1;
+		}
+		else if (mode == 1)
+		{
+			char* tokenStr;
+			
+			PLR_DEV_OPTS devOpts;
+			retVal = player->GetDeviceOptions((UINT32)chipID, devOpts);
+			if (retVal & 0x80)
+			{
+				mode = 0;
+				continue;
+			}
+			
+			// Core / Opts / SRMode / SampleRate / ReSampleMode / Muting
+			printf("Command [C/O/SRM/SR/RSM/M data]: ");
+			fgets(line, 0x80, stdin);
+			StripNewline(line);
+			
+			tokenStr = strtok(line, " ");
+			for (endPtr = line; *endPtr != '\0'; endPtr ++)
+				*endPtr = (char)toupper((unsigned char)*endPtr);
+			tokenStr = endPtr + 1;
+			
+			if (! strcmp(line, "C"))
+			{
+				std::string fccStr(tokenStr);
+				fccStr.resize(4, 0x00);
+				devOpts.emuCore =
+					(fccStr[0] << 24) | (fccStr[1] << 16) |
+					(fccStr[2] <<  8) | (fccStr[3] <<  0);
+				player->SetDeviceOptions((UINT32)chipID, devOpts);
+			}
+			else if (! strcmp(line, "O"))
+			{
+				devOpts.coreOpts = (UINT32)strtoul(tokenStr, &endPtr, 0);
+				if (endPtr > tokenStr)
+					player->SetDeviceOptions((UINT32)chipID, devOpts);
+			}
+			else if (! strcmp(line, "SRM"))
+			{
+				devOpts.srMode = (UINT8)strtoul(tokenStr, &endPtr, 0);
+				if (endPtr > tokenStr)
+					player->SetDeviceOptions((UINT32)chipID, devOpts);
+			}
+			else if (! strcmp(line, "SR"))
+			{
+				devOpts.smplRate = (UINT32)strtoul(tokenStr, &endPtr, 0);
+				if (endPtr > tokenStr)
+					player->SetDeviceOptions((UINT32)chipID, devOpts);
+			}
+			else if (! strcmp(line, "RSM"))
+			{
+				devOpts.resmplMode = (UINT8)strtoul(tokenStr, &endPtr, 0);
+				if (endPtr > tokenStr)
+					player->SetDeviceOptions((UINT32)chipID, devOpts);
+			}
+			else if (! strcmp(line, "M"))
+			{
+				PLR_MUTE_OPTS& muteOpts = devOpts.muteOpts;
+				
+				letter = '\0';
+				tokenStr = strtok(NULL, ",");
+				while(tokenStr != NULL)
+				{
+					letter = toupper((unsigned char)*tokenStr);
+					if (letter == 'E')
+						muteOpts.disable = 0x00;
+					else if (letter == 'D')
+						muteOpts.disable = 0xFF;
+					else if (letter == 'O')
+						muteOpts.chnMute[0] = 0;
+					else if (letter == 'X')
+						muteOpts.chnMute[0] = ~0;
+					else if (isalnum(letter))
+					{
+						long chnID = strtol(tokenStr, &endPtr, 0);
+						if (endPtr > tokenStr)
+							muteOpts.chnMute[0] ^= (1 << chnID);
+					}
+					
+					tokenStr = strtok(NULL, ",");
+				}
+				
+				player->SetDeviceMuting((UINT32)chipID, muteOpts);
+				printf("-> Chip %s [0x%02X], Channel Mask: 0x%02X\n",
+					(muteOpts.disable & 0x01) ? "Off" : "On", muteOpts.disable, muteOpts.chnMute[0]);
+			}
+			else if (! strcmp(line, "Q"))
+			{
+				break;
+			}
+			else
+			{
+				mode = 0;
+			}
+		}
+		
+		//inkey = _getch();
+		//letter = toupper(inkey);
+	}
+	
+	return;
+}
+
+static void StripNewline(char* str)
+{
+	char* strPtr;
+	
+	strPtr = str;
+	while(*strPtr != '\0')
+		strPtr ++;
+	
+	while(strPtr > str && iscntrl((unsigned char)strPtr[-1]))
+		strPtr --;
+	*strPtr = '\0';
+	
+	return;
 }
 
 static std::string FCC2Str(UINT32 fcc)
@@ -416,19 +594,17 @@ static UINT8 GetPlayerForFile(DATA_LOADER *dLoad, PlayerBase** retPlayer)
 	PlayerBase* player;
 	
 	if (! VGMPlayer::IsMyFile(dLoad))
-		player = new VGMPlayer;
+		player = vgmPlr;
 	else if (! S98Player::IsMyFile(dLoad))
-		player = new S98Player;
+		player = s98Plr;
 	else if (! DROPlayer::IsMyFile(dLoad))
-		player = new DROPlayer;
+		player = droPlr;
 	else
 		return 0xFF;
 	
 	retVal = player->LoadFile(dLoad);
 	if (retVal < 0x80)
 		*retPlayer = player;
-	else
-		delete player;
 	return retVal;
 }
 

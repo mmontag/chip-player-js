@@ -528,13 +528,76 @@ UINT8 S98Player::GetSongDeviceInfo(std::vector<PLR_DEV_INFO>& devInfList) const
 		return 0x00;	// returned data based on file header
 }
 
-UINT8 S98Player::SetDeviceOptions(UINT8 type, UINT8 id, const PLR_DEV_OPTIONS& devOpts) const
+size_t S98Player::GetDevOptIdxFromID(UINT32 id) const
 {
+	UINT8 type;
+	UINT8 instance;
+	
+	if (id & 0x80000000)
+	{
+		type = (id >> 0) & 0xFF;
+		instance = (id >> 16) & 0xFF;
+	}
+	else if (id < _devHdrs.size())
+	{
+		UINT32 s98DevType;
+		UINT32 curDev;
+		
+		s98DevType = _devHdrs[id].devType;
+		type = (s98DevType < S98DEV_END) ? S98_DEV_LIST[s98DevType] : 0xFF;
+		instance = 0;
+		for (curDev = 0; curDev < id; curDev ++)
+		{
+			if (_devHdrs[curDev].devType == s98DevType)
+				instance ++;
+		}
+	}
+	else
+	{
+		return (UINT32)-1;
+	}
+	
+	return (UINT32)-1;
+}
+
+UINT8 S98Player::SetDeviceOptions(UINT32 id, const PLR_DEV_OPTS& devOpts)
+{
+	size_t devID = GetDevOptIdxFromID(id);
+	if (devID == (UINT32)-1)
+		return 0x80;	// bad device ID
+	
+	//_devOpts[devID] = devOpts;
+	SetDeviceMuting(id, devOpts.muteOpts);
+	return 0x00;
+}
+
+UINT8 S98Player::GetDeviceOptions(UINT32 id, PLR_DEV_OPTS& devOpts) const
+{
+	size_t devID = GetDevOptIdxFromID(id);
+	if (devID == (UINT32)-1)
+		return 0x80;	// bad device ID
+	
+	//devOpts = _devOpts[devID];
 	return 0xFF;
 }
 
-UINT8 S98Player::GetDeviceOptions(UINT8 type, UINT8 id, PLR_DEV_OPTIONS& devOpts) const
+UINT8 S98Player::SetDeviceMuting(UINT32 id, const PLR_MUTE_OPTS& muteOpts)
 {
+	size_t devID = GetDevOptIdxFromID(id);
+	if (devID == (UINT32)-1)
+		return 0x80;	// bad device ID
+	
+	//_devOpts[devID].muteOpts = muteOpts;
+	return 0xFF;
+}
+
+UINT8 S98Player::GetDeviceMuting(UINT32 id, PLR_MUTE_OPTS& muteOpts) const
+{
+	size_t devID = GetDevOptIdxFromID(id);
+	if (devID == (UINT32)-1)
+		return 0x80;	// bad device ID
+	
+	//muteOpts = _devOpts[devID].muteOpts;
 	return 0xFF;
 }
 
@@ -820,10 +883,11 @@ UINT32 S98Player::Render(UINT32 smplCnt, WAVE_32BS* data)
 		for (curDev = 0; curDev < _devices.size(); curDev ++)
 		{
 			VGM_BASEDEV* clDev;
+			UINT8 disable = 0x00;
 			
-			for (clDev = &_devices[curDev].base; clDev != NULL; clDev = clDev->linkDev)
+			for (clDev = &_devices[curDev].base; clDev != NULL; clDev = clDev->linkDev, disable >>= 1)
 			{
-				if (clDev->defInf.dataPtr != NULL)
+				if (clDev->defInf.dataPtr != NULL && ! (disable & 0x01))
 					Resmpl_Execute(&clDev->resmpl, smplStep, &data[curSmpl]);
 			}
 		}

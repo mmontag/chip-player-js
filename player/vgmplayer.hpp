@@ -4,6 +4,7 @@
 #include <stdtype.h>
 #include <emu/EmuStructs.h>
 #include <emu/Resampler.h>
+#include <emu/SoundDevs.h>	// for DEVID_COUNT
 #include "../utils/StrUtils.h"
 #include "helper.h"
 #include "playerbase.hpp"
@@ -47,6 +48,8 @@ public:
 		VGM_BASEDEV base;
 		UINT8 vgmChipType;
 		UINT8 chipID;
+		UINT32 flags;
+		size_t optID;
 		DEVFUNC_WRITE_A8D8 write8;		// write 8-bit data to 8-bit register/offset
 		DEVFUNC_WRITE_A16D8 writeM8;	// write 8-bit data to 16-bit memory offset
 		DEVFUNC_WRITE_A8D16 writeD16;	// write 16-bit data to 8-bit register/offset
@@ -55,7 +58,6 @@ public:
 		DEVFUNC_WRITE_BLOCK romWrite;
 		DEVFUNC_WRITE_MEMSIZE romSizeB;
 		DEVFUNC_WRITE_BLOCK romWriteB;
-		UINT32 flags;
 	};
 	
 protected:
@@ -75,6 +77,15 @@ protected:
 		UINT8 type;
 		UINT8 flags;
 		UINT16 data;
+	};
+	
+	struct SONG_DEV_CFG
+	{
+		size_t deviceID;	// index for _devices array
+		UINT8 vgmChipType;
+		UINT8 type;
+		UINT16 instance;
+		std::vector<UINT8> cfgData;
 	};
 	
 	struct DACSTRM_DEV
@@ -124,8 +135,10 @@ public:
 	const char* const* GetTags(void);
 	UINT8 GetSongInfo(PLR_SONG_INFO& songInf);
 	UINT8 GetSongDeviceInfo(std::vector<PLR_DEV_INFO>& devInfList) const;
-	UINT8 SetDeviceOptions(UINT8 type, UINT8 id, const PLR_DEV_OPTIONS& devOpts) const;
-	UINT8 GetDeviceOptions(UINT8 type, UINT8 id, PLR_DEV_OPTIONS& devOpts) const;
+	UINT8 SetDeviceOptions(UINT32 id, const PLR_DEV_OPTS& devOpts);
+	UINT8 GetDeviceOptions(UINT32 id, PLR_DEV_OPTS& devOpts) const;
+	UINT8 SetDeviceMuting(UINT32 id, const PLR_MUTE_OPTS& muteOpts);
+	UINT8 GetDeviceMuting(UINT32 id, PLR_MUTE_OPTS& muteOpts) const;
 	// player-specific options
 	//UINT8 SetPlayerOptions(const ###_PLAY_OPTIONS& playOpts) const;
 	//UINT8 GetPlayerOptions(###_PLAY_OPTIONS& playOpts) const;
@@ -161,6 +174,9 @@ protected:
 	
 	UINT8 LoadTags(void);
 	std::string GetUTF8String(const UINT8* startPtr, const UINT8* endPtr);
+	
+	size_t DeviceID2OptionID(UINT32 id) const;
+	void RefreshMuting(VGMPlayer::CHIP_DEVICE& chipDev, const PLR_MUTE_OPTS& muteOpts);
 	
 	void RefreshTSRates(void);
 	
@@ -229,6 +245,7 @@ protected:
 	enum
 	{
 		_HDR_BUF_SIZE = 0x100,
+		_OPT_DEV_COUNT = 0x10,	//0x29
 		_CHIP_COUNT = 0x29,
 		_PCM_BANK_COUNT = 0x40
 	};
@@ -276,6 +293,7 @@ protected:
 	//PLAYER_EVENT_CB _eventCbFunc;
 	//void* _eventCbParam;
 	
+	static const UINT8 _OPT_DEV_LIST[_OPT_DEV_COUNT];	// list of configurable libvgm devices (different from VGM chip list]
 	static const UINT8 _DEV_LIST[_CHIP_COUNT];	// VGM chip ID -> libvgm device ID
 	static const UINT32 _CHIPCLK_OFS[_CHIP_COUNT];	// file offsets for chip clocks in VGM header
 	static const UINT16 _CHIP_VOLUME[_CHIP_COUNT];	// default volume for chips
@@ -286,9 +304,13 @@ protected:
 	static const UINT8 _VGM_ROM_CHIPS[0x40][2];	// ROM write datablock ID -> VGM chip / memory type
 	static const UINT8 _VGM_RAM_CHIPS[0x40];	// RAM write datablock ID -> VGM chip
 	
-	size_t _devMap[_CHIP_COUNT][2];	// maps VGM device ID to _devices vector
+	PLR_DEV_OPTS _devOpts[_OPT_DEV_COUNT * 2];	// space for 2 instances per chip
+	size_t _devOptMap[DEVID_COUNT][2];	// maps libvgm device ID to _devOpts vector
+	
+	std::vector<SONG_DEV_CFG> _songDevCfg;
+	size_t _vdDevMap[_CHIP_COUNT][2];	// maps VGM device ID to _devices vector
+	size_t _optDevMap[_OPT_DEV_COUNT * 2];	// maps _devOpts vector index to _devices vector
 	std::vector<CHIP_DEVICE> _devices;
-	std::vector< std::vector<UINT8> > _devCfg;
 	
 	size_t _dacStrmMap[0x100];	// maps VGM DAC stream ID -> _dacStreams vector
 	std::vector<DACSTRM_DEV> _dacStreams;
