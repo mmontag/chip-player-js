@@ -29,7 +29,7 @@
 #define DEVID_K054539	0x1A
 #define DEVID_C6280		0x1B
 #define DEVID_C140		0x1C
-#define DEVID_C219		0x10	// TODO: renumber devices
+#define DEVID_C219		0x80	// TODO: renumber devices
 #define DEVID_K053260	0x1D
 #define DEVID_POKEY		0x1E
 #define DEVID_QSOUND	0x1F
@@ -42,7 +42,5 @@
 #define DEVID_X1_010	0x26
 #define DEVID_C352		0x27
 #define DEVID_GA20		0x28
-
-#define DEVID_COUNT		0x29	// number of supported sound devices
 
 #endif	// __SOUNDDEVS_H__

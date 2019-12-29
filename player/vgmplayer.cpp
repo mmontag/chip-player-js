@@ -141,15 +141,15 @@ VGMPlayer::VGMPlayer() :
 	_psTrigger(0x00)
 {
 	UINT8 retVal;
-	UINT8 optChip;
+	UINT16 optChip;
 	UINT8 chipID;
 	
-	for (optChip = 0x00; optChip < DEVID_COUNT; optChip ++)
+	for (optChip = 0x00; optChip < 0x100; optChip ++)
 	{
 		for (chipID = 0; chipID < 2; chipID ++)
 			_devOptMap[optChip][chipID] = (size_t)-1;
 	}
-	for (optChip = 0x00; optChip < _OPT_DEV_COUNT; optChip ++)
+	for (optChip = 0; optChip < _OPT_DEV_COUNT; optChip ++)
 	{
 		for (chipID = 0; chipID < 2; chipID ++)
 		{
@@ -581,12 +581,11 @@ void VGMPlayer::RefreshMuting(VGMPlayer::CHIP_DEVICE& chipDev, const PLR_MUTE_OP
 	VGM_BASEDEV* clDev;
 	UINT8 linkCntr = 0;
 	
-	for (clDev = &chipDev.base; clDev != NULL; clDev = clDev->linkDev, linkCntr ++)
+	for (clDev = &chipDev.base; clDev != NULL && linkCntr < 2; clDev = clDev->linkDev, linkCntr ++)
 	{
-		if (linkCntr >= 2)
-			break;
-		if (clDev->defInf.dataPtr != NULL && clDev->defInf.devDef->SetMuteMask != NULL)
-			clDev->defInf.devDef->SetMuteMask(clDev->defInf.dataPtr, muteOpts.chnMute[0]);
+		DEV_INFO* devInf = &clDev->defInf;
+		if (devInf->dataPtr != NULL && devInf->devDef->SetMuteMask != NULL)
+			devInf->devDef->SetMuteMask(devInf->dataPtr, muteOpts.chnMute[0]);
 	}
 	
 	return;
@@ -633,7 +632,12 @@ UINT8 VGMPlayer::SetDeviceMuting(UINT32 id, const PLR_MUTE_OPTS& muteOpts)
 
 UINT8 VGMPlayer::GetDeviceMuting(UINT32 id, PLR_MUTE_OPTS& muteOpts) const
 {
-	return 0xFF;
+	size_t optID = DeviceID2OptionID(id);
+	if (optID == (UINT32)-1)
+		return 0x80;	// bad device ID
+	
+	muteOpts = _devOpts[optID].muteOpts;
+	return 0x00;
 }
 
 //UINT8 VGMPlayer::SetPlayerOptions(const ###_PLAY_OPTIONS& playOpts) const
@@ -967,7 +971,7 @@ void VGMPlayer::InitDevices(void)
 		for (chipID = 0; chipID < 2; chipID ++)
 			_vdDevMap[vgmChip][chipID] = (size_t)-1;
 	}
-	for (curChip = 0x00; curChip < _OPT_DEV_COUNT * 2; curChip ++)
+	for (curChip = 0; curChip < _OPT_DEV_COUNT * 2; curChip ++)
 		_optDevMap[curChip] = (size_t)-1;
 	
 	for (vgmChip = 0x00; vgmChip < _CHIP_COUNT; vgmChip ++)
@@ -1331,12 +1335,16 @@ void VGMPlayer::InitDevices(void)
 				continue;
 			}
 			
-			if (devOpts != NULL && devInf->devDef->SetOptionBits != NULL)
-				devInf->devDef->SetOptionBits(devInf->dataPtr, devOpts->coreOpts);
-			
 			SetupLinkedDevices(&chipDev.base, &DeviceLinkCallback, this);
 			// already done by SndEmu_Start()
 			//devInf->devDef->Reset(devInf->dataPtr);
+			
+			if (devOpts != NULL)
+			{
+				if (devInf->devDef->SetOptionBits != NULL)
+					devInf->devDef->SetOptionBits(devInf->dataPtr, devOpts->coreOpts);
+				RefreshMuting(chipDev, devOpts->muteOpts);
+			}
 			
 			_vdDevMap[vgmChip][chipID] = _devices.size();
 			if (chipDev.optID != (size_t)-1)
@@ -1350,16 +1358,11 @@ void VGMPlayer::InitDevices(void)
 	for (curChip = 0; curChip < _devices.size(); curChip ++)
 	{
 		CHIP_DEVICE& chipDev = _devices[curChip];
-		PLR_DEV_OPTS* devOpts = (chipDev.optID != (size_t)-1) ? &_devOpts[chipDev.optID] : NULL;
 		VGM_BASEDEV* clDev;
 		UINT8 linkCntr = 0;
 		for (clDev = &chipDev.base; clDev != NULL; clDev = clDev->linkDev, linkCntr ++)
 		{
 			UINT16 chipVol = GetChipVolume(chipDev.vgmChipType, chipDev.chipID, linkCntr);
-			
-			if (devOpts != NULL && linkCntr < 2 && clDev->defInf.dataPtr != NULL &&
-				clDev->defInf.devDef->SetMuteMask != NULL)
-				clDev->defInf.devDef->SetMuteMask(clDev->defInf.dataPtr, devOpts->muteOpts.chnMute[linkCntr]);
 			
 			Resmpl_SetVals(&clDev->resmpl, 0xFF, chipVol, _outSmplRate);
 			Resmpl_DevConnect(&clDev->resmpl, &clDev->defInf);
@@ -1469,11 +1472,11 @@ UINT32 VGMPlayer::Render(UINT32 smplCnt, WAVE_32BS* data)
 		
 		for (curDev = 0; curDev < _devices.size(); curDev ++)
 		{
-			CHIP_DEVICE& chipDev = _devices[curDev];
-			UINT8 disable = (chipDev.optID != (size_t)-1) ? _devOpts[chipDev.optID].muteOpts.disable : 0x00;
+			CHIP_DEVICE* cDev = &_devices[curDev];
+			UINT8 disable = (cDev->optID != (size_t)-1) ? _devOpts[cDev->optID].muteOpts.disable : 0x00;
 			VGM_BASEDEV* clDev;
 			
-			for (clDev = &chipDev.base; clDev != NULL; clDev = clDev->linkDev, disable >>= 1)
+			for (clDev = &cDev->base; clDev != NULL; clDev = clDev->linkDev, disable >>= 1)
 			{
 				if (clDev->defInf.dataPtr != NULL && ! (disable & 0x01))
 					Resmpl_Execute(&clDev->resmpl, 1, &data[curSmpl]);

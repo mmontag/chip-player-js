@@ -36,8 +36,9 @@ struct S98_DEVICE
 typedef struct _s98_chip_device S98_CHIPDEV;
 struct _s98_chip_device
 {
-	std::vector<UINT8> cfg;
 	VGM_BASEDEV base;
+	size_t optID;
+	std::vector<UINT8> cfg;
 	DEVFUNC_WRITE_A8D8 write;
 };
 
@@ -87,7 +88,9 @@ public:
 	//UINT8 Seek(...); // TODO
 	
 private:
-	size_t GetDevOptIdxFromID(UINT32 id) const;
+	UINT8 GetDeviceInstance(size_t id) const;
+	size_t DeviceID2OptionID(UINT32 id) const;
+	void RefreshMuting(S98_CHIPDEV& chipDev, const PLR_MUTE_OPTS& muteOpts);
 	
 	void CalcSongLength(void);
 	UINT8 LoadTags(void);
@@ -99,6 +102,11 @@ private:
 	
 	void ParseFile(UINT32 ticks);
 	void DoCommand(void);
+	
+	enum
+	{
+		_OPT_DEV_COUNT = 0x0A
+	};
 	
 	CPCONV* _cpcSJIS;	// ShiftJIS -> UTF-8 codepage conversion
 	DATA_LOADER *_dLoad;
@@ -117,8 +125,13 @@ private:
 	UINT64 _tsMult;
 	UINT64 _tsDiv;
 	
-	//PLR_DEV_OPTS _devOpts[...];
+	static const UINT8 _OPT_DEV_LIST[_OPT_DEV_COUNT];	// list of configurable libvgm devices
+	
+	PLR_DEV_OPTS _devOpts[_OPT_DEV_COUNT * 2];	// space for 2 instances per chip
+	size_t _devOptMap[0x100][2];	// maps libvgm device ID to _devOpts vector
 	std::vector<S98_CHIPDEV> _devices;
+	size_t _optDevMap[_OPT_DEV_COUNT * 2];	// maps _devOpts vector index to _devices vector
+	
 	UINT32 _filePos;
 	UINT32 _fileTick;
 	UINT32 _playTick;

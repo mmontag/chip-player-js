@@ -417,32 +417,13 @@ size_t DROPlayer::DeviceID2OptionID(UINT32 id) const
 	return (size_t)-1;
 }
 
-size_t DROPlayer::OptionID2DeviceID(UINT32 id) const
+void DROPlayer::RefreshMuting(DRO_CHIPDEV& chipDev, const PLR_MUTE_OPTS& muteOpts)
 {
-	if (! (_playState & PLAYSTATE_PLAY))
-		return (size_t)-1;
+	DEV_INFO* devInf = &chipDev.base.defInf;
+	if (devInf->dataPtr != NULL && devInf->devDef->SetMuteMask != NULL)
+		devInf->devDef->SetMuteMask(devInf->dataPtr, muteOpts.chnMute[0]);
 	
-	UINT8 type;
-	UINT8 instance;
-	
-	if (id < 2)
-	{
-		type = DEVID_YM3812;
-		instance = id - 0;
-	}
-	else if (id < 3)
-	{
-		type = DEVID_YMF262;
-		instance = id - 2;
-	}
-	else
-	{
-		type = 0xFF;
-		instance = 0;
-	}
-	if (instance >= _devices.size() || type != _devTypes[0])
-		return (size_t)-1;
-	return instance;
+	return;
 }
 
 UINT8 DROPlayer::SetDeviceOptions(UINT32 id, const PLR_DEV_OPTS& devOpts)
@@ -453,7 +434,10 @@ UINT8 DROPlayer::SetDeviceOptions(UINT32 id, const PLR_DEV_OPTS& devOpts)
 	
 	_devOpts[optID] = devOpts;
 	// no immediate changes necessary for OPL2/OPL3
-	SetDeviceMuting(id, devOpts.muteOpts);
+	
+	size_t devID = _optDevMap[optID];
+	if (devID < _devices.size())
+		RefreshMuting(_devices[devID], _devOpts[optID].muteOpts);
 	return 0x00;
 }
 
@@ -473,16 +457,11 @@ UINT8 DROPlayer::SetDeviceMuting(UINT32 id, const PLR_MUTE_OPTS& muteOpts)
 	if (optID == (UINT32)-1)
 		return 0x80;	// bad device ID
 	
-	PLR_MUTE_OPTS& devMOpt = _devOpts[optID].muteOpts;
-	devMOpt = muteOpts;
+	_devOpts[optID].muteOpts = muteOpts;
 	
-	size_t devID = OptionID2DeviceID(optID);
-	if (devID != (UINT32)-1)
-	{
-		DEV_INFO* devInf = &_devices[devID].base.defInf;
-		if (devInf->dataPtr != NULL && devInf->devDef->SetMuteMask != NULL)
-			devInf->devDef->SetMuteMask(devInf->dataPtr, devMOpt.chnMute[0]);
-	}
+	size_t devID = _optDevMap[optID];
+	if (devID < _devices.size())
+		RefreshMuting(_devices[devID], _devOpts[optID].muteOpts);
 	return 0x00;
 }
 
@@ -567,6 +546,9 @@ UINT8 DROPlayer::Start(void)
 	size_t curDev;
 	UINT8 retVal;
 	
+	for (curDev = 0; curDev < 3; curDev ++)
+		_optDevMap[curDev] = (size_t)-1;
+	
 	_devices.clear();
 	_devices.resize(_devTypes.size());
 	for (curDev = 0; curDev < _devTypes.size(); curDev ++)
@@ -577,18 +559,23 @@ UINT8 DROPlayer::Start(void)
 		VGM_BASEDEV* clDev;
 		UINT8 deviceID;
 		
-		devOpts = &_devOpts[DeviceID2OptionID(curDev)];
 		cDev->base.defInf.dataPtr = NULL;
 		cDev->base.linkDev = NULL;
-		devCfg.emuCore = devOpts->emuCore;
-		devCfg.srMode = devOpts->srMode;
+		deviceID = _devTypes[curDev];
+		cDev->optID = DeviceID2OptionID(curDev);
+		
+		devOpts = (cDev->optID != (size_t)-1) ? &_devOpts[cDev->optID] : NULL;
+		devCfg.emuCore = (devOpts != NULL) ? devOpts->emuCore : 0x00;
+		devCfg.srMode = (devOpts != NULL) ? devOpts->srMode : DEVRI_SRMODE_NATIVE;
 		devCfg.flags = 0x00;
 		devCfg.clock = 3579545;
-		devCfg.smplRate = devOpts->smplRate ? devOpts->smplRate : _outSmplRate;
-		
-		deviceID = _devTypes[curDev];
 		if (deviceID == DEVID_YMF262)
 			devCfg.clock *= 4;	// OPL3 uses a 14 MHz clock
+		if (devOpts != NULL && devOpts->smplRate)
+			devCfg.smplRate = devOpts->smplRate;
+		else
+			devCfg.smplRate = _outSmplRate;
+		
 		retVal = SndEmu_Start(deviceID, &devCfg, &cDev->base.defInf);
 		if (retVal)
 		{
@@ -596,14 +583,22 @@ UINT8 DROPlayer::Start(void)
 			cDev->base.defInf.devDef = NULL;
 			continue;
 		}
-		cDev->devOpts = &_devOpts[DeviceID2OptionID(0x80000000 | (curDev << 16) | (deviceID << 0))];
 		SndEmu_GetDeviceFunc(cDev->base.defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&cDev->write);
 		
 		SetupLinkedDevices(&cDev->base, NULL, NULL);
 		
+		if (devOpts != NULL)
+		{
+			if (cDev->base.defInf.devDef->SetOptionBits != NULL)
+				cDev->base.defInf.devDef->SetOptionBits(cDev->base.defInf.dataPtr, devOpts->coreOpts);
+			
+			_optDevMap[cDev->optID] = curDev;
+		}
+		
 		for (clDev = &cDev->base; clDev != NULL; clDev = clDev->linkDev)
 		{
-			clDev->defInf.devDef->SetMuteMask(clDev->defInf.dataPtr, devOpts->muteOpts.chnMute[0]);
+			if (clDev->defInf.devDef->SetMuteMask != NULL)
+				clDev->defInf.devDef->SetMuteMask(clDev->defInf.dataPtr, devOpts->muteOpts.chnMute[0]);
 			
 			Resmpl_SetVals(&clDev->resmpl, 0xFF, 0x100, _outSmplRate);
 			// do DualOPL2 hard panning by muting either the left or right speaker
@@ -732,8 +727,8 @@ UINT32 DROPlayer::Render(UINT32 smplCnt, WAVE_32BS* data)
 		for (curDev = 0; curDev < _devices.size(); curDev ++)
 		{
 			DRO_CHIPDEV* cDev = &_devices[curDev];
+			UINT8 disable = (cDev->optID != (size_t)-1) ? _devOpts[cDev->optID].muteOpts.disable : 0x00;
 			VGM_BASEDEV* clDev;
-			UINT8 disable = _devOpts[DeviceID2OptionID(curDev)].muteOpts.disable;
 			
 			for (clDev = &cDev->base; clDev != NULL; clDev = clDev->linkDev, disable >>= 1)
 			{
@@ -881,11 +876,11 @@ void DROPlayer::DoFileEnd(void)
 
 void DROPlayer::WriteReg(UINT8 port, UINT8 reg, UINT8 data)
 {
-	UINT8 optID = port >> _portShift;
+	UINT8 devID = port >> _portShift;
 	
-	if (optID >= _devices.size())
+	if (devID >= _devices.size())
 		return;
-	DRO_CHIPDEV* cDev = &_devices[optID];
+	DRO_CHIPDEV* cDev = &_devices[devID];
 	DEV_DATA* dataPtr = cDev->base.defInf.dataPtr;
 	if (dataPtr == NULL)
 		return;

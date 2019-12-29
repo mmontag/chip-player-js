@@ -4,7 +4,6 @@
 #include <stdtype.h>
 #include <emu/EmuStructs.h>
 #include <emu/Resampler.h>
-#include <emu/SoundDevs.h>	// for DEVID_COUNT
 #include "../utils/StrUtils.h"
 #include "helper.h"
 #include "playerbase.hpp"
@@ -176,7 +175,7 @@ protected:
 	std::string GetUTF8String(const UINT8* startPtr, const UINT8* endPtr);
 	
 	size_t DeviceID2OptionID(UINT32 id) const;
-	void RefreshMuting(VGMPlayer::CHIP_DEVICE& chipDev, const PLR_MUTE_OPTS& muteOpts);
+	void RefreshMuting(CHIP_DEVICE& chipDev, const PLR_MUTE_OPTS& muteOpts);
 	
 	void RefreshTSRates(void);
 	
@@ -305,7 +304,7 @@ protected:
 	static const UINT8 _VGM_RAM_CHIPS[0x40];	// RAM write datablock ID -> VGM chip
 	
 	PLR_DEV_OPTS _devOpts[_OPT_DEV_COUNT * 2];	// space for 2 instances per chip
-	size_t _devOptMap[DEVID_COUNT][2];	// maps libvgm device ID to _devOpts vector
+	size_t _devOptMap[0x100][2];	// maps libvgm device ID to _devOpts vector
 	
 	std::vector<SONG_DEV_CFG> _songDevCfg;
 	size_t _vdDevMap[_CHIP_COUNT][2];	// maps VGM device ID to _devices vector

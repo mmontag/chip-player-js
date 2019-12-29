@@ -62,7 +62,7 @@ typedef struct _dro_chip_device DRO_CHIPDEV;
 struct _dro_chip_device
 {
 	VGM_BASEDEV base;
-	PLR_DEV_OPTS* devOpts;
+	size_t optID;
 	DEVFUNC_WRITE_A8D8 write;
 };
 
@@ -113,7 +113,7 @@ public:
 	
 private:
 	size_t DeviceID2OptionID(UINT32 id) const;
-	size_t OptionID2DeviceID(UINT32 id) const;
+	void RefreshMuting(DRO_CHIPDEV& chipDev, const PLR_MUTE_OPTS& muteOpts);
 	
 	void ScanInitBlock(void);
 	
@@ -149,6 +149,8 @@ private:
 	
 	PLR_DEV_OPTS _devOpts[3];	// 0 = 1st OPL2, 1 = 2nd OPL2, 2 = 1st OPL3
 	std::vector<DRO_CHIPDEV> _devices;
+	size_t _optDevMap[3];	// maps _devOpts vector index to _devices vector
+	
 	UINT32 _filePos;
 	UINT32 _fileTick;
 	UINT32 _playTick;

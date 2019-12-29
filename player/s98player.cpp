@@ -60,6 +60,13 @@ static const char* const S98_TAG_MAPPING[] =
 	NULL,
 };
 
+/*static*/ const UINT8 S98Player::_OPT_DEV_LIST[_OPT_DEV_COUNT] =
+{
+	DEVID_AY8910, DEVID_YM2203, DEVID_YM2612, DEVID_YM2608,
+	DEVID_YM2151, DEVID_YM2413, DEVID_YM3526, DEVID_YM3812,
+	DEVID_YMF262, DEVID_SN76496,
+};
+
 
 INLINE UINT16 ReadLE16(const UINT8* data)
 {
@@ -88,7 +95,26 @@ S98Player::S98Player() :
 	_playState(0x00),
 	_psTrigger(0x00)
 {
-	UINT8 retVal = CPConv_Init(&_cpcSJIS, "CP932", "UTF-8");
+	UINT8 retVal;
+	UINT16 optChip;
+	UINT8 chipID;
+	
+	for (optChip = 0x00; optChip < 0x100; optChip ++)
+	{
+		for (chipID = 0; chipID < 2; chipID ++)
+			_devOptMap[optChip][chipID] = (size_t)-1;
+	}
+	for (optChip = 0; optChip < _OPT_DEV_COUNT; optChip ++)
+	{
+		for (chipID = 0; chipID < 2; chipID ++)
+		{
+			size_t optID = optChip * 2 + chipID;
+			InitDeviceOptions(_devOpts[optID]);
+			_devOptMap[_OPT_DEV_LIST[optChip]][chipID] = optID;
+		}
+	}
+	
+	retVal = CPConv_Init(&_cpcSJIS, "CP932", "UTF-8");
 	if (retVal)
 		_cpcSJIS = NULL;
 	_tagList.reserve(16);
@@ -495,7 +521,7 @@ UINT8 S98Player::GetSongDeviceInfo(std::vector<PLR_DEV_INFO>& devInfList) const
 		
 		devInf.id = curDev;
 		devInf.type = S98_DEV_LIST[devHdr->devType];
-		devInf.instance = 0xFF;
+		devInf.instance = GetDeviceInstance(curDev);
 		devInf.clock = devHdr->clock;
 		devInf.cParams = 0x00;
 		if (devHdr->devType == S98DEV_PSGYM)
@@ -528,7 +554,25 @@ UINT8 S98Player::GetSongDeviceInfo(std::vector<PLR_DEV_INFO>& devInfList) const
 		return 0x00;	// returned data based on file header
 }
 
-size_t S98Player::GetDevOptIdxFromID(UINT32 id) const
+UINT8 S98Player::GetDeviceInstance(size_t id) const
+{
+	const S98_DEVICE* mainDHdr = &_devHdrs[id];
+	UINT8 mainDType = (mainDHdr->devType < S98DEV_END) ? S98_DEV_LIST[mainDHdr->devType] : 0xFF;
+	UINT8 instance = 0;
+	size_t curDev;
+	
+	for (curDev = 0; curDev < id; curDev ++)
+	{
+		const S98_DEVICE* dHdr = &_devHdrs[curDev];
+		UINT8 dType = (dHdr->devType < S98DEV_END) ? S98_DEV_LIST[dHdr->devType] : 0xFF;
+		if (dType == mainDType)
+			instance ++;
+	}
+	
+	return instance;
+}
+
+size_t S98Player::DeviceID2OptionID(UINT32 id) const
 {
 	UINT8 type;
 	UINT8 instance;
@@ -541,64 +585,83 @@ size_t S98Player::GetDevOptIdxFromID(UINT32 id) const
 	else if (id < _devHdrs.size())
 	{
 		UINT32 s98DevType;
-		UINT32 curDev;
 		
 		s98DevType = _devHdrs[id].devType;
 		type = (s98DevType < S98DEV_END) ? S98_DEV_LIST[s98DevType] : 0xFF;
-		instance = 0;
-		for (curDev = 0; curDev < id; curDev ++)
-		{
-			if (_devHdrs[curDev].devType == s98DevType)
-				instance ++;
-		}
+		instance = GetDeviceInstance(id);
 	}
 	else
 	{
-		return (UINT32)-1;
+		return (size_t)-1;
 	}
 	
-	return (UINT32)-1;
+	if (instance < 2)
+		return _devOptMap[type][instance];
+	else
+		return (size_t)-1;
+}
+
+void S98Player::RefreshMuting(S98_CHIPDEV& chipDev, const PLR_MUTE_OPTS& muteOpts)
+{
+	VGM_BASEDEV* clDev;
+	UINT8 linkCntr = 0;
+	
+	for (clDev = &chipDev.base; clDev != NULL && linkCntr < 2; clDev = clDev->linkDev, linkCntr ++)
+	{
+		DEV_INFO* devInf = &clDev->defInf;
+		if (devInf->dataPtr != NULL && devInf->devDef->SetMuteMask != NULL)
+			devInf->devDef->SetMuteMask(devInf->dataPtr, muteOpts.chnMute[0]);
+	}
+	
+	return;
 }
 
 UINT8 S98Player::SetDeviceOptions(UINT32 id, const PLR_DEV_OPTS& devOpts)
 {
-	size_t devID = GetDevOptIdxFromID(id);
-	if (devID == (UINT32)-1)
+	size_t optID = DeviceID2OptionID(id);
+	if (optID == (UINT32)-1)
 		return 0x80;	// bad device ID
 	
-	//_devOpts[devID] = devOpts;
-	SetDeviceMuting(id, devOpts.muteOpts);
+	_devOpts[optID] = devOpts;
+	
+	size_t devID = _optDevMap[optID];
+	if (devID < _devices.size())
+		RefreshMuting(_devices[devID], _devOpts[optID].muteOpts);
 	return 0x00;
 }
 
 UINT8 S98Player::GetDeviceOptions(UINT32 id, PLR_DEV_OPTS& devOpts) const
 {
-	size_t devID = GetDevOptIdxFromID(id);
-	if (devID == (UINT32)-1)
+	size_t optID = DeviceID2OptionID(id);
+	if (optID == (UINT32)-1)
 		return 0x80;	// bad device ID
 	
-	//devOpts = _devOpts[devID];
-	return 0xFF;
+	devOpts = _devOpts[optID];
+	return 0x00;
 }
 
 UINT8 S98Player::SetDeviceMuting(UINT32 id, const PLR_MUTE_OPTS& muteOpts)
 {
-	size_t devID = GetDevOptIdxFromID(id);
-	if (devID == (UINT32)-1)
+	size_t optID = DeviceID2OptionID(id);
+	if (optID == (UINT32)-1)
 		return 0x80;	// bad device ID
 	
-	//_devOpts[devID].muteOpts = muteOpts;
-	return 0xFF;
+	_devOpts[optID].muteOpts = muteOpts;
+	
+	size_t devID = _optDevMap[optID];
+	if (devID < _devices.size())
+		RefreshMuting(_devices[devID], _devOpts[optID].muteOpts);
+	return 0x00;
 }
 
 UINT8 S98Player::GetDeviceMuting(UINT32 id, PLR_MUTE_OPTS& muteOpts) const
 {
-	size_t devID = GetDevOptIdxFromID(id);
-	if (devID == (UINT32)-1)
+	size_t optID = DeviceID2OptionID(id);
+	if (optID == (UINT32)-1)
 		return 0x80;	// bad device ID
 	
-	//muteOpts = _devOpts[devID].muteOpts;
-	return 0xFF;
+	muteOpts = _devOpts[optID].muteOpts;
+	return 0x00;
 }
 
 UINT8 S98Player::SetSampleRate(UINT32 sampleRate)
@@ -693,6 +756,9 @@ UINT8 S98Player::Start(void)
 	size_t curDev;
 	UINT8 retVal;
 	
+	for (curDev = 0; curDev < _OPT_DEV_COUNT * 2; curDev ++)
+		_optDevMap[curDev] = (size_t)-1;
+	
 	_devices.clear();
 	_devices.resize(_devHdrs.size());
 	for (curDev = 0; curDev < _devHdrs.size(); curDev ++)
@@ -701,23 +767,37 @@ UINT8 S98Player::Start(void)
 		S98_CHIPDEV* cDev = &_devices[curDev];
 		DEV_GEN_CFG devCfg;
 		VGM_BASEDEV* clDev;
+		PLR_DEV_OPTS* devOpts;
 		UINT8 deviceID;
+		UINT8 instance;
 		
 		cDev->base.defInf.dataPtr = NULL;
+		cDev->base.defInf.devDef = NULL;
 		cDev->base.linkDev = NULL;
-		devCfg.emuCore = 0x00;
-		devCfg.srMode = DEVRI_SRMODE_NATIVE;
-		devCfg.flags = 0x00;
-		devCfg.clock = devHdr->clock;
-		devCfg.smplRate = _outSmplRate;
-		
 		deviceID = (devHdr->devType < S98DEV_END) ? S98_DEV_LIST[devHdr->devType] : 0xFF;
 		if (deviceID == 0xFF)
-		{
-			cDev->base.defInf.dataPtr = NULL;
-			cDev->base.defInf.devDef = NULL;
 			continue;
+		
+		instance = GetDeviceInstance(curDev);
+		if (instance < 2)
+		{
+			cDev->optID = _devOptMap[deviceID][instance];
+			devOpts = &_devOpts[cDev->optID];
 		}
+		else
+		{
+			cDev->optID = (size_t)-1;
+			devOpts = NULL;
+		}
+		devCfg.emuCore = (devOpts != NULL) ? devOpts->emuCore : 0x00;
+		devCfg.srMode = (devOpts != NULL) ? devOpts->srMode : DEVRI_SRMODE_NATIVE;
+		devCfg.flags = 0x00;
+		devCfg.clock = devHdr->clock;
+		if (devOpts != NULL && devOpts->smplRate)
+			devCfg.smplRate = devOpts->smplRate;
+		else
+			devCfg.smplRate = _outSmplRate;
+		
 		switch(deviceID)
 		{
 		case DEVID_AY8910:
@@ -772,6 +852,15 @@ UINT8 S98Player::Start(void)
 		SndEmu_GetDeviceFunc(cDev->base.defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&cDev->write);
 		
 		SetupLinkedDevices(&cDev->base, &SetSSGCore, this);
+		
+		if (devOpts != NULL)
+		{
+			if (cDev->base.defInf.devDef->SetOptionBits != NULL)
+				cDev->base.defInf.devDef->SetOptionBits(cDev->base.defInf.dataPtr, devOpts->coreOpts);
+			RefreshMuting(*cDev, devOpts->muteOpts);
+			
+			_optDevMap[cDev->optID] = curDev;
+		}
 		
 		for (clDev = &cDev->base; clDev != NULL; clDev = clDev->linkDev)
 		{
@@ -882,10 +971,11 @@ UINT32 S98Player::Render(UINT32 smplCnt, WAVE_32BS* data)
 		
 		for (curDev = 0; curDev < _devices.size(); curDev ++)
 		{
+			S98_CHIPDEV* cDev = &_devices[curDev];
+			UINT8 disable = (cDev->optID != (size_t)-1) ? _devOpts[cDev->optID].muteOpts.disable : 0x00;
 			VGM_BASEDEV* clDev;
-			UINT8 disable = 0x00;
 			
-			for (clDev = &_devices[curDev].base; clDev != NULL; clDev = clDev->linkDev, disable >>= 1)
+			for (clDev = &cDev->base; clDev != NULL; clDev = clDev->linkDev, disable >>= 1)
 			{
 				if (clDev->defInf.dataPtr != NULL && ! (disable & 0x01))
 					Resmpl_Execute(&clDev->resmpl, smplStep, &data[curSmpl]);

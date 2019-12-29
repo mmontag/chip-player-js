@@ -1,3 +1,8 @@
+// DRO/S98/VGM player test program
+// -------------------------------
+// Warning: This just serves as a tool for testing features.
+// Thus, the user interface can be a complicated mess and a pain to use.
+
 #ifdef _WIN32
 //#define _WIN32_WINNT	0x500	// for GetConsoleWindow()
 #include <windows.h>
