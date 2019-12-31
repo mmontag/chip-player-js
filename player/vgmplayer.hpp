@@ -39,6 +39,14 @@ struct VGM_HEADER
 	INT16 volumeGain;	// 8.8 fixed point, +0x100 = +6 db
 };
 
+struct VGM_PLAY_OPTIONS
+{
+	UINT32 playbackHz;	// set to 60 (NTSC) or 50 (PAL) for region-specific song speed adjustment
+						// Note: requires VGM_HEADER.recordHz to be non-zero to work.
+	UINT8 hardStopOld;	// enforce silence at end of old VGMs (<1.50), fixes Key Off events being trimmed off
+};
+
+
 class VGMPlayer : public PlayerBase
 {
 public:
@@ -139,8 +147,8 @@ public:
 	UINT8 SetDeviceMuting(UINT32 id, const PLR_MUTE_OPTS& muteOpts);
 	UINT8 GetDeviceMuting(UINT32 id, PLR_MUTE_OPTS& muteOpts) const;
 	// player-specific options
-	//UINT8 SetPlayerOptions(const ###_PLAY_OPTIONS& playOpts) const;
-	//UINT8 GetPlayerOptions(###_PLAY_OPTIONS& playOpts) const;
+	UINT8 SetPlayerOptions(const VGM_PLAY_OPTIONS& playOpts);
+	UINT8 GetPlayerOptions(VGM_PLAY_OPTIONS& playOpts) const;
 	
 	//UINT32 GetSampleRate(void) const;
 	UINT8 SetSampleRate(UINT32 sampleRate);
@@ -303,6 +311,7 @@ protected:
 	static const UINT8 _VGM_ROM_CHIPS[0x40][2];	// ROM write datablock ID -> VGM chip / memory type
 	static const UINT8 _VGM_RAM_CHIPS[0x40];	// RAM write datablock ID -> VGM chip
 	
+	VGM_PLAY_OPTIONS _playOpts;
 	PLR_DEV_OPTS _devOpts[_OPT_DEV_COUNT * 2];	// space for 2 instances per chip
 	size_t _devOptMap[0x100][2];	// maps libvgm device ID to _devOpts vector
 	

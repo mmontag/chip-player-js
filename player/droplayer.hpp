@@ -58,6 +58,17 @@ struct DRO_HEADER
 	UINT8 regCmdMap[0x80];
 };
 
+// DRO v2 often incorrectly specify DualOPL2 instead of OPL3
+// These constants allow a configuration of how to handle DualOPL2 in DRO v2 files.
+#define DRO_V2OPL3_DETECT	0x00	// scan the initialization block and use OPL3 if "OPL3 enable" if found [default]
+#define DRO_V2OPL3_HEADER	0x01	// strictly follow the DRO header
+#define DRO_V2OPL3_ENFORCE	0x02	// always enforce OPL3 mode when the DRO says DualOPL2
+struct DRO_PLAY_OPTIONS
+{
+	UINT8 v2opl3Mode;	// DRO v2 DualOPL2 -> OPL3 fixes
+};
+
+
 typedef struct _dro_chip_device DRO_CHIPDEV;
 struct _dro_chip_device
 {
@@ -86,6 +97,8 @@ public:
 	UINT8 GetDeviceOptions(UINT32 id, PLR_DEV_OPTS& devOpts) const;
 	UINT8 SetDeviceMuting(UINT32 id, const PLR_MUTE_OPTS& muteOpts);
 	UINT8 GetDeviceMuting(UINT32 id, PLR_MUTE_OPTS& muteOpts) const;
+	UINT8 SetPlayerOptions(const DRO_PLAY_OPTIONS& playOpts);
+	UINT8 GetPlayerOptions(DRO_PLAY_OPTIONS& playOpts) const;
 	
 	//UINT32 GetSampleRate(void) const;
 	UINT8 SetSampleRate(UINT32 sampleRate);
@@ -147,6 +160,7 @@ private:
 	UINT64 _tsMult;
 	UINT64 _tsDiv;
 	
+	DRO_PLAY_OPTIONS _playOpts;
 	PLR_DEV_OPTS _devOpts[3];	// 0 = 1st OPL2, 1 = 2nd OPL2, 2 = 1st OPL3
 	std::vector<DRO_CHIPDEV> _devices;
 	size_t _optDevMap[3];	// maps _devOpts vector index to _devices vector

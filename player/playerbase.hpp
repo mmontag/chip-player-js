@@ -86,7 +86,7 @@ public:
 	virtual UINT8 SetDeviceMuting(UINT32 id, const PLR_MUTE_OPTS& muteOpts) = 0;
 	virtual UINT8 GetDeviceMuting(UINT32 id, PLR_MUTE_OPTS& muteOpts) const = 0;
 	// player-specific options
-	//virtual UINT8 SetPlayerOptions(const ###_PLAY_OPTIONS& playOpts) const = 0;
+	//virtual UINT8 SetPlayerOptions(const ###_PLAY_OPTIONS& playOpts) = 0;
 	//virtual UINT8 GetPlayerOptions(###_PLAY_OPTIONS& playOpts) const = 0;
 	
 	virtual UINT32 GetSampleRate(void) const;

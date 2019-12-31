@@ -1,3 +1,4 @@
+// TODO: option to disable DualOPL2 -> OPL3 _realHwType patch
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -45,6 +46,8 @@ DROPlayer::DROPlayer() :
 	_psTrigger(0x00)
 {
 	size_t curDev;
+	
+	_playOpts.v2opl3Mode = DRO_V2OPL3_DETECT;
 	
 	for (curDev = 0; curDev < 3; curDev ++)
 		InitDeviceOptions(_devOpts[curDev]);
@@ -176,9 +179,20 @@ UINT8 DROPlayer::LoadFile(DATA_LOADER *dataLoader)
 		// This bug was introduced when DRO logging was rewritten for DOSBox 0.73.
 		if (_realHwType == DROHW_DUALOPL2)
 		{
-			// if OPL3 enable is set, it definitely is an OPL3 file
-			if (_initRegSet[0x105] && (_initOPL3Enable & 0x01))
+			switch(_playOpts.v2opl3Mode)
+			{
+			case DRO_V2OPL3_DETECT:
+				// if OPL3 enable is set, it definitely is an OPL3 file
+				if (_initRegSet[0x105] && (_initOPL3Enable & 0x01))
+					_realHwType = DROHW_OPL3;
+				break;
+			case DRO_V2OPL3_HEADER:
+				// keep the value from the header
+				break;
+			case DRO_V2OPL3_ENFORCE:
 				_realHwType = DROHW_OPL3;
+				break;
+			}
 		}
 	}
 	
@@ -472,6 +486,18 @@ UINT8 DROPlayer::GetDeviceMuting(UINT32 id, PLR_MUTE_OPTS& muteOpts) const
 		return 0x80;	// bad device ID
 	
 	muteOpts = _devOpts[optID].muteOpts;
+	return 0x00;
+}
+
+UINT8 DROPlayer::SetPlayerOptions(const DRO_PLAY_OPTIONS& playOpts)
+{
+	_playOpts = playOpts;
+	return 0x00;
+}
+
+UINT8 DROPlayer::GetPlayerOptions(DRO_PLAY_OPTIONS& playOpts) const
+{
+	playOpts = _playOpts;
 	return 0x00;
 }
 

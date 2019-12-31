@@ -43,9 +43,6 @@ extern "C" int __cdecl _kbhit(void);
 
 //#define USE_MEMORY_LOADER 1	// define to use the in-memory loader
 
-#define SHOW_TAGS		1
-#define SHOW_FILE_INFO	1
-
 int main(int argc, char* argv[]);
 static void DoChipControlMode(PlayerBase* player);
 static void StripNewline(char* str);
@@ -94,6 +91,9 @@ static INT32 WaveWrtDrv = -1;
 static UINT32 masterVol = 0x10000;	// fixed point 16.16
 static UINT32 fadeSmplStart;
 static UINT32 fadeSmplTime;
+
+static bool showTags = false;
+static bool showFileInfo = false;
 
 static DROPlayer* droPlr;
 static S98Player* s98Plr;
@@ -202,7 +202,7 @@ int main(int argc, char* argv[])
 				player->Tick2Second(player->GetTotalTicks()), hwType);
 	}
 	
-	if (SHOW_TAGS)
+	if (showTags)
 	{
 		const char* songTitle = NULL;
 		const char* songAuthor = NULL;
@@ -249,7 +249,7 @@ int main(int argc, char* argv[])
 	fadeSmplTime = player->GetSampleRate() * 4;
 	fadeSmplStart = (UINT32)-1;
 	
-	if (SHOW_FILE_INFO)
+	if (showFileInfo)
 	{
 		PLR_SONG_INFO sInf;
 		std::vector<PLR_DEV_INFO> diList;
@@ -401,6 +401,37 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
+/*
+Command Mode overview
+
+Sound Chip ID:
+	D - display configuration
+		T param - show tags (0/D/OFF - off, 1/E/ON - on)
+		FI param - show file information (see above)
+		Q - quit
+	P - player configuration
+		[DRO]
+			OPL3 param - DualOPL2 -> OPL3 patch, (0/1/2, see DRO_V2OPL3_*)
+		[VGM]
+			PHZ param - set playback rate in Hz (set to 50 to play NTSC VGMs in PAL speed)
+			HSO param - hard-stop old VGMs (<1.50) when they finish
+	[number] - sound chip # configuration (active sound chip)
+			Note: The number is the ID of the active sound chip (as shown by device info).
+			      All sound chips can be controlled with 0x800I00NN (NN = libvgm device ID, I = instance, i.e. 0 or 1)
+		C param - set emulation core to param (four-character code, case sensitive, empty = use default)
+		O param - set sound core options (core-specific)
+		SRM param - set sample rate mode (0/1/2, see DEVRI_SRMODE_*)
+		SR param - set emulated sample rate (0 = use rate of output stream)
+		RSM param - set resampling mode [not working]
+		M param,param,... - set mute options
+			This is a list of channels to be toggled. (0 = first channel)
+			Additional valid letters:
+				E - enable sound chip
+				D - disable sound chip
+				O - all channels on
+				X - mute all channels
+		Q - quit
+*/
 static void DoChipControlMode(PlayerBase* player)
 {
 	int letter;
@@ -410,7 +441,7 @@ static void DoChipControlMode(PlayerBase* player)
 	int chipID;
 	UINT8 retVal;
 	
-	printf("Chip Control. ");
+	printf("Command Mode. ");
 	mode = 0;	// start
 	chipID = -1;
 	while(mode >= 0)
@@ -419,36 +450,72 @@ static void DoChipControlMode(PlayerBase* player)
 		{
 			PLR_DEV_OPTS devOpts;
 			
+			// number (sound chip ID) / D (display) / P (player options)
 			printf("Sound Chip ID: ");
 			fgets(line, 0x80, stdin);
 			StripNewline(line);
 			if (line[0] == '\0')
 				return;
 			
-			chipID = (int)strtol(line, &endPtr, 0);
-			if (endPtr == line)
-				break;
-			
-			retVal = player->GetDeviceOptions((UINT32)chipID, devOpts);
-			if (retVal & 0x80)
+			// Note: In MSVC 2010, strtol returns 0x7FFFFFFF for the string "0x8000000C".
+			// strtoul returns the correct value and also properly returns -1 for "-1".
+			chipID = (int)strtoul(line, &endPtr, 0);
+			if (endPtr > line)
 			{
-				printf("Invalid sound chip ID.\n");
-				continue;
+				retVal = player->GetDeviceOptions((UINT32)chipID, devOpts);
+				if (retVal & 0x80)
+				{
+					printf("Invalid sound chip ID.\n");
+					continue;
+				}
+				
+				printf("Cfg: Core %s, Opts 0x%X, srMode 0x%02X, sRate %u, resampleMode 0x%02X\n",
+					FCC2Str(devOpts.emuCore).c_str(), devOpts.coreOpts, devOpts.srMode,
+					devOpts.smplRate, devOpts.resmplMode);
+				printf("Muting: Chip %s [0x%02X], Channel Mask: 0x%02X\n",
+					(devOpts.muteOpts.disable & 0x01) ? "Off" : "On", devOpts.muteOpts.disable,
+					devOpts.muteOpts.chnMute[0]);
+				mode = 1;
 			}
-			
-			printf("Cfg: Core %s, Opts 0x%X, srMode 0x%02X, sRate %u, resampleMode 0x%02X\n",
-				FCC2Str(devOpts.emuCore).c_str(), devOpts.coreOpts, devOpts.srMode,
-				devOpts.smplRate, devOpts.resmplMode);
-			printf("Muting: Chip %s [0x%02X], Channel Mask: 0x%02X\n",
-				(devOpts.muteOpts.disable & 0x01) ? "Off" : "On", devOpts.muteOpts.disable,
-				devOpts.muteOpts.chnMute[0]);
-			mode = 1;
+			else
+			{
+				letter = toupper((unsigned char)*line);
+				if (letter == 'D')
+				{
+					mode = 10;
+				}
+				else if (letter == 'P')
+				{
+					switch(player->GetPlayerType())
+					{
+					case FCC_DRO:
+					{
+						DROPlayer* droplay = dynamic_cast<DROPlayer*>(player);
+						DRO_PLAY_OPTIONS playOpts;
+						droplay->GetPlayerOptions(playOpts);
+						printf("Opts: OPL3Mode %u\n", playOpts.v2opl3Mode);
+						mode = 2;
+					}
+						break;
+					case FCC_VGM:
+					{
+						VGMPlayer* vgmplay = dynamic_cast<VGMPlayer*>(player);
+						VGM_PLAY_OPTIONS playOpts;
+						vgmplay->GetPlayerOptions(playOpts);
+						printf("Opts: PlaybkHz %u, HardStopOld %u\n",
+							playOpts.playbackHz, playOpts.hardStopOld);
+						mode = 2;
+					}
+						break;
+					}
+				}
+			}
 		}
-		else if (mode == 1)
+		else if (mode == 1)	// sound chip command mode
 		{
 			char* tokenStr;
-			
 			PLR_DEV_OPTS devOpts;
+			
 			retVal = player->GetDeviceOptions((UINT32)chipID, devOpts);
 			if (retVal & 0x80)
 			{
@@ -531,17 +598,126 @@ static void DoChipControlMode(PlayerBase* player)
 					(muteOpts.disable & 0x01) ? "Off" : "On", muteOpts.disable, muteOpts.chnMute[0]);
 			}
 			else if (! strcmp(line, "Q"))
+				mode = -1;
+			else
+				mode = 0;
+		}
+		else if (mode == 2)	// player configuration mode
+		{
+			switch(player->GetPlayerType())
 			{
+			case FCC_DRO:
+			{
+				DROPlayer* droplay = dynamic_cast<DROPlayer*>(player);
+				DRO_PLAY_OPTIONS playOpts;
+				char* tokenStr;
+				
+				droplay->GetPlayerOptions(playOpts);
+				
+				printf("Command [OPL3 data]: ");
+				fgets(line, 0x80, stdin);
+				StripNewline(line);
+			
+				tokenStr = strtok(line, " ");
+				for (endPtr = line; *endPtr != '\0'; endPtr ++)
+					*endPtr = (char)toupper((unsigned char)*endPtr);
+				tokenStr = endPtr + 1;
+			
+				if (! strcmp(line, "OPL3"))
+				{
+					playOpts.v2opl3Mode = (UINT8)strtoul(tokenStr, &endPtr, 0);
+					if (endPtr > tokenStr)
+						droplay->SetPlayerOptions(playOpts);
+				}
+				else if (! strcmp(line, "Q"))
+					mode = -1;
+				else
+					mode = 0;
+			}
+				break;
+			case FCC_VGM:
+			{
+				VGMPlayer* vgmplay = dynamic_cast<VGMPlayer*>(player);
+				VGM_PLAY_OPTIONS playOpts;
+				char* tokenStr;
+				
+				vgmplay->GetPlayerOptions(playOpts);
+				
+				printf("Command [PHZ/HSO data]: ");
+				fgets(line, 0x80, stdin);
+				StripNewline(line);
+			
+				tokenStr = strtok(line, " ");
+				for (endPtr = line; *endPtr != '\0'; endPtr ++)
+					*endPtr = (char)toupper((unsigned char)*endPtr);
+				tokenStr = endPtr + 1;
+			
+				if (! strcmp(line, "PHZ"))
+				{
+					playOpts.playbackHz = (UINT32)strtoul(tokenStr, &endPtr, 0);
+					if (endPtr > tokenStr)
+						vgmplay->SetPlayerOptions(playOpts);
+				}
+				else if (! strcmp(line, "HSO"))
+				{
+					playOpts.hardStopOld = (UINT8)strtoul(tokenStr, &endPtr, 0);
+					if (endPtr > tokenStr)
+						vgmplay->SetPlayerOptions(playOpts);
+				}
+				else if (! strcmp(line, "Q"))
+					mode = -1;
+				else
+					mode = 0;
+			}
+				break;
+			default:
+				printf("No player-specific configuration available.\n");
+				mode = 0;
 				break;
 			}
-			else
-			{
-				mode = 0;
-			}
 		}
-		
-		//inkey = _getch();
-		//letter = toupper(inkey);
+		else if (mode == 10)	// display configuration mode
+		{
+			char* tokenStr;
+			
+			// Tags / FileInfo
+			printf("Command [T/FI data]: ");
+			fgets(line, 0x80, stdin);
+			StripNewline(line);
+			
+			tokenStr = strtok(line, " ");
+			for (endPtr = line; *endPtr != '\0'; endPtr ++)
+				*endPtr = (char)toupper((unsigned char)*endPtr);
+			tokenStr = endPtr + 1;
+			
+			if (! strcmp(line, "T") || ! strcmp(line, "FI"))
+			{
+				int val = (int)strtol(tokenStr, &endPtr, 0);
+				if (endPtr == tokenStr)
+				{
+					for (endPtr = tokenStr; *endPtr != '\0'; endPtr ++)
+						*endPtr = (char)toupper((unsigned char)*endPtr);
+					letter = *tokenStr;
+					if (letter == 'E' || ! strcmp(tokenStr, "ON"))
+						val = 1;
+					else if (letter == 'D' || ! strcmp(tokenStr, "OFF"))
+						val = 0;
+					else
+						val = -1;
+				}
+				if (val >= 0)
+				{
+					if (! strcmp(line, "T"))
+						showTags = !!val;
+					else if (! strcmp(line, "FI"))
+						showFileInfo = !!val;
+				}
+			}
+			else if (! strcmp(line, "Q"))
+				mode = -1;
+			else
+				mode = 0;
+		}
 	}
 	
 	return;

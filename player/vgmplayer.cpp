@@ -144,6 +144,9 @@ VGMPlayer::VGMPlayer() :
 	UINT16 optChip;
 	UINT8 chipID;
 	
+	_playOpts.playbackHz = 0;
+	_playOpts.hardStopOld = 0;
+	
 	for (optChip = 0x00; optChip < 0x100; optChip ++)
 	{
 		for (chipID = 0; chipID < 2; chipID ++)
@@ -640,8 +643,17 @@ UINT8 VGMPlayer::GetDeviceMuting(UINT32 id, PLR_MUTE_OPTS& muteOpts) const
 	return 0x00;
 }
 
-//UINT8 VGMPlayer::SetPlayerOptions(const ###_PLAY_OPTIONS& playOpts) const
-//UINT8 VGMPlayer::GetPlayerOptions(###_PLAY_OPTIONS& playOpts) const
+UINT8 VGMPlayer::SetPlayerOptions(const VGM_PLAY_OPTIONS& playOpts)
+{
+	_playOpts = playOpts;
+	return 0x00;
+}
+
+UINT8 VGMPlayer::GetPlayerOptions(VGM_PLAY_OPTIONS& playOpts) const
+{
+	playOpts = _playOpts;
+	return 0x00;
+}
 
 UINT8 VGMPlayer::SetSampleRate(UINT32 sampleRate)
 {
@@ -662,6 +674,12 @@ void VGMPlayer::RefreshTSRates(void)
 {
 	_tsMult = _outSmplRate * 1;
 	_tsDiv = 44100;
+	if (_playOpts.playbackHz && _fileHdr.recordHz)
+	{
+		// TODO: fix at other places
+		_tsMult *= _fileHdr.recordHz;
+		_tsDiv *= _playOpts.playbackHz;
+	}
 	
 	return;
 }
