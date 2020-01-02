@@ -1437,7 +1437,7 @@ Bit8u NOPN2_Read(ym3438_t *chip, Bit32u port)
     return 0;
 }
 
-void nukedopn2_write(ym3438_t *chip, UINT8 port, UINT8 data)
+void NOPN2_WriteBuffered(ym3438_t *chip, UINT8 port, UINT8 data)
 {
     Bit64u time1, time2;
     Bit32s buffer[2];
@@ -1470,6 +1470,11 @@ void nukedopn2_write(ym3438_t *chip, UINT8 port, UINT8 data)
     chip->writebuf[chip->writebuf_last].time = time1;
     chip->writebuf_lasttime = time1;
     chip->writebuf_last = (chip->writebuf_last + 1) % NOPN_WRITEBUF_SIZE;
+}
+
+void nukedopn2_write(void *chip, UINT8 port, UINT8 data)
+{
+    NOPN2_WriteBuffered((ym3438_t *)chip, port, data);
 }
 
 UINT8 nukedopn2_read(void *chip, UINT8 port)
