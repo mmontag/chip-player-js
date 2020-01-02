@@ -110,19 +110,17 @@ public:
 	//double Sample2Second(UINT32 samples) const;
 	
 	UINT8 GetState(void) const;
-	UINT32 GetCurFileOfs(void) const;
-	UINT32 GetCurTick(void) const;
-	UINT32 GetCurSample(void) const;
+	UINT32 GetCurPos(UINT8 unit) const;
+	UINT32 GetCurLoop(void) const;
 	UINT32 GetTotalTicks(void) const;	// get time for playing once in ticks
 	UINT32 GetLoopTicks(void) const;	// get time for one loop in ticks
 	//UINT32 GetTotalPlayTicks(UINT32 numLoops) const;	// get time for playing + looping (without fading)
-	UINT32 GetCurrentLoop(void) const;
 	
 	UINT8 Start(void);
 	UINT8 Stop(void);
 	UINT8 Reset(void);
+	UINT8 Seek(UINT8 unit, UINT32 pos);
 	UINT32 Render(UINT32 smplCnt, WAVE_32BS* data);
-	//UINT8 Seek(...); // TODO
 	
 private:
 	size_t DeviceID2OptionID(UINT32 id) const;
@@ -130,6 +128,8 @@ private:
 	
 	void ScanInitBlock(void);
 	
+	UINT8 SeekToTick(UINT32 tick);
+	UINT8 SeekToFilePos(UINT32 pos);
 	void ParseFile(UINT32 ticks);
 	void DoCommand_v1(void);
 	void DoCommand_v2(void);

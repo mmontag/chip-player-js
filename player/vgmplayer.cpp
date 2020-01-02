@@ -704,19 +704,25 @@ UINT8 VGMPlayer::GetState(void) const
 	return _playState;
 }
 
-UINT32 VGMPlayer::GetCurFileOfs(void) const
+UINT32 VGMPlayer::GetCurPos(UINT8 unit) const
 {
-	return _filePos;
+	switch(unit)
+	{
+	case PLAYPOS_FILEOFS:
+		return _filePos;
+	case PLAYPOS_TICK:
+		return _playTick;
+	case PLAYPOS_SAMPLE:
+		return _playSmpl;
+	case PLAYPOS_COMMAND:
+	default:
+		return (UINT32)-1;
+	}
 }
 
-UINT32 VGMPlayer::GetCurTick(void) const
+UINT32 VGMPlayer::GetCurLoop(void) const
 {
-	return _playTick;
-}
-
-UINT32 VGMPlayer::GetCurSample(void) const
-{
-	return _playSmpl;
+	return _curLoop;
 }
 
 UINT32 VGMPlayer::GetTotalTicks(void) const
@@ -730,11 +736,6 @@ UINT32 VGMPlayer::GetLoopTicks(void) const
 		return 0;
 	else
 		return _fileHdr.loopTicks;
-}
-
-UINT32 VGMPlayer::GetCurrentLoop(void) const
-{
-	return _curLoop;
 }
 
 
@@ -1059,12 +1060,6 @@ void VGMPlayer::InitDevices(void)
 					if (retVal)
 						break;
 					SndEmu_GetDeviceFunc(devInf->devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&chipDev.write8);
-					
-					if (devInf->devDef->SetPanning != NULL)
-					{
-						INT16 panPos[4] = {0x00, -0x80, +0x80, 0x00};
-						devInf->devDef->SetPanning(devInf->dataPtr, panPos);
-					}
 				}
 				break;
 			case DEVID_SEGAPCM:
@@ -1137,12 +1132,6 @@ void VGMPlayer::InitDevices(void)
 					if (retVal)
 						break;
 					SndEmu_GetDeviceFunc(devInf->devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&chipDev.write8);
-					
-					if (devInf->devDef->SetPanning != NULL)
-					{
-						INT16 panPos[3] = {-0x80, +0x80, 0x00};
-						devInf->devDef->SetPanning(devInf->dataPtr, panPos);
-					}
 				}
 				break;
 			case DEVID_32X_PWM:
@@ -1363,6 +1352,19 @@ void VGMPlayer::InitDevices(void)
 					devInf->devDef->SetOptionBits(devInf->dataPtr, devOpts->coreOpts);
 				RefreshMuting(chipDev, devOpts->muteOpts);
 			}
+			if (devInf->devDef->SetPanning != NULL)
+			{
+				if (chipType == DEVID_SN76496)
+				{
+					INT16 panPos[4] = {0x00, -0x80, +0x80, 0x00};
+					devInf->devDef->SetPanning(devInf->dataPtr, panPos);
+				}
+				else if (chipType == DEVID_AY8910)
+				{
+					INT16 panPos[3] = {-0x80, +0x80, 0x00};
+					devInf->devDef->SetPanning(devInf->dataPtr, panPos);
+				}
+			}
 			
 			_vdDevMap[vgmChip][chipID] = _devices.size();
 			if (chipDev.optID != (size_t)-1)
@@ -1474,6 +1476,65 @@ void VGMPlayer::LoadOPL4ROM(CHIP_DEVICE* chipDev)
 	yrwData.clear();
 	
 	return;
+}
+
+UINT8 VGMPlayer::Seek(UINT8 unit, UINT32 pos)
+{
+	switch(unit)
+	{
+	case PLAYPOS_FILEOFS:
+		_playState |= PLAYSTATE_SEEK;
+		if (pos < _filePos)
+			Reset();
+		return SeekToFilePos(pos);
+	case PLAYPOS_SAMPLE:
+		pos = Sample2Tick(pos);
+		// fall through
+	case PLAYPOS_TICK:
+		_playState |= PLAYSTATE_SEEK;
+		if (pos < _playTick)
+			Reset();
+		return SeekToTick(pos);
+	case PLAYPOS_COMMAND:
+	default:
+		return 0xFF;
+	}
+}
+
+UINT8 VGMPlayer::SeekToTick(UINT32 tick)
+{
+	_playState |= PLAYSTATE_SEEK;
+	if (tick > _playTick)
+		ParseFile(tick - _playTick);
+	_playSmpl = Tick2Sample(_playTick);
+	_playState &= ~PLAYSTATE_SEEK;
+	return 0x00;
+}
+
+UINT8 VGMPlayer::SeekToFilePos(UINT32 pos)
+{
+	_playState |= PLAYSTATE_SEEK;
+	while(_filePos < _fileHdr.dataEnd && _filePos <= pos && ! (_playState & PLAYSTATE_END))
+	{
+		UINT8 curCmd = _fileData[_filePos];
+		COMMAND_FUNC func = _CMD_INFO[curCmd].func;
+		(this->*func)();
+		_filePos += _CMD_INFO[curCmd].cmdLen;
+	}
+	_playTick = _fileTick;
+	_playSmpl = Tick2Sample(_playTick);
+	
+	if (_filePos >= _fileHdr.dataEnd)
+	{
+		_playState |= PLAYSTATE_END;
+		_psTrigger |= PLAYSTATE_END;
+		if (_eventCbFunc != NULL)
+			_eventCbFunc(this, _eventCbParam, PLREVT_END, NULL);
+		fprintf(stderr, "VGM file ends early! (filePos 0x%06X, end at 0x%06X)\n", _filePos, _fileHdr.dataEnd);
+	}
+	_playState &= ~PLAYSTATE_SEEK;
+	
+	return 0x00;
 }
 
 UINT32 VGMPlayer::Render(UINT32 smplCnt, WAVE_32BS* data)

@@ -707,19 +707,25 @@ UINT8 S98Player::GetState(void) const
 	return _playState;
 }
 
-UINT32 S98Player::GetCurFileOfs(void) const
+UINT32 S98Player::GetCurPos(UINT8 unit) const
 {
-	return _filePos;
+	switch(unit)
+	{
+	case PLAYPOS_FILEOFS:
+		return _filePos;
+	case PLAYPOS_TICK:
+		return _playTick;
+	case PLAYPOS_SAMPLE:
+		return _playSmpl;
+	case PLAYPOS_COMMAND:
+	default:
+		return (UINT32)-1;
+	}
 }
 
-UINT32 S98Player::GetCurTick(void) const
+UINT32 S98Player::GetCurLoop(void) const
 {
-	return _playTick;
-}
-
-UINT32 S98Player::GetCurSample(void) const
-{
-	return _playSmpl;
+	return _curLoop;
 }
 
 UINT32 S98Player::GetTotalTicks(void) const
@@ -733,11 +739,6 @@ UINT32 S98Player::GetLoopTicks(void) const
 		return 0;
 	else
 		return _totalTicks - _loopTick;
-}
-
-UINT32 S98Player::GetCurrentLoop(void) const
-{
-	return _curLoop;
 }
 
 
@@ -943,6 +944,51 @@ UINT8 S98Player::Reset(void)
 			cDev->write(defInf->dataPtr, 1, 0x80);
 		}
 	}
+	
+	return 0x00;
+}
+
+UINT8 S98Player::Seek(UINT8 unit, UINT32 pos)
+{
+	switch(unit)
+	{
+	case PLAYPOS_FILEOFS:
+		_playState |= PLAYSTATE_SEEK;
+		if (pos < _filePos)
+			Reset();
+		return SeekToFilePos(pos);
+	case PLAYPOS_SAMPLE:
+		pos = Sample2Tick(pos);
+		// fall through
+	case PLAYPOS_TICK:
+		_playState |= PLAYSTATE_SEEK;
+		if (pos < _playTick)
+			Reset();
+		return SeekToTick(pos);
+	case PLAYPOS_COMMAND:
+	default:
+		return 0xFF;
+	}
+}
+
+UINT8 S98Player::SeekToTick(UINT32 tick)
+{
+	_playState |= PLAYSTATE_SEEK;
+	if (tick > _playTick)
+		ParseFile(tick - _playTick);
+	_playSmpl = Tick2Sample(_playTick);
+	_playState &= ~PLAYSTATE_SEEK;
+	return 0x00;
+}
+
+UINT8 S98Player::SeekToFilePos(UINT32 pos)
+{
+	_playState |= PLAYSTATE_SEEK;
+	while(_filePos <= pos && ! (_playState & PLAYSTATE_END))
+		DoCommand();
+	_playTick = _fileTick;
+	_playSmpl = Tick2Sample(_playTick);
+	_playState &= ~PLAYSTATE_SEEK;
 	
 	return 0x00;
 }

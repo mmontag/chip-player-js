@@ -7,10 +7,19 @@
 #include <vector>
 
 
+// GetState() bit masks
 #define PLAYSTATE_PLAY	0x01	// is playing
-#define PLAYSTATE_PAUSE	0x02	// is paused (render wave, but don't advance in the song)
-#define PLAYSTATE_END	0x04	// has reached the end of the file
+#define PLAYSTATE_END	0x02	// has reached the end of the file
+#define PLAYSTATE_PAUSE	0x04	// is paused (render wave, but don't advance in the song)
+#define PLAYSTATE_SEEK	0x08	// is seeking
 
+// GetCurPos()/Seek() units
+#define PLAYPOS_FILEOFS	0x00	// file offset (in bytes)
+#define PLAYPOS_TICK	0x01	// tick position (scale: internal tick rate)
+#define PLAYPOS_SAMPLE	0x02	// sample number (scale: rendering sample rate)
+#define PLAYPOS_COMMAND	0x03	// internal command ID
+
+// callback functions and event constants
 class PlayerBase;
 typedef UINT8 (*PLAYER_EVENT_CB)(PlayerBase* player, void* userParam, UINT8 evtType, void* evtParam);
 #define PLREVT_NONE		0x00
@@ -49,6 +58,8 @@ struct PLR_MUTE_OPTS
 	UINT8 disable;		// suspend emulation (0x01 = main device, 0x02 = linked, 0xFF = all)
 	UINT32 chnMute[2];	// channel muting mask ([1] is used for linked devices)
 };
+
+#define PLR_DEV_ID(chip, instance)	(0x80000000 | (instance << 16) | (chip << 0))
 
 struct PLR_DEV_OPTS
 {
@@ -98,22 +109,18 @@ public:
 	virtual double Tick2Second(UINT32 ticks) const = 0;
 	virtual double Sample2Second(UINT32 samples) const;
 	
-	virtual UINT8 GetState(void) const = 0;
-	virtual UINT32 GetCurFileOfs(void) const = 0;
-	virtual UINT32 GetCurTick(void) const = 0;
-	virtual UINT32 GetCurSample(void) const = 0;
+	virtual UINT8 GetState(void) const = 0;			// get playback state (playing / paused / ...)
+	virtual UINT32 GetCurPos(UINT8 unit) const = 0;	// get current playback position
+	virtual UINT32 GetCurLoop(void) const = 0;		// get current loop index (0 = 1st loop, 1 = 2nd loop, ...)
 	virtual UINT32 GetTotalTicks(void) const = 0;	// get time for playing once in ticks
 	virtual UINT32 GetLoopTicks(void) const = 0;	// get time for one loop in ticks
 	virtual UINT32 GetTotalPlayTicks(UINT32 numLoops) const;	// get time for playing + looping (without fading)
-	virtual UINT32 GetCurrentLoop(void) const = 0;
-	//virtual UINT32 GetCurrentCommandID(void) const = 0;	// TODO
 	
 	virtual UINT8 Start(void) = 0;
 	virtual UINT8 Stop(void) = 0;
 	virtual UINT8 Reset(void) = 0;
+	virtual UINT8 Seek(UINT8 unit, UINT32 pos) = 0; // seek to playback position
 	virtual UINT32 Render(UINT32 smplCnt, WAVE_32BS* data) = 0;
-	//virtual UINT8 SeekToSample(...) = 0; // TODO
-	//virtual UINT8 SeekToCommand(...) = 0; // TODO
 	
 protected:
 	UINT32 _outSmplRate;

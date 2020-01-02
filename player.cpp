@@ -129,6 +129,8 @@ int main(int argc, char* argv[])
 	}
 	playState = 0x00;
 	
+	// I'll keep the instances of the players for the program's life time.
+	// This way player/chip options are kept between track changes.
 	droPlr = new DROPlayer;
 	s98Plr = new S98Player;
 	vgmPlr = new VGMPlayer;
@@ -296,7 +298,7 @@ int main(int argc, char* argv[])
 				pState = "Fading";
 			else
 				pState = "Playing";
-			printf("%s %.2f / %.2f ...   \r", pState, player->Sample2Second(player->GetCurSample()),
+			printf("%s %.2f / %.2f ...   \r", pState, player->Sample2Second(player->GetCurPos(PLAYPOS_SAMPLE)),
 					player->Tick2Second(player->GetTotalPlayTicks(maxLoops)));
 			fflush(stdout);
 			needRefresh = false;
@@ -335,6 +337,21 @@ int main(int argc, char* argv[])
 				fadeSmplStart = (UINT32)-1;
 				OSMutex_Unlock(renderMtx);
 			}
+			else if (letter >= '0' && letter <= '9')
+			{
+				UINT32 maxPos;
+				UINT8 pbPos10;
+				UINT32 destPos;
+				
+				OSMutex_Lock(renderMtx);
+				maxPos = player->GetTotalPlayTicks(maxLoops);
+				pbPos10 = letter - '0';
+				destPos = maxPos * pbPos10 / 10;
+				player->Seek(PLAYPOS_TICK, destPos);
+				if (player->GetCurPos(PLAYPOS_SAMPLE) < fadeSmplStart)
+					fadeSmplStart = (UINT32)-1;
+				OSMutex_Unlock(renderMtx);
+			}
 			else if (letter == 'B')	// previous file
 			{
 				if (curSong > argbase)
@@ -355,7 +372,7 @@ int main(int argc, char* argv[])
 			}
 			else if (letter == 'F')	// fade out
 			{
-				fadeSmplStart = player->GetCurSample();
+				fadeSmplStart = player->GetCurPos(PLAYPOS_SAMPLE);
 			}
 			else if (letter == 'C')	// chip control
 			{
@@ -875,7 +892,7 @@ static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void*
 	if (smplCount > smplAlloc)
 		smplCount = smplAlloc;
 	memset(smplData, 0, smplCount * sizeof(WAVE_32BS));
-	basePbSmpl = player->GetCurSample();
+	basePbSmpl = player->GetCurPos(PLAYPOS_SAMPLE);
 	smplRendered = player->Render(smplCount, smplData);
 	smplCount = smplRendered;
 	
@@ -944,7 +961,7 @@ static UINT8 FilePlayCallback(PlayerBase* player, void* userParam, UINT8 evtType
 				if (fadeSmplTime)
 				{
 					if (fadeSmplStart == (UINT32)-1)
-						fadeSmplStart = player->GetCurSample();
+						fadeSmplStart = player->GetCurPos(PLAYPOS_SAMPLE);
 				}
 				else
 				{
@@ -953,6 +970,8 @@ static UINT8 FilePlayCallback(PlayerBase* player, void* userParam, UINT8 evtType
 					return 0x01;
 				}
 			}
+			if (player->GetState() & PLAYSTATE_SEEK)
+				break;
 			printf("Loop %u.\n", 1 + *curLoop);
 		}
 		break;
