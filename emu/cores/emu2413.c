@@ -15,16 +15,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifndef INLINE
-#if defined(_MSC_VER)
-#define INLINE __inline
-#elif defined(__GNUC__)
-#define INLINE __inline__
-#else
-#define INLINE inline
-#endif
-#endif
-
 #include <stdtype.h>
 #include "emutypes.h"
 #include "../snddef.h"
