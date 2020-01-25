@@ -1207,8 +1207,8 @@ void NOPN2_Reset(ym3438_t *chip, Bit32u clock, Bit32u rate)
         chip->pan_r[i] = 1;
     }
     // ratio: sampleRate / (clock / 144) * (1 << resamplerFraction)
-    chip->rateratio = (Bit32u)((((Bit64u)144 * chip->smplRate) << RSM_FRAC) / chip->clock);
-    if (abs((Bit32s)chip->rateratio - (1 << RSM_FRAC)) <= 1)
+    chip->rateratio = (Bit32s)((((Bit64u)144 * chip->smplRate) << RSM_FRAC) / chip->clock);
+    if (abs(chip->rateratio - (1 << RSM_FRAC)) <= 1)
         chip->rateratio = (1 << RSM_FRAC);
 }
 

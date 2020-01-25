@@ -187,6 +187,7 @@
     <ClCompile Include="emu\cores\np_nes_dmc.c" />
     <ClCompile Include="emu\cores\np_nes_fds.c" />
     <ClCompile Include="emu\cores\nukedopl.c" />
+    <ClCompile Include="emu\cores\nukedopll.c" />
     <ClCompile Include="emu\cores\okiadpcm.c" />
     <ClCompile Include="emu\cores\okim6258.c" />
     <ClCompile Include="emu\cores\Ootake_PSG.c" />
@@ -269,6 +270,8 @@
     <ClInclude Include="emu\cores\np_nes_dmc.h" />
     <ClInclude Include="emu\cores\np_nes_fds.h" />
     <ClInclude Include="emu\cores\nukedopl.h" />
+    <ClInclude Include="emu\cores\nukedopll.h" />
+    <ClInclude Include="emu\cores\nukedopll_int.h" />
     <ClInclude Include="emu\cores\nukedopl_int.h" />
     <ClInclude Include="emu\cores\okiadpcm.h" />
     <ClInclude Include="emu\cores\okim6258.h" />

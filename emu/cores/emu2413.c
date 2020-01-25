@@ -26,6 +26,7 @@
 #endif
 
 #include <stdtype.h>
+#include "emutypes.h"
 #include "../snddef.h"
 #include "../EmuStructs.h"
 #include "../EmuCores.h"
@@ -1222,6 +1223,8 @@ void EOPLL_reset(EOPLL *opll) {
   //opll->mask = 0;
 
   opll->rhythm_mode = 0;
+  if (opll->chip_mode == 1)
+    opll->reg[0x0e] = 32;
   opll->slot_key_status = 0;
   opll->eg_counter = 0;
 
@@ -1384,7 +1387,10 @@ void EOPLL_writeReg(EOPLL *opll, uint8_t reg, uint8_t data) {
 
   case 0x0e:
     if (opll->chip_mode == 1)
+    {
+      opll->reg[reg] |= 32;
       break;
+    }
     update_rhythm_mode(opll);
     update_key_status(opll);
     break;

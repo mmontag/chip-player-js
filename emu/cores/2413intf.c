@@ -7,6 +7,9 @@
 #ifdef EC_YM2413_EMU2413
 #include "emu2413.h"
 #endif
+#ifdef EC_YM2413_NUKED
+#include "nukedopll.h"
+#endif
 
 
 const DEV_DEF* devDefList_YM2413[] =
@@ -16,6 +19,9 @@ const DEV_DEF* devDefList_YM2413[] =
 #endif
 #ifdef EC_YM2413_MAME
 	&devDef_YM2413_MAME,
+#endif
+#ifdef EC_YM2413_NUKED
+	&devDef_YM2413_Nuked,
 #endif
 	NULL
 };

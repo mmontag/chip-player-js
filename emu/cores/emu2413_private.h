@@ -1,8 +1,6 @@
 #ifndef __EMU2413_H_PRIVATE__
 #define __EMU2413_H_PRIVATE__
 
-#include <stdtype.h>
-#include "../snddef.h"
 #include "emutypes.h"
 
 #ifdef __cplusplus

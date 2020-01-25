@@ -38,11 +38,6 @@
 #define NOPN_WRITEBUF_DELAY 15
 
 enum {
-#if 0
-    ym3438_type_discrete = 0,   /* Discrete YM3438 (Teradrive)          */
-    ym3438_type_asic = 1,       /* ASIC YM3438 (MD1 VA7, MD2, MD3, etc) */
-    ym3438_type_ym2612 = 2      /* YM2612 (MD1, MD2 VA2)                */
-#endif
     ym3438_mode_ym2612 = 0x01,      /* Enables YM2612 emulation (MD1, MD2 VA2) */
     ym3438_mode_readmode = 0x02     /* Enables status read on any port (TeraDrive, MD1 VA7, MD2, etc) */
 };

@@ -6,7 +6,8 @@
 #ifndef SNDDEV_SELECT
 // undefine one of the variables to disable the cores
 #define EC_YM2413_MAME		// enable YM2413 core from MAME
-#define EC_YM2413_EMU2413	// enable EMU2413 core (from in_vgm)
+#define EC_YM2413_EMU2413	// enable EMU2413 core
+#define EC_YM2413_NUKED		// enable Nuked OPNLL
 #endif
 
 // cfg.flags: 0 = YM2413 mode, 1 = VRC7 mode

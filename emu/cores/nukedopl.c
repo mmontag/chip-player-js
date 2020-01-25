@@ -1288,8 +1288,8 @@ void NOPL3_Reset(opl3_chip *chip, Bit32u clock, Bit32u samplerate)
     chip->noise = 1;
     //chip->rateratio = (samplerate << RSM_FRAC) / 49716;
     // ratio: sampleRate / (clock / 288) * (1 << resamplerFraction)
-    chip->rateratio = (Bit32u)((((Bit64u)288 * samplerate) << RSM_FRAC) / clock);
-    if (abs((Bit32s)chip->rateratio - (1 << RSM_FRAC)) <= 1)
+    chip->rateratio = (Bit32s)((((Bit64u)288 * samplerate) << RSM_FRAC) / clock);
+    if (abs(chip->rateratio - (1 << RSM_FRAC)) <= 1)
         chip->rateratio = (1 << RSM_FRAC);
     chip->tremoloshift = 4;
     chip->vibshift = 1;
