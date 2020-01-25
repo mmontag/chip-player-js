@@ -1359,6 +1359,13 @@ void VGMPlayer::InitDevices(void)
 					INT16 panPos[4] = {0x00, -0x80, +0x80, 0x00};
 					devInf->devDef->SetPanning(devInf->dataPtr, panPos);
 				}
+				else if (chipType == DEVID_YM2413)
+				{
+					INT16 panPos[14] = {
+						-0x100, +0x100, -0x80, +0x80, -0x40, +0x40, -0xC0, +0xC0, 0x00,
+						-0x60, +0x60, 0x00, -0xC0, +0xC0};
+					devInf->devDef->SetPanning(devInf->dataPtr, panPos);
+				}
 				else if (chipType == DEVID_AY8910)
 				{
 					INT16 panPos[3] = {-0x80, +0x80, 0x00};
