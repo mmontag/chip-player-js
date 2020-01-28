@@ -1,12 +1,18 @@
 #### Audio Output Library ####
 project(libVgmTest)
 cmake_minimum_required(VERSION 3.1)
+include(CheckIncludeFile)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/libs/cmake_modules/")
+
+check_include_file("stdint.h" HAVE_STDINT)
+if(HAVE_STDINT)
+	add_definitions("-D HAVE_STDINT")
+endif()
 
 if(MSVC)
 	set(CMAKE_DEBUG_POSTFIX "d")
