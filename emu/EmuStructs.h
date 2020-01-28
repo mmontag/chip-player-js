@@ -123,8 +123,16 @@ struct _device_generic_config
 						// Note: Some cores ignore the srMode setting and always use smplRate.
 };	// DEV_GEN_CFG
 
+/* need to ensure INIT_DEVINF is always static inline, use our own */
+#if defined(_MSC_VER)
+#define DEVINF_INLINE static __inline
+#elif defined(__GNUC__)
+#define DEVINF_INLINE static __inline__
+#else
+#define DEVINF_INLINE static inline
+#endif
 
-INLINE void INIT_DEVINF(DEV_INFO* devInf, DEV_DATA* devData, UINT32 sampleRate, const DEV_DEF* devDef)
+DEVINF_INLINE void INIT_DEVINF(DEV_INFO* devInf, DEV_DATA* devData, UINT32 sampleRate, const DEV_DEF* devDef)
 {
 	devInf->dataPtr = devData;
 	devInf->sampleRate = sampleRate;
@@ -134,6 +142,8 @@ INLINE void INIT_DEVINF(DEV_INFO* devInf, DEV_DATA* devData, UINT32 sampleRate, 
 	devInf->linkDevs = NULL;
 	return;
 }
+
+#undef DEVINF_INLINE
 
 #ifdef __cplusplus
 }
