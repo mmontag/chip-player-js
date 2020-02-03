@@ -17,7 +17,7 @@
  *      siliconpr0n.org(digshadow, John McMaster):
  *          VRC VII decap and die shot.
  *
- *  version: 0.9
+ *  version: 1.0
  */
 
 #include <string.h>
@@ -1051,8 +1051,8 @@ void NOPLL_Clock(opll_t *chip, int32_t *buffer) {
     if (chip->cycles == 0) {
         chip->lfo_am_out = (chip->lfo_am_counter >> 3) & 0x0f;
     }
-    OPLL_DoModeWrite(chip);
     chip->rm_enable >>= 1;
+    OPLL_DoModeWrite(chip);
     chip->rm_select++;
     if (chip->rm_select > rm_num_tc) {
         chip->rm_select = rm_num_tc + 1;
@@ -1150,27 +1150,27 @@ static void OPLL_GenerateResampled(opll_t *chip, int32_t *buf)
             {
             case 1:
                 mute_m = chip->mute[6];
-                mute_r = chip->mute[9];     // BD [13]
+                mute_r = chip->mute[9];
                 break;
             case 2:
                 mute_m = chip->mute[7];
-                mute_r = chip->mute[10];    // SD [11]
+                mute_r = chip->mute[10];
                 break;
             case 3:
                 mute_m = chip->mute[8];
-                mute_r = chip->mute[12];    // CY [9]
+                mute_r = chip->mute[12];
                 break;
             case 4:
                 mute_m = 0;
-                mute_r = chip->mute[13];    // HH [10]
+                mute_r = chip->mute[13];
                 break;
             case 5:
                 mute_m = 0;
-                mute_r = chip->mute[11];    // TT [12]
+                mute_r = chip->mute[11];
                 break;
             case 6:
                 mute_m = 0;
-                mute_r = chip->mute[9];     // BD [-]
+                mute_r = chip->mute[9];
                 break;
             case 7:
                 mute_m = chip->mute[0];
@@ -1186,15 +1186,15 @@ static void OPLL_GenerateResampled(opll_t *chip, int32_t *buf)
                 break;
             case 10:
                 mute_m = 0;
-                mute_r = chip->mute[10];    // SD [13]
+                mute_r = chip->mute[10];
                 break;
             case 11:
                 mute_m = 0;
-                mute_r = chip->mute[12];    // CY [11]
+                mute_r = chip->mute[12];
                 break;
             case 12:
                 mute_m = 0;
-                mute_r = 0;                 // ?? [9]
+                mute_r = 0;
                 break;
             case 13:
                 mute_m = chip->mute[3];
@@ -1210,15 +1210,15 @@ static void OPLL_GenerateResampled(opll_t *chip, int32_t *buf)
                 break;
             case 16:
                 mute_m = 0;
-                mute_r = 0;                 // ?? [10]
+                mute_r = 0;
                 break;
             case 17:
                 mute_m = 0;
-                mute_r = chip->mute[13];    // HH [12]
+                mute_r = chip->mute[13];
                 break;
             default:
                 mute_m = 0;
-                mute_r =chip->mute[11];     // TT [-]
+                mute_r = chip->mute[11];
                 break;
             }
             NOPLL_Clock(chip, buffer);
