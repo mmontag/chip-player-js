@@ -162,4 +162,4 @@ install(TARGETS ${PROJECT_NAME}
 		LIBRARY DESTINATION "lib"
 		ARCHIVE DESTINATION "lib"
 		)
-install(FILES ${AUDIO_HEADERS} DESTINATION include/audio)
+install(FILES ${AUDIO_HEADERS} DESTINATION include/vgm/audio)

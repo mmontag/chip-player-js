@@ -109,4 +109,4 @@ install(TARGETS ${PROJECT_NAME}
 		LIBRARY DESTINATION "lib"
 		ARCHIVE DESTINATION "lib"
 		)
-install(FILES ${UTIL_HEADERS} DESTINATION include/utils)
+install(FILES ${UTIL_HEADERS} DESTINATION include/vgm/utils)

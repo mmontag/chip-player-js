@@ -58,4 +58,4 @@ install(TARGETS ${PROJECT_NAME}
 		LIBRARY DESTINATION "lib"
 		ARCHIVE DESTINATION "lib"
 		)
-install(FILES ${PLAYER_HEADERS} DESTINATION include/player)
+install(FILES ${PLAYER_HEADERS} DESTINATION include/vgm/player)

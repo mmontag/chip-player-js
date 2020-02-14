@@ -599,5 +599,5 @@ install(TARGETS ${PROJECT_NAME}
 		LIBRARY DESTINATION "lib"
 		ARCHIVE DESTINATION "lib"
 		)
-install(FILES ${EMU_HEADERS} DESTINATION include/emu)
-install(FILES ${EMU_CORE_HEADERS} DESTINATION include/emu/cores)
+install(FILES ${EMU_HEADERS} DESTINATION include/vgm/emu)
+install(FILES ${EMU_CORE_HEADERS} DESTINATION include/vgm/emu/cores)
