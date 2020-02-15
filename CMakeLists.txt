@@ -123,3 +123,11 @@ target_include_directories(player PRIVATE ${PROJECT_SOURCE_DIR})
 target_link_libraries(player PRIVATE vgm-audio vgm-player)
 add_sanitizers(player)
 endif()
+
+set(COMMON_HEADERS
+	common_def.h
+	stdbool.h
+	stdtype.h
+)
+
+install(FILES ${COMMON_HEADERS} DESTINATION include/vgm)
