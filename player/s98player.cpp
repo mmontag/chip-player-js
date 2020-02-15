@@ -10,13 +10,13 @@
 
 #include "../common_def.h"
 #include "s98player.hpp"
-#include <emu/EmuStructs.h>
-#include <emu/SoundEmu.h>
-#include <emu/Resampler.h>
-#include <emu/SoundDevs.h>
-#include <emu/EmuCores.h>
-#include <emu/cores/sn764intf.h>	// for SN76496_CFG
-#include <emu/cores/ayintf.h>		// for AY8910_CFG
+#include "../emu/EmuStructs.h"
+#include "../emu/SoundEmu.h"
+#include "../emu/Resampler.h"
+#include "../emu/SoundDevs.h"
+#include "../emu/EmuCores.h"
+#include "../emu/cores/sn764intf.h"	// for SN76496_CFG
+#include "../emu/cores/ayintf.h"		// for AY8910_CFG
 #include "../utils/StrUtils.h"
 #include "helper.h"
 

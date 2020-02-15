@@ -2,8 +2,8 @@
 #define __DROPLAYER_HPP__
 
 #include "../stdtype.h"
-#include <emu/EmuStructs.h>
-#include <emu/Resampler.h>
+#include "../emu/EmuStructs.h"
+#include "../emu/Resampler.h"
 #include "helper.h"
 #include "playerbase.hpp"
 #include "../utils/DataLoader.h"

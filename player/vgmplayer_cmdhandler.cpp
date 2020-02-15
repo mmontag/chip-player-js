@@ -7,9 +7,9 @@
 
 #include "../common_def.h"
 #include "vgmplayer.hpp"
-#include <emu/EmuStructs.h>
-#include <emu/dac_control.h>
-#include <emu/cores/sn764intf.h>	// for SN76496_W constants
+#include "../emu/EmuStructs.h"
+#include "../emu/dac_control.h"
+#include "../emu/cores/sn764intf.h"	// for SN76496_W constants
 
 #include "dblk_compr.h"
 #include "helper.h"

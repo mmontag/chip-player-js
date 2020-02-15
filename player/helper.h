@@ -7,8 +7,8 @@ extern "C"
 #endif
 
 #include "../stdtype.h"
-#include <emu/EmuStructs.h>
-#include <emu/Resampler.h>
+#include "../emu/EmuStructs.h"
+#include "../emu/Resampler.h"
 
 typedef struct _vgm_base_device VGM_BASEDEV;
 struct _vgm_base_device

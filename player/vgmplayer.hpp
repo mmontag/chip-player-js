@@ -2,8 +2,8 @@
 #define __VGMPLAYER_HPP__
 
 #include "../stdtype.h"
-#include <emu/EmuStructs.h>
-#include <emu/Resampler.h>
+#include "../emu/EmuStructs.h"
+#include "../emu/Resampler.h"
 #include "../utils/StrUtils.h"
 #include "helper.h"
 #include "playerbase.hpp"

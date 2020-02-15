@@ -9,11 +9,11 @@
 
 #include "../common_def.h"
 #include "droplayer.hpp"
-#include <emu/EmuStructs.h>
-#include <emu/SoundEmu.h>
-#include <emu/Resampler.h>
-#include <emu/SoundDevs.h>
-#include <emu/EmuCores.h>
+#include "../emu/EmuStructs.h"
+#include "../emu/SoundEmu.h"
+#include "../emu/Resampler.h"
+#include "../emu/SoundDevs.h"
+#include "../emu/EmuCores.h"
 #include "helper.h"
 
 

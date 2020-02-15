@@ -2,9 +2,9 @@
 #include <string.h>
 
 #include "../stdtype.h"
-#include <emu/EmuStructs.h>
-#include <emu/SoundEmu.h>
-#include <emu/Resampler.h>
+#include "../emu/EmuStructs.h"
+#include "../emu/SoundEmu.h"
+#include "../emu/Resampler.h"
 #include "helper.h"
 
 void SetupLinkedDevices(VGM_BASEDEV* cBaseDev, SETUPLINKDEV_CB devCfgCB, void* cbUserParam)
