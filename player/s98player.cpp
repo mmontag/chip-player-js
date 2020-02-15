@@ -8,7 +8,7 @@
 
 #define INLINE	static inline
 
-#include <common_def.h>
+#include "../common_def.h"
 #include "s98player.hpp"
 #include <emu/EmuStructs.h>
 #include <emu/SoundEmu.h>

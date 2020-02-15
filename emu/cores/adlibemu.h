@@ -1,7 +1,7 @@
 #ifndef __ADLIBEMU_H__
 #define __ADLIBEMU_H__
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 #include "../snddef.h"
 
 #if defined(OPLTYPE_IS_OPL2)

@@ -11,7 +11,7 @@
 #include <dsound.h>
 #include <mmsystem.h>	// for WAVEFORMATEX
 
-#include <stdtype.h>
+#include "../stdtype.h"
 
 #include "AudioStream.h"
 #include "../utils/OSThread.h"

@@ -64,7 +64,7 @@
 
 #include <stdio.h>
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 #include "../snddef.h"
 #include "../EmuHelper.h"
 #include "ymdeltat.h"

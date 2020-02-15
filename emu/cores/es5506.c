@@ -1,6 +1,6 @@
 #include <stddef.h>
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 #include "../EmuStructs.h"
 #include "es5506.h"
 

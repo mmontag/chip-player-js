@@ -6,7 +6,7 @@ extern "C"
 {
 #endif
 
-#include <stdtype.h>
+#include "../stdtype.h"
 #include <emu/EmuStructs.h>
 #include <emu/Resampler.h>
 

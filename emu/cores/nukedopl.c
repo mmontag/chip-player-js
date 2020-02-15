@@ -30,7 +30,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 #include "../snddef.h"
 #include "nukedopl.h"
 #include "nukedopl_int.h"

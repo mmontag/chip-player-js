@@ -130,7 +130,7 @@
 #include <string.h> // for memset
 #include <stddef.h> // for NULL
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 #include "../snddef.h"
 #include "../EmuHelper.h"
 #include "../EmuCores.h"

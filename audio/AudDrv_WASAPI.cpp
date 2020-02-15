@@ -18,7 +18,7 @@
 #define	wcsdup	_wcsdup
 #endif
 
-#include <stdtype.h>
+#include "../stdtype.h"
 
 #include "AudioStream.h"
 #include "../utils/OSThread.h"

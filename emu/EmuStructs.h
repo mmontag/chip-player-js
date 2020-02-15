@@ -7,7 +7,7 @@ extern "C"
 #endif
 
 #include <stddef.h>	// for NULL
-#include <stdtype.h>
+#include "../stdtype.h"
 #include "snddef.h"
 
 typedef struct _device_definition DEV_DEF;

@@ -6,7 +6,7 @@ extern "C"
 {
 #endif
 
-#include <stdtype.h>
+#include "../stdtype.h"
 
 typedef struct _os_thread OS_THREAD;
 typedef void (*OS_THR_FUNC)(void* args);

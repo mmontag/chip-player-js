@@ -6,7 +6,7 @@
 
 #include <Windows.h>
 
-#include <stdtype.h>
+#include "../stdtype.h"
 #include "OSSignal.h"
 
 //typedef struct _os_signal OS_SIGNAL;

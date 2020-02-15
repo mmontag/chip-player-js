@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include <string.h>	// for memset
 #include <math.h>
-#include <stdtype.h>
+#include "../../stdtype.h"
 #include "../EmuStructs.h"
 #include "../EmuCores.h"
 #include "../snddef.h"

@@ -1,7 +1,7 @@
 #ifndef __AY8910_H__
 #define __AY8910_H__
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 #include "../snddef.h"
 #include "../EmuStructs.h"
 

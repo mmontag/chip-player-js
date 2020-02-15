@@ -16,7 +16,7 @@ int __cdecl _getch(void);	// from conio.h
 #define _getch	getchar
 #endif
 
-#include <common_def.h>
+#include "common_def.h"
 #include "audio/AudioStream.h"
 #include "audio/AudioStream_SpcDrvFuns.h"
 

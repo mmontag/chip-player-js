@@ -1,7 +1,7 @@
 #ifndef __FMOPL_H__
 #define __FMOPL_H__
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 #include "../snddef.h"
 
 /* --- select emulation chips --- */

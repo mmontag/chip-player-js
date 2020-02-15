@@ -2,7 +2,7 @@
 // copyright-holders:ElSemi, R. Belmont
 #include <string.h> // for memset
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 #include "scspdsp.h"
 
 static UINT16 PACK(INT32 val)

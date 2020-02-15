@@ -23,7 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 #include "../snddef.h"
 #include "../EmuHelper.h"
 #include "../EmuCores.h"

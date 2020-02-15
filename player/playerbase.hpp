@@ -1,7 +1,7 @@
 #ifndef __PLAYERBASE_HPP__
 #define __PLAYERBASE_HPP__
 
-#include <stdtype.h>
+#include "../stdtype.h"
 #include <emu/Resampler.h>
 #include "../utils/DataLoader.h"
 #include <vector>

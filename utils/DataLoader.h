@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include <stdtype.h>
+#include "../stdtype.h"
 
 typedef UINT8 (*DLOADCB_GENERIC)(void *context);
 typedef UINT32 (*DLOADCB_READ)(void *context, UINT8 *buffer, UINT32 numBytes);

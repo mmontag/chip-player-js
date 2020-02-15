@@ -98,7 +98,7 @@
 #include <string.h>
 #include <math.h>
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 #include "../EmuStructs.h"
 #include "../EmuCores.h"
 #include "../snddef.h"

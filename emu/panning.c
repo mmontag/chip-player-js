@@ -8,7 +8,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-#include <stdtype.h>
+#include "../stdtype.h"
 #include "panning.h"
 
 #ifndef M_PI

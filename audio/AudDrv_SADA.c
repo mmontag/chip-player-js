@@ -14,7 +14,7 @@
 #define	Sleep(msec)	usleep(msec * 1000)
 #endif
 
-#include <stdtype.h>
+#include "../stdtype.h"
 
 #include "AudioStream.h"
 #include "../utils/OSThread.h"

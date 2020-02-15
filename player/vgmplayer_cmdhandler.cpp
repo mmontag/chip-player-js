@@ -5,7 +5,7 @@
 
 #define INLINE	static inline
 
-#include <common_def.h>
+#include "../common_def.h"
 #include "vgmplayer.hpp"
 #include <emu/EmuStructs.h>
 #include <emu/dac_control.h>

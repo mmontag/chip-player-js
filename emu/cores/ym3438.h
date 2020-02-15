@@ -1,7 +1,7 @@
 #ifndef __YM3438_H__
 #define __YM3438_H__
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 #include "../snddef.h"
 
 void nukedopn2_write(void *chip, UINT8 port, UINT8 data);

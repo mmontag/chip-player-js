@@ -17,7 +17,7 @@
 #include <string.h>
 #include <stddef.h>	// for NULL
 
-#include <stdtype.h>
+#include "../stdtype.h"
 #include "EmuStructs.h"
 #include "snddef.h"
 #include "SoundDevs.h"

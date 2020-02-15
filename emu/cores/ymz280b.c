@@ -38,7 +38,7 @@
 #include <stddef.h>	// for NULL
 #include <math.h>
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 #include "../EmuStructs.h"
 #include "../EmuCores.h"
 #include "../snddef.h"

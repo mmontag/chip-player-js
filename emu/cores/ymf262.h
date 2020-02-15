@@ -1,7 +1,7 @@
 #ifndef __YMF262_H__
 #define __YMF262_H__
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 
 typedef void (*OPL3_TIMERHANDLER)(void *param,UINT8 timer,UINT32 period);
 typedef void (*OPL3_IRQHANDLER)(void *param,UINT8 irq);

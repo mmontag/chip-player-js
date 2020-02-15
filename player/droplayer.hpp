@@ -1,7 +1,7 @@
 #ifndef __DROPLAYER_HPP__
 #define __DROPLAYER_HPP__
 
-#include <stdtype.h>
+#include "../stdtype.h"
 #include <emu/EmuStructs.h>
 #include <emu/Resampler.h>
 #include "helper.h"

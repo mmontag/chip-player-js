@@ -1,7 +1,7 @@
 #ifndef __YM2612_H__
 #define __YM2612_H__
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 
 typedef struct ym2612__ ym2612_;
 

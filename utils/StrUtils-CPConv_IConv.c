@@ -13,7 +13,7 @@
 #include <iconv.h>
 #include <errno.h>
 
-#include <stdtype.h>
+#include "../stdtype.h"
 #include "StrUtils.h"
 
 //typedef struct _codepage_conversion CPCONV;

@@ -30,7 +30,7 @@
 #ifndef __NUKEDOPL_INT_H__
 #define __NUKEDOPL_INT_H__
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 #include "../snddef.h"
 
 //#define NOPL_ENABLE_WRITEBUF

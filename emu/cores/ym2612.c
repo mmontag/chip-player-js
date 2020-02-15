@@ -27,7 +27,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 #include "../snddef.h"
 #include "ym2612.h"
 #include "ym2612_int.h"

@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>	// for memcpy() etc.
 
-#include <common_def.h>	// stdtype.h, INLINE
+#include "../common_def.h"	// stdtype.h, INLINE
 
 #include "AudioStream.h"
 

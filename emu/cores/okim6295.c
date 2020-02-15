@@ -54,7 +54,7 @@
 #include <string.h>	// for memset
 #include <math.h>
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 #include "../snddef.h"
 #include "../EmuHelper.h"
 #include "../EmuCores.h"

@@ -10,7 +10,7 @@
 #include <unistd.h>		// for usleep()
 #define	Sleep(msec)	usleep(msec * 1000)
 
-#include <stdtype.h>
+#include "../stdtype.h"
 
 #include "AudioStream.h"
 #include "../utils/OSMutex.h"

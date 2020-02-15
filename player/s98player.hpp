@@ -1,7 +1,7 @@
 #ifndef __S98PLAYER_HPP__
 #define __S98PLAYER_HPP__
 
-#include <stdtype.h>
+#include "../stdtype.h"
 #include <emu/EmuStructs.h>
 #include <emu/Resampler.h>
 #include "../utils/StrUtils.h"

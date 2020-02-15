@@ -2,7 +2,7 @@
 #define __YM2413_H__
 
 #include "../EmuStructs.h"
-#include <stdtype.h>
+#include "../../stdtype.h"
 
 extern DEV_DEF devDef_YM2413_MAME;
 

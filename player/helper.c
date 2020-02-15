@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <stdtype.h>
+#include "../stdtype.h"
 #include <emu/EmuStructs.h>
 #include <emu/SoundEmu.h>
 #include <emu/Resampler.h>

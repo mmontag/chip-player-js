@@ -1,7 +1,7 @@
 #ifndef __YMDELTAT_H__
 #define __YMDELTAT_H__
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 
 #define YM_DELTAT_SHIFT    (16)
 

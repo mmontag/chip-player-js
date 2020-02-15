@@ -7,7 +7,7 @@
 #include <pthread.h>
 #include <errno.h>
 
-#include <stdtype.h>
+#include "../stdtype.h"
 #include "OSMutex.h"
 
 //typedef struct _os_mutex OS_MUTEX;

@@ -6,7 +6,7 @@ extern "C"
 {
 #endif
 
-#include <stdtype.h>
+#include "../stdtype.h"
 #include "EmuStructs.h"
 
 void daccontrol_update(void* info, UINT32 samples, DEV_SMPL** dummy);

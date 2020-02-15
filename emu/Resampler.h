@@ -6,7 +6,7 @@ extern "C"
 {
 #endif
 
-#include <stdtype.h>
+#include "../stdtype.h"
 #include "snddef.h"	// for DEV_SMPL
 #include "EmuStructs.h"
 

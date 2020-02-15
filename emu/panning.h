@@ -6,7 +6,7 @@ extern "C"
 {
 #endif
 
-#include <stdtype.h>
+#include "../stdtype.h"
 
 #define PANNING_BITS	16	// 16.16 fixed point
 #define PANNING_NORMAL	(1 << PANNING_BITS)

@@ -2,7 +2,7 @@
 #ifndef __EMU2149_H_PRIVATE__
 #define __EMU2149_H_PRIVATE__
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 #include "../snddef.h"
 #include "emutypes.h"
 

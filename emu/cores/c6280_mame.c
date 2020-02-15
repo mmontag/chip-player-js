@@ -42,7 +42,7 @@
 #include <string.h>	// for memset()
 #include <math.h>	// for pow()
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 #include "../snddef.h"
 #include "../EmuStructs.h"
 #include "../EmuCores.h"

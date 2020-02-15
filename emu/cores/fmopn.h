@@ -1,7 +1,7 @@
 #ifndef __FMOPN_H__
 #define __FMOPN_H__
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 #include "../snddef.h"
 #include "../EmuStructs.h"
 

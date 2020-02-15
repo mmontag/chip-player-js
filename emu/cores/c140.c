@@ -24,7 +24,7 @@ TODO: What does the INT0 pin do? Normally Namco tied it to VOL0 (with VOL1 = VCC
 #include <string.h>	// for memset
 #include <stddef.h>	// for NULL
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 #include "../EmuStructs.h"
 #include "../EmuCores.h"
 #include "../snddef.h"

@@ -8,7 +8,7 @@
 #include <string.h>	// for memset
 #include <stdio.h>
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 #include "../EmuStructs.h"
 #include "../EmuCores.h"
 #include "../snddef.h"

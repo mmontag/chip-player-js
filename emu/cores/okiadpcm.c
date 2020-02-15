@@ -12,7 +12,7 @@
 #include <stddef.h>
 #include <math.h>
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 #include "okiadpcm.h"
 
 

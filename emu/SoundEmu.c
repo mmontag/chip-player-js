@@ -1,7 +1,7 @@
 #include <stddef.h>
 #include <stdlib.h>	// for malloc/free
 
-#include <stdtype.h>
+#include "../stdtype.h"
 #include "EmuStructs.h"
 #include "SoundEmu.h"
 #include "SoundDevs.h"

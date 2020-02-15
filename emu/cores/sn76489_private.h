@@ -1,7 +1,7 @@
 #ifndef __SN76489_PRIVATE_H__
 #define __SN76489_PRIVATE_H__
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 #include "../snddef.h"
 #include "sn764intf.h"
 

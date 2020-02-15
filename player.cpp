@@ -28,7 +28,7 @@ extern "C" int __cdecl _kbhit(void);
 #define	Sleep(msec)	usleep(msec * 1000)
 #endif
 
-#include <common_def.h>
+#include "common_def.h"
 #include "utils/DataLoader.h"
 #include "utils/FileLoader.h"
 #include "utils/MemoryLoader.h"

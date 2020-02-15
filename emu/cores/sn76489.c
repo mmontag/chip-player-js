@@ -24,7 +24,7 @@
 #include <float.h>	// for FLT_MIN
 #include <string.h>	// for memcpy
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 #include "../snddef.h"
 #include "../EmuStructs.h"
 #include "../EmuCores.h"

@@ -25,7 +25,7 @@
 #endif
 #endif
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 #include "emutypes.h"
 #include "../snddef.h"
 #include "../EmuStructs.h"

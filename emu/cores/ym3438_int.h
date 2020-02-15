@@ -30,7 +30,7 @@
 #ifndef __YM3438_INT_H__
 #define __YM3438_INT_H__
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 #include "../snddef.h"
 
 #define RSM_FRAC 10

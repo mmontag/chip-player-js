@@ -7,7 +7,7 @@
 #include <windows.h>
 #include <mmsystem.h>
 
-#include <stdtype.h>
+#include "../stdtype.h"
 
 #include "AudioStream.h"
 #include "../utils/OSThread.h"

@@ -29,7 +29,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 #include "../snddef.h"
 #include "ym3438.h"
 #include "ym3438_int.h"

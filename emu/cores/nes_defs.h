@@ -26,8 +26,8 @@
 #ifndef __NES_DEFS_H__
 #define __NES_DEFS_H__
 
-#include <stdtype.h>
-#include <stdbool.h>
+#include "../../stdtype.h"
+#include "../../stdbool.h"
 
 /* REGULAR TYPE DEFINITIONS */
 typedef INT8          int8;

@@ -22,7 +22,7 @@ int __cdecl _getch(void);	// from conio.h
 
 #define VGM_LONG_UPDATE	0
 
-#include <common_def.h>
+#include "common_def.h"
 #include "audio/AudioStream.h"
 #include "audio/AudioStream_SpcDrvFuns.h"
 #include "emu/EmuStructs.h"

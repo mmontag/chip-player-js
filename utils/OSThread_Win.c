@@ -6,7 +6,7 @@
 
 #include <Windows.h>
 
-#include <stdtype.h>
+#include "../stdtype.h"
 #include "OSThread.h"
 
 //typedef struct _os_thread OS_THREAD;

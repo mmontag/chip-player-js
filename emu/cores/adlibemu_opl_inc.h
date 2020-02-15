@@ -30,7 +30,7 @@
 /*
 	define Bits, Bitu, Bit32s, Bit32u, Bit16s, Bit16u, Bit8s, Bit8u here
 */
-#include <common_def.h>
+#include "../../common_def.h"
 typedef UINT32		Bitu;
 typedef INT32		Bits;
 typedef UINT32		Bit32u;

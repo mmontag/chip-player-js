@@ -18,7 +18,7 @@ int __cdecl _getch(void);	// from conio.h
 #define	Sleep(msec)	usleep(msec * 1000)
 #endif
 
-#include <common_def.h>
+#include "common_def.h"
 #include "audio/AudioStream.h"
 #include "audio/AudioStream_SpcDrvFuns.h"
 #include "emu/EmuStructs.h"

@@ -4,8 +4,8 @@
 #include <stdlib.h>
 //#include <string.h>	// for memset
 
-#include <stdtype.h>
-#include <stdbool.h>
+#include "../stdtype.h"
+#include "../stdbool.h"
 
 #include "AudioStream.h"
 #include "../utils/OSMutex.h"

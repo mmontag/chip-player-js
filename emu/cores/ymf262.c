@@ -64,7 +64,7 @@ differences between OPL2 and OPL3 shown in datasheets:
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 #include "../snddef.h"
 #include "../EmuHelper.h"
 #include "ymf262.h"

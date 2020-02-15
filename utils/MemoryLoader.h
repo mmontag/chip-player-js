@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include <stdtype.h>
+#include "../stdtype.h"
 #include "DataLoader.h"
 
 DATA_LOADER *MemoryLoader_Init(const UINT8 *buffer, UINT32 length);

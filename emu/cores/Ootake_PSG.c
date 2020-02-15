@@ -53,7 +53,7 @@ Copyright(C)2006-2017 Kitao Nakamura.
 #include <string.h>	// for memset
 #include <math.h>
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 #include "../snddef.h"
 #include "../EmuStructs.h"
 #include "../EmuCores.h"

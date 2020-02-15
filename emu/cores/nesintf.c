@@ -2,8 +2,8 @@
 #include <string.h>	// for memset
 #include <stddef.h>	// for NULL
 
-#include <stdtype.h>
-#include <stdbool.h>
+#include "../../stdtype.h"
+#include "../../stdbool.h"
 #include "../EmuStructs.h"
 #include "../EmuCores.h"
 #include "../EmuHelper.h"

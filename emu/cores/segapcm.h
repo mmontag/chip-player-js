@@ -1,7 +1,7 @@
 #ifndef __SEGAPCM_H__
 #define __SEGAPCM_H__
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 #include "../EmuStructs.h"
 
 // cfg.bnkshift: ROM bank shift

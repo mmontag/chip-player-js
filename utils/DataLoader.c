@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <stdtype.h>
+#include "../stdtype.h"
 #include "DataLoader.h"
 
 UINT8 DataLoader_Reset(DATA_LOADER *loader)

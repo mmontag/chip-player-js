@@ -50,8 +50,8 @@
 #include <string.h>	// for memset
 #include <stddef.h>	// for NULL
 
-#include <stdtype.h>
-#include <stdbool.h>
+#include "../../stdtype.h"
+#include "../../stdbool.h"
 #include "../snddef.h"
 #include "nes_apu.h"
 

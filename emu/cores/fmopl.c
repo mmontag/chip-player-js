@@ -78,7 +78,7 @@ Revision History:
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 #include "../snddef.h"
 #include "../EmuHelper.h"
 

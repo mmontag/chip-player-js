@@ -1,7 +1,7 @@
 #ifndef __NUKEDOPL_H__
 #define __NUKEDOPL_H__
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 #include "../snddef.h"
 
 void nukedopl3_write(void *chip, UINT8 a, UINT8 v);

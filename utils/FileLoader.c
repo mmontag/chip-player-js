@@ -3,7 +3,7 @@
 #include <string.h>
 #include <zlib.h>
 
-#include <common_def.h>
+#include "../common_def.h"
 #include "FileLoader.h"
 
 enum

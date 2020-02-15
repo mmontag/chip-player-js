@@ -17,7 +17,7 @@
 #define snprintf	_snprintf
 #endif
 
-#include <stdtype.h>
+#include "../stdtype.h"
 #include "StrUtils.h"
 
 //typedef struct _codepage_conversion CPCONV;

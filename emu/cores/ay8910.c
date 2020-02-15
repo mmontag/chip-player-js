@@ -537,7 +537,7 @@ YM2203 Japanese datasheet contents, translated: http://www.larwe.com/technical/c
 #include <stdio.h>
 #include <math.h>
 
-#include <stdtype.h>
+#include "../../stdtype.h"
 #include "../snddef.h"
 #include "../EmuStructs.h"
 #include "../EmuCores.h"

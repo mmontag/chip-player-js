@@ -6,7 +6,7 @@
 #ifdef HAVE_STDINT_H
 #include <stdint.h>
 #else
-#include <stdtype.h>
+#include "../../stdtype.h"
 
 #define __int8_t_defined
 typedef UINT8 uint8_t;

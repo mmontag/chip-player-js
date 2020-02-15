@@ -6,8 +6,8 @@
 #include <stddef.h>	// for NULL
 #include <math.h>	// for exp
 
-#include <stdtype.h>
-#include <stdbool.h>
+#include "../../stdtype.h"
+#include "../../stdbool.h"
 #include "../snddef.h"
 #include "../RatioCntr.h"
 #include "np_nes_fds.h"
