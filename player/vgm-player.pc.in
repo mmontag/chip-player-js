@@ -1,0 +1,12 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: LibVGM Player
+Description: LibVGM player library
+Version: @VGMPLAYER_PKGCONFIG_VERSION@
+Requires.private: vgm-utils vgm-emu
+
+Libs: -L${libdir} -lvgm-player
+Cflags: -I${includedir} @PLAYER_DEFS@

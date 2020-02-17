@@ -1,8 +1,15 @@
 #### Sound Emulation Library ####
-project(vgm-emu)
+project(vgm-emu VERSION 1.0)
 cmake_minimum_required(VERSION 2.8)
 
+if (POLICY CMP0042)
+	cmake_policy(SET CMP0042 NEW)
+endif ()
+
 set(LIBVGM_SOURCE_DIR ${PROJECT_SOURCE_DIR}/..)
+set(VGMEMU_PKGCONFIG_CFLAGS)
+set(VGMEMU_PKGCONFIG_LDFLAGS)
+set(VGMEMU_PKGCONFIG_VERSION ${PROJECT_VERSION})
 
 # Note: If multiple cores are present for a device, the core chosed by default is marked with *.
 
@@ -579,20 +586,44 @@ if(SNDEMU_GA20_ALL)
 endif()
 
 
-add_library(${PROJECT_NAME} STATIC ${EMU_FILES})
-set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
+add_library(${PROJECT_NAME}_obj OBJECT ${EMU_FILES})
+set_property(TARGET ${PROJECT_NAME}_obj PROPERTY POSITION_INDEPENDENT_CODE ON)
 
-target_compile_definitions(${PROJECT_NAME} PUBLIC ${EMU_DEFS})
+target_compile_definitions(${PROJECT_NAME}_obj PUBLIC ${EMU_DEFS})
 
-target_include_directories(${PROJECT_NAME}
+target_include_directories(${PROJECT_NAME}_obj
 	PUBLIC ${LIBVGM_SOURCE_DIR}
 	PRIVATE ${LIBVGM_SOURCE_DIR}/libs/include
 )
 
+add_library(${PROJECT_NAME} STATIC $<TARGET_OBJECTS:${PROJECT_NAME}_obj>)
+SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
+target_compile_definitions(${PROJECT_NAME} PUBLIC ${EMU_DEFS})
+
+if(BUILD_SHARED)
+add_library(${PROJECT_NAME}_shared SHARED $<TARGET_OBJECTS:${PROJECT_NAME}_obj>)
+SET_TARGET_PROPERTIES(${PROJECT_NAME}_shared PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
+target_compile_definitions(${PROJECT_NAME}_shared PUBLIC ${EMU_DEFS})
+endif(BUILD_SHARED)
+
 if(CMAKE_COMPILER_IS_GNUCC OR UNIX)
 	# link Math library
 	target_link_libraries(${PROJECT_NAME} PRIVATE m)
+    if(BUILD_SHARED)
+	target_link_libraries(${PROJECT_NAME}_shared PRIVATE m)
+    endif(BUILD_SHARED)
+	set(VGMEMU_PKGCONFIG_LDFLAGS "-lm")
 endif()
+
+foreach(DEF ${EMU_DEFS})
+	string(REPLACE " " "" DEF "${DEF}")
+	set(VGMEMU_PKGCONFIG_CFLAGS ${VGMEMU_PKGCONFIG_CFLAGS} "-D${DEF}")
+endforeach(DEF)
+
+string(REPLACE ";" " " VGMEMU_PKGCONFIG_CFLAGS "${VGMEMU_PKGCONFIG_CFLAGS}")
+string(REPLACE ";" " " VGMEMU_PKGCONFIG_LDFLAGS "${VGMEMU_PKGCONFIG_LDFLAGS}")
+
+configure_file(vgm-emu.pc.in ${CMAKE_CURRENT_BINARY_DIR}/vgm-emu.pc @ONLY)
 
 install(TARGETS ${PROJECT_NAME}
 		RUNTIME DESTINATION "bin"
@@ -601,3 +632,12 @@ install(TARGETS ${PROJECT_NAME}
 		)
 install(FILES ${EMU_HEADERS} DESTINATION include/vgm/emu)
 install(FILES ${EMU_CORE_HEADERS} DESTINATION include/vgm/emu/cores)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/vgm-emu.pc DESTINATION lib/pkgconfig)
+
+if(BUILD_SHARED)
+install(TARGETS ${PROJECT_NAME}_shared
+		RUNTIME DESTINATION "bin"
+		LIBRARY DESTINATION "lib"
+		ARCHIVE DESTINATION "lib"
+		)
+endif(BUILD_SHARED)
