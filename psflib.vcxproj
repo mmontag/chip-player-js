@@ -56,8 +56,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>../foobar/zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <EnableEnhancedInstructionSet>NoExtensions</EnableEnhancedInstructionSet>
-      <AdditionalOptions>/d2notypeopt %(AdditionalOptions)</AdditionalOptions>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -76,8 +75,9 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FloatingPointModel>Fast</FloatingPointModel>
       <AdditionalIncludeDirectories>../foobar/zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <EnableEnhancedInstructionSet>NoExtensions</EnableEnhancedInstructionSet>
-      <AdditionalOptions>/d2notypeopt</AdditionalOptions>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <AdditionalOptions>
+      </AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
