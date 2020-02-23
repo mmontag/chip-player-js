@@ -6,6 +6,7 @@ includedir=${prefix}/include
 Name: LibVGM Utils
 Description: LibVGM utility library
 Version: @VGMUTILS_PKGCONFIG_VERSION@
+Requires.private: @VGMUTILS_PKGCONFIG_REQUIRES@
 
 Libs: -L${libdir} -lvgm-utils
 Libs.private: @VGMUTILS_PKGCONFIG_LDFLAGS@

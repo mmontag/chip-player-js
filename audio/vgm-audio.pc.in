@@ -6,7 +6,7 @@ includedir=${prefix}/include
 Name: LibVGM Audio
 Description: LibVGM audio library
 Version: @VGMAUDIO_PKGCONFIG_VERSION@
-Requires.private: vgm-utils
+Requires.private: vgm-utils @VGMAUDIO_PKGCONFIG_REQUIRES@
 
 Libs: -L${libdir} -lvgm-audio
 Libs.private: @VGMAUDIO_PKGCONFIG_LDFLAGS@
