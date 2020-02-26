@@ -1,4 +1,8 @@
 #### miscellaneous utility functions/classes ####
+if (POLICY CMP0048)
+	cmake_policy(SET CMP0048 NEW)
+endif ()
+
 project(vgm-utils VERSION 1.0)
 cmake_minimum_required(VERSION 3.1)
 

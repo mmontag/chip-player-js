@@ -1,4 +1,8 @@
 #### File Playback Library ####
+if (POLICY CMP0048)
+	cmake_policy(SET CMP0048 NEW)
+endif ()
+
 project(vgm-player VERSION 1.0)
 cmake_minimum_required(VERSION 3.12)
 
