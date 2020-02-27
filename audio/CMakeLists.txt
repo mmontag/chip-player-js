@@ -149,6 +149,7 @@ endif()
 
 add_library(${PROJECT_NAME}_obj OBJECT ${AUDIO_FILES})
 set_property(TARGET ${PROJECT_NAME}_obj PROPERTY POSITION_INDEPENDENT_CODE ON)
+target_link_libraries(${PROJECT_NAME}_obj PRIVATE ${AUDIO_LIBS})
 
 target_compile_definitions(${PROJECT_NAME}_obj PUBLIC ${AUDIO_DEFS})
 

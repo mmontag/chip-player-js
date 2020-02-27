@@ -1,6 +1,6 @@
 #### Audio Output Library ####
 project(libVgmTest)
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.12)
 include(CheckIncludeFile)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)

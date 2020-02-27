@@ -1,6 +1,6 @@
 #### File Playback Library ####
 project(vgm-player VERSION 1.0)
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.12)
 
 if (POLICY CMP0042)
 	cmake_policy(SET CMP0042 NEW)
@@ -35,6 +35,7 @@ set(VGMPLAYER_PKGCONFIG_VERSION ${PROJECT_VERSION})
 
 add_library(${PROJECT_NAME}_obj OBJECT ${PLAYER_FILES})
 set_property(TARGET ${PROJECT_NAME}_obj PROPERTY POSITION_INDEPENDENT_CODE ON)
+target_link_libraries(${PROJECT_NAME}_obj PRIVATE ${PLAYER_LIBS})
 
 target_compile_definitions(${PROJECT_NAME}_obj PUBLIC ${PLAYER_DEFS})
 

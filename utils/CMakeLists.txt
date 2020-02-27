@@ -93,6 +93,7 @@ endif()
 
 add_library(${PROJECT_NAME}_obj OBJECT ${UTIL_FILES})
 set_property(TARGET ${PROJECT_NAME}_obj PROPERTY POSITION_INDEPENDENT_CODE ON)
+target_link_libraries(${PROJECT_NAME}_obj PRIVATE ${UTIL_LIBS})
 
 target_compile_definitions(${PROJECT_NAME}_obj PUBLIC ${UTIL_DEFS})
 
