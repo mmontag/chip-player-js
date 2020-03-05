@@ -79,6 +79,7 @@ option(BUILD_LIBEMU "build sound emulation library" ON)
 option(BUILD_LIBPLAYER "build player library" ON)
 option(BUILD_TESTS "build test programs" ON)
 option(BUILD_PLAYER "build player application" ON)
+option(BUILD_VGM2WAV "build sample vgm2wav application" ON)
 option(BUILD_SHARED "build shared versions of libraries" ON)
 option(USE_SANITIZERS "use sanitizers" ON)
 
@@ -159,6 +160,15 @@ target_link_libraries(player PRIVATE vgm-audio vgm-player)
 if(USE_SANITIZERS)
     add_sanitizers(player)
 endif(USE_SANITIZERS)
+endif()
+
+if(BUILD_VGM2WAV)
+add_executable(vgm2wav vgm2wav.cpp)
+target_include_directories(vgm2wav PRIVATE ${PROJECT_SOURCE_DIR})
+target_link_libraries(vgm2wav PRIVATE vgm-player vgm-emu vgm-utils)
+if(USE_SANITIZERS)
+	add_sanitizers(vgm2wav)
+endif()
 endif()
 
 set(COMMON_HEADERS
