@@ -1,5 +1,5 @@
 /**
- * emu2413 v1.2.7
+ * emu2413 v1.5.2
  * https://github.com/digital-sound-antiques/emu2413
  * Copyright (C) 2020 Mitsutaka Okazaki
  *
@@ -75,7 +75,7 @@ static const uint8_t default_inst[EOPLL_TONE_NUM][(16 + 3) * 8] = {{
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, // 0: Original
 0x71,0x61,0x1e,0x17,0xd0,0x78,0x00,0x17, // 1: Violin
 0x13,0x41,0x1a,0x0d,0xd8,0xf7,0x23,0x13, // 2: Guitar
-0x13,0x01,0x99,0x00,0xf2,0xd4,0x21,0x23, // 3: Piano
+0x13,0x01,0x99,0x00,0xf2,0xc4,0x21,0x23, // 3: Piano
 0x11,0x61,0x0e,0x07,0x8d,0x64,0x70,0x27, // 4: Flute
 0x32,0x21,0x1e,0x06,0xe1,0x76,0x01,0x28, // 5: Clarinet
 0x31,0x22,0x16,0x05,0xe0,0x71,0x00,0x18, // 6: Oboe
@@ -86,7 +86,7 @@ static const uint8_t default_inst[EOPLL_TONE_NUM][(16 + 3) * 8] = {{
 0x33,0x01,0x83,0x11,0xea,0xef,0x10,0x04, // B: Harpsichord
 0x17,0xc1,0x24,0x07,0xf8,0xf8,0x22,0x12, // C: Vibraphone
 0x61,0x50,0x0c,0x05,0xd2,0xf5,0x40,0x42, // D: Synthsizer Bass
-0x01,0x01,0x55,0x03,0xe4,0x90,0x03,0x02, // E: Acoustic Bass
+0x01,0x01,0x55,0x03,0xe9,0x90,0x03,0x02, // E: Acoustic Bass
 0x41,0x41,0x89,0x03,0xf1,0xe4,0xc0,0x13, // F: Electric Guitar
 0x01,0x01,0x18,0x0f,0xdf,0xf8,0x6a,0x6d, // R: Bass Drum (from VRC7)
 0x01,0x01,0x00,0x00,0xc8,0xd8,0xa7,0x68, // R: High-Hat(M) / Snare Drum(C) (from VRC7)
@@ -139,11 +139,7 @@ static const uint8_t default_inst[EOPLL_TONE_NUM][(16 + 3) * 8] = {{
 /* damper speed before key-on. key-scale affects. */
 #define DAMPER_RATE 12
 
-#define TL2EG(d) ((d) << (EG_BITS - TL_BITS))
-#define SL2EG(d) ((d) << (EG_BITS - SL_BITS))
-
-/* envelope phase counter size */
-#define EG_DP_BITS 15
+#define TL2EG(d) ((d) << 1)
 
 /* sine table */
 #define PG_BITS 10 /* 2^10 = 1024 length sine table */
@@ -194,21 +190,16 @@ static uint16_t halfsin_table[PG_WIDTH];
 static uint16_t *wave_table_map[2] = {fullsin_table, halfsin_table};
 
 /* pitch modulator */
-#define PM_PG_BITS 3
-#define PM_PG_WIDTH (1 << PM_PG_BITS)
-#define PM_DP_BITS 22
-#define PM_DP_WIDTH (1 << PM_DP_BITS)
-
 /* offset to fnum, rough approximation of 14 cents depth. */
-static int8_t pm_table[8][PM_PG_WIDTH] = {
-    {0, 0, 0, 0, 0, 0, 0, 0},    // fnum = 000xxxxx
-    {0, 0, 1, 0, 0, 0, -1, 0},   // fnum = 001xxxxx
-    {0, 1, 2, 1, 0, -1, -2, -1}, // fnum = 010xxxxx
-    {0, 1, 3, 1, 0, -1, -3, -1}, // fnum = 011xxxxx
-    {0, 2, 4, 2, 0, -2, -4, -2}, // fnum = 100xxxxx
-    {0, 2, 5, 2, 0, -2, -5, -2}, // fnum = 101xxxxx
-    {0, 3, 6, 3, 0, -3, -6, -3}, // fnum = 110xxxxx
-    {0, 3, 7, 3, 0, -3, -7, -3}, // fnum = 111xxxxx
+static int8_t pm_table[8][8] = {
+    {0, 0, 0, 0, 0, 0, 0, 0},    // fnum = 000xxxxxx
+    {0, 0, 1, 0, 0, 0, -1, 0},   // fnum = 001xxxxxx
+    {0, 1, 2, 1, 0, -1, -2, -1}, // fnum = 010xxxxxx
+    {0, 1, 3, 1, 0, -1, -3, -1}, // fnum = 011xxxxxx
+    {0, 2, 4, 2, 0, -2, -4, -2}, // fnum = 100xxxxxx
+    {0, 2, 5, 2, 0, -2, -5, -2}, // fnum = 101xxxxxx
+    {0, 3, 6, 3, 0, -3, -6, -3}, // fnum = 110xxxxxx
+    {0, 3, 7, 3, 0, -3, -7, -3}, // fnum = 111xxxxxx
 };
 
 /* amplitude lfo table */
@@ -238,6 +229,8 @@ static uint8_t eg_step_tables[4][8] = {
     {0, 1, 1, 1, 0, 1, 1, 1},
     {0, 1, 1, 1, 1, 1, 1, 1},
 };
+
+enum __OPLL_EG_STATE { ATTACK, DECAY, SUSTAIN, RELEASE, DAMP, UNKNOWN };
 
 static uint32_t ml_table[16] = {1,     1 * 2, 2 * 2,  3 * 2,  4 * 2,  5 * 2,  6 * 2,  7 * 2,
                                 8 * 2, 9 * 2, 10 * 2, 10 * 2, 12 * 2, 12 * 2, 15 * 2, 15 * 2};
@@ -275,9 +268,6 @@ static EOPLL_PATCH default_patch[EOPLL_TONE_NUM][(16 + 3) * 2];
 /* resolution of sinc(x) table. sinc(x) where 0.0<=x<1.0 corresponds to sinc_table[0...SINC_RESO-1] */
 #define SINC_RESO 256
 #define SINC_AMP_BITS 12
-
-/* fast conversion: 3-point average filter is used instead of sinc(x) table. rough and fast.*/
-#define USE_FAST_RATE_CONV 0
 
 // double hamming(double x) { return 0.54 - 0.46 * cos(2 * PI * x); }
 static double blackman(double x) { return 0.42 - 0.5 * cos(2 * _PI_ * x) + 0.08 * cos(4 * _PI_ * x); }
@@ -373,9 +363,6 @@ void EOPLL_RateConv_delete(EOPLL_RateConv *conv) {
 
 static void makeSinTable(void) {
   int x;
-  // for (x = 0; x < PG_WIDTH / 4; x++) {
-  //   fullsin_table[x] = (uint16_t)round(-log2(sin((x + 0.5) * PI / (PG_WIDTH / 4) / 2)) * 256);
-  // }
 
   for (x = 0; x < PG_WIDTH / 4; x++) {
     fullsin_table[PG_WIDTH / 4 + x] = fullsin_table[PG_WIDTH / 4 - x - 1];
@@ -462,9 +449,9 @@ static void initializeTables() {
 #if EOPLL_DEBUG
 static void _debug_print_patch(EOPLL_SLOT *slot) {
   EOPLL_PATCH *p = slot->patch;
-  printf("[slot#%d am:%d pm:%d eg:%d kr:%d ml:%d kl:%d tl:%d wf:%d fb:%d A:%d D:%d S:%d R:%d]\n", slot->number, //
+  printf("[slot#%d am:%d pm:%d eg:%d kr:%d ml:%d kl:%d tl:%d ws:%d fb:%d A:%d D:%d S:%d R:%d]\n", slot->number, //
          p->AM, p->PM, p->EG, p->KR, p->ML,                                                                     //
-         p->KL, p->TL, p->WF, p->FB,                                                                            //
+         p->KL, p->TL, p->WS, p->FB,                                                                            //
          p->AR, p->DR, p->SL, p->RR);
 }
 
@@ -495,6 +482,11 @@ static INLINE void _debug_print_slot_info(EOPLL_SLOT *slot) {
 #endif
 
 static INLINE int get_parameter_rate(EOPLL_SLOT *slot) {
+
+  if ((slot->type & 1) == 0 && slot->key_flag == 0) {
+    return 0;
+  }
+
   switch (slot->eg_state) {
   case ATTACK:
     return slot->patch->AR;
@@ -518,7 +510,7 @@ static INLINE int get_parameter_rate(EOPLL_SLOT *slot) {
 }
 
 enum SLOT_UPDATE_FLAG {
-  UPDATE_WF = 1,
+  UPDATE_WS = 1,
   UPDATE_TLL = 2,
   UPDATE_RKS = 4,
   UPDATE_EG = 8,
@@ -536,8 +528,8 @@ static void commit_slot_update(EOPLL_SLOT *slot) {
   }
 #endif
 
-  if (slot->update_requests & UPDATE_WF) {
-    slot->wave_table = wave_table_map[slot->patch->WF];
+  if (slot->update_requests & UPDATE_WS) {
+    slot->wave_table = wave_table_map[slot->patch->WS];
   }
 
   if (slot->update_requests & UPDATE_TLL) {
@@ -586,6 +578,7 @@ static void reset_slot(EOPLL_SLOT *slot, int number) {
   slot->eg_shift = 0;
   slot->rks = 0;
   slot->tll = 0;
+  slot->key_flag = 0;
   slot->sus_flag = 0;
   slot->blk_fnum = 0;
   slot->blk = 0;
@@ -598,12 +591,14 @@ static void reset_slot(EOPLL_SLOT *slot, int number) {
 
 static INLINE void slotOn(EOPLL *opll, int i) {
   EOPLL_SLOT *slot = &opll->slot[i];
+  slot->key_flag = 1;
   slot->eg_state = DAMP;
   request_update(slot, UPDATE_EG);
 }
 
 static INLINE void slotOff(EOPLL *opll, int i) {
   EOPLL_SLOT *slot = &opll->slot[i];
+  slot->key_flag = 0;
   if (slot->type & 1) {
     slot->eg_state = RELEASE;
     request_update(slot, UPDATE_EG);
@@ -663,11 +658,6 @@ static INLINE void set_patch(EOPLL *opll, int32_t ch, int32_t num) {
   request_update(CAR(opll, ch), UPDATE_ALL);
 }
 
-static INLINE void set_slot_patch(EOPLL_SLOT *slot, EOPLL_PATCH *patch) {
-  slot->patch = patch;
-  request_update(slot, UPDATE_ALL);
-}
-
 static INLINE void set_sus_flag(EOPLL *opll, int ch, int flag) {
   CAR(opll, ch)->sus_flag = flag;
   request_update(CAR(opll, ch), UPDATE_EG);
@@ -714,97 +704,56 @@ static INLINE void set_block(EOPLL *opll, int ch, int blk) {
 
 static INLINE void update_rhythm_mode(EOPLL *opll) {
   const uint8_t new_rhythm_mode = (opll->reg[0x0e] >> 5) & 1;
-  const uint32_t slot_key_status = opll->slot_key_status;
 
-  if (opll->patch_number[6] & 0x10) {
-    if (!(BIT(slot_key_status, SLOT_BD2) | new_rhythm_mode)) {
-      opll->slot[SLOT_BD1].eg_state = RELEASE;
-      opll->slot[SLOT_BD1].eg_out = EG_MUTE;
-      opll->slot[SLOT_BD2].eg_state = RELEASE;
-      opll->slot[SLOT_BD2].eg_out = EG_MUTE;
-      set_patch(opll, 6, opll->reg[0x36] >> 4);
-    }
-  } else if (new_rhythm_mode) {
-    opll->patch_number[6] = 16;
-    opll->slot[SLOT_BD1].eg_state = RELEASE;
-    opll->slot[SLOT_BD1].eg_out = EG_MUTE;
-    opll->slot[SLOT_BD2].eg_state = RELEASE;
-    opll->slot[SLOT_BD2].eg_out = EG_MUTE;
-    set_slot_patch(&opll->slot[SLOT_BD1], &opll->patch[16 * 2 + 0]);
-    set_slot_patch(&opll->slot[SLOT_BD2], &opll->patch[16 * 2 + 1]);
-  }
+  if (opll->rhythm_mode != new_rhythm_mode) {
 
-  if (opll->patch_number[7] & 0x10) {
-    if (!((BIT(slot_key_status, SLOT_HH) && BIT(slot_key_status, SLOT_SD)) | new_rhythm_mode)) {
+    if (new_rhythm_mode) {
+      opll->slot[SLOT_HH].type = 3;
+      opll->slot[SLOT_HH].pg_keep = 1;
+      opll->slot[SLOT_SD].type = 3;
+      opll->slot[SLOT_TOM].type = 3;
+      opll->slot[SLOT_CYM].type = 3;
+      opll->slot[SLOT_CYM].pg_keep = 1;
+      set_patch(opll, 6, 16);
+      set_patch(opll, 7, 17);
+      set_patch(opll, 8, 18);
+      set_slot_volume(&opll->slot[SLOT_HH], ((opll->reg[0x37] >> 4) & 15) << 2);
+      set_slot_volume(&opll->slot[SLOT_TOM], ((opll->reg[0x38] >> 4) & 15) << 2);
+    } else {
       opll->slot[SLOT_HH].type = 0;
       opll->slot[SLOT_HH].pg_keep = 0;
-      opll->slot[SLOT_HH].eg_state = RELEASE;
-      opll->slot[SLOT_HH].eg_out = EG_MUTE;
       opll->slot[SLOT_SD].type = 1;
-      opll->slot[SLOT_SD].eg_state = RELEASE;
-      opll->slot[SLOT_SD].eg_out = EG_MUTE;
-      set_patch(opll, 7, opll->reg[0x37] >> 4);
-    }
-  } else if (new_rhythm_mode) {
-    opll->patch_number[7] = 17;
-    opll->slot[SLOT_HH].type = 3;
-    opll->slot[SLOT_HH].pg_keep = 1;
-    opll->slot[SLOT_HH].eg_state = RELEASE;
-    opll->slot[SLOT_HH].eg_out = EG_MUTE;
-    opll->slot[SLOT_SD].type = 3;
-    opll->slot[SLOT_SD].eg_state = RELEASE;
-    opll->slot[SLOT_SD].eg_out = EG_MUTE;
-    set_slot_patch(&opll->slot[SLOT_HH], &opll->patch[17 * 2 + 0]);
-    set_slot_patch(&opll->slot[SLOT_SD], &opll->patch[17 * 2 + 1]);
-    set_slot_volume(&opll->slot[SLOT_HH], ((opll->reg[0x37] >> 4) & 15) << 2);
-  }
-
-  if (opll->patch_number[8] & 0x10) {
-    if (!((BIT(slot_key_status, SLOT_CYM) && BIT(slot_key_status, SLOT_TOM)) | new_rhythm_mode)) {
       opll->slot[SLOT_TOM].type = 0;
-      opll->slot[SLOT_TOM].eg_state = RELEASE;
-      opll->slot[SLOT_TOM].eg_out = EG_MUTE;
       opll->slot[SLOT_CYM].type = 1;
       opll->slot[SLOT_CYM].pg_keep = 0;
-      opll->slot[SLOT_CYM].eg_state = RELEASE;
-      opll->slot[SLOT_CYM].eg_out = EG_MUTE;
+      set_patch(opll, 6, opll->reg[0x36] >> 4);
+      set_patch(opll, 7, opll->reg[0x37] >> 4);
       set_patch(opll, 8, opll->reg[0x38] >> 4);
     }
-  } else if (new_rhythm_mode) {
-    opll->patch_number[8] = 18;
-    opll->slot[SLOT_TOM].type = 3;
-    opll->slot[SLOT_TOM].eg_state = RELEASE;
-    opll->slot[SLOT_TOM].eg_out = EG_MUTE;
-    opll->slot[SLOT_CYM].type = 3;
-    opll->slot[SLOT_CYM].pg_keep = 1;
-    opll->slot[SLOT_CYM].eg_state = RELEASE;
-    opll->slot[SLOT_CYM].eg_out = EG_MUTE;
-    set_slot_patch(&opll->slot[SLOT_TOM], &opll->patch[18 * 2 + 0]);
-    set_slot_patch(&opll->slot[SLOT_CYM], &opll->patch[18 * 2 + 1]);
-    set_slot_volume(&opll->slot[SLOT_TOM], ((opll->reg[0x38] >> 4) & 15) << 2);
   }
 
   opll->rhythm_mode = new_rhythm_mode;
 }
 
 static void update_ampm(EOPLL *opll) {
-  const uint32_t pm_inc = (opll->test_flag & 8) ? opll->pm_dphase << 10 : opll->pm_dphase;
-  const uint32_t am_inc = (opll->test_flag & 8) ? 64 : 1;
   if (opll->test_flag & 2) {
     opll->pm_phase = 0;
     opll->am_phase = 0;
   } else {
-    opll->pm_phase = (opll->pm_phase + pm_inc) & (PM_DP_WIDTH - 1);
-    opll->am_phase += am_inc;
+    opll->pm_phase += (opll->test_flag & 8) ? 1024 : 1;
+    opll->am_phase += (opll->test_flag & 8) ? 64 : 1;
   }
   opll->lfo_am = am_table[(opll->am_phase >> 6) % sizeof(am_table)];
 }
 
-static void update_noise(EOPLL *opll) {
-  if (opll->noise_seed & 1)
-    opll->noise_seed ^= 0x8003020;
-  opll->noise_seed >>= 1;
-  opll->noise = opll->noise_seed & 1;
+static void update_noise(EOPLL *opll, int cycle) {
+  int i;
+  for (i = 0; i < cycle; i++) {
+    if (opll->noise & 1) {
+      opll->noise ^= 0x800200;
+    }
+    opll->noise >>= 1;
+  }
 }
 
 static void update_short_noise(EOPLL *opll) {
@@ -822,7 +771,7 @@ static void update_short_noise(EOPLL *opll) {
 }
 
 static INLINE void calc_phase(EOPLL_SLOT *slot, int32_t pm_phase, uint8_t reset) {
-  const int8_t pm = slot->patch->PM ? pm_table[(slot->fnum >> 6) & 7][pm_phase >> (PM_DP_BITS - PM_PG_BITS)] : 0;
+  const int8_t pm = slot->patch->PM ? pm_table[(slot->fnum >> 6) & 7][(pm_phase >> 10) & 7] : 0;
   if (reset) {
     slot->pg_phase = 0;
   }
@@ -881,9 +830,6 @@ static INLINE void start_envelope(EOPLL_SLOT *slot) {
     slot->eg_state = ATTACK;
     slot->eg_out = EG_MUTE;
   }
-  if (!slot->pg_keep) {
-    slot->pg_phase = 0;
-  }
   request_update(slot, UPDATE_EG);
 }
 
@@ -893,7 +839,7 @@ static INLINE void calc_envelope(EOPLL_SLOT *slot, EOPLL_SLOT *buddy, uint16_t e
   uint8_t s;
 
   if (slot->eg_state == ATTACK) {
-    if (0 < slot->eg_out && slot->eg_rate_h > 0 && (eg_counter & mask & ~3) == 0) {
+    if (0 < slot->eg_out && 0 < slot->eg_rate_h && (eg_counter & mask & ~3) == 0) {
       s = lookup_attack_step(slot, eg_counter);
       if (0 < s) {
         slot->eg_out = max(0, ((int)slot->eg_out - (slot->eg_out >> s) - 1));
@@ -907,10 +853,15 @@ static INLINE void calc_envelope(EOPLL_SLOT *slot, EOPLL_SLOT *buddy, uint16_t e
 
   switch (slot->eg_state) {
   case DAMP:
-    if (slot->eg_out >= EG_MAX) {
+    if (slot->eg_out >= EG_MUTE) {
       start_envelope(slot);
-      if (buddy && !buddy->pg_keep) {
-        buddy->pg_phase = 0;
+      if (slot->type & 1) {
+        if (!slot->pg_keep) {
+          slot->pg_phase = 0;
+        }
+        if (buddy && !buddy->pg_keep) {
+          buddy->pg_phase = 0;
+        }
       }
     }
     break;
@@ -923,7 +874,7 @@ static INLINE void calc_envelope(EOPLL_SLOT *slot, EOPLL_SLOT *buddy, uint16_t e
     break;
 
   case DECAY:
-    if ((slot->eg_out >> (EG_BITS - SL_BITS)) == slot->patch->SL) {
+    if ((slot->eg_out >> 3) == slot->patch->SL) {
       slot->eg_state = SUSTAIN;
       request_update(slot, UPDATE_EG);
     }
@@ -974,7 +925,7 @@ static INLINE int16_t to_linear(uint16_t h, EOPLL_SLOT *slot, int16_t am) {
   if (slot->eg_out >= EG_MAX)
     return 0;
 
-  att = min(127, (slot->eg_out + slot->tll + am)) << 4;
+  att = min(EG_MAX, (slot->eg_out + slot->tll + am)) << 4;
   return lookup_exp_table(h + att);
 }
 
@@ -985,7 +936,7 @@ static INLINE int16_t calc_slot_car(EOPLL *opll, int ch, int16_t fm) {
 
   slot->output[1] = slot->output[0];
   slot->output[0] = to_linear(slot->wave_table[(slot->pg_out + 2 * (fm >> 1)) & (PG_WIDTH - 1)], slot, am);
-  
+
   return slot->output[0];
 }
 
@@ -1016,9 +967,9 @@ static INLINE int16_t calc_slot_snare(EOPLL *opll) {
   uint32_t phase;
 
   if (BIT(slot->pg_out, PG_BITS - 2))
-    phase = opll->noise ? _PD(0x300) : _PD(0x200);
+    phase = (opll->noise & 1) ? _PD(0x300) : _PD(0x200);
   else
-    phase = opll->noise ? _PD(0x0) : _PD(0x100);
+    phase = (opll->noise & 1) ? _PD(0x0) : _PD(0x100);
 
   return to_linear(slot->wave_table[phase], slot, 0);
 }
@@ -1037,9 +988,9 @@ static INLINE int16_t calc_slot_hat(EOPLL *opll) {
   uint32_t phase;
 
   if (opll->short_noise)
-    phase = opll->noise ? _PD(0x2d0) : _PD(0x234);
+    phase = (opll->noise & 1) ? _PD(0x2d0) : _PD(0x234);
   else
-    phase = opll->noise ? _PD(0x34) : _PD(0xd0);
+    phase = (opll->noise & 1) ? _PD(0x34) : _PD(0xd0);
 
   return to_linear(slot->wave_table[phase], slot, 0);
 }
@@ -1052,7 +1003,6 @@ static void update_output(EOPLL *opll) {
   int i;
 
   update_ampm(opll);
-  update_noise(opll);
   update_short_noise(opll);
   update_slots(opll);
 
@@ -1067,7 +1017,7 @@ static void update_output(EOPLL *opll) {
   }
 
   /* CH7 */
-  if (opll->patch_number[6] <= 15) {
+  if (!opll->rhythm_mode) {
     if (!(opll->mask & EOPLL_MASK_CH(6))) {
       out[6] = _MO(calc_slot_car(opll, 6, calc_slot_mod(opll, 6)));
     }
@@ -1076,9 +1026,10 @@ static void update_output(EOPLL *opll) {
       out[9] = _RO(calc_slot_car(opll, 6, calc_slot_mod(opll, 6)));
     }
   }
+  update_noise(opll, 14);
 
   /* CH8 */
-  if (opll->patch_number[7] <= 15) {
+  if (!opll->rhythm_mode) {
     if (!(opll->mask & EOPLL_MASK_CH(7))) {
       out[7] = _MO(calc_slot_car(opll, 7, calc_slot_mod(opll, 7)));
     }
@@ -1090,9 +1041,10 @@ static void update_output(EOPLL *opll) {
       out[11] = _RO(calc_slot_snare(opll));
     }
   }
+  update_noise(opll, 2);
 
   /* CH9 */
-  if (opll->patch_number[8] <= 15) {
+  if (!opll->rhythm_mode) {
     if (!(opll->mask & EOPLL_MASK_CH(8))) {
       out[8] = _MO(calc_slot_car(opll, 8, calc_slot_mod(opll, 8)));
     }
@@ -1104,6 +1056,7 @@ static void update_output(EOPLL *opll) {
       out[13] = _RO(calc_slot_cym(opll));
     }
   }
+  update_noise(opll, 2);
 }
 
 INLINE static void mix_output(EOPLL *opll) {
@@ -1162,16 +1115,17 @@ EOPLL *EOPLL_new(uint32_t clk, uint32_t rate) {
   opll->conv = NULL;
   opll->mix_out[0] = 0;
   opll->mix_out[1] = 0;
-  opll->chip_mode = 0;
+  opll->chip_type = 0;
 
-  for (i = 0; i < 14; i++)
+  for (i = 0; i < 15; i++)
   {
     opll->pan[i] = 3;
     Panning_Centre(opll->pan_fine[i]);
   }
 
   //EOPLL_reset(opll);
-  EOPLL_reset_patch(opll, 0);
+  //EOPLL_setChipType(opll, 0);
+  EOPLL_resetPatch(opll, 0);
 
   return opll;
 }
@@ -1219,11 +1173,11 @@ void EOPLL_reset(EOPLL *opll) {
   opll->pm_phase = 0;
   opll->am_phase = 0;
 
-  opll->noise_seed = 0xffff;
+  opll->noise = 0x1;
   //opll->mask = 0;
 
   opll->rhythm_mode = 0;
-  if (opll->chip_mode == 1)
+  if (opll->chip_type == 1)
     opll->reg[0x0e] = 32;
   opll->slot_key_status = 0;
   opll->eg_counter = 0;
@@ -1239,8 +1193,6 @@ void EOPLL_reset(EOPLL *opll) {
 
   for (i = 0; i < 0x40; i++)
     EOPLL_writeReg(opll, i, 0);
-
-  opll->pm_dphase = PM_DP_WIDTH / (1024 * 8);
 
   //for (i = 0; i < 14; i++)
   //  opll->pan[i] = 3;
@@ -1272,21 +1224,20 @@ void EOPLL_setRate(EOPLL *opll, uint32_t rate) {
 
 void EOPLL_setQuality(EOPLL *opll, uint8_t q) {}
 
-void EOPLL_setChipMode(EOPLL *opll, uint8_t mode)
+void EOPLL_setChipType(EOPLL *opll, uint8_t type)
 {
-  opll->chip_mode = mode;
-  if (opll->chip_mode == 1)
+  opll->chip_type = type;
+  if (opll->chip_type == 1)
     EOPLL_resetPatch(opll, EOPLL_VRC7_TONE);
   else
     EOPLL_resetPatch(opll, EOPLL_2413_TONE);
 }
 
 void EOPLL_writeReg(EOPLL *opll, uint8_t reg, uint8_t data) {
-  int32_t ch;
-  int i;
+  int ch, i;
 
-  data = data & 0xff;
-  reg = reg & 0x3f;
+  if (reg >= 0x40)
+    return;
 
   /* mirror registers */
   if ((0x19 <= reg && reg <= 0x1f) || (0x29 <= reg && reg <= 0x2f) || (0x39 <= reg && reg <= 0x3f)) {
@@ -1334,13 +1285,13 @@ void EOPLL_writeReg(EOPLL *opll, uint8_t reg, uint8_t data) {
 
   case 0x03:
     opll->patch[1].KL = (data >> 6) & 3;
-    opll->patch[1].WF = (data >> 4) & 1;
-    opll->patch[0].WF = (data >> 3) & 1;
+    opll->patch[1].WS = (data >> 4) & 1;
+    opll->patch[0].WS = (data >> 3) & 1;
     opll->patch[0].FB = (data)&7;
     for (i = 0; i < 9; i++) {
       if (opll->patch_number[i] == 0) {
-        request_update(MOD(opll, i), UPDATE_WF);
-        request_update(CAR(opll, i), UPDATE_WF | UPDATE_TLL);
+        request_update(MOD(opll, i), UPDATE_WS);
+        request_update(CAR(opll, i), UPDATE_WS | UPDATE_TLL);
       }
     }
     break;
@@ -1386,7 +1337,7 @@ void EOPLL_writeReg(EOPLL *opll, uint8_t reg, uint8_t data) {
     break;
 
   case 0x0e:
-    if (opll->chip_mode == 1)
+    if (opll->chip_type == 1)
     {
       opll->reg[reg] |= 32;
       break;
@@ -1426,8 +1377,6 @@ void EOPLL_writeReg(EOPLL *opll, uint8_t reg, uint8_t data) {
     set_block(opll, ch, (data >> 1) & 7);
     set_sus_flag(opll, ch, (data >> 5) & 1);
     update_key_status(opll);
-    /* update rhythm mode here because key-off of rhythm instrument is deferred until key-on bit is down. */
-    update_rhythm_mode(opll);
     break;
 
   case 0x30:
@@ -1491,8 +1440,8 @@ void EOPLL_dumpToPatch(const uint8_t *dump, EOPLL_PATCH *patch) {
   patch[1].TL = 0;
   patch[0].FB = (dump[3]) & 7;
   patch[1].FB = 0;
-  patch[0].WF = (dump[3] >> 3) & 1;
-  patch[1].WF = (dump[3] >> 4) & 1;
+  patch[0].WS = (dump[3] >> 3) & 1;
+  patch[1].WS = (dump[3] >> 4) & 1;
   patch[0].AR = (dump[4] >> 4) & 15;
   patch[1].AR = (dump[5] >> 4) & 15;
   patch[0].DR = (dump[4]) & 15;
@@ -1521,7 +1470,7 @@ void EOPLL_patchToDump(const EOPLL_PATCH *patch, uint8_t *dump) {
   dump[0] = (uint8_t)((patch[0].AM << 7) + (patch[0].PM << 6) + (patch[0].EG << 5) + (patch[0].KR << 4) + patch[0].ML);
   dump[1] = (uint8_t)((patch[1].AM << 7) + (patch[1].PM << 6) + (patch[1].EG << 5) + (patch[1].KR << 4) + patch[1].ML);
   dump[2] = (uint8_t)((patch[0].KL << 6) + patch[0].TL);
-  dump[3] = (uint8_t)((patch[1].KL << 6) + (patch[1].WF << 4) + (patch[0].WF << 3) + patch[0].FB);
+  dump[3] = (uint8_t)((patch[1].KL << 6) + (patch[1].WS << 4) + (patch[0].WS << 3) + patch[0].FB);
   dump[4] = (uint8_t)((patch[0].AR << 4) + patch[0].DR);
   dump[5] = (uint8_t)((patch[1].AR << 4) + patch[1].DR);
   dump[6] = (uint8_t)((patch[0].SL << 4) + patch[0].RR);
@@ -1532,7 +1481,7 @@ void EOPLL_copyPatch(EOPLL *opll, int32_t num, EOPLL_PATCH *patch) {
   memcpy(&opll->patch[num], patch, sizeof(EOPLL_PATCH));
 }
 
-void EOPLL_resetPatch(EOPLL *opll, int32_t type) {
+void EOPLL_resetPatch(EOPLL *opll, uint8_t type) {
   int i;
   for (i = 0; i < 19 * 2; i++)
     EOPLL_copyPatch(opll, i, &default_patch[type % EOPLL_TONE_NUM][i]);
@@ -1602,7 +1551,7 @@ static UINT8 device_start_ym2413_emu(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf
 	if (chip == NULL)
 		return 0xFF;
 	
-	EOPLL_setChipMode(chip, cfg->flags & 0x01);
+	EOPLL_setChipType(chip, cfg->flags & 0x01);
 	
 	chip->_devData.chipInf = chip;
 	INIT_DEVINF(retDevInf, &chip->_devData, rate, &devDef_YM2413_Emu);

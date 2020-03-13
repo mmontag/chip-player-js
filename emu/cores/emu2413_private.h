@@ -9,13 +9,11 @@ extern "C" {
 
 #define EOPLL_DEBUG 0
 
-typedef enum __EOPLL_EG_STATE { ATTACK, DECAY, SUSTAIN, RELEASE, DAMP, UNKNOWN } EOPLL_EG_STATE;
-
 enum EOPLL_TONE_ENUM { EOPLL_2413_TONE = 0, EOPLL_VRC7_TONE = 1, EOPLL_281B_TONE = 2 };
 
 /* voice data */
 typedef struct __EOPLL_PATCH {
-  uint32_t TL, FB, EG, ML, AR, DR, SL, RR, KR, KL, AM, PM, WF;
+  uint32_t TL, FB, EG, ML, AR, DR, SL, RR, KR, KL, AM, PM, WS;
 } EOPLL_PATCH;
 
 /* slot */
@@ -44,15 +42,16 @@ typedef struct __EOPLL_SLOT {
   uint8_t blk;          /* block (3 bits) */
 
   /* envelope generator (eg) */
-  uint8_t eg_state;         /* current state */
-  int32_t volume;           /* current volume */
-  uint8_t sus_flag;         /* key-sus option 1:on 0:off */
-  uint16_t tll;             /* total level + key scale level*/
-  uint8_t rks;              /* key scale offset (rks) for eg speed */
-  uint8_t eg_rate_h;        /* eg speed rate high 4bits */
-  uint8_t eg_rate_l;        /* eg speed rate low 2bits */
-  uint32_t eg_shift;        /* shift for eg global counter, controls envelope speed */
-  uint32_t eg_out;          /* eg output */
+  uint8_t eg_state;  /* current state */
+  int32_t volume;    /* current volume */
+  uint8_t key_flag;  /* key-on flag 1:on 0:off */
+  uint8_t sus_flag;  /* key-sus option 1:on 0:off */
+  uint16_t tll;      /* total level + key scale level*/
+  uint8_t rks;       /* key scale offset (rks) for eg speed */
+  uint8_t eg_rate_h; /* eg speed rate high 4bits */
+  uint8_t eg_rate_l; /* eg speed rate low 2bits */
+  uint32_t eg_shift; /* shift for eg global counter, controls envelope speed */
+  uint32_t eg_out;   /* eg output */
 
   uint32_t update_requests; /* flags to debounce update */
 
@@ -91,7 +90,7 @@ typedef struct __EOPLL {
   uint32_t clk;
   uint32_t rate;
 
-  uint8_t chip_mode;
+  uint8_t chip_type;
 
   uint8_t adr;
 
@@ -107,20 +106,15 @@ typedef struct __EOPLL {
   uint32_t eg_counter;
 
   uint32_t pm_phase;
-  uint32_t pm_dphase;
-
   int32_t am_phase;
-  int32_t am_dphase;
   uint8_t lfo_am;
 
-  uint32_t noise_seed;
-  uint8_t noise;
+  uint32_t noise;
   uint8_t short_noise;
 
   int32_t patch_number[9];
   EOPLL_SLOT slot[18];
   EOPLL_PATCH patch[19 * 2];
-  int32_t patch_update[2];
 
   uint8_t pan[16];
   int32_t pan_fine[16][2];
@@ -139,11 +133,12 @@ EOPLL *EOPLL_new(uint32_t clk, uint32_t rate);
 void EOPLL_delete(EOPLL *);
 
 void EOPLL_reset(EOPLL *);
-void EOPLL_resetPatch(EOPLL *, int32_t);
+void EOPLL_resetPatch(EOPLL *, uint8_t);
 
 /** 
  * Set output wave sampling rate. 
- * @param rate sampling rate. If clock / 72 (typically 49716 or 49715 at 3.58MHz) is set, the internal rate converter is disabled.
+ * @param rate sampling rate. If clock / 72 (typically 49716 or 49715 at 3.58MHz) is set, the internal rate converter is
+ * disabled.
  */
 void EOPLL_setRate(EOPLL *opll, uint32_t rate);
 
@@ -155,7 +150,7 @@ void EOPLL_setQuality(EOPLL *opll, uint8_t q);
 
 /** 
  * Set pan pot (extra function - not YM2413 chip feature)
- * @param ch 0..8:tone 9:bd 10:hh 11:sd 12:tom 13:cym
+ * @param ch 0..8:tone 9:bd 10:hh 11:sd 12:tom 13:cym 14,15:reserved
  * @param pan 0:mute 1:right 2:left 3:center 
  * ```
  * pan: 76543210
@@ -173,16 +168,18 @@ void EOPLL_setPan(EOPLL *opll, uint32_t ch, uint8_t pan);
 void EOPLL_setPanFine(EOPLL *opll, uint32_t ch, int16_t pan);
 
 /**
- * Set chip mode. If vrc7 is selected, r#14 is ignored.
- * @param mode 0:ym2413 1:vrc7
+ * Set chip type. If vrc7 is selected, r#14 is ignored.
+ * This method not change the current ROM patch set.
+ * To change ROM patch set, use OPLL_resetPatch.
+ * @param type 0:YM2413 1:VRC7
  */
-void EOPLL_setChipMode(EOPLL *opll, uint8_t mode); 
+void EOPLL_setChipType(EOPLL *opll, uint8_t type); 
 
 void EOPLL_writeIO(EOPLL *opll, uint8_t reg, uint8_t val);
 void EOPLL_writeReg(EOPLL *opll, uint8_t reg, uint8_t val);
 
 /**
- * Calculate sample
+ * Calculate one sample
  */
 int32_t EOPLL_calc(EOPLL *opll);
 
@@ -229,6 +226,7 @@ uint32_t EOPLL_toggleMask(EOPLL *, uint32_t mask);
 #define EOPLL_reset_patch EOPLL_resetPatch
 #define EOPLL_dump2patch EOPLL_dumpToPatch
 #define EOPLL_patch2dump EOPLL_patchToDump
+#define EOPLL_setChipMode EOPLL_setChipType
 
 #ifdef __cplusplus
 }
