@@ -11,6 +11,7 @@
 #include "../../stdtype.h"
 #include "../snddef.h"
 #include "../EmuStructs.h"
+#include "../EmuHelper.h"
 #include "../EmuCores.h"
 #include "rf5c68.h"
 

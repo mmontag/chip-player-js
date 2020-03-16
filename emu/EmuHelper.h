@@ -1,6 +1,12 @@
 #ifndef __EMUHELPER_H__
 #define __EMUHELPER_H__
 
+#include <stddef.h>	// for NULL
+#include "../stdtype.h"
+#include "../common_def.h"	// for INLINE
+#include "EmuStructs.h"
+
+
 #ifdef _USE_MATH_DEFINES
 // MS VC6 doesn't have M_PI yet
 #ifndef M_PI
@@ -8,7 +14,7 @@
 #endif
 #endif
 
-#if _MSC_VER < 1400
+#if defined(_MSC_VER) && _MSC_VER < 1400
 // Math function defines from VC2010's math.h for VC6
 #ifndef powf
 #define powf(x,y)   ((float)pow((double)(x), (double)(y)))
@@ -20,6 +26,19 @@
 #else
 #define logerror
 #endif
+
+
+INLINE void INIT_DEVINF(DEV_INFO* devInf, DEV_DATA* devData, UINT32 sampleRate, const DEV_DEF* devDef)
+{
+	devInf->dataPtr = devData;
+	devInf->sampleRate = sampleRate;
+	devInf->devDef = devDef;
+	
+	devInf->linkDevCount = 0;
+	devInf->linkDevs = NULL;
+	return;
+}
+
 
 // get parent struct from chip data pointer
 #define CHP_GET_INF_PTR(info)	(((DEV_DATA*)info)->chipInf)

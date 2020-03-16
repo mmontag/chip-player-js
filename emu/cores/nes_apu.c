@@ -52,6 +52,7 @@
 
 #include "../../stdtype.h"
 #include "../../stdbool.h"
+#include "../../common_def.h"
 #include "../snddef.h"
 #include "nes_apu.h"
 

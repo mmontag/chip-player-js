@@ -1,3 +1,4 @@
+#include <stddef.h>	// for NULL
 #include "../EmuStructs.h"
 
 #include "2413intf.h"

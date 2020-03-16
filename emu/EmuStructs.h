@@ -6,7 +6,6 @@ extern "C"
 {
 #endif
 
-#include <stddef.h>	// for NULL
 #include "../stdtype.h"
 #include "snddef.h"
 
@@ -122,28 +121,6 @@ struct _device_generic_config
 	UINT32 smplRate;	// sample rate for SRMODE_CUSTOM/DEVRI_SRMODE_HIGHEST
 						// Note: Some cores ignore the srMode setting and always use smplRate.
 };	// DEV_GEN_CFG
-
-/* need to ensure INIT_DEVINF is always static inline, use our own */
-#if defined(_MSC_VER)
-#define DEVINF_INLINE static __inline
-#elif defined(__GNUC__)
-#define DEVINF_INLINE static __inline__
-#else
-#define DEVINF_INLINE static inline
-#endif
-
-DEVINF_INLINE void INIT_DEVINF(DEV_INFO* devInf, DEV_DATA* devData, UINT32 sampleRate, const DEV_DEF* devDef)
-{
-	devInf->dataPtr = devData;
-	devInf->sampleRate = sampleRate;
-	devInf->devDef = devDef;
-	
-	devInf->linkDevCount = 0;
-	devInf->linkDevs = NULL;
-	return;
-}
-
-#undef DEVINF_INLINE
 
 #ifdef __cplusplus
 }

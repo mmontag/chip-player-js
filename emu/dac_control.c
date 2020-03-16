@@ -19,6 +19,7 @@
 
 #include "../stdtype.h"
 #include "EmuStructs.h"
+#include "EmuHelper.h"	// for INIT_DEVINF
 #include "snddef.h"
 #include "SoundDevs.h"
 #include "SoundEmu.h"

@@ -28,6 +28,7 @@
 #include <math.h>
 
 #include "../../stdtype.h"
+#include "../../common_def.h"
 #include "../snddef.h"
 #include "ym2612.h"
 #include "ym2612_int.h"

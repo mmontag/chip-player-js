@@ -1,3 +1,4 @@
+#include <stddef.h>	// for NULL
 #include "../EmuStructs.h"
 
 #include "rf5cintf.h"
