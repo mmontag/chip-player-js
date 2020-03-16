@@ -254,8 +254,8 @@ static void SN76489_Update(SN76489_Context* chip, UINT32 length, DEV_SMPL **buff
 				if ( ( ( chip->PSGStereo >> i ) & 0x11 ) == 0x11 )
 				{
 					// no GG stereo for this channel
-					buffer[0][j] += APPLY_PANNING( chnOut, chip->panning[i][0] ); // left
-					buffer[1][j] += APPLY_PANNING( chnOut, chip->panning[i][1] ); // right
+					buffer[0][j] += APPLY_PANNING_S( chnOut, chip->panning[i][0] ); // left
+					buffer[1][j] += APPLY_PANNING_S( chnOut, chip->panning[i][1] ); // right
 				}
 				else
 				{

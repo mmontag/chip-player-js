@@ -12,7 +12,7 @@ extern "C"
 #define PANNING_NORMAL	(1 << PANNING_BITS)
 
 // apply panning value to x, x should be within +-16384
-#define APPLY_PANNING(x, panval)	((x * panval) >> PANNING_BITS)
+#define APPLY_PANNING_S(x, panval)	((x * panval) >> PANNING_BITS)
 // apply panning value to x, version for larger values
 #define APPLY_PANNING_L(x, panval)	(INT32)(((INT64)x * panval) >> PANNING_BITS)
 

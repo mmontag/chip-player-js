@@ -15,16 +15,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifndef INLINE
-#if defined(_MSC_VER)
-#define INLINE __inline
-#elif defined(__GNUC__)
-#define INLINE __inline__
-#else
-#define INLINE inline
-#endif
-#endif
-
 #include "../../stdtype.h"
 #include "emutypes.h"
 #include "../snddef.h"
@@ -34,6 +24,7 @@
 #include "emu2413.h"
 #include "emu2413_private.h"
 #include "../panning.h" // Maxim
+#undef INLINE	// emu2413 uses its own INLINE definition
 
 
 static UINT8 device_start_ym2413_emu(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
@@ -66,6 +57,16 @@ DEV_DEF devDef_YM2413_Emu =
 	devFunc,	// rwFuncs
 };
 
+
+#ifndef INLINE
+#if defined(_MSC_VER)
+#define INLINE __inline
+#elif defined(__GNUC__)
+#define INLINE __inline__
+#else
+#define INLINE inline
+#endif
+#endif
 
 #define _PI_ 3.14159265358979323846264338327950288
 
@@ -187,7 +188,7 @@ static uint16_t fullsin_table[PG_WIDTH] = {
 /* clang-format on */
 
 static uint16_t halfsin_table[PG_WIDTH];
-static uint16_t *wave_table_map[2] = {fullsin_table, halfsin_table};
+static const uint16_t *wave_table_map[2] = {fullsin_table, halfsin_table};
 
 /* pitch modulator */
 /* offset to fnum, rough approximation of 14 cents depth. */
@@ -1078,9 +1079,9 @@ INLINE static void mix_output_stereo(EOPLL *opll) {
   out[0] = out[1] = 0;
   for (i = 0; i < 14; i++) {
     if (opll->pan[i] & 1)
-      out[1] += APPLY_PANNING(opll->ch_out[i], opll->pan_fine[i][1]);
+      out[1] += APPLY_PANNING_S(opll->ch_out[i], opll->pan_fine[i][1]);
     if (opll->pan[i] & 2)
-      out[0] += APPLY_PANNING(opll->ch_out[i], opll->pan_fine[i][0]);
+      out[0] += APPLY_PANNING_S(opll->ch_out[i], opll->pan_fine[i][0]);
   }
   if (opll->conv) {
     EOPLL_RateConv_putData(opll->conv, 0, out[0]);

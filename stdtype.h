@@ -1,7 +1,7 @@
 #ifndef __CST_STDTYPE_H__
 #define __CST_STDTYPE_H__
 
-#ifdef HAVE_STDINT
+#ifdef HAVE_STDINT_H
 
 #include <stdint.h>
 
@@ -14,7 +14,7 @@ typedef  int32_t	 INT32;
 typedef uint64_t	UINT64;
 typedef  int64_t	 INT64;
 
-#else	// ! HAVE_STDINT
+#else	// ! HAVE_STDINT_H
 
 // typedefs to use MAME's (U)INTxx types (copied from MAME\src\ods\odscomm.h)
 // 8-bit values

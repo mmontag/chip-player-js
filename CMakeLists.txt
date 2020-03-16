@@ -15,7 +15,7 @@ endif ()
 
 check_include_file("stdint.h" HAVE_STDINT)
 if(HAVE_STDINT)
-	add_definitions("-D HAVE_STDINT")
+	add_definitions("-D HAVE_STDINT_H")
 endif()
 
 if(MSVC)

@@ -33,7 +33,7 @@ typedef struct __EOPLL_SLOT {
   int32_t output[2]; /* output value, latest and previous. */
 
   /* phase generator (pg) */
-  uint16_t *wave_table; /* wave table */
+  const uint16_t *wave_table; /* wave table */
   uint32_t pg_phase;    /* pg phase */
   uint32_t pg_out;      /* pg output, as index of wave table */
   uint8_t pg_keep;      /* if 1, pg_phase is preserved when key-on */

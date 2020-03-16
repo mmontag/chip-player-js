@@ -467,8 +467,8 @@ mix_output_stereo(EPSG *psg, int32_t out[2])
     if (! (~psg->stereo_mask[i] & 0x03))
     {
       // mono channel
-      out[0] += APPLY_PANNING(psg->ch_out[i], psg->pan[i][0]);
-      out[1] += APPLY_PANNING(psg->ch_out[i], psg->pan[i][1]);
+      out[0] += APPLY_PANNING_S(psg->ch_out[i], psg->pan[i][0]);
+      out[1] += APPLY_PANNING_S(psg->ch_out[i], psg->pan[i][1]);
     }
     else
     {
