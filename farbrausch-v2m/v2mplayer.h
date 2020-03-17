@@ -28,7 +28,11 @@ class V2MPlayer
 public:
     // init
     // call this instead of a constructor
-    void Init(uint32_t a_tickspersec=1000) { m_tpc=a_tickspersec; /* m_base.valid=0; */ memset(&m_base, 0, sizeof(V2MBase)); }
+    void Init(uint32_t a_tickspersec = 1000) {
+      m_tpc = a_tickspersec;
+      /* m_base.valid = 0; */
+      memset(&m_base, 0, sizeof(V2MBase));
+    }
 
     // opens a v2m file for playing
     //
@@ -67,7 +71,7 @@ public:
     //
     // returns  : flag if playing
     //
-    void Render(float *a_buffer, uint32_t a_len, bool a_add=false);
+    int Render(float *a_buffer, uint32_t a_len, bool a_add=false);
 
     // render proxy for C-style callbacks
     //
@@ -96,11 +100,11 @@ public:
     //         values structured as following:
     //         first  long: time in ms
     //         second long: song position (see above for a description)
-    //                                            format: 0xBBBBTTNN, where
-    //                                                            BBBB is the bar number (starting at 0)
-    //                                                            TT   is the number of the 32th tick within the current bar
-    //                                                            NN   is the total number of 32th ticks a the current bar has
-    //                                                            (32, normally, may change with different time signatures than 4/4)
+    //           format: 0xBBBBTTNN, where
+    //                   BBBB is the bar number (starting at 0)
+    //                   TT   is the number of the 32th tick within the current bar
+    //                   NN   is the total number of 32th ticks a the current bar has
+    //                        (32, normally, may change with different time signatures than 4/4)
     //         ... and so on for every found position
     //
     // NOTE: it is your responsibility to free the array again.
@@ -123,20 +127,18 @@ private:
     // struct defs
 
     // General info from V2M file
-    struct V2MBase
-    {
-        bool valid;
-        const uint8_t   *patchmap;
-        uint32_t    base_timediv;
-        const uint8_t   *globals;
-        uint32_t    timediv; // Ticks per Beat
-        uint32_t    timediv2;
-        uint32_t    maxtime;
-        const uint8_t          *gptr;     // Global event pointer
-        uint32_t               gd_num;    // Global event number?
+    struct V2MBase {
+        bool                   valid;
+        const uint8_t          *patchmap;
+        uint32_t               base_timediv;
+        const uint8_t          *globals;
+        uint32_t               timediv;   // Ticks per beat
+        uint32_t               timediv2;  // Ticks per beat * 10000
+        uint32_t               maxtime;
+        const uint8_t          *gptr;     // Global event pointer - pointer to first event
+        uint32_t               gd_num;    // Number of global data events
 
-        struct Channel
-        {
+        struct Channel {                  // 16 channels
             uint32_t           note_num;  // Note number
             const uint8_t      *note_ptr; // Note pointer
 
@@ -146,7 +148,7 @@ private:
             uint32_t           pb_num;    // Pitch bend number
             const uint8_t      *pb_ptr;   // Pitch bend pointer
 
-            struct CC {
+            struct CC { // 7 controls
                 uint32_t       cc_num;    // Control change number
                 const uint8_t  *cc_ptr;   // Control change pointer
             } ctl[7];
@@ -161,18 +163,19 @@ private:
     struct PlayerState
     {
         enum { OFF, STOPPED, PLAYING, } state;
-        uint32_t        time;
-        uint32_t        nexttime;
-        const uint8_t   *gptr;
-        uint32_t        gnt;
-        uint32_t        gnr;
+        uint32_t        time;             // Current time (in ticks?)
+        uint32_t        nexttime;         // Time of next event (of any type: g, note, pc, pb, cc)
+        const uint8_t   *gptr;            // Global event pointer - updated as song plays
+        uint32_t        gnt;              // "nt" generally stands for Next Time
+        uint32_t        gnr;              // Global event number
         uint32_t        usecs;
-        uint32_t        num;
-        uint32_t        den;
-        uint32_t        tpq;
+
+        uint32_t        num;              // Time signature numerator
+        uint32_t        den;              // Time signature denominator
+        uint32_t        tpq;              // Appears to be unused
         uint32_t        bar;
         uint32_t        beat;
-        uint32_t        tick;
+        uint32_t        tick;             // Not sure how this differs from time (appears unused)
 
         struct Channel
         {

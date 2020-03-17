@@ -51,7 +51,10 @@ export default class XMPPlayer extends Player {
       return;
     }
 
-    this.lib._v2m_write_audio(this.buffer, this.bufferSize);
+    const samplesWritten = this.lib._v2m_write_audio(this.buffer, this.bufferSize);
+    if (samplesWritten === 0) {
+      this.stop();
+    }
 
     for (channel = 0; channel < channels.length; channel++) {
       for (i = 0; i < this.bufferSize; i++) {

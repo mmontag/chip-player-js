@@ -1,3 +1,5 @@
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "modernize-loop-convert"
 /*************************************************************************************/
 /*************************************************************************************/
 /**                                                                                 **/
@@ -11,6 +13,7 @@
 
 #include "v2mplayer.h"
 #include "libv2.h"
+#include <emscripten.h> // TODO: Remove
 
 #define GETDELTA(p, w) ((p)[0] + ((p)[w] << 8) + ((p)[2*w] << 16))
 #define UPDATENT(n, v, p, w)  if ((n) < (w)) { (v) = m_state.time + GETDELTA((p), (w)); if ((v) < m_state.nexttime) m_state.nexttime = (v); }
@@ -24,20 +27,18 @@ extern void writeUint(uint8_t *buf, uint32_t value);
 
 namespace
 {
-    void UpdateSampleDelta(uint32_t nexttime, uint32_t time, uint32_t usecs, uint32_t td2, uint32_t *smplrem, uint32_t *smpldelta)
+  void UpdateSampleDelta(uint32_t nexttime, uint32_t time, uint32_t usecs, uint32_t td2, uint32_t *smplrem, uint32_t *smpldelta)
+  {
+    // performs 64bit (nexttime-time)*usecs/td2 and a 32.32bit addition to smpldelta:smplrem
+    uint64_t t = ((nexttime - time) * (uint64_t) usecs) / td2; // i.e. usecs=163839879, td2=1280000
+    uint32_t r = *smplrem;
+    *smplrem   += (t >> 32);        // bits 32-63
+    *smpldelta += (t & 0xffffffff); // bits 00-31
+    if (*smplrem < r)
     {
-        // performs 64bit (nexttime-time)*usecs/td2 and a 32.32bit addition to smpl_delta:smpl_rem
-        uint64_t t = ((nexttime - time) * (uint64_t) usecs) / td2;
-        uint32_t r = readUint((uint8_t*)smplrem);
-//        *smpl_rem   += (t >> 32);         // bits 32-63
-        writeUint((uint8_t*)smplrem, r+(t >> 32u)); // bits 32-63
-//        *smpl_delta += (t & 0xffffffff);  // bits 00-31
-        writeUint((uint8_t*)smpldelta, readUint((uint8_t*)smpldelta)+(t & 0xffffffff)); // bits 00-31
-        if (readUint((uint8_t*)smplrem) < r)
-        {
-            writeUint((uint8_t*)smpldelta, readUint((uint8_t*)smpldelta) + 1);
-        }
+      *smpldelta += 1;
     }
+  }
 }
 
 bool V2MPlayer::InitBase(const void *a_v2m)
@@ -49,35 +50,53 @@ bool V2MPlayer::InitBase(const void *a_v2m)
     m_base.timediv  = readUint(d);
     m_base.timediv2 = 10000 * m_base.timediv;
     m_base.maxtime  = readUint(d + 4);
-    m_base.gd_num    = readUint(d + 8);
+    m_base.gd_num   = readUint(d + 8);  // Number of global data events
 
-    d += 12;
-    m_base.gptr = d;
-    d += 10*m_base.gd_num;
+//  EM_ASM_({ console.log('V2MPlayer::InitBase\n  timediv: %s\n  timediv2: %s\n maxtime: %s, gd_num: %s', $0, $1, $2, $3); }, m_base.timediv, m_base.timediv2, m_base.maxtime, m_base.gd_num);
+
+
+    d += 12;                            // Advance past timediv, maxtime, and gd_num (each 4 bytes)
+    m_base.gptr = d;                    // Store address of first global event
+    d += 10 * m_base.gd_num;            // Each global data event is 10 bytes (NOT interleaved)
+
+    // Example global data block for 4 events (40 bytes):
+    //
+    //    1   2   3   4    <-- gd_num = 4
+    // 0
+    // 1      ? ? ?        <-- not sure what's here
+    // 2
+    // 3 [    usecs    ]   <-- usecs is 4 bytes each
+    // 4 [    usecs    ]
+    // 5 [    usecs    ]
+    // 6 [    usecs    ]
+    // 7 num num num num   <-- num, den, tpq are 1 byte each
+    // 8 den den den den
+    // 9 tpq tpq tpq tpq
+
     for (int ch = 0; ch < 16; ch++)
     {
-        V2MBase::Channel &c=m_base.chan[ch];
-        c.note_num= readUint(d);
+        V2MBase::Channel &c = m_base.chan[ch];
+        c.note_num = readUint(d);
         d += 4;
         if (c.note_num)
         {
-            c.note_ptr=d;
-            d += 5*c.note_num;
+            c.note_ptr = d;
+            d += 5 * c.note_num;        // Note event: 5 bytes
             c.pc_num = readUint(d);
             d += 4;
             c.pc_ptr = d;
-            d += 4*c.pc_num;
+            d += 4 * c.pc_num;          // Program change event: 4 bytes
             c.pb_num = readUint(d);
             d += 4;
             c.pb_ptr = d;
-            d += 5*c.pb_num;
+            d += 5 * c.pb_num;          // Pitch bend event: 5 bytes
             for (int cn = 0; cn < 7; cn++)
             {
                 V2MBase::Channel::CC &cc = c.ctl[cn];
                 cc.cc_num = readUint(d);
                 d += 4;
                 cc.cc_ptr = d;
-                d += 4*cc.cc_num;
+                d += 4 * cc.cc_num;     // Control change event: 4 bytes
             }
         }
     }
@@ -177,7 +196,7 @@ void V2MPlayer::Tick()
     // ticks = nexttime - time
     // beats = ticks / timediv
     // bars = beats / 4 (for example)
-    m_state.tick += m_state.nexttime-m_state.time;
+    m_state.tick += m_state.nexttime - m_state.time;
     while (m_state.tick >= m_base.timediv * m_base.speed)
     {
         m_state.tick -= m_base.timediv * m_base.speed;
@@ -203,6 +222,7 @@ void V2MPlayer::Tick()
         m_state.num = m_state.gptr[7*m_base.gd_num + m_state.gnr];
         m_state.den = m_state.gptr[8*m_base.gd_num + m_state.gnr];
         m_state.tpq = m_state.gptr[9*m_base.gd_num + m_state.gnr];
+//        EM_ASM_({ console.log('V2MPlayer::Tick usecs: %s tpq: %s', $0, $1); }, m_state.usecs, m_state.tpq);
         m_state.gnr++;
         UPDATENT2(m_state.gnr, m_state.gnt, m_state.gptr + m_state.gnr, m_base.gd_num);
     }
@@ -273,8 +293,8 @@ void V2MPlayer::Tick()
 
     if (m_state.nexttime == (uint32_t)-1)
         m_state.state = PlayerState::STOPPED;
-    if(m_state.time >= m_base.maxtime)
-        m_state.state=PlayerState::STOPPED;
+    if (m_state.time >= m_base.maxtime)
+        m_state.state = PlayerState::STOPPED;
 }
 
 bool V2MPlayer::Open(const void *a_v2mptr, uint32_t a_samplerate)
@@ -311,24 +331,35 @@ void V2MPlayer::Play(uint32_t a_time)
     m_base.valid = sFALSE;
     uint32_t destsmpl, cursmpl = 0;
     {
-        destsmpl = m_base.speed * ((uint64_t)a_time * m_samplerate) / m_tpc;
+        destsmpl = ((uint64_t)a_time * m_samplerate) / 1000; // m_tpc;
     }
+
+//    EM_ASM_({ console.log('V2MPlayer::Play a_time: %s destsmpl: %s', $0, $1); }, a_time, destsmpl);
 
     m_state.state = PlayerState::PLAYING;
     m_state.smpl_delta = 0;
     m_state.smpl_rem = 0;
+    m_state.smpl_cur = 0;
     while ((cursmpl + m_state.smpl_delta) < destsmpl && m_state.state == PlayerState::PLAYING)
     {
+//      EM_ASM_({ console.log('-- cursmpl: %s m_state.time: %s m_state.nexttime: %s', $0, $1, $2); }, cursmpl, m_state.time, m_state.nexttime);
+
         cursmpl += m_state.smpl_delta;
         Tick();
         if (m_state.state == PlayerState::PLAYING)
         {
-            UpdateSampleDelta(m_state.nexttime, m_state.time, m_state.usecs, m_base.timediv2 * m_base.speed, &m_state.smpl_rem, &m_state.smpl_delta);
+            UpdateSampleDelta(m_state.nexttime,
+                              m_state.time,
+                              m_state.usecs,
+                              m_base.timediv2, // * m_base.speed,
+                              &m_state.smpl_rem,
+                              &m_state.smpl_delta);
         } else
             m_state.smpl_delta = -1;
     }
     m_state.smpl_delta -= (destsmpl - cursmpl);
     m_timeoffset = cursmpl-m_state.smpl_cur;
+//    EM_ASM_({ console.log('V2MPlayer::Play m_state.smpl_delta: %s m_state.smpl_cur: %s destsmpl: %s', $0, $1, $2); }, m_state.smpl_delta, m_state.smpl_cur, destsmpl);
     m_fadeval    = 1.0f;
     m_fadedelta  = 0.0f;
     m_base.valid = sTRUE;
@@ -352,53 +383,56 @@ int* V2MPlayer::GetVoiceMap()
 	return getVoiceMap(m_synth);
 }
 #endif
-void V2MPlayer::Render(float *a_buffer, uint32_t a_len, bool a_add)
+int V2MPlayer::Render(float *a_buffer, uint32_t a_len, bool a_add)
 {
     if (!a_buffer)
-        return;
+        return 0;
 
-    if (m_base.valid && m_state.state == PlayerState::PLAYING)
-    {
-        uint32_t todo=a_len;
-        while (todo)
-        {
+    int samples_rendered = 0;
+
+    if (m_base.valid && m_state.state == PlayerState::PLAYING) {
+//        EM_ASM_({ console.log('V2MPlayer::Render (A) a_len', $0, $1); }, a_len, m_state.state);
+        uint32_t todo = a_len;
+        while (todo) {
             // how many samples to render?
-            // whichever is less of SMPLDELTA or TODO
+            // whichever is less of smpl_delta or todo
             int torender = (todo > m_state.smpl_delta) ? m_state.smpl_delta : todo;
-            if (torender)
-            {
+            if (torender) {
                 synthRender(m_synth, a_buffer, torender, nullptr, a_add);
-                a_buffer += 2*torender;
+                a_buffer += 2 * torender;
                 todo -= torender;
                 m_state.smpl_delta -= torender;
-                m_state.smpl_cur   += torender;
+                samples_rendered   += torender;
             }
             // Several consecutive Render calls could complete before entering this branch
-            if (!m_state.smpl_delta)
-            {
-              // Events are drained. We caught up to new events, and need to process them.
+            if (!m_state.smpl_delta) {
+                // Events are drained. We caught up to new events, and need to process them.
                 Tick();
                 if (m_state.state == PlayerState::PLAYING)
-                  // after Tick, we have a new nexttime, time usecs,
-                    UpdateSampleDelta(m_state.nexttime, m_state.time, m_state.usecs, m_base.timediv2 * m_base.speed, &m_state.smpl_rem, &m_state.smpl_delta);
+                    // after Tick, we have a new nexttime, time usecs,
+                    UpdateSampleDelta(m_state.nexttime,
+                                      m_state.time,
+                                      m_state.usecs,
+                                      m_base.timediv2 * m_base.speed,
+                                      &m_state.smpl_rem,
+                                      &m_state.smpl_delta);
                 else
                     m_state.smpl_delta = -1;
             }
         }
-    }
-    else if (m_state.state==PlayerState::OFF || !m_base.valid)
-    {
-        if (!a_add)
-        {
+    } else if (m_state.state==PlayerState::OFF || !m_base.valid) {
+//      EM_ASM_({ console.log('V2MPlayer::Render (B) a_len', $0, $1); }, a_len, m_state.state);
+        if (!a_add) {
             memset(a_buffer, 0, a_len * sizeof(a_buffer[0])*2);
         }
-    } else
-    {
+    } else { // PlayerState::STOPPED
+//      EM_ASM_({ console.log('V2MPlayer::Render (C) a_len', $0, $1); }, a_len, m_state.state);
         synthRender(m_synth, a_buffer, a_len, nullptr, a_add);
-        m_state.smpl_cur += a_len;
+        // Let's try ignoring these samples...!
+        // samples_rendered = a_len;
     }
 
-    if (m_fadedelta)
+    if (m_fadedelta > 0)
     {
         for (uint32_t i = 0; i < a_len; i++)
         {
@@ -410,6 +444,9 @@ void V2MPlayer::Render(float *a_buffer, uint32_t a_len, bool a_add)
         }
         if (!m_fadeval) Stop();
     }
+
+    m_state.smpl_cur += samples_rendered;
+    return samples_rendered;
 }
 
 bool V2MPlayer::NoEnd()
@@ -434,6 +471,7 @@ void V2MPlayer::SetSpeed(float speed) {
 }
 
 uint32_t V2MPlayer::GetTime() {
+  // TODO(montag): this seems wrong
   return m_state.time * m_base.base_timediv;
 }
 
@@ -515,3 +553,5 @@ uint32_t V2MPlayer::CalcPositions(int32_t **a_dest)
 }
 
 #endif
+
+#pragma clang diagnostic pop

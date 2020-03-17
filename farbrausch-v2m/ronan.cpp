@@ -420,7 +420,8 @@ extern "C" void ronanCBTick(syWRonan *wsptr)
                     for (fs = 0; fs < NSYLS - 1; fs++)
                     {
                         const syldef &s = syls[fs];
-                        if (len2 = mystrnicmp1(s.syl, wsptr->ptr))
+                        len2 = mystrnicmp1(s.syl, wsptr->ptr);
+                        if (len2)
                         {
                             len = len2;
                             //                            printf2("got %s\n",s.syl);

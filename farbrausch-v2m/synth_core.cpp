@@ -68,7 +68,7 @@ static const float fc2pi   = 6.28318530717958647692528676655901f;
 static const float fc32bit = 2147483648.0f; // 2^31 (original code has (2^31)-1, but this ends up rounding up to 2^31 anyway)
 
 // Synth constants
-static const float fcoscbase   = 261.6255653f; // Oscillator base freq
+static const float fcoscbase   = 261.6255653f; // Oscillator base freq of C4 (middle C)
 static const float fcsrbase    = 44100.0f;     // Base sampling rate
 static const float fcboostfreq = 150.0f;       // Bass boost cut-off freq
 static const float fcframebase = 128.0f;       // size of a frame in samples
@@ -2721,8 +2721,8 @@ struct V2Synth
 		DEBUG_PLOT_OPEN(DEBUG_PLOT_CHAN(&chansw[12], 0), "channel 12", buf_size, 0, 0);
 		DEBUG_PLOT_OPEN(DEBUG_PLOT_CHAN(&chansw[13], 0), "channel 13", buf_size, 0, 0);
 		DEBUG_PLOT_OPEN(DEBUG_PLOT_CHAN(&chansw[14], 0), "channel 14", buf_size, 0, 0);
-		DEBUG_PLOT_OPEN(DEBUG_PLOT_CHAN(&chansw[15], 0), "channel 15", buf_size, 0, 0);	
-#endif		
+		DEBUG_PLOT_OPEN(DEBUG_PLOT_CHAN(&chansw[15], 0), "channel 15", buf_size, 0, 0);
+#endif
 
         // debug plots (uncomment the ones you want)
         //int sr_plot = 44100/10; // plot rate
@@ -3057,7 +3057,7 @@ struct V2Synth
 private:
     const V2Sound *getpatch(int pgm) const
     {
-        assert(pgm >= 0 && pgm < 128);		
+        assert(pgm >= 0 && pgm < 128);
         return (const V2Sound *)&patchmap->raw_data[readUintAt((uint8_t*)patchmap->offsets, pgm)];
     }
 
