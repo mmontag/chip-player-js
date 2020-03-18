@@ -10,7 +10,7 @@ import {BrowserRouter as Router, NavLink, Route} from 'react-router-dom';
 import {API_BASE, CATALOG_PREFIX, MAX_VOICES, REPLACE_STATE_ON_SEEK} from "./config";
 import {Switch} from 'react-router';
 import Dropzone from 'react-dropzone';
-import { toArabic } from 'roman-numerals';
+import {toArabic} from 'roman-numerals';
 
 import ChipCore from './chip-core';
 import promisify from './promisifyXhr';
@@ -32,6 +32,7 @@ import Browse from "./Browse";
 import DirectoryLink from "./DirectoryLink";
 import dice from './images/dice.png';
 import DropMessage from "./DropMessage";
+import {VolumeSlider} from "./VolumeSlider";
 
 const NUMERIC_COLLATOR = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'});
 
@@ -88,6 +89,7 @@ class App extends React.Component {
     this.nextSong = this.nextSong.bind(this);
     this.prevSubtune = this.prevSubtune.bind(this);
     this.nextSubtune = this.nextSubtune.bind(this);
+    this.handleVolumeChange = this.handleVolumeChange.bind(this);
     this.handleTimeSliderChange = this.handleTimeSliderChange.bind(this);
     this.handleTempoChange = this.handleTempoChange.bind(this);
     this.handleSetVoices = this.handleSetVoices.bind(this);
@@ -170,6 +172,7 @@ class App extends React.Component {
       user: null,
       faves: [],
       songUrl: null,
+      volume: 100,
 
       directories: {},
     };
@@ -522,6 +525,11 @@ class App extends React.Component {
     }
   }
 
+  handleVolumeChange(volume) {
+    this.setState({ volume });
+    this.playerNode.gain.value = Math.max(0, Math.min(1, volume * 0.01));
+  }
+
   toggleInfo() {
     this.setState({
       showInfo: !this.state.showInfo,
@@ -656,9 +664,12 @@ class App extends React.Component {
         <div className="App-main">
           <div className="App-main-inner">
             <div className="tab-container">
-              <NavLink className="tab" activeClassName="tab-selected" to={{ pathname: "/", ...search }} exact>Search</NavLink>
-              <NavLink className="tab" activeClassName="tab-selected" to={{ pathname: "/browse", ...search }}>Browse</NavLink>
-              <NavLink className="tab" activeClassName="tab-selected" to={{ pathname: "/favorites", ...search }}>Favorites</NavLink>
+              <NavLink className="tab" activeClassName="tab-selected" to={{pathname: "/", ...search}}
+                       exact>Search</NavLink>
+              <NavLink className="tab" activeClassName="tab-selected"
+                       to={{pathname: "/browse", ...search}}>Browse</NavLink>
+              <NavLink className="tab" activeClassName="tab-selected"
+                       to={{pathname: "/favorites", ...search}}>Favorites</NavLink>
             </div>
             <div className="App-main-content-area" ref={this.contentAreaRef}>
               <Switch>
@@ -708,84 +719,89 @@ class App extends React.Component {
         <div className="App-footer">
           <div className="App-footer-main">
             <div className="App-footer-main-inner">
-            <button onClick={this.prevSong}
-                    className="box-button"
-                    disabled={this.state.ejected}>
-              &lt;
-            </button>
-            {' '}
-            <button onClick={this.togglePause}
-                    className="box-button"
-                    disabled={this.state.ejected}>
-              {this.state.paused ? 'Resume' : 'Pause'}
-            </button>
-            {' '}
-            <button onClick={this.nextSong}
-                    className="box-button"
-                    disabled={this.state.ejected}>
-              &gt;
-            </button>
-            {' '}
-            {this.state.currentSongNumSubtunes > 1 &&
-            <span style={{whiteSpace: 'nowrap'}}>
-              Tune {this.state.currentSongSubtune + 1} of {this.state.currentSongNumSubtunes}{' '}
-              <button
-                className="box-button"
-                disabled={this.state.ejected}
-                onClick={this.prevSubtune}>&lt;
+              <button onClick={this.prevSong}
+                      className="box-button"
+                      disabled={this.state.ejected}>
+                &lt;
               </button>
               {' '}
-              <button
-                className="box-button"
-                disabled={this.state.ejected}
-                onClick={this.nextSubtune}>&gt;
+              <button onClick={this.togglePause}
+                      className="box-button"
+                      disabled={this.state.ejected}>
+                {this.state.paused ? 'Resume' : 'Pause'}
+              </button>
+              {' '}
+              <button onClick={this.nextSong}
+                      className="box-button"
+                      disabled={this.state.ejected}>
+                &gt;
+              </button>
+              {' '}
+              {this.state.currentSongNumSubtunes > 1 &&
+              <span style={{whiteSpace: 'nowrap'}}>
+              Tune {this.state.currentSongSubtune + 1} of {this.state.currentSongNumSubtunes}{' '}
+                <button
+                  className="box-button"
+                  disabled={this.state.ejected}
+                  onClick={this.prevSubtune}>&lt;
+              </button>
+                {' '}
+                <button
+                  className="box-button"
+                  disabled={this.state.ejected}
+                  onClick={this.nextSubtune}>&gt;
               </button>
             </span>}
-            <span style={{float: 'right'}}>
+              <span style={{float: 'right'}}>
               <button className="box-button" onClick={this.handlePlayRandom}>
                 <img alt="Roll the dice" src={dice} style={{verticalAlign: 'bottom'}}/>
                 Random
               </button>
-              {' '}
-              {!this.state.showPlayerSettings &&
-              <button className="box-button" onClick={this.toggleSettings}>
-                Settings &gt;
-              </button>}
-            </span>
-            {this.state.playerError &&
-            <div className="App-error">ERROR: {this.state.playerError}</div>
-            }
-            <TimeSlider
-              currentSongDurationMs={this.state.currentSongDurationMs}
-              getCurrentPositionMs={() => {
-                const sequencer = this.sequencer;
-                if (sequencer && sequencer.getPlayer()) {
-                  return sequencer.getPlayer().getPositionMs();
-                }
-                return 0;
-              }}
-              onChange={this.handleTimeSliderChange}/>
-            {!this.state.ejected &&
-            <div className="SongDetails">
-              {this.state.faves && this.state.songUrl &&
-              <div style={{float: 'left', marginBottom: '58px'}}>
-                <FavoriteButton favorites={this.state.faves}
-                                toggleFavorite={this.handleToggleFavorite}
-                                href={this.state.songUrl}/>
-              </div>}
-              <div className="SongDetails-title">
-                {title}
                 {' '}
-                {this.state.infoTexts.length > 0 &&
-                <a onClick={(e) => this.toggleInfo(e)} href='#'>
-                  тхт
-                </a>
-                }
+                {!this.state.showPlayerSettings &&
+                <button className="box-button" onClick={this.toggleSettings}>
+                  Settings &gt;
+                </button>}
+            </span>
+              {this.state.playerError &&
+              <div className="App-error">ERROR: {this.state.playerError}</div>
+              }
+              <div style={{display: 'flex', flexDirection: 'row'}}>
+                <TimeSlider
+                  currentSongDurationMs={this.state.currentSongDurationMs}
+                  getCurrentPositionMs={() => {
+                    const sequencer = this.sequencer;
+                    if (sequencer && sequencer.getPlayer()) {
+                      return sequencer.getPlayer().getPositionMs();
+                    }
+                    return 0;
+                  }}
+                  onChange={this.handleTimeSliderChange}/>
+                <VolumeSlider onChange={(e) => {
+                  this.handleVolumeChange(e.target.value);
+                }} value={this.state.volume}/>
               </div>
-              <div className="SongDetails-subtitle">{subtitle}</div>
-              <div className="SongDetails-filepath">{pathLinks}</div>
-            </div>}
-          </div>
+              {!this.state.ejected &&
+              <div className="SongDetails">
+                {this.state.faves && this.state.songUrl &&
+                <div style={{float: 'left', marginBottom: '58px'}}>
+                  <FavoriteButton favorites={this.state.faves}
+                                  toggleFavorite={this.handleToggleFavorite}
+                                  href={this.state.songUrl}/>
+                </div>}
+                <div className="SongDetails-title">
+                  {title}
+                  {' '}
+                  {this.state.infoTexts.length > 0 &&
+                  <a onClick={(e) => this.toggleInfo(e)} href='#'>
+                    тхт
+                  </a>
+                  }
+                </div>
+                <div className="SongDetails-subtitle">{subtitle}</div>
+                <div className="SongDetails-filepath">{pathLinks}</div>
+              </div>}
+            </div>
           </div>
           {this.state.showPlayerSettings &&
           <div className="App-footer-settings">

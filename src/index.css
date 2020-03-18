@@ -359,10 +359,8 @@ body,#root {
 .Visualizer-analyzer { display: block; image-rendering: pixelated; }
 .Visualizer-spectrogram { display: block; flex-grow: 1; min-height: 0; image-rendering: pixelated; }
 
-.TimeSlider { margin: var(--charH) 0; }
-.TimeSlider-time { display: flex; flex-direction: row; justify-content: space-between; }
-.TimeSlider-elapsed {}
-.TimeSlider-total {}
+.TimeSlider { margin: var(--charH) 0; flex-grow: 1 }
+.TimeSlider-labels, .VolumeSlider-labels { display: flex; flex-direction: row; justify-content: space-between; }
 
 .Song-now-playing {
     background-color: var(--button);

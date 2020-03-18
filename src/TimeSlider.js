@@ -76,9 +76,9 @@ export default class TimeSlider extends Component {
           pos={this.getSongPos()}
           onDrag={this.handlePositionDrag}
           onChange={this.handlePositionDrop}/>
-        <div className='TimeSlider-time'>
-          <div className='TimeSlider-elapsed'>{this.getTimeLabel()}</div>
-          <div className='TimeSlider-total'>{this.getTime(this.props.currentSongDurationMs)}</div>
+        <div className='TimeSlider-labels'>
+          <div>{this.getTimeLabel()}</div>
+          <div>{this.getTime(this.props.currentSongDurationMs)}</div>
         </div>
       </div>
     );
