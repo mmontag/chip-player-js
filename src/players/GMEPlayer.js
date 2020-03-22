@@ -1,7 +1,7 @@
 import Player from "./Player.js";
 import App from "../App";
 import SubBass from "../effects/SubBass";
-import encoding from "encoding-japanese";
+const encoding = require('encoding-japanese');
 
 let emu = null;
 let libgme = null;
