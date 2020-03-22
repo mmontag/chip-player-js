@@ -90,6 +90,7 @@ source ~/src/emsdk/emsdk_env.sh  # load the emscripten environment variables
 mkdir build                      # create a build folder for Cmake output
 cd build                         
 emcmake cmake -DDISABLE_SF3=1 .. # Cmake will generate a Makefile by default
+                                 # Problems here? Try deleting CMake cache files
 emmake make fluidlite-static
 ```
 
