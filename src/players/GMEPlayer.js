@@ -1,7 +1,6 @@
 import Player from "./Player.js";
 import App from "../App";
 import SubBass from "../effects/SubBass";
-const encoding = require('encoding-japanese');
 
 let emu = null;
 let libgme = null;
@@ -149,18 +148,25 @@ export default class GMEPlayer extends Player {
     };
 
     const readString = function () {
-      const raw = [];
+      let value = '';
+
+      // Interpret as UTF8 (disabled)
+      // value = libgme.UTF8ToString(libgme.getValue(ref + offset, "i8*"));
+
+      // Interpret as ISO-8859-1 (unsigned integer values, 0 to 255)
       const ptr = libgme.getValue(ref + offset, 'i8*');
       for (let i = 0; i < 255; i++) {
         let char = libgme.getValue(ptr + i, 'i8');
         if (char === 0) {
           break;
+        } else if (char < 0) {
+          char = (Math.abs(char) ^ 255) + 1;
         }
-        raw.push(char & 0xFF);
+        value += String.fromCharCode(char);
       }
 
       offset += 4;
-      return encoding.convert(raw, {to: 'UNICODE', type: 'string'});
+      return value;
     };
 
     const meta = {};
