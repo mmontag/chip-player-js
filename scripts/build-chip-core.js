@@ -291,6 +291,8 @@ var runtime_methods = [
 ];
 
 var flags = [
+  // Build flags for Emscripten 1.39.11. Last updated March 22, 2020
+  //
   // '--closure', '1',       // causes TypeError: lib.FS.mkdir is not a function
   // '--llvm-lto', '3',
   // '--clear-cache',        // sometimes Emscripten cache gets "poisoned"
@@ -303,8 +305,9 @@ var flags = [
   '-s', 'EXPORT_NAME=CHIP_CORE',
   '-s', 'ENVIRONMENT=web',
   '-s', 'USE_ZLIB=1',
-  '-s', 'BINARYEN_TRAP_MODE=clamp',
   '-s', 'EXPORT_ES6=1',
+  '-s', 'USE_ES6_IMPORT_META=0',
+  '-lidbfs.js',
   '-Os',
   '-o', js_file,
 
