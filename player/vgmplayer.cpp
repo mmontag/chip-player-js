@@ -156,8 +156,15 @@ VGMPlayer::VGMPlayer() :
 		for (chipID = 0; chipID < 2; chipID ++)
 		{
 			size_t optID = optChip * 2 + chipID;
-			InitDeviceOptions(_devOpts[optID]);
-			_devOptMap[_OPT_DEV_LIST[optChip]][chipID] = optID;
+			UINT8 devID = _OPT_DEV_LIST[optChip];
+			PLR_DEV_OPTS& devOpts = _devOpts[optID];
+			
+			InitDeviceOptions(devOpts);
+			if (devID == DEVID_NES_APU)
+				devOpts.coreOpts = 0x01B7;
+			else if (devID == DEVID_SCSP)
+				devOpts.coreOpts = 0x01;
+			_devOptMap[devID][chipID] = optID;
 		}
 	}
 	
@@ -600,11 +607,16 @@ UINT8 VGMPlayer::SetDeviceOptions(UINT32 id, const PLR_DEV_OPTS& devOpts)
 		return 0x80;	// bad device ID
 	
 	_devOpts[optID] = devOpts;
-	// TODO: Are there any configuration changes must be applied immediately?
 	
 	size_t devID = _optDevMap[optID];
 	if (devID < _devices.size())
+	{
+		DEV_INFO* devInf = &_devices[devID].base.defInf;
+		if (devInf->devDef->SetOptionBits != NULL)
+			devInf->devDef->SetOptionBits(devInf->dataPtr, _devOpts[optID].coreOpts);
+		
 		RefreshMuting(_devices[devID], _devOpts[optID].muteOpts);
+	}
 	return 0x00;
 }
 

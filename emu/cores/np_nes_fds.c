@@ -178,6 +178,16 @@ void NES_FDS_SetOption(void* chip, int id, int val)
 	if (id == OPT_CUTOFF) NES_FDS_SetRate(fds, fds->rate);
 }
 
+int NES_FDS_GetOption(void* chip, int id)
+{
+	NES_FDS* fds = (NES_FDS*)chip;
+
+	if (id < OPT_END)
+		return fds->option[id];
+	else
+		return 0;
+}
+
 void NES_FDS_Reset(void* chip)
 {
 	NES_FDS* fds = (NES_FDS*)chip;

@@ -34,6 +34,7 @@
 						// prevents clicking (Valley Bell mod) (default: disabled)
 // [NSFPlay FDS core] options
 #define OPT_NES_4085_RESET		0x0400	// OPT_4085_RESET (default: disabled)
+#define OPT_NES_FDS_DISABLE		0x0800	// OPT_WRITE_PROTECT (default: disabled)
 
 // default option bitmask: 0x01B7
 

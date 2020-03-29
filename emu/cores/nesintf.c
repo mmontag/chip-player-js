@@ -19,6 +19,7 @@
 #endif
 #ifdef EC_NES_NSFP_FDS
 #include "np_nes_fds.h"
+#define FDS_OPT_WRITE_PROTECT	2
 #endif
 
 
@@ -45,7 +46,7 @@ static void nes_write_ram(void* chip, UINT32 offset, UINT32 length, const UINT8*
 
 static void nes_set_chip_option_mame(void* chip, UINT32 NesOptions);
 static void nes_set_chip_option_nsfplay(void* chip, UINT32 NesOptions);
-static void nes_set_chip_option_fds(void* chip_fds, UINT32 NesOptions);
+static void nes_set_chip_option_fds(NESAPU_INF* info, UINT32 NesOptions);
 static void nes_set_mute_mask_mame(void* chip, UINT32 MuteMask);
 static void nes_set_mute_mask_nsfplay(void* chip, UINT32 MuteMask);
 
@@ -123,6 +124,7 @@ struct nesapu_info
 	void* chip_dmc;
 	void* chip_fds;
 	UINT8* memory;
+	UINT8 fds_disable;
 };
 
 
@@ -215,6 +217,8 @@ static UINT8 device_start_nes_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	memset(info->memory, 0x00, 0x8000);
 	nesapu_set_rom(info->chip_apu, info->memory - 0x8000);
 	
+	info->fds_disable = 0;
+	
 	// store pointer to NESAPU_INF into sound chip structures
 	info->_devData.chipInf = info;
 	devData = (DEV_DATA*)info->chip_apu;
@@ -267,6 +271,8 @@ static UINT8 device_start_nes_nsfplay(const DEV_GEN_CFG* cfg, DEV_INFO* retDevIn
 	info->memory = (UINT8*)malloc(0x8000);
 	memset(info->memory, 0x00, 0x8000);
 	NES_DMC_np_SetMemory(info->chip_dmc, info->memory - 0x8000);
+	
+	info->fds_disable = 0;
 	
 	// store pointer to NESAPU_INF into sound chip structures
 	info->_devData.chipInf = info;
@@ -364,7 +370,7 @@ static void nes_w_mame(void* chip, UINT8 offset, UINT8 data)
 	else	// FDS
 	{
 #ifdef EC_NES_NSFP_FDS
-		if (info->chip_fds != NULL)
+		if (info->chip_fds != NULL && ! info->fds_disable)
 			NES_FDS_Write(info->chip_fds, 0x4000 | offset, data);
 #endif
 	}
@@ -382,7 +388,7 @@ static UINT8 nes_r_mame(void* chip, UINT8 offset)
 	else	// FDS
 	{
 #ifdef EC_NES_NSFP_FDS
-		if (info->chip_fds != NULL)
+		if (info->chip_fds != NULL && ! info->fds_disable)
 			return nes_read_fds(info->chip_fds, offset);
 #endif
 		return 0x00;
@@ -404,7 +410,7 @@ static void nes_w_nsfplay(void* chip, UINT8 offset, UINT8 data)
 	else	// FDS
 	{
 #ifdef EC_NES_NSFP_FDS
-		if (info->chip_fds != NULL)
+		if (info->chip_fds != NULL && ! info->fds_disable)
 			NES_FDS_Write(info->chip_fds, 0x4000 | offset, data);
 #endif
 	}
@@ -427,7 +433,7 @@ static UINT8 nes_r_nsfplay(void* chip, UINT8 offset)
 	else	// FDS
 	{
 #ifdef EC_NES_NSFP_FDS
-		if (info->chip_fds != NULL)
+		if (info->chip_fds != NULL && ! info->fds_disable)
 			return nes_read_fds(info->chip_fds, offset);
 #endif
 		return 0x00;
@@ -499,7 +505,7 @@ static void nes_set_chip_option_mame(void* chip, UINT32 NesOptions)
 	
 #ifdef EC_NES_NSFP_FDS
 	if (info->chip_fds != NULL)
-		nes_set_chip_option_fds(info->chip_fds, NesOptions);
+		nes_set_chip_option_fds(info, NesOptions);
 #endif
 	
 	return;
@@ -527,7 +533,7 @@ static void nes_set_chip_option_nsfplay(void* chip, UINT32 NesOptions)
 	
 #ifdef EC_NES_NSFP_FDS
 	if (info->chip_fds != NULL)
-		nes_set_chip_option_fds(info->chip_fds, NesOptions);
+		nes_set_chip_option_fds(info, NesOptions);
 #endif
 	
 	return;
@@ -535,14 +541,15 @@ static void nes_set_chip_option_nsfplay(void* chip, UINT32 NesOptions)
 #endif
 
 #ifdef EC_NES_NSFP_FDS
-static void nes_set_chip_option_fds(void* chip_fds, UINT32 NesOptions)
+static void nes_set_chip_option_fds(NESAPU_INF* info, UINT32 NesOptions)
 {
 	UINT8 CurOpt;
 	
 	// FDS options
 	// I skip the Cutoff frequency here, since it's not a boolean value.
-	for (CurOpt = 12; CurOpt < 14; CurOpt ++)
-		NES_FDS_SetOption(chip_fds, CurOpt-12+1, (NesOptions >> CurOpt) & 0x01);
+	for (CurOpt = 10; CurOpt < 12; CurOpt ++)
+		NES_FDS_SetOption(info->chip_fds, CurOpt-10+1, (NesOptions >> CurOpt) & 0x01);
+	info->fds_disable = NES_FDS_GetOption(info->chip_fds, FDS_OPT_WRITE_PROTECT);
 	
 	return;
 }

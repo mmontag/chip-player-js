@@ -10,6 +10,7 @@ bool NES_FDS_Read(void* chip, UINT16 adr, UINT8* val);
 void NES_FDS_SetRate(void* chip, UINT32 r);
 void NES_FDS_SetClock(void* chip, UINT32 c);
 void NES_FDS_SetOption(void* chip, int id, int val);
+int NES_FDS_GetOption(void* chip, int id);
 void NES_FDS_SetMask(void* chip, int m);
 void NES_FDS_SetStereoMix(void* chip, int trk, INT16 mixl, INT16 mixr);
 
