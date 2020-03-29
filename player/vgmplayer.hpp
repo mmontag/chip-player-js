@@ -252,7 +252,7 @@ protected:
 	enum
 	{
 		_HDR_BUF_SIZE = 0x100,
-		_OPT_DEV_COUNT = 0x10,	//0x29
+		_OPT_DEV_COUNT = 0x29,
 		_CHIP_COUNT = 0x29,
 		_PCM_BANK_COUNT = 0x40
 	};
