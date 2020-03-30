@@ -594,7 +594,7 @@ void VGMPlayer::RefreshMuting(VGMPlayer::CHIP_DEVICE& chipDev, const PLR_MUTE_OP
 	{
 		DEV_INFO* devInf = &clDev->defInf;
 		if (devInf->dataPtr != NULL && devInf->devDef->SetMuteMask != NULL)
-			devInf->devDef->SetMuteMask(devInf->dataPtr, muteOpts.chnMute[0]);
+			devInf->devDef->SetMuteMask(devInf->dataPtr, muteOpts.chnMute[linkCntr]);
 	}
 	
 	return;
