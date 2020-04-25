@@ -46,7 +46,6 @@ bool V2MPlayer::InitBase(const void *a_v2m)
     const auto *d = (const uint8_t*)a_v2m;
 
     m_base.speed = 1.0;
-    m_base.base_timediv = readUint(d);
     m_base.timediv  = readUint(d);
     m_base.timediv2 = 10000 * m_base.timediv;
     m_base.maxtime  = readUint(d + 4);
@@ -124,12 +123,10 @@ bool V2MPlayer::InitBase(const void *a_v2m)
         m_base.speechdata = (const char *)d;
         d += spsize;
         const uint32_t *p32 = (const uint32_t*)m_base.speechdata;
- //       uint32_t n = *(p32++);
-        uint32_t n = readUint((uint8_t*)(p32++));	// EMSCRIPTEN might be unaligned shit
+        uint32_t n = *(p32++);
         for (uint32_t i = 0; i < n; i++)
         {
-   //         m_base.speechptrs[i] = m_base.speechdata + *(p32++);
-            m_base.speechptrs[i] = m_base.speechdata + readUint((uint8_t*)(p32++));	//  EMSCRIPTEN
+            m_base.speechptrs[i] = m_base.speechdata + *(p32++);
         }
     }
 
@@ -169,7 +166,7 @@ void V2MPlayer::Reset()
             UPDATENT(scc.cc_nr, scc.cc_nt, scc.cc_ptr, bcc.cc_num);
         }
     }
-    m_state.usecs = 5000*m_samplerate;
+    m_state.usecs = 5000*m_samplerate; // 500000 microseconds per beat * samplerate / 100
     m_state.num   = 4;
     m_state.den   = 4;
     m_state.tpq   = 8;
@@ -191,15 +188,14 @@ void V2MPlayer::Tick()
     if (m_state.state != PlayerState::PLAYING)
         return;
 
-    // Look at the number of MIDI ticks we will be processing here.
-    // This isn't used any further than to track the bar/beat/tick.
-    // ticks = nexttime - time
+    // Track the bar/beat/tick for displaying in a UI, like 4:1:25.
+    // tick = nexttime - time
     // beats = ticks / timediv
     // bars = beats / 4 (for example)
     m_state.tick += m_state.nexttime - m_state.time;
-    while (m_state.tick >= m_base.timediv * m_base.speed)
+    while (m_state.tick >= m_base.timediv)
     {
-        m_state.tick -= m_base.timediv * m_base.speed;
+        m_state.tick -= (uint32_t)(m_base.timediv);
         m_state.beat++;
     }
     uint32_t qpb=(m_state.num*4/m_state.den);
@@ -348,6 +344,7 @@ void V2MPlayer::Play(uint32_t a_time)
         Tick();
         if (m_state.state == PlayerState::PLAYING)
         {
+            m_state.smpl_delta = 0;
             UpdateSampleDelta(m_state.nexttime,
                               m_state.time,
                               m_state.usecs,
@@ -357,8 +354,8 @@ void V2MPlayer::Play(uint32_t a_time)
         } else
             m_state.smpl_delta = -1;
     }
-    m_state.smpl_delta -= (destsmpl - cursmpl);
-    m_timeoffset = cursmpl-m_state.smpl_cur;
+    m_state.smpl_cur = cursmpl;
+    m_state.smpl_delta = m_state.smpl_delta - (destsmpl - cursmpl);
 //    EM_ASM_({ console.log('V2MPlayer::Play m_state.smpl_delta: %s m_state.smpl_cur: %s destsmpl: %s', $0, $1, $2); }, m_state.smpl_delta, m_state.smpl_cur, destsmpl);
     m_fadeval    = 1.0f;
     m_fadedelta  = 0.0f;
@@ -413,7 +410,7 @@ int V2MPlayer::Render(float *a_buffer, uint32_t a_len, bool a_add)
                     UpdateSampleDelta(m_state.nexttime,
                                       m_state.time,
                                       m_state.usecs,
-                                      m_base.timediv2 * m_base.speed,
+                                      (uint32_t)(m_base.timediv2 * m_base.speed),
                                       &m_state.smpl_rem,
                                       &m_state.smpl_delta);
                 else
@@ -445,7 +442,7 @@ int V2MPlayer::Render(float *a_buffer, uint32_t a_len, bool a_add)
         if (!m_fadeval) Stop();
     }
 
-    m_state.smpl_cur += samples_rendered;
+    m_state.smpl_cur += (uint32_t)(samples_rendered * m_base.speed);
     return samples_rendered;
 }
 
@@ -466,13 +463,10 @@ bool V2MPlayer::IsPlaying()
 
 void V2MPlayer::SetSpeed(float speed) {
   m_base.speed = speed;
-//  m_base.timediv = (uint32_t)(m_base.base_timediv * speed);
-//  m_base.timediv2 = (uint32_t)(m_base.base_timediv * 10000 * speed);
 }
 
-uint32_t V2MPlayer::GetTime() {
-  // TODO(montag): this seems wrong
-  return m_state.time * m_base.base_timediv;
+float V2MPlayer::GetTime() {
+  return 1000.0 * m_state.smpl_cur / m_samplerate;
 }
 
 

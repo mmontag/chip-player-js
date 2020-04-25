@@ -50,7 +50,7 @@ int v2m_write_audio(float *buffer, int buffer_size) {
 }
 
 float v2m_get_position_ms() {
-  return 1000 * (float)v2m.GetTime() / g_sample_rate;
+  return v2m.GetTime();
 }
 
 float v2m_get_duration_ms() {
