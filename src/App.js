@@ -771,6 +771,7 @@ class App extends React.Component {
                   currentSongDurationMs={this.state.currentSongDurationMs}
                   getCurrentPositionMs={() => {
                     const sequencer = this.sequencer;
+                    // TODO: reevaluate this approach
                     if (sequencer && sequencer.getPlayer()) {
                       return sequencer.getPlayer().getPositionMs();
                     }

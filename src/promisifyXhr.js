@@ -5,15 +5,23 @@ export default function promisify(xhr) {
     return new Promise(function (resolve, reject) {
       xhr.onload = function () {
         if (xhr.status < 200 || xhr.status >= 300) {
-          reject({request: xhr});
+          reject({
+            status: xhr.status,
+            statusText: xhr.statusText,
+          });
         } else {
           resolve(xhr);
         }
       };
       xhr.onerror = function () {
-        reject({request: xhr});
+        reject({
+          status: xhr.status,
+          statusText: xhr.statusText,
+        });
       };
-      oldSend.apply(xhr, xhrArguments);
+      try {
+        oldSend.apply(xhr, xhrArguments);
+      } catch (e) {}
     });
   };
   return xhr;
