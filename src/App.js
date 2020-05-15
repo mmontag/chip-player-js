@@ -250,12 +250,11 @@ class App extends React.Component {
       console.log('Attaching Media Key event handlers.');
 
       // Limitations of MediaSession: there must always be an active audio element :(
-      const audio = document.createElement('audio');
-      audio.src = process.env.PUBLIC_URL + '/5-seconds-of-silence.mp3';
-      audio.loop = true;
-      audio.volume = 0;
-      audio.play();
-      this.audio = audio;
+      this.mediaSessionAudio = document.createElement('audio');
+      this.mediaSessionAudio.src = process.env.PUBLIC_URL + '/5-seconds-of-silence.mp3';
+      this.mediaSessionAudio.loop = true;
+      this.mediaSessionAudio.volume = 0;
+      this.mediaSessionAudio.play();
 
       navigator.mediaSession.setActionHandler('play', () => { console.debug('Media Key: play'); this.togglePause(); });
       navigator.mediaSession.setActionHandler('pause', () => { console.debug('Media Key: pause'); this.togglePause(); });
@@ -343,7 +342,7 @@ class App extends React.Component {
       window.history.replaceState(null, '', search ? `?${search}` : './');
 
       if ('mediaSession' in navigator) {
-        this.audio.pause();
+        this.mediaSessionAudio.pause();
 
         navigator.mediaSession.playbackState = 'none';
         if ('MediaMetadata' in window) {
@@ -404,7 +403,7 @@ class App extends React.Component {
       const metadata = player.getMetadata();
 
       if ('mediaSession' in navigator) {
-        this.audio.play();
+        this.mediaSessionAudio.play();
 
         if ('MediaMetadata' in window) {
           console.log('metadata', metadata);
@@ -442,12 +441,11 @@ class App extends React.Component {
     if (this.state.ejected || !this.sequencer.getPlayer()) return;
 
     const paused = this.sequencer.getPlayer().togglePause();
-    navigator.mediaSession.playbackState = paused ? 'paused' : 'playing';
-    if (this.audio) {
+    if ('mediaSession' in navigator) {
       if (paused) {
-        this.audio.pause();
+        this.mediaSessionAudio.pause();
       } else {
-        this.audio.play();
+        this.mediaSessionAudio.play();
       }
     }
     this.setState({paused: paused});
