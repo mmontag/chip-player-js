@@ -255,11 +255,14 @@ class App extends React.Component {
       audio.loop = true;
       audio.volume = 0;
       audio.play();
+      this.audio = audio;
 
       navigator.mediaSession.setActionHandler('play', () => { console.debug('Media Key: play'); this.togglePause(); });
       navigator.mediaSession.setActionHandler('pause', () => { console.debug('Media Key: pause'); this.togglePause(); });
       navigator.mediaSession.setActionHandler('previoustrack', () => { console.debug('Media Key: previoustrack'); this.prevSong(); });
       navigator.mediaSession.setActionHandler('nexttrack', () => { console.debug('Media Key: nexttrack'); this.nextSong(); });
+      navigator.mediaSession.setActionHandler('seekbackward', () => { console.debug('Media Key: seekbackward'); this.seekRelative(-5000); });
+      navigator.mediaSession.setActionHandler('seekforward', () => { console.debug('Media Key: seekforward'); this.seekRelative(5000); });
     }
 
     document.addEventListener('keydown', (e) => {
@@ -338,6 +341,15 @@ class App extends React.Component {
       delete urlParams.play;
       const search = queryString.stringify(urlParams);
       window.history.replaceState(null, '', search ? `?${search}` : './');
+
+      if ('mediaSession' in navigator) {
+        this.audio.pause();
+
+        navigator.mediaSession.playbackState = 'none';
+        if ('MediaMetadata' in window) {
+          navigator.mediaSession.metadata = new window.MediaMetadata({});
+        }
+      }
     } else {
       const player = this.sequencer.getPlayer();
       const url = this.sequencer.getCurrUrl();
@@ -368,6 +380,14 @@ class App extends React.Component {
             if (xhr.status >= 200 && xhr.status < 400) {
               const { imageUrl, infoTexts } = xhr.response;
               this.setState({imageUrl: imageUrl, infoTexts: infoTexts});
+
+              if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata.artwork = [{
+                  src: imageUrl,
+                  sizes: '512x512',
+                }];
+              }
+
               if (infoTexts.length === 0) {
                 this.setState({ showInfo: false });
               }
@@ -379,6 +399,22 @@ class App extends React.Component {
       } else {
         // Drag & dropped files reach this branch
         this.setState({imageUrl: null, infoTexts: [], showInfo: false});
+      }
+
+      const metadata = player.getMetadata();
+
+      if ('mediaSession' in navigator) {
+        this.audio.play();
+
+        if ('MediaMetadata' in window) {
+          console.log('metadata', metadata);
+          navigator.mediaSession.metadata = new window.MediaMetadata({
+            title: metadata.title || metadata.formatted?.title,
+            artist: metadata.artist || metadata.formatted?.subtitle,
+            album: metadata.game,
+            artwork: []
+          });
+        }
       }
 
       this.setState({
@@ -403,9 +439,18 @@ class App extends React.Component {
   }
 
   togglePause() {
-    if (!this.sequencer.getPlayer()) return;
+    if (this.state.ejected || !this.sequencer.getPlayer()) return;
 
-    this.setState({paused: this.sequencer.getPlayer().togglePause()});
+    const paused = this.sequencer.getPlayer().togglePause();
+    navigator.mediaSession.playbackState = paused ? 'paused' : 'playing';
+    if (this.audio) {
+      if (paused) {
+        this.audio.pause();
+      } else {
+        this.audio.play();
+      }
+    }
+    this.setState({paused: paused});
   }
 
   toggleSettings() {
