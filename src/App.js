@@ -473,8 +473,10 @@ class App extends React.Component {
     if (!this.sequencer.getPlayer()) return;
 
     const pos = event.target ? event.target.value : event;
-
     const seekMs = Math.floor(pos * this.state.currentSongDurationMs);
+
+    this.seekRelativeInner(seekMs);
+
     if (REPLACE_STATE_ON_SEEK) {
       const urlParams = {
         ...queryString.parse(window.location.search.substr(1)),
@@ -485,19 +487,6 @@ class App extends React.Component {
         .replace(/%2F/g, '/');
       window.history.replaceState(null, '', stateUrl);
     }
-
-    // Seek in song
-    this.sequencer.getPlayer().seekMs(seekMs);
-    this.setState({
-      currentSongPositionMs: seekMs, // Smooth
-    });
-    setTimeout(() => {
-      if (this.sequencer.getPlayer().isPlaying()) {
-        this.setState({
-          currentSongPositionMs: this.sequencer.getPlayer().getPositionMs(), // Accurate
-        });
-      }
-    }, 100);
   }
 
   seekRelative(ms) {
@@ -506,7 +495,10 @@ class App extends React.Component {
     const durationMs = this.state.currentSongDurationMs;
     const seekMs = clamp(this.sequencer.getPlayer().getPositionMs() + ms, 0, durationMs);
 
-    // Seek in song
+    this.seekRelativeInner(seekMs);
+  }
+
+  seekRelativeInner(seekMs) {
     this.sequencer.getPlayer().seekMs(seekMs);
     this.setState({
       currentSongPositionMs: seekMs, // Smooth
