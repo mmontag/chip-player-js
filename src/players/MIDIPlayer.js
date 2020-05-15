@@ -275,6 +275,9 @@ export default class MIDIPlayer extends Player {
     const parts = filepath.split('/');
     const len = parts.length;
     const meta = {};
+    // HACK: MIDI metadata is guessed from filepath
+    // based on the directory structure of Chip Player catalog.
+    // Ideally, this data should be embedded in the MIDI files.
     if (parts.length >= 3) {
       meta.formatted = {
         title: `${parts[1]} - ${parts[len - 1]}`,
