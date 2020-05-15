@@ -72,6 +72,8 @@ export default class Sequencer {
   }
 
   advanceSong(direction) {
+    if (this.context == null) return;
+
     this.currIdx += direction;
 
     if (this.currIdx < 0 || this.currIdx >= this.context.length) {
