@@ -69,8 +69,12 @@ option(AUDIODRV_SADA "Audio Driver: SADA (Solaris Audio Device Architecture) [So
 option(AUDIODRV_ALSA "Audio Driver: ALSA (Advanced Linux Sound Architecture) [Linux]" ${ALSA_FOUND})
 option(AUDIODRV_PULSE "Audio Driver: PulseAudio [Linux]" ${PULSEAUDIO_FOUND})
 option(AUDIODRV_APPLE "Audio Driver: Core Audio [macOS]" ${ADRV_APPLE})
-option(AUDIODRV_LIBAO "Audio Driver: libao" ${LIBAO_FOUND})
-
+if(LINK_STATIC_LIBS)
+	# linking errors when using static library in MinGW
+	option(AUDIODRV_LIBAO "Audio Driver: libao" OFF)
+else()
+	option(AUDIODRV_LIBAO "Audio Driver: libao" ${LIBAO_FOUND})
+endif()
 
 if(AUDIODRV_WAVEWRITE)
 	set(AUDIO_DEFS ${AUDIO_DEFS} " AUDDRV_WAVEWRITE")

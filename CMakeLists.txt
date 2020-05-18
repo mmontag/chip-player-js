@@ -41,6 +41,17 @@ if(MSVC)
 	endif()
 endif()
 
+if(MINGW)
+	option(LINK_STATIC_LIBS "link with static libraries" ON)
+	if(LINK_STATIC_LIBS)
+		set(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+		set(CMAKE_CXX_STANDARD_LIBRARIES "-static-libgcc -static-libstdc++ -lwsock32 -lws2_32 ${CMAKE_CSS_STANDARD_LIBRARIES}")
+		set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive")
+	endif()
+else()
+	option(LINK_STATIC_LIBS "build with static libraries" OFF)
+endif()
+
 if(CMAKE_COMPILER_IS_GNUCC)
 
 # assume Windows 2000 and later for GetConsoleWindow API call
