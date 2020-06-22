@@ -28,6 +28,7 @@ function MIDIPlayer(options) {
   this.events = [];
   this.paused = true;
   this.useWebMIDI = false;
+  this.sampleRate = options.sampleRate || 44100;
 
   this.channelsInUse = [];
   this.channelsMuted = [];
@@ -148,7 +149,7 @@ MIDIPlayer.prototype.processPlaySynth = function(buffer, bufferSize) {
   let batchSize = 64;
   let event = null;
   const synth = this.synth;
-  const msPerBatch = this.speed * 1000 * (batchSize / 44100) / 2;
+  const msPerBatch = this.speed * 1000 * (batchSize / this.sampleRate) / 2;
 
   for (let samplesRemaining = bufferSize * 2;
        samplesRemaining > 0;

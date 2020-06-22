@@ -177,6 +177,7 @@ export default class MIDIPlayer extends Player {
     this.midiFilePlayer = new MIDIFilePlayer({
       output: dummyMidiOutput,
       skipSilence: true,
+      sampleRate: this.sampleRate,
       synth: {
         noteOn: lib._tp_note_on,
         noteOff: lib._tp_note_off,
