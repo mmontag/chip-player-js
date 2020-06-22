@@ -4,7 +4,7 @@ const fileExtensions = [
   'v2m',
 ];
 
-export default class XMPPlayer extends Player {
+export default class V2MPlayer extends Player {
   constructor(audioCtx, destNode, chipCore, onPlayerStateUpdate = function() {}) {
     super(audioCtx, destNode, chipCore, onPlayerStateUpdate);
     this.loadData = this.loadData.bind(this);

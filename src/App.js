@@ -145,10 +145,13 @@ class App extends React.Component {
     const gainNode = audioCtx.createGain();
     gainNode.gain.value = 1;
     gainNode.connect(audioCtx.destination);
-    var playerNode = this.playerNode = gainNode;
+    const playerNode = this.playerNode = gainNode;
 
     this._unlockAudioContext(audioCtx);
     console.log('Sample rate: %d hz', audioCtx.sampleRate);
+
+    // Initialize sequencer with empty players array
+    this.sequencer = new Sequencer([], this.handleSequencerStateUpdate, this.handlePlayerError);
 
     this.state = {
       loading: true,
@@ -230,8 +233,6 @@ class App extends React.Component {
         loading: false
       });
     }
-
-    this.sequencer = new Sequencer([], this.handleSequencerStateUpdate, this.handlePlayerError);
   }
 
   _unlockAudioContext(context) {
@@ -254,7 +255,6 @@ class App extends React.Component {
       this.mediaSessionAudio.src = process.env.PUBLIC_URL + '/5-seconds-of-silence.mp3';
       this.mediaSessionAudio.loop = true;
       this.mediaSessionAudio.volume = 0;
-      this.mediaSessionAudio.play();
 
       navigator.mediaSession.setActionHandler('play', () => { console.debug('Media Key: play'); this.togglePause(); });
       navigator.mediaSession.setActionHandler('pause', () => { console.debug('Media Key: pause'); this.togglePause(); });
@@ -416,6 +416,7 @@ class App extends React.Component {
         }
       }
 
+      // Wrap in blob player state?
       this.setState({
         ejected: false,
         paused: player.isPaused(),
@@ -601,6 +602,7 @@ class App extends React.Component {
         });
         if (needsRomanNumeralSort) {
           console.log("Roman numeral sort is active for this directory");
+          // Movement IV. Wow => Movement 0004. Wow
           json.forEach(item => arabicMap[item.path] = this.romanToArabicSubstrings(item.path));
         }
         const items = json
@@ -610,6 +612,7 @@ class App extends React.Component {
               [a.path, b.path];
             return NUMERIC_COLLATOR.compare(strA, strB);
           })
+
           .sort((a, b) => {
             if (a.type < b.type) return -1;
             if (a.type > b.type) return 1;
@@ -636,7 +639,7 @@ class App extends React.Component {
     const subtitle = [metadata.game, metadata.system].filter(x => x).join(' - ') +
       App.allOrNone(' (', metadata.copyright, ')');
     return {title, subtitle};
-  }
+   }
 
   static allOrNone(...args) {
     let str = '';
