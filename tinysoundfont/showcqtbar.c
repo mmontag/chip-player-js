@@ -222,7 +222,7 @@ int cqt_init(int rate, int width, float volume, float freq_min, float freq_max, 
   cqt.basefreq = (freq_min < MIN_FREQ) ? MIN_FREQ : freq_min;
   cqt.endfreq = (freq_max > MAX_FREQ) ? MAX_FREQ : freq_max;
 
-  if (rate < 8000 || rate > 100000)
+  if (rate < 8000 || rate > 200000)
     return 0;
 
   // Get a power of 2 samples just over 0.33 seconds

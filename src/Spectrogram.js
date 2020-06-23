@@ -46,11 +46,13 @@ export default class Spectrogram {
     const fMin = 25.95;
     const fMax = 4504.0;
     const cqtSize = this.lib._cqt_init(audioCtx.sampleRate, cqtBins, db, fMin, fMax, supersample);
-    if (!cqtSize) throw Error('Error initializing constant Q transform.');
+    if (!cqtSize) {
+      console.error('Error initializing constant Q transform. Constant Q will be disabled.');
+    } else {
+      this.cqtFreqs = Array(cqtBins).fill().map((_, i) => this.lib._cqt_bin_to_freq(i));
+      _aWeightingLUT = this.cqtFreqs.map(f => 0.5 + 0.5 * _getAWeighting(f));
+    }
     this.cqtSize = cqtSize;
-    this.cqtFreqs = Array(cqtBins).fill().map((_, i) => this.lib._cqt_bin_to_freq(i));
-    _aWeightingLUT = this.cqtFreqs.map(f => 0.5 + 0.5 * _getAWeighting(f));
-
     this.dataPtr = this.lib._malloc(cqtSize * 4);
 
     this.paused = true;
@@ -89,7 +91,7 @@ export default class Spectrogram {
   setMode(mode) {
     this.mode = mode;
     if (mode === MODE_CONSTANT_Q) {
-      this.analyserNode.fftSize = this.cqtSize;
+      this.analyserNode.fftSize = this.cqtSize || 2048;
     } else {
       this.analyserNode.fftSize = this.fftSize;
     }
