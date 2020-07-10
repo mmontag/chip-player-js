@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <vector>
@@ -19,7 +18,7 @@
 #include "../emu/cores/ayintf.h"		// for AY8910_CFG
 #include "../utils/StrUtils.h"
 #include "helper.h"
-
+#include "logging.h"
 
 enum S98_DEVTYPES
 {
@@ -309,8 +308,8 @@ UINT8 S98Player::LoadTags(void)
 		// tag offset = PSF tag
 		if (endPtr - startPtr < 5 || memcmp(startPtr, "[S98]", 5))
 		{
-			fprintf(stderr, "Invalid S98 tag data!\n");
-			fprintf(stderr, "tagData size: %zu, Signature: %.5s\n", endPtr - startPtr, startPtr);
+			debug("Invalid S98 tag data!\n");
+			debug("tagData size: %zu, Signature: %.5s\n", endPtr - startPtr, startPtr);
 			return 0xF0;
 		}
 		startPtr += 5;
@@ -320,7 +319,7 @@ UINT8 S98Player::LoadTags(void)
 			{
 				tagIsUTF8 = true;
 				startPtr += 3;
-				fprintf(stderr, "Info: Tags are UTF-8 encoded.");
+				debug("Info: Tags are UTF-8 encoded.");
 			}
 		}
 		
@@ -1059,7 +1058,7 @@ void S98Player::DoCommand(void)
 		_psTrigger |= PLAYSTATE_END;
 		if (_eventCbFunc != NULL)
 			_eventCbFunc(this, _eventCbParam, PLREVT_END, NULL);
-		fprintf(stderr, "S98 file ends early! (filePos 0x%06X, fileSize 0x%06X)\n", _filePos, DataLoader_GetSize(_dLoad));
+		debug("S98 file ends early! (filePos 0x%06X, fileSize 0x%06X)\n", _filePos, DataLoader_GetSize(_dLoad));
 		return;
 	}
 	

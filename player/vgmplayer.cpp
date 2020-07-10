@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
 #include <vector>
 #include <string>
@@ -26,8 +25,7 @@
 #include "dblk_compr.h"
 #include "../utils/StrUtils.h"
 #include "helper.h"
-
-
+#include "logging.h"
 
 /*static*/ const UINT8 VGMPlayer::_OPT_DEV_LIST[_OPT_DEV_COUNT] =
 {
@@ -294,7 +292,7 @@ UINT8 VGMPlayer::ParseHeader(void)
 	{
 		if (_fileHdr.loopOfs < _fileHdr.dataOfs || _fileHdr.loopOfs >= _fileHdr.dataEnd)
 		{
-			fprintf(stderr, "Invalid VGM loop offset 0x%06X - ignoring!\n", _fileHdr.loopOfs);
+			debug("Invalid VGM loop offset 0x%06X - ignoring!\n", _fileHdr.loopOfs);
 			_fileHdr.loopOfs = 0x00;
 		}
 	}
@@ -1479,7 +1477,7 @@ void VGMPlayer::LoadOPL4ROM(CHIP_DEVICE* chipDev)
 	hFile = fopen(romFile, "rb");
 	if (hFile == NULL)
 	{
-		fprintf(stderr, "Warning: Couldn't load %s!\n", romFile);
+		debug("Warning: Couldn't load %s!\n", romFile);
 		return;
 	}
 	
@@ -1548,7 +1546,7 @@ UINT8 VGMPlayer::SeekToFilePos(UINT32 pos)
 		_psTrigger |= PLAYSTATE_END;
 		if (_eventCbFunc != NULL)
 			_eventCbFunc(this, _eventCbParam, PLREVT_END, NULL);
-		fprintf(stderr, "VGM file ends early! (filePos 0x%06X, end at 0x%06X)\n", _filePos, _fileHdr.dataEnd);
+		debug("VGM file ends early! (filePos 0x%06X, end at 0x%06X)\n", _filePos, _fileHdr.dataEnd);
 	}
 	_playState &= ~PLAYSTATE_SEEK;
 	
@@ -1615,7 +1613,7 @@ void VGMPlayer::ParseFile(UINT32 ticks)
 		_psTrigger |= PLAYSTATE_END;
 		if (_eventCbFunc != NULL)
 			_eventCbFunc(this, _eventCbParam, PLREVT_END, NULL);
-		fprintf(stderr, "VGM file ends early! (filePos 0x%06X, end at 0x%06X)\n", _filePos, _fileHdr.dataEnd);
+		debug("VGM file ends early! (filePos 0x%06X, end at 0x%06X)\n", _filePos, _fileHdr.dataEnd);
 	}
 	
 	return;
