@@ -13,7 +13,7 @@
 #endif
 
 #include "oplintf.h"
-#ifdef EC_YM3812_MAME
+#if defined(EC_YM3812_MAME) || defined(SNDDEV_YM3526)
 #include "fmopl.h"
 #endif
 #ifdef EC_YM3812_ADLIBEMU
