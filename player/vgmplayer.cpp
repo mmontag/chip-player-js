@@ -3,6 +3,10 @@
 #include <vector>
 #include <string>
 
+#ifndef NO_EXTERNAL_ROM
+#include <stdio.h>
+#endif
+
 #define INLINE	static inline
 
 #include "../common_def.h"
@@ -1467,6 +1471,7 @@ VGMPlayer::CHIP_DEVICE* VGMPlayer::GetDevicePtr(UINT8 chipType, UINT8 chipID)
 
 void VGMPlayer::LoadOPL4ROM(CHIP_DEVICE* chipDev)
 {
+#ifndef NO_EXTERNAL_ROM
 	if (chipDev->romWrite == NULL)
 		return;
 	
@@ -1489,9 +1494,7 @@ void VGMPlayer::LoadOPL4ROM(CHIP_DEVICE* chipDev)
 	
 	chipDev->romSize(chipDev->base.defInf.dataPtr, yrwData.size());
 	chipDev->romWrite(chipDev->base.defInf.dataPtr, 0x00, yrwData.size(), &yrwData[0]);
-	yrwData.clear();
-	
-	return;
+#endif
 }
 
 UINT8 VGMPlayer::Seek(UINT8 unit, UINT32 pos)
