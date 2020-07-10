@@ -1,5 +1,7 @@
 #include "playerbase.hpp"
 
+#include <stdlib.h>
+
 PlayerBase::PlayerBase() :
 	_outSmplRate(0),
 	_eventCbFunc(NULL),
