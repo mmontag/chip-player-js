@@ -22,9 +22,6 @@
       hardware currently emulated that uses external handlers.
 */
 
-#ifdef _DEBUG
-#include <stdio.h>
-#endif
 #include <stdlib.h>
 #include <string.h>	// for memset
 #include <stddef.h>	// for NULL

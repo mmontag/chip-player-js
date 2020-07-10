@@ -534,7 +534,6 @@ YM2203 Japanese datasheet contents, translated: http://www.larwe.com/technical/c
 
 #include <stdlib.h>
 #include <string.h>	// for memset
-#include <stdio.h>
 #include <math.h>
 
 #include "../../stdtype.h"

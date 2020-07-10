@@ -94,7 +94,6 @@
 // in the MSXMoonSound class.
 
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
 #include <math.h>
 
@@ -899,9 +898,6 @@ static void ymf278b_B_w(YMF278BChip *chip, UINT8 reg, UINT8 data)
 		default:
 			break;
 	}
-//#ifdef _DEBUG
-//	logerror("YMF278B:  Port B write %02x, %02x\n", reg, data);
-//#endif
 }
 
 static void ymf278b_C_w(YMF278BChip* chip, UINT8 reg, UINT8 data)
@@ -1222,9 +1218,7 @@ static void ymf278b_w(void *info, UINT8 offset, UINT8 data)
 			break;
 
 		default:
-#ifdef _DEBUG
 			logerror("YMF278B: unexpected write at offset %X to ymf278b = %02X\n", offset, data);
-#endif
 			break;
 	}
 }

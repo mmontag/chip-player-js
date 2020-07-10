@@ -6,6 +6,9 @@
 #include "../common_def.h"	// for INLINE
 #include "EmuStructs.h"
 
+#ifdef _DEBUG
+#include <stdio.h>
+#endif
 
 #ifdef _USE_MATH_DEFINES
 // MS VC6 doesn't have M_PI yet
@@ -24,7 +27,7 @@
 #ifdef _DEBUG
 #define logerror	printf
 #else
-#define logerror
+#define logerror(...) {}
 #endif
 
 

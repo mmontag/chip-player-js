@@ -22,7 +22,10 @@
 /***********************************************************/
 
 #include <stdlib.h>	// for calloc()
-#include <stdio.h>
+
+#if YM_DEBUG_LEVEL > 1
+#endif
+
 #include <stddef.h>	// for NULL
 #define _USE_MATH_DEFINES
 #include <math.h>

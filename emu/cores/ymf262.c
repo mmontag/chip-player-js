@@ -55,9 +55,6 @@ differences between OPL2 and OPL3 shown in datasheets:
 
 */
 
-#ifdef _DEBUG
-#include <stdio.h>
-#endif
 #include <stdlib.h>
 #include <string.h>	// for memset
 #include <stddef.h>	// for NULL

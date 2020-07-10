@@ -30,9 +30,6 @@
     * June 6, 2011       (AS) Rewrote DMA from scratch, Darius 2 relies on it.
 */
 
-#ifdef _DEBUG
-#include <stdio.h>
-#endif
 #include <math.h>	// for pow() in scsplfo.c
 #include <stdlib.h>
 #include <string.h>	// for memset

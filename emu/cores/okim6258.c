@@ -11,9 +11,6 @@
  **********************************************************************************************/
 
 
-#ifdef _DEBUG
-#include <stdio.h>
-#endif
 #include <stdlib.h>
 #include <stddef.h>	// for NULL
 #include <math.h>

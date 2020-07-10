@@ -69,9 +69,6 @@ Revision History:
         verify volume of the FM part on the Y8950
 */
 
-#ifdef _DEBUG
-#include <stdio.h>
-#endif
 #include <stdlib.h>
 #include <string.h>	// for memset
 #include <stddef.h>	// for NULL

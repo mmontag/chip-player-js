@@ -27,7 +27,6 @@
     AY-3-8910 data sheet
     
 *****************************************************************************/
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 

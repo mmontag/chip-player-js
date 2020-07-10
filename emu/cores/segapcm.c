@@ -6,7 +6,6 @@
 
 #include <stdlib.h>
 #include <string.h>	// for memset
-#include <stdio.h>
 
 #include "../../stdtype.h"
 #include "../EmuStructs.h"
@@ -15,7 +14,6 @@
 #include "../EmuHelper.h"
 
 #include "segapcm.h"
-
 
 static void SEGAPCM_update(void *chip, UINT32 samples, DEV_SMPL **outputs);
 

@@ -39,7 +39,6 @@ to do:
 
 */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>	// for NULL
 #define _USE_MATH_DEFINES

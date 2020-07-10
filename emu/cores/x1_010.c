@@ -51,7 +51,6 @@ Registers:
 
 ***************************************************************************/
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>	// for NULL
 #include <string.h>	// for memset

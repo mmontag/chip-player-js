@@ -49,9 +49,6 @@
  *
  *****************************************************************************/
 
-#ifdef _DEBUG
-#include <stdio.h>
-#endif
 #include <stdlib.h>
 
 #include "../../stdtype.h"
