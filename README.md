@@ -45,7 +45,7 @@ Prerequisites: yarn, cmake, emsdk.
 * Clone the repository. 
 * Run `yarn install`.
 
-In building the subprojects, we ultimately invoke `emmake make` instead of `make` to yield an object file that can Emscripten can link to in the final build.
+In building the subprojects, we ultimately invoke `emmake make` instead of `make` to yield an object file that Emscripten can link to in the final build.
 
 * Install the [Emscripten SDK (emsdk)](https://github.com/emscripten-core/emsdk).
 * The build script in [package.json](package.json) looks for the emsdk in `~/src/emsdk`. Modify this line to match your emsdk install location if necessary:
@@ -122,6 +122,12 @@ Or deploy to Github Pages:
 yarn deploy
 ```
 
+Deploy to Github Pages without rebuilding chip-core.wasm: 
+
+```sh
+yarn deploy-lite
+```
+
 ### Related Projects and Resources
 
 ##### Chipmachine (Native)
@@ -191,6 +197,14 @@ Diverse and usable GM SoundFonts.
 
 - The best pop music MIDI archive comes from [Colin Raffel's thesis work](https://colinraffel.com/projects/lmd/) on MIDI alignment. About 20,000 cleaned MIDI files
     * Colin Raffel. "Learning-Based Methods for Comparing Sequences, with Applications to Audio-to-MIDI Alignment and Matching". PhD Thesis, 2016.
+- VGM Rips: https://vgmrips.net
+- VGMusic.com: https://archive.org/details/vgmusic
+- Sound Canvas MIDI Collection: https://archive.org/details/sound_canvas_midi_collection
+- The Mod Archive: https://modarchive.org/
+- Zophar's Domain: https://www.zophar.net/music
+- OPL Archive: http://opl.wafflenet.com/
+- Piano E-Competition MIDI: http://www.piano-e-competition.com/midiinstructions.asp
+- Modland: https://modland.com/pub/modules/
 
 #### Miscellaneous
 
