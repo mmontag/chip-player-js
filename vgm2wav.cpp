@@ -254,13 +254,13 @@ int main(int argc, const char *argv[]) {
     }
 
     /* figure out a player */
-    if(VGMPlayer::IsMyFile(loader) == 0) {
+    if(VGMPlayer::PlayerCanLoadFile(loader) == 0) {
         player = new VGMPlayer();
     }
-    else if(S98Player::IsMyFile(loader) == 0) {
+    else if(S98Player::PlayerCanLoadFile(loader) == 0) {
         player = new S98Player();
     }
-    else if(DROPlayer::IsMyFile(loader) == 0) {
+    else if(DROPlayer::PlayerCanLoadFile(loader) == 0) {
         player = new DROPlayer();
     }
     else {

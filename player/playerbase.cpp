@@ -23,9 +23,14 @@ const char* PlayerBase::GetPlayerName(void) const
 	return "";
 }
 
-/*static*/ UINT8 IsMyFile(DATA_LOADER *dataLoader)
+/*static*/ UINT8 PlayerBase::PlayerCanLoadFile(DATA_LOADER *dataLoader)
 {
 	return 0xFF;
+}
+
+UINT8 PlayerBase::CanLoadFile(DATA_LOADER *dataLoader) const
+{
+	return this->PlayerCanLoadFile(dataLoader);
 }
 
 /*static*/ UINT8 PlayerBase::InitDeviceOptions(PLR_DEV_OPTS& devOpts)

@@ -72,7 +72,7 @@ const char* DROPlayer::GetPlayerName(void) const
 	return "DRO";
 }
 
-/*static*/ UINT8 DROPlayer::IsMyFile(DATA_LOADER *dataLoader)
+/*static*/ UINT8 DROPlayer::PlayerCanLoadFile(DATA_LOADER *dataLoader)
 {
 	DataLoader_ReadUntil(dataLoader,0x10);
 	if (DataLoader_GetSize(dataLoader) < 0x10)
@@ -80,6 +80,11 @@ const char* DROPlayer::GetPlayerName(void) const
 	if (memcmp(&DataLoader_GetData(dataLoader)[0x00], "DBRAWOPL", 8))
 		return 0xF0;	// invalid signature
 	return 0x00;
+}
+
+UINT8 DROPlayer::CanLoadFile(DATA_LOADER *dataLoader) const
+{
+	return this->PlayerCanLoadFile(dataLoader);
 }
 
 UINT8 DROPlayer::LoadFile(DATA_LOADER *dataLoader)

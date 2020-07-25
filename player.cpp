@@ -794,11 +794,11 @@ static UINT8 GetPlayerForFile(DATA_LOADER *dLoad, PlayerBase** retPlayer)
 	UINT8 retVal;
 	PlayerBase* player;
 	
-	if (! VGMPlayer::IsMyFile(dLoad))
+	if (! vgmPlr->CanLoadFile(dLoad))
 		player = vgmPlr;
-	else if (! S98Player::IsMyFile(dLoad))
+	else if (! s98Plr->CanLoadFile(dLoad))
 		player = s98Plr;
-	else if (! DROPlayer::IsMyFile(dLoad))
+	else if (! droPlr->CanLoadFile(dLoad))
 		player = droPlr;
 	else
 		return 0xFF;

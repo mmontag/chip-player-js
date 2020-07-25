@@ -142,7 +142,7 @@ const char* S98Player::GetPlayerName(void) const
 	return "S98";
 }
 
-/*static*/ UINT8 S98Player::IsMyFile(DATA_LOADER *dataLoader)
+/*static*/ UINT8 S98Player::PlayerCanLoadFile(DATA_LOADER *dataLoader)
 {
 	DataLoader_ReadUntil(dataLoader,0x20);
 	if (DataLoader_GetSize(dataLoader) < 0x20)
@@ -150,6 +150,11 @@ const char* S98Player::GetPlayerName(void) const
 	if (memcmp(&DataLoader_GetData(dataLoader)[0x00], "S98", 3))
 		return 0xF0;	// invalid signature
 	return 0x00;
+}
+
+UINT8 S98Player::CanLoadFile(DATA_LOADER *dataLoader) const
+{
+	return this->PlayerCanLoadFile(dataLoader);
 }
 
 UINT8 S98Player::LoadFile(DATA_LOADER *dataLoader)

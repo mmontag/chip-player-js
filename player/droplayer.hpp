@@ -85,8 +85,9 @@ public:
 	
 	UINT32 GetPlayerType(void) const;
 	const char* GetPlayerName(void) const;
-	static UINT8 IsMyFile(DATA_LOADER *fileLoader);
-	UINT8 LoadFile(DATA_LOADER *fileLoader);
+	static UINT8 PlayerCanLoadFile(DATA_LOADER *dataLoader);
+	UINT8 CanLoadFile(DATA_LOADER *dataLoader) const;
+	UINT8 LoadFile(DATA_LOADER *dataLoader);
 	UINT8 UnloadFile(void);
 	const DRO_HEADER* GetFileHeader(void) const;
 	

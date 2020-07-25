@@ -202,7 +202,7 @@ const char* VGMPlayer::GetPlayerName(void) const
 	return "VGM";
 }
 
-/*static*/ UINT8 VGMPlayer::IsMyFile(DATA_LOADER *dataLoader)
+/*static*/ UINT8 VGMPlayer::PlayerCanLoadFile(DATA_LOADER *dataLoader)
 {
 	DataLoader_ReadUntil(dataLoader,0x38);
 	if (DataLoader_GetSize(dataLoader) < 0x38)
@@ -210,6 +210,11 @@ const char* VGMPlayer::GetPlayerName(void) const
 	if (memcmp(&DataLoader_GetData(dataLoader)[0x00], "Vgm ", 4))
 		return 0xF0;	// invalid signature
 	return 0x00;
+}
+
+UINT8 VGMPlayer::CanLoadFile(DATA_LOADER *dataLoader) const
+{
+	return this->PlayerCanLoadFile(dataLoader);
 }
 
 UINT8 VGMPlayer::LoadFile(DATA_LOADER *dataLoader)
