@@ -92,7 +92,7 @@ static UINT32 masterVol = 0x10000;	// fixed point 16.16
 static UINT32 fadeSmplStart;
 static UINT32 fadeSmplTime;
 
-static bool showTags = false;
+static UINT8 showTags = 1;
 static bool showFileInfo = false;
 
 static DROPlayer* droPlr;
@@ -204,7 +204,7 @@ int main(int argc, char* argv[])
 				player->Tick2Second(player->GetTotalTicks()), hwType);
 	}
 	
-	if (showTags)
+	if (showTags > 0)
 	{
 		const char* songTitle = NULL;
 		const char* songAuthor = NULL;
@@ -229,19 +229,22 @@ int main(int argc, char* argv[])
 			else if (!strcmp(t[0], "COMMENT"))
 				songComment = t[1];
 		}
-	
+		
 		if (songTitle != NULL && songTitle[0] != '\0')
 			printf("\nSong Title: %s", songTitle);
-		if (songAuthor != NULL && songAuthor[0] != '\0')
-			printf("\nSong Author: %s", songAuthor);
-		if (songGame != NULL && songGame[0] != '\0')
-			printf("\nSong Game: %s", songGame);
-		if (songSystem != NULL && songSystem[0] != '\0')
-			printf("\nSong System: %s", songSystem);
-		if (songDate != NULL && songDate[0] != '\0')
-			printf("\nSong Date: %s", songDate);
-		if (songComment != NULL && songComment[0] != '\0')
-			printf("\nSong Comment: %s", songComment);
+		if (showTags >= 2)
+		{
+			if (songAuthor != NULL && songAuthor[0] != '\0')
+				printf("\nSong Author: %s", songAuthor);
+			if (songGame != NULL && songGame[0] != '\0')
+				printf("\nSong Game: %s", songGame);
+			if (songSystem != NULL && songSystem[0] != '\0')
+				printf("\nSong System: %s", songSystem);
+			if (songDate != NULL && songDate[0] != '\0')
+				printf("\nSong Date: %s", songDate);
+			if (songComment != NULL && songComment[0] != '\0')
+				printf("\nSong Comment: %s", songComment);
+		}
 	}
 	
 	putchar('\n');
@@ -725,7 +728,7 @@ static void DoChipControlMode(PlayerBase* player)
 				if (val >= 0)
 				{
 					if (! strcmp(line, "T"))
-						showTags = !!val;
+						showTags = val;
 					else if (! strcmp(line, "FI"))
 						showFileInfo = !!val;
 				}

@@ -17,7 +17,7 @@ set(VGMEMU_PKGCONFIG_VERSION ${PROJECT_VERSION})
 
 # Note: If multiple cores are present for a device, the core chosed by default is marked with *.
 
-option(SNDEMU_ALL "build all sound devices (overrides other selections)" ON)
+option(SNDEMU__ALL "build all sound devices (overrides other selections)" ON)
 option(SNDEMU_SN76496_ALL "Sound Device SN76496: all cores" OFF)
 option(SNDEMU_SN76496_MAME "Sound Device SN76496: MAME core*" OFF)
 option(SNDEMU_SN76496_MAXIM "Sound Device SN76496: Maxim core" OFF)
@@ -89,12 +89,12 @@ option(SNDEMU_C352_ALL "Sound Device C352: all cores" OFF)
 option(SNDEMU_GA20_ALL "Sound Device Irem GA20: all cores" OFF)
 
 # console/computer presets
-option(SNDEMU_PRESET_SMS "Sound Dev. Preset: Sega Master System/Game Gear" OFF)
-option(SNDEMU_PRESET_SMD "Sound Dev. Preset: Sega MegaDrive (with CD/32X)" OFF)
-option(SNDEMU_PRESET_MSX "Sound Dev. Preset: MSX (with extentions)" OFF)
-option(SNDEMU_PRESET_S98 "Sound Dev. Preset: S98 logs" OFF)
-option(SNDEMU_PRESET_NES "Sound Dev. Preset: NES/Famicom (with extentions)" OFF)
-option(SNDEMU_PRESET_IBM_PC "Sound Dev. Preset: IBM PC (Tandy/CMS/Sound Blaster)" OFF)
+option(SNDEMU__PRESET_SMS "Sound Dev. Preset: Sega Master System/Game Gear" OFF)
+option(SNDEMU__PRESET_SMD "Sound Dev. Preset: Sega MegaDrive (with CD/32X)" OFF)
+option(SNDEMU__PRESET_MSX "Sound Dev. Preset: MSX (with extensions)" OFF)
+option(SNDEMU__PRESET_S98 "Sound Dev. Preset: S98 logs" OFF)
+option(SNDEMU__PRESET_NES "Sound Dev. Preset: NES/Famicom (with extensions)" OFF)
+option(SNDEMU__PRESET_IBM_PC "Sound Dev. Preset: IBM PC (Tandy/CMS/Sound Blaster)" OFF)
 
 
 # enable sound device selection
@@ -102,7 +102,7 @@ set(EMU_DEFS "SNDDEV_SELECT")
 
 
 #### general enable-all option ####
-if(SNDEMU_ALL)
+if(SNDEMU__ALL)
 	# turn all devices on
 	set(SNDEMU_SN76496_ALL ON)
 	set(SNDEMU_YM2413_ALL ON)
@@ -149,17 +149,17 @@ endif()
 
 
 #### presets for specific machines ####
-if(SNDEMU_PRESET_SMS)
+if(SNDEMU__PRESET_SMS)
 	set(SNDEMU_SN76496_ALL ON)
 	set(SNDEMU_YM2413_ALL ON)	# Sega Mark III FM Sound Unit
 endif()
-if(SNDEMU_PRESET_SMD)
+if(SNDEMU__PRESET_SMD)
 	set(SNDEMU_YM2612_ALL ON)
 	set(SNDEMU_SN76496_ALL ON)
 	set(SNDEMU_RF5C68_ALL ON)	# MegaCD
 	set(SNDEMU_32X_PWM_ALL ON)	# Sega 32X
 endif()
-if(SNDEMU_PRESET_MSX)
+if(SNDEMU__PRESET_MSX)
 	set(SNDEMU_AY8910_ALL ON)
 	set(SNDEMU_Y8950_ALL ON)	# MSX-AUDIO
 	set(SNDEMU_YM2413_ALL ON)	# MSX-MUSIC/FM-PAC
@@ -168,7 +168,7 @@ if(SNDEMU_PRESET_MSX)
 	set(SNDEMU_YMF262_ALL ON)	# MoonSound (FM-part)
 	set(SNDEMU_YM2151_ALL ON)	# Yamaha SFG-05
 endif()
-if(SNDEMU_PRESET_S98)
+if(SNDEMU__PRESET_S98)
 	set(SNDEMU_AY8910_ALL ON)	# PSG (device 1, 15)
 	set(SNDEMU_YM2203_ALL ON)	# OPN (device 2)
 	set(SNDEMU_YM2612_ALL ON)	# OPN2 (device 3)
@@ -180,12 +180,12 @@ if(SNDEMU_PRESET_S98)
 	set(SNDEMU_YMF262_ALL ON)	# OPL3 (device 9)
 	set(SNDEMU_SN76496_ALL ON)	# DCSG (device 16)
 endif()
-if(SNDEMU_PRESET_NES)
+if(SNDEMU__PRESET_NES)
 	set(SNDEMU_NESAPU_ALL ON)
 	set(SNDEMU_YM2413_ALL ON)	# VRC7
 	set(SNDEMU_AY8910_ALL ON)	# Sunsoft 5B
 endif()
-if(SNDEMU_PRESET_PC)
+if(SNDEMU__PRESET_PC)
 	set(SNDEMU_SN76496_ALL ON)	# Tandy
 	set(SNDEMU_SAA1099_ALL ON)	# CMS / Game Blaster
 	set(SNDEMU_YM3812_ALL ON)	# AdLib / Sound Blaster 1/2
