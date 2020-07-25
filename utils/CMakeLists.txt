@@ -125,12 +125,14 @@ add_library(${PROJECT_NAME} STATIC $<TARGET_OBJECTS:${PROJECT_NAME}_obj>)
 
 SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 target_compile_definitions(${PROJECT_NAME} PUBLIC ${UTIL_DEFS})
+target_include_directories(${PROJECT_NAME} PUBLIC ${LIBVGM_SOURCE_DIR})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${UTIL_LIBS})
 
 if(BUILD_SHARED)
 add_library(${PROJECT_NAME}_shared SHARED $<TARGET_OBJECTS:${PROJECT_NAME}_obj>)
 SET_TARGET_PROPERTIES(${PROJECT_NAME}_shared PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 target_compile_definitions(${PROJECT_NAME}_shared PUBLIC ${UTIL_DEFS})
+target_include_directories(${PROJECT_NAME}_shared PUBLIC ${LIBVGM_SOURCE_DIR})
 target_link_libraries(${PROJECT_NAME}_shared PRIVATE ${UTIL_LIBS})
 endif(BUILD_SHARED)
 
