@@ -3,7 +3,7 @@ libADLMIDI is a free Software MIDI synthesizer library with OPL3 emulation
 
 Original ADLMIDI code: Copyright (c) 2010-2014 Joel Yliluoma <bisqwit@iki.fi>
 
-ADLMIDI Library API:   Copyright (c) 2015-2018 Vitaly Novichkov <admin@wohlnet.ru>
+ADLMIDI Library API:   Copyright (c) 2015-2020 Vitaly Novichkov <admin@wohlnet.ru>
 
 Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 emulation:
 
@@ -26,6 +26,7 @@ Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 e
 * DJGPP GCC 7.2 cross compiler from Linux to MS-DOS 32-bit
 * OpenBSD
 * Haiku
+* Emscripten
 
 # Key features
 * OPL3 emulation with four-operator mode support
@@ -82,7 +83,6 @@ The library is licensed under in it's parts LGPL 2.1+, GPL v2+, GPL v3+, and MIT
 * **libADLMIDI_SHARED** - (ON/OFF, default OFF) Build shared library
 * **WITH_UNIT_TESTS** - (ON/OFF, default OFF) Enable unit testing
 
-* **WITH_CPP_EXTRAS** - (ON/OFF, default OFF) Build libADLMIDI with some extra public features for C++ language (for example, instrument testing API is available for C++ only).
 * **WITH_MIDI_SEQUENCER** - (ON/OFF, default ON) Build with embedded MIDI sequencer. Disable this if you want use library in real-time MIDI drivers or plugins.)
 * **WITH_EMBEDDED_BANKS** - (ON/OFF, default ON) Enable or disable embedded banks (Original ADLMIDI and older versions of libADLMIDI are had embedded-only banks with no ability to load custom banks in runtime).
 * **WITH_HQ_RESAMPLER** - (ON/OFF, default OFF) Build with support for high quality resampling (requires zita-resampler to be installed)
@@ -100,7 +100,7 @@ The library is licensed under in it's parts LGPL 2.1+, GPL v2+, GPL v3+, and MIT
 
 * **WITH_MIDIPLAY** - (ON/OFF, default OFF) Build demo MIDI player (Requires SDL2 and also pthread on Windows with MinGW)
 * **MIDIPLAY_WAVE_ONLY** - (ON/OFF, default OFF) Build Demo MIDI player without support of real time playing. It will output into WAV only.
-* **WITH_ADLMIDI2** - (ON/OFF, default OFF) Build Classic ADLMIDI MIDI player (Requires SDL2 on Linux and macOS, requires pthread on Windows with MinGW, SDL doesn't required on Windows. Also, the **WITH_CPP_EXTRAS** flag must be enabled)
+* **WITH_ADLMIDI2** - (ON/OFF, default OFF) Build Classic ADLMIDI MIDI player (Requires SDL2 on Linux and macOS, requires pthread on Windows with MinGW, SDL doesn't required on Windows).
 * **WITH_VLC_PLUGIN** - (ON/OFF, default OFF) Compile VLC plugin. For now, works on Linux and VLC. Support for other platforms comming soon!
 * **WITH_OLD_UTILS** - (ON/OFF, default OFF) Build old utilities to dump some bank formats, made by original creator of ADLMIDI
 * **EXAMPLE_SDL2_AUDIO** - (ON/OFF, default OFF) Build also a simple SDL2 demo MIDI player
@@ -120,12 +120,12 @@ You need to make in the any IDE a library project and put into it next files
 
 ### Public header (include)
 * adlmidi.h     - Library Public API header, use it to control library
-* adlmidi.hpp   - Public additional C++ API header, optional
 
 ### Internal code (src)
 * chips/*       - Various OPL3 chip emulators and commonized interface over them
 * wopl/*        - WOPL bank format library
 * adldata.hh    - bank structures definition
+* adldata_db.h  - Embedded banks database structures and containers definitions
 * adlmidi_private.hpp - header of internal private APIs
 * adlmidi_bankmap.h - MIDI bank hash table
 * adlmidi_bankmap.tcc - MIDI bank hash table (Implementation)
@@ -133,8 +133,8 @@ You need to make in the any IDE a library project and put into it next files
 * adlmidi_ptr.hpp - Custom implementations of smart pointers for C++98
 * file_reader.hpp - Generic file and memory reader
 
-* adldata.cpp	 - Automatically generated database of FM banks from "fm_banks" directory via "gen_adldata" tool. **Don't build it if you have defined `DISABLE_EMBEDDED_BANKS` macro!**
-* adlmidi.cpp   - code of library
+* adldata.cpp	  - Automatically generated database of FM banks from "fm_banks" directory via "gen_adldata" tool. **Don't build it if you defined the `DISABLE_EMBEDDED_BANKS` macro!**
+* adlmidi.cpp     - code of library
 * adlmidi_load.cpp	- Source of file loading and parsing processing
 * adlmidi_midiplay.cpp	- MIDI event sequencer
 * adlmidi_opl3.cpp	- OPL3 chips manager
@@ -182,6 +182,15 @@ To build that example you will need to have installed SDL2 library.
  * Reworked rhythm-mode percussions system, WOPL banks with rhythm-mode percussions
  * Added Public Domain Opal OPL3 emulator made by Reality (a team who originally made the Reality Adlib Tracker) (Thanks to [Jean Pierre Cimalando](https://github.com/jpcima) for a work!)
  * Added LGPL licensed JavaOPL3 emulator made by Robson Cozendey in Java and later rewritten into C++ for GZDoom (Thanks to [Jean Pierre Cimalando](https://github.com/jpcima) for a work!)
+ * Fully rewritten an embedded bank database format, embedded banks now supports a wider set (more than 127:127 instruments in one bank)
+ * Improved an accuracy of the DMX volume model, include the buggy AM intepretation
+ * Improved an accuracy of Apogee volume model, include the bug of AM instruments
+ * Improved an accuracy of Win9X volume model
+ * Removed C++ extras. C++-binded instruments tester is useless since a real-time MIDI API can completely replace it
+ * Added AIL volume model
+ * Added Generic FM variant of Win9X volume model
+ * Fixed an incorrect work of CC-121 (See https://github.com/Wohlstand/libADLMIDI/issues/227 for details)
+ * Added an aproximal simulation of HMI volume model (TODO: Research an actual HMI volume model and fix it!)
 
 ## 1.4.0   2018-10-01
  * Implemented a full support for Portamento! (Thanks to [Jean Pierre Cimalando](https://github.com/jpcima) for a work!)

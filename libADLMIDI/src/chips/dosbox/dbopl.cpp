@@ -1507,11 +1507,15 @@ void Chip::Setup( Bit32u rate ) {
 	}
 }
 
-static bool doneTables = false;
+static volatile bool doneTables = false;
+static Mutex mutexTables;
+
 void InitTables( void ) {
 	if ( doneTables )
 		return;
-	doneTables = true;
+	MutexHolder lock( mutexTables );
+	if ( doneTables )
+		return;
 #if ( DBOPL_WAVE == WAVE_HANDLER ) || ( DBOPL_WAVE == WAVE_TABLELOG )
 	//Exponential volume table, same as the real adlib
 	for ( int i = 0; i < 256; i++ ) {
@@ -1661,6 +1665,7 @@ void InitTables( void ) {
 		}
 	}
 #endif
+	doneTables = true;
 }
 
 Bit32u Handler::WriteAddr( Bit32u port, Bit8u val ) {

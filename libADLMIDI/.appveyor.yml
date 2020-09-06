@@ -7,6 +7,7 @@ environment:
     VLC_PLUGIN: OFF
     BUILD_SHARED: ON
     BUILD_STATIC: ON
+    BUILD_MIDIPLAY: ON
     VLC_TARBALL_x32: "https://mirror.yandex.ru/mirrors/ftp.videolan.org/vlc/3.0.4/win32/vlc-3.0.4-win32.7z"
     VLC_TARBALL_x64: "https://mirror.yandex.ru/mirrors/ftp.videolan.org/vlc/3.0.4/win64/vlc-3.0.4-win64.7z"
     SEVENZIP: "C:\\Program Files\\7-Zip\\7z.exe"
@@ -22,6 +23,7 @@ environment:
       TOOLCHAIN_BIN: "C:\\mingw-w64\\i686-6.3.0-posix-dwarf-rt_v5-rev1\\mingw32\\bin"
       VLC_PLUGIN: ON
       BUILD_SHARED: OFF
+      BUILD_MIDIPLAY: OFF
       VLC_TARBALL: ${VLC_TARBALL_x32}
     - BUILD_TYPE: Release
       COMPILER: MinGW-w64
@@ -32,6 +34,7 @@ environment:
       TOOLCHAIN_BIN: "C:\\mingw-w64\\x86_64-6.3.0-posix-seh-rt_v5-rev1\\mingw64\\bin"
       VLC_PLUGIN: ON
       BUILD_SHARED: OFF
+      BUILD_MIDIPLAY: OFF
       VLC_TARBALL: ${VLC_TARBALL_x64}
     - BUILD_TYPE: Debug
       COMPILER: MinGW
@@ -140,7 +143,7 @@ build_script:
   - md build-%COMPILER%-%BUILD_TYPE%-%PLATFORM%
   - cd build-%COMPILER%-%BUILD_TYPE%-%PLATFORM%
   - if NOT [%TOOLCHAIN_BIN%]==[] set PATH=%TOOLCHAIN_BIN%;%PATH:C:\Program Files\Git\usr\bin;=%
-  - cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DCMAKE_PREFIX_PATH=%CMAKEPREFIXPATH% -DCMAKE_INSTALL_PREFIX=libADLMIDI -DWITH_OLD_UTILS=ON -DWITH_GENADLDATA=OFF -DlibADLMIDI_STATIC=%BUILD_STATIC% -DlibADLMIDI_SHARED=%BUILD_SHARED% -DWITH_VLC_PLUGIN=%VLC_PLUGIN% -DVLC_PLUGIN_NOINSTALL=ON ..
+  - cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DCMAKE_PREFIX_PATH=%CMAKEPREFIXPATH% -DCMAKE_INSTALL_PREFIX=libADLMIDI -DWITH_OLD_UTILS=ON -DWITH_GENADLDATA=OFF -DlibADLMIDI_STATIC=%BUILD_STATIC% -DlibADLMIDI_SHARED=%BUILD_SHARED% -DWITH_MIDIPLAY=%BUILD_MIDIPLAY% -DWITH_VLC_PLUGIN=%VLC_PLUGIN% -DVLC_PLUGIN_NOINSTALL=ON ..
   - if [%COMPILER_FAMILY%]==[MinGW] cmake --build . --config %BUILD_TYPE% -- -j 2
   - if [%COMPILER_FAMILY%]==[MinGW] mingw32-make install
   - if [%COMPILER_FAMILY%]==[MSVC] cmake --build . --config %BUILD_TYPE% --target install

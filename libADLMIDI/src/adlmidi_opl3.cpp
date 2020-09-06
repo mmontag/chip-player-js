@@ -2,7 +2,7 @@
  * libADLMIDI is a free Software MIDI synthesizer library with OPL3 emulation
  *
  * Original ADLMIDI code: Copyright (c) 2010-2014 Joel Yliluoma <bisqwit@iki.fi>
- * ADLMIDI Library API:   Copyright (c) 2015-2019 Vitaly Novichkov <admin@wohlnet.ru>
+ * ADLMIDI Library API:   Copyright (c) 2015-2020 Vitaly Novichkov <admin@wohlnet.ru>
  *
  * Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 emulation:
  * http://iki.fi/bisqwit/source/adlmidi.html
@@ -25,6 +25,10 @@
 #include "adlmidi_private.hpp"
 #include <stdlib.h>
 #include <cassert>
+
+#ifndef DISABLE_EMBEDDED_BANKS
+#include "wopl/wopl_file.h"
+#endif
 
 #ifdef ADLMIDI_HW_OPL
 static const unsigned OPLBase = 0x388;
@@ -191,12 +195,80 @@ static const uint16_t g_channelsMapPan[NUM_OF_CHANNELS] =
     Ports: ???
 */
 
+// Mapping from MIDI volume level to OPL level value.
+
+static const uint_fast32_t s_dmx_volume_model[128] =
+{
+    0,  1,  3,  5,  6,  8,  10, 11,
+    13, 14, 16, 17, 19, 20, 22, 23,
+    25, 26, 27, 29, 30, 32, 33, 34,
+    36, 37, 39, 41, 43, 45, 47, 49,
+    50, 52, 54, 55, 57, 59, 60, 61,
+    63, 64, 66, 67, 68, 69, 71, 72,
+    73, 74, 75, 76, 77, 79, 80, 81,
+    82, 83, 84, 84, 85, 86, 87, 88,
+    89, 90, 91, 92, 92, 93, 94, 95,
+    96, 96, 97, 98, 99, 99, 100, 101,
+    101, 102, 103, 103, 104, 105, 105, 106,
+    107, 107, 108, 109, 109, 110, 110, 111,
+    112, 112, 113, 113, 114, 114, 115, 115,
+    116, 117, 117, 118, 118, 119, 119, 120,
+    120, 121, 121, 122, 122, 123, 123, 123,
+    124, 124, 125, 125, 126, 126, 127, 127,
+};
+
+static const uint_fast32_t s_w9x_sb16_volume_model[32] =
+{
+    80, 63, 40, 36, 32, 28, 23, 21,
+    19, 17, 15, 14, 13, 12, 11, 10,
+    9,  8,  7,  6,  5,  5,  4,  4,
+    3,  3,  2,  2,  1,  1,  0,  0
+};
+
+static const uint_fast32_t s_w9x_generic_fm_volume_model[32] =
+{
+    40, 36, 32, 28, 23, 21, 19, 17,
+    15, 14, 13, 12, 11, 10, 9,  8,
+    7,  6,  5,  5,  4,  4,  3,  3,
+    2,  2,  1,  1,  1,  0,  0,  0
+};
+
+static const uint_fast32_t s_ail_vel_graph[16] =
+{
+    82,   85,  88,  91,  94,  97, 100, 103,
+    106, 109, 112, 115, 118, 121, 124, 127
+};
+
+//! a VERY APROXIMAL HMI volume model, TODO: Research accurate one!
+static const uint_fast32_t s_hmi_volume_table[128] =
+{
+    0x3f, 0x3f, 0x3a, 0x35, 0x35, 0x30, 0x30, 0x2c, 0x2c, 0x29, 0x29,
+    0x25, 0x25, 0x24, 0x24, 0x23, 0x23, 0x22, 0x21, 0x21, 0x20, 0x20,
+    0x1f, 0x1f, 0x1e, 0x1e, 0x1d, 0x1d, 0x1c, 0x1c, 0x1b, 0x1b, 0x1a,
+    0x1a, 0x1a, 0x19, 0x19, 0x19, 0x18, 0x18, 0x18, 0x17, 0x17, 0x17,
+    0x16, 0x16, 0x16, 0x15, 0x15, 0x15, 0x14, 0x14, 0x14, 0x14, 0x13,
+    0x13, 0x13, 0x13, 0x12, 0x12, 0x12, 0x12, 0x11, 0x11, 0x11, 0x10,
+    0x10, 0x10, 0x0f, 0x0f, 0x0f, 0x0e, 0x0e, 0x0e, 0x0d, 0x0d, 0x0d,
+    0x0c, 0x0c, 0x0c, 0x0b, 0x0b, 0x0b, 0x0b, 0x0a, 0x0a, 0x0a, 0x0a,
+    0x09, 0x09, 0x09, 0x09, 0x08, 0x08, 0x08, 0x08, 0x07, 0x07, 0x07,
+    0x07, 0x06, 0x06, 0x06, 0x06, 0x05, 0x05, 0x05, 0x05, 0x04, 0x04,
+    0x04, 0x04, 0x03, 0x03, 0x03, 0x03, 0x03, 0x02, 0x02, 0x02, 0x02,
+    0x02, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00
+};
+
+enum
+{
+    MasterVolumeDefault = 127
+};
+
 enum
 {
     OPL_PANNING_LEFT  = 0x10,
     OPL_PANNING_RIGHT = 0x20,
     OPL_PANNING_BOTH  = 0x30
 };
+
+
 
 static adlinsdata2 makeEmptyInstrument()
 {
@@ -215,6 +287,7 @@ OPL3::OPL3() :
     m_deepVibratoMode(false),
     m_rhythmMode(false),
     m_softPanning(false),
+    m_masterVolume(MasterVolumeDefault),
     m_musicMode(MODE_MIDI),
     m_volumeScale(VOLUME_Generic)
 {
@@ -232,6 +305,13 @@ OPL3::OPL3() :
 
 OPL3::~OPL3()
 {
+#ifdef ADLMIDI_HW_OPL
+    silenceAll();
+    writeRegI(0, 0x0BD, 0);
+    writeRegI(0, 0x104, 0);
+    writeRegI(0, 0x105, 0);
+    silenceAll();
+#endif
 }
 
 bool OPL3::setupLocked()
@@ -248,21 +328,40 @@ void OPL3::setEmbeddedBank(uint32_t bank)
     //Embedded banks are supports 128:128 GM set only
     m_insBanks.clear();
 
-    if(bank >= static_cast<unsigned int>(maxAdlBanks()))
+    if(bank >= static_cast<uint32_t>(g_embeddedBanksCount))
         return;
 
-    Bank *bank_pair[2] =
-    {
-        &m_insBanks[0],
-        &m_insBanks[PercussionTag]
-    };
+    const BanksDump::BankEntry &bankEntry = g_embeddedBanks[m_embeddedBank];
+    m_insBankSetup.deepTremolo = ((bankEntry.bankSetup >> 8) & 0x01) != 0;
+    m_insBankSetup.deepVibrato = ((bankEntry.bankSetup >> 8) & 0x02) != 0;
+    m_insBankSetup.volumeModel = (bankEntry.bankSetup & 0xFF);
+    m_insBankSetup.scaleModulators = false;
 
-    for(unsigned i = 0; i < 256; ++i)
+    for(int ss = 0; ss < 2; ss++)
     {
-        size_t meta = banks[bank][i];
-        adlinsdata2 &ins = bank_pair[i / 128]->ins[i % 128];
-        ins = adlinsdata2::from_adldata(::adlins[meta]);
+        bank_count_t maxBanks = ss ? bankEntry.banksPercussionCount : bankEntry.banksMelodicCount;
+        bank_count_t banksOffset = ss ? bankEntry.banksOffsetPercussive : bankEntry.banksOffsetMelodic;
+
+        for(bank_count_t bankID = 0; bankID < maxBanks; bankID++)
+        {
+            size_t bankIndex = g_embeddedBanksMidiIndex[banksOffset + bankID];
+            const BanksDump::MidiBank &bankData = g_embeddedBanksMidi[bankIndex];
+            size_t bankMidiIndex = static_cast<size_t>((bankData.msb * 256) + bankData.lsb) + (ss ? static_cast<size_t>(PercussionTag) : 0);
+            Bank &bankTarget = m_insBanks[bankMidiIndex];
+
+            for(size_t instId = 0; instId < 128; instId++)
+            {
+                midi_bank_idx_t instIndex = bankData.insts[instId];
+                if(instIndex < 0)
+                    continue;
+                BanksDump::InstrumentEntry instIn = g_embeddedBanksInstruments[instIndex];
+                adlinsdata2 &instOut = bankTarget.ins[instId];
+
+                adlFromInstrument(instIn, instOut);
+            }
+        }
     }
+
 #else
     ADL_UNUSED(bank);
 #endif
@@ -275,19 +374,19 @@ void OPL3::writeReg(size_t chip, uint16_t address, uint8_t value)
     unsigned o = address >> 8;
     unsigned port = OPLBase + o * 2;
 
-    #ifdef __DJGPP__
+#   ifdef __DJGPP__
     outportb(port, address);
     for(unsigned c = 0; c < 6; ++c) inportb(port);
     outportb(port + 1, value);
     for(unsigned c = 0; c < 35; ++c) inportb(port);
-    #endif
+#   endif
 
-    #ifdef __WATCOMC__
+#   ifdef __WATCOMC__
     outp(port, address);
     for(uint16_t c = 0; c < 6; ++c)  inp(port);
     outp(port + 1, value);
     for(uint16_t c = 0; c < 35; ++c) inp(port);
-    #endif//__WATCOMC__
+#   endif//__WATCOMC__
 
 #else//ADLMIDI_HW_OPL
     m_chips[chip]->writeReg(address, value);
@@ -411,18 +510,164 @@ void OPL3::noteOn(size_t c1, size_t c2, double hertz) // Hertz range: 0..131071
     }
 }
 
-void OPL3::touchNote(size_t c, uint8_t volume, uint8_t brightness)
+static inline uint_fast32_t brightnessToOPL(uint_fast32_t brightness)
 {
-    if(volume > 63)
-        volume = 63;
+    double b = static_cast<double>(brightness);
+    double ret = ::round(127.0 * ::sqrt(b * (1.0 / 127.0))) / 2.0;
+    return static_cast<uint_fast32_t>(ret);
+}
 
+void OPL3::touchNote(size_t c,
+                     uint_fast32_t velocity,
+                     uint_fast32_t channelVolume,
+                     uint_fast32_t channelExpression,
+                     uint8_t brightness)
+{
     size_t chip = c / NUM_OF_CHANNELS, cc = c % NUM_OF_CHANNELS;
     const adldata &adli = m_insCache[c];
     size_t cmf_offset = ((m_musicMode == MODE_CMF) && cc >= OPL3_CHANNELS_RHYTHM_BASE) ? 10 : 0;
     uint16_t o1 = g_operatorsMap[cc * 2 + 0 + cmf_offset];
     uint16_t o2 = g_operatorsMap[cc * 2 + 1 + cmf_offset];
-    uint8_t  x = adli.modulator_40, y = adli.carrier_40;
+    uint8_t  srcMod = adli.modulator_40,
+             srcCar = adli.carrier_40;
     uint32_t mode = 1; // 2-op AM
+
+    uint_fast32_t kslMod = srcMod & 0xC0;
+    uint_fast32_t kslCar = srcCar & 0xC0;
+    uint_fast32_t tlMod = srcMod & 0x3F;
+    uint_fast32_t tlCar = srcCar & 0x3F;
+
+    uint_fast32_t modulator;
+    uint_fast32_t carrier;
+
+    uint_fast32_t volume = 0;
+    uint_fast32_t midiVolume = 0;
+
+    bool do_modulator = false;
+    bool do_carrier = true;
+
+    static const bool do_ops[10][2] =
+    {
+        { false, true },  /* 2 op FM */
+        { true,  true },  /* 2 op AM */
+        { false, false }, /* 4 op FM-FM ops 1&2 */
+        { true,  false }, /* 4 op AM-FM ops 1&2 */
+        { false, true  }, /* 4 op FM-AM ops 1&2 */
+        { true,  false }, /* 4 op AM-AM ops 1&2 */
+        { false, true  }, /* 4 op FM-FM ops 3&4 */
+        { false, true  }, /* 4 op AM-FM ops 3&4 */
+        { false, true  }, /* 4 op FM-AM ops 3&4 */
+        { true,  true  }  /* 4 op AM-AM ops 3&4 */
+    };
+
+
+    // ------ Mix volumes and compute average ------
+
+    switch(m_volumeScale)
+    {
+    default:
+    case Synth::VOLUME_Generic:
+    {
+        volume = velocity * m_masterVolume *
+                 channelVolume * channelExpression;
+
+        /* If the channel has arpeggio, the effective volume of
+             * *this* instrument is actually lower due to timesharing.
+             * To compensate, add extra volume that corresponds to the
+             * time this note is *not* heard.
+             * Empirical tests however show that a full equal-proportion
+             * increment sounds wrong. Therefore, using the square root.
+             */
+        //volume = (int)(volume * std::sqrt( (double) ch[c].users.size() ));
+        const double c1 = 11.541560327111707;
+        const double c2 = 1.601379199767093e+02;
+        const uint_fast32_t minVolume = 1108075; // 8725 * 127
+
+        // The formula below: SOLVE(V=127^4 * 2^( (A-63.49999) / 8), A)
+        if(volume > minVolume)
+        {
+            double lv = std::log(static_cast<double>(volume));
+            volume = static_cast<uint_fast32_t>(lv * c1 - c2);
+        }
+        else
+            volume = 0;
+    }
+    break;
+
+    case Synth::VOLUME_NATIVE:
+    {
+        volume = velocity * channelVolume * channelExpression;
+        // 4096766 = (127 * 127 * 127) / 2
+        volume = (volume * m_masterVolume) / 4096766;
+    }
+    break;
+
+    case Synth::VOLUME_DMX:
+    case Synth::VOLUME_DMX_FIXED:
+    {
+        volume = (channelVolume * channelExpression * m_masterVolume) / 16129;
+        volume = (s_dmx_volume_model[volume] + 1) << 1;
+        volume = (s_dmx_volume_model[(velocity < 128) ? velocity : 127] * volume) >> 9;
+    }
+    break;
+
+    case Synth::VOLUME_APOGEE:
+    case Synth::VOLUME_APOGEE_FIXED:
+    {
+        midiVolume = (channelVolume * channelExpression * m_masterVolume / 16129);
+    }
+    break;
+
+    case Synth::VOLUME_9X:
+    {
+        volume = (channelVolume * channelExpression * m_masterVolume) / 16129;
+        volume = s_w9x_sb16_volume_model[volume >> 2];
+    }
+    break;
+
+    case Synth::VOLUME_9X_GENERIC_FM:
+    {
+        volume = (channelVolume * channelExpression * m_masterVolume) / 16129;
+        volume = s_w9x_generic_fm_volume_model[volume >> 2];
+    }
+    break;
+
+    case Synth::VOLUME_AIL:
+    {
+        midiVolume = (channelVolume * channelExpression) * 2;
+        midiVolume >>= 8;
+        if(midiVolume != 0)
+            midiVolume++;
+
+        velocity = (velocity & 0x7F) >> 3;
+        velocity = s_ail_vel_graph[velocity];
+
+        midiVolume = (midiVolume * velocity) * 2;
+        midiVolume >>= 8;
+        if(midiVolume != 0)
+            midiVolume++;
+
+        if(m_masterVolume < 127)
+            midiVolume = (midiVolume * m_masterVolume) / 127;
+    }
+    break;
+
+    case Synth::VOLUME_HMI:
+    {
+        /* Temporarily copying DMX volume model. TODO: Reverse-engine the actual HMI volume model! */
+        volume = (channelVolume * channelExpression * m_masterVolume) / 16129;
+        volume = (((velocity < 128) ? velocity : 127) * volume) / 127;
+        volume = 63 - s_hmi_volume_table[volume];
+    }
+    break;
+    }
+
+    if(volume > 63)
+        volume = 63;
+
+    if(midiVolume > 127)
+        midiVolume = 127;
+
 
     if(m_channelCategory[c] == ChanCat_Regular ||
        m_channelCategory[c] == ChanCat_Rhythm_Bass)
@@ -450,49 +695,118 @@ void OPL3::touchNote(size_t c, uint8_t volume, uint8_t brightness)
         mode += (i0->feedconn & 1) + (i1->feedconn & 1) * 2;
     }
 
-    static const bool do_ops[10][2] =
-    {
-        { false, true },  /* 2 op FM */
-        { true,  true },  /* 2 op AM */
-        { false, false }, /* 4 op FM-FM ops 1&2 */
-        { true,  false }, /* 4 op AM-FM ops 1&2 */
-        { false, true  }, /* 4 op FM-AM ops 1&2 */
-        { true,  false }, /* 4 op AM-AM ops 1&2 */
-        { false, true  }, /* 4 op FM-FM ops 3&4 */
-        { false, true  }, /* 4 op AM-FM ops 3&4 */
-        { false, true  }, /* 4 op FM-AM ops 3&4 */
-        { true,  true  }  /* 4 op AM-AM ops 3&4 */
-    };
+    do_modulator = do_ops[mode][0] || m_scaleModulators;
+    do_carrier   = do_ops[mode][1] || m_scaleModulators;
+
+    // ------ Compute the total level register output data ------
 
     if(m_musicMode == MODE_RSXX)
     {
-        if(o1 != 0xFFF)
-            writeRegI(chip, 0x40 + o1, x);
-        if(o2 != 0xFFF)
-            writeRegI(chip, 0x40 + o2, y - volume / 2);
+        tlCar -= volume / 2;
+    }
+    else if(m_volumeScale == Synth::VOLUME_APOGEE ||
+            m_volumeScale == Synth::VOLUME_APOGEE_FIXED)
+    {
+        // volume = ((64 * (velocity + 0x80)) * volume) >> 15;
+
+        if(do_carrier)
+        {
+            tlCar = 63 - tlCar;
+            tlCar *= velocity + 0x80;
+            tlCar = (midiVolume * tlCar) >> 15;
+            tlCar = tlCar ^ 63;
+        }
+
+        if(do_modulator)
+        {
+            uint_fast32_t mod = tlCar;
+
+            tlMod = 63 - tlMod;
+            tlMod *= velocity + 0x80;
+
+            if(m_volumeScale == Synth::VOLUME_APOGEE_FIXED || mode > 1)
+                mod = tlMod; // Fix the AM voices bug
+
+            // NOTE: Here is a bug of Apogee Sound System that makes modulator
+            // to not work properly on AM instruments. The fix of this bug, you
+            // need to replace the tlCar with tmMod in this formula.
+            // Don't do the bug on 4-op voices.
+            tlMod = (midiVolume * mod) >> 15;
+
+            tlMod ^= 63;
+        }
+    }
+    else if(m_volumeScale == Synth::VOLUME_DMX && mode <= 1)
+    {
+        tlCar = (63 - volume);
+
+        if(do_modulator)
+        {
+            if(tlMod < tlCar)
+                tlMod = tlCar;
+        }
+    }
+    else if(m_volumeScale == Synth::VOLUME_9X)
+    {
+        if(do_carrier)
+            tlCar += volume + s_w9x_sb16_volume_model[velocity >> 2];
+        if(do_modulator)
+            tlMod += volume + s_w9x_sb16_volume_model[velocity >> 2];
+
+        if(tlCar > 0x3F)
+            tlCar = 0x3F;
+        if(tlMod > 0x3F)
+            tlMod = 0x3F;
+    }
+    else if(m_volumeScale == Synth::VOLUME_9X_GENERIC_FM)
+    {
+        if(do_carrier)
+            tlCar += volume + s_w9x_generic_fm_volume_model[velocity >> 2];
+        if(do_modulator)
+            tlMod += volume + s_w9x_generic_fm_volume_model[velocity >> 2];
+
+        if(tlCar > 0x3F)
+            tlCar = 0x3F;
+        if(tlMod > 0x3F)
+            tlMod = 0x3F;
+    }
+    else if(m_volumeScale == Synth::VOLUME_AIL)
+    {
+        uint_fast32_t v0_val = (~srcMod) & 0x3f;
+        uint_fast32_t v1_val = (~srcCar) & 0x3f;
+
+        if(do_modulator)
+            v0_val = (v0_val * midiVolume) / 127;
+        if(do_carrier)
+            v1_val = (v1_val * midiVolume) / 127;
+
+        tlMod = (~v0_val) & 0x3F;
+        tlCar = (~v1_val) & 0x3F;
     }
     else
     {
-        bool do_modulator = do_ops[ mode ][ 0 ] || m_scaleModulators;
-        bool do_carrier   = do_ops[ mode ][ 1 ] || m_scaleModulators;
-
-        uint32_t modulator = do_modulator ? (x | 63) - volume + volume * (x & 63) / 63 : x;
-        uint32_t carrier   = do_carrier   ? (y | 63) - volume + volume * (y & 63) / 63 : y;
-
-        if(brightness != 127)
-        {
-            brightness = static_cast<uint8_t>(::round(127.0 * ::sqrt((static_cast<double>(brightness)) * (1.0 / 127.0))) / 2.0);
-            if(!do_modulator)
-                modulator = (modulator | 63) - brightness + brightness * (modulator & 63) / 63;
-            if(!do_carrier)
-                carrier = (carrier | 63) - brightness + brightness * (carrier & 63) / 63;
-        }
-
-        if(o1 != 0xFFF)
-            writeRegI(chip, 0x40 + o1, modulator);
-        if(o2 != 0xFFF)
-            writeRegI(chip, 0x40 + o2, carrier);
+        if(do_modulator)
+            tlMod = 63 - volume + (volume * tlMod) / 63;
+        if(do_carrier)
+            tlCar = 63 - volume + (volume * tlCar) / 63;
     }
+
+    if(brightness != 127)
+    {
+        brightness = brightnessToOPL(brightness);
+        if(!do_modulator)
+            tlMod = 63 - brightness + (brightness * tlMod) / 63;
+        if(!do_carrier)
+            tlCar = 63 - brightness + (brightness * tlCar) / 63;
+    }
+
+    modulator = (kslMod & 0xC0) | (tlMod & 63);
+    carrier = (kslCar & 0xC0) | (tlCar & 63);
+
+    if(o1 != 0xFFF)
+        writeRegI(chip, 0x40 + o1, modulator);
+    if(o2 != 0xFFF)
+        writeRegI(chip, 0x40 + o2, carrier);
 
     // Correct formula (ST3, AdPlug):
     //   63-((63-(instrvol))/63)*chanvol
@@ -501,20 +815,6 @@ void OPL3::touchNote(size_t c, uint8_t volume, uint8_t brightness)
     // Also (slower, floats):
     //   63 + chanvol * (instrvol / 63.0 - 1)
 }
-
-/*
-void OPL3::Touch(unsigned c, unsigned volume) // Volume maxes at 127*127*127
-{
-    if(LogarithmicVolumes)
-        Touch_Real(c, volume * 127 / (127 * 127 * 127) / 2);
-    else
-    {
-        // The formula below: SOLVE(V=127^3 * 2^( (A-63.49999) / 8), A)
-        Touch_Real(c, volume > 8725 ? static_cast<unsigned int>(std::log(volume) * 11.541561 + (0.5 - 104.22845)) : 0);
-        // The incorrect formula below: SOLVE(V=127^3 * (2^(A/63)-1), A)
-        //Touch_Real(c, volume>11210 ? 91.61112 * std::log(4.8819E-7*volume + 1.0)+0.5 : 0);
-    }
-}*/
 
 void OPL3::setPatch(size_t c, const adldata &instrument)
 {
@@ -565,7 +865,7 @@ void OPL3::silenceAll() // Silence all OPL channels.
     for(size_t c = 0; c < m_numChannels; ++c)
     {
         noteOff(c);
-        touchNote(c, 0);
+        touchNote(c, 0, 0, 0);
     }
 }
 
@@ -694,6 +994,26 @@ void OPL3::setVolumeScaleModel(ADLMIDI_VolumeModels volumeModel)
     case ADLMIDI_VolumeModel_9X:
         m_volumeScale = OPL3::VOLUME_9X;
         break;
+
+    case ADLMIDI_VolumeModel_DMX_Fixed:
+        m_volumeScale = OPL3::VOLUME_DMX_FIXED;
+        break;
+
+    case ADLMIDI_VolumeModel_APOGEE_Fixed:
+        m_volumeScale = OPL3::VOLUME_APOGEE_FIXED;
+        break;
+
+    case ADLMIDI_VolumeModel_AIL:
+        m_volumeScale = OPL3::VOLUME_AIL;
+        break;
+
+    case ADLMIDI_VolumeModel_9X_GENERIC_FM:
+        m_volumeScale = OPL3::VOLUME_9X_GENERIC_FM;
+        break;
+
+    case ADLMIDI_VolumeModel_HMI:
+        m_volumeScale = OPL3::VOLUME_HMI;
+        break;
     }
 }
 
@@ -712,6 +1032,16 @@ ADLMIDI_VolumeModels OPL3::getVolumeScaleModel()
         return ADLMIDI_VolumeModel_APOGEE;
     case OPL3::VOLUME_9X:
         return ADLMIDI_VolumeModel_9X;
+    case OPL3::VOLUME_DMX_FIXED:
+        return ADLMIDI_VolumeModel_DMX_Fixed;
+    case OPL3::VOLUME_APOGEE_FIXED:
+        return ADLMIDI_VolumeModel_APOGEE_Fixed;
+    case OPL3::VOLUME_AIL:
+        return ADLMIDI_VolumeModel_AIL;
+    case OPL3::VOLUME_9X_GENERIC_FM:
+        return ADLMIDI_VolumeModel_9X_GENERIC_FM;
+    case OPL3::VOLUME_HMI:
+        return ADLMIDI_VolumeModel_HMI;
     }
 }
 

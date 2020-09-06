@@ -7,8 +7,8 @@ if(OPENMP_FOUND)
 endif()
 
 if(NOT WIN32 AND NOT ADLMIDI_DOS)
-    set(ADLMIDI2_HAS_PUZZLE_GAME TRUE)
-    set(ADLMIDI2_VIDEO_OUT_SUPPORT TRUE)
+    option(ADLMIDI2_HAS_PUZZLE_GAME     "Enable the built-in puzzle game" ON)
+    option(ADLMIDI2_VIDEO_OUT_SUPPORT   "Allow video recording with using of FFMPEG" ON)
 endif()
 
 set(adlmidi2_src)
@@ -28,6 +28,8 @@ if(NOT WIN32 AND NOT ADLMIDI_DOS)
     libADLMIDI_find_SDL2()
     target_link_libraries(adlmidi2 PRIVATE ADLMIDI_SDL2)
 endif()
+
+set_nopie(adlmidi2)
 
 if(ADLMIDI2_HAS_PUZZLE_GAME)
     target_compile_definitions(adlmidi2 PUBLIC SUPPORT_PUZZLE_GAME)
@@ -49,10 +51,6 @@ elseif(NOT ADLMIDI_DOS)
         target_link_libraries(adlmidi2 PRIVATE dl)
     endif()
     target_link_libraries(adlmidi2 PRIVATE pthread m)
-endif()
-
-if(NOT WITH_CPP_EXTRAS)
-    message(FATAL_ERROR "ADLMIDI2 Requires C++ Extras. Please enable WITH_CPP_EXTRAS option!")
 endif()
 
 if(MSVC)

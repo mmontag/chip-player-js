@@ -2,7 +2,7 @@
  * libADLMIDI is a free Software MIDI synthesizer library with OPL3 emulation
  *
  * Original ADLMIDI code: Copyright (c) 2010-2014 Joel Yliluoma <bisqwit@iki.fi>
- * ADLMIDI Library API:   Copyright (c) 2015-2019 Vitaly Novichkov <admin@wohlnet.ru>
+ * ADLMIDI Library API:   Copyright (c) 2015-2020 Vitaly Novichkov <admin@wohlnet.ru>
  *
  * Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 emulation:
  * http://iki.fi/bisqwit/source/adlmidi.html
@@ -29,15 +29,12 @@ template <class WOPLI>
 static void cvt_generic_to_FMIns(adlinsdata2 &ins, const WOPLI &in)
 {
     ins.voice2_fine_tune = 0.0;
-    int8_t voice2_fine_tune = in.second_voice_detune;
+    int voice2_fine_tune = in.second_voice_detune;
+
     if(voice2_fine_tune != 0)
     {
-        if(voice2_fine_tune == 1)
-            ins.voice2_fine_tune = 0.000025;
-        else if(voice2_fine_tune == -1)
-            ins.voice2_fine_tune = -0.000025;
-        else
-            ins.voice2_fine_tune = voice2_fine_tune * (15.625 / 1000.0);
+        // Simulate behavior of DMX second voice detune
+        ins.voice2_fine_tune = (double)(((voice2_fine_tune + 128) >> 1) - 64) / 32.0;
     }
 
     ins.midi_velocity_offset = in.midi_velocity_offset;
@@ -81,17 +78,11 @@ static void cvt_FMIns_to_generic(WOPLI &ins, const adlinsdata2 &in)
     double voice2_fine_tune = in.voice2_fine_tune;
     if(voice2_fine_tune != 0)
     {
-        if(voice2_fine_tune > 0 && voice2_fine_tune <= 0.000025)
-            ins.second_voice_detune = 1;
-        else if(voice2_fine_tune < 0 && voice2_fine_tune >= -0.000025)
-            ins.second_voice_detune = -1;
-        else
-        {
-            long value = static_cast<long>(round(voice2_fine_tune * (1000.0 / 15.625)));
-            value = (value < -128) ? -128 : value;
-            value = (value > +127) ? +127 : value;
-            ins.second_voice_detune = static_cast<int8_t>(value);
-        }
+        int m = (int)(voice2_fine_tune * 32.0);
+        m += 64;
+        m <<= 1;
+        m -= 128;
+        ins.second_voice_detune = (uint8_t)m;
     }
 
     ins.midi_velocity_offset = in.midi_velocity_offset;

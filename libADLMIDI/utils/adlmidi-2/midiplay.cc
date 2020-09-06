@@ -81,7 +81,7 @@ public:
 #include <signal.h>
 
 #include "adlmidi.h"
-#include "adlmidi.hpp"
+
 
 #ifndef __DJGPP__
 
@@ -94,7 +94,6 @@ static const unsigned OPLBase = 0x388;
 #endif
 static unsigned NumCards   = 2;
 static bool AdlPercussionMode = false;
-static bool ReverbIsOn = true;
 static bool QuitFlag = false, FakeDOSshell = false;
 static bool DoingInstrumentTesting = false;
 static bool WritePCMfile = false;
@@ -187,7 +186,7 @@ static class UserInterface
 #endif
 public:
     static constexpr unsigned NColumns = 1216 / 20;
-    #ifdef SUPPORT_VIDEO_OUTPUT
+#ifdef SUPPORT_VIDEO_OUTPUT
     static constexpr unsigned VidWidth  = 1216, VidHeight = 2160;
     static constexpr unsigned FontWidth =   20, FontHeight = 45;
     static constexpr unsigned TxWidth   = (VidWidth / FontWidth), TxHeight = (VidHeight / FontHeight);
@@ -195,10 +194,10 @@ public:
     unsigned short CharBuffer[TxWidth * TxHeight] = {0};
     bool           DirtyCells[TxWidth * TxHeight] = {false};
     unsigned       NDirty = 0;
-    #endif
-    #ifdef _WIN32
+#endif
+#ifdef _WIN32
     void *handle;
-    #endif
+#endif
     int x, y, color, txtline, maxy;
 
     // Text:
@@ -222,22 +221,22 @@ public:
         va_start(ap, fmt);
         vfprintf(stderr, fmt, ap);
         va_end(ap);
-        #ifdef _WIN32
+#ifdef _WIN32
         fflush(stderr);
-        #endif
+#endif
     }
 #endif
 
     UserInterface():
-    #ifdef SUPPORT_PUZZLE_GAME
+#ifdef SUPPORT_PUZZLE_GAME
         player(2),
         computer(31),
-    #endif
+#endif
         x(0), y(0), color(-1), txtline(0),
         maxy(0), cursor_visible(true)
     {
         GuessInitialWindowHeight();
-        #ifdef _WIN32
+#ifdef _WIN32
         handle = GetStdHandle(STD_OUTPUT_HANDLE);
         GotoXY(41, 13);
         CONSOLE_SCREEN_BUFFER_INFO tmp;
@@ -253,19 +252,19 @@ public:
             //COORD size = { NColumns, 23*NumCards+5 };
             //SetConsoleScreenBufferSize(handle,size);
         }
-        #endif
-        #if (!defined(_WIN32) || defined(__CYGWIN__)) && defined(TIOCGWINSZ)
+#endif
+#if (!defined(_WIN32) || defined(__CYGWIN__)) && defined(TIOCGWINSZ)
         std::signal(SIGWINCH, SigWinchHandler);
-        #endif
-        #ifdef __DJGPP__
+#endif
+#ifdef __DJGPP__
         color = 7;
-        #endif
+#endif
         std::memset(slots, '.',      sizeof(slots));
         std::memset(background, '.', sizeof(background));
         std::memset(backgroundcolor, 1, sizeof(backgroundcolor));
-        #ifndef _WIN32
+#ifndef _WIN32
         std::setvbuf(stderr, stderr_buffer, _IOFBF, sizeof(stderr_buffer));
-        #endif
+#endif
         RawPrn("\r"); // Ensure cursor is at the x=0 we imagine it being
         Print(0, 7, true, "Hit Ctrl-C to quit");
     }
@@ -273,7 +272,7 @@ public:
     {
         if(!cursor_visible) return;
         cursor_visible = false;
-        #ifdef _WIN32
+#ifdef _WIN32
         if(handle)
         {
             const CONSOLE_CURSOR_INFO info = {100, false};
@@ -282,15 +281,15 @@ public:
                 CheckTetris();
             return;
         }
-        #endif
+#endif
         if(!DoingInstrumentTesting)
             CheckTetris();
-        #ifdef __DJGPP__
+#ifdef __DJGPP__
         {
             _setcursortype(_NOCURSOR);
             return;
         }
-        #endif
+#endif
         RawPrn("\33[?25l"); // hide cursor
     }
     void ShowCursor()
@@ -299,28 +298,47 @@ public:
         cursor_visible = true;
         GotoXY(0, maxy);
         Color(7);
-        #ifdef _WIN32
+#ifdef _WIN32
         if(handle)
         {
             const CONSOLE_CURSOR_INFO info = {100, true};
             SetConsoleCursorInfo(handle, &info);
             return;
         }
-        #endif
-        #ifdef __DJGPP__
+#endif
+#ifdef __DJGPP__
         {
             _setcursortype(_NORMALCURSOR);
             return;
         }
-        #endif
+#endif
         RawPrn("\33[?25h"); // show cursor
         std::fflush(stderr);
     }
+    void ClearScreen()
+    {
+#ifdef __DJGPP__
+        Color(7);
+        clrscr();
+#else
+        std::fprintf(stderr, "\e[0m\033[0;0H\033[2J");
+        std::fflush(stderr);
+#endif
+    }
+    void ColorReset()
+    {
+#ifdef __DJGPP__
+        Color(7);
+#else
+        std::fprintf(stderr, "\e[0m");
+        std::fflush(stderr);
+#endif
+    }
     void VidPut(char c)
     {
-        #ifndef SUPPORT_VIDEO_OUTPUT
+#ifndef SUPPORT_VIDEO_OUTPUT
         c = c;
-        #else
+#else
         unsigned clr = (unsigned)color, tx = (unsigned)x, ty = (unsigned)y;
         unsigned cell_index = ty * TxWidth + tx;
         if(cell_index < TxWidth * TxHeight)
@@ -338,7 +356,7 @@ public:
         }
         #endif
     }
-    #ifdef SUPPORT_VIDEO_OUTPUT
+#ifdef SUPPORT_VIDEO_OUTPUT
     static unsigned VidTranslateColor(unsigned c)
     {
         static const unsigned colors[16] =
@@ -390,19 +408,19 @@ public:
                 }
         }
     }
-    #endif
+#endif
     void PutC(char c)
     {
-        #ifdef _WIN32
+#ifdef _WIN32
         if(handle) WriteConsole(handle, &c, 1, 0, 0);
         else
-        #endif
+#endif
         {
-            #ifdef __DJGPP__
+#ifdef __DJGPP__
             putch(c);
-            #else
+#else
             std::fputc(c, stderr);
-            #endif
+#endif
         }
         VidPut(c);
         ++x; // One letter drawn. Update cursor position.
@@ -411,11 +429,11 @@ public:
     int Print(unsigned beginx, unsigned color, bool ln, const char *fmt, va_list ap)
     {
         char Line[1024];
-        #ifndef __CYGWIN__
+#ifndef __CYGWIN__
         int nchars = std::vsnprintf(Line, sizeof(Line), fmt, ap);
-        #else
+#else
         int nchars = std::vsprintf(Line, fmt, ap); /* SECURITY: POSSIBLE BUFFER OVERFLOW (Cygwin) */
-        #endif
+#endif
         //if(nchars == 0) return nchars;
 
         HideCursor();
@@ -566,7 +584,7 @@ public:
             y += 1;
             x = 0;
         }
-        #ifdef _WIN32
+#ifdef _WIN32
         if(handle)
         {
             CONSOLE_SCREEN_BUFFER_INFO tmp;
@@ -579,14 +597,14 @@ public:
             }
             SetConsoleCursorPosition(handle, tmp2);
         }
-        #endif
-        #ifdef __DJGPP__
+#endif
+#ifdef __DJGPP__
         {
             gotoxy(x = newx, wherey() - (y - newy));
             y = newy;
             return;
         }
-        #endif
+#endif
         // Go up with \33[A
         if(newy < y)
         {
@@ -614,15 +632,15 @@ public:
     {
         if(color != newcolor)
         {
-            #ifdef _WIN32
+#ifdef _WIN32
             if(handle)
                 SetConsoleTextAttribute(handle, newcolor);
             else
-            #endif
-            #ifdef __DJGPP__
+#endif
+#ifdef __DJGPP__
                 textattr(newcolor);
             if(0)
-            #endif
+#endif
             {
                 static const char map[8 + 1] = "04261537";
                 RawPrn("\33[0;%s40;3%c", (newcolor & 8) ? "1;" : "", map[newcolor & 7]);
@@ -765,10 +783,10 @@ struct Reverb /* This reverb implementation is based on Freeverb impl. in Sox */
     std::vector<float> out[2];
     std::deque<float> input_fifo;
 
-    void Create(double sample_rate_Hz,
-                double wet_gain_dB,
-                double room_scale, double reverberance, double fhf_damping, /* 0..1 */
-                double pre_delay_s, double stereo_depth,
+    void Create(float sample_rate_Hz,
+                float wet_gain_dB,
+                float room_scale, float reverberance, float fhf_damping, /* 0..1 */
+                float pre_delay_s, float stereo_depth,
                 size_t buffer_size)
     {
         size_t delay = static_cast<size_t>(pre_delay_s  * sample_rate_Hz + .5);
@@ -796,24 +814,115 @@ struct Reverb /* This reverb implementation is based on Freeverb impl. in Sox */
         input_fifo.erase(input_fifo.begin(), input_fifo.begin() + length);
     }
 };
+static union ReverbSpecs
+{
+    float array[7];
+    struct byname
+    {
+        float do_reverb;        // boolean...
+        float wet_gain_db;      // wet_gain_dB  (-10..10)
+        float room_scale;       // room_scale   (0..1)
+        float reverberance;     // reverberance (0..1)
+        float hf_damping;       // hf_damping   (0..1)
+        float pre_delay_s;      // pre_delay_s  (0.. 0.5)
+        float stereo_depth;     // stereo_depth (0..1)
+    } byname = {1.f, 6.f, .7f, .6f, .8f, 0.f, 1.f};
+} ReverbSpecs;
 static struct MyReverbData
 {
-    bool wetonly;
+    float  wetonly;
     Reverb chan[2];
 
-    MyReverbData() : wetonly(false)
+    MyReverbData()
     {
-        for(size_t i = 0; i < 2; ++i)
+        ReInit();
+    }
+    void ReInit()
+    {
+        wetonly = ReverbSpecs.byname.do_reverb;
+        for(std::size_t i=0; i<2; ++i)
+        {
             chan[i].Create(PCM_RATE,
-                           6.0,  // wet_gain_dB  (-10..10)
-                           .7,   // room_scale   (0..1)
-                           .6,   // reverberance (0..1)
-                           .8,   // hf_damping   (0..1)
-                           .000, // pre_delay_s  (0.. 0.5)
-                           1,   // stereo_depth (0..1)
-                           MaxSamplesAtTime);
+                ReverbSpecs.byname.wet_gain_db,
+                ReverbSpecs.byname.room_scale,
+                ReverbSpecs.byname.reverberance,
+                ReverbSpecs.byname.hf_damping,
+                ReverbSpecs.byname.pre_delay_s,
+                ReverbSpecs.byname.stereo_depth,
+                MaxSamplesAtTime);
+        }
     }
 } reverb_data;
+
+static void ParseReverb(std::string specs)
+{
+    while(!specs.empty())
+    {
+        std::size_t colon = specs.find(':');
+        if(colon == 0)
+        {
+            specs.erase(0, 1);
+            continue;
+        }
+        if(colon == specs.npos)
+        {
+            colon = specs.size();
+        }
+        std::string term(&specs[0], colon);
+        if(!term.empty())
+        {
+            std::size_t eq = specs.find('=');
+            std::size_t key_end     = (eq == specs.npos) ? specs.size() : eq;
+            std::size_t value_begin = (eq == specs.npos) ? specs.size() : (eq+1);
+            std::string key(&term[0], key_end);
+            std::string value(&term[value_begin], term.size()-value_begin);
+            float floatvalue = std::strtof(&value[0], nullptr); // FIXME: Requires specs to be nul-terminated
+            //if(!value.empty())
+            //    std::from_chars(&value[0], &value[value.size()], floatvalue); // Not implemented in GCC
+
+            // Create a hash of the key
+            //Good: start=0x266191FB6907,mul=0x1,add=0x3238000,perm=0xF3B47F00, mod=21,shift=12   distance = 21  min=0 max=20
+            std::uint_fast64_t a=0xF5A9AADABAC7, b=0xC08F0800, c=0xA06C000, d=0x336A683E37B6, result=a + d*key.size();
+            unsigned mod=19, shift=3;
+            for(unsigned char ch: key)
+            {
+                result += ch;
+                result = (result ^ (result >> (1 + 1 * ((shift>>0) & 7)))) * b;
+                result = (result ^ (result >> (1 + 1 * ((shift>>3) & 7)))) * c;
+            }
+            unsigned index = result % mod;
+            // switch(index) {
+            // case 0: index = 2; break; // room, room_scale, scale, room-scale, roomscale
+            // case 1: index = 1; break; // g
+            // case 2: index = 6; break; // stereo, depth, stereo_depth, stereo-depth, stereodepth, width, s
+            // case 3: index = 3; break; // reverberance, factor, f
+            // case 4: index = 0; break; // none, off
+            // case 5: index = 0; break; // false
+            // case 6: index = 4; break; // hf, hf_damping, hf-damping, damping, dampening
+            // case 7: index = 0; break; // no
+            // case 8: index = 6; break; // wide
+            // case 9: index = 5; break; // delay, pre_delay, pre-delay, predelay, seconds, wait
+            // case 10: index = 4; break; // damp, d
+            // case 11: index = 1; break; // gain, wet_gain, wetgain, wet
+            // case 13: index = 2; break; // r
+            // case 15: index = 3; break; // amount
+            // case 16: index = 3; break; // reverb
+            // case 18: index = 5; break; // w
+            // }
+            index = (05733727145604003612 >> (index * 3)) & 7;
+            if(index < 7) ReverbSpecs.array[index] = floatvalue;
+        }
+        specs.erase(specs.begin(), specs.begin() + colon);
+    }
+    std::fprintf(stderr, "Reverb settings: Wet-dry=%g gain=%g room=%g reverb=%g damping=%g delay=%g stereo=%g\n",
+        ReverbSpecs.array[0],
+        ReverbSpecs.byname.wet_gain_db,
+        ReverbSpecs.byname.room_scale,
+        ReverbSpecs.byname.reverberance,
+        ReverbSpecs.byname.hf_damping,
+        ReverbSpecs.byname.pre_delay_s,
+        ReverbSpecs.byname.stereo_depth);
+}
 
 #ifdef _WIN32
 namespace WindowsAudio
@@ -989,16 +1098,15 @@ struct FourChars
 };
 
 
-
-static void SendStereoAudio(unsigned long count, short *samples)
+static void SendStereoAudio(unsigned long count, short* samples)
 {
     if(count > MaxSamplesAtTime)
     {
         SendStereoAudio(MaxSamplesAtTime, samples);
-        SendStereoAudio(count - MaxSamplesAtTime, samples + MaxSamplesAtTime);
+        SendStereoAudio(count-MaxSamplesAtTime, samples+MaxSamplesAtTime);
         return;
     }
-    #if 0
+#if 0
     if(count % 2 == 1)
     {
         // An uneven number of samples? To avoid complicating matters,
@@ -1006,22 +1114,21 @@ static void SendStereoAudio(unsigned long count, short *samples)
         count   -= 1;
         samples += 1;
     }
-    #endif
+#endif
     if(!count) return;
 
     // Attempt to filter out the DC component. However, avoid doing
     // sudden changes to the offset, for it can be audible.
-    double average[2] = {0, 0};
-    for(unsigned w = 0; w < 2; ++w)
+    double average[2]={0,0};
+    for(unsigned w=0; w<2; ++w)
         for(unsigned long p = 0; p < count; ++p)
-            average[w] += samples[p * 2 + w];
-    static float prev_avg_flt[2] = {0, 0};
+            average[w] += samples[p*2+w];
+    static float prev_avg_flt[2] = {0,0};
     float average_flt[2] =
     {
-        prev_avg_flt[0] = (float)((double(prev_avg_flt[0]) + average[0] * 0.04 / double(count)) / 1.04),
-        prev_avg_flt[1] = (float)((double(prev_avg_flt[1]) + average[1] * 0.04 / double(count)) / 1.04)
+        prev_avg_flt[0] = (prev_avg_flt[0] + average[0]*0.04/double(count)) / 1.04,
+        prev_avg_flt[1] = (prev_avg_flt[1] + average[1]*0.04/double(count)) / 1.04
     };
-
     // Figure out the amplitude of both channels
     if(!DoingInstrumentTesting)
     {
@@ -1029,17 +1136,17 @@ static void SendStereoAudio(unsigned long count, short *samples)
         if(!amplitude_display_counter--)
         {
             amplitude_display_counter = (PCM_RATE / count) / 24;
-            double amp[2] = {0, 0};
-            for(unsigned w = 0; w < 2; ++w)
+            double amp[2]={0,0};
+            for(unsigned w=0; w<2; ++w)
             {
                 average[w] /= double(count);
                 for(unsigned long p = 0; p < count; ++p)
-                    amp[w] += std::fabs(samples[p * 2 + w] - average[w]);
+                    amp[w] += std::fabs(samples[p*2+w] - average[w]);
                 amp[w] /= double(count);
                 // Turn into logarithmic scale
-                const double dB = std::log(amp[w] < 1 ? 1 : amp[w]) * 4.328085123;
-                const double maxdB = 3 * 16; // = 3 * log2(65536)
-                amp[w] = dB / maxdB;
+                const double dB = std::log(amp[w]<1 ? 1 : amp[w]) * 4.328085123;
+                const double maxdB = 3*16; // = 3 * log2(65536)
+                amp[w] = dB/maxdB;
             }
             UI.IllustrateVolumes(amp[0], amp[1]);
         }
@@ -1047,108 +1154,87 @@ static void SendStereoAudio(unsigned long count, short *samples)
 
     //static unsigned counter = 0; if(++counter < 8000)  return;
 
-    #if defined(_WIN32) && 0
+#if defined(__WIN32__) && 0
     // Cheat on dosbox recording: easier on the cpu load.
-    {
-        count *= 2;
-        std::vector<short> AudioBuffer(count);
-        for(unsigned long p = 0; p < count; ++p)
-            AudioBuffer[p] = samples[p];
-        WindowsAudio::Write((const unsigned char *) &AudioBuffer[0], count * 2);
-        return;
-    }
-    #endif
+   {count*=2;
+    std::vector<short> AudioBuffer(count);
+    for(unsigned long p = 0; p < count; ++p)
+        AudioBuffer[p] = samples[p];
+    WindowsAudio::Write( (const unsigned char*) &AudioBuffer[0], count*2);
+    return;}
+#endif
 
-    #ifdef _WIN32
-    std::vector<short> AudioBuffer(count * 2);
+    // Convert input to float format
+    std::vector<float> dry[2];
+    for(unsigned w=0; w<2; ++w)
+    {
+        dry[w].resize(count);
+        float a = average_flt[w];
+        for(unsigned long p = 0; p < count; ++p)
+        {
+            int   s = samples[p*2+w];
+            dry[w][p] = (s - a) * double(0.3/32768.0);
+        }
+        // ^  Note: ftree-vectorize causes an error in this loop on g++-4.4.5
+        reverb_data.chan[w].input_fifo.insert(
+        reverb_data.chan[w].input_fifo.end(),
+            dry[w].begin(), dry[w].end());
+    }
+    // Reverbify it
+    for(unsigned w=0; w<2; ++w)
+        reverb_data.chan[w].Process(count);
+
+    // Convert to signed 16-bit int format and put to playback queue
+#ifdef __WIN32__
+    std::vector<short> AudioBuffer(count*2);
     const size_t pos = 0;
-    #else
+#else
     AudioBuffer_lock.Lock();
     size_t pos = AudioBuffer.size();
-    AudioBuffer.resize(pos + count * 2);
-    #endif
-
-    if(ReverbIsOn)
-    {
-        // Convert input to float format
-        std::vector<float> dry[2];
-        for(unsigned w = 0; w < 2; ++w)
+    AudioBuffer.resize(pos + count*2);
+#endif
+    for(unsigned long p = 0; p < count; ++p)
+        for(unsigned w=0; w<2; ++w)
         {
-            dry[w].resize(count);
-            float a = average_flt[w];
-            for(unsigned long p = 0; p < count; ++p)
-            {
-                int   s = samples[p * 2 + w];
-                dry[w][p] = static_cast<float>((s - a) * double(0.3 / 32768.0));
-            }
-            // ^  Note: ftree-vectorize causes an error in this loop on g++-4.4.5
-            reverb_data.chan[w].input_fifo.insert(
-                reverb_data.chan[w].input_fifo.end(),
-                dry[w].begin(), dry[w].end());
+            float out = ((1 - reverb_data.wetonly) * dry[w][p] +
+                          reverb_data.wetonly * (
+                .5 * (reverb_data.chan[0].out[w][p]
+                    + reverb_data.chan[1].out[w][p]))
+                        ) * 32768.0f
+                 + average_flt[w];
+            AudioBuffer[pos+p*2+w] =
+                out<-32768.f ? -32768 :
+                out>32767.f ?  32767 : out;
         }
-        // Reverbify it
-        for(unsigned w = 0; w < 2; ++w)
-            reverb_data.chan[w].Process(count);
-
-        // Convert to signed 16-bit int format and put to playback queue
-        for(unsigned long p = 0; p < count; ++p)
-            for(unsigned w = 0; w < 2; ++w)
-            {
-                float out = static_cast<float>((1 - reverb_data.wetonly) * dry[w][p] +
-                             .5 * (reverb_data.chan[0].out[w][p]
-                                   + reverb_data.chan[1].out[w][p])) * 32768.0f
-                            + average_flt[w];
-                AudioBuffer[pos + p * 2 + w] =
-                    static_cast<short>(
-                        out < -32768.f ? -32768 :
-                        out > 32767.f ?  32767 : out
-                    );
-            }
-    }
-    else
-    {
-        for(unsigned long p = 0; p < count; ++p)
-            for(unsigned w = 0; w < 2; ++w)
-            {
-//                float out = ((1 - reverb_data.wetonly) * dry[w][p] +
-//                             .5 * (reverb_data.chan[0].out[w][p]
-//                                   + reverb_data.chan[1].out[w][p])) * 32768.0f
-//                            + average_flt[w];
-                AudioBuffer[pos + p * 2 + w] = samples[p * 2 + w];
-            }
-    }
-
-
     if(WritePCMfile)
     {
         /* HACK: Cheat on DOSBox recording: Record audio separately on Windows. */
-        static FILE *fp = nullptr;
+        static FILE* fp = nullptr;
         if(!fp)
         {
             fp = PCMfilepath == "-" ? stdout
-                 : fopen(PCMfilepath.c_str(), "wb");
+                                    : fopen(PCMfilepath.c_str(), "wb");
             if(fp)
             {
-                FourChars Bufs[] =
-                {
+                FourChars Bufs[] = {
                     "RIFF", (0x24u),  // RIFF type, file length - 8
                     "WAVE",           // WAVE file
                     "fmt ", (0x10u),  // fmt subchunk, which is 16 bytes:
-                    "\1\0\2\0",     // PCM (1) & stereo (2)
-                    (48000u),     // sampling rate
-                    (48000u * 2 * 2), // byte rate
-                    "\2\0\20\0",    // block align & bits per sample
+                      "\1\0\2\0",     // PCM (1) & stereo (2)
+                      (48000u    ), // sampling rate
+                      (48000u*2*2), // byte rate
+                      "\2\0\20\0",    // block align & bits per sample
                     "data", (0x00u)  //  data subchunk, which is so far 0 bytes.
                 };
-                for(unsigned c = 0; c < sizeof(Bufs) / sizeof(*Bufs); ++c)
+                for(unsigned c=0; c<sizeof(Bufs)/sizeof(*Bufs); ++c)
                     std::fwrite(Bufs[c].ret, 1, 4, fp);
             }
         }
 
         // Using a loop, because our data type is a deque, and
         // the data might not be contiguously stored in memory.
-        for(unsigned long p = 0; p < 2 * count; ++p)
-            std::fwrite(&AudioBuffer[pos + p], 1, 2, fp);
+        for(unsigned long p = 0; p < 2*count; ++p)
+            std::fwrite(&AudioBuffer[pos+p], 1, 2, fp);
 
         /* Update the WAV header */
         if(true)
@@ -1158,9 +1244,9 @@ static void SendStereoAudio(unsigned long count, short *samples)
             {
                 long datasize = pos - 0x2C;
                 if(std::fseek(fp, 4,  SEEK_SET) == 0) // Patch the RIFF length
-                    std::fwrite(FourChars(0x24u + datasize).ret, 1, 4, fp);
+                    std::fwrite( FourChars(0x24u+datasize).ret, 1,4, fp);
                 if(std::fseek(fp, 40, SEEK_SET) == 0) // Patch the data length
-                    std::fwrite(FourChars(datasize).ret, 1, 4, fp);
+                    std::fwrite( FourChars(datasize).ret, 1,4, fp);
                 std::fseek(fp, pos, SEEK_SET);
             }
         }
@@ -1170,12 +1256,11 @@ static void SendStereoAudio(unsigned long count, short *samples)
         //if(std::ftell(fp) >= 48000*4*10*60)
         //    raise(SIGINT);
     }
-
-    #ifdef SUPPORT_VIDEO_OUTPUT
+#ifdef SUPPORT_VIDEO_OUTPUT
     if(WriteVideoFile)
     {
         static constexpr unsigned framerate = 15;
-        static FILE *fp = nullptr;
+        static FILE* fp = nullptr;
         static unsigned long samples_carry = 0;
 
         if(!fp)
@@ -1200,7 +1285,7 @@ static void SendStereoAudio(unsigned long count, short *samples)
             {
                 UI.VidRender();
 
-                const unsigned char *source = (const unsigned char *)&UI.PixelBuffer;
+                const unsigned char* source = (const unsigned char*)&UI.PixelBuffer;
                 std::size_t bytes_remain    = sizeof(UI.PixelBuffer);
                 while(bytes_remain)
                 {
@@ -1213,224 +1298,236 @@ static void SendStereoAudio(unsigned long count, short *samples)
             }
         }
     }
-    #endif
-
-    #ifndef _WIN32
+#endif
+#ifndef __WIN32__
     AudioBuffer_lock.Unlock();
-    #else
+#else
     if(!WritePCMfile)
-        WindowsAudio::Write((const unsigned char *) &AudioBuffer[0], static_cast<unsigned>(2 * AudioBuffer.size()));
-    #endif
+        WindowsAudio::Write( (const unsigned char*) &AudioBuffer[0], 2*AudioBuffer.size());
+#endif
 }
 #endif /* not DJGPP */
 
-/*
- * THIS CLASS USES !!!ADL PRIVATE!!!
- */
 
-//class OPL3;
-//class AdlInstrumentTester
-//{
-//    uint32_t cur_gm;
-//    uint32_t ins_idx;
-//    std::vector<uint32_t> adl_ins_list;
-//    OPL3 *opl;
-//    MIDIplay * play;
+class AdlInstrumentTester
+{
+    struct Impl;
+    Impl *p;
 
-//public:
-//    AdlInstrumentTester(ADL_MIDIPlayer *device)
-//    {
-//        cur_gm   = 0;
-//        ins_idx  = 0;
-//        play = reinterpret_cast<MIDIplay*>(device->adl_midiPlayer);
-//        if(!play)
-//            return;
-//        opl = &play->opl;
-//    }
+public:
+    explicit AdlInstrumentTester(ADL_MIDIPlayer *device);
+    virtual ~AdlInstrumentTester();
 
-//    ~AdlInstrumentTester()
-//    {}
+    void start();
 
-//    // Find list of adlib instruments that supposedly implement this GM
-//    void FindAdlList()
-//    {
-//        const unsigned NumBanks = (unsigned)adl_getBanksCount();
-//        std::set<unsigned> adl_ins_set;
-//        for(unsigned bankno = 0; bankno < NumBanks; ++bankno)
-//            adl_ins_set.insert(banks[bankno][cur_gm]);
-//        adl_ins_list.assign(adl_ins_set.begin(), adl_ins_set.end());
-//        ins_idx = 0;
-//        NextAdl(0);
-//        opl->Silence();
-//    }
+    // Find list of adlib instruments that supposedly implement this GM
+    void FindAdlList();
+    void DoNote(int note);
+    void DoNoteOff();
+    void NextGM(int offset);
+    void NextAdl(int offset);
+    bool HandleInputChar(char ch);
+
+    void printIntst();
+
+private:
+    AdlInstrumentTester(const AdlInstrumentTester &);
+    AdlInstrumentTester &operator=(const AdlInstrumentTester &);
+};
 
 
-//    void Touch(unsigned c, unsigned volume) // Volume maxes at 127*127*127
-//    {
-//        if(opl->LogarithmicVolumes)// !!!ADL PRIVATE!!!
-//            opl->Touch_Real(c, volume * 127 / (127 * 127 * 127) / 2);// !!!ADL PRIVATE!!!
-//        else
-//        {
-//            // The formula below: SOLVE(V=127^3 * 2^( (A-63.49999) / 8), A)
-//            opl->Touch_Real(c, volume > 8725 ? static_cast<unsigned int>(std::log(volume) * 11.541561 + (0.5 - 104.22845)) : 0);// !!!ADL PRIVATE!!!
-//            // The incorrect formula below: SOLVE(V=127^3 * (2^(A/63)-1), A)
-//            //Touch_Real(c, volume>11210 ? 91.61112 * std::log(4.8819E-7*volume + 1.0)+0.5 : 0);
-//        }
-//    }
+struct AdlInstrumentTester::Impl
+{
+    bool is_drums;
+    int play_chan;
+    int cur_gm;
+    int ins_idx;
+    int cur_note;
+    ADL_MIDIPlayer *device;
+};
 
-//    void DoNote(int note)
-//    {
-//        if(adl_ins_list.empty()) FindAdlList();
-//        const unsigned meta = adl_ins_list[ins_idx];
-//        const adlinsdata &ains = opl->GetAdlMetaIns(meta);// !!!ADL PRIVATE!!!
+AdlInstrumentTester::AdlInstrumentTester(ADL_MIDIPlayer *device)
+    : p(new Impl)
+{
+#ifndef DISABLE_EMBEDDED_BANKS
+    p->is_drums = false;
+    p->play_chan = 0;
+    p->cur_gm = 0;
+    p->ins_idx = 0;
+    p->cur_note = -1;
+    p->device = device;
+#else
+    (void)(device);
+#endif
+}
 
-//        int tone = (cur_gm & 128) ? (cur_gm & 127) : (note + 50);
-//        if(ains.tone)
-//        {
-//            /*if(ains.tone < 20)
-//                tone += ains.tone;
-//            else */
-//            if(ains.tone < 128)
-//                tone = ains.tone;
-//            else
-//                tone -= ains.tone - 128;
-//        }
-//        double hertz = 172.00093 * std::exp(0.057762265 * (tone + 0.0));
-//        int i[2] = { ains.adlno1, ains.adlno2 };
-//        int32_t adlchannel[2] = { 0, 3 };
-//        if(i[0] == i[1])
-//        {
-//            adlchannel[1] = -1;
-//            adlchannel[0] = 6; // single-op
-//            std::printf("noteon at %d(%d) for %g Hz\n",
-//                        adlchannel[0], i[0], hertz);
-//        }
-//        else
-//        {
-//            std::printf("noteon at %d(%d) and %d(%d) for %g Hz\n",
-//                        adlchannel[0], i[0], adlchannel[1], i[1], hertz);
-//        }
+AdlInstrumentTester::~AdlInstrumentTester()
+{
+    delete p;
+}
 
-//        opl->NoteOff(0);
-//        opl->NoteOff(3);
-//        opl->NoteOff(6);
-//        for(unsigned c = 0; c < 2; ++c)
-//        {
-//            if(adlchannel[c] < 0) continue;
-//            opl->Patch((uint16_t)adlchannel[c], (uint16_t)i[c]);
-//            opl->Touch_Real((uint16_t)adlchannel[c], 127 * 127 * 100);
-//            opl->Pan((uint16_t)adlchannel[c], 0x30);
-//            opl->NoteOn((uint16_t)adlchannel[c], hertz);
-//        }
-//    }
+void AdlInstrumentTester::start()
+{
+    NextGM(0);
+}
 
-//    void NextGM(int offset)
-//    {
-//        cur_gm = (cur_gm + 256 + (uint32_t)offset) & 0xFF;
-//        FindAdlList();
-//    }
+void AdlInstrumentTester::FindAdlList()
+{
+#ifndef DISABLE_EMBEDDED_BANKS
+    adl_panic(p->device);
+    p->cur_note = -1;
+#endif
+}
 
-//    void NextAdl(int offset)
-//    {
-//        if(adl_ins_list.empty()) FindAdlList();
-//        const unsigned NumBanks = (unsigned)adl_getBanksCount();
-//        ins_idx = (uint32_t)((int32_t)ins_idx + (int32_t)adl_ins_list.size() + offset) % adl_ins_list.size();
 
-//        UI.Color(15);
-//        std::fflush(stderr);
-//        std::printf("SELECTED G%c%d\t%s\n",
-//                    cur_gm < 128 ? 'M' : 'P', cur_gm < 128 ? cur_gm + 1 : cur_gm - 128,
-//                    "<-> select GM, ^v select ins, qwe play note");
-//        std::fflush(stdout);
-//        UI.Color(7);
-//        std::fflush(stderr);
-//        for(unsigned a = 0; a < adl_ins_list.size(); ++a)
-//        {
-//            const unsigned i = adl_ins_list[a];
-//            const adlinsdata &ains = opl->GetAdlMetaIns(i);
+void AdlInstrumentTester::DoNote(int note)
+{
+#ifndef DISABLE_EMBEDDED_BANKS
+    DoNoteOff();
+    adl_rt_noteOn(p->device, p->play_chan, note, 127);
+    p->cur_note = note;
+#else
+    (void)(note);
+#endif
+}
 
-//            char ToneIndication[8] = "   ";
-//            if(ains.tone)
-//            {
-//                /*if(ains.tone < 20)
-//                    std::sprintf(ToneIndication, "+%-2d", ains.tone);
-//                else*/
-//                if(ains.tone < 128)
-//                    std::sprintf(ToneIndication, "=%-2d", ains.tone);
-//                else
-//                    std::sprintf(ToneIndication, "-%-2d", ains.tone - 128);
-//            }
-//            std::printf("%s%s%s%u\t",
-//                        ToneIndication,
-//                        ains.adlno1 != ains.adlno2 ? "[2]" : "   ",
-//                        (ins_idx == a) ? "->" : "\t",
-//                        i
-//                       );
+void AdlInstrumentTester::DoNoteOff()
+{
+#ifndef DISABLE_EMBEDDED_BANKS
+    if(p->cur_note > 0)
+        adl_rt_noteOff(p->device, 0, p->cur_note);
+#endif
+}
 
-//            for(unsigned bankno = 0; bankno < NumBanks; ++bankno)
-//                if(banks[bankno][cur_gm] == i)
-//                    std::printf(" %u", bankno);
+void AdlInstrumentTester::NextGM(int offset)
+{
+#ifndef DISABLE_EMBEDDED_BANKS
+    int maxBanks = adl_getBanksCount();
+    if(offset < 0 && (static_cast<long>(p->cur_gm) + offset) < 0)
+        p->cur_gm += maxBanks;
 
-//            std::printf("\n");
-//        }
-//    }
+    p->cur_gm += offset;
 
-//    bool HandleInputChar(char ch)
-//    {
-//        static const char notes[] = "zsxdcvgbhnjmq2w3er5t6y7ui9o0p";
-//        //                           c'd'ef'g'a'bC'D'EF'G'A'Bc'd'e
-//        switch(ch)
-//        {
-//        case '/':
-//        case 'H':
-//        case 'A':
-//            NextAdl(-1);
-//            break;
-//        case '*':
-//        case 'P':
-//        case 'B':
-//            NextAdl(+1);
-//            break;
-//        case '-':
-//        case 'K':
-//        case 'D':
-//            NextGM(-1);
-//            break;
-//        case '+':
-//        case 'M':
-//        case 'C':
-//            NextGM(+1);
-//            break;
-//        case 3:
-//            #if !((!defined(_WIN32) || defined(__CYGWIN__)) && !defined(__DJGPP__))
-//        case 27:
-//            #endif
-//            return false;
-//            break;
-//        default:
-//            const char *p = strchr(notes, ch);
-//            if(p && *p)
-//                DoNote((p - notes) - 12);
-//        }
-//        return true;
-//    }
-//};
+    if(p->cur_gm >= maxBanks)
+        p->cur_gm = (p->cur_gm + offset) - maxBanks;
+
+    adl_setBank(p->device, p->cur_gm);
+
+    FindAdlList();
+
+    printIntst();
+#else
+    (void)(offset);
+#endif
+}
+
+void AdlInstrumentTester::NextAdl(int offset)
+{
+#ifndef DISABLE_EMBEDDED_BANKS
+
+#if 0
+    UI.Color(15);
+    std::fflush(stderr);
+    std::printf("SELECTED G%c%d\t%s\n",
+                cur_gm < 128 ? 'M' : 'P', cur_gm < 128 ? cur_gm + 1 : cur_gm - 128,
+                "<-> select GM, ^v select ins, qwe play note");
+    std::fflush(stdout);
+    UI.Color(7);
+    std::fflush(stderr);
+#endif
+
+    if(offset < 0 && (static_cast<long>(p->ins_idx) + offset) < 0)
+        p->ins_idx += 127;
+
+    p->ins_idx += offset;
+
+    if(p->ins_idx >= 127)
+        p->ins_idx = (p->ins_idx + offset) - 127;
+
+    adl_rt_patchChange(p->device, p->play_chan, p->ins_idx);
+    adl_rt_controllerChange(p->device, p->play_chan, 7, 127);
+    adl_rt_controllerChange(p->device, p->play_chan, 11, 127);
+    adl_rt_controllerChange(p->device, p->play_chan, 10, 64);
+
+    printIntst();
+#else
+    (void)(offset);
+#endif
+}
+
+bool AdlInstrumentTester::HandleInputChar(char ch)
+{
+#ifndef DISABLE_EMBEDDED_BANKS
+    static const char notes[] = "zsxdcvgbhnjmq2w3er5t6y7ui9o0p";
+    //                           c'd'ef'g'a'bC'D'EF'G'A'Bc'd'e
+    switch(ch)
+    {
+    case '/':
+    case 'H':
+    case 'A':
+        NextAdl(-1);
+        break;
+    case '*':
+    case 'P':
+    case 'B':
+        NextAdl(+1);
+        break;
+    case '-':
+    case 'K':
+    case 'D':
+        NextGM(-1);
+        break;
+    case '+':
+    case 'M':
+    case 'C':
+        NextGM(+1);
+        break;
+    case 'T':
+        p->is_drums = !p->is_drums;
+        p->play_chan = p->is_drums ? 9 : 0;
+        NextAdl(0);
+        break;
+    case ' ':
+        DoNoteOff();
+        break;
+    case 3:
+#if !((!defined(__WIN32__) || defined(__CYGWIN__)) && !defined(__DJGPP__))
+    case 27:
+#endif
+        return false;
+    default:
+        const char *p = std::strchr(notes, ch);
+        if(p && *p)
+            DoNote((int)(p - notes) + 48);
+    }
+#else
+    (void)(ch);
+#endif
+    return true;
+}
+
+void AdlInstrumentTester::printIntst()
+{
+#ifndef DISABLE_EMBEDDED_BANKS
+    UI.GotoXY(0, 10);
+    UI.Print(0, 255, false, "Bank: %3d, Instrument %3d %10s   ",
+             p->cur_gm, p->ins_idx, p->is_drums ? "drum" : "melodic");
+    UI.ShowCursor();
+#endif
+}
+
+
 
 static void TidyupAndExit(int sig)
 {
     bool hookSignal = false;
     hookSignal |= (sig == SIGINT);
-    #ifdef __DJGPP__
-        hookSignal |= (sig == SIGQUIT);
-    #endif
+#ifdef __DJGPP__
+    hookSignal |= (sig == SIGQUIT);
+#endif
     if(hookSignal)
     {
         UI.ShowCursor();
-        UI.Color(7);
-        std::fflush(stderr);
-        //signal(SIGINT, SIG_DFL);
-        //raise(SIGINT);
-        std::printf("\nBye!\n");
         QuitFlag = true;
     }
 }
@@ -1499,8 +1596,13 @@ static int ParseCommandLine(char *cmdline, char **argv)
 }
 
 extern int main(int argc, char **argv);
+
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR szCmdLine, int sw)
 {
+    (void)hInst;
+    (void)hPrev;
+    (void)szCmdLine;
+    (void)sw;
     //extern int main(int, char **);
     char *cmdline = GetCommandLine();
     int argc = ParseCommandLine(cmdline, NULL);
@@ -1553,7 +1655,7 @@ static bool is_number(const std::string &s)
 
 int main(int argc, char **argv)
 {
-#ifndef HARDWARE_OPL3
+#if !defined(HARDWARE_OPL3) && !defined(_WIN32)
     // How long is SDL buffer, in seconds?
     // The smaller the value, the more often AdlAudioCallBack()
     // is called.
@@ -1600,21 +1702,26 @@ int main(int argc, char **argv)
             "\n\n"
             "Usage: adlmidi <midifilename> [ <options> ] [ <banknumber> [ <numcards> [ <numfourops>] ] ]\n"
             "       adlmidi <midifilename> -1   To enter instrument tester\n"
-            // " -p Enables adlib percussion instrument mode (use with CMF files)\n"
-            " -t Enables tremolo amplification mode\n"
-            " -v Enables vibrato amplification mode\n"
-            " -s Enables scaling of modulator volumes\n"
-            " -frb Enables full-ranged CC74 XG Brightness controller\n"
-            " -nl Quit without looping\n"
-            " -nr Disables the reverb effect\n"
-            " -w [<filename>] Write WAV file rather than playing\n"
-            " -d [<filename>] Write video file using ffmpeg\n"
-            #ifndef HARDWARE_OPL3
-            " -fp Enables full-panning stereo support\n"
-            " --emu-nuked  Uses Nuked OPL3 v 1.8 emulator\n"
-            " --emu-nuked7 Uses Nuked OPL3 v 1.7.4 emulator\n"
-            " --emu-dosbox Uses DosBox 0.74 OPL3 emulator\n"
-            #endif
+            // " -p              Enables adlib percussion instrument mode (use with CMF files)\n"
+            " -t              Enables tremolo amplification mode\n"
+            " -v              Enables vibrato amplification mode\n"
+            " -s              Enables scaling of modulator volumes\n"
+            " -frb            Enables full-ranged CC74 XG Brightness controller\n"
+            " -nl             Quit without looping\n"
+#ifndef HARDWARE_OPL3
+            " -reverb <specs> Controls reverb (default: gain=6:room=.7:factor=.6:damping=.8:predelay=0:stereo=1)\n"
+            " -reverb none    Disables reverb (also -nr)\n"
+#endif
+            " -w              [<filename>] Write WAV file rather than playing\n"
+#ifdef SUPPORT_VIDEO_OUTPUT
+            " -d              [<filename>] Write video file using ffmpeg\n"
+#endif
+#ifndef HARDWARE_OPL3
+            " -fp             Enables full-panning stereo support\n"
+            " --emu-nuked     Uses Nuked OPL3 v 1.8 emulator\n"
+            " --emu-nuked7    Uses Nuked OPL3 v 1.7.4 emulator\n"
+            " --emu-dosbox    Uses DosBox 0.74 OPL3 emulator\n"
+#endif
         );
         int banksCount = adl_getBanksCount();
         const char *const *bankNames = adl_getBankNames();
@@ -1640,6 +1747,9 @@ int main(int argc, char **argv)
             "     -p and -v options if it sounds wrong otherwise.\n"
             "\n"
         );
+        UI.ShowCursor();
+        UI.ColorReset();
+        std::printf("\n");
         return 0;
     }
 
@@ -1648,11 +1758,11 @@ int main(int argc, char **argv)
 #endif
 
     ADL_MIDIPlayer *myDevice;
-    #ifndef __DJGPP__
+#ifndef __DJGPP__
     myDevice = adl_init(PCM_RATE);
-    #else
+#else
     myDevice = adl_init(48000);
-    #endif
+#endif
 
     // Set hooks
     adl_setNoteHook(myDevice, adlNoteHook, (void *)&UI);
@@ -1688,6 +1798,15 @@ int main(int argc, char **argv)
         else if(!std::strcmp("--emu-dosbox", argv[2]))
             emulator = ADLMIDI_EMU_DOSBOX;
 #endif
+#ifndef __DJGPP__
+        else if(!std::strcmp("-nr", argv[2]))
+            ParseReverb("none");
+        else if(!std::strcmp("-reverb", argv[2]))
+        {
+            ParseReverb(argv[3]);
+            had_option = true;
+        }
+#endif
         else if(!std::strcmp("-w", argv[2]))
         {
             loopEnabled = 0;
@@ -1706,7 +1825,7 @@ int main(int argc, char **argv)
                 }
             }
         }
-        #ifdef SUPPORT_VIDEO_OUTPUT
+#ifdef SUPPORT_VIDEO_OUTPUT
         else if(!std::strcmp("-d", argv[2]))
         {
             loopEnabled = 0;
@@ -1721,11 +1840,9 @@ int main(int argc, char **argv)
                 }
             }
         }
-        #endif
+#endif
         else if(!std::strcmp("-s", argv[2]))
             adl_setScaleModulators(myDevice, 1);
-        else if(!std::strcmp("-nr", argv[2]))
-            ReverbIsOn = false;
         else break;
 
         std::copy(argv + (had_option ? 4 : 3), argv + argc, argv + 2);
@@ -1737,9 +1854,7 @@ int main(int argc, char **argv)
 #endif
     adl_setLoopEnabled(myDevice, loopEnabled);
 
-    #ifndef __DJGPP__
-
-    #ifndef _WIN32
+#if !defined(__DJGPP__) && !defined(_WIN32)
     static SDL_AudioSpec spec, obtained;
     spec.freq     = PCM_RATE;
     spec.format   = AUDIO_S16SYS;
@@ -1759,9 +1874,7 @@ int main(int argc, char **argv)
                          spec.samples,    spec.freq,    spec.channels,
                          obtained.samples, obtained.freq, obtained.channels);
     }
-    #endif
-
-    #endif /* not DJGPP */
+#endif /* not DJGPP and not WIN32 */
 
     if(argc >= 3)
     {
@@ -1782,6 +1895,8 @@ int main(int argc, char **argv)
                 {
                     std::fprintf(stderr, "ERROR: %s\n", adl_errorInfo(myDevice));
                     UI.ShowCursor();
+                    UI.ColorReset();
+                    std::printf("\n");
                     return 1;
                 }
             }
@@ -1794,6 +1909,8 @@ int main(int argc, char **argv)
             {
                 std::fprintf(stdout, "FAILED: %s\n", adl_errorInfo(myDevice));
                 UI.ShowCursor();
+                UI.ColorReset();
+                std::printf("\n");
                 return 1;
             }
 
@@ -1826,6 +1943,8 @@ int main(int argc, char **argv)
         {
             std::fprintf(stderr, "ERROR: %s\n", adl_errorInfo(myDevice));
             UI.ShowCursor();
+            UI.ColorReset();
+            std::printf("\n");
             return 0;
         }
     }
@@ -1837,6 +1956,8 @@ int main(int argc, char **argv)
         {
             std::fprintf(stderr, "ERROR: %s\n", adl_errorInfo(myDevice));
             UI.ShowCursor();
+            UI.ColorReset();
+            std::printf("\n");
             return 0;
         }
     }
@@ -1865,14 +1986,16 @@ int main(int argc, char **argv)
     }
 
     UI.Color(7);
-    if(adl_openFile(myDevice, argv[1]) != 0)
+    if(!DoingInstrumentTesting && adl_openFile(myDevice, argv[1]) != 0)
     {
         std::fprintf(stderr, "%s\n", adl_errorInfo(myDevice));
         UI.ShowCursor();
+        UI.ColorReset();
+        std::printf("\n");
         return 2;
     }
 
-    #ifdef __DJGPP__
+#ifdef __DJGPP__
 
     unsigned TimerPeriod = 0x1234DDul / NewTimerFreq;
     //disable();
@@ -1882,29 +2005,33 @@ int main(int argc, char **argv)
     //enable();
     unsigned long BIOStimer_begin = BIOStimer;
 
-    #else
+#else
 
     //const double maxdelay = MaxSamplesAtTime / (double)PCM_RATE;
+    reverb_data.ReInit();
 
-    #ifdef _WIN32
+#ifdef _WIN32
     WindowsAudio::Open(PCM_RATE, 2, 16);
-    #else
+#else
     SDL_PauseAudio(0);
-    #endif
+#endif
 
-    #endif /* djgpp */
+#endif /* djgpp */
 
     AdlInstrumentTester InstrumentTester(myDevice);
 
-    //static std::vector<int> sample_buf;
-    #ifdef __DJGPP__
-    double tick_delay = 0.0;
-    #endif
+    if(DoingInstrumentTesting)
+        InstrumentTester.start();
 
-    #ifndef __DJGPP__
+    //static std::vector<int> sample_buf;
+#ifdef __DJGPP__
+    double tick_delay = 0.0;
+#endif
+
+#ifndef __DJGPP__
     //sample_buf.resize(1024);
     short buff[1024];
-    #endif
+#endif
 
     UI.TetrisLaunched = true;
     while(!QuitFlag)
@@ -2041,7 +2168,7 @@ int main(int argc, char **argv)
     //Shut up all sustaining notes
     adl_panic(myDevice);
 
-    #ifdef __DJGPP__
+#ifdef __DJGPP__
     // Fix the skewed clock and reset BIOS tick rate
     _farpokel(_dos_ds, 0x46C, BIOStimer_begin +
               (BIOStimer - BIOStimer_begin)
@@ -2056,16 +2183,23 @@ int main(int argc, char **argv)
     UI.ShowCursor();
     UI.Color(7);
     clrscr();
-    #else
-    #ifdef _WIN32
-    WindowsAudio::Close();
-    #else
-    SDL_CloseAudio();
-    #endif
+#else
 
-    #endif /* djgpp */
+#ifdef _WIN32
+    WindowsAudio::Close();
+#else
+    SDL_CloseAudio();
+#endif
+
+#endif /* djgpp */
+
+    UI.ClearScreen();
+    UI.ColorReset();
+    UI.ShowCursor();
 
     adl_close(myDevice);
+
+    std::printf("Bye!\n");
 
     if(FakeDOSshell)
     {

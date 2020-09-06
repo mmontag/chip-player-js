@@ -2,7 +2,7 @@
  * libADLMIDI is a free Software MIDI synthesizer library with OPL3 emulation
  *
  * Original ADLMIDI code: Copyright (c) 2010-2014 Joel Yliluoma <bisqwit@iki.fi>
- * ADLMIDI Library API:   Copyright (c) 2015-2019 Vitaly Novichkov <admin@wohlnet.ru>
+ * ADLMIDI Library API:   Copyright (c) 2015-2020 Vitaly Novichkov <admin@wohlnet.ru>
  *
  * Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 emulation:
  * http://iki.fi/bisqwit/source/adlmidi.html
@@ -112,8 +112,18 @@ enum ADLMIDI_VolumeModels
     ADLMIDI_VolumeModel_DMX = 3,
     /*! Logarithmic volume scale, used in Apogee Sound System. */
     ADLMIDI_VolumeModel_APOGEE = 4,
-    /*! Aproximated and shorted volume map table. Similar to general, but has less granularity. */
-    ADLMIDI_VolumeModel_9X = 5
+    /*! Aproximated and shorted volume map table (SB16 driver). Similar to general, but has less granularity. */
+    ADLMIDI_VolumeModel_9X = 5,
+    /*! DMX model with a fixed bug of AM voices */
+    ADLMIDI_VolumeModel_DMX_Fixed = 6,
+    /*! Apogee model with a fixed bug of AM voices*/
+    ADLMIDI_VolumeModel_APOGEE_Fixed = 7,
+    /*! Audio Interfaces Library volume scaling model */
+    ADLMIDI_VolumeModel_AIL = 8,
+    /*! Aproximated and shorted volume map table (Generic FM driver). Similar to general, but has less granularity. */
+    ADLMIDI_VolumeModel_9X_GENERIC_FM = 9,
+    /*! HMI Sound Operating System volume scaling model */
+    ADLMIDI_VolumeModel_HMI = 10
 };
 
 /**

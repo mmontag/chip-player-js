@@ -19,6 +19,22 @@ list(APPEND GEN_ADLDATA_SRC
     ini/ini_processing.cpp
 )
 
+option(WITH_GENADLDATA_DEEPDEBUG "Enable deep debug mode of gen_adldata with dumping every voice into WAV file" OFF)
+if(WITH_GENADLDATA_DEEPDEBUG)
+    add_definitions(-DGEN_ADLDATA_DEEP_DEBUG)
+    list(APPEND GEN_ADLDATA_SRC
+        ../midiplay/wave_writer.c
+    )
+    file(GLOB WAV_FILES ${libADLMIDI_SOURCE_DIR}/fm_banks/_deep_debug/*.wav)
+    if(WAV_FILES)
+        file(REMOVE ${WAV_FILES})
+    endif()
+    add_custom_target(gen_adldata_deepdebug_prepare ALL
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${libADLMIDI_SOURCE_DIR}/fm_banks/_deep_debug
+        COMMAND ${CMAKE_COMMAND} -E remove ${libADLMIDI_SOURCE_DIR}/fm_banks/adldata-cache-x.dat
+    )
+endif()
+
 if(USE_DOSBOX_EMULATOR)
     set(HAS_EMULATOR TRUE)
     list(APPEND GEN_ADLDATA_SRC
@@ -49,6 +65,17 @@ if(MSVC)
     target_compile_options(gen_adldata PUBLIC "/std:c++latest")
 else()
     target_link_libraries(gen_adldata PRIVATE pthread m)
+endif()
+
+set_nopie(gen_adldata)
+
+if(WITH_GENADLDATA_DEEPDEBUG)
+    add_dependencies(gen_adldata gen_adldata_deepdebug_prepare)
+endif()
+
+option(WITH_GENADLDATA_PROGRESS "Enable progress printing in gen_adldata" OFF)
+if(WITH_GENADLDATA_PROGRESS OR WITH_GENADLDATA_DEEPDEBUG)
+    target_compile_options(gen_adldata PUBLIC "-DADL_GENDATA_PRINT_PROGRESS")
 endif()
 
 if(WITH_GENADLDATA_COMMENTS)

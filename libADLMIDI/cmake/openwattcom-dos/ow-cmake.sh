@@ -1,11 +1,11 @@
 #!/bin/bash
-export WATCOM=$HOME/Qt/Tools/ow-snapshot-2.0
+export WATCOM=/opt/watcom
 export EDPATH=$WATCOM/eddat
 export WIPFC=$WATCOM/wipfc
 export INCLUDE="$WATCOM/h"
-WATCOM_FLAGS="-bdos4g -march=i386"
-export CFLAGS="$WATCOM_FLAGS -xc -std=wc"
-export CXXFLAGS="$WATCOM_FLAGS -xc++ -xs -feh -frtti -std=c++98"
+#WATCOM_FLAGS="-bdos4g -march=i386"
+#export CFLAGS="$WATCOM_FLAGS -x c -std=wc"
+#export CXXFLAGS="$WATCOM_FLAGS -x c++ -xs -feh -frtti -std=c++98"
 export LFLAGS="$WATCOM_FLAGS"
 
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"

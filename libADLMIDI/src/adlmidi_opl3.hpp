@@ -2,7 +2,7 @@
  * libADLMIDI is a free Software MIDI synthesizer library with OPL3 emulation
  *
  * Original ADLMIDI code: Copyright (c) 2010-2014 Joel Yliluoma <bisqwit@iki.fi>
- * ADLMIDI Library API:   Copyright (c) 2015-2019 Vitaly Novichkov <admin@wohlnet.ru>
+ * ADLMIDI Library API:   Copyright (c) 2015-2020 Vitaly Novichkov <admin@wohlnet.ru>
  *
  * Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 emulation:
  * http://iki.fi/bisqwit/source/adlmidi.html
@@ -110,6 +110,8 @@ public:
     bool m_runAtPcmRate;
     //! Enable soft panning
     bool m_softPanning;
+    //! Master volume, controlled via SysEx (0...127)
+    uint8_t m_masterVolume;
 
     //! Just a padding. Reserved.
     char _padding2[3];
@@ -121,6 +123,8 @@ public:
     {
         //! MIDI mode
         MODE_MIDI,
+        //! AIL XMIDI mode
+        MODE_XMIDI,
         //! Id-Software Music mode
         MODE_IMF,
         //! Creative Music Files mode
@@ -142,8 +146,18 @@ public:
         VOLUME_DMX,
         //! Apoge Sound System volume scaling model
         VOLUME_APOGEE,
-        //! Windows 9x driver volume scale table
-        VOLUME_9X
+        //! Windows 9x SB16 driver volume scale table
+        VOLUME_9X,
+        //! DMX model with a fixed bug of AM voices
+        VOLUME_DMX_FIXED,
+        //! Apogee model with a fixed bug of AM voices
+        VOLUME_APOGEE_FIXED,
+        //! Audio Interfaces Library volume scaling model
+        VOLUME_AIL,
+        //! Windows 9x Generic FM driver volume scale table
+        VOLUME_9X_GENERIC_FM,
+        //! HMI Sound Operating System volume scale table
+        VOLUME_HMI
     } m_volumeScale;
 
     //! Reserved
@@ -249,10 +263,14 @@ public:
     /**
      * @brief Change setup of instrument in specified chip channel
      * @param c Channel of chip (Emulated chip choosing by next formula: [c = ch + (chipId * 23)])
-     * @param volume Volume level (from 0 to 63)
+     * @param volume Volume level (from 0 to 127)
      * @param brightness CC74 Brightness level (from 0 to 127)
      */
-    void touchNote(size_t c, uint8_t volume, uint8_t brightness = 127);
+    void touchNote(size_t c,
+                   uint_fast32_t velocity,
+                   uint_fast32_t channelVolume = 127,
+                   uint_fast32_t channelExpression = 127,
+                   uint8_t brightness = 127);
 
     /**
      * @brief Set the instrument into specified chip channel

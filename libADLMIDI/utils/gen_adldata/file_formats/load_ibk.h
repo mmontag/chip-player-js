@@ -3,11 +3,13 @@
 
 #include "../progs_cache.h"
 
-static bool LoadIBK(const char *fn, unsigned bank, const char *prefix, bool percussive, bool noRhythmMode = false)
+bool BankFormats::LoadIBK(BanksDump &db, const char *fn, unsigned bank,
+                          const std::string &bankTitle, const char *prefix,
+                          bool percussive, bool noRhythmMode)
 {
-    #ifdef HARD_BANKS
+#ifdef HARD_BANKS
     writeIni("IBK", fn, prefix, bank, percussive ? INI_Drums : INI_Melodic);
-    #endif
+#endif
     FILE *fp = std::fopen(fn, "rb");
     if(!fp)
         return false;
@@ -20,6 +22,9 @@ static bool LoadIBK(const char *fn, unsigned bank, const char *prefix, bool perc
         return false;
     }
     std::fclose(fp);
+
+    size_t bankDb = db.initBank(bank, bankTitle, BanksDump::BankEntry::SETUP_Generic);
+    BanksDump::MidiBank bnk;
 
     unsigned offs1_base = 0x804, offs1_len = 9;
     unsigned offs2_base = 0x004, offs2_len = 16;
@@ -43,7 +48,10 @@ static bool LoadIBK(const char *fn, unsigned bank, const char *prefix, bool perc
         sprintf(name2, "%s%c%u", prefix,
                 (gmno < 128 ? 'M' : 'P'), gmno & 127);
 
-        insdata tmp;
+        BanksDump::InstrumentEntry inst;
+        BanksDump::Operator ops[5];
+
+        InstBuffer tmp;
         tmp.data[0] = data[offset2 + 0];
         tmp.data[1] = data[offset2 + 1];
         tmp.data[8] = data[offset2 + 2];
@@ -57,53 +65,43 @@ static bool LoadIBK(const char *fn, unsigned bank, const char *prefix, bool perc
         tmp.data[10] = data[offset2 + 10];
         // bisqwit: [+11] seems to be used also, what is it for?
         // Wohlstand: You wanna know? It's the rhythm-mode drum number! If 0 - melodic, >0 - rhythm-mode drum
-        tmp.finetune = percussive ? 0 : data[offset2 + 12];
-        tmp.diff = false;
-        struct ins tmp2;
-        tmp2.notenum  = percussive ? data[offset2 + 13] : 0;
-        tmp2.pseudo4op = false;
-        tmp2.real4op = false;
-        tmp2.voice2_fine_tune = 0.0;
-        tmp2.midi_velocity_offset = 0;
 
-        tmp2.rhythmModeDrum = 0;
+        db.toOps(tmp.d, ops, 0);
+        inst.noteOffset1 = percussive ? 0 : data[offset2 + 12];
+        inst.percussionKeyNumber = percussive ? data[offset2 + 13] : 0;
+        inst.setFbConn(data[offset2 + 10]);
+
         if(percussive && !noRhythmMode)
         {
             int rm = data[offset2 + 11];
             switch(rm)
             {
             case 6:
-                tmp2.rhythmModeDrum = ins::Flag_RM_BassDrum;
+                inst.instFlags |= BanksDump::InstrumentEntry::WOPL_RM_BassDrum;
                 break;
             case 7:
-                tmp2.rhythmModeDrum = ins::Flag_RM_Snare;
+                inst.instFlags |= BanksDump::InstrumentEntry::WOPL_RM_Snare;
                 break;
             case 8:
-                tmp2.rhythmModeDrum = ins::Flag_RM_TomTom;
+                inst.instFlags |= BanksDump::InstrumentEntry::WOPL_RM_TomTom;
                 break;
             case 9:
-                tmp2.rhythmModeDrum = ins::Flag_RM_Cymbal;
+                inst.instFlags |= BanksDump::InstrumentEntry::WOPL_RM_Cymbal;
                 break;
             case 10:
-                tmp2.rhythmModeDrum = ins::Flag_RM_HiHat;
+                inst.instFlags |= BanksDump::InstrumentEntry::WOPL_RM_HiHat;
                 break;
             default:
                 // IBK logic: make non-percussion instrument be silent
-                tmp = MakeNoSoundIns();
+                inst.instFlags |= BanksDump::InstrumentEntry::WOPL_Ins_IsBlank;
                 break;
             }
         }
 
-        size_t resno = InsertIns(tmp, tmp2, std::string(1, '\377') + name, name2);
-        SetBank(bank, (unsigned int)gmno, resno);
+        db.addInstrument(bnk, a, inst, ops, fn);
     }
 
-    AdlBankSetup setup;
-    setup.volumeModel = VOLUME_Generic;
-    setup.deepTremolo = false;
-    setup.deepVibrato = false;
-    setup.scaleModulators = false;
-    SetBankSetup(bank, setup);
+    db.addMidiBank(bankDb, percussive, bnk);
 
     return true;
 }

@@ -2,7 +2,7 @@
  * libADLMIDI is a free Software MIDI synthesizer library with OPL3 emulation
  *
  * Original ADLMIDI code: Copyright (c) 2010-2014 Joel Yliluoma <bisqwit@iki.fi>
- * ADLMIDI Library API:   Copyright (c) 2015-2019 Vitaly Novichkov <admin@wohlnet.ru>
+ * ADLMIDI Library API:   Copyright (c) 2015-2020 Vitaly Novichkov <admin@wohlnet.ru>
  *
  * Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 emulation:
  * http://iki.fi/bisqwit/source/adlmidi.html
@@ -64,6 +64,10 @@ public:
     void partialReset();
     void resetMIDI();
 
+private:
+    void resetMIDIDefaults(int offset = 0);
+
+public:
     /**********************Internal structures and classes**********************/
 
     /**
@@ -71,6 +75,13 @@ public:
      */
     struct MIDIchannel
     {
+        //! Default MIDI volume
+        uint8_t def_volume;
+        //! Default LSB of a bend sensitivity
+        int     def_bendsense_lsb;
+        //! Default MSB of a bend sensitivity
+        int     def_bendsense_msb;
+
         //! LSB Bank number
         uint8_t bank_lsb,
         //! MSB Bank number
@@ -316,11 +327,22 @@ public:
          */
         void resetAllControllers()
         {
+            volume  = def_volume;
+            brightness = 127;
+            panning = 64;
+
+            resetAllControllers121();
+        }
+
+        /**
+         * @brief Reset all MIDI controllers into initial state (CC121)
+         */
+        void resetAllControllers121()
+        {
             bend = 0;
-            bendsense_msb = 2;
-            bendsense_lsb = 0;
+            bendsense_msb = def_bendsense_msb;
+            bendsense_lsb = def_bendsense_lsb;
             updateBendSensitivity();
-            volume  = 100;
             expression = 127;
             sustain = false;
             softPedal = false;
@@ -331,12 +353,10 @@ public:
             vibspeed = 2 * 3.141592653 * 5.0;
             vibdepth = 0.5 / 127;
             vibdelay_us = 0;
-            panning = 64;
             portamento = 0;
             portamentoEnable = false;
             portamentoSource = -1;
             portamentoRate = HUGE_VAL;
-            brightness = 127;
         }
 
         /**
@@ -369,8 +389,11 @@ public:
                 --extended_note_count;
         }
 
-        MIDIchannel()
-            : activenotes(128)
+        MIDIchannel() :
+            def_volume(100),
+            def_bendsense_lsb(0),
+            def_bendsense_msb(2),
+            activenotes(128)
         {
             gliding_note_count = 0;
             extended_note_count = 0;
@@ -537,9 +560,6 @@ public:
 
     //! CMF Rhythm mode
     bool    m_cmfPercussionMode;
-
-    //! Master volume, controlled via SysEx
-    uint8_t m_masterVolume;
 
     //! SysEx device ID
     uint8_t m_sysExDeviceId;

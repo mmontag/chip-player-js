@@ -4,17 +4,22 @@
 #include "../progs_cache.h"
 #include "../midi_inst_list.h"
 
-static bool LoadEA(const char *fn, unsigned bank, const char *prefix)
+bool BankFormats::LoadEA(BanksDump &db, const char *fn, unsigned bank,
+                         const std::string &bankTitle, const char *prefix)
 {
     FILE *fp = std::fopen(fn, "rb");
     if(!fp)
         return false;
 
+    size_t bankDb = db.initBank(bank, bankTitle, BanksDump::BankEntry::SETUP_CMF);
+    BanksDump::MidiBank bnkMelodic = db.midiBanks[db.banks[0].melodic[0]];
+    BanksDump::MidiBank bnkPercussion = db.midiBanks[db.banks[0].percussion[0]];
+
     // Copy all instruments from bank 0
-    for(unsigned gmno = 0; gmno < 128; ++gmno)
-        progs[bank][gmno] = progs[0][gmno];
-    for(unsigned gmno = 35; gmno < 80; ++gmno)
-        progs[bank][0x80 + gmno] = progs[0][0x80 + gmno];
+//    for(unsigned gmno = 0; gmno < 128; ++gmno)
+//        progs[bank][gmno] = progs[0][gmno];
+//    for(unsigned gmno = 35; gmno < 80; ++gmno)
+//        progs[bank][0x80 + gmno] = progs[0][0x80 + gmno];
 
     uint16_t sources[20 + 8];
     // Copy also the unused instruments
@@ -61,7 +66,10 @@ static bool LoadEA(const char *fn, unsigned bank, const char *prefix)
             return false;
         }
 
-        insdata tmp;
+        BanksDump::InstrumentEntry inst;
+        BanksDump::Operator ops[5];
+
+        InstBuffer tmp;
         tmp.data[0] = bytes[0]; // reg 0x20: modulator AM/VIG/EG/KSR
         tmp.data[8] = bytes[1]; // reg 0x40: modulator ksl/attenuation
         tmp.data[2] = bytes[2]; // reg 0x60: modulator attack/decay
@@ -78,15 +86,12 @@ static bool LoadEA(const char *fn, unsigned bank, const char *prefix)
 
         tmp.data[10] = bytes[8]; // reg 0xC0 (feedback and connection)
 
-        tmp.finetune = int8_t(bytes[9] + 12); // finetune
         tmp.data[6] = 0;        // reg 0xE0: modulator, never seems to be set
         tmp.data[7] = 0;        // reg 0xE0: carrier,   never seems to be set
 
-        ins tmp2{};
-        tmp2.notenum   = 0;
-        tmp2.pseudo4op = false;
-        tmp2.real4op = false;
-        tmp2.rhythmModeDrum = 0;
+        db.toOps(tmp.d, ops, 0);
+        inst.setFbConn(bytes[8]);
+        inst.noteOffset1 = int8_t(bytes[9] + 12);
 
         std::string name;
         char name2[512];
@@ -98,42 +103,38 @@ static bool LoadEA(const char *fn, unsigned bank, const char *prefix)
         {
             snprintf(name2, 512, "%sunk%04X", prefix, offset);
         }
-        size_t resno = InsertIns(tmp, tmp2, std::string(1, '\377') + name, name2);
-        SetBank(bank, gmno, resno);
+
+        db.addInstrument(bnkMelodic, gmno, inst, ops, fn);
 
         if(gmno == 10)
         {
-            /*tmp.finetune=0;*/ tmp2.notenum = 0x49;
-            SetBank(bank, 0x80 + 0x36, InsertIns(tmp, tmp2, std::string(1, '\377') + MidiInsName[0x80 + 0x36 - 35], std::string(1, '\377') + prefix + "P54"));
+            inst.percussionKeyNumber = 0x49;
+            db.addInstrument(bnkPercussion, 0x36, inst, ops, fn);
         }
 
         if(gmno == 18)
         {
-            /*tmp.finetune=0;*/ tmp2.notenum = 0x17;
-            SetBank(bank, 0x80 + 0x2A, InsertIns(tmp, tmp2, std::string(1, '\377') + MidiInsName[0x80 + 0x2A - 35], std::string(1, '\377') + prefix + "P42"));
+            inst.percussionKeyNumber = 0x17;
+            db.addInstrument(bnkPercussion, 0x2A, inst, ops, fn);
         }
 
         if(gmno == 16)
         {
-            /*tmp.finetune=0;*/ tmp2.notenum = 0x0C;
-            SetBank(bank, 0x80 + 0x24, InsertIns(tmp, tmp2, std::string(1, '\377') + MidiInsName[0x80 + 0x24 - 35], std::string(1, '\377') + prefix + "P36"));
+            inst.percussionKeyNumber = 0x0C;
+            db.addInstrument(bnkPercussion, 0x24, inst, ops, fn);
         }
 
         if(gmno == 17)
         {
-            /*tmp.finetune=0;*/ tmp2.notenum = 0x01;
-            SetBank(bank, 0x80 + 0x26, InsertIns(tmp, tmp2, std::string(1, '\377') + MidiInsName[0x80 + 0x26 - 35], std::string(1, '\377') + prefix + "P38"));
+            inst.percussionKeyNumber = 0x01;
+            db.addInstrument(bnkPercussion, 0x26, inst, ops, fn);
         }
     }
 
     std::fclose(fp);
 
-    AdlBankSetup setup;
-    setup.volumeModel = VOLUME_CMF;
-    setup.deepTremolo = false;
-    setup.deepVibrato = false;
-    setup.scaleModulators = false;
-    SetBankSetup(bank, setup);
+    db.addMidiBank(bankDb, false, bnkMelodic);
+    db.addMidiBank(bankDb, true, bnkPercussion);
 
     return true;
 }

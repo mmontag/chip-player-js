@@ -1,7 +1,7 @@
 /*
  * Interfaces over Yamaha OPL3 (YMF262) chip emulators
  *
- * Copyright (c) 2017-2019 Vitaly Novichkov (Wohlstand)
+ * Copyright (c) 2017-2020 Vitaly Novichkov (Wohlstand)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -29,6 +29,8 @@ class DosBoxOPL3 final : public OPLChipBaseBufferedT<DosBoxOPL3>
 public:
     DosBoxOPL3();
     ~DosBoxOPL3() override;
+
+    static void globalPreInit();
 
     bool canRunAtPcmRate() const override { return true; }
     void setRate(uint32_t rate) override;

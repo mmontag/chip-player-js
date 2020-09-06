@@ -1,7 +1,7 @@
 /*
 PtrList - A custom STD::Vector implementation. Workaround for OpenWatcom's crashing implementation
 
-Copyright (c) 2015-2019 Vitaly Novichkov <admin@wohlnet.ru>
+Copyright (c) 2015-2020 Vitaly Novichkov <admin@wohlnet.ru>
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the "Software"),

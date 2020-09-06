@@ -2,7 +2,7 @@
  * libADLMIDI is a free Software MIDI synthesizer library with OPL3 emulation
  *
  * Original ADLMIDI code: Copyright (c) 2010-2014 Joel Yliluoma <bisqwit@iki.fi>
- * ADLMIDI Library API:   Copyright (c) 2015-2019 Vitaly Novichkov <admin@wohlnet.ru>
+ * ADLMIDI Library API:   Copyright (c) 2015-2020 Vitaly Novichkov <admin@wohlnet.ru>
  *
  * Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 emulation:
  * http://iki.fi/bisqwit/source/adlmidi.html
@@ -109,6 +109,9 @@ bool MIDIplay::LoadBank(FileAndMemReader &fr)
     }
 
     Synth &synth = *m_synth;
+
+    synth.setEmbeddedBank(m_setup.bankId);
+
     synth.m_insBankSetup.scaleModulators = false;
     synth.m_insBankSetup.deepTremolo = (wopl->opl_flags & WOPL_FLAG_DEEP_TREMOLO) != 0;
     synth.m_insBankSetup.deepVibrato = (wopl->opl_flags & WOPL_FLAG_DEEP_VIBRATO) != 0;
@@ -116,8 +119,6 @@ bool MIDIplay::LoadBank(FileAndMemReader &fr)
     m_setup.deepTremoloMode = -1;
     m_setup.deepVibratoMode = -1;
     m_setup.volumeScaleModel = ADLMIDI_VolumeModel_AUTO;
-
-    synth.setEmbeddedBank(m_setup.bankId);
 
     uint16_t slots_counts[2] = {wopl->banks_count_melodic, wopl->banks_count_percussion};
     WOPLBank *slots_src_ins[2] = { wopl->banks_melodic, wopl->banks_percussive };
@@ -181,7 +182,7 @@ bool MIDIplay::LoadMIDI_post()
         uint16_t ins_count = static_cast<uint16_t>(instruments.size());
         for(uint16_t i = 0; i < ins_count; ++i)
         {
-            const uint8_t *InsData = instruments[i].data;
+            const uint8_t *insData = instruments[i].data;
             size_t bank = i / 256;
             bank = ((bank & 127) + ((bank >> 7) << 8));
             if(bank > 127 + (127 << 8))
@@ -194,18 +195,18 @@ bool MIDIplay::LoadMIDI_post()
             adlinsdata2 &adlins = synth.m_insBanks[bank].ins[i % 128];
             adldata    adl;
             adl.modulator_E862 =
-                ((static_cast<uint32_t>(InsData[8] & 0x07) << 24) & 0xFF000000) //WaveForm
-                | ((static_cast<uint32_t>(InsData[6]) << 16) & 0x00FF0000) //Sustain/Release
-                | ((static_cast<uint32_t>(InsData[4]) << 8) & 0x0000FF00) //Attack/Decay
-                | ((static_cast<uint32_t>(InsData[0]) << 0) & 0x000000FF); //MultKEVA
+                ((static_cast<uint32_t>(insData[8] & 0x07) << 24) & 0xFF000000) //WaveForm
+                | ((static_cast<uint32_t>(insData[6]) << 16) & 0x00FF0000) //Sustain/Release
+                | ((static_cast<uint32_t>(insData[4]) << 8) & 0x0000FF00) //Attack/Decay
+                | ((static_cast<uint32_t>(insData[0]) << 0) & 0x000000FF); //MultKEVA
             adl.carrier_E862 =
-                ((static_cast<uint32_t>(InsData[9] & 0x07) << 24) & 0xFF000000) //WaveForm
-                | ((static_cast<uint32_t>(InsData[7]) << 16) & 0x00FF0000) //Sustain/Release
-                | ((static_cast<uint32_t>(InsData[5]) << 8) & 0x0000FF00) //Attack/Decay
-                | ((static_cast<uint32_t>(InsData[1]) << 0) & 0x000000FF); //MultKEVA
-            adl.modulator_40 = InsData[2];
-            adl.carrier_40   = InsData[3];
-            adl.feedconn     = InsData[10] & 0x0F;
+                ((static_cast<uint32_t>(insData[9] & 0x07) << 24) & 0xFF000000) //WaveForm
+                | ((static_cast<uint32_t>(insData[7]) << 16) & 0x00FF0000) //Sustain/Release
+                | ((static_cast<uint32_t>(insData[5]) << 8) & 0x0000FF00) //Attack/Decay
+                | ((static_cast<uint32_t>(insData[1]) << 0) & 0x000000FF); //MultKEVA
+            adl.modulator_40 = insData[2];
+            adl.carrier_40   = insData[3];
+            adl.feedconn     = insData[10] & 0x0F;
             adl.finetune = 0;
             adlins.adl[0] = adl;
             adlins.adl[1] = adl;
@@ -238,6 +239,7 @@ bool MIDIplay::LoadMIDI_post()
     {
         //std::fprintf(stderr, "Done reading IMF file\n");
         synth.m_numFourOps  = 0; //Don't use 4-operator channels for IMF playing!
+        synth.m_rhythmMode = false;//Don't enforce rhythm-mode when it's unneeded
         synth.m_musicMode = Synth::MODE_IMF;
 
         synth.m_numChips = 1;
@@ -245,10 +247,15 @@ bool MIDIplay::LoadMIDI_post()
     }
     else
     {
+        if(format == MidiSequencer::Format_XMIDI)
+            synth.m_musicMode = Synth::MODE_XMIDI;
+
         synth.m_numChips = m_setup.numChips;
         if(m_setup.numFourOps < 0)
             adlCalculateFourOpChannels(this, true);
     }
+
+    resetMIDIDefaults();
 
     m_setup.tick_skip_samples_delay = 0;
     synth.reset(m_setup.emulator, m_setup.PCM_RATE, this); // Reset OPL3 chip

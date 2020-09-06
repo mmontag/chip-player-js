@@ -2,7 +2,7 @@
  * libADLMIDI is a free Software MIDI synthesizer library with OPL3 emulation
  *
  * Original ADLMIDI code: Copyright (c) 2010-2014 Joel Yliluoma <bisqwit@iki.fi>
- * ADLMIDI Library API:   Copyright (c) 2015-2019 Vitaly Novichkov <admin@wohlnet.ru>
+ * ADLMIDI Library API:   Copyright (c) 2015-2020 Vitaly Novichkov <admin@wohlnet.ru>
  *
  * Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 emulation:
  * http://iki.fi/bisqwit/source/adlmidi.html
@@ -60,16 +60,17 @@ typedef int32_t ssize_t;
 #endif
 
 #if defined(__DJGPP__) || (defined(__WATCOMC__) && (defined(__DOS__) || defined(__DOS4G__) || defined(__DOS4GNZ__)))
-#define ADLMIDI_HW_OPL
-#include <conio.h>
-#ifdef __DJGPP__
-#include <pc.h>
-#include <dpmi.h>
-#include <go32.h>
-#include <sys/farptr.h>
-#include <dos.h>
-#endif
-
+#   ifndef ADLMIDI_HW_OPL
+#       define ADLMIDI_HW_OPL
+#   endif
+#   include <conio.h>
+#   ifdef __DJGPP__
+#       include <pc.h>
+#       include <dpmi.h>
+#       include <go32.h>
+#       include <sys/farptr.h>
+#       include <dos.h>
+#   endif
 #endif
 
 #include <vector>
@@ -145,13 +146,10 @@ class OPLChipBase;
 typedef class OPL3 Synth;
 
 #include "adldata.hh"
+#include "adlmidi_db.h"
 
 #define ADLMIDI_BUILD
 #include "adlmidi.h"    //Main API
-
-#ifndef ADLMIDI_DISABLE_CPP_EXTRAS
-#include "adlmidi.hpp"  //Extra C++ API
-#endif
 
 #include "adlmidi_ptr.hpp"
 
@@ -228,5 +226,9 @@ extern void adl_audioTickHandler(void *instance, uint32_t chipId, uint32_t rate)
  * @return Always 0
  */
 extern int adlCalculateFourOpChannels(MIDIplay *play, bool silent = false);
+
+#ifndef DISABLE_EMBEDDED_BANKS
+extern void adlFromInstrument(const BanksDump::InstrumentEntry &instIn, adlinsdata2 &instOut);
+#endif
 
 #endif // ADLMIDI_PRIVATE_HPP

@@ -1,7 +1,7 @@
 /*
  * BW_Midi_Sequencer - MIDI Sequencer for C++
  *
- * Copyright (c) 2015-2019 Vitaly Novichkov <admin@wohlnet.ru>
+ * Copyright (c) 2015-2020 Vitaly Novichkov <admin@wohlnet.ru>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -23,8 +23,8 @@
  */
 
 #pragma once
-#ifndef BISQUIT_AND_WOHLSTANDS_MIDI_SEQUENCER_HHHHPPP
-#define BISQUIT_AND_WOHLSTANDS_MIDI_SEQUENCER_HHHHPPP
+#ifndef BW_MIDI_SEQUENCER_HHHHPPP
+#define BW_MIDI_SEQUENCER_HHHHPPP
 
 #include <list>
 #include <vector>
@@ -132,18 +132,21 @@ class BW_MidiSequencer
             //! [Non-Standard] Loop End point with support of multi-loops
             ST_LOOPSTACK_BREAK = 0xE6,//size == 0 <CUSTOM>
             //! [Non-Standard] Callback Trigger
-            ST_CALLBACK_TRIGGER = 0xE7//size == 1 <CUSTOM>
+            ST_CALLBACK_TRIGGER = 0xE7,//size == 1 <CUSTOM>
+
+            // Built-in hooks
+            ST_SONG_BEGIN_HOOK    = 0x101
         };
         //! Main type of event
-        uint8_t type;
+        uint_fast16_t type;
         //! Sub-type of the event
-        uint8_t subtype;
+        uint_fast16_t subtype;
         //! Targeted MIDI channel
-        uint8_t channel;
+        uint_fast16_t channel;
         //! Is valid event
-        uint8_t isValid;
+        uint_fast16_t isValid;
         //! Reserved 5 bytes padding
-        uint8_t __padding[4];
+        uint_fast16_t __padding[4];
         //! Absolute tick position (Used for the tempo calculation only)
         uint64_t absPosition;
         //! Raw data of this event
@@ -343,6 +346,8 @@ private:
 
     //! Is looping enabled or not
     bool    m_loopEnabled;
+    //! Don't process loop: trigger hooks only if they are set
+    bool    m_loopHooksOnly;
 
     //! Full song length in seconds
     double m_fullSongTimeLength;
@@ -452,7 +457,7 @@ private:
         {
             if(caughtStackEnd && (stackLevel >= 0) && (stackLevel < static_cast<int>(stack.size())))
             {
-                const LoopStackEntry &e = stack[stackLevel];
+                const LoopStackEntry &e = stack[static_cast<size_t>(stackLevel)];
                 if(e.infinity || (!e.infinity && e.loops > 0))
                     return true;
             }
@@ -472,7 +477,7 @@ private:
         LoopStackEntry &getCurStack()
         {
             if((stackLevel >= 0) && (stackLevel < static_cast<int>(stack.size())))
-                return stack[stackLevel];
+                return stack[static_cast<size_t>(stackLevel)];
             if(stack.empty())
             {
                 LoopStackEntry d;
@@ -509,6 +514,34 @@ private:
     //! Common error string
     std::string m_errorString;
 
+    struct SequencerTime
+    {
+        //! Time buffer
+        double   timeRest;
+        //! Sample rate
+        uint32_t sampleRate;
+        //! Size of one frame in bytes
+        uint32_t frameSize;
+        //! Minimum possible delay, granuality
+        double minDelay;
+        //! Last delay
+        double delay;
+
+        void init()
+        {
+            sampleRate = 44100;
+            frameSize = 2;
+            reset();
+        }
+
+        void reset()
+        {
+            timeRest = 0.0;
+            minDelay = 1.0 / static_cast<double>(sampleRate);
+            delay = 0.0;
+        }
+    } m_time;
+
 public:
     BW_MidiSequencer();
     virtual ~BW_MidiSequencer();
@@ -518,6 +551,14 @@ public:
      * @param intrf Pre-Initialized interface structure (pointer will be taken)
      */
     void setInterface(const BW_MidiRtInterface *intrf);
+
+    /**
+     * @brief Runs ticking in a sync with audio streaming. Use this together with onPcmRender hook to easily play MIDI.
+     * @param stream pointer to the output PCM stream
+     * @param length length of the buffer in bytes
+     * @return Count of recorded data in bytes
+     */
+    int playStream(uint8_t *stream, size_t length);
 
     /**
      * @brief Returns file format type of currently loaded file
@@ -575,6 +616,12 @@ public:
      * @param enabled Enable loop
      */
     void setLoopEnabled(bool enabled);
+
+    /**
+     * @brief Switch loop hooks-only mode on/off
+     * @param enabled Don't loop: trigger hooks only without loop
+     */
+    void setLoopHooksOnly(bool enabled);
 
     /**
      * @brief Get music title
@@ -748,4 +795,4 @@ private:
 
 };
 
-#endif /* BISQUIT_AND_WOHLSTANDS_MIDI_SEQUENCER_HHHHPPP */
+#endif /* BW_MIDI_SEQUENCER_HHHHPPP */

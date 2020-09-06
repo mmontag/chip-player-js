@@ -1,3 +1,27 @@
+/*
+ * ADLMIDI Player is a free MIDI player based on a libADLMIDI,
+ * a Software MIDI synthesizer library with OPL3 emulation
+ *
+ * Original ADLMIDI code: Copyright (c) 2010-2014 Joel Yliluoma <bisqwit@iki.fi>
+ * ADLMIDI Library API:   Copyright (c) 2015-2020 Vitaly Novichkov <admin@wohlnet.ru>
+ *
+ * Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 emulation:
+ * http://iki.fi/bisqwit/source/adlmidi.html
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <string>
 #include <cstdio>
 #include <cctype>
@@ -9,6 +33,37 @@
 #include <vector>
 #include <algorithm>
 #include <signal.h>
+#include <stdint.h>
+
+#if defined(_MSC_VER) && _MSC_VER < 1900
+
+#define snprintf c99_snprintf
+#define vsnprintf c99_vsnprintf
+
+__inline int c99_vsnprintf(char *outBuf, size_t size, const char *format, va_list ap)
+{
+    int count = -1;
+
+    if (size != 0)
+        count = _vsnprintf_s(outBuf, size, _TRUNCATE, format, ap);
+    if (count == -1)
+        count = _vscprintf(format, ap);
+
+    return count;
+}
+
+__inline int c99_snprintf(char *outBuf, size_t size, const char *format, ...)
+{
+    int count;
+    va_list ap;
+
+    va_start(ap, format);
+    count = c99_vsnprintf(outBuf, size, format, ap);
+    va_end(ap);
+
+    return count;
+}
+#endif
 
 #if defined(__WATCOMC__)
 #include <stdio.h> // snprintf is here!
@@ -78,29 +133,28 @@ void mch_delay(int32_t msec)
 #ifndef HARDWARE_OPL3
 
 #ifndef OUTPUT_WAVE_ONLY
-#define SDL_MAIN_HANDLED
-#include <SDL2/SDL.h>
+#   include "audio.h"
 #endif
 
 #include "wave_writer.h"
 
-#ifndef OUTPUT_WAVE_ONLY
+#   ifndef OUTPUT_WAVE_ONLY
 class MutexType
 {
-    SDL_mutex *mut;
+    void *mut;
 public:
-    MutexType() : mut(SDL_CreateMutex()) { }
+    MutexType() : mut(audio_mutex_create()) { }
     ~MutexType()
     {
-        SDL_DestroyMutex(mut);
+        audio_mutex_destroy(mut);
     }
     void Lock()
     {
-        SDL_mutexP(mut);
+        audio_mutex_lock(mut);
     }
     void Unlock()
     {
-        SDL_mutexV(mut);
+        audio_mutex_unlock(mut);
     }
 };
 
@@ -109,52 +163,72 @@ static AudioBuff g_audioBuffer;
 static MutexType g_audioBuffer_lock;
 static ADLMIDI_AudioFormat g_audioFormat;
 
-static void SDL_AudioCallbackX(void *, Uint8 *stream, int len)
+static void SDL_AudioCallbackX(void *, uint8_t *stream, int len)
 {
-    SDL_LockAudio();
+    audio_lock();
     //short *target = (short *) stream;
     g_audioBuffer_lock.Lock();
-    unsigned ate = len; // number of bytes
+    unsigned ate = static_cast<unsigned>(len); // number of bytes
     if(ate > g_audioBuffer.size())
         ate = (unsigned)g_audioBuffer.size();
     for(unsigned a = 0; a < ate; ++a)
         stream[a] = g_audioBuffer[a];
     g_audioBuffer.erase(g_audioBuffer.begin(), g_audioBuffer.begin() + ate);
     g_audioBuffer_lock.Unlock();
-    SDL_UnlockAudio();
+    audio_unlock();
 }
+#   endif//OUTPUT_WAVE_ONLY
 
-static const char *SDLAudioToStr(int format)
+const char* audio_format_to_str(int format, int is_msb)
 {
     switch(format)
     {
-    case AUDIO_S8:
+    case ADLMIDI_SampleType_S8:
         return "S8";
-    case AUDIO_U8:
+    case ADLMIDI_SampleType_U8:
         return "U8";
-    case AUDIO_S16:
-        return "S16";
-    case AUDIO_S16MSB:
-        return "S16MSB";
-    case AUDIO_U16:
-        return "U16";
-    case AUDIO_U16MSB:
-        return "U16MSB";
-    case AUDIO_S32:
-        return "S32";
-    case AUDIO_S32MSB:
-        return "S32MSB";
-    case AUDIO_F32:
-        return "F32";
-    case AUDIO_F32MSB:
-        return "F32MSB";
-    default:
-        return "UNK";
+    case ADLMIDI_SampleType_S16:
+        return is_msb ? "S16MSB" : "S16";
+    case ADLMIDI_SampleType_U16:
+        return is_msb ? "U16MSB" : "U16";
+    case ADLMIDI_SampleType_S32:
+        return is_msb ? "S32MSB" : "S32";
+    case ADLMIDI_SampleType_F32:
+        return is_msb ? "F32MSB" : "F32";
     }
+    return "UNK";
 }
-#endif//OUTPUT_WAVE_ONLY
 
 #endif //HARDWARE_OPL3
+
+const char* volume_model_to_str(int vm)
+{
+    switch(vm)
+    {
+    default:
+    case ADLMIDI_VolumeModel_Generic:
+        return "Generic";
+    case ADLMIDI_VolumeModel_NativeOPL3:
+        return "Native OPL3";
+    case ADLMIDI_VolumeModel_DMX:
+        return "DMX";
+    case ADLMIDI_VolumeModel_APOGEE:
+        return "Apogee Sound System";
+    case ADLMIDI_VolumeModel_9X:
+        return "9X (SB16)";
+    case ADLMIDI_VolumeModel_DMX_Fixed:
+        return "DMX (fixed AM voices)";
+    case ADLMIDI_VolumeModel_APOGEE_Fixed:
+        return "Apogee Sound System (fixed AM voices)";
+    case ADLMIDI_VolumeModel_AIL:
+        return "Audio Interfaces Library (AIL)";
+    case ADLMIDI_VolumeModel_9X_GENERIC_FM:
+        return "9X (Generic FM)";
+    case ADLMIDI_VolumeModel_HMI:
+        return "HMI";
+    }
+}
+
 
 static bool is_number(const std::string &s)
 {
@@ -189,7 +263,7 @@ static void debugPrint(void * /*userdata*/, const char *fmt, ...)
     char buffer[4096];
     std::va_list args;
     va_start(args, fmt);
-    int rc = std::vsnprintf(buffer, sizeof(buffer), fmt, args);
+    int rc = vsnprintf(buffer, sizeof(buffer), fmt, args);
     va_end(args);
     if(rc > 0)
     {
@@ -197,6 +271,57 @@ static void debugPrint(void * /*userdata*/, const char *fmt, ...)
         flushout(stdout);
     }
 }
+
+#ifdef HARDWARE_OPL3
+static inline void keyWait()
+{
+    std::printf("\n<press any key to continue...>");
+    getch();
+    std::printf("\r                              \n");
+}
+#endif
+
+static void printBanks()
+{
+    // Get count of embedded banks (no initialization needed)
+    int banksCount = adl_getBanksCount();
+    //Get pointer to list of embedded bank names
+    const char *const *banknames = adl_getBankNames();
+
+    if(banksCount > 0)
+    {
+        std::printf("    Available embedded banks by number:\n\n");
+
+        for(int a = 0; a < banksCount; ++a)
+        {
+            std::printf("%10s%2u = %s\n", a ? "" : "Banks:", a, banknames[a]);
+#ifdef HARDWARE_OPL3
+            if(((a - 15) % 23 == 0 && a != 0))
+                keyWait();
+#endif
+        }
+
+        std::printf(
+            "\n"
+            "     Use banks 2-5 to play Descent \"q\" soundtracks.\n"
+            "     Look up the relevant bank number from descent.sng.\n"
+            "\n"
+            "     The fourth parameter can be used to specify the number\n"
+            "     of four-op channels to use. Each four-op channel eats\n"
+            "     the room of two regular channels. Use as many as required.\n"
+            "     The Doom & Hexen sets require one or two, while\n"
+            "     Miles four-op set requires the maximum of numcards*6.\n"
+            "\n"
+        );
+    }
+    else
+    {
+        std::printf("    This build of libADLMIDI has no embedded banks!\n\n");
+    }
+
+    flushout(stdout);
+}
+
 
 #ifdef DEBUG_TRACE_ALL_EVENTS
 static void debugPrintEvent(void * /*userdata*/, ADL_UInt8 type, ADL_UInt8 subtype, ADL_UInt8 channel, const ADL_UInt8 * /*data*/, size_t len)
@@ -232,28 +357,58 @@ int main(int argc, char **argv)
                          "==========================================\n\n");
     flushout(stdout);
 
+    if(argc >= 2 && std::string(argv[1]) == "--list-banks")
+    {
+        printBanks();
+        return 0;
+    }
+
     if(argc < 2 || std::string(argv[1]) == "--help" || std::string(argv[1]) == "-h")
     {
         std::printf(
-            "Usage: adlmidi <midifilename> [ <options> ] [ <bank> [ <numchips> [ <numfourops>] ] ]\n"
+            "Usage: adlmidi <midifilename> [ <options> ] \n"
+            "                              [ <bank> [ <numchips> [ <numfourops>] ] ]\n"
             // " -p Enables adlib percussion instrument mode\n"
             " -t Enables tremolo amplification mode\n"
             " -v Enables vibrato amplification mode\n"
             " -s Enables scaling of modulator volumes\n"
+            " -vm <num> Chooses one of volume models: \n"
+            "    0 auto (default)\n"
+            "    1 Generic\n"
+            "    2 Native OPL3\n"
+            "    3 DMX\n"
+            "    4 Apogee Sound System\n"
+            "    5 9x SB16\n"
+            "    6 DMX (Fixed AM voices)\n"
+            "    7 Apogee Sound System (Fixed AM voices)\n"
+            "    8 Audio Interfaces Library (AIL)\n"
+            "    9 9x Generic FM\n"
+            "   10 HMI Sound Operating System\n"
+        );
+#ifdef HARDWARE_OPL3
+        keyWait();
+#endif
+        std::printf(
             " -frb Enables full-ranged CC74 XG Brightness controller\n"
             " -nl Quit without looping\n"
             " -w Write WAV file rather than playing\n"
-            " -mb Run the test of multibank over embedded. 62, 14, 68, and 74'th banks will be combined into one\n"
+            " -mb  Run the test of multibank over embedded. 62, 14, 68, and 74'th banks\n"
+            "      will be combined into one\n"
             " --solo <track>             Selects a solo track to play\n"
             " --only <track1,...,trackN> Selects a subset of tracks to play\n"
-            #ifndef HARDWARE_OPL3
+#ifndef HARDWARE_OPL3
             " -fp Enables full-panning stereo support\n"
             " --emu-nuked  Uses Nuked OPL3 v 1.8 emulator\n"
             " --emu-nuked7 Uses Nuked OPL3 v 1.7.4 emulator\n"
             " --emu-dosbox Uses DosBox 0.74 OPL3 emulator\n"
             " --emu-opal   Uses Opal OPL3 emulator\n"
             " --emu-java   Uses Java OPL3 emulator\n"
-            #endif
+#endif
+#ifdef HARDWARE_OPL3
+            "\n"
+            " --time-freq <hz>  Uses a different time value, DEFAULT 209\n"
+            " --list-banks  Print a lost of all built-in FM banks\n"
+#endif
             "\n"
             "Where <bank> - number of embeeded bank or filepath to custom WOPL bank file\n"
             "\n"
@@ -262,43 +417,14 @@ int main(int argc, char **argv)
             "\n"
         );
 
-        // Get count of embedded banks (no initialization needed)
-        int banksCount = adl_getBanksCount();
-        //Get pointer to list of embedded bank names
-        const char *const *banknames = adl_getBankNames();
-
-        if(banksCount > 0)
-        {
-            std::printf("    Available embedded banks by number:\n\n");
-
-            for(int a = 0; a < banksCount; ++a)
-                std::printf("%10s%2u = %s\n", a ? "" : "Banks:", a, banknames[a]);
-
-            std::printf(
-                "\n"
-                "     Use banks 2-5 to play Descent \"q\" soundtracks.\n"
-                "     Look up the relevant bank number from descent.sng.\n"
-                "\n"
-                "     The fourth parameter can be used to specify the number\n"
-                "     of four-op channels to use. Each four-op channel eats\n"
-                "     the room of two regular channels. Use as many as required.\n"
-                "     The Doom & Hexen sets require one or two, while\n"
-                "     Miles four-op set requires the maximum of numcards*6.\n"
-                "\n"
-            );
-        }
-        else
-        {
-            std::printf("    This build of libADLMIDI has no embedded banks!\n\n");
-        }
-
-        flushout(stdout);
-
+#ifndef HARDWARE_OPL3
+        printBanks();
+#endif
         return 0;
     }
 
-    long sampleRate = 44100;
-    #ifndef HARDWARE_OPL3
+    unsigned int sampleRate = 44100;
+#ifndef HARDWARE_OPL3
     //const unsigned MaxSamplesAtTime = 512; // 512=dbopl limitation
     // How long is SDL buffer, in seconds?
     // The smaller the value, the more often SDL_AudioCallBack()
@@ -309,17 +435,24 @@ int main(int argc, char **argv)
     const double OurHeadRoomLength = 0.1;
     // The lag between visual content and audio content equals
     // the sum of these two buffers.
-    #ifndef OUTPUT_WAVE_ONLY
-    SDL_AudioSpec spec;
-    SDL_AudioSpec obtained;
 
-    spec.freq     = (int)sampleRate;
-    spec.format   = AUDIO_S16SYS;
+#   ifndef OUTPUT_WAVE_ONLY
+    AudioOutputSpec spec;
+    AudioOutputSpec obtained;
+
+    spec.freq     = sampleRate;
+    spec.format   = ADLMIDI_SampleType_S16;
+    spec.is_msb   = 0;
     spec.channels = 2;
-    spec.samples  = Uint16((double)spec.freq * AudioBufferLength);
-    spec.callback = SDL_AudioCallbackX;
-    #endif //OUTPUT_WAVE_ONLY
-    #endif //HARDWARE_OPL3
+    spec.samples  = uint16_t((double)spec.freq * AudioBufferLength);
+#   endif //OUTPUT_WAVE_ONLY
+#endif //HARDWARE_OPL3
+
+#ifdef HARDWARE_OPL3
+    static unsigned newTimerFreq = 209;
+    unsigned timerPeriod = 0x1234DDul / newTimerFreq;
+#endif
+
 
     ADL_MIDIPlayer *myDevice;
 
@@ -348,13 +481,14 @@ int main(int argc, char **argv)
     int emulator = ADLMIDI_EMU_NUKED;
 #endif
 
+    int volumeModel = ADLMIDI_VolumeModel_AUTO;
     size_t soloTrack = ~(size_t)0;
     std::vector<size_t> onlyTracks;
 
 #if !defined(HARDWARE_OPL3) && !defined(OUTPUT_WAVE_ONLY)
     g_audioFormat.type = ADLMIDI_SampleType_S16;
-    g_audioFormat.containerSize = sizeof(Sint16);
-    g_audioFormat.sampleOffset = sizeof(Sint16) * 2;
+    g_audioFormat.containerSize = sizeof(int16_t);
+    g_audioFormat.sampleOffset = sizeof(int16_t) * 2;
 #endif
 
     while(argc > 2)
@@ -371,22 +505,22 @@ int main(int argc, char **argv)
         {
             //Current Wave output implementation allows only SINT16 output
             g_audioFormat.type = ADLMIDI_SampleType_S16;
-            g_audioFormat.containerSize = sizeof(Sint16);
-            g_audioFormat.sampleOffset = sizeof(Sint16) * 2;
+            g_audioFormat.containerSize = sizeof(int16_t);
+            g_audioFormat.sampleOffset = sizeof(int16_t) * 2;
             recordWave = true;//Record library output into WAV file
         }
         else if(!std::strcmp("-s8", argv[2]) && !recordWave)
-            spec.format = AUDIO_S8;
+            spec.format = ADLMIDI_SampleType_S8;
         else if(!std::strcmp("-u8", argv[2]) && !recordWave)
-            spec.format = AUDIO_U8;
+            spec.format = ADLMIDI_SampleType_U8;
         else if(!std::strcmp("-s16", argv[2]) && !recordWave)
-            spec.format = AUDIO_S16;
+            spec.format = ADLMIDI_SampleType_S16;
         else if(!std::strcmp("-u16", argv[2]) && !recordWave)
-            spec.format = AUDIO_U16;
+            spec.format = ADLMIDI_SampleType_U16;
         else if(!std::strcmp("-s32", argv[2]) && !recordWave)
-            spec.format = AUDIO_S32;
+            spec.format = ADLMIDI_SampleType_S32;
         else if(!std::strcmp("-f32", argv[2]) && !recordWave)
-            spec.format = AUDIO_F32;
+            spec.format = ADLMIDI_SampleType_F32;
 #endif
 
         else if(!std::strcmp("-t", argv[2]))
@@ -419,6 +553,36 @@ int main(int argc, char **argv)
         else if(!std::strcmp("-s", argv[2]))
             adl_setScaleModulators(myDevice, 1);//Turn on modulators scaling by volume
 
+#ifdef HARDWARE_OPL3
+        else if(!std::strcmp("--time-freq", argv[2]))
+        {
+            if(argc <= 3)
+            {
+                printError("The option --time-freq requires an argument!\n");
+                return 1;
+            }
+            newTimerFreq = std::strtoul(argv[3], NULL, 0);
+            if(newTimerFreq == 0)
+            {
+                printError("The option --time-freq requires a non-zero integer argument!\n");
+                return 1;
+            }
+
+            timerPeriod = 0x1234DDul / newTimerFreq;
+
+            had_option = true;
+        }
+#endif
+        else if(!std::strcmp("-vm", argv[2]))
+        {
+            if(argc <= 3)
+            {
+                printError("The option --solo requires an argument!\n");
+                return 1;
+            }
+            volumeModel = std::strtol(argv[3], NULL, 10);
+            had_option = true;
+        }
         else if(!std::strcmp("--solo", argv[2]))
         {
             if(argc <= 3)
@@ -426,7 +590,7 @@ int main(int argc, char **argv)
                 printError("The option --solo requires an argument!\n");
                 return 1;
             }
-            soloTrack = std::strtoul(argv[3], NULL, 0);
+            soloTrack = std::strtoul(argv[3], NULL, 10);
             had_option = true;
         }
         else if(!std::strcmp("--only", argv[2]))
@@ -489,46 +653,47 @@ int main(int argc, char **argv)
     if(!recordWave)
     {
         // Set up SDL
-        if(SDL_OpenAudio(&spec, &obtained) < 0)
+        if(audio_init(&spec, &obtained, SDL_AudioCallbackX) < 0)
         {
-            std::fprintf(stderr, "\nERROR: Couldn't open audio: %s\n\n", SDL_GetError());
-            //return 1;
+            std::fprintf(stderr, "\nERROR: Couldn't open audio: %s\n\n", audio_get_error());
+            adl_close(myDevice);
+            return 1;
         }
         if(spec.samples != obtained.samples)
         {
             std::fprintf(stderr, " - Audio wanted (format=%s,samples=%u,rate=%u,channels=%u);\n"
                                  " - Audio obtained (format=%s,samples=%u,rate=%u,channels=%u)\n",
-                         SDLAudioToStr(spec.format), spec.samples,    spec.freq,    spec.channels,
-                         SDLAudioToStr(obtained.format), obtained.samples, obtained.freq, obtained.channels);
+                         audio_format_to_str(spec.format, spec.is_msb),         spec.samples,     spec.freq,     spec.channels,
+                         audio_format_to_str(obtained.format, obtained.is_msb), obtained.samples, obtained.freq, obtained.channels);
         }
         switch(obtained.format)
         {
-        case AUDIO_S8:
+        case ADLMIDI_SampleType_S8:
             g_audioFormat.type = ADLMIDI_SampleType_S8;
-            g_audioFormat.containerSize = sizeof(Sint8);
-            g_audioFormat.sampleOffset = sizeof(Sint8) * 2;
+            g_audioFormat.containerSize = sizeof(int8_t);
+            g_audioFormat.sampleOffset = sizeof(int8_t) * 2;
             break;
-        case AUDIO_U8:
+        case ADLMIDI_SampleType_U8:
             g_audioFormat.type = ADLMIDI_SampleType_U8;
-            g_audioFormat.containerSize = sizeof(Uint8);
-            g_audioFormat.sampleOffset = sizeof(Uint8) * 2;
+            g_audioFormat.containerSize = sizeof(uint8_t);
+            g_audioFormat.sampleOffset = sizeof(uint8_t) * 2;
             break;
-        case AUDIO_S16:
+        case ADLMIDI_SampleType_S16:
             g_audioFormat.type = ADLMIDI_SampleType_S16;
-            g_audioFormat.containerSize = sizeof(Sint16);
-            g_audioFormat.sampleOffset = sizeof(Sint16) * 2;
+            g_audioFormat.containerSize = sizeof(int16_t);
+            g_audioFormat.sampleOffset = sizeof(int16_t) * 2;
             break;
-        case AUDIO_U16:
+        case ADLMIDI_SampleType_U16:
             g_audioFormat.type = ADLMIDI_SampleType_U16;
-            g_audioFormat.containerSize = sizeof(Uint16);
-            g_audioFormat.sampleOffset = sizeof(Uint16) * 2;
+            g_audioFormat.containerSize = sizeof(uint16_t);
+            g_audioFormat.sampleOffset = sizeof(uint16_t) * 2;
             break;
-        case AUDIO_S32:
+        case ADLMIDI_SampleType_S32:
             g_audioFormat.type = ADLMIDI_SampleType_S32;
-            g_audioFormat.containerSize = sizeof(Sint32);
-            g_audioFormat.sampleOffset = sizeof(Sint32) * 2;
+            g_audioFormat.containerSize = sizeof(int32_t);
+            g_audioFormat.sampleOffset = sizeof(int32_t) * 2;
             break;
-        case AUDIO_F32:
+        case ADLMIDI_SampleType_F32:
             g_audioFormat.type = ADLMIDI_SampleType_F32;
             g_audioFormat.containerSize = sizeof(float);
             g_audioFormat.sampleOffset = sizeof(float) * 2;
@@ -546,6 +711,7 @@ int main(int argc, char **argv)
             if(adl_setBank(myDevice, bankno) != 0)
             {
                 printError(adl_errorInfo(myDevice));
+                adl_close(myDevice);
                 return 1;
             }
             std::fprintf(stdout, " - Use embedded bank #%d [%s]\n", bankno, adl_getBankNames()[bankno]);
@@ -562,6 +728,7 @@ int main(int argc, char **argv)
                 std::fprintf(stdout, "FAILED!\n");
                 flushout(stdout);
                 printError(adl_errorInfo(myDevice));
+                adl_close(myDevice);
                 return 1;
             }
             std::fprintf(stdout, "OK!\n");
@@ -588,12 +755,14 @@ int main(int argc, char **argv)
             if(adl_getBank(myDevice, &id[i], ADLMIDI_Bank_Create, &bank) < 0)
             {
                 printError(adl_errorInfo(myDevice));
+                adl_close(myDevice);
                 return 1;
             }
 
             if(adl_loadEmbeddedBank(myDevice, &bank, banks[i]) < 0)
             {
                 printError(adl_errorInfo(myDevice));
+                adl_close(myDevice);
                 return 1;
             }
         }
@@ -610,6 +779,7 @@ int main(int argc, char **argv)
     if(adl_setNumChips(myDevice, numOfChips) != 0)
     {
         printError(adl_errorInfo(myDevice));
+        adl_close(myDevice);
         return 1;
     }
 #else
@@ -617,12 +787,16 @@ int main(int argc, char **argv)
     adl_setNumChips(myDevice, numOfChips);
 #endif
 
+    if(volumeModel != ADLMIDI_VolumeModel_AUTO)
+        adl_setVolumeRangeModel(myDevice, volumeModel);
+
     if(argc >= 5)
     {
         //Set total count of 4-operator channels between all emulated chips
         if(adl_setNumFourOpsChn(myDevice, std::atoi(argv[4])) != 0)
         {
             printError(adl_errorInfo(myDevice));
+            adl_close(myDevice);
             return 1;
         }
     }
@@ -637,11 +811,12 @@ int main(int argc, char **argv)
 
     std::fprintf(stdout, " - Number of chips %d\n", adl_getNumChipsObtained(myDevice));
     std::fprintf(stdout, " - Number of four-ops %d\n", adl_getNumFourOpsChnObtained(myDevice));
-    std::fprintf(stdout, " - Track count: %lu\n", (unsigned long)adl_trackCount(myDevice));
+    std::fprintf(stdout, " - Track count: %lu\n", static_cast<unsigned long>(adl_trackCount(myDevice)));
+    std::fprintf(stdout, " - Volume model: %s\n", volume_model_to_str(adl_getVolumeRangeModel(myDevice)));
 
-    if(soloTrack != ~(size_t)0)
+    if(soloTrack != ~static_cast<size_t>(0))
     {
-        std::fprintf(stdout, " - Solo track: %lu\n", (unsigned long)soloTrack);
+        std::fprintf(stdout, " - Solo track: %lu\n", static_cast<unsigned long>(soloTrack));
         adl_setTrackOptions(myDevice, soloTrack, ADLMIDI_TrackOption_Solo);
     }
 
@@ -655,7 +830,7 @@ int main(int argc, char **argv)
         {
             size_t track = onlyTracks[i];
             adl_setTrackOptions(myDevice, track, ADLMIDI_TrackOption_On);
-            std::fprintf(stdout, " %lu", (unsigned long)track);
+            std::fprintf(stdout, " %lu", static_cast<unsigned long>(track));
         }
         std::fprintf(stdout, "\n");
     }
@@ -670,19 +845,17 @@ int main(int argc, char **argv)
     signal(SIGHUP, sighandler);
 #   endif
 
-#else//HARDWARE_OPL3
-    static const unsigned NewTimerFreq = 209;
-    unsigned TimerPeriod = 0x1234DDul / NewTimerFreq;
+#else // HARDWARE_OPL3
 
-    #ifdef __DJGPP__
+#   ifdef __DJGPP__
     //disable();
     outportb(0x43, 0x34);
-    outportb(0x40, TimerPeriod & 0xFF);
-    outportb(0x40, TimerPeriod >>   8);
+    outportb(0x40, timerPeriod & 0xFF);
+    outportb(0x40, timerPeriod >>   8);
     //enable();
-    #endif//__DJGPP__
+#   endif//__DJGPP__
 
-    #ifdef __WATCOMC__
+#   ifdef __WATCOMC__
     std::fprintf(stdout, " - Initializing BIOS timer...\n");
     flushout(stdout);
     //disable();
@@ -692,7 +865,7 @@ int main(int argc, char **argv)
     //enable();
     std::fprintf(stdout, " - Ok!\n");
     flushout(stdout);
-    #endif//__WATCOMC__
+#   endif//__WATCOMC__
 
     unsigned long BIOStimer_begin = BIOStimer;
     double tick_delay = 0.0;
@@ -724,7 +897,7 @@ int main(int argc, char **argv)
         flushout(stdout);
 
 #   ifndef HARDWARE_OPL3
-        SDL_PauseAudio(0);
+        audio_start();
 #   endif
 
 #   ifdef DEBUG_SEEKING_TEST
@@ -734,10 +907,18 @@ int main(int argc, char **argv)
 #   endif
 
 #   ifndef HARDWARE_OPL3
-        Uint8 buff[16384];
+        uint8_t buff[16384];
 #   endif
         char posHMS[25];
-        uint64_t milliseconds_prev = -1;
+        uint64_t milliseconds_prev = ~0u;
+        int printsCounter = 0;
+        int printsCounterPeriod = 1;
+#   ifdef HARDWARE_OPL3
+        printsCounterPeriod = 500;
+#   endif
+
+        std::fprintf(stdout, "                                               \r");
+
         while(!stop)
         {
 #   ifndef HARDWARE_OPL3
@@ -760,15 +941,20 @@ int main(int argc, char **argv)
 
 #   ifndef DEBUG_TRACE_ALL_EVENTS
             double time_pos = adl_positionTell(myDevice);
-            std::fprintf(stdout, "                                               \r");
             uint64_t milliseconds = static_cast<uint64_t>(time_pos * 1000.0);
+
             if(milliseconds != milliseconds_prev)
             {
-                secondsToHMSM(time_pos, posHMS, 25);
-                std::fprintf(stdout, "                                               \r");
-                std::fprintf(stdout, "Time position: %s / %s\r", posHMS, totalHMS);
-                flushout(stdout);
-                milliseconds_prev = milliseconds;
+                if(printsCounter >= printsCounterPeriod)
+                {
+                    printsCounter = -1;
+                    secondsToHMSM(time_pos, posHMS, 25);
+                    std::fprintf(stdout, "                                               \r");
+                    std::fprintf(stdout, "Time position: %s / %s\r", posHMS, totalHMS);
+                    flushout(stdout);
+                    milliseconds_prev = milliseconds;
+                }
+                printsCounter++;
             }
 #   endif
 
@@ -780,10 +966,10 @@ int main(int argc, char **argv)
                 g_audioBuffer[pos + p] = buff[p];
             g_audioBuffer_lock.Unlock();
 
-            const SDL_AudioSpec &spec = obtained;
-            while(g_audioBuffer.size() > static_cast<size_t>(spec.samples + (spec.freq * g_audioFormat.sampleOffset) * OurHeadRoomLength))
+            const AudioOutputSpec &spec = obtained;
+            while(!stop && (g_audioBuffer.size() > static_cast<size_t>(spec.samples + (spec.freq * g_audioFormat.sampleOffset) * OurHeadRoomLength)))
             {
-                SDL_Delay(1);
+                audio_delay(1);
             }
 
 #       ifdef DEBUG_SEEKING_TEST
@@ -796,20 +982,20 @@ int main(int argc, char **argv)
 #       endif
 
 #   else//HARDWARE_OPL3
-            const double mindelay = 1.0 / NewTimerFreq;
+            const double mindelay = 1.0 / newTimerFreq;
 
             //__asm__ volatile("sti\nhlt");
             //usleep(10000);
-            #ifdef __DJGPP__
+#       ifdef __DJGPP__
             __dpmi_yield();
-            #endif
-            #ifdef __WATCOMC__
+#       endif
+#       ifdef __WATCOMC__
             //dpmi_dos_yield();
             mch_delay((unsigned int)(tick_delay * 1000.0));
-            #endif
+#       endif
             static unsigned long PrevTimer = BIOStimer;
             const unsigned long CurTimer = BIOStimer;
-            const double eat_delay = (CurTimer - PrevTimer) / (double)NewTimerFreq;
+            const double eat_delay = (CurTimer - PrevTimer) / (double)newTimerFreq;
             PrevTimer = CurTimer;
             tick_delay = adl_tickEvents(myDevice, eat_delay, mindelay);
             if(adl_atEnd(myDevice) && tick_delay <= 0)
@@ -826,7 +1012,8 @@ int main(int argc, char **argv)
         }
         std::fprintf(stdout, "                                               \n\n");
 #   ifndef HARDWARE_OPL3
-        SDL_CloseAudio();
+        audio_stop();
+        audio_close();
 #   endif
     }
 #endif //OUTPUT_WAVE_ONLY
@@ -842,17 +1029,17 @@ int main(int argc, char **argv)
         std::fprintf(stdout, "\n==========================================\n");
         flushout(stdout);
 
-        if(wave_open(sampleRate, wave_out.c_str()) == 0)
+        if(wave_open(static_cast<long>(sampleRate), wave_out.c_str()) == 0)
         {
             wave_enable_stereo();
             short buff[4096];
             int complete_prev = -1;
             while(!stop)
             {
-                size_t got = (size_t)adl_play(myDevice, 4096, buff);
+                size_t got = static_cast<size_t>(adl_play(myDevice, 4096, buff));
                 if(got <= 0)
                     break;
-                wave_write(buff, (long)got);
+                wave_write(buff, static_cast<long>(got));
 
                 int complete = static_cast<int>(std::floor(100.0 * adl_positionTell(myDevice) / total));
                 flushout(stdout);
@@ -883,24 +1070,24 @@ int main(int argc, char **argv)
 
 #ifdef HARDWARE_OPL3
 
-    #ifdef __DJGPP__
+#   ifdef __DJGPP__
     // Fix the skewed clock and reset BIOS tick rate
     _farpokel(_dos_ds, 0x46C, BIOStimer_begin +
               (BIOStimer - BIOStimer_begin)
-              * (0x1234DD / 65536.0) / NewTimerFreq);
+              * (0x1234DD / 65536.0) / newTimerFreq);
 
     //disable();
     outportb(0x43, 0x34);
     outportb(0x40, 0);
     outportb(0x40, 0);
     //enable();
-    #endif
+#   endif
 
-    #ifdef __WATCOMC__
+#   ifdef __WATCOMC__
     outp(0x43, 0x34);
     outp(0x40, 0);
     outp(0x40, 0);
-    #endif
+#   endif
 
     adl_panic(myDevice); //Shut up all sustaining notes
 

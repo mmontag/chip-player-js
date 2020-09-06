@@ -2,6 +2,9 @@
 #define LOAD_OP2_H
 
 #include "../progs_cache.h"
+#ifndef COMMON_H
+#include "common.h"
+#endif
 
 #ifndef _MSC_VER
 #define PACKED_STRUCT __attribute__((packed))
@@ -15,32 +18,32 @@
 
 struct Doom_OPL2instrument
 {
-    unsigned char trem_vibr_1;    /* OP 1: tremolo/vibrato/sustain/KSR/multi */
-    unsigned char att_dec_1;      /* OP 1: attack rate/decay rate */
-    unsigned char sust_rel_1;     /* OP 1: sustain level/release rate */
-    unsigned char wave_1;         /* OP 1: waveform select */
-    unsigned char scale_1;        /* OP 1: key scale level */
-    unsigned char level_1;        /* OP 1: output level */
-    unsigned char feedback;       /* feedback/AM-FM (both operators) */
-    unsigned char trem_vibr_2;    /* OP 2: tremolo/vibrato/sustain/KSR/multi */
-    unsigned char att_dec_2;      /* OP 2: attack rate/decay rate */
-    unsigned char sust_rel_2;     /* OP 2: sustain level/release rate */
-    unsigned char wave_2;         /* OP 2: waveform select */
-    unsigned char scale_2;        /* OP 2: key scale level */
-    unsigned char level_2;        /* OP 2: output level */
-    unsigned char unused;
-    short         basenote;       /* base note offset */
+    uint8_t trem_vibr_1;    /* OP 1: tremolo/vibrato/sustain/KSR/multi */
+    uint8_t att_dec_1;      /* OP 1: attack rate/decay rate */
+    uint8_t sust_rel_1;     /* OP 1: sustain level/release rate */
+    uint8_t wave_1;         /* OP 1: waveform select */
+    uint8_t scale_1;        /* OP 1: key scale level */
+    uint8_t level_1;        /* OP 1: output level */
+    uint8_t feedback;       /* feedback/AM-FM (both operators) */
+    uint8_t trem_vibr_2;    /* OP 2: tremolo/vibrato/sustain/KSR/multi */
+    uint8_t att_dec_2;      /* OP 2: attack rate/decay rate */
+    uint8_t sust_rel_2;     /* OP 2: sustain level/release rate */
+    uint8_t wave_2;         /* OP 2: waveform select */
+    uint8_t scale_2;        /* OP 2: key scale level */
+    uint8_t level_2;        /* OP 2: output level */
+    uint8_t unused;
+    uint8_t basenote[2];    /* base note offset */
 } PACKED_STRUCT;
 
 struct Doom_opl_instr
 {
-    unsigned short        flags;
+    uint8_t             flags[2];
 #define FL_FIXED_PITCH  0x0001          // note has fixed pitch (drum note)
-#define FL_UNKNOWN      0x0002          // ??? (used in instrument #65 only)
+#define FL_VIB_DELAY    0x0002          // vib_delay (used in instrument #65 only)
 #define FL_DOUBLE_VOICE 0x0004          // use two voices instead of one
 
-    unsigned char         finetune;
-    unsigned char         note;
+    uint8_t             finetune;
+    uint8_t             note;
     struct Doom_OPL2instrument patchdata[2];
 } PACKED_STRUCT;
 
@@ -49,11 +52,11 @@ struct Doom_opl_instr
 #endif
 
 
-static bool LoadDoom(const char *fn, unsigned bank, const char *prefix)
+bool BankFormats::LoadDoom(BanksDump &db, const char *fn, unsigned bank, const std::string &bankTitle, const char *prefix)
 {
-    #ifdef HARD_BANKS
+#ifdef HARD_BANKS
     writeIni("OP2", fn, prefix, bank, INI_Both);
-    #endif
+#endif
     FILE *fp = std::fopen(fn, "rb");
     if(!fp)
         return false;
@@ -68,11 +71,17 @@ static bool LoadDoom(const char *fn, unsigned bank, const char *prefix)
     }
     std::fclose(fp);
 
+    size_t bankDb = db.initBank(bank, bankTitle, BanksDump::BankEntry::SETUP_DMX);
+    BanksDump::MidiBank bnkMelodique;
+    BanksDump::MidiBank bnkPercussion;
+
     for(unsigned a = 0; a < 175; ++a)
     {
         const size_t offset1 = 0x18A4 + a * 32;
         const size_t offset2 = 8      + a * 36;
-
+        BanksDump::MidiBank &bnk = a < 128 ? bnkMelodique : bnkPercussion;
+        BanksDump::InstrumentEntry inst;
+        BanksDump::Operator ops[5];
         std::string name;
         for(unsigned p = 0; p < 32; ++p)
             if(data[offset1] != '\0')
@@ -80,15 +89,17 @@ static bool LoadDoom(const char *fn, unsigned bank, const char *prefix)
 
         //printf("%3d %3d %3d %8s: ", a,b,c, name.c_str());
         int gmno = int(a < 128 ? a : ((a | 128) + 35));
+        size_t patchId = a < 128 ? a : ((a - 128) + 35);
 
         char name2[512];
         snprintf(name2, 512, "%s%c%u", prefix, (gmno < 128 ? 'M' : 'P'), gmno & 127);
 
         Doom_opl_instr &ins = *(Doom_opl_instr *) &data[offset2];
+        uint16_t flags = toSint16LE(ins.flags);
 
-        insdata tmp[2] = {MakeNoSoundIns(), MakeNoSoundIns()};
-        tmp[0].diff = false;
-        tmp[1].diff = false;
+        InstBuffer tmp[2] = {MakeNoSoundIns1(), MakeNoSoundIns1()};
+        int16_t noteOffset[2];
+
         for(size_t index = 0; index < 2; ++index)
         {
             const Doom_OPL2instrument &src = ins.patchdata[index];
@@ -103,40 +114,29 @@ static bool LoadDoom(const char *fn, unsigned bank, const char *prefix)
             tmp[index].data[8] = src.scale_1 | src.level_1;
             tmp[index].data[9] = src.scale_2 | src.level_2;
             tmp[index].data[10] = src.feedback;
-            tmp[index].finetune = int8_t(src.basenote + 12);
-        }
-        struct ins tmp2;
-        tmp2.notenum  = ins.note;
-        tmp2.pseudo4op = false;
-        tmp2.real4op = false;
-        tmp2.voice2_fine_tune = 0.0;
-        tmp2.midi_velocity_offset = 0;
-        tmp2.rhythmModeDrum = 0;
-
-        while(tmp2.notenum && tmp2.notenum < 20)
-        {
-            tmp2.notenum += 12;
-            tmp[0].finetune -= 12;
-            tmp[1].finetune -= 12;
+            noteOffset[index] = toSint16LE(src.basenote) + 12;
+            inst.fbConn |= (uint_fast16_t(src.feedback) << (index == 1 ? 8 : 0));
+            db.toOps(tmp[index].d, ops, index * 2);
         }
 
-        if(!(ins.flags & FL_DOUBLE_VOICE))
+        uint8_t notenum  = ins.note;
+
+        while(notenum && notenum < 20)
         {
-            size_t resno = InsertIns(tmp[0], tmp2, std::string(1, '\377') + name, name2);
-            SetBank(bank, (unsigned int)gmno, resno);
+            notenum += 12;
+            noteOffset[0] -= 12;
+            noteOffset[1] -= 12;
         }
-        else // Double instrument
-        {
-            tmp2.pseudo4op = true;
-            tmp2.voice2_fine_tune = (((double)ins.finetune - 128.0) * 15.625) / 1000.0;
-            if(ins.finetune == 129)
-                tmp2.voice2_fine_tune = 0.000025;
-            else if(ins.finetune == 127)
-                tmp2.voice2_fine_tune = -0.000025;
-            //printf("/*DOOM FINE TUNE (flags %000X instrument is %d) IS %d -> %lf*/\n", ins.flags, a, ins.finetune, tmp2.fine_tune);
-            size_t resno = InsertIns(tmp[0], tmp[1], tmp2, std::string(1, '\377') + name, name2);
-            SetBank(bank, (unsigned int)gmno, resno);
-        }
+
+        inst.noteOffset1 = noteOffset[0];
+        inst.noteOffset2 = noteOffset[1];
+
+        if((flags & FL_DOUBLE_VOICE) != 0)
+            inst.instFlags |= BanksDump::InstrumentEntry::WOPL_Ins_4op | BanksDump::InstrumentEntry::WOPL_Ins_Pseudo4op;
+        inst.percussionKeyNumber = notenum;
+        inst.secondVoiceDetune = static_cast<char>(static_cast<int>(ins.finetune) - 128);
+
+        db.addInstrument(bnk, patchId, inst, ops, fn);
 
         /*const Doom_OPL2instrument& A = ins.patchdata[0];
         const Doom_OPL2instrument& B = ins.patchdata[1];
@@ -159,12 +159,8 @@ static bool LoadDoom(const char *fn, unsigned bank, const char *prefix)
         printf("------------------------------------------------------------\n");*/
     }
 
-    AdlBankSetup setup;
-    setup.volumeModel = VOLUME_DMX;
-    setup.deepTremolo = false;
-    setup.deepVibrato = false;
-    setup.scaleModulators = false;
-    SetBankSetup(bank, setup);
+    db.addMidiBank(bankDb, false, bnkMelodique);
+    db.addMidiBank(bankDb, true, bnkPercussion);
 
     return true;
 }
