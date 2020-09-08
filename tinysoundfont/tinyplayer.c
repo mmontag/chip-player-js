@@ -179,6 +179,7 @@ extern void tp_init(int sampleRate) {
 
   g_adlSynth = adl_init(sampleRate);
   adl_setSoftPanEnabled(g_adlSynth, 1);
+  adl_setVolumeRangeModel(g_adlSynth, ADLMIDI_VolumeModel_AUTO);
   adl_setNumChips(g_adlSynth, 4);
 
   g_Synths[0] = fluidSynth;

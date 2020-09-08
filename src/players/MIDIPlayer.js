@@ -335,11 +335,11 @@ export default class MIDIPlayer extends Player {
       const findBank = (str) => opl3banks.findIndex(bank => bank.label.indexOf(str) > -1);
       let bankId = 0;
       if (fp.indexOf('[rick]') > -1) {
-        bankId = findBank('Descent: Rick');
+        bankId = findBank('Descent:: Rick');
       } else if (fp.indexOf('[ham]') > -1) {
-        bankId = findBank('Descent: Ham');
+        bankId = findBank('Descent:: Ham');
       } else if (fp.indexOf('[int]') > -1) {
-        bankId = findBank('Descent: Int');
+        bankId = findBank('Descent:: Int');
       } else if (fp.indexOf('descent 2') > -1) {
         bankId = findBank('Descent 2');
       } else if (fp.indexOf('magic carpet') > -1) {
