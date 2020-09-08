@@ -1364,13 +1364,12 @@ int64_t MIDIplay::calculateChipChannelGoodness(size_t c, const MIDIchannel::Note
     {
         s -= 40000;
         // If it's same instrument, better chance to get it when no free channels
-        if(chan.recent_ins == ins)
-        {
-            if(synth.m_musicMode == Synth::MODE_CMF || synth.m_volumeScale == Synth::VOLUME_HMI)
-                s = 0; // Re-use channel immediately
-            else
-                s =  -koff_ms; // Wait until releasing sound will complete
-        }
+        if(chan.recent_ins == ins && synth.m_musicMode == Synth::MODE_CMF)
+            s = 0; // Re-use releasing channel with the same instrument
+        else if(synth.m_volumeScale == Synth::VOLUME_HMI)
+            s = 0; // HMI doesn't care about the same instrument
+        else if(chan.recent_ins == ins)
+            s =  -koff_ms; // Wait until releasing sound will complete
         return s;
     }
 
