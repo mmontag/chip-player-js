@@ -1,5 +1,5 @@
 #### Audio Output Library ####
-project(libVgmTest)
+project(libVgmTest LANGUAGES C CXX)
 cmake_minimum_required(VERSION 3.12)
 include(CheckIncludeFile)
 

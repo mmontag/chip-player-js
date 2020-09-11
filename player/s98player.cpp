@@ -537,6 +537,11 @@ UINT8 S98Player::GetSongDeviceInfo(std::vector<PLR_DEV_INFO>& devInfList) const
 			devInf.cParams = (AYTYPE_AY8910 << 0) | (0x00 << 8);
 			devInf.clock /= 2;
 		}
+		else if (devHdr->devType == S98DEV_DCSG)
+		{
+			// SEGA PSG default parameters
+			devInf.cParams = (0x0009 << 0) | (0x10 << 16) | (0x00 << 24);
+		}
 		if (! _devices.empty())
 		{
 			const VGM_BASEDEV& cDev = _devices[curDev].base;
@@ -823,7 +828,7 @@ UINT8 S98Player::Start(void)
 				}
 				
 				SaveDeviceConfig(cDev->cfg, &ayCfg, sizeof(AY8910_CFG));
-				retVal = SndEmu_Start(deviceID, (DEV_GEN_CFG*)&ayCfg, &cDev->base.defInf);
+				retVal = SndEmu_Start(deviceID, &ayCfg._genCfg, &cDev->base.defInf);
 			}
 			break;
 		case DEVID_SN76496:
@@ -840,7 +845,7 @@ UINT8 S98Player::Start(void)
 				snCfg.t6w28_tone = NULL;
 				
 				SaveDeviceConfig(cDev->cfg, &snCfg, sizeof(SN76496_CFG));
-				retVal = SndEmu_Start(deviceID, (DEV_GEN_CFG*)&snCfg, &cDev->base.defInf);
+				retVal = SndEmu_Start(deviceID, &snCfg._genCfg, &cDev->base.defInf);
 			}
 			break;
 		default:

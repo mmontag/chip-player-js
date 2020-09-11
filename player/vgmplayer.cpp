@@ -1074,7 +1074,7 @@ void VGMPlayer::InitDevices(void)
 					}
 					
 					SaveDeviceConfig(sdCfg.cfgData, &snCfg, sizeof(SN76496_CFG));
-					retVal = SndEmu_Start(chipType, (DEV_GEN_CFG*)&snCfg, devInf);
+					retVal = SndEmu_Start(chipType, &snCfg._genCfg, devInf);
 					if (retVal)
 						break;
 					SndEmu_GetDeviceFunc(devInf->devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&chipDev.write8);
@@ -1088,7 +1088,7 @@ void VGMPlayer::InitDevices(void)
 					spCfg.bnkshift = _hdrBuffer[0x3C];
 					spCfg.bnkmask = _hdrBuffer[0x3E];
 					SaveDeviceConfig(sdCfg.cfgData, &spCfg, sizeof(SEGAPCM_CFG));
-					retVal = SndEmu_Start(chipType, (DEV_GEN_CFG*)&spCfg, devInf);
+					retVal = SndEmu_Start(chipType, &spCfg._genCfg, devInf);
 					if (retVal)
 						break;
 					SndEmu_GetDeviceFunc(devInf->devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A16D8, 0, (void**)&chipDev.writeM8);
@@ -1146,7 +1146,7 @@ void VGMPlayer::InitDevices(void)
 					ayCfg.chipFlags = _hdrBuffer[0x79];
 					
 					SaveDeviceConfig(sdCfg.cfgData, &ayCfg, sizeof(AY8910_CFG));
-					retVal = SndEmu_Start(chipType, (DEV_GEN_CFG*)&ayCfg, devInf);
+					retVal = SndEmu_Start(chipType, &ayCfg._genCfg, devInf);
 					if (retVal)
 						break;
 					SndEmu_GetDeviceFunc(devInf->devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&chipDev.write8);
@@ -1179,7 +1179,7 @@ void VGMPlayer::InitDevices(void)
 					okiCfg.outputBits = (_hdrBuffer[0x94] & 0x08) ? OKIM6258_OUT_12B : OKIM6258_OUT_10B;
 					
 					SaveDeviceConfig(sdCfg.cfgData, &okiCfg, sizeof(OKIM6258_CFG));
-					retVal = SndEmu_Start(chipType, (DEV_GEN_CFG*)&okiCfg, devInf);
+					retVal = SndEmu_Start(chipType, &okiCfg._genCfg, devInf);
 					if (retVal)
 						break;
 					SndEmu_GetDeviceFunc(devInf->devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&chipDev.write8);
