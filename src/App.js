@@ -381,7 +381,8 @@ class App extends React.Component {
               this.setState({imageUrl: imageUrl, infoTexts: infoTexts});
 
               if ('mediaSession' in navigator) {
-                navigator.mediaSession.metadata.artwork = [{
+                // Clear artwork if imageUrl is null.
+                navigator.mediaSession.metadata.artwork = (imageUrl == null) ? [] : [{
                   src: imageUrl,
                   sizes: '512x512',
                 }];
