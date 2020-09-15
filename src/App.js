@@ -650,6 +650,10 @@ class App extends React.Component {
     return <DirectoryLink dim to={'/browse' + path}>{decodeURI(path)}</DirectoryLink>;
   }
 
+  getCurrentSongLink() {
+    return '/?play=' + encodeURIComponent(this.sequencer.getCurrUrl().replace(CATALOG_PREFIX, ''));
+  }
+
   onDrop = (droppedFiles) => {
     const reader = new FileReader();
     const file = droppedFiles[0];
@@ -825,7 +829,7 @@ class App extends React.Component {
                                   href={this.state.songUrl}/>
                 </div>}
                 <div className="SongDetails-title">
-                  {title}
+                  <a style={{color: 'var(--neutral4)'}} href={this.getCurrentSongLink()}>{title}</a>
                   {' '}
                   {this.state.infoTexts.length > 0 &&
                   <a onClick={(e) => this.toggleInfo(e)} href='#'>
