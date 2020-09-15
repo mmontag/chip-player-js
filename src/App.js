@@ -606,20 +606,19 @@ class App extends React.Component {
     const {title, subtitle} = titlesFromMetadata(this.state.currentSongMetadata);
     const currContext = this.sequencer.getCurrContext();
     const currIdx = this.sequencer.getCurrIdx();
-    const pathLinks = pathToLinks(this.state.songUrl);
     const search = { search: window.location.search };
     return (
       <Router basename={process.env.PUBLIC_URL}>
-      <Dropzone
-        disableClick
-        style={{}}
-        onDrop={this.onDrop}>{dropzoneProps => (
-      <div className="App">
-        <DropMessage dropzoneProps={dropzoneProps}/>
-        <div hidden={!this.state.showInfo} className="message-box-outer">
-          <div hidden={!this.state.showInfo} className="message-box">
-            <div className="message-box-inner">
-              <pre style={{maxHeight: '100%', margin: 0}}>
+        <Dropzone
+          disableClick
+          style={{}}
+          onDrop={this.onDrop}>{dropzoneProps => (
+          <div className="App">
+            <DropMessage dropzoneProps={dropzoneProps}/>
+            <div hidden={!this.state.showInfo} className="message-box-outer">
+              <div hidden={!this.state.showInfo} className="message-box">
+                <div className="message-box-inner">
+              <pre style={{ maxHeight: '100%', margin: 0 }}>
                 {this.state.infoTexts[0]}
               </pre>
                 </div>
