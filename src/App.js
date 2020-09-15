@@ -5,15 +5,15 @@ import queryString from 'querystring';
 import * as firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
-import firebaseConfig from './config/firebaseConfig';
 import {BrowserRouter as Router, NavLink, Route} from 'react-router-dom';
-import {API_BASE, CATALOG_PREFIX, MAX_VOICES, REPLACE_STATE_ON_SEEK} from "./config";
 import {Switch} from 'react-router';
 import Dropzone from 'react-dropzone';
-import {toArabic} from 'roman-numerals';
 
+import {API_BASE, CATALOG_PREFIX, MAX_VOICES, REPLACE_STATE_ON_SEEK} from './config';
+import firebaseConfig from './config/firebaseConfig';
 import ChipCore from './chip-core';
 import promisify from './promisifyXhr';
+import {pathToLinks, romanToArabicSubstrings, titlesFromMetadata, unlockAudioContext, updateQueryString} from './util';
 
 import GMEPlayer from './players/GMEPlayer';
 import XMPPlayer from './players/XMPPlayer';
@@ -22,18 +22,16 @@ import V2MPlayer from './players/V2MPlayer';
 
 import PlayerParams from './PlayerParams';
 import Search from './Search';
-import TimeSlider from "./TimeSlider";
+import TimeSlider from './TimeSlider';
 import Visualizer from './Visualizer';
-import FavoriteButton from "./FavoriteButton";
-import AppHeader from "./AppHeader";
-import Favorites from "./Favorites";
-import Sequencer from "./Sequencer";
-import Browse from "./Browse";
-import DirectoryLink from "./DirectoryLink";
-import dice from './images/dice.png';
+import FavoriteButton from './FavoriteButton';
+import AppHeader from './AppHeader';
+import Favorites from './Favorites';
+import Sequencer from './Sequencer';
+import Browse from './Browse';
 import DropMessage from './DropMessage';
 import {VolumeSlider} from './VolumeSlider';
-import {updateQueryString} from './util';
+import dice from './images/dice.png';
 
 const NUMERIC_COLLATOR = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'});
 
@@ -148,7 +146,7 @@ class App extends React.Component {
     gainNode.connect(audioCtx.destination);
     const playerNode = this.playerNode = gainNode;
 
-    this._unlockAudioContext(audioCtx);
+    unlockAudioContext(audioCtx);
     console.log('Sample rate: %d hz', audioCtx.sampleRate);
 
     // Initialize sequencer with empty players array
@@ -236,17 +234,6 @@ class App extends React.Component {
     }
   }
 
-  _unlockAudioContext(context) {
-    // https://hackernoon.com/unlocking-web-audio-the-smarter-way-8858218c0e09
-    console.log('AudioContext initial state is %s.', context.state);
-    if (context.state === 'suspended') {
-      const events = ['touchstart', 'touchend', 'mousedown', 'mouseup'];
-      const unlock = () => context.resume()
-        .then(() => events.forEach(event => document.body.removeEventListener(event, unlock)));
-      events.forEach(event => document.body.addEventListener(event, unlock, false));
-    }
-  }
-
   attachMediaKeyHandlers() {
     if ('mediaSession' in navigator) {
       console.log('Attaching Media Key event handlers.');
@@ -323,7 +310,7 @@ class App extends React.Component {
   }
 
   handleSequencerStateUpdate(isEjected) {
-    console.debug('App.handleSequencerStateUpdate(isEjected=%s)', isEjected);
+    console.debug('handleSequencerStateUpdate(isEjected=%s)', isEjected);
 
     if (isEjected) {
       this.setState({
@@ -563,21 +550,6 @@ class App extends React.Component {
     });
   }
 
-  romanToArabicSubstrings(str) {
-    // Works up to 399 (CCCXCIX)
-    try {
-      str = str.replace(/\b([IVXLC]+|[ivxlc]+)[-.,)]/, (a, match, c, d) => {
-        const numeric = String(toArabic(match)).padStart(4, '0');
-        return numeric;
-      });
-      return str;
-    } catch (e) {
-      // Ignore false positives like 'mill.', 'did-', or 'mix,'
-      console.error(e);
-      return str;
-    }
-  }
-
   fetchDirectory(path) {
     fetch(`${API_BASE}/browse?path=%2F${encodeURIComponent(path)}`)
       .then(response => response.json())
@@ -594,7 +566,7 @@ class App extends React.Component {
         if (needsRomanNumeralSort) {
           console.log("Roman numeral sort is active for this directory");
           // Movement IV. Wow => Movement 0004. Wow
-          json.forEach(item => arabicMap[item.path] = this.romanToArabicSubstrings(item.path));
+          json.forEach(item => arabicMap[item.path] = romanToArabicSubstrings(item.path));
         }
         const items = json
           .sort((a, b) => {
@@ -603,7 +575,6 @@ class App extends React.Component {
               [a.path, b.path];
             return NUMERIC_COLLATOR.compare(strA, strB);
           })
-
           .sort((a, b) => {
             if (a.type < b.type) return -1;
             if (a.type > b.type) return 1;
@@ -621,35 +592,6 @@ class App extends React.Component {
       });
   }
 
-  static titlesFromMetadata(metadata) {
-    if (metadata.formatted) {
-      return metadata.formatted;
-    }
-
-    const title = App.allOrNone(metadata.artist, ' - ') + metadata.title;
-    const subtitle = [metadata.game, metadata.system].filter(x => x).join(' - ') +
-      App.allOrNone(' (', metadata.copyright, ')');
-    return {title, subtitle};
-   }
-
-  static allOrNone(...args) {
-    let str = '';
-    for (let i = 0; i < args.length; i++) {
-      if (!args[i]) return '';
-      str += args[i];
-    }
-    return str;
-  }
-
-  pathToLinks(path) {
-    if (!path) return null;
-
-    path = path
-      .replace(/^https?:\/\/[a-z0-9\-.:]+\/(music|catalog)\//, '/')
-      .split('/').slice(0, -1).join('/') + '/';
-    return <DirectoryLink dim to={'/browse' + path}>{decodeURI(path)}</DirectoryLink>;
-  }
-
   getCurrentSongLink() {
     return '/?play=' + encodeURIComponent(this.sequencer.getCurrUrl().replace(CATALOG_PREFIX, ''));
   }
@@ -665,10 +607,10 @@ class App extends React.Component {
   };
 
   render() {
-    const {title, subtitle} = App.titlesFromMetadata(this.state.currentSongMetadata);
+    const {title, subtitle} = titlesFromMetadata(this.state.currentSongMetadata);
     const currContext = this.sequencer.getCurrContext();
     const currIdx = this.sequencer.getCurrIdx();
-    const pathLinks = this.pathToLinks(this.state.songUrl);
+    const pathLinks = pathToLinks(this.state.songUrl);
     const search = { search: window.location.search };
     return (
       <Router basename={process.env.PUBLIC_URL}>

@@ -1,6 +1,6 @@
 import Player from "./Player.js";
-import App from "../App";
 import SubBass from "../effects/SubBass";
+import {allOrNone} from '../util';
 
 let emu = null;
 let libgme = null;
@@ -188,9 +188,9 @@ export default class GMEPlayer extends Player {
     meta.formatted = {
       title: meta.game === meta.title ?
         meta.title :
-        App.allOrNone(meta.game, ' - ') + meta.title,
+        allOrNone(meta.game, ' - ') + meta.title,
       subtitle: [meta.artist, meta.system].filter(x => x).join(' - ') +
-        App.allOrNone(' (', meta.copyright, ')'),
+        allOrNone(' (', meta.copyright, ')'),
     };
 
     return meta;
