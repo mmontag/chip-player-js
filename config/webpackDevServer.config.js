@@ -74,7 +74,9 @@ module.exports = function(proxy, allowedHost) {
     https: protocol === 'https',
     host: host,
     overlay: false,
-    historyApiFallback: true,
+    historyApiFallback: {
+      disableDotRule: true,
+    },
     public: allowedHost,
     proxy,
     before(app) {
