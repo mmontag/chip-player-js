@@ -6,6 +6,7 @@ import debounce from 'lodash/debounce';
 import promisify from "./promisifyXhr";
 import {API_BASE, CATALOG_PREFIX} from "./config";
 import DirectoryLink from "./DirectoryLink";
+import {updateQueryString} from './util';
 
 const MAX_RESULTS = 100;
 
@@ -55,12 +56,7 @@ export default class Search extends PureComponent {
 
   onSearchInputChange(val, immediate = false) {
     this.setState({query: val});
-    const urlParams = {
-      ...queryString.parse(window.location.search.substr(1)),
-      q: val ? val.trim() : undefined,
-    };
-    const stateUrl = '?' + queryString.stringify(urlParams).replace(/%20/g, '+');
-    window.history.replaceState(null, '', stateUrl);
+    updateQueryString({ q: val ? val.trim() : undefined });
     if (val.length) {
       if (immediate) {
         this.doSearch(val);

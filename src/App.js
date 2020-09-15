@@ -31,8 +31,9 @@ import Sequencer from "./Sequencer";
 import Browse from "./Browse";
 import DirectoryLink from "./DirectoryLink";
 import dice from './images/dice.png';
-import DropMessage from "./DropMessage";
-import {VolumeSlider} from "./VolumeSlider";
+import DropMessage from './DropMessage';
+import {VolumeSlider} from './VolumeSlider';
+import {updateQueryString} from './util';
 
 const NUMERIC_COLLATOR = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'});
 
@@ -336,10 +337,7 @@ class App extends React.Component {
         imageUrl: null,
         songUrl: null,
       });
-      const urlParams = queryString.parse(window.location.search.substr(1));
-      delete urlParams.play;
-      const search = queryString.stringify(urlParams);
-      window.history.replaceState(null, '', search ? `?${search}` : './');
+      updateQueryString({ play: undefined });
 
       if ('mediaSession' in navigator) {
         this.mediaSessionAudio.pause();
@@ -358,16 +356,8 @@ class App extends React.Component {
         const pathParts = url.split('/');
         pathParts.pop();
 
-        // Update application URL (window.history API)
-        // TODO: clean up, combine with URL updating in Search component
         const filepath = url.replace(CATALOG_PREFIX, '');
-        const urlParams = {
-          ...queryString.parse(window.location.search.substr(1)),
-          play: filepath,
-        };
-        delete urlParams.t;
-        const stateUrl = '?' + queryString.stringify(urlParams);
-        window.history.replaceState(null, '', stateUrl);
+        updateQueryString({ play: filepath, t: undefined });
 
         // Fetch artwork/info for this file (cancelable request)
         if (this.metaRequest) this.metaRequest.abort();
