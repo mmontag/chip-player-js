@@ -54,7 +54,7 @@
     "react-dev-utils": "^7.0.5",
     "react-dom": "^16.8.0",
     "react-dropzone": "7.0.0",
-    "react-router-dom": "^5.0.0",
+    "react-router-dom": "^5.2.0",
     "react-virtual-list": "^2.3.0",
     "resolve": "1.6.0",
     "roman-numerals": "^0.3.2",
