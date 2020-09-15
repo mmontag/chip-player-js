@@ -1,6 +1,6 @@
-import React, {PureComponent} from "react";
+import React from "react";
 
-export default class AppHeader extends PureComponent {
+export default class AppHeader extends React.PureComponent {
   render() {
     return (
       <header className="App-header">

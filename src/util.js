@@ -1,6 +1,6 @@
 import queryString from 'querystring';
-import {toArabic} from 'roman-numerals';
 import React from 'react';
+import { toArabic } from 'roman-numerals';
 
 import DirectoryLink from './DirectoryLink';
 
@@ -21,7 +21,7 @@ export function updateQueryString(newParams) {
   window.history.replaceState(null, '', stateUrl);
 }
 
-export function romanToArabicSubstrings(str) {
+export function replaceRomanWithArabic(str) {
   // Works up to 399 (CCCXCIX)
   try {
     return str.replace(ROMAN_NUMERAL_REGEX, (_, match) => String(toArabic(match)).padStart(4, '0'));
@@ -50,7 +50,7 @@ export function titlesFromMetadata(metadata) {
   const title = allOrNone(metadata.artist, ' - ') + metadata.title;
   const subtitle = [metadata.game, metadata.system].filter(x => x).join(' - ') +
     allOrNone(' (', metadata.copyright, ')');
-  return {title, subtitle};
+  return { title, subtitle };
 }
 
 export function allOrNone(...args) {
