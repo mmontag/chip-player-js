@@ -723,19 +723,24 @@ class App extends React.Component {
                     toggleFavorite={this.handleToggleFavorite}
                     favorites={this.state.faves}/>
                 )}/>
-                <Route path="/browse/:browsePath*" render={({match}) => (
-                  this.contentAreaRef.current &&
-                  <Browse currContext={currContext}
-                          currIdx={currIdx}
-                          browsePath={match.params.browsePath || ''}
-                          directories={this.state.directories}
-                          fetchDirectory={this.fetchDirectory}
-                          handleSongClick={this.handleSongClick}
-                          handleShufflePlay={this.handleShufflePlay}
-                          scrollContainerRef={this.contentAreaRef}
-                          favorites={this.state.faves}
-                          toggleFavorite={this.handleToggleFavorite}/>
-                )}/>
+                <Route path="/browse/:browsePath*" render={({match}) => {
+                  // Undo the react-router-dom double-encoded % workaround - see DirectoryLink.js
+                  if (match.params.browsePath)
+                    match.params.browsePath = match.params.browsePath.replace('%25', '%');
+                  return (
+                    this.contentAreaRef.current &&
+                    <Browse currContext={currContext}
+                            currIdx={currIdx}
+                            browsePath={match.params.browsePath || ''}
+                            directories={this.state.directories}
+                            fetchDirectory={this.fetchDirectory}
+                            handleSongClick={this.handleSongClick}
+                            handleShufflePlay={this.handleShufflePlay}
+                            scrollContainerRef={this.contentAreaRef}
+                            favorites={this.state.faves}
+                            toggleFavorite={this.handleToggleFavorite}/>
+                  );
+                }}/>
               </Switch>
             </div>
           </div>
