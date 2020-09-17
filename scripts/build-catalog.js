@@ -1,7 +1,7 @@
 const fs = require('fs');
 const glob = require('glob');
-const {listToTrie} = require('../src/ResigTrie');
 const directoryTree = require('directory-tree');
+const { listToTrie } = require('./ResigTrie');
 
 // Point this to the place where you keep all the music.
 // this location is untracked, so put a symlink here.
