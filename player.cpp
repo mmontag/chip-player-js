@@ -269,9 +269,7 @@ int main(int argc, char* argv[])
 		{
 			const PLR_DEV_INFO& pdi = diList[curDev];
 			printf(" Dev %d: Type 0x%02X #%d, Core %s, Clock %u, Rate %u, Volume 0x%X\n",
-				(int)pdi.id, pdi.type, (INT8)pdi.instance, FCC2Str(pdi.core).c_str(), pdi.clock, pdi.smplRate, pdi.volume);
-			if (pdi.cParams != 0)
-				printf("        CfgParams: 0x%08X\n", pdi.cParams);
+				(int)pdi.id, pdi.type, (INT8)pdi.instance, FCC2Str(pdi.core).c_str(), pdi.devCfg->clock, pdi.smplRate, pdi.volume);
 		}
 	}
 	

@@ -239,6 +239,7 @@ UINT8 S98Player::LoadFile(DATA_LOADER *dataLoader)
 	if (! _fileHdr.tickDiv)
 		_fileHdr.tickDiv = 1000;
 	
+	GenerateDeviceConfig();
 	CalcSongLength();
 	LoadTags();
 	
@@ -526,22 +527,7 @@ UINT8 S98Player::GetSongDeviceInfo(std::vector<PLR_DEV_INFO>& devInfList) const
 		devInf.id = curDev;
 		devInf.type = S98_DEV_LIST[devHdr->devType];
 		devInf.instance = GetDeviceInstance(curDev);
-		devInf.clock = devHdr->clock;
-		devInf.cParams = 0x00;
-		if (devHdr->devType == S98DEV_PSGYM)
-		{
-			devInf.cParams = (AYTYPE_YM2149 << 0) | (YM2149_PIN26_LOW << 8);
-		}
-		else if (devHdr->devType == S98DEV_PSGAY)
-		{
-			devInf.cParams = (AYTYPE_AY8910 << 0) | (0x00 << 8);
-			devInf.clock /= 2;
-		}
-		else if (devHdr->devType == S98DEV_DCSG)
-		{
-			// SEGA PSG default parameters
-			devInf.cParams = (0x0009 << 0) | (0x10 << 16) | (0x00 << 24);
-		}
+		devInf.devCfg = (const DEV_GEN_CFG*)&_devCfgs[curDev].data[0];
 		if (! _devices.empty())
 		{
 			const VGM_BASEDEV& cDev = _devices[curDev].base;
@@ -761,6 +747,70 @@ static void SetSSGCore(void* userParam, VGM_BASEDEV* cDev, DEVLINK_INFO* dLink)
 	return;
 }
 
+void S98Player::GenerateDeviceConfig(void)
+{
+	size_t curDev;
+	
+	_devCfgs.clear();
+	_devCfgs.resize(_devHdrs.size());
+	for (curDev = 0; curDev < _devCfgs.size(); curDev ++)
+	{
+		const S98_DEVICE* devHdr = &_devHdrs[curDev];
+		DEV_GEN_CFG devCfg;
+		UINT8 deviceID;
+		
+		memset(&devCfg, 0x00, sizeof(DEV_GEN_CFG));
+		devCfg.clock = devHdr->clock;
+		devCfg.flags = 0x00;
+		
+		deviceID = (devHdr->devType < S98DEV_END) ? S98_DEV_LIST[devHdr->devType] : 0xFF;
+		switch(deviceID)
+		{
+		case DEVID_AY8910:
+			{
+				AY8910_CFG ayCfg;
+				
+				ayCfg._genCfg = devCfg;
+				if (devHdr->devType == S98DEV_PSGYM)
+				{
+					ayCfg.chipType = AYTYPE_YM2149;
+					ayCfg.chipFlags = YM2149_PIN26_LOW;
+				}
+				else
+				{
+					ayCfg.chipType = AYTYPE_AY8910;
+					ayCfg.chipFlags = 0x00;
+					ayCfg._genCfg.clock /= 2;
+				}
+				
+				SaveDeviceConfig(_devCfgs[curDev].data, &ayCfg, sizeof(AY8910_CFG));
+			}
+			break;
+		case DEVID_SN76496:
+			{
+				SN76496_CFG snCfg;
+				
+				snCfg._genCfg = devCfg;
+				snCfg.shiftRegWidth = 0x10;
+				snCfg.noiseTaps = 0x09;
+				snCfg.segaPSG = 1;
+				snCfg.negate = 0;
+				snCfg.stereo = 1;
+				snCfg.clkDiv = 8;
+				snCfg.t6w28_tone = NULL;
+				
+				SaveDeviceConfig(_devCfgs[curDev].data, &snCfg, sizeof(SN76496_CFG));
+			}
+			break;
+		default:
+			SaveDeviceConfig(_devCfgs[curDev].data, &devCfg, sizeof(DEV_GEN_CFG));
+			break;
+		}
+	}
+	
+	return;
+}
+
 UINT8 S98Player::Start(void)
 {
 	size_t curDev;
@@ -775,7 +825,7 @@ UINT8 S98Player::Start(void)
 	{
 		const S98_DEVICE* devHdr = &_devHdrs[curDev];
 		S98_CHIPDEV* cDev = &_devices[curDev];
-		DEV_GEN_CFG devCfg;
+		DEV_GEN_CFG* devCfg = (DEV_GEN_CFG*)&_devCfgs[curDev].data[0];
 		VGM_BASEDEV* clDev;
 		PLR_DEV_OPTS* devOpts;
 		UINT8 deviceID;
@@ -799,60 +849,14 @@ UINT8 S98Player::Start(void)
 			cDev->optID = (size_t)-1;
 			devOpts = NULL;
 		}
-		devCfg.emuCore = (devOpts != NULL) ? devOpts->emuCore : 0x00;
-		devCfg.srMode = (devOpts != NULL) ? devOpts->srMode : DEVRI_SRMODE_NATIVE;
-		devCfg.flags = 0x00;
-		devCfg.clock = devHdr->clock;
+		devCfg->emuCore = (devOpts != NULL) ? devOpts->emuCore : 0x00;
+		devCfg->srMode = (devOpts != NULL) ? devOpts->srMode : DEVRI_SRMODE_NATIVE;
 		if (devOpts != NULL && devOpts->smplRate)
-			devCfg.smplRate = devOpts->smplRate;
+			devCfg->smplRate = devOpts->smplRate;
 		else
-			devCfg.smplRate = _outSmplRate;
+			devCfg->smplRate = _outSmplRate;
 		
-		switch(deviceID)
-		{
-		case DEVID_AY8910:
-			{
-				AY8910_CFG ayCfg;
-				
-				ayCfg._genCfg = devCfg;
-				if (devHdr->devType == S98DEV_PSGYM)
-				{
-					ayCfg.chipType = AYTYPE_YM2149;
-					ayCfg.chipFlags = YM2149_PIN26_LOW;
-				}
-				else
-				{
-					ayCfg.chipType = AYTYPE_AY8910;
-					ayCfg.chipFlags = 0x00;
-					devCfg.clock /= 2;
-				}
-				
-				SaveDeviceConfig(cDev->cfg, &ayCfg, sizeof(AY8910_CFG));
-				retVal = SndEmu_Start(deviceID, &ayCfg._genCfg, &cDev->base.defInf);
-			}
-			break;
-		case DEVID_SN76496:
-			{
-				SN76496_CFG snCfg;
-				
-				snCfg._genCfg = devCfg;
-				snCfg.shiftRegWidth = 0x10;
-				snCfg.noiseTaps = 0x09;
-				snCfg.segaPSG = 1;
-				snCfg.negate = 0;
-				snCfg.stereo = 1;
-				snCfg.clkDiv = 8;
-				snCfg.t6w28_tone = NULL;
-				
-				SaveDeviceConfig(cDev->cfg, &snCfg, sizeof(SN76496_CFG));
-				retVal = SndEmu_Start(deviceID, &snCfg._genCfg, &cDev->base.defInf);
-			}
-			break;
-		default:
-			SaveDeviceConfig(cDev->cfg, &devCfg, sizeof(DEV_GEN_CFG));
-			retVal = SndEmu_Start(deviceID, &devCfg, &cDev->base.defInf);
-			break;
-		}
+		retVal = SndEmu_Start(deviceID, devCfg, &cDev->base.defInf);
 		if (retVal)
 		{
 			cDev->base.defInf.dataPtr = NULL;

@@ -44,6 +44,12 @@ struct _s98_chip_device
 
 class S98Player : public PlayerBase
 {
+private:
+	struct DevCfgBuffer
+	{
+		std::vector<UINT8> data;
+	};
+	
 public:
 	S98Player();
 	~S98Player();
@@ -99,6 +105,7 @@ private:
 	
 	void RefreshTSRates(void);
 	
+	void GenerateDeviceConfig(void);
 	UINT8 SeekToTick(UINT32 tick);
 	UINT8 SeekToFilePos(UINT32 pos);
 	void ParseFile(UINT32 ticks);
@@ -115,6 +122,7 @@ private:
 	
 	S98_HEADER _fileHdr;
 	std::vector<S98_DEVICE> _devHdrs;
+	std::vector<DevCfgBuffer> _devCfgs;
 	UINT32 _totalTicks;
 	UINT32 _loopTick;
 	std::map<std::string, std::string> _tagData;

@@ -221,6 +221,7 @@ UINT8 DROPlayer::LoadFile(DATA_LOADER *dataLoader)
 	_portMask = (1 << _portShift) - 1;
 	
 	_totalTicks = _fileHdr.lengthMS;
+	GenerateDeviceConfig();
 	
 	return 0x00;
 }
@@ -327,6 +328,7 @@ UINT8 DROPlayer::UnloadFile(void)
 	_dataOfs = 0x00;
 	_devTypes.clear();
 	_devPanning.clear();
+	_devCfgs.clear();
 	_devices.clear();
 	
 	return 0x00;
@@ -371,16 +373,14 @@ UINT8 DROPlayer::GetSongDeviceInfo(std::vector<PLR_DEV_INFO>& devInfList) const
 	devInfList.reserve(_devTypes.size());
 	for (curDev = 0; curDev < _devTypes.size(); curDev ++)
 	{
+		const DEV_GEN_CFG* devCfg = &_devCfgs[curDev];
 		PLR_DEV_INFO devInf;
 		memset(&devInf, 0x00, sizeof(PLR_DEV_INFO));
 		
 		devInf.id = curDev;
 		devInf.type = _devTypes[curDev];
 		devInf.instance = curDev;
-		devInf.clock = 3579545;
-		devInf.cParams = 0x00;
-		if (devInf.type == DEVID_YMF262)
-			devInf.clock *= 4;
+		devInf.devCfg = devCfg;
 		if (! _devices.empty())
 		{
 			const VGM_BASEDEV& cDev = _devices[curDev].base;
@@ -572,6 +572,26 @@ UINT32 DROPlayer::GetLoopTicks(void) const
 }
 
 
+void DROPlayer::GenerateDeviceConfig(void)
+{
+	size_t curDev;
+	
+	_devCfgs.clear();
+	_devCfgs.resize(_devTypes.size());
+	for (curDev = 0; curDev < _devCfgs.size(); curDev ++)
+	{
+		DEV_GEN_CFG* devCfg = &_devCfgs[curDev];
+		memset(devCfg, 0x00, sizeof(DEV_GEN_CFG));
+		
+		devCfg->clock = 3579545;
+		if (_devTypes[curDev] == DEVID_YMF262)
+			devCfg->clock *= 4;	// OPL3 uses a 14 MHz clock
+		devCfg->flags = 0x00;
+	}
+	
+	return;
+}
+
 UINT8 DROPlayer::Start(void)
 {
 	size_t curDev;
@@ -586,28 +606,22 @@ UINT8 DROPlayer::Start(void)
 	{
 		DRO_CHIPDEV* cDev = &_devices[curDev];
 		PLR_DEV_OPTS* devOpts;
-		DEV_GEN_CFG devCfg;
+		DEV_GEN_CFG* devCfg = &_devCfgs[curDev];
 		VGM_BASEDEV* clDev;
-		UINT8 deviceID;
 		
 		cDev->base.defInf.dataPtr = NULL;
 		cDev->base.linkDev = NULL;
-		deviceID = _devTypes[curDev];
 		cDev->optID = DeviceID2OptionID(curDev);
 		
 		devOpts = (cDev->optID != (size_t)-1) ? &_devOpts[cDev->optID] : NULL;
-		devCfg.emuCore = (devOpts != NULL) ? devOpts->emuCore : 0x00;
-		devCfg.srMode = (devOpts != NULL) ? devOpts->srMode : DEVRI_SRMODE_NATIVE;
-		devCfg.flags = 0x00;
-		devCfg.clock = 3579545;
-		if (deviceID == DEVID_YMF262)
-			devCfg.clock *= 4;	// OPL3 uses a 14 MHz clock
+		devCfg->emuCore = (devOpts != NULL) ? devOpts->emuCore : 0x00;
+		devCfg->srMode = (devOpts != NULL) ? devOpts->srMode : DEVRI_SRMODE_NATIVE;
 		if (devOpts != NULL && devOpts->smplRate)
-			devCfg.smplRate = devOpts->smplRate;
+			devCfg->smplRate = devOpts->smplRate;
 		else
-			devCfg.smplRate = _outSmplRate;
+			devCfg->smplRate = _outSmplRate;
 		
-		retVal = SndEmu_Start(deviceID, &devCfg, &cDev->base.defInf);
+		retVal = SndEmu_Start(_devTypes[curDev], devCfg, &cDev->base.defInf);
 		if (retVal)
 		{
 			cDev->base.defInf.dataPtr = NULL;

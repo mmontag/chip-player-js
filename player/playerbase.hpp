@@ -47,10 +47,9 @@ struct PLR_DEV_INFO
 	UINT8 type;		// device type
 	UINT8 instance;	// instance ID of this device type (0xFF -> N/A for this format)
 	UINT16 volume;	// output volume (0x100 = 100%)
-	UINT32 core;	// FCC for device emulation core
-	UINT32 clock;	// chip clock
-	UINT32 cParams;	// additional device configuration parameters (SN76489 params, AY8910 type, ...)
+	UINT32 core;	// FCC of device emulation core
 	UINT32 smplRate;	// current sample rate (0 if not running)
+	const DEV_GEN_CFG* devCfg;	// device configuration parameters
 };
 
 struct PLR_MUTE_OPTS

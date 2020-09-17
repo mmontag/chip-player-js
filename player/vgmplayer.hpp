@@ -192,6 +192,7 @@ protected:
 	UINT16 GetChipVolume(UINT8 chipType, UINT8 chipID, UINT8 isLinked) const;
 	UINT16 EstimateOverallVolume(void) const;
 	void NormalizeOverallVolume(UINT16 overallVol);
+	void GenerateDeviceConfig(void);
 	void InitDevices(void);
 	
 	static void DeviceLinkCallback(void* userParam, VGM_BASEDEV* cDev, DEVLINK_INFO* dLink);
@@ -316,7 +317,7 @@ protected:
 	PLR_DEV_OPTS _devOpts[_OPT_DEV_COUNT * 2];	// space for 2 instances per chip
 	size_t _devOptMap[0x100][2];	// maps libvgm device ID to _devOpts vector
 	
-	std::vector<SONG_DEV_CFG> _songDevCfg;
+	std::vector<SONG_DEV_CFG> _devCfgs;
 	size_t _vdDevMap[_CHIP_COUNT][2];	// maps VGM device ID to _devices vector
 	size_t _optDevMap[_OPT_DEV_COUNT * 2];	// maps _devOpts vector index to _devices vector
 	std::vector<CHIP_DEVICE> _devices;

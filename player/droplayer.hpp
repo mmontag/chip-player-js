@@ -129,6 +129,7 @@ private:
 	
 	void ScanInitBlock(void);
 	
+	void GenerateDeviceConfig(void);
 	UINT8 SeekToTick(UINT32 tick);
 	UINT8 SeekToFilePos(UINT32 pos);
 	void ParseFile(UINT32 ticks);
@@ -143,6 +144,7 @@ private:
 	DRO_HEADER _fileHdr;
 	std::vector<UINT8> _devTypes;
 	std::vector<UINT8> _devPanning;
+	std::vector<DEV_GEN_CFG> _devCfgs;
 	UINT8 _realHwType;
 	UINT8 _portShift;	// 0 for OPL2 (1 port per chip), 1 for OPL3 (2 ports per chip)
 	UINT8 _portMask;	// (1 << _portShift) - 1

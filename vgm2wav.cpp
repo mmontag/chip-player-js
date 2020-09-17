@@ -424,7 +424,7 @@ static void dump_info(PlayerBase *player) {
           devInfList[i].type,
           (INT8)devInfList[i].instance,
           str,
-          devInfList[i].clock,
+          devInfList[i].devCfg->clock,
           devInfList[i].smplRate,
           devInfList[i].volume);
         devDefList = SndEmu_GetDevDefList(devInfList[i].type);
