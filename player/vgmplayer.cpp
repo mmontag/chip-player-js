@@ -1158,14 +1158,6 @@ void VGMPlayer::InitDevices(void)
 				break;
 			SndEmu_GetDeviceFunc(devInf->devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&chipDev.write8);
 			break;
-		case DEVID_SEGAPCM:
-			retVal = SndEmu_Start(chipType, devCfg, devInf);
-			if (retVal)
-				break;
-			SndEmu_GetDeviceFunc(devInf->devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A16D8, 0, (void**)&chipDev.writeM8);
-			SndEmu_GetDeviceFunc(devInf->devDef, RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, (void**)&chipDev.romSize);
-			SndEmu_GetDeviceFunc(devInf->devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&chipDev.romWrite);
-			break;
 		case DEVID_RF5C68:
 			if (! devCfg->emuCore)
 			{
@@ -1202,14 +1194,6 @@ void VGMPlayer::InitDevices(void)
 			SndEmu_GetDeviceFunc(devInf->devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0x5241, (void**)&chipDev.romWriteB);
 			LoadOPL4ROM(&chipDev);
 			break;
-		case DEVID_AY8910:
-			if (! devCfg->emuCore)
-				devCfg->emuCore = FCC_EMU_;
-			retVal = SndEmu_Start(chipType, devCfg, devInf);
-			if (retVal)
-				break;
-			SndEmu_GetDeviceFunc(devInf->devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&chipDev.write8);
-			break;
 		case DEVID_32X_PWM:
 			retVal = SndEmu_Start(chipType, devCfg, devInf);
 			if (retVal)
@@ -1222,38 +1206,6 @@ void VGMPlayer::InitDevices(void)
 				break;
 			SndEmu_GetDeviceFunc(devInf->devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&chipDev.write8);
 			SndEmu_GetDeviceFunc(devInf->devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D16, 0, (void**)&chipDev.writeD16);
-			SndEmu_GetDeviceFunc(devInf->devDef, RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, (void**)&chipDev.romSize);
-			SndEmu_GetDeviceFunc(devInf->devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&chipDev.romWrite);
-			break;
-		case DEVID_OKIM6258:
-			retVal = SndEmu_Start(chipType, devCfg, devInf);
-			if (retVal)
-				break;
-			SndEmu_GetDeviceFunc(devInf->devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&chipDev.write8);
-			break;
-		case DEVID_K054539:
-			retVal = SndEmu_Start(chipType, devCfg, devInf);
-			if (retVal)
-				break;
-			SndEmu_GetDeviceFunc(devInf->devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A16D8, 0, (void**)&chipDev.writeM8);
-			SndEmu_GetDeviceFunc(devInf->devDef, RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, (void**)&chipDev.romSize);
-			SndEmu_GetDeviceFunc(devInf->devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&chipDev.romWrite);
-			break;
-		case DEVID_C140:
-			chipDev.flags = 0x00;
-			retVal = SndEmu_Start(chipType, devCfg, devInf);
-			if (retVal)
-				break;
-			SndEmu_GetDeviceFunc(devInf->devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A16D8, 0, (void**)&chipDev.writeM8);
-			SndEmu_GetDeviceFunc(devInf->devDef, RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, (void**)&chipDev.romSize);
-			SndEmu_GetDeviceFunc(devInf->devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&chipDev.romWrite);
-			break;
-		case DEVID_C219:
-			chipDev.flags |= 0x01;	// enable 16-bit byteswap patch on all ROM data
-			retVal = SndEmu_Start(chipType, devCfg, devInf);
-			if (retVal)
-				break;
-			SndEmu_GetDeviceFunc(devInf->devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A16D8, 0, (void**)&chipDev.writeM8);
 			SndEmu_GetDeviceFunc(devInf->devDef, RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, (void**)&chipDev.romSize);
 			SndEmu_GetDeviceFunc(devInf->devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&chipDev.romWrite);
 			break;
@@ -1283,7 +1235,7 @@ void VGMPlayer::InitDevices(void)
 			SndEmu_GetDeviceFunc(devInf->devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&chipDev.romWrite);
 			
 			memset(&_qsWork[chipID], 0x00, sizeof(QSOUND_WORK));
-			if (devCfg->emuCore == FCC_MAME)
+			if (devInf->devDef->coreID == FCC_MAME)
 				chipDev.flags &= ~0x01;	// MAME's old HLE doesn't need those hacks
 			if (chipDev.writeD16 != NULL)
 				_qsWork[chipID].write = &VGMPlayer::WriteQSound_A;
@@ -1298,13 +1250,6 @@ void VGMPlayer::InitDevices(void)
 				break;
 			SndEmu_GetDeviceFunc(devInf->devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&chipDev.write8);
 			SndEmu_GetDeviceFunc(devInf->devDef, RWF_MEMORY | RWF_WRITE, DEVRW_A16D8, 0, (void**)&chipDev.writeM8);
-			break;
-		case DEVID_ES5503:
-			retVal = SndEmu_Start(chipType, devCfg, devInf);
-			if (retVal)
-				break;
-			SndEmu_GetDeviceFunc(devInf->devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&chipDev.write8);
-			SndEmu_GetDeviceFunc(devInf->devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&chipDev.romWrite);
 			break;
 		case DEVID_ES5506:
 			retVal = SndEmu_Start(chipType, devCfg, devInf);
@@ -1323,6 +1268,8 @@ void VGMPlayer::InitDevices(void)
 			SndEmu_GetDeviceFunc(devInf->devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&chipDev.romWrite);
 			break;
 		default:
+			if (chipType == DEVID_C219)
+				chipDev.flags |= 0x01;	// enable 16-bit byteswap patch on all ROM data
 			if (! devCfg->emuCore)
 			{
 				if (chipType == DEVID_YM2612)
@@ -1331,6 +1278,8 @@ void VGMPlayer::InitDevices(void)
 					devCfg->emuCore = FCC_ADLE;
 				else if (chipType == DEVID_YMF262)
 					devCfg->emuCore = FCC_NUKE;
+				else if (chipType == DEVID_AY8910)
+					devCfg->emuCore = FCC_EMU_;
 				else if (chipType == DEVID_NES_APU)
 					devCfg->emuCore = FCC_NSFP;
 				else if (chipType == DEVID_C6280)

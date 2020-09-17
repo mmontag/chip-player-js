@@ -241,6 +241,8 @@ UINT8 S98Player::LoadFile(DATA_LOADER *dataLoader)
 	
 	GenerateDeviceConfig();
 	CalcSongLength();
+	
+	// parse tags
 	LoadTags();
 	
 	return 0x00;
