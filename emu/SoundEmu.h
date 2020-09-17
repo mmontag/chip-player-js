@@ -52,7 +52,8 @@ void SndEmu_FreeDevLinkData(DEV_INFO* devInf);
  */
 UINT8 SndEmu_GetDeviceFunc(const DEV_DEF* devInf, UINT8 funcType, UINT8 rwType, UINT16 user, void** retFuncPtr);
 /**
- * @brief Retrieve a function of a sound core that fullfills certain conditions.
+ * @brief Retrieve the name of a sound device.
+ *        Device configuration parameters may be use to identify exact sound chip models.
  *
  * @param deviceID ID of the sound device to get the name of (see DEVID constants in SoundDevs.h)
  * @param opts bitfield of options

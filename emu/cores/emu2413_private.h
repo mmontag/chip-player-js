@@ -107,6 +107,7 @@ typedef struct __EOPLL {
 
   uint32_t pm_phase;
   int32_t am_phase;
+
   uint8_t lfo_am;
 
   uint32_t noise;
@@ -117,7 +118,7 @@ typedef struct __EOPLL {
   EOPLL_PATCH patch[19 * 2];
 
   uint8_t pan[16];
-  int32_t pan_fine[16][2];
+  int32_t pan_fine[16][2];  /* [VB mod] changed from float to 16.16 fixed-point int32_t */
   uint32_t mask;
 
   /* channel output */
@@ -161,9 +162,9 @@ void EOPLL_setQuality(EOPLL *opll, uint8_t q);
 void EOPLL_setPan(EOPLL *opll, uint32_t ch, uint8_t pan);
 
 /**
- * Set fine pan pot (extra function by Valley Bell)
- * @param ch see EOPLL_setPan
- * @param pan pan position: -256 = left, 0 = centre, +256 = right
+ * Set fine-grained panning
+ * @param ch 0..8:tone 9:bd 10:hh 11:sd 12:tom 13:cym 14,15:reserved
+ * @param pan [Valley Bell mod] pan position: -256 = left, 0 = centre, +256 = right
  */
 void EOPLL_setPanFine(EOPLL *opll, uint32_t ch, int16_t pan);
 
@@ -222,6 +223,7 @@ uint32_t EOPLL_toggleMask(EOPLL *, uint32_t mask);
 #define EOPLL_set_rate EOPLL_setRate
 #define EOPLL_set_quality EOPLL_setQuality
 #define EOPLL_set_pan EOPLL_setPan
+#define EOPLL_set_pan_fine EOPLL_setPanFine
 #define EOPLL_calc_stereo EOPLL_calcStereo
 #define EOPLL_reset_patch EOPLL_resetPatch
 #define EOPLL_dump2patch EOPLL_dumpToPatch

@@ -12,9 +12,9 @@
 
  Custom programmed Mitsubishi M60016 Gate Array, 3608 gates, 148 Max I/O ports
 
-    The X1-010 is 16 Voices sound generator, each channel gets it's
-    waveform from RAM (128 bytes per waveform, 8 bit unsigned data)
-    or sampling PCM(8bit unsigned data).
+    The X1-010 is a 16-Voice sound generator, each channel gets its
+    waveform from RAM (128 bytes per waveform, 8 bit signed data)
+    or sampling PCM (8 bit signed data).
 
 Registers:
     8 registers per channel (mapped to the lower bytes of 16 words on the 68K)
@@ -23,7 +23,7 @@ Registers:
 
     0       7--- ----   Frequency divider flag (only downtown seems to set this)
             -654 3---
-            ---- -2--   PCM/Waveform repeat flag (0:Ones 1:Repeat) (*1)
+            ---- -2--   PCM/Waveform repeat flag (0:Once 1:Repeat) (*1)
             ---- --1-   Sound out select (0:PCM 1:Waveform)
             ---- ---0   Key on / off
 
@@ -31,23 +31,24 @@ Registers:
             ---- 3210   PCM Volume 2 (R?)
                         Waveform No.
 
-    2                   PCM Frequency
-                        Waveform Pitch Lo
+    2                   PCM Frequency (4.4 fixed point)
+                        Waveform Pitch Lo (6.10 fixed point)
 
-    3                   Waveform Pitch Hi
+    3                   Waveform Pitch Hi (6.10 fixed point)
 
     4                   PCM Sample Start / 0x1000           [Start/End in bytes]
-                        Waveform Envelope Time
+                        Waveform Envelope Time (.10 fixed point)
 
     5                   PCM Sample End 0x100 - (Sample End / 0x1000)    [PCM ROM is Max 1MB?]
                         Waveform Envelope No.
     6                   Reserved
     7                   Reserved
 
-    offset 0x0000 - 0x0fff  Wave form data
-    offset 0x1000 - 0x1fff  Envelope data
+    offset 0x0000 - 0x007f  Channel data
+    offset 0x0080 - 0x0fff  Envelope data
+    offset 0x1000 - 0x1fff  Wave form data
 
-    *1 : when 0 is specified, hardware interrupt is caused(allways return soon)
+    *1 : when 0 is specified, hardware interrupt is caused (always return soon)
 
 ***************************************************************************/
 

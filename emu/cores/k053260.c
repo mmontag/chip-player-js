@@ -113,7 +113,22 @@ const DEV_DEF* devDefList_K053260[] =
 
 #define LOG 0
 
-#define CLOCKS_PER_SAMPLE 32
+#define CLOCKS_PER_SAMPLE 64
+
+
+// Pan multipliers.  Set according to integer angles in degrees, amusingly.
+// Exact precision hard to know, the floating point-ish output format makes
+// comparisons iffy.  So we used a 1.16 format.
+static const int pan_mul[8][2] = {
+    {     0,     0 }, // No sound for pan 0
+    { 65536,     0 }, //  0 degrees
+    { 59870, 26656 }, // 24 degrees
+    { 53684, 37950 }, // 35 degrees
+    { 46341, 46341 }, // 45 degrees
+    { 37950, 53684 }, // 55 degrees
+    { 26656, 59870 }, // 66 degrees
+    {     0, 65536 }  // 90 degrees
+};
 
 
 typedef struct _k053260_state k053260_state;
@@ -126,7 +141,7 @@ typedef struct
 
 	// live state
 	UINT32 position;
-	UINT16 pan_volume[2];
+	INT32  pan_volume[2];
 	UINT16 counter;
 	INT8   output;
 	UINT8  playing;
@@ -404,8 +419,8 @@ static void k053260_update(void* param, UINT32 samples, DEV_SMPL **outputs)
 					KDSC_play(&info->voice[i], buffer, cycles);
 			}
 
-			outputs[0][j] = buffer[0] >> 1;
-			outputs[1][j] = buffer[1] >> 1;
+			outputs[0][j] = buffer[0];
+			outputs[1][j] = buffer[1];
 		}
 	}
 	else
@@ -489,8 +504,8 @@ INLINE void KDSC_set_pan(KDSC_Voice* voice, UINT8 data)
 
 INLINE void KDSC_update_pan_volume(KDSC_Voice* voice)
 {
-	voice->pan_volume[0] = voice->volume * (8 - voice->pan);
-	voice->pan_volume[1] = voice->volume * voice->pan;
+	voice->pan_volume[0] = voice->volume * pan_mul[voice->pan][0];
+	voice->pan_volume[1] = voice->volume * pan_mul[voice->pan][1];
 }
 
 INLINE void KDSC_key_on(KDSC_Voice* voice)
@@ -499,8 +514,8 @@ INLINE void KDSC_key_on(KDSC_Voice* voice)
 	voice->counter = 0xFFFF; // force update on next sound_stream_update
 	voice->output = 0;
 	voice->playing = 1;
-	if (LOG) logerror("K053260: start = %06x, length = %06x, pitch = %04x, vol = %02x, loop = %s, %s\n",
-					voice->start, voice->length, voice->pitch, voice->volume, voice->loop ? "yes" : "no", voice->kadpcm ? "KADPCM" : "PCM" );
+	if (LOG) logerror("K053260: start = %06x, length = %06x, pitch = %04x, vol = %02x:%x, loop = %s, %s\n",
+					voice->start, voice->length, voice->pitch, voice->volume, voice->pan, voice->loop ? "yes" : "no", voice->kadpcm ? "KADPCM" : "PCM" );
 }
 
 INLINE void KDSC_key_off(KDSC_Voice* voice)
@@ -562,8 +577,8 @@ INLINE void KDSC_play(KDSC_Voice* voice, DEV_SMPL *outputs, UINT16 cycles)
 		}
 	}
 
-	outputs[0] += voice->output * voice->pan_volume[0];
-	outputs[1] += voice->output * voice->pan_volume[1];
+	outputs[0] += (voice->output * voice->pan_volume[0]) >> 15;
+	outputs[1] += (voice->output * voice->pan_volume[1]) >> 15;
 }
 
 INLINE UINT8 KDSC_read_rom(KDSC_Voice* voice)

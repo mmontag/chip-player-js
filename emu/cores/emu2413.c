@@ -914,7 +914,7 @@ static void update_slots(EOPLL *opll) {
 
 /* output: -4095...4095 */
 static INLINE int16_t lookup_exp_table(uint16_t i) {
-  /* from andete's expressoin */
+  /* from andete's expression */
   int16_t t = (exp_table[(i & 0xff) ^ 0xff] + 1024);
   int16_t res = t >> ((i & 0x7f00) >> 8);
   return ((i & 0x8000) ? ~res : res) << 1;
@@ -1007,7 +1007,8 @@ static void update_output(EOPLL *opll) {
   update_slots(opll);
 
   out = opll->ch_out;
-  memset(opll->ch_out, 0, 14 * sizeof(int16_t));
+  // prevent DC offset when muting channels mid-playback
+  memset(out, 0, 14 * sizeof(int16_t));
 
   /* CH1-6 */
   for (i = 0; i < 6; i++) {
@@ -1077,10 +1078,10 @@ INLINE static void mix_output_stereo(EOPLL *opll) {
   int i;
   out[0] = out[1] = 0;
   for (i = 0; i < 14; i++) {
-    if (opll->pan[i] & 1)
-      out[1] += APPLY_PANNING_S(opll->ch_out[i], opll->pan_fine[i][1]);
     if (opll->pan[i] & 2)
       out[0] += APPLY_PANNING_S(opll->ch_out[i], opll->pan_fine[i][0]);
+    if (opll->pan[i] & 1)
+      out[1] += APPLY_PANNING_S(opll->ch_out[i], opll->pan_fine[i][1]);
   }
   if (opll->conv) {
     EOPLL_RateConv_putData(opll->conv, 0, out[0]);
@@ -1117,8 +1118,7 @@ EOPLL *EOPLL_new(uint32_t clk, uint32_t rate) {
   opll->mix_out[1] = 0;
   opll->chip_type = 0;
 
-  for (i = 0; i < 15; i++)
-  {
+  for (i = 0; i < 14; i++) {
     opll->pan[i] = 3;
     Panning_Centre(opll->pan_fine[i]);
   }
@@ -1143,8 +1143,8 @@ static void reset_rate_conversion_params(EOPLL *opll) {
   const double f_inp = opll->clk / 72.0;
 
   opll->out_time = 0;
-  opll->out_step = (uint32_t)(f_inp * 0x100);
-  opll->inp_step = (uint32_t)(f_out * 0x100);
+  opll->out_step = ((uint32_t)f_inp) << 8;
+  opll->inp_step = ((uint32_t)f_out) << 8;
 
   if (opll->conv) {
     EOPLL_RateConv_delete(opll->conv);
@@ -1177,10 +1177,13 @@ void EOPLL_reset(EOPLL *opll) {
   //opll->mask = 0;
 
   opll->rhythm_mode = 0;
-  if (opll->chip_type == 1)
-    opll->reg[0x0e] = 32;
   opll->slot_key_status = 0;
   opll->eg_counter = 0;
+  if (opll->chip_type == 1)
+  {
+    opll->reg[0x0e] = 32;
+    update_rhythm_mode(opll);
+  }
 
   reset_rate_conversion_params(opll);
 
@@ -1194,8 +1197,10 @@ void EOPLL_reset(EOPLL *opll) {
   for (i = 0; i < 0x40; i++)
     EOPLL_writeReg(opll, i, 0);
 
-  //for (i = 0; i < 14; i++)
-  //  opll->pan[i] = 3;
+  /*for (i = 0; i < 15; i++) {
+    opll->pan[i] = 3;
+    Panning_Centre(opll->pan_fine[i]);
+  }*/
 
   for (i = 0; i < 14; i++) {
     opll->ch_out[i] = 0;
