@@ -1,0 +1,4 @@
+*.o
+liblazyusf.a
+bench
+dumpresampled
