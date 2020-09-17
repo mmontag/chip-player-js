@@ -64,7 +64,7 @@ option(AUDIODRV_DSOUND "Audio Driver: DirectSound [Windows]" ${ADRV_WIN_ALL})
 option(AUDIODRV_XAUDIO2 "Audio Driver: XAudio2 [Windows]" ${ADRV_WIN_ALL})
 option(AUDIODRV_WASAPI "Audio Driver: WASAPI [Windows]" ${ADRV_WIN_VISTA})
 
-option(AUDIODRV_OSS "Audio Driver: OSS (Open Sound System) [Linux]" ${ADRV_LINUX})
+option(AUDIODRV_OSS "Audio Driver: OSS (Open Sound System) [Linux]" OFF)
 option(AUDIODRV_SADA "Audio Driver: SADA (Solaris Audio Device Architecture) [Solaris/BSD]" OFF)
 option(AUDIODRV_ALSA "Audio Driver: ALSA (Advanced Linux Sound Architecture) [Linux]" ${ALSA_FOUND})
 option(AUDIODRV_PULSE "Audio Driver: PulseAudio [Linux]" ${PULSEAUDIO_FOUND})

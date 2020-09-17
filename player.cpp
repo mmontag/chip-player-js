@@ -85,7 +85,7 @@ static UINT32 idWavOut;
 static UINT32 idWavOutDev;
 static UINT32 idWavWrt;
 
-static INT32 AudioOutDrv = 0;
+static INT32 AudioOutDrv = -2;
 static INT32 WaveWrtDrv = -1;
 
 static UINT32 masterVol = 0x10000;	// fixed point 16.16
@@ -986,27 +986,35 @@ static UINT8 FilePlayCallback(PlayerBase* player, void* userParam, UINT8 evtType
 
 static UINT32 GetNthAudioDriver(UINT8 adrvType, INT32 drvNumber)
 {
+	// special numbers for drvNumber:
+	//	-1 - don't select any
+	//	-2 - select last found driver
 	if (drvNumber == -1)
 		return (UINT32)-1;
 	
 	UINT32 drvCount;
 	UINT32 curDrv;
 	INT32 typedDrv;
+	UINT32 lastDrv;
 	AUDDRV_INFO* drvInfo;
 	
 	// go through all audio drivers get the ID of the requested Output/Disk Writer driver
 	drvCount = Audio_GetDriverCount();
+	lastDrv = (UINT32)-1;
 	for (typedDrv = 0, curDrv = 0; curDrv < drvCount; curDrv ++)
 	{
 		Audio_GetDriverInfo(curDrv, &drvInfo);
 		if (drvInfo->drvType == adrvType)
 		{
+			lastDrv = curDrv;
 			if (typedDrv == drvNumber)
 				return curDrv;
 			typedDrv ++;
 		}
 	}
 	
+	if (drvNumber == -2)
+		return lastDrv;
 	return (UINT32)-1;
 }
 
