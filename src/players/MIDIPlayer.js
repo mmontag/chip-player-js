@@ -4,6 +4,7 @@ import MIDIFilePlayer from './MIDIFilePlayer';
 import Player from './Player';
 import GENERAL_MIDI_PATCH_MAP from '../gm-patch-map';
 import { SOUNDFONT_URL_PATH } from '../config';
+import { ensureEmscFileWithUrl } from '../util';
 
 let lib = null;
 const MOUNTPOINT = '/soundfonts';
@@ -439,7 +440,7 @@ export default class MIDIPlayer extends Player {
         break;
       case 'soundfont':
         const url = `${SOUNDFONT_URL_PATH}/${value}`;
-        this._ensureFile(`${MOUNTPOINT}/${value}`, url)
+        ensureEmscFileWithUrl(lib, `${MOUNTPOINT}/${value}`, url)
           .then(filename => this._loadSoundfont(filename));
         break;
       case 'reverb':
@@ -463,30 +464,6 @@ export default class MIDIPlayer extends Player {
         console.warn('MIDIPlayer has no parameter with id "%s".', id);
     }
     this.params[id] = value;
-  }
-
-  _ensureFile(filename, url) {
-    if (lib.FS.analyzePath(filename).exists) {
-      console.log(`${filename} exists in Emscripten file system.`);
-      return Promise.resolve(filename);
-    } else {
-      console.log(`Downloading ${filename}...`);
-      return fetch(url)
-        .then(response => response.arrayBuffer())
-        .then(buffer => {
-          const arr = new Uint8Array(buffer);
-          console.log(`Writing ${filename} to Emscripten file system...`);
-          lib.FS.writeFile(filename, arr);
-          lib.FS.syncfs(false, (err) => {
-            if (err) {
-              console.log('Error synchronizing to indexeddb.', err);
-            } else {
-              console.log(`Synchronized ${filename} to indexeddb.`);
-            }
-          });
-          return filename;
-        });
-    }
   }
 
   _loadSoundfont(filename) {

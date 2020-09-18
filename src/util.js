@@ -1,6 +1,7 @@
 import queryString from 'querystring';
 import React from 'react';
 import { toArabic } from 'roman-numerals';
+import path from 'path';
 
 import DirectoryLink from './DirectoryLink';
 
@@ -69,4 +70,42 @@ export function pathToLinks(path) {
     .replace(CATALOG_PREFIX_REGEX, '/')
     .split('/').slice(0, -1).join('/') + '/';
   return <DirectoryLink dim to={'/browse' + path}>{decodeURI(path)}</DirectoryLink>;
+}
+
+export function ensureEmscFileWithUrl(emscRuntime, filename, url) {
+  if (0 && emscRuntime.FS.analyzePath(filename).exists) {
+    console.log(`${filename} exists in Emscripten file system.`);
+    return Promise.resolve(filename);
+  } else {
+    console.log(`Downloading ${filename}...`);
+    return fetch(url)
+      .then(response => response.arrayBuffer())
+      .then(buffer => {
+        const arr = new Uint8Array(buffer);
+        return ensureEmscFileWithData(emscRuntime, filename, arr, true);
+      });
+  }
+}
+
+export function ensureEmscFileWithData(emscRuntime, filename, uint8Array, forceWrite=false) {
+  if (0 && !forceWrite && emscRuntime.FS.analyzePath(filename).exists) {
+    console.log(`${filename} exists in Emscripten file system.`);
+    return Promise.resolve(filename);
+  } else {
+    console.log(`Writing ${filename} to Emscripten file system...`);
+    const dir = path.dirname(filename);
+    emscRuntime.FS.mkdirTree(dir);
+    emscRuntime.FS.writeFile(filename, uint8Array);
+    return new Promise((resolve, reject) => {
+      emscRuntime.FS.syncfs(false, (err) => {
+        if (err) {
+          console.log('Error synchronizing to indexeddb.', err);
+          reject(err);
+        } else {
+          console.log(`Synchronized ${filename} to indexeddb.`);
+          resolve(filename);
+        }
+      });
+    });
+  }
 }
