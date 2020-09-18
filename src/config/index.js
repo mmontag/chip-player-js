@@ -17,7 +17,18 @@ export const FORMATS =  [
   'spc',
   'kss',
   's3m',
+  'v2m',
   'vgm',
   'vgz',
   'xm',
 ];
+
+// needs to be a CommonJS module - used in node.js server
+module.exports = {
+  API_BASE,
+  CATALOG_PREFIX,
+  SOUNDFONT_URL_PATH,
+  MAX_VOICES,
+  REPLACE_STATE_ON_SEEK,
+  FORMATS,
+};
