@@ -91,7 +91,7 @@ protected:
 		size_t deviceID;	// index for _devices array
 		UINT8 vgmChipType;
 		UINT8 type;
-		UINT16 instance;
+		UINT8 instance;
 		std::vector<UINT8> cfgData;
 	};
 	
@@ -296,6 +296,7 @@ protected:
 	UINT32 _playTick;
 	UINT32 _playSmpl;
 	UINT32 _curLoop;
+	UINT32 _lastLoopTick;
 	
 	UINT8 _playState;
 	UINT8 _psTrigger;	// used to temporarily trigger special commands

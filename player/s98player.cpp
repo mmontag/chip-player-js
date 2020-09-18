@@ -929,6 +929,7 @@ UINT8 S98Player::Reset(void)
 	_playState &= ~PLAYSTATE_END;
 	_psTrigger = 0x00;
 	_curLoop = 0;
+	_lastLoopTick = 0;
 	
 	RefreshTSRates();
 	
@@ -1066,6 +1067,49 @@ void S98Player::ParseFile(UINT32 ticks)
 	return;
 }
 
+void S98Player::HandleEOF(void)
+{
+	UINT8 doLoop = (_fileHdr.loopOfs != 0);
+	
+	if (doLoop)
+	{
+		if (_lastLoopTick == _fileTick)
+		{
+			doLoop = 0;	// prevent freezing due to infinite loop
+			debug("Warning! Ignored Zero-Sample-Loop!\n");
+		}
+		else
+		{
+			_lastLoopTick = _fileTick;
+		}
+	}
+	if (doLoop)
+	{
+		_curLoop ++;
+		if (_eventCbFunc != NULL)
+		{
+			UINT8 retVal;
+			
+			retVal = _eventCbFunc(this, _eventCbParam, PLREVT_LOOP, &_curLoop);
+			if (retVal == 0x01)
+			{
+				_playState |= PLAYSTATE_END;
+				_psTrigger |= PLAYSTATE_END;
+				return;
+			}
+		}
+		_filePos = _fileHdr.loopOfs;
+		return;
+	}
+	
+	_playState |= PLAYSTATE_END;
+	_psTrigger |= PLAYSTATE_END;
+	if (_eventCbFunc != NULL)
+		_eventCbFunc(this, _eventCbParam, PLREVT_END, NULL);
+	
+	return;
+}
+
 void S98Player::DoCommand(void)
 {
 	if (_filePos >= DataLoader_GetSize(_dLoad))
@@ -1091,30 +1135,7 @@ void S98Player::DoCommand(void)
 		_fileTick += 2 + ReadVarInt(_filePos);
 		return;
 	case 0xFD:
-		if (! _fileHdr.loopOfs)
-		{
-			_playState |= PLAYSTATE_END;
-			_psTrigger |= PLAYSTATE_END;
-			if (_eventCbFunc != NULL)
-				_eventCbFunc(this, _eventCbParam, PLREVT_END, NULL);
-		}
-		else
-		{
-			_curLoop ++;
-			if (_eventCbFunc != NULL)
-			{
-				UINT8 retVal;
-				
-				retVal = _eventCbFunc(this, _eventCbParam, PLREVT_LOOP, &_curLoop);
-				if (retVal == 0x01)
-				{
-					_playState |= PLAYSTATE_END;
-					_psTrigger |= PLAYSTATE_END;
-					return;
-				}
-			}
-			_filePos = _fileHdr.loopOfs;
-		}
+		HandleEOF();
 		return;
 	}
 	

@@ -252,7 +252,12 @@ UINT8 VGMPlayer::ParseHeader(void)
 	
 	_fileHdr.dataOfs = (_fileHdr.fileVer >= 0x150) ? ReadRelOfs(_fileData, 0x34) : 0x00;
 	if (! _fileHdr.dataOfs)
-		_fileHdr.dataOfs = 0x40;
+		_fileHdr.dataOfs = 0x40;	// offset not set - assume v1.00 header size
+	if (_fileHdr.dataOfs < 0x38)
+	{
+		fprintf(stderr, "Warning! Invalid Data Offset 0x%02X!\n", _fileHdr.dataOfs);
+		_fileHdr.dataOfs = 0x38;
+	}
 	_hdrLenFile = _fileHdr.dataOfs;
 	
 	_fileHdr.extraHdrOfs = (_hdrLenFile >= 0xC0) ? ReadRelOfs(_fileData, 0xBC) : 0x00;
@@ -292,7 +297,11 @@ UINT8 VGMPlayer::ParseHeader(void)
 	}
 	
 	if (! _fileHdr.eofOfs || _fileHdr.eofOfs > DataLoader_GetSize(_dLoad))
+	{
+		fprintf(stderr, "Warning! Invalid EOF Offset 0x%06X! (should be: 0x%06X)\n",
+				_fileHdr.eofOfs, DataLoader_GetSize(_dLoad));
 		_fileHdr.eofOfs = DataLoader_GetSize(_dLoad);	// catch invalid EOF values
+	}
 	_fileHdr.dataEnd = _fileHdr.eofOfs;
 	// command data ends at the GD3 offset if:
 	//	GD3 is used && GD3 offset < EOF (just to be sure) && GD3 offset > dataOfs (catch files with GD3 between header and data)
@@ -304,6 +313,12 @@ UINT8 VGMPlayer::ParseHeader(void)
 		if (_fileHdr.loopOfs < _fileHdr.dataOfs || _fileHdr.loopOfs >= _fileHdr.dataEnd)
 		{
 			debug("Invalid VGM loop offset 0x%06X - ignoring!\n", _fileHdr.loopOfs);
+			_fileHdr.loopOfs = 0x00;
+		}
+		if (_fileHdr.loopOfs && _fileHdr.loopTicks == 0)
+		{
+			// 0-Sample-Loops causes the program to hang in the playback routine
+			debug("Warning! Ignored Zero-Sample-Loop!\n");
 			_fileHdr.loopOfs = 0x00;
 		}
 	}
@@ -779,6 +794,7 @@ UINT8 VGMPlayer::Reset(void)
 	_playState &= ~PLAYSTATE_END;
 	_psTrigger = 0x00;
 	_curLoop = 0;
+	_lastLoopTick = 0;
 	
 	RefreshTSRates();
 	

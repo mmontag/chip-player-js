@@ -109,6 +109,7 @@ private:
 	UINT8 SeekToTick(UINT32 tick);
 	UINT8 SeekToFilePos(UINT32 pos);
 	void ParseFile(UINT32 ticks);
+	void HandleEOF(void);
 	void DoCommand(void);
 	
 	enum
@@ -146,6 +147,7 @@ private:
 	UINT32 _playTick;
 	UINT32 _playSmpl;
 	UINT32 _curLoop;
+	UINT32 _lastLoopTick;
 	
 	UINT8 _playState;
 	UINT8 _psTrigger;	// used to temporarily trigger special commands

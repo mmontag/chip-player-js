@@ -546,30 +546,22 @@ void VGMPlayer::Cmd_unknown(void)
 
 void VGMPlayer::Cmd_EndOfData(void)
 {
-	if (! _fileHdr.loopOfs)
+	UINT8 silenceStop = 0;
+	UINT8 doLoop = (_fileHdr.loopOfs != 0);
+	
+	if (doLoop)
 	{
-		_playState |= PLAYSTATE_END;
-		_psTrigger |= PLAYSTATE_END;
-		if (_eventCbFunc != NULL)
-			_eventCbFunc(this, _eventCbParam, PLREVT_END, NULL);
-		
-		if (_playOpts.hardStopOld)
+		if (_lastLoopTick == _fileTick)
 		{
-			UINT8 doStop = 0x00;
-			doStop |= (_fileHdr.fileVer < 0x150) << 0;
-			doStop |= (_fileHdr.fileVer == 0x150 && _playOpts.hardStopOld == 2) << 1;
-			if (doStop)
-			{
-				size_t curDev;
-				for (curDev = 0; curDev < _devices.size(); curDev ++)
-				{
-					DEV_INFO* devInf = &_devices[curDev].base.defInf;
-					devInf->devDef->Reset(devInf->dataPtr);
-				}
-			}
+			doLoop = 0;	// prevent freezing due to infinite loop
+			fprintf(stderr, "Warning! Ignored Zero-Sample-Loop!\n");
+		}
+		else
+		{
+			_lastLoopTick = _fileTick;
 		}
 	}
-	else
+	if (doLoop)
 	{
 		_curLoop ++;
 		if (_eventCbFunc != NULL)
@@ -585,6 +577,27 @@ void VGMPlayer::Cmd_EndOfData(void)
 			}
 		}
 		_filePos = _fileHdr.loopOfs;
+		return;
+	}
+	
+	_playState |= PLAYSTATE_END;
+	_psTrigger |= PLAYSTATE_END;
+	if (_eventCbFunc != NULL)
+		_eventCbFunc(this, _eventCbParam, PLREVT_END, NULL);
+	
+	if (_playOpts.hardStopOld)
+	{
+		silenceStop |= (_fileHdr.fileVer < 0x150) << 0;
+		silenceStop |= (_fileHdr.fileVer == 0x150 && _playOpts.hardStopOld == 2) << 1;
+	}
+	if (silenceStop)
+	{
+		size_t curDev;
+		for (curDev = 0; curDev < _devices.size(); curDev ++)
+		{
+			DEV_INFO* devInf = &_devices[curDev].base.defInf;
+			devInf->devDef->Reset(devInf->dataPtr);
+		}
 	}
 	
 	return;
