@@ -166,7 +166,9 @@ export default class Sequencer {
         // TODO: recover from this error
         this.onSequencerStateUpdate(true);
         this.player = null;
-        this.onPlayerError(`${e.status} ${e.statusText}`);
+        const message = e.message || `${e.status} ${e.statusText}`;
+        console.error(e);
+        this.onPlayerError(message);
       });
   }
 
@@ -197,15 +199,7 @@ export default class Sequencer {
   playSongBuffer(filepath, buffer) {
     let uint8Array;
     uint8Array = new Uint8Array(buffer);
-
-    try {
-      this.player.loadData(uint8Array, filepath);
-    } catch (e) {
-      this.onPlayerError(e.message);
-      return;
-    }
-    this.onPlayerError(null);
-
+    this.player.loadData(uint8Array, filepath);
     const numVoices = this.player.getNumVoices();
     this.player.setTempo(this.tempo);
     this.player.setVoices([...Array(numVoices)].fill(true));

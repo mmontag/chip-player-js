@@ -31,6 +31,7 @@ export default class AppFooter extends React.PureComponent {
 
       // this.
       getCurrentSongLink,
+      handlePlayerError,
       handlePlayRandom,
       handleSetVoices,
       handleTempoChange,
@@ -98,7 +99,10 @@ export default class AppFooter extends React.PureComponent {
               </button>}
             </span>
             {playerError &&
-            <div className="App-error">ERROR: {playerError}</div>
+            <div className="App-error">ERROR: {playerError}
+              {' '}
+              <button  onClick={() => handlePlayerError(null)}>[x]</button>
+            </div>
             }
             <div style={{ display: 'flex', flexDirection: 'row' }}>
               <TimeSlider

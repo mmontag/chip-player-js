@@ -700,6 +700,7 @@ class App extends React.Component {
               ejected={this.state.ejected}
               faves={this.state.faves}
               getCurrentSongLink={this.getCurrentSongLink}
+              handlePlayerError={this.handlePlayerError}
               handlePlayRandom={this.handlePlayRandom}
               handleSetVoices={this.handleSetVoices}
               handleTempoChange={this.handleTempoChange}
