@@ -162,6 +162,10 @@ const v2m_files = [
 
 source_files = source_files.concat(v2m_files);
 
+const n64_files = [
+
+].map(file => 'lazyusf2/' + file);
+
 // Complete LibXMP build:
 // source_files.push('libxmp/lib/libxmp.a');
 source_files.push('libxmp/libxmp-lite-stagedir/lib/libxmp-lite.a');
