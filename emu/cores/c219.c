@@ -201,7 +201,7 @@ static void c219_w(void *chip, UINT16 offset, UINT8 data)
 		offset &= ~0x008;
 
 	info->REG[offset]=data;
-	if (offset < 0x180)
+	if (offset < 0x100)
 	{
 		C219_VOICE *v = &info->voi[offset>>4];
 

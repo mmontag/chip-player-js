@@ -741,6 +741,7 @@ void VGMPlayer::Cmd_DataBlock(void)
 		if (chipType == 0x1C && dataLen && (cDev->flags & 0x01))
 		{
 			// chip == ASIC 219 (ID 0x1C + flags 0x01): byte-swap sample data
+			dataLen &= ~0x01;
 			std::vector<UINT8> swpData(dataLen);
 			for (UINT32 curPos = 0x00; curPos < dataLen; curPos += 0x02)
 			{
