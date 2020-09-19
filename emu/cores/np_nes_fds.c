@@ -116,6 +116,8 @@ void* NES_FDS_Create(UINT32 clock, UINT32 rate)
 	fds->sm[0] = 128;
 	fds->sm[1] = 128;
 
+	fds->mask = 0;
+
 	NES_FDS_Reset(fds);
 
 	return fds;

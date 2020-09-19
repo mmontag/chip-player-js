@@ -75,9 +75,6 @@ typedef struct queue_s
 #define  APU_SMASK   0x15
 #define  APU_IRQCTRL 0x17
 
-#define  NOISE_LONG     0x4000
-#define  NOISE_SHORT    93
-
 /* CHANNEL TYPE DEFINITIONS */
 
 /* Square Wave */
@@ -115,7 +112,7 @@ typedef struct triangle_s
 typedef struct noise_s
 {
 	uint8 regs[4]; /* regs[1] unused */
-	int cur_pos;
+	uint32 seed;
 	int vbl_length;
 	float phaseacc;
 	float output_vol;

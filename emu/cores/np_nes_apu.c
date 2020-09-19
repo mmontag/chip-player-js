@@ -304,6 +304,8 @@ void* NES_APU_np_Create(UINT32 clock, UINT32 rate)
 		for(t=0;t<2;++t)
 			apu->sm[c][t] = 128;
 
+	apu->mask = 0;
+
 	return apu;
 }
 
@@ -317,7 +319,7 @@ void NES_APU_np_Reset(void* chip)
 	NES_APU* apu = (NES_APU*)chip;
 	int i;
 	apu->gclock = 0;
-	apu->mask = 0;
+	//apu->mask = 0;
 
 	apu->scounter[0] = 0;
 	apu->scounter[1] = 0;

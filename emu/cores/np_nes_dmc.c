@@ -163,6 +163,8 @@ void* NES_DMC_np_Create(UINT32 clock, UINT32 rate)
 		for(t=0;t<3;++t)
 			dmc->sm[c][t] = 128;
 
+	dmc->mask = 0;
+
 	return dmc;
 }
 
@@ -582,7 +584,7 @@ void NES_DMC_np_Reset(void* chip)
 {
 	NES_DMC* dmc = (NES_DMC*)chip;
 	int i;
-	dmc->mask = 0;
+	//dmc->mask = 0;
 
 	InitializeTNDTable(dmc,8227,12241,22638);
 

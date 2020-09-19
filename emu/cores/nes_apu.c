@@ -80,7 +80,6 @@ struct _nesapu_state
 	uint32  samps_per_sync;        /* Number of samples per vsync */
 	uint32  buffer_size;           /* Actual buffer size in bytes */
 	uint32  real_rate;             /* Actual playback rate */
-	uint8   noise_lut[NOISE_LONG]; /* Noise sample lookup table */
 	uint32  vbl_times[0x20];       /* VBL durations in samples */
 	uint32  sync_times1[SYNCS_MAX1]; /* Samples per sync table */
 	uint32  sync_times2[SYNCS_MAX2]; /* Samples per sync table */
@@ -117,23 +116,6 @@ static void create_syncs(nesapu_state *info, unsigned long sps)
 		info->sync_times2[i] = val;
 		info->sync_times2[i] >>= 2;
 		val += sps;
-	}
-}
-
-/* INITIALIZE NOISE LOOKUP TABLE */
-static void create_noise(uint8 *buf, const int bits, int size)
-{
-	int m = 0x0011;
-	int xor_val, i;
-
-	for (i = 0; i < size; i++)
-	{
-		xor_val = m & 1;
-		m >>= 1;
-		xor_val ^= (m & 1);
-		m |= xor_val << (bits - 1);
-
-		buf[i] = m;
 	}
 }
 
@@ -326,13 +308,11 @@ static int8 apu_noise(nesapu_state *info, noise_t *chan)
 	chan->phaseacc -= (float) info->apu_incsize; /* # of cycles per sample */
 	while (chan->phaseacc < 0)
 	{
+		uint32 feedback;
 		chan->phaseacc += freq;
 
-		chan->cur_pos++;
-		if (NOISE_SHORT == chan->cur_pos && (chan->regs[2] & 0x80))
-			chan->cur_pos = 0;
-		else if (NOISE_LONG == chan->cur_pos)
-			chan->cur_pos = 0;
+		feedback = chan->seed ^ (chan->seed >> ((chan->regs[2] & 0x80) ? 6 : 1));
+		chan->seed = (chan->seed >> 1) | ((feedback & 1) << 14);
 	}
 
 	if (chan->regs[0] & 0x10) /* fixed volume */
@@ -340,12 +320,8 @@ static int8 apu_noise(nesapu_state *info, noise_t *chan)
 	else
 		outvol = 0x0F - chan->env_vol;
 
-	output = info->noise_lut[chan->cur_pos];
-	if (output > outvol)
-		output = outvol;
-
-	if (info->noise_lut[chan->cur_pos] & 0x80) /* make it negative */
-		output = -output;
+	// more sane output noise signal -VB
+	output = (chan->seed & 1) ? outvol : -outvol;
 
 	return (int8) output;
 }
@@ -547,7 +523,6 @@ INLINE void apu_regwrite(nesapu_state *info, int address, uint8 value)
 
 	case APU_WRD2:
 		info->APU.noi.regs[2] = value;
-		info->APU.noi.cur_pos = 0;	// Thanks to Delek for this fix.
 		break;
 
 	case APU_WRD3:
@@ -742,7 +717,6 @@ void* device_start_nesapu(UINT32 clock, UINT32 rate)
 	info->apu_incsize = (float) (clock / (float) info->real_rate);
 
 	/* Use initializer calls */
-	create_noise(info->noise_lut, 13, NOISE_LONG);
 	create_vbltimes(info->vbl_times,vbl_length,info->samps_per_sync);
 	create_syncs(info, info->samps_per_sync);
 
@@ -779,6 +753,7 @@ void device_reset_nesapu(void* chip)
 	apu_dpcmreset(&info->APU.dpcm);
 	nesapu_set_mute_mask(info, MuteMask);
 	
+	info->APU.noi.seed = 1;
 	for (CurReg = 0x00; CurReg < 0x18; CurReg ++)
 		nes_apu_write(info, CurReg, 0x00);
 	
