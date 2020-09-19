@@ -203,7 +203,7 @@
 	{0x15, 0x03, &VGMPlayer::Cmd_Ofs8_Data8},           // B5 YMW258 (MultiPCM) register write
 	{0x16, 0x03, &VGMPlayer::Cmd_Ofs8_Data8},           // B6 uPD7759 register write
 	{0x17, 0x03, &VGMPlayer::Cmd_Ofs8_Data8},           // B7 OKIM6258 register write
-	{0x18, 0x03, &VGMPlayer::Cmd_Ofs8_Data8},           // B8 OKIM6295 register write
+	{0x18, 0x03, &VGMPlayer::Cmd_OKIM6295_Reg},         // B8 OKIM6295 register write
 	{0x1B, 0x03, &VGMPlayer::Cmd_Ofs8_Data8},           // B9 HuC6280 register write
 	{0x1D, 0x03, &VGMPlayer::Cmd_Ofs8_Data8},           // BA K053260 register write
 	{0x1E, 0x03, &VGMPlayer::Cmd_Ofs8_Data8},           // BB Pokey register write
@@ -1284,6 +1284,30 @@ void VGMPlayer::Cmd_SAA_Reg(void)
 	
 	cDev->write8(cDev->base.defInf.dataPtr, 0x01, fData[0x01] & 0x7F);	// SAA commands are at offset 1, not 0
 	cDev->write8(cDev->base.defInf.dataPtr, 0x00, fData[0x02]);
+	return;
+}
+
+void VGMPlayer::Cmd_OKIM6295_Reg(void)
+{
+	UINT8 chipType = _CMD_INFO[fData[0x00]].chipType;
+	UINT8 chipID = (fData[0x01] & 0x80) >> 7;
+	CHIP_DEVICE* cDev = GetDevicePtr(chipType, chipID);
+	if (cDev == NULL || cDev->write8 == NULL)
+		return;
+	
+	UINT8 ofs = fData[0x01] & 0x7F;
+	UINT8 data = fData[0x02];
+	if (ofs == 0x0B)
+	{
+		if (data & 0x80)
+		{
+			data &= 0x7F;	// remove "pin7" bit (bug in some MAME VGM logs)
+			//fprintf(stderr, "OKIM6295 Warning: SetClock command (%02X %02X) includes Pin7 bit!\n",
+			//	fData[0x00], fData[0x01]);
+		}
+	}
+	
+	cDev->write8(cDev->base.defInf.dataPtr, ofs, data);
 	return;
 }
 
