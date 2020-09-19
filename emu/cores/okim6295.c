@@ -64,6 +64,8 @@ typedef struct _okim6295_state okim6295_state;
 
 
 static void okim6295_set_bank_base(okim6295_state *info, UINT32 base);
+static UINT32 okim6295_get_rate(void* chip);
+static void okim6295_set_clock(void *chip, UINT32 clock);
 INLINE void okim6295_set_pin7(okim6295_state *info, UINT8 pin7);
 
 static void okim6295_update(void* info, UINT32 samples, DEV_SMPL** outputs);
@@ -72,7 +74,7 @@ static void device_stop_okim6295(void* chipptr);
 static void device_reset_okim6295(void *chip);
 
 static UINT8 okim6295_r(void* chip, UINT8 offset);
-static void okim6295_w(void* info, UINT8 offset, UINT8 data);
+static void okim6295_w(void* chip, UINT8 offset, UINT8 data);
 
 static void okim6295_alloc_rom(void* info, UINT32 memsize);
 static void okim6295_write_rom(void* info, UINT32 offset, UINT32 length, const UINT8* data);
@@ -86,6 +88,8 @@ static DEVDEF_RWFUNC devFunc[] =
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, okim6295_r},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, okim6295_write_rom},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, okim6295_alloc_rom},
+	{RWF_CLOCK | RWF_WRITE, DEVRW_VALUE, 0, okim6295_set_clock},
+	{RWF_SRATE | RWF_READ, DEVRW_VALUE, 0, okim6295_get_rate},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef =
@@ -144,6 +148,7 @@ struct _okim6295_state
 	UINT8 nmk_mode;
 	UINT8 nmk_bank[4];
 	UINT32 master_clock;    // master clock frequency
+	UINT8 clock_buffer[4];
 	UINT32 initial_clock;
 	
 	UINT32  ROMSize;
@@ -175,6 +180,22 @@ static const int volume_table[16] =
 	0x00,
 	0x00,
 };
+
+
+INLINE UINT32 ReadLE32(const UINT8* buffer)
+{
+	return	(buffer[0] <<  0) | (buffer[1] <<  8) |
+			(buffer[2] << 16) | (buffer[3] << 24);
+}
+
+INLINE void WriteLE32(UINT8* buffer, UINT32 value)
+{
+	buffer[0] = (value >>  0) & 0xFF;
+	buffer[1] = (value >>  8) & 0xFF;
+	buffer[2] = (value >> 16) & 0xFF;
+	buffer[3] = (value >> 24) & 0xFF;
+	return;
+}
 
 /**********************************************************************************************
 
@@ -306,6 +327,7 @@ static UINT8 device_start_okim6295(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	info->SmpRateFunc = NULL;
 
 	info->master_clock = info->initial_clock;
+	WriteLE32(info->clock_buffer, info->master_clock);
 	info->pin7_state = info->pin7_initial;
 	divisor = info->pin7_state ? 132 : 165;
 
@@ -338,7 +360,11 @@ static void device_reset_okim6295(void *chip)
 	UINT8 voice;
 	
 	info->master_clock = info->initial_clock;
+	WriteLE32(info->clock_buffer, info->master_clock);
 	info->pin7_state = info->pin7_initial;
+	if (info->SmpRateFunc != NULL)
+		info->SmpRateFunc(info->SmpRateData, okim6295_get_rate(chip));
+	
 	info->command = -1;
 	info->bank_offs = 0;
 	info->nmk_mode = 0x00;
@@ -374,18 +400,30 @@ static void okim6295_set_bank_base(okim6295_state *info, UINT32 base)
 
 ***********************************************************************************************/
 
-static void okim6295_clock_changed(okim6295_state *info)
+static UINT32 okim6295_get_rate(void* chip)
 {
-	UINT32 divisor;
-	divisor = info->pin7_state ? 132 : 165;
+	okim6295_state *info = (okim6295_state *)chip;
+	UINT32 divisor = info->pin7_state ? 132 : 165;
+	return info->master_clock / divisor;
+}
+
+static void okim6295_set_clock(void *chip, UINT32 clock)
+{
+	okim6295_state *info = (okim6295_state *)chip;
+	
+	if (clock)
+		info->master_clock = clock;	// set to parameter
+	else
+		info->master_clock = ReadLE32(info->clock_buffer);	// set to value from buffer
 	if (info->SmpRateFunc != NULL)
-		info->SmpRateFunc(info->SmpRateData, info->master_clock / divisor);
+		info->SmpRateFunc(info->SmpRateData, okim6295_get_rate(chip));
 }
 
 INLINE void okim6295_set_pin7(okim6295_state *info, UINT8 pin7)
 {
 	info->pin7_state = pin7;
-	okim6295_clock_changed(info);
+	if (info->SmpRateFunc != NULL)
+		info->SmpRateFunc(info->SmpRateData, okim6295_get_rate(info));
 }
 
 
@@ -501,46 +539,40 @@ static void okim6295_write_command(okim6295_state *info, UINT8 data)
 	}
 }
 
-static void okim6295_w(void* info, UINT8 offset, UINT8 data)
+static void okim6295_w(void* chip, UINT8 offset, UINT8 data)
 {
-	okim6295_state *chip = (okim6295_state *)info;
+	okim6295_state *info = (okim6295_state *)chip;
 	
 	switch(offset)
 	{
 	case 0x00:
-		okim6295_write_command(chip, data);
+		okim6295_write_command(info, data);
 		break;
 	case 0x08:
-		chip->master_clock &= ~0x000000FF;
-		chip->master_clock |= data <<  0;
-		break;
 	case 0x09:
-		chip->master_clock &= ~0x0000FF00;
-		chip->master_clock |= data <<  8;
-		break;
 	case 0x0A:
-		chip->master_clock &= ~0x00FF0000;
-		chip->master_clock |= data << 16;
+		info->clock_buffer[offset & 0x03] = data;
 		break;
 	case 0x0B:
-		chip->master_clock &= ~0xFF000000;
-		chip->master_clock |= data << 24;
-		okim6295_clock_changed(chip);
+		info->clock_buffer[offset & 0x03] = data;
+		okim6295_set_clock(chip, 0);	// refresh clock from clock_buffer
+		if (info->SmpRateFunc != NULL)
+			info->SmpRateFunc(info->SmpRateData, okim6295_get_rate(chip));
 		break;
 	case 0x0C:
-		okim6295_set_pin7(chip, data);
+		okim6295_set_pin7(info, data);
 		break;
 	case 0x0E:	// NMK112 bank switch enable
-		chip->nmk_mode = data;
+		info->nmk_mode = data;
 		break;
 	case 0x0F:
-		okim6295_set_bank_base(chip, data << 18);
+		okim6295_set_bank_base(info, data << 18);
 		break;
 	case 0x10:
 	case 0x11:
 	case 0x12:
 	case 0x13:
-		chip->nmk_bank[offset & 0x03] = data;
+		info->nmk_bank[offset & 0x03] = data;
 		break;
 	}
 	
