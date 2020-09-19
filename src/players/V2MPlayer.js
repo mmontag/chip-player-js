@@ -62,19 +62,14 @@ export default class V2MPlayer extends Player {
           this.buffer +           // Interleaved channel format
           i * 4 * 2 +             // frame offset   * bytes per sample * num channels +
           channel * 4,            // channel offset * bytes per sample
-          'float'                 // the sample values are signed 16-bit integers
+          'float'                 // the sample values are 32-bit floating point
         );
       }
     }
   }
 
-  setVoices(voices) {
-    console.error('Unable to set voices for this file format.');
-  }
-
   setTempo(val) {
     return this.lib._v2m_set_speed(val);
-    // console.error('Unable to set speed for this file format.');
   }
 
   getPositionMs() {

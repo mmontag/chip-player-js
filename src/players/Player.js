@@ -79,6 +79,20 @@ export default class Player {
     console.warn('Player.setFadeout() not implemented for this player.');
   }
 
+  getDurationMs() {
+    console.warn('Player.getDurationMs() not implemented for this player.');
+    return 5000;
+  }
+
+  getPositionMs() {
+    console.warn('Player.getPositionMs() not implemented for this player.');
+    return 0;
+  }
+
+  seekMs(ms) {
+    console.warn('Player.seekMs() not implemented for this player.');
+  }
+
   getVoiceName(index) {
     console.warn('Player.getVoiceName() not implemented for this player.');
   }
