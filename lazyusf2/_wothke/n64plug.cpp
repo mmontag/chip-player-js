@@ -1,7 +1,8 @@
 /*
 	USF Decoder: for playing "(Ultra) Nintendo 64 Sound" format (.USF/.MINIUSF) files
 	
-	Based on kode54's: https://gitlab.kode54.net/kode54/lazyusf2 
+	Based on kode54's: https://gitlab.kode54.net/kode54/lazyusf2
+  https://git.lopez-snowhill.net/chris/foo_input_usf/-/blob/master/psf.cpp
 
 	As compared to kode54's original psf.cpp, the code has been patched to NOT
 	rely on any fubar2000 base impls.
@@ -27,6 +28,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
+#include <emscripten.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,8 +50,8 @@
 #include <psflib.h>
 #include <psf2fs.h>
 
-#include "src/usf/usf.h"
-#include "src/r4300/r4300.h"
+#include "usf/usf.h"
+#include "r4300/r4300.h"
 #include "circular_buffer.h"
 
 
@@ -117,7 +119,8 @@ struct FileAccess_t {
 };
 static struct FileAccess_t *g_file= 0;
 
-static void * psf_file_fopen( const char * uri ) {
+static void * psf_file_fopen( void * context, const char * uri ) {
+//    EM_ASM_({ console.log('Tiny MIDI Player loaded %d bytes.', $0); }, length);
     return g_file->fopen( uri );
 }
 static size_t psf_file_fread( void * buffer, size_t size, size_t count, void * handle ) {
@@ -135,6 +138,7 @@ static long psf_file_ftell( void * handle ) {
 }
 const psf_file_callbacks psf_file_system = {
     "\\/|:",
+    NULL,
     psf_file_fopen,
     psf_file_fread,
     psf_file_fseek,
@@ -143,7 +147,7 @@ const psf_file_callbacks psf_file_system = {
 };
 
 
-// ------------------ stripped down version based on foobar2000 plugin (see psf.cpp)  -------------------- 
+// ------------------ stripped down version based on foobar2000 plugin (see psf.cpp)  --------------------
 
 //#define DBG(a) OutputDebugString(a)
 #define DBG(a)
@@ -155,7 +159,7 @@ static unsigned int cfg_suppressopeningsilence = 1;
 static unsigned int cfg_suppressendsilence = 1;
 static unsigned int cfg_endsilenceseconds= 10;
 
-static unsigned int cfg_resample= 1;				
+static unsigned int cfg_resample= 1;
 static unsigned int cfg_resample_hz= 44100;
 
 static const char field_length[]="usf_length";
@@ -163,7 +167,7 @@ static const char field_fade[]="usf_fade";
 
 // redundant!
 static unsigned int cfg_hle_audio= 0;	// supposedly better accuracy..
-enum { _usf_use_lle = 1}; 
+enum { _usf_use_lle = 1};
 
 #define BORK_TIME 0xC0CAC01A
 
@@ -254,13 +258,13 @@ const int MAX_INFO_LEN= 10;
 
 class file_info {
 	double len;
-	
+
 	// no other keys implemented
 	const char* sampleRate;
 	const char* channels;
-	
+
 	std::vector<std::string> requiredLibs;
-	
+
 public:
 	file_info() {
 		sampleRate = (const char*)malloc(MAX_INFO_LEN);
@@ -286,7 +290,7 @@ public:
 	}
 	const char *info_get(std::string &t) {
 		const char *tag= t.c_str();
-		
+
 		if (!stricmp_utf8(tag, "samplerate")) {
 			return sampleRate;
 		} else if (!stricmp_utf8(tag, "channels")) {
@@ -298,21 +302,21 @@ public:
 	void set_length(double l) {
 		len= l;
 	}
-	
+
 	void info_set_lib(std::string& tag, const char * value) {
 		// EMSCRIPTEN depends on all libs being loaded before the song can be played!
-		
+
 		for (std::vector<std::string>::const_iterator iter = requiredLibs.begin(); iter != requiredLibs.end(); ++iter) {
 			const std::string& libName= *iter;
-			
+
 			if (strcmp(value, libName.c_str()) == 0) {
 				return;	// no duplicates
-			}			
-		}		
-		requiredLibs.push_back(std::string(value));	
+			}
+		}
+		requiredLibs.push_back(std::string(value));
 	}
 
-	// 
+	//
 	unsigned int meta_get_count() { return 0;}
 	unsigned int meta_enum_value_count(unsigned int i) { return 0; }
 	const char* meta_enum_value(unsigned int i, unsigned int k) { return "dummy";}
@@ -333,7 +337,7 @@ public:
 static void info_meta_ansi( file_info & info )
 {
 /* FIXME eventually migrate original impl
- 
+
 	for ( unsigned i = 0, j = info.meta_get_count(); i < j; i++ )
 	{
 		for ( unsigned k = 0, l = info.meta_enum_value_count( i ); k < l; k++ )
@@ -345,7 +349,7 @@ static void info_meta_ansi( file_info & info )
 	for ( unsigned i = 0, j = info.info_get_count(); i < j; i++ )
 	{
 		const char * name = info.info_enum_name( i );
-		
+
 		if ( name[ 0 ] == '_' )
 			info.info_set( std::string( name ), pfc::stringcvt::string_utf8_from_ansi( info.info_enum_value( i ) ) );
 	}
@@ -367,12 +371,12 @@ struct psf_info_meta_state
 		: info( 0 ), utf8( false ), tag_song_ms( 0 ), tag_fade_ms( 0 ) {}
 };
 
-static int psf_info_meta(void * context, const char * name, const char * value) {
+static int info_target(void * context, const char * name, const char * value) {
 	// typical tags: _lib, _enablecompare(on), _enableFIFOfull(on), fade, volume
 	// game, genre, year, copyright, track, title, length(x:x.xxx), artist
-	
+
 	// FIXME: various "_"-settings are currently not used to configure the emulator
-	
+
 	psf_info_meta_state * state = ( psf_info_meta_state * ) context;
 
 	std::string & tag = state->name;
@@ -426,7 +430,7 @@ static int psf_info_meta(void * context, const char * name, const char * value) 
 	}
 	else if (!stricmp_utf8_partial(tag, "_lib"))
 	{
-		DBG("found _lib");		
+		DBG("found _lib");
 		state->info->info_set_lib(tag, value);
 	}
 	else if (!stricmp_utf8(tag, "_enablecompare"))
@@ -456,7 +460,7 @@ static int psf_info_meta(void * context, const char * name, const char * value) 
 
 	// handle description stuff elsewhere
 	n64_meta_set(tag.c_str(), value);
-	
+
 	return 0;
 }
 
@@ -480,7 +484,7 @@ struct usf_loader_state
 
 int usf_loader(void * context, const uint8_t * exe, size_t exe_size,
                                   const uint8_t * reserved, size_t reserved_size) {
-									  
+
 	struct usf_loader_state * state = ( struct usf_loader_state * ) context;
     if ( exe_size > 0 ) return -1;
 
@@ -505,7 +509,7 @@ class input_usf
 {
 	const static t_int16 SEEK_BUF_SIZE= 1024;
 	t_int16 seek_buffer[SEEK_BUF_SIZE * 2];	// discarded sample output during "seek"
-	
+
 	bool no_loop, eof, in_playback, resample;
 
 	usf_loader_state * m_state;
@@ -517,7 +521,7 @@ class input_usf
 	int err;
 
 	int data_written,remainder;
-	
+
 	double startsilence,silence;
 
 	int song_len,fade_len;
@@ -539,9 +543,9 @@ public:
 	int32_t getDataWritten() { return data_written; }
 	int32_t getSamplesToPlay() { return song_len + fade_len; }
 	int32_t getSamplesRate() { return sample_rate; }
-	
-	
-	std::vector<std::string> splitpath(const std::string& str, 
+
+
+	std::vector<std::string> splitpath(const std::string& str,
 								const std::set<char> &delimiters) {
 
 		std::vector<std::string> result;
@@ -563,8 +567,8 @@ public:
 
 		return result;
 	}
-	
-	
+
+
 	void shutdown()
 	{
 		if ( m_state )
@@ -582,16 +586,27 @@ public:
 
 		psf_info_meta_state info_state;
 		info_state.info = &m_info;
-		
-		// INFO: das info_state wird spaeter in den callbacks als "context" mitgegeben
-		//       psf_info_meta ist das "target"
-		
-		if ( psf_load( p_path, &psf_file_system, 0x21, 0, 0, psf_info_meta, &info_state, 0 ) <= 0 ) {
+
+		// INFO: the info_state is given later in the callbacks as "context"
+		//       info_target is the "target"
+    //    psf_load(
+    //      p_path, &psf_file_system, 0x21,
+    //      0, 0, psf_info_meta,
+    //      &info_state, 0, print_message,
+    //      &msgbuf
+    //    );
+
+		if ( psf_load(
+		       p_path, &psf_file_system, 0x21,
+		       0, NULL, info_target,
+		       &info_state, 0, 0,
+		       NULL
+		     ) <= 0 ) {
 			throw exception_io_data( "Not a USF file" );
 		}
 		if ( !info_state.utf8 )
 			info_meta_ansi( m_info );
-		
+
 		tag_song_ms = info_state.tag_song_ms;
 		tag_fade_ms = info_state.tag_fade_ms;
 
@@ -604,41 +619,45 @@ public:
 		m_info.set_length( (double)( tag_song_ms + tag_fade_ms ) * .001 );
 		m_info.info_set_int( "channels", 2 );
 
-		// song may depend on some lib-file(s) that first must be loaded! 
+		// song may depend on some lib-file(s) that first must be loaded!
 		// (enter "retry-mode" if something is missing)
 		std::set<char> delims; delims.insert('\\'); delims.insert('/');
-		
-		std::vector<std::string> p = splitpath(m_path, delims);		
+
+		std::vector<std::string> p = splitpath(m_path, delims);
 		std::string path= m_path.substr(0, m_path.length()-p.back().length());
-		
-restart:				
+
+restart:
 		std::vector<std::string>libs= m_info.get_required_libs();
 		for (std::vector<std::string>::const_iterator iter = libs.begin(); iter != libs.end(); ++iter) {
 			const std::string& libName= *iter;
 			const std::string libFile= path + libName;
 
 			int r= n64_request_file(libFile.c_str());	// trigger load & check if ready
-			if (r <0) { 
+			if (r <0) {
 				return -1; // file not ready
 			} else {
 				// loaded lib may reference another lib..
 				int origLen= libs.size();
-				
-				if ( psf_load( libFile.c_str(), &psf_file_system, 0x21, 0, 0, psf_info_meta, &info_state, 0 ) <= 0 ) {	// used to parse potential additional _lib refs
+
+				if ( psf_load(
+				  libFile.c_str(), &psf_file_system, 0x21,
+				  0, NULL, info_target,
+				  &info_state, 0, 0,
+				  NULL ) <= 0 ) {	// used to parse potential additional _lib refs
 					throw exception_io_data( "Not a USF file" );
 				} else {
 					libs= m_info.get_required_libs();
-					
-					if (libs.size() > origLen)  {						
-						goto restart;	// iterator is not robust and will fuck up 
-					}					
-				}				
+
+					if (libs.size() > origLen)  {
+						goto restart;	// iterator is not robust and will fuck up
+					}
+				}
 			}
 		}
 		return 0;
 	}
 
-	void decode_initialize(t_int16 *output_buffer, int out_size) {			
+	void decode_initialize(t_int16 *output_buffer, int out_size) {
 		shutdown();
 
 		m_state = new usf_loader_state;
@@ -648,8 +667,13 @@ restart:
 		usf_clear( m_state->emu_state );
 
 		usf_set_hle_audio( m_state->emu_state, !_usf_use_lle || cfg_hle_audio );
-		
-		if ( psf_load( m_path.c_str(), &psf_file_system, 0x21, usf_loader, m_state, usf_info, m_state, 1 ) < 0 )
+
+		if ( psf_load(
+		  m_path.c_str(), &psf_file_system, 0x21,
+		  usf_loader, m_state, usf_info,
+		  m_state, 1, 0,
+		  NULL
+		) < 0 )
 			throw exception_io_data( "Invalid USF" );
 
 		usf_set_compare( m_state->emu_state, m_state->enable_compare );
@@ -920,6 +944,47 @@ static input_usf g_input_usf;
 
 // ------------------------------------------------------------------------------------------------------- 
 
+// use "regular" file ops - which are provided by Emscripten (just make sure all files are previously loaded)
+
+void* em_fopen( const char * uri ) {
+  return (void*)fopen(uri, "r");
+}
+size_t em_fread( void * buffer, size_t size, size_t count, void * handle ) {
+  return fread(buffer, size, count, (FILE*)handle );
+}
+int em_fseek( void * handle, int64_t offset, int whence ) {
+  return fseek( (FILE*) handle, offset, whence );
+}
+long int em_ftell( void * handle ) {
+  return  ftell( (FILE*) handle );
+}
+int em_fclose( void * handle  ) {
+  return fclose( (FILE *) handle  );
+}
+
+size_t em_fgetlength( FILE * f) {
+  int fd= fileno(f);
+  struct stat buf;
+  fstat(fd, &buf);
+  return buf.st_size;
+}
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void n64_setup (void) {
+  if (!g_file) {
+    g_file = (struct FileAccess_t*) malloc(sizeof( struct FileAccess_t ));
+
+    g_file->fopen= em_fopen;
+    g_file->fread= em_fread;
+    g_file->fseek= em_fseek;
+    g_file->ftell= em_ftell;
+    g_file->fclose= em_fclose;
+    g_file->fgetlength= em_fgetlength;
+  }
+}
 
 void n64_boost_volume(unsigned char b) { /*noop*/}
 
@@ -959,44 +1024,12 @@ int n64_seek_sample (int sampleTime) {
     return 0;
 }
 
-
-
-// use "regular" file ops - which are provided by Emscripten (just make sure all files are previously loaded)
-
-void* em_fopen( const char * uri ) {
-	return (void*)fopen(uri, "r");
-}
-size_t em_fread( void * buffer, size_t size, size_t count, void * handle ) {
-	return fread(buffer, size, count, (FILE*)handle );
-}
-int em_fseek( void * handle, int64_t offset, int whence ) {
-	return fseek( (FILE*) handle, offset, whence );
-}
-long int em_ftell( void * handle ) {
-	return  ftell( (FILE*) handle );
-}
-int em_fclose( void * handle  ) {
-	return fclose( (FILE *) handle  );
+void n64_shutdown() {
+  g_input_usf.shutdown();
 }
 
-size_t em_fgetlength( FILE * f) {
-	int fd= fileno(f);
-	struct stat buf;
-	fstat(fd, &buf);
-	return buf.st_size;	
-}	
-
-void n64_setup (void) {
-	if (!g_file) {
-		g_file = (struct FileAccess_t*) malloc(sizeof( struct FileAccess_t ));
-		
-		g_file->fopen= em_fopen;
-		g_file->fread= em_fread;
-		g_file->fseek= em_fseek;
-		g_file->ftell= em_ftell;
-		g_file->fclose= em_fclose;		
-		g_file->fgetlength= em_fgetlength;
-	}
+#ifdef __cplusplus
 }
+#endif
 
 
