@@ -28,21 +28,16 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
-#include <emscripten.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/stat.h>
-
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
 #include <stdexcept>
 #include <set>
-
 #include <codecvt>
 #include <locale>
-#include <string>
 
-#include <string.h>
-
+#include <emscripten/fetch.h>
 #include <psflib.h>
 
 #include "usf/usf.h"
@@ -93,50 +88,35 @@ int stricmp_utf8_partial(std::string const &s1, const char *s2) {
       (char *) memcpy (__new, __old, __len);              \
     }))
 
-// callback defined elsewhere 
-extern void n64_meta_set(const char *name, const char *value);
-
-
-struct FileAccess_t {
-  void *(*fopen)(const char *uri);
-
-  size_t (*fread)(void *buffer, size_t size, size_t count, void *handle);
-
-  int (*fseek)(void *handle, int64_t offset, int whence);
-
-  long int (*ftell)(void *handle);
-
-  int (*fclose)(void *handle);
-
-  size_t (*fgetlength)(FILE *f);
-};
-
-static struct FileAccess_t *g_file = 0;
-
-static void *psf_file_fopen(void *context, const char *uri) {
-//    EM_ASM_({ console.log('Tiny MIDI Player loaded %d bytes.', $0); }, length);
-  return g_file->fopen(uri);
+static void* psf_file_fopen(void *context, const char *uri) {
+  return fopen(uri, "rb");
 }
 
 static size_t psf_file_fread(void *buffer, size_t size, size_t count, void *handle) {
-  return g_file->fread(buffer, size, count, handle);
+  return fread(buffer, size, count, static_cast<FILE *>(handle));
 }
 
 static int psf_file_fseek(void *handle, int64_t offset, int whence) {
-  return g_file->fseek(handle, offset, whence);
+  return fseek(static_cast<FILE*>(handle), offset, whence);
 }
 
 static int psf_file_fclose(void *handle) {
-  g_file->fclose(handle);
-  return 0;
+  return fclose(static_cast<FILE*>(handle));
 }
 
 static long psf_file_ftell(void *handle) {
-  return g_file->ftell(handle);
+  return ftell(static_cast<FILE*>(handle));
 }
 
-const psf_file_callbacks psf_file_system = {"\\/|:", NULL, psf_file_fopen, psf_file_fread, psf_file_fseek,
-                                            psf_file_fclose, psf_file_ftell};
+const psf_file_callbacks psf_file_system = {
+  "\\/|:",
+  nullptr,
+  psf_file_fopen,
+  psf_file_fread,
+  psf_file_fseek,
+  psf_file_fclose,
+  psf_file_ftell
+};
 
 
 // ------------------ stripped down version based on foobar2000 plugin (see psf.cpp)  --------------------
@@ -144,7 +124,6 @@ const psf_file_callbacks psf_file_system = {"\\/|:", NULL, psf_file_fopen, psf_f
 //#define DBG(a) OutputDebugString(a)
 #define DBG(a)
 
-static unsigned int cfg_infinite = 0;
 static unsigned int cfg_deflength = 170000;
 static unsigned int cfg_deffade = 10000;
 static unsigned int cfg_suppressopeningsilence = 1;
@@ -152,16 +131,14 @@ static unsigned int cfg_suppressendsilence = 1;
 static unsigned int cfg_endsilenceseconds = 10;
 
 static unsigned int cfg_resample = 1;
+
+// TODO(montag): expose HLE audio setting
+static unsigned int cfg_hle_audio = 1;
+// TODO(montag): add sample rate argument to n64_load_file
 static unsigned int cfg_resample_hz = 44100;
 
 static const char field_length[] = "usf_length";
 static const char field_fade[] = "usf_fade";
-
-// redundant!
-static unsigned int cfg_hle_audio = 0;  // supposedly better accuracy..
-enum {
-  _usf_use_lle = 1
-};
 
 #define BORK_TIME 0xC0CAC01A
 
@@ -242,11 +219,8 @@ const int MAX_INFO_LEN = 10;
 class file_info {
   double len;
 
-  // no other keys implemented
   const char *sampleRate;
   const char *channels;
-
-  std::vector<std::string> requiredLibs;
 
 public:
   file_info() {
@@ -257,14 +231,6 @@ public:
   ~file_info() {
     free((void *) channels);
     free((void *) sampleRate);
-  }
-
-  void reset() {
-    requiredLibs.resize(0);
-  }
-
-  std::vector<std::string> get_required_libs() {
-    return requiredLibs;
   }
 
   void info_set_int(const char *tag, int value) {
@@ -291,20 +257,6 @@ public:
     len = l;
   }
 
-  void info_set_lib(std::string &tag, const char *value) {
-    // EMSCRIPTEN depends on all libs being loaded before the song can be played!
-
-    for (std::vector<std::string>::const_iterator iter = requiredLibs.begin(); iter != requiredLibs.end(); ++iter) {
-      const std::string &libName = *iter;
-
-      if (strcmp(value, libName.c_str()) == 0) {
-        return;  // no duplicates
-      }
-    }
-    requiredLibs.push_back(std::string(value));
-  }
-
-  //
   unsigned int meta_get_count() { return 0; }
 
   unsigned int meta_enum_value_count(unsigned int i) { return 0; }
@@ -373,19 +325,13 @@ static int info_target(void *context, const char *name, const char *value) {
 
   // FIXME: various "_"-settings are currently not used to configure the emulator
 
-  psf_info_meta_state *state = (psf_info_meta_state *) context;
+  auto *state = (psf_info_meta_state *) context;
 
   std::string &tag = state->name;
 
   tag.assign(name);
 
-  if (!stricmp_utf8(tag, "game")) {
-    DBG("reading game as album");
-    tag.assign("album");
-  } else if (!stricmp_utf8(tag, "year")) {
-    DBG("reading year as date");
-    tag.assign("date");
-  }
+  // TODO(montag): Handle miniusf song metadata
 
   if (!stricmp_utf8_partial(tag, "replaygain_"))  // FIXME: how does relate to the "volume"?
   {
@@ -412,7 +358,8 @@ static int info_target(void *context, const char *name, const char *value) {
     state->utf8 = true;
   } else if (!stricmp_utf8_partial(tag, "_lib")) {
     DBG("found _lib");
-    state->info->info_set_lib(tag, value);
+    // usflib dependencies must be preloaded into emscripten filesystem.
+    // state->info->info_set_lib(tag, value);
   } else if (!stricmp_utf8(tag, "_enablecompare")) {
     DBG("found _enablecompare");
     state->info->info_set(tag, value);
@@ -428,9 +375,6 @@ static int info_target(void *context, const char *name, const char *value) {
   } else {
     state->info->meta_add(tag, value);
   }
-
-  // handle description stuff elsewhere
-  n64_meta_set(tag.c_str(), value);
 
   return 0;
 }
@@ -465,6 +409,12 @@ int usf_info(void *context, const char *name, const char *value) {
     state->enable_fifo_full = 1;
 
   return 0;
+}
+
+static void print_message(void * context, const char * message)
+{
+  auto * msgbuf = (std::string *)context;
+  msgbuf->append(message);
 }
 
 /*
@@ -543,25 +493,21 @@ public:
   }
 
   int open(const char *p_path) {
-    m_info.reset();
 
     m_path = p_path;
 
     psf_info_meta_state info_state;
     info_state.info = &m_info;
 
-    // INFO: the info_state is given later in the callbacks as "context"
-    //       info_target is the "target"
-    //    psf_load(
-    //      p_path, &psf_file_system, 0x21,
-    //      0, 0, psf_info_meta,
-    //      &info_state, 0, print_message,
-    //      &msgbuf
-    //    );
+    std::string msgbuf;
 
-    if (psf_load(p_path, &psf_file_system, 0x21, 0, NULL, info_target, &info_state, 0, 0, NULL) <= 0) {
+    int ret = psf_load(p_path, &psf_file_system, 0x21, 0, NULL, info_target, &info_state, 0, print_message, &msgbuf);
+
+    if (ret <= 0) {
+      printf("Not a USF file (%s)\n", p_path);
       throw exception_io_data("Not a USF file");
     }
+
     if (!info_state.utf8)
       info_meta_ansi(m_info);
 
@@ -576,40 +522,6 @@ public:
     m_info.set_length((double) (tag_song_ms + tag_fade_ms) * .001);
     m_info.info_set_int("channels", 2);
 
-    // song may depend on some lib-file(s) that first must be loaded!
-    // (enter "retry-mode" if something is missing)
-    std::set<char> delims;
-    delims.insert('\\');
-    delims.insert('/');
-
-    std::vector<std::string> p = splitpath(m_path, delims);
-    std::string path = m_path.substr(0, m_path.length() - p.back().length());
-
-    restart:
-    std::vector<std::string> libs = m_info.get_required_libs();
-    for (std::vector<std::string>::const_iterator iter = libs.begin(); iter != libs.end(); ++iter) {
-      const std::string &libName = *iter;
-      const std::string libFile = path + libName;
-
-      int r = n64_request_file(libFile.c_str());  // trigger load & check if ready
-      if (r < 0) {
-        return -1; // file not ready
-      } else {
-        // loaded lib may reference another lib..
-        int origLen = libs.size();
-
-        if (psf_load(libFile.c_str(), &psf_file_system, 0x21, 0, NULL, info_target, &info_state, 0, 0, NULL) <=
-            0) {  // used to parse potential additional _lib refs
-          throw exception_io_data("Not a USF file");
-        } else {
-          libs = m_info.get_required_libs();
-
-          if (libs.size() > origLen) {
-            goto restart;  // iterator is not robust and will fuck up
-          }
-        }
-      }
-    }
     return 0;
   }
 
@@ -622,7 +534,7 @@ public:
 
     usf_clear(m_state->emu_state);
 
-    usf_set_hle_audio(m_state->emu_state, !_usf_use_lle || cfg_hle_audio);
+    usf_set_hle_audio(m_state->emu_state, cfg_hle_audio);
 
     if (psf_load(m_path.c_str(), &psf_file_system, 0x21, usf_loader, m_state, usf_info, m_state, 1, 0, NULL) < 0)
       throw exception_io_data("Invalid USF");
@@ -822,6 +734,8 @@ public:
       data_written = 0;
     }
 
+//usf_set_seeking(m_state->emu_state, true);
+
     p_seconds -= usfemu_pos;
 
     // more abortable, and emu doesn't like doing huge numbers of samples per call anyway
@@ -855,6 +769,8 @@ public:
       m_buffer.samples_written(remainder * 2);
       remainder = 0;
     }
+
+//usf_set_seeking(m_state->emu_state, false);
   }
 
 private:
@@ -870,70 +786,10 @@ private:
 
 static input_usf g_input_usf;
 
-// ------------------------------------------------------------------------------------------------------- 
-
-// use "regular" file ops - which are provided by Emscripten (just make sure all files are previously loaded)
-
-void *em_fopen(const char *uri) {
-  return (void *) fopen(uri, "r");
-}
-
-size_t em_fread(void *buffer, size_t size, size_t count, void *handle) {
-  return fread(buffer, size, count, (FILE *) handle);
-}
-
-int em_fseek(void *handle, int64_t offset, int whence) {
-  return fseek((FILE *) handle, offset, whence);
-}
-
-long int em_ftell(void *handle) {
-  return ftell((FILE *) handle);
-}
-
-int em_fclose(void *handle) {
-  return fclose((FILE *) handle);
-}
-
-size_t em_fgetlength(FILE *f) {
-  int fd = fileno(f);
-  struct stat buf;
-  fstat(fd, &buf);
-  return buf.st_size;
-}
-
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-void n64_setup(void) {
-  if (!g_file) {
-    g_file = (struct FileAccess_t *) malloc(sizeof(struct FileAccess_t));
-
-    g_file->fopen = em_fopen;
-    g_file->fread = em_fread;
-    g_file->fseek = em_fseek;
-    g_file->ftell = em_ftell;
-    g_file->fclose = em_fclose;
-    g_file->fgetlength = em_fgetlength;
-  }
-}
-
-void n64_boost_volume(unsigned char b) { /*noop*/}
-
-int32_t n64_get_sample_rate() {
-  return g_input_usf.getSamplesRate();
-}
-
-int32_t n64_get_samples_to_play() {
-  // base for seeking
-  return g_input_usf.getSamplesToPlay();  // in samples (one channel)
-}
-
-int32_t n64_get_samples_played() {
-  return g_input_usf.getDataWritten();
-}
-
-int n64_load_file(const char *uri, int16_t *output_buffer, uint16_t outSize) {
+int32_t n64_load_file(const char *uri, int16_t *output_buffer, uint16_t outSize) {
   try {
     int retVal = g_input_usf.open(uri);
     if (retVal < 0) return retVal;  // trigger retry later
@@ -946,14 +802,20 @@ int n64_load_file(const char *uri, int16_t *output_buffer, uint16_t outSize) {
   }
 }
 
-int n64_read(int16_t *output_buffer, uint16_t outSize) {
+int32_t n64_get_duration_ms() {
+  return 1000.0 * g_input_usf.getSamplesToPlay() / g_input_usf.getSamplesRate();
+}
+
+int32_t n64_get_position_ms() {
+  return 1000.0 * g_input_usf.getDataWritten() / g_input_usf.getSamplesRate();
+}
+
+int32_t n64_render_audio(int16_t *output_buffer, uint16_t outSize) {
   return g_input_usf.decode_run(output_buffer, outSize);
 }
 
-int n64_seek_sample(int sampleTime) {
-  // time measured in 1 channel samples
-  g_input_usf.decode_seek(((double) sampleTime) / (double) n64_get_sample_rate());
-  return 0;
+void n64_seek_ms(int msec) {
+  g_input_usf.decode_seek(((double) msec) / 1000.0);
 }
 
 void n64_shutdown() {
