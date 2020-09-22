@@ -512,8 +512,8 @@ UINT8 VGMPlayer::GetSongDeviceInfo(std::vector<PLR_DEV_INFO>& devInfList) const
 		memset(&devInf, 0x00, sizeof(PLR_DEV_INFO));
 		devInf.type = sdCfg.type;
 		devInf.id = sdCfg.deviceID;
-		devInf.core = dCfg->emuCore;
 		devInf.instance = (UINT8)sdCfg.instance;
+		devInf.devCfg = dCfg;
 		if (cDev != NULL)
 		{
 			// when playing, get information from device structures (may feature modified volume levels)
