@@ -2,6 +2,7 @@ const { spawn, execSync } = require('child_process');
 const fs = require('fs');
 const chalk = require('chalk');
 const paths = require('../config/paths');
+const path = require('path');
 
 /**
  * Compile the C libraries with emscripten.
@@ -366,6 +367,8 @@ const compiler = process.env.EMPP_BIN || 'em++';
 const jsOutFile = 'src/chip-core.js';
 const wasmOutFile = 'src/chip-core.wasm';
 const wasmDir = paths.appPublic;
+const wasmMapOutFile = wasmOutFile + '.map';
+const wasmMapDir = path.resolve(paths.appPublic, '..');
 const runtimeMethods = [
   'ALLOC_NORMAL',
   'FS',
@@ -402,6 +405,18 @@ const flags = [
   '-o', jsOutFile,
 
   /*
+   WASM Source Maps
+
+   These source maps require local fileserver running at chip-player-js root
+   to expose C/C++ source files to browser; i.e. $ python -m http.server 9000
+   Subproject static libraries must also be compiled with the emcc flags:
+    `-g4 --source-map-base http://localhost:9000`.
+   See lazyusf2/Makefile (for liblazyusf.a).
+  */
+  '-g4',                     // include debug information
+  '--source-map-base', 'http://localhost:9000/',
+
+  /*
   Warnings/misc.
    */
   '-Qunused-arguments',
@@ -423,6 +438,11 @@ build_proc.on('exit', function (code) {
   if (code === 0) {
     console.log('Moving %s to %s.', wasmOutFile, wasmDir);
     execSync(`mv ${wasmOutFile} ${wasmDir}`);
+
+    if (fs.existsSync(wasmMapOutFile)) {
+      console.log('Moving %s to %s.', wasmMapOutFile, wasmMapDir);
+      execSync(`mv ${wasmMapOutFile} ${wasmMapDir}`);
+    }
 
     // Don't use --pre-js because it can get stripped out by closure.
     const eslint_disable = '/*eslint-disable*/\n';
