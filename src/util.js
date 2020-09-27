@@ -73,7 +73,7 @@ export function pathToLinks(path) {
 }
 
 export function ensureEmscFileWithUrl(emscRuntime, filename, url) {
-  if (0 && emscRuntime.FS.analyzePath(filename).exists) {
+  if (emscRuntime.FS.analyzePath(filename).exists) {
     console.log(`${filename} exists in Emscripten file system.`);
     return Promise.resolve(filename);
   } else {
@@ -88,7 +88,7 @@ export function ensureEmscFileWithUrl(emscRuntime, filename, url) {
 }
 
 export function ensureEmscFileWithData(emscRuntime, filename, uint8Array, forceWrite=false) {
-  if (0 && !forceWrite && emscRuntime.FS.analyzePath(filename).exists) {
+  if (!forceWrite && emscRuntime.FS.analyzePath(filename).exists) {
     console.log(`${filename} exists in Emscripten file system.`);
     return Promise.resolve(filename);
   } else {
