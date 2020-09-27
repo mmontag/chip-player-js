@@ -10,6 +10,7 @@ const FORMATS =  [
   'ay',
   'it',
   'mid',
+  'miniusf',
   'mod',
   'nsf',
   'nsfe',
