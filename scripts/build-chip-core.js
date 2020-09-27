@@ -27,7 +27,7 @@ const chipModules = [
   {
     // TODO: decouple from libADLMIDI and fluidlite
     name: 'player',
-    // enabled: true,
+    enabled: true,
     sourceFiles: [
       'tinysoundfont/tinyplayer.c',
     ],
@@ -66,7 +66,7 @@ const chipModules = [
   },
   {
     name: 'gme',
-    // enabled: true,
+    enabled: true,
     sourceFiles: [
       'Ay_Apu.cpp',
       'Ay_Core.cpp',
@@ -215,7 +215,7 @@ const chipModules = [
   },
   {
     name: 'libxmp',
-    // enabled: true,
+    enabled: true,
     sourceFiles: [
       // 'libxmp/lib/libxmp.a', // full libxmp build
       'libxmp/libxmp-lite-stagedir/lib/libxmp-lite.a',
@@ -240,7 +240,7 @@ const chipModules = [
   },
   {
     name: 'fluidlite',
-    // enabled: true,
+    enabled: true,
     sourceFiles: [
       'fluidlite/build/libfluidlite.a',
     ],
@@ -262,7 +262,7 @@ const chipModules = [
   },
   {
     name: 'libADLMIDI',
-    // enabled: true,
+    enabled: true,
     sourceFiles: [
       'chips/dosbox_opl3.cpp',
       'chips/dosbox/dbopl.cpp',
@@ -305,7 +305,7 @@ const chipModules = [
   },
   {
     name: 'v2m',
-    // enabled: true,
+    enabled: true,
     sourceFiles: [
       'ronan.cpp',
       'scope.cpp',
@@ -360,7 +360,6 @@ const chipModules = [
       '-fno-strict-aliasing',
     ],
   },
-
 ];
 
 const compiler = process.env.EMPP_BIN || 'em++';
@@ -413,8 +412,8 @@ const flags = [
     `-g4 --source-map-base http://localhost:9000`.
    See lazyusf2/Makefile (for liblazyusf.a).
   */
-  '-g4',                     // include debug information
-  '--source-map-base', 'http://localhost:9000/',
+  // '-g4',                     // include debug information
+  // '--source-map-base', 'http://localhost:9000/',
 
   /*
   Warnings/misc.
