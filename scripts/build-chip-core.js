@@ -400,7 +400,7 @@ const flags = [
   '-s', 'EXPORT_ES6=1',
   '-s', 'USE_ES6_IMPORT_META=0',
   '-lidbfs.js',
-  '-O3',                     // set to O0 for fast compile during development
+  '-Os',                     // set to O0 for fast compile during development
   '-o', jsOutFile,
 
   /*
