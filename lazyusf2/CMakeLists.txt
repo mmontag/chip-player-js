@@ -9,7 +9,6 @@ include_directories(../psflib)
 include_directories(~/src/emsdk/emscripten/1.38.28/system/include)
 
 add_executable(lazyusf2
-        _wothke/_x_adapter.cpp
         _wothke/circular_buffer.h
         _wothke/n64plug.cpp
         ai/ai_controller.c
