@@ -3,7 +3,9 @@ node_modules/
 dist/
 build/
 cmake-build-debug/
+*.a
 *.wasm
+*.wasm.map
 lib*.js
 libxmp/libxmp-lite-stagedir/
 public/soundfonts/
