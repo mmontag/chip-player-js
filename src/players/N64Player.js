@@ -55,8 +55,8 @@ export default class N64Player extends Player {
         this.muteAudioDuringCall(this.audioNode, () => {
           err = this.lib.ccall(
             'n64_load_file', 'number',
-            ['string', 'number', 'number'],
-            [fsFilename, this.buffer, this.bufferSize], // TODO: use this.audioCtx.sampleRate
+            ['string', 'number', 'number', 'number'],
+            [fsFilename, this.buffer, this.bufferSize, this.audioCtx.sampleRate],
           );
 
           if (err !== 0) {
