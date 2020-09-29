@@ -592,7 +592,7 @@ class App extends React.Component {
 
   getCurrentSongLink() {
     const url = this.sequencer.getCurrUrl();
-    return url ? '/?play=' + encodeURIComponent(url.replace(CATALOG_PREFIX, '')) : '#';
+    return url ? process.env.PUBLIC_URL + '/?play=' + encodeURIComponent(url.replace(CATALOG_PREFIX, '')) : '#';
   }
 
   onDrop = (droppedFiles) => {
