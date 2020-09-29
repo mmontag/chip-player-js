@@ -134,8 +134,6 @@ static unsigned int cfg_resample = 1;
 
 // TODO(montag): expose HLE audio setting
 static unsigned int cfg_hle_audio = 1;
-// TODO(montag): add sample rate argument to n64_load_file
-static unsigned int cfg_resample_hz = 44100;
 
 static const char field_length[] = "usf_length";
 static const char field_fade[] = "usf_fade";
@@ -430,7 +428,7 @@ class input_usf {
 
   std::string m_path;
 
-  int32_t sample_rate, last_sample_rate;
+  int32_t last_sample_rate;
 
   int err;
 
@@ -552,7 +550,6 @@ public:
 
     resample = cfg_resample;
 
-    sample_rate = resample ? cfg_resample_hz : 0;
     last_sample_rate = 0;
 
     do_suppressendsilence = !!cfg_suppressendsilence;
@@ -773,6 +770,7 @@ public:
 //usf_set_seeking(m_state->emu_state, false);
   }
 
+  int32_t sample_rate;
 private:
   double MulDiv(int ms, int sampleRate, int d) {
     return ((double) ms) * sampleRate / d;
@@ -789,10 +787,12 @@ static input_usf g_input_usf;
 #ifdef __cplusplus
 extern "C" {
 #endif
-int32_t n64_load_file(const char *uri, int16_t *output_buffer, uint16_t outSize) {
+int32_t n64_load_file(const char *uri, int16_t *output_buffer, uint16_t outSize, int32_t samp_rate) {
   try {
     int retVal = g_input_usf.open(uri);
     if (retVal < 0) return retVal;  // trigger retry later
+
+    g_input_usf.sample_rate = samp_rate;
 
     g_input_usf.decode_initialize(output_buffer, outSize);
 
