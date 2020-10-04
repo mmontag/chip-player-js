@@ -155,45 +155,35 @@ if(AUDIODRV_LIBAO)
 endif()
 
 
-add_library(${PROJECT_NAME}_obj OBJECT ${AUDIO_FILES})
-set_property(TARGET ${PROJECT_NAME}_obj PROPERTY POSITION_INDEPENDENT_CODE ON)
-target_link_libraries(${PROJECT_NAME}_obj PRIVATE ${AUDIO_LIBS})
-
-target_compile_definitions(${PROJECT_NAME}_obj PUBLIC ${AUDIO_DEFS})
-
-target_include_directories(${PROJECT_NAME}_obj
-	PUBLIC ${LIBVGM_SOURCE_DIR}
-	PRIVATE ${LIBVGM_SOURCE_DIR}/libs/include
-)
-if(WIN32 AND NOT MSVC)
-	target_include_directories(${PROJECT_NAME}_obj PRIVATE
-		${LIBVGM_SOURCE_DIR}/libs/include_mingw
-	)
-elseif(MSVC)
-	target_include_directories(${PROJECT_NAME}_obj PRIVATE
-		${LIBVGM_SOURCE_DIR}/libs/include_vc
-	)
-	if(MSVC_VERSION LESS 1400)
-		target_include_directories(${PROJECT_NAME}_obj PRIVATE
-			${LIBVGM_SOURCE_DIR}/libs/include_vc6
-		)
-	endif()
-endif()
-target_include_directories(${PROJECT_NAME}_obj PRIVATE ${AUDIO_INCLUDES})
-
-add_library(${PROJECT_NAME} STATIC $<TARGET_OBJECTS:${PROJECT_NAME}_obj>)
-SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
+add_library(${PROJECT_NAME} ${LIBRARY_TYPE} ${AUDIO_FILES})
+set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(${PROJECT_NAME} PUBLIC ${AUDIO_DEFS})
-target_include_directories(${PROJECT_NAME} PUBLIC ${LIBVGM_SOURCE_DIR})
+target_include_directories(${PROJECT_NAME}
+	PUBLIC ${LIBVGM_SOURCE_DIR}
+	PRIVATE ${AUDIO_INCLUDES}
+)
 target_link_libraries(${PROJECT_NAME} PRIVATE ${AUDIO_LIBS} vgm-utils)
 
-if(BUILD_SHARED)
-add_library(${PROJECT_NAME}_shared SHARED $<TARGET_OBJECTS:${PROJECT_NAME}_obj>)
-SET_TARGET_PROPERTIES(${PROJECT_NAME}_shared PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
-target_include_directories(${PROJECT_NAME}_shared PUBLIC ${LIBVGM_SOURCE_DIR})
-target_link_libraries(${PROJECT_NAME}_shared PRIVATE ${AUDIO_LIBS} vgm-utils_shared)
-target_compile_definitions(${PROJECT_NAME}_shared PUBLIC ${AUDIO_DEFS})
-endif(BUILD_SHARED)
+if(WIN32)
+	# for some Windows Audio APIs, we need WinAPI headers from special directories
+	if(NOT MSVC)
+		target_include_directories(${PROJECT_NAME} PRIVATE
+			${LIBVGM_SOURCE_DIR}/libs/include
+			${LIBVGM_SOURCE_DIR}/libs/include_mingw
+		)
+	elseif(MSVC)
+		target_include_directories(${PROJECT_NAME} PRIVATE
+			${LIBVGM_SOURCE_DIR}/libs/include
+			${LIBVGM_SOURCE_DIR}/libs/include_vc
+		)
+		if(MSVC_VERSION LESS 1400)
+			target_include_directories(${PROJECT_NAME} PRIVATE
+				${LIBVGM_SOURCE_DIR}/libs/include_vc6
+			)
+		endif()
+	endif()
+endif()
+
 
 foreach(DEF ${AUDIO_DEFS})
 	string(REPLACE " " "" DEF "${DEF}")
@@ -213,11 +203,3 @@ install(TARGETS ${PROJECT_NAME}
 		)
 install(FILES ${AUDIO_HEADERS} DESTINATION include/vgm/audio)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/vgm-audio.pc DESTINATION lib/pkgconfig)
-
-if(BUILD_SHARED)
-install(TARGETS ${PROJECT_NAME}_shared
-		RUNTIME DESTINATION "bin"
-		LIBRARY DESTINATION "lib"
-		ARCHIVE DESTINATION "lib"
-		)
-endif()

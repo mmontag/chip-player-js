@@ -2,9 +2,9 @@
 if (POLICY CMP0048)
 	cmake_policy(SET CMP0048 NEW)
 endif ()
+cmake_minimum_required(VERSION 2.8)
 
 project(vgm-emu VERSION 1.0)
-cmake_minimum_required(VERSION 3.12)
 
 if (POLICY CMP0042)
 	cmake_policy(SET CMP0042 NEW)
@@ -590,34 +590,17 @@ if(SNDEMU_GA20_ALL)
 endif()
 
 
-add_library(${PROJECT_NAME}_obj OBJECT ${EMU_FILES})
-set_property(TARGET ${PROJECT_NAME}_obj PROPERTY POSITION_INDEPENDENT_CODE ON)
-
-target_compile_definitions(${PROJECT_NAME}_obj PUBLIC ${EMU_DEFS})
-
-target_include_directories(${PROJECT_NAME}_obj
+add_library(${PROJECT_NAME} ${LIBRARY_TYPE} ${EMU_FILES})
+set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+target_compile_definitions(${PROJECT_NAME} PUBLIC ${EMU_DEFS})
+target_include_directories(${PROJECT_NAME}
 	PUBLIC ${LIBVGM_SOURCE_DIR}
 	PRIVATE ${LIBVGM_SOURCE_DIR}/libs/include
 )
 
-add_library(${PROJECT_NAME} STATIC $<TARGET_OBJECTS:${PROJECT_NAME}_obj>)
-SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
-target_compile_definitions(${PROJECT_NAME} PUBLIC ${EMU_DEFS})
-target_include_directories(${PROJECT_NAME} PUBLIC ${LIBVGM_SOURCE_DIR})
-
-if(BUILD_SHARED)
-add_library(${PROJECT_NAME}_shared SHARED $<TARGET_OBJECTS:${PROJECT_NAME}_obj>)
-SET_TARGET_PROPERTIES(${PROJECT_NAME}_shared PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
-target_compile_definitions(${PROJECT_NAME}_shared PUBLIC ${EMU_DEFS})
-target_include_directories(${PROJECT_NAME}_shared PUBLIC ${LIBVGM_SOURCE_DIR})
-endif(BUILD_SHARED)
-
 if(CMAKE_COMPILER_IS_GNUCC OR UNIX)
 	# link Math library
 	target_link_libraries(${PROJECT_NAME} PRIVATE m)
-    if(BUILD_SHARED)
-	target_link_libraries(${PROJECT_NAME}_shared PRIVATE m)
-    endif(BUILD_SHARED)
 	set(VGMEMU_PKGCONFIG_LDFLAGS "-lm")
 endif()
 
@@ -639,11 +622,3 @@ install(TARGETS ${PROJECT_NAME}
 install(FILES ${EMU_HEADERS} DESTINATION include/vgm/emu)
 install(FILES ${EMU_CORE_HEADERS} DESTINATION include/vgm/emu/cores)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/vgm-emu.pc DESTINATION lib/pkgconfig)
-
-if(BUILD_SHARED)
-install(TARGETS ${PROJECT_NAME}_shared
-		RUNTIME DESTINATION "bin"
-		LIBRARY DESTINATION "lib"
-		ARCHIVE DESTINATION "lib"
-		)
-endif(BUILD_SHARED)

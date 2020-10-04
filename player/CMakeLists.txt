@@ -4,13 +4,13 @@ if (POLICY CMP0048)
 endif ()
 
 project(vgm-player VERSION 1.0)
-cmake_minimum_required(VERSION 3.12)
 
 if (POLICY CMP0042)
 	cmake_policy(SET CMP0042 NEW)
 endif ()
 
 set(LIBVGM_SOURCE_DIR ${PROJECT_SOURCE_DIR}/..)
+cmake_minimum_required(VERSION 3.1)
 
 set(PLAYER_DEFS)
 set(PLAYER_FILES
@@ -34,49 +34,19 @@ set(PLAYER_HEADERS
 )
 set(PLAYER_INCLUDES)
 set(PLAYER_LIBS)
+
 set(VGMPLAYER_PKGCONFIG_CFLAGS)
 set(VGMPLAYER_PKGCONFIG_LDFLAGS)
 set(VGMPLAYER_PKGCONFIG_VERSION ${PROJECT_VERSION})
 
-add_library(${PROJECT_NAME}_obj OBJECT ${PLAYER_FILES})
-set_property(TARGET ${PROJECT_NAME}_obj PROPERTY POSITION_INDEPENDENT_CODE ON)
-target_link_libraries(${PROJECT_NAME}_obj PRIVATE ${PLAYER_LIBS})
-
-target_compile_definitions(${PROJECT_NAME}_obj PUBLIC ${PLAYER_DEFS})
-
-target_include_directories(${PROJECT_NAME}_obj
-	PUBLIC ${LIBVGM_SOURCE_DIR}
-	PRIVATE ${LIBVGM_SOURCE_DIR}/libs/include
-)
-if(WIN32 AND NOT MSVC)
-	target_include_directories(${PROJECT_NAME}_obj PRIVATE
-		${LIBVGM_SOURCE_DIR}/libs/include_mingw
-	)
-elseif(MSVC)
-	target_include_directories(${PROJECT_NAME}_obj PRIVATE
-		${LIBVGM_SOURCE_DIR}/libs/include_vc
-	)
-	if(MSVC_VERSION LESS 1400)
-		target_include_directories(${PROJECT_NAME}_obj PRIVATE
-			${LIBVGM_SOURCE_DIR}/libs/include_vc6
-		)
-	endif()
-endif()
-target_include_directories(${PROJECT_NAME}_obj PRIVATE ${PLAYER_INCLUDES})
-
-add_library(${PROJECT_NAME} STATIC $<TARGET_OBJECTS:${PROJECT_NAME}_obj>)
-SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
+add_library(${PROJECT_NAME} ${LIBRARY_TYPE} ${PLAYER_FILES})
+set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(${PROJECT_NAME} PUBLIC ${PLAYER_DEFS})
-target_include_directories(${PROJECT_NAME} PUBLIC ${LIBVGM_SOURCE_DIR})
+target_include_directories(${PROJECT_NAME}
+	PUBLIC ${LIBVGM_SOURCE_DIR}
+	PRIVATE ${PLAYER_INCLUDES}
+)
 target_link_libraries(${PROJECT_NAME} PRIVATE ${PLAYER_LIBS} vgm-emu vgm-utils)
-
-if(BUILD_SHARED)
-add_library(${PROJECT_NAME}_shared SHARED $<TARGET_OBJECTS:${PROJECT_NAME}_obj>)
-SET_TARGET_PROPERTIES(${PROJECT_NAME}_shared PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
-target_compile_definitions(${PROJECT_NAME}_shared PUBLIC ${PLAYER_DEFS})
-target_include_directories(${PROJECT_NAME}_shared PUBLIC ${LIBVGM_SOURCE_DIR})
-target_link_libraries(${PROJECT_NAME}_shared PRIVATE ${PLAYER_LIBS} vgm-emu_shared vgm-utils_shared)
-endif(BUILD_SHARED)
 
 
 foreach(DEF ${PLAYER_DEFS})
@@ -95,11 +65,3 @@ install(TARGETS ${PROJECT_NAME}
 		)
 install(FILES ${PLAYER_HEADERS} DESTINATION include/vgm/player)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/vgm-player.pc DESTINATION lib/pkgconfig)
-
-if(BUILD_SHARED)
-install(TARGETS ${PROJECT_NAME}_shared
-		RUNTIME DESTINATION "bin"
-		LIBRARY DESTINATION "lib"
-		ARCHIVE DESTINATION "lib"
-		)
-endif(BUILD_SHARED)
