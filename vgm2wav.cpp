@@ -22,6 +22,10 @@
 #include "emu/EmuCores.h"
 #include "emu/SoundEmu.h"
 
+#ifdef _MSC_VER
+#define strncasecmp	_strnicmp
+#endif
+
 #define str_equals(s1,s2) (strcmp(s1,s2) == 0)
 #define str_istarts(s1,s2) (strncasecmp(s1,s2,strlen(s2)) == 0)
 

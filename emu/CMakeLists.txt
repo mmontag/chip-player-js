@@ -1,19 +1,10 @@
 #### Sound Emulation Library ####
-if (POLICY CMP0048)
-	cmake_policy(SET CMP0048 NEW)
-endif ()
 cmake_minimum_required(VERSION 2.8)
+project(vgm-emu)
 
-project(vgm-emu VERSION 1.0)
+set(EMU_PC_CFLAGS)
+set(EMU_PC_LDFLAGS)
 
-if (POLICY CMP0042)
-	cmake_policy(SET CMP0042 NEW)
-endif ()
-
-set(LIBVGM_SOURCE_DIR ${PROJECT_SOURCE_DIR}/..)
-set(VGMEMU_PKGCONFIG_CFLAGS)
-set(VGMEMU_PKGCONFIG_LDFLAGS)
-set(VGMEMU_PKGCONFIG_VERSION ${PROJECT_VERSION})
 
 # Note: If multiple cores are present for a device, the core chosed by default is marked with *.
 
@@ -601,24 +592,25 @@ target_include_directories(${PROJECT_NAME}
 if(CMAKE_COMPILER_IS_GNUCC OR UNIX)
 	# link Math library
 	target_link_libraries(${PROJECT_NAME} PRIVATE m)
-	set(VGMEMU_PKGCONFIG_LDFLAGS "-lm")
+	set(EMU_PC_LDFLAGS "-lm")
 endif()
 
-foreach(DEF ${EMU_DEFS})
-	string(REPLACE " " "" DEF "${DEF}")
-	set(VGMEMU_PKGCONFIG_CFLAGS ${VGMEMU_PKGCONFIG_CFLAGS} "-D${DEF}")
-endforeach(DEF)
 
-string(REPLACE ";" " " VGMEMU_PKGCONFIG_CFLAGS "${VGMEMU_PKGCONFIG_CFLAGS}")
-string(REPLACE ";" " " VGMEMU_PKGCONFIG_LDFLAGS "${VGMEMU_PKGCONFIG_LDFLAGS}")
-
-configure_file(vgm-emu.pc.in ${CMAKE_CURRENT_BINARY_DIR}/vgm-emu.pc @ONLY)
+pkgcfg_configure("${LIBVGM_SOURCE_DIR}/cmake/libvgm.pc.in" "${CMAKE_CURRENT_BINARY_DIR}/vgm-emu.pc"
+		NAME "LibVGM Emu"
+		DESC "LibVGM sound chip emulation library"
+		VERSION ${LIBVGM_VERSION}
+		DEFINES ${EMU_DEFS}
+		CFLAGS ${EMU_PC_CFLAGS}
+		LDFLAGS_PRIV ${EMU_PC_LDFLAGS}
+		LDFLAGS_PUB "-l${PROJECT_NAME}"
+	)
 
 install(TARGETS ${PROJECT_NAME}
 		RUNTIME DESTINATION "bin"
 		LIBRARY DESTINATION "lib"
 		ARCHIVE DESTINATION "lib"
 		)
-install(FILES ${EMU_HEADERS} DESTINATION include/vgm/emu)
-install(FILES ${EMU_CORE_HEADERS} DESTINATION include/vgm/emu/cores)
+install(FILES ${EMU_HEADERS} DESTINATION "${LIBVGM_INSTALL_INCLUDE_DIR}/emu")
+install(FILES ${EMU_CORE_HEADERS} DESTINATION "${LIBVGM_INSTALL_INCLUDE_DIR}/emu/cores")
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/vgm-emu.pc DESTINATION lib/pkgconfig)

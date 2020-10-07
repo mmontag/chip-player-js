@@ -1,16 +1,6 @@
 #### miscellaneous utility functions/classes ####
-if (POLICY CMP0048)
-	cmake_policy(SET CMP0048 NEW)
-endif ()
-
-project(vgm-utils VERSION 1.0)
 cmake_minimum_required(VERSION 3.1)
-
-if (POLICY CMP0042)
-	cmake_policy(SET CMP0042 NEW)
-endif ()
-
-set(LIBVGM_SOURCE_DIR ${PROJECT_SOURCE_DIR}/..)
+project(vgm-utils)
 
 set(UTIL_DEFS)
 set(UTIL_FILES)
@@ -26,10 +16,10 @@ set(UTIL_HEADERS
 )
 set(UTIL_INCLUDES)
 set(UTIL_LIBS)
-set(VGMUTILS_PKGCONFIG_CFLAGS)
-set(VGMUTILS_PKGCONFIG_LDFLAGS)
-set(VGMUTILS_PKGCONFIG_REQUIRES)
-set(VGMUTILS_PKGCONFIG_VERSION ${PROJECT_VERSION})
+
+set(UTILS_PC_CFLAGS)
+set(UTILS_PC_LDFLAGS)
+set(UTILS_PC_PKGS)
 
 
 
@@ -38,7 +28,7 @@ set(VGMUTILS_PKGCONFIG_VERSION ${PROJECT_VERSION})
 find_package(ZLIB REQUIRED)
 set(UTIL_FILES ${UTIL_FILES} MemoryLoader.c FileLoader.c DataLoader.c)
 set(UTIL_LIBS ${UTIL_LIBS} ZLIB::ZLIB)
-set(VGMUTILS_PKGCONFIG_REQUIRES ${VGMUTILS_PKGCONFIG_REQUIRES} "zlib")
+set(UTILS_PC_PKGS ${UTILS_PC_PKGS} "zlib")
 
 
 
@@ -60,7 +50,7 @@ elseif(CMAKE_USE_PTHREADS_INIT)
 	)
 endif()
 set(UTIL_LIBS ${UTIL_LIBS} Threads::Threads)
-set(VGMUTILS_PKGCONFIG_LDFLAGS ${VGMUTILS_PKGCONFIG_LDFLAGS} ${CMAKE_THREAD_LIBS_INIT})
+set(UTILS_PC_LDFLAGS ${UTILS_PC_LDFLAGS} ${CMAKE_THREAD_LIBS_INIT})
 
 
 
@@ -88,9 +78,9 @@ elseif(UTIL_CHARCNV_ICONV)
 	find_package(Iconv REQUIRED)
 	set(UTIL_FILES ${UTIL_FILES} StrUtils-CPConv_IConv.c)
 	set(UTIL_LIBS ${UTIL_LIBS} Iconv::Iconv)
-    if(NOT Iconv_IS_BUILT_IN)
-    	set(VGMUTILS_PKGCONFIG_LDFLAGS ${VGMUTILS_PKGCONFIG_LDFLAGS} "-liconv")
-    endif()
+	if(NOT Iconv_IS_BUILT_IN)
+		set(UTILS_PC_LDFLAGS ${UTILS_PC_LDFLAGS} "-liconv")
+	endif()
 endif()
 
 
@@ -105,21 +95,21 @@ target_include_directories(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME} PUBLIC ${UTIL_LIBS})
 
 
-foreach(DEF ${UTIL_DEFS})
-	string(REPLACE " " "" DEF "${DEF}")
-	set(VGMUTILS_PKGCONFIG_CFLAGS ${VGMUTILS_PKGCONFIG_CFLAGS} "-D${DEF}")
-endforeach(DEF)
-
-string(REPLACE ";" " " VGMUTILS_PKGCONFIG_CFLAGS "${VGMUTILS_PKGCONFIG_CFLAGS}")
-string(REPLACE ";" " " VGMUTILS_PKGCONFIG_LDFLAGS "${VGMUTILS_PKGCONFIG_LDFLAGS}")
-string(REPLACE ";" " " VGMUTILS_PKGCONFIG_REQUIRES "${VGMUTILS_PKGCONFIG_REQUIRES}")
-
-configure_file(vgm-utils.pc.in ${CMAKE_CURRENT_BINARY_DIR}/vgm-utils.pc @ONLY)
+pkgcfg_configure("${LIBVGM_SOURCE_DIR}/cmake/libvgm.pc.in" "${CMAKE_CURRENT_BINARY_DIR}/vgm-utils.pc"
+		NAME "LibVGM Utils"
+		DESC "LibVGM utility library"
+		VERSION ${LIBVGM_VERSION}
+		DEFINES ${UTIL_DEFS}
+		CFLAGS ${UTILS_PC_CFLAGS}
+		LDFLAGS_PRIV ${UTILS_PC_LDFLAGS}
+		LDFLAGS_PUB "-l${PROJECT_NAME}"
+		PKGS_PRIV ${UTILS_PC_PKGS}
+	)
 
 install(TARGETS ${PROJECT_NAME}
 		RUNTIME DESTINATION "bin"
 		LIBRARY DESTINATION "lib"
 		ARCHIVE DESTINATION "lib"
 		)
-install(FILES ${UTIL_HEADERS} DESTINATION include/vgm/utils)
+install(FILES ${UTIL_HEADERS} DESTINATION "${LIBVGM_INSTALL_INCLUDE_DIR}/utils")
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/vgm-utils.pc DESTINATION lib/pkgconfig)
