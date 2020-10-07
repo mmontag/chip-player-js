@@ -1,5 +1,5 @@
 #### libvgm ####
-
+cmake_minimum_required(VERSION 3.1)
 if(POLICY CMP0042)
 	cmake_policy(SET CMP0042 NEW)
 endif()
@@ -10,24 +10,27 @@ if(POLICY CMP0074)
 	cmake_policy(SET CMP0074 NEW)
 endif()
 
-cmake_minimum_required(VERSION 3.1)
-project(libVgmTest VERSION 1.0 LANGUAGES C CXX)
-include(CheckIncludeFile)
+project(libvgmMain VERSION 0.1 LANGUAGES C CXX)
+
+set(LIBVGM_NAME "libvgm")	# for use in subdirectories
+set(LIBVGM_VERSION ${PROJECT_VERSION})	# for use in subdirectories
+set(LIBVGM_SOURCE_DIR ${PROJECT_SOURCE_DIR})	# for use in subdirectories
+set(LIBVGM_INSTALL_INCLUDE_DIR "include/libvgm")
+set(LIBVGM_INSTALL_TARGETS)	# will be filled in by sub-projects
+
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
-set(LIBVGM_VERSION ${PROJECT_VERSION})	# for use in subdirectories
-set(LIBVGM_SOURCE_DIR ${PROJECT_SOURCE_DIR})	# for use in subdirectories
-set(LIBVGM_INSTALL_INCLUDE_DIR "include/libvgm")
-
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/libs/cmake_modules/")
 
+include(CheckIncludeFile)
 check_include_file("stdint.h" HAVE_STDINT)
 if(HAVE_STDINT)
 	add_definitions("-D HAVE_STDINT_H")
 endif()
+
 
 if(MSVC)
 	set(CMAKE_DEBUG_POSTFIX "d")
@@ -196,3 +199,9 @@ set(COMMON_HEADERS
 )
 
 install(FILES ${COMMON_HEADERS} DESTINATION "${LIBVGM_INSTALL_INCLUDE_DIR}")
+
+cmake_cfg_install("${LIBVGM_SOURCE_DIR}/cmake/config.cmake.in"
+	NAME "${LIBVGM_NAME}"
+	VERSION "${LIBVGM_VERSION}"
+	TARGETS "${LIBVGM_INSTALL_TARGETS}"
+	)

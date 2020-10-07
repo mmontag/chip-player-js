@@ -1,5 +1,4 @@
 #### miscellaneous utility functions/classes ####
-cmake_minimum_required(VERSION 3.1)
 project(vgm-utils)
 
 set(UTIL_DEFS)
@@ -89,7 +88,7 @@ add_library(${PROJECT_NAME} ${LIBRARY_TYPE} ${UTIL_FILES})
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(${PROJECT_NAME} PUBLIC ${UTIL_DEFS})
 target_include_directories(${PROJECT_NAME}
-	PUBLIC ${LIBVGM_SOURCE_DIR}
+	PUBLIC $<BUILD_INTERFACE:${LIBVGM_SOURCE_DIR}> $<INSTALL_INTERFACE:${LIBVGM_INSTALL_INCLUDE_DIR}>
 	PRIVATE ${UTIL_INCLUDES}
 )
 target_link_libraries(${PROJECT_NAME} PUBLIC ${UTIL_LIBS})
@@ -111,5 +110,6 @@ install(TARGETS ${PROJECT_NAME}
 		LIBRARY DESTINATION "lib"
 		ARCHIVE DESTINATION "lib"
 		)
+set(LIBVGM_INSTALL_TARGETS ${LIBVGM_INSTALL_TARGETS} "${PROJECT_NAME}" PARENT_SCOPE)
 install(FILES ${UTIL_HEADERS} DESTINATION "${LIBVGM_INSTALL_INCLUDE_DIR}/utils")
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/vgm-utils.pc DESTINATION lib/pkgconfig)

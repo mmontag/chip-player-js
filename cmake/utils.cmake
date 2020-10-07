@@ -1,4 +1,5 @@
 include(CMakeParseArguments)
+include(CMakePackageConfigHelpers)
 
 # pkgcfg_configure - write a configured pkg-config.pc file
 #	Required parameters:
@@ -18,18 +19,59 @@ function(pkgcfg_configure FILE_IN FILE_OUT)
 	set(args_single NAME DESC VERSION)
 	set(args_multi DEFINES CFLAGS LDFLAGS_PRIV LDFLAGS_PUB PKGS_PRIV PKGS_PUB)
 	cmake_parse_arguments(PKGCFG "" "${args_single}" "${args_multi}" ${ARGN})
-
+	
 	foreach(DEF ${PKGCFG_DEFINES})
 		string(REPLACE " " "" DEF "${DEF}")	# remove spaces from defines
 		list(APPEND PKGCFG_CFLAGS "-D${DEF}")
 	endforeach(DEF)
-
+	
 	# CMake uses ; to separate values, in pkg-config we use spaces.
 	string(REPLACE ";" " " PKGCFG_CFLAGS "${PKGCFG_CFLAGS}")
 	string(REPLACE ";" " " PKGCFG_LDFLAGS_PRIV "${PKGCFG_LDFLAGS_PRIV}")
 	string(REPLACE ";" " " PKGCFG_LDFLAGS_PUB "${PKGCFG_LDFLAGS_PUB}")
 	string(REPLACE ";" " " PKGCFG_PKGS_PRIV "${PKGCFG_PKGS_PRIV}")
 	string(REPLACE ";" " " PKGCFG_PKGS_PUB "${PKGCFG_PKGS_PUB}")
-
+	
 	configure_file("${FILE_IN}" "${FILE_OUT}" @ONLY)
+endfunction()
+
+# cmake_cfg_install - generate and install a CMake Package Configuration file
+#	Required parameters:
+#		- FILE_IN: cmake config template (config.cmake.in file)
+#	Arguments:
+#		- NAME: package name (used for folder and namespace)
+#		- VERSION: package version
+#		- TARGETS: CMake targets to install
+function(cmake_cfg_install CFG_TEMPLATE)
+	set(args_single NAME VERSION)
+	set(args_multi TARGETS)
+	cmake_parse_arguments(CMCFG "" "${args_single}" "${args_multi}" ${ARGN})
+	
+	set(CONFIG_DESTINATION "lib/cmake/${CMCFG_NAME}")
+	set(TARGETS_FILENAME "${CMCFG_NAME}Targets.cmake")	# Note: This variable is used by config.cmake.in.
+	set(CONFIG_FILENAME "${CMCFG_NAME}Config.cmake")
+	set(CFGVER_FILENAME "${CMCFG_NAME}ConfigVersion.cmake")
+	
+	configure_package_config_file("${CFG_TEMPLATE}" "${CMAKE_CURRENT_BINARY_DIR}/${CONFIG_FILENAME}"
+		INSTALL_DESTINATION "${CONFIG_DESTINATION}"
+		)
+	write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/${CFGVER_FILENAME}"
+		VERSION ${CMCFG_VERSION}
+		COMPATIBILITY SameMajorVersion)
+	
+	install(TARGETS ${CMCFG_TARGETS} EXPORT "${CMCFG_NAME}")
+	install(EXPORT "${CMCFG_NAME}"
+		DESTINATION "${CONFIG_DESTINATION}"
+		NAMESPACE "${CMCFG_NAME}::"
+		FILE "${TARGETS_FILENAME}")
+	install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${CONFIG_FILENAME}"
+			"${CMAKE_CURRENT_BINARY_DIR}/${CFGVER_FILENAME}"
+		DESTINATION "${CONFIG_DESTINATION}"
+		)
+	
+	# register project in local user package registry
+	export(TARGETS ${CMCFG_TARGETS}
+		NAMESPACE "${CMCFG_NAME}::"
+		FILE "${CMAKE_CURRENT_BINARY_DIR}/${TARGETS_FILENAME}")
+	export(PACKAGE ${CMCFG_NAME})
 endfunction()

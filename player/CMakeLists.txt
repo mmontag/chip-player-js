@@ -1,5 +1,4 @@
 #### File Playback Library ####
-cmake_minimum_required(VERSION 2.8)
 project(vgm-player)
 
 set(PLAYER_DEFS)
@@ -33,7 +32,7 @@ add_library(${PROJECT_NAME} ${LIBRARY_TYPE} ${PLAYER_FILES})
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(${PROJECT_NAME} PUBLIC ${PLAYER_DEFS})
 target_include_directories(${PROJECT_NAME}
-	PUBLIC ${LIBVGM_SOURCE_DIR}
+	PUBLIC $<BUILD_INTERFACE:${LIBVGM_SOURCE_DIR}> $<INSTALL_INTERFACE:${LIBVGM_INSTALL_INCLUDE_DIR}>
 	PRIVATE ${PLAYER_INCLUDES}
 )
 target_link_libraries(${PROJECT_NAME} PRIVATE ${PLAYER_LIBS} vgm-emu vgm-utils)
@@ -55,5 +54,6 @@ install(TARGETS ${PROJECT_NAME}
 		LIBRARY DESTINATION "lib"
 		ARCHIVE DESTINATION "lib"
 		)
+set(LIBVGM_INSTALL_TARGETS ${LIBVGM_INSTALL_TARGETS} "${PROJECT_NAME}" PARENT_SCOPE)
 install(FILES ${PLAYER_HEADERS} DESTINATION "${LIBVGM_INSTALL_INCLUDE_DIR}/player")
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/vgm-player.pc DESTINATION lib/pkgconfig)
