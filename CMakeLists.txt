@@ -15,7 +15,7 @@ project(libvgmMain VERSION 0.1 LANGUAGES C CXX)
 set(LIBVGM_NAME "libvgm")	# for use in subdirectories
 set(LIBVGM_VERSION ${PROJECT_VERSION})	# for use in subdirectories
 set(LIBVGM_SOURCE_DIR ${PROJECT_SOURCE_DIR})	# for use in subdirectories
-set(LIBVGM_INSTALL_INCLUDE_DIR "include/libvgm")
+set(LIBVGM_INSTALL_INCLUDE_DIR "include/vgm")
 set(LIBVGM_INSTALL_TARGETS)	# will be filled in by sub-projects
 
 
