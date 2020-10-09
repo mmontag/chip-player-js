@@ -3,7 +3,7 @@
 /* need to link with:
  * vgm-player
  * vgm-emu
- * vmg-util
+ * vgm-util
  * iconv (depending on system)
  * z
  */
@@ -24,6 +24,7 @@
 
 #ifdef _MSC_VER
 #define strncasecmp	_strnicmp
+#define snprintf	_snprintf
 #endif
 
 #define str_equals(s1,s2) (strcmp(s1,s2) == 0)
