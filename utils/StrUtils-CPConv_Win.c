@@ -107,10 +107,16 @@ UINT8 CPConv_Init(CPCONV** retCPC, const char* cpFrom, const char* cpTo)
 	
 	cpc->cpiFrom = GetCodepageFromStr(cpFrom);
 	if (! cpc->cpiFrom)
+	{
+		free(cpc);
 		return 0x80;
+	}
 	cpc->cpiTo = GetCodepageFromStr(cpTo);
 	if (! cpc->cpiTo)
+	{
+		free(cpc);
 		return 0x81;
+	}
 	cpc->cpsFrom = strdup(cpFrom);
 	cpc->cpsTo = strdup(cpTo);
 	

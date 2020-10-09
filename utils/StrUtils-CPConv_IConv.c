@@ -39,6 +39,7 @@ UINT8 CPConv_Init(CPCONV** retCPC, const char* cpFrom, const char* cpTo)
 	{
 		free(cpc->cpFrom);
 		free(cpc->cpTo);
+		free(cpc);
 		return 0x80;
 	}
 	
