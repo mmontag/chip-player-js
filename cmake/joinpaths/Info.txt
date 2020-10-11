@@ -1,0 +1,1 @@
+CMake path joining from https://github.com/jtojnar/cmake-snips

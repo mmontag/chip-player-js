@@ -1,6 +1,9 @@
 include(CMakeParseArguments)
 include(CMakePackageConfigHelpers)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/joinpaths")
+include(JoinPaths)
+
 # pkgcfg_configure - write a configured pkg-config.pc file
 #	Required parameters:
 #		- FILE_IN: pkg-config template (*.pc.in file)
@@ -31,7 +34,16 @@ function(pkgcfg_configure FILE_IN FILE_OUT)
 	string(REPLACE ";" " " PKGCFG_LDFLAGS_PUB "${PKGCFG_LDFLAGS_PUB}")
 	string(REPLACE ";" " " PKGCFG_PKGS_PRIV "${PKGCFG_PKGS_PRIV}")
 	string(REPLACE ";" " " PKGCFG_PKGS_PUB "${PKGCFG_PKGS_PUB}")
-	
+
+	# JoinPaths does not support Windows yet, use previous behaviour there to avoid regressions
+	if(WIN32)
+		set(libdir_for_pc_file "\${prefix}/lib")
+		set(includedir_for_pc_file "\${prefix}/include")
+	else()
+		join_paths(libdir_for_pc_file "\${exec_prefix}" "${CMAKE_INSTALL_LIBDIR}")
+		join_paths(includedir_for_pc_file "\${prefix}" "${CMAKE_INSTALL_INCLUDEDIR}")
+	endif(WIN32)
+
 	configure_file("${FILE_IN}" "${FILE_OUT}" @ONLY)
 endfunction()
 
@@ -47,7 +59,7 @@ function(cmake_cfg_install CFG_TEMPLATE)
 	set(args_multi TARGETS)
 	cmake_parse_arguments(CMCFG "" "${args_single}" "${args_multi}" ${ARGN})
 	
-	set(CONFIG_DESTINATION "lib/cmake/${CMCFG_NAME}")
+	set(CONFIG_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${CMCFG_NAME}")
 	set(TARGETS_FILENAME "${CMCFG_NAME}Targets.cmake")	# Note: This variable is used by config.cmake.in.
 	set(CONFIG_FILENAME "${CMCFG_NAME}Config.cmake")
 	set(CFGVER_FILENAME "${CMCFG_NAME}ConfigVersion.cmake")

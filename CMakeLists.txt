@@ -10,20 +10,21 @@ if(POLICY CMP0074)
 	cmake_policy(SET CMP0074 NEW)
 endif()
 
+include(GNUInstallDirs)
+
 project(libvgmMain VERSION 0.1 LANGUAGES C CXX)
 
 set(LIBVGM_NAME "libvgm")	# for use in subdirectories
 set(LIBVGM_VERSION ${PROJECT_VERSION})	# for use in subdirectories
 set(LIBVGM_SOURCE_DIR ${PROJECT_SOURCE_DIR})	# for use in subdirectories
-set(LIBVGM_INSTALL_INCLUDE_DIR "include/vgm")
+set(LIBVGM_INSTALL_INCLUDE_DIR "${CMAKE_INSTALL_INCLUDEDIR}/vgm")
 set(LIBVGM_INSTALL_TARGETS)	# will be filled in by sub-projects
-
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/libs/cmake_modules/")
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/libs/cmake_modules/")
 
 include(CheckIncludeFile)
 check_include_file("stdint.h" HAVE_STDINT)
@@ -139,7 +140,6 @@ if(BUILD_LIBPLAYER)
 	endif(USE_SANITIZERS)
 endif()
 
-
 if(BUILD_TESTS)
 
 add_executable(audiotest audiotest.c)
@@ -172,6 +172,7 @@ if(USE_SANITIZERS)
 	add_sanitizers(vgmtest)
 endif(USE_SANITIZERS)
 
+install(TARGETS audiotest emutest audemutest vgmtest DESTINATION "${CMAKE_INSTALL_BINDIR}")
 endif(BUILD_TESTS)
 
 if(BUILD_PLAYER)
@@ -181,6 +182,7 @@ target_link_libraries(player PRIVATE vgm-audio vgm-player vgm-utils)
 if(USE_SANITIZERS)
 	add_sanitizers(player)
 endif(USE_SANITIZERS)
+install(TARGETS player DESTINATION "${CMAKE_INSTALL_BINDIR}")
 endif(BUILD_PLAYER)
 
 if(BUILD_VGM2WAV)
@@ -189,7 +191,8 @@ target_include_directories(vgm2wav PRIVATE ${PROJECT_SOURCE_DIR})
 target_link_libraries(vgm2wav PRIVATE vgm-player vgm-emu vgm-utils)
 if(USE_SANITIZERS)
 	add_sanitizers(vgm2wav)
-endif()
+endif(USE_SANITIZERS)
+install(TARGETS vgm2wav DESTINATION "${CMAKE_INSTALL_BINDIR}")
 endif(BUILD_VGM2WAV)
 
 set(COMMON_HEADERS
@@ -199,7 +202,6 @@ set(COMMON_HEADERS
 )
 
 install(FILES ${COMMON_HEADERS} DESTINATION "${LIBVGM_INSTALL_INCLUDE_DIR}")
-
 cmake_cfg_install("${LIBVGM_SOURCE_DIR}/cmake/config.cmake.in"
 	NAME "${LIBVGM_NAME}"
 	VERSION "${LIBVGM_VERSION}"
