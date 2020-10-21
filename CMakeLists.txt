@@ -10,9 +10,13 @@ if(POLICY CMP0074)
 	cmake_policy(SET CMP0074 NEW)
 endif()
 
-include(GNUInstallDirs)
-
 project(libvgmMain VERSION 0.1 LANGUAGES C CXX)
+
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/libs/cmake_modules/")
+
+include(GNUInstallDirs)
+include(CheckIncludeFile)
+include("${PROJECT_SOURCE_DIR}/cmake/utils.cmake")
 
 set(LIBVGM_NAME "libvgm")	# for use in subdirectories
 set(LIBVGM_VERSION ${PROJECT_VERSION})	# for use in subdirectories
@@ -20,13 +24,10 @@ set(LIBVGM_SOURCE_DIR ${PROJECT_SOURCE_DIR})	# for use in subdirectories
 set(LIBVGM_INSTALL_INCLUDE_DIR "${CMAKE_INSTALL_INCLUDEDIR}/vgm")
 set(LIBVGM_INSTALL_TARGETS)	# will be filled in by sub-projects
 
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
 
-list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/libs/cmake_modules/")
-
-include(CheckIncludeFile)
 check_include_file("stdint.h" HAVE_STDINT)
 if(HAVE_STDINT)
 	add_definitions("-D HAVE_STDINT_H")
@@ -100,13 +101,11 @@ endif(CMAKE_COMPILER_IS_GNUCC)
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/sanitizers")
 find_package(Sanitizers)
 
-include("${PROJECT_SOURCE_DIR}/cmake/utils.cmake")
-
 
 option(BUILD_LIBAUDIO "build audio output library" ON)
 option(BUILD_LIBEMU "build sound emulation library" ON)
 option(BUILD_LIBPLAYER "build player library" ON)
-option(BUILD_TESTS "build test programs" ON)
+option(BUILD_TESTS "build test programs" OFF)
 option(BUILD_PLAYER "build player application" ON)
 option(BUILD_VGM2WAV "build sample vgm2wav application" ON)
 set(LIBRARY_TYPE CACHE STRING "library type (static/shared)")
@@ -114,10 +113,11 @@ set_property(CACHE LIBRARY_TYPE PROPERTY STRINGS "SHARED;STATIC")
 option(USE_SANITIZERS "use sanitizers" ON)
 
 
+# --- main library ---
 add_subdirectory(utils)
 if(USE_SANITIZERS)
 	add_sanitizers(utils)
-endif()
+endif(USE_SANITIZERS)
 
 if(BUILD_LIBAUDIO)
 	add_subdirectory(audio)
@@ -140,24 +140,26 @@ if(BUILD_LIBPLAYER)
 	endif(USE_SANITIZERS)
 endif()
 
+
+# --- additional stuff ---
 if(BUILD_TESTS)
 
 add_executable(audiotest audiotest.c)
-target_include_directories(audiotest PRIVATE ${PROJECT_SOURCE_DIR})
+target_include_directories(audiotest PRIVATE ${LIBVGM_SOURCE_DIR})
 target_link_libraries(audiotest PRIVATE vgm-audio)
 if(USE_SANITIZERS)
 	add_sanitizers(audiotest)
 endif(USE_SANITIZERS)
 
 add_executable(emutest emutest.c)
-target_include_directories(emutest PRIVATE ${PROJECT_SOURCE_DIR})
+target_include_directories(emutest PRIVATE ${LIBVGM_SOURCE_DIR})
 target_link_libraries(emutest PRIVATE vgm-emu)
 if(USE_SANITIZERS)
 	add_sanitizers(emutest)
 endif(USE_SANITIZERS)
 
 add_executable(audemutest audemutest.c)
-target_include_directories(audemutest PRIVATE ${PROJECT_SOURCE_DIR})
+target_include_directories(audemutest PRIVATE ${LIBVGM_SOURCE_DIR})
 target_link_libraries(audemutest PRIVATE vgm-audio vgm-emu)
 if(USE_SANITIZERS)
 	add_sanitizers(audemutest)
@@ -166,7 +168,7 @@ endif(USE_SANITIZERS)
 find_package(ZLIB REQUIRED)
 
 add_executable(vgmtest vgmtest.c player/dblk_compr.c)
-target_include_directories(vgmtest PRIVATE ${PROJECT_SOURCE_DIR})
+target_include_directories(vgmtest PRIVATE ${LIBVGM_SOURCE_DIR})
 target_link_libraries(vgmtest PRIVATE ZLIB::ZLIB vgm-audio vgm-emu)
 if(USE_SANITIZERS)
 	add_sanitizers(vgmtest)
@@ -177,7 +179,7 @@ endif(BUILD_TESTS)
 
 if(BUILD_PLAYER)
 add_executable(player player.cpp player/dblk_compr.c)
-target_include_directories(player PRIVATE ${PROJECT_SOURCE_DIR})
+target_include_directories(player PRIVATE ${LIBVGM_SOURCE_DIR})
 target_link_libraries(player PRIVATE vgm-audio vgm-player vgm-utils)
 if(USE_SANITIZERS)
 	add_sanitizers(player)
@@ -187,7 +189,7 @@ endif(BUILD_PLAYER)
 
 if(BUILD_VGM2WAV)
 add_executable(vgm2wav vgm2wav.cpp)
-target_include_directories(vgm2wav PRIVATE ${PROJECT_SOURCE_DIR})
+target_include_directories(vgm2wav PRIVATE ${LIBVGM_SOURCE_DIR})
 target_link_libraries(vgm2wav PRIVATE vgm-player vgm-emu vgm-utils)
 if(USE_SANITIZERS)
 	add_sanitizers(vgm2wav)
