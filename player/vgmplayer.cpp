@@ -1001,14 +1001,6 @@ void VGMPlayer::GenerateDeviceConfig(void)
 					snCfg.clkDiv = (_hdrBuffer[0x2B] & 0x08) ? 1 : 8;
 					snCfg.ncrPSG = (_hdrBuffer[0x2B] & 0x10) ? 1 : 0;
 					snCfg.t6w28_tone = NULL;
-					
-					if ((chipID & 0x01) && (hdrClock & 0x80000000))	// must be 2nd chip + T6W28 mode
-					{
-						CHIP_DEVICE* otherDev = GetDevicePtr(vgmChip, chipID ^ 0x01);
-						if (otherDev != NULL)
-							snCfg.t6w28_tone = otherDev->base.defInf.dataPtr;
-					}
-					
 					SaveDeviceConfig(sdCfg.cfgData, &snCfg, sizeof(SN76496_CFG));
 				}
 				break;

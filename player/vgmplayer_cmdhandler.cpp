@@ -19,7 +19,7 @@
 /*static*/ const VGMPlayer::COMMAND_INFO VGMPlayer::_CMD_INFO[0x100] =
 {
 	// {chip type, function},                         VGM command
-	{0xFF, 0x00, &VGMPlayer::Cmd_invalid},              // 00
+	{0xFF, 0x01, &VGMPlayer::Cmd_unknown},              // 00
 	{0xFF, 0x00, &VGMPlayer::Cmd_invalid},              // 01
 	{0xFF, 0x00, &VGMPlayer::Cmd_invalid},              // 02
 	{0xFF, 0x00, &VGMPlayer::Cmd_invalid},              // 03
