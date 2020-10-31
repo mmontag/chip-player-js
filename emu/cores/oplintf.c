@@ -21,7 +21,7 @@
 #include "adlibemu.h"
 #endif
 #ifdef EC_YM3812_NUKED
-#include "nukedopl.h"
+#include "nukedopl3.h"
 #endif
 
 

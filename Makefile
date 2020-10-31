@@ -187,7 +187,7 @@ LIBEMUOBJS = \
 	$(LIBEMUOBJ)/cores/262intf.o \
 	$(LIBEMUOBJ)/cores/ymf262.o \
 	$(LIBEMUOBJ)/cores/adlibemu_opl3.o \
-	$(LIBEMUOBJ)/cores/nukedopl.o \
+	$(LIBEMUOBJ)/cores/nukedopl3.o \
 	$(LIBEMUOBJ)/cores/ymf278b.o \
 	$(LIBEMUOBJ)/cores/ymf271.o \
 	$(LIBEMUOBJ)/cores/ymz280b.o \

@@ -1,5 +1,5 @@
-#ifndef __NUKEDOPL_H__
-#define __NUKEDOPL_H__
+#ifndef __NUKEDOPL3_H__
+#define __NUKEDOPL3_H__
 
 #include "../../stdtype.h"
 #include "../snddef.h"
@@ -14,4 +14,4 @@ void nukedopl3_set_mutemask(void *chip, UINT32 MuteMask);
 void nukedopl3_set_volume(void *chip, INT32 volume);
 void nukedopl3_set_vol_lr(void *chip, INT32 volLeft, INT32 volRight);
 
-#endif	// __NUKEDOPL_H__
+#endif	// __NUKEDOPL3_H__

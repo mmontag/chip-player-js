@@ -1,30 +1,30 @@
-//
-// Copyright (C) 2017-2018 Alexey Khokholov (Nuke.YKT)
-// 
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
-// of the License, or (at your option) any later version.
-// 
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-// 
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-//
-//
-//  Nuked OPN2(Yamaha YM3438) emulator.
-//  Thanks:
-//      Silicon Pr0n:
-//          Yamaha YM3438 decap and die shot(digshadow).
-//      OPLx decapsulated(Matthew Gambrell, Olli Niemitalo):
-//          OPL2 ROMs.
-//
-// version: 1.0.9
-//
+/*
+ * Copyright (C) 2017-2018 Alexey Khokholov (Nuke.YKT)
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ *
+ *
+ *  Nuked OPN2(Yamaha YM3438) emulator.
+ *  Thanks:
+ *      Silicon Pr0n:
+ *          Yamaha YM3438 decap and die shot(digshadow).
+ *      OPLx decapsulated(Matthew Gambrell, Olli Niemitalo):
+ *          OPL2 ROMs.
+ *
+ * version: 1.0.10
+ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -221,7 +221,7 @@ static const Bit32u fm_algorithm[4][6][8] = {
     }
 };
 
-//static Bit32u chip_type = ym3438_mode_readmode;
+//static Bit32u chip_type = ym3438_mode_readmode;	// moved into ym3438_t struct
 
 void NOPN2_DoIO(ym3438_t *chip)
 {
@@ -536,12 +536,12 @@ void NOPN2_PhaseGenerate(ym3438_t *chip)
     }
     /* Phase step */
     slot = (chip->cycles + 19) % 24;
-    chip->pg_phase[slot] += chip->pg_inc[slot];
-    chip->pg_phase[slot] &= 0xfffff;
     if (chip->pg_reset[slot] || chip->mode_test_21[3])
     {
         chip->pg_phase[slot] = 0;
     }
+    chip->pg_phase[slot] += chip->pg_inc[slot];
+    chip->pg_phase[slot] &= 0xfffff;
 }
 
 void NOPN2_EnvelopeSSGEG(ym3438_t *chip)

@@ -207,7 +207,7 @@
     <ClCompile Include="emu\cores\es5506.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="emu\cores\nukedopl.c">
+    <ClCompile Include="emu\cores\nukedopl3.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
     <ClCompile Include="emu\cores\okiadpcm.c">
@@ -470,7 +470,7 @@
     <ClInclude Include="emu\cores\saaintf.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="emu\cores\nukedopl.h">
+    <ClInclude Include="emu\cores\nukedopl3.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="emu\cores\ym3438.h">
@@ -500,7 +500,7 @@
     <ClInclude Include="emu\cores\sn76489_private.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="emu\cores\nukedopl_int.h">
+    <ClInclude Include="emu\cores\nukedopl3_int.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="emu\cores\ym3438_int.h">

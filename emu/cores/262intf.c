@@ -14,7 +14,7 @@
 #include "adlibemu.h"
 #endif
 #ifdef EC_YMF262_NUKED
-#include "nukedopl.h"
+#include "nukedopl3.h"
 #endif
 
 
