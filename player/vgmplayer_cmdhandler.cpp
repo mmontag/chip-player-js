@@ -1119,6 +1119,8 @@ void VGMPlayer::Cmd_RF5C_Mem(void)
 		return;
 	
 	UINT16 memOfs = ReadLE16(&fData[0x01]);
+	if (memOfs & 0xF000)
+		fprintf(stderr, "Warning: RF5C mem write to out-of-window offset 0x%04X\n", memOfs);
 	cDev->writeM8(cDev->base.defInf.dataPtr, memOfs, fData[0x03]);
 	return;
 }

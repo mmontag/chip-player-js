@@ -358,6 +358,7 @@ static void rf5c68_w(void *info, UINT8 offset, UINT8 data)
 static UINT8 rf5c68_mem_r(void *info, UINT16 offset)
 {
 	rf5c68_state *chip = (rf5c68_state *)info;
+	offset &= 0x0FFF;
 	return chip->data[chip->wbank * 0x1000 | offset];
 }
 
@@ -369,6 +370,7 @@ static UINT8 rf5c68_mem_r(void *info, UINT16 offset)
 static void rf5c68_mem_w(void *info, UINT16 offset, UINT8 data)
 {
 	rf5c68_state *chip = (rf5c68_state *)info;
+	offset &= 0x0FFF;
 	chip->data[chip->wbank * 0x1000 | offset] = data;
 }
 
@@ -376,7 +378,7 @@ static void rf5c68_write_ram(void *info, UINT32 offset, UINT32 length, const UIN
 {
 	rf5c68_state *chip = (rf5c68_state *)info;
 	
-	//offset |= chip->wbank * 0x1000;
+	// offset is absolute here
 	if (offset >= chip->datasize)
 		return;
 	if (offset + length > chip->datasize)
