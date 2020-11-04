@@ -63,7 +63,6 @@ DEV_DEF devDef_RF5C68_MAME =
 
 
 #define NUM_CHANNELS	(8)
-#define STEAM_STEP		0x800
 
 
 
@@ -78,16 +77,6 @@ struct _pcm_channel
 	UINT16		step;
 	UINT16		loopst;
 	UINT8		Muted;
-};
-
-typedef struct _mem_stream mem_stream;
-struct _mem_stream
-{
-	UINT32 BaseAddr;
-	UINT32 EndAddr;
-	UINT32 CurAddr;
-	UINT16 CurStep;
-	const UINT8* MemPnt;
 };
 
 
@@ -105,60 +94,16 @@ struct _rf5c68_state
 	
 	SAMPLE_END_CB		sample_end_cb;
 	void*				sample_cb_param;
-	
-	mem_stream			memstrm;
 };
-
-
-static void memstream_sample_check(rf5c68_state *chip, UINT32 addr, UINT16 Speed);
-static void rf5c68_mem_stream_flush(rf5c68_state *chip);
 
 
 //-------------------------------------------------
 //    RF5C68 stream update
 //-------------------------------------------------
 
-static void memstream_sample_check(rf5c68_state *chip, UINT32 addr, UINT16 Speed)
-{
-	mem_stream* ms = &chip->memstrm;
-	UINT32 SmplSpd;
-	
-	SmplSpd = (Speed >= 0x0800) ? (Speed >> 11) : 1;
-	if (addr >= ms->CurAddr)
-	{
-		// Is the stream too fast? (e.g. about to catch up the output)
-		if (addr - ms->CurAddr <= SmplSpd * 5)
-		{
-			// Yes - delay the stream
-			ms->CurAddr -= SmplSpd * 4;
-			if (ms->CurAddr < ms->BaseAddr)
-				ms->CurAddr = ms->BaseAddr;
-		}
-	}
-	else
-	{
-		// Is the stream too slow? (e.g. the output is about to catch up the stream)
-		if (ms->CurAddr - addr <= SmplSpd * 5)
-		{
-			if (ms->CurAddr + SmplSpd * 4 >= ms->EndAddr)
-			{
-				rf5c68_mem_stream_flush(chip);
-			}
-			else
-			{
-				memcpy(chip->data + ms->CurAddr, ms->MemPnt + (ms->CurAddr - ms->BaseAddr), SmplSpd * 4);
-				ms->CurAddr += SmplSpd * 4;
-			}
-		}
-	}
-	
-	return;
-}
-
 static void rf5c68_update(void *info, UINT32 samples, DEV_SMPL **outputs)
 {
 	rf5c68_state *chip = (rf5c68_state *)info;
-	mem_stream* ms = &chip->memstrm;
 	DEV_SMPL *left = outputs[0];
 	DEV_SMPL *right = outputs[1];
 	UINT8 i;
@@ -195,7 +140,6 @@ static void rf5c68_update(void *info, UINT32 samples, DEV_SMPL **outputs)
 						chip->sample_end_cb(chip->sample_cb_param,(chan->addr >> 11)/0x2000);
 				}
 
-				memstream_sample_check(chip, (chan->addr >> 11) & 0xFFFF, chan->step);
 				/* fetch the sample and handle looping */
 				sample = chip->data[(chan->addr >> 11) & 0xffff];
 				if (sample == 0xff)
@@ -222,22 +166,6 @@ static void rf5c68_update(void *info, UINT32 samples, DEV_SMPL **outputs)
 					right[j] -= (sample * rv) >> 5;
 				}
 			}
-		}
-	}
-
-	if (samples && ms->CurAddr < ms->EndAddr)
-	{
-		ms->CurStep += STEAM_STEP * samples;
-		if (ms->CurStep >= 0x0800)	// 1 << 11
-		{
-			i = ms->CurStep >> 11;
-			ms->CurStep &= 0x07FF;
-			
-			if (ms->CurAddr + i > ms->EndAddr)
-				i = ms->EndAddr - ms->CurAddr;
-			
-			memcpy(chip->data + ms->CurAddr, ms->MemPnt + (ms->CurAddr - ms->BaseAddr), i);
-			ms->CurAddr += i;
 		}
 	}
 	
@@ -316,7 +244,6 @@ static void device_reset_rf5c68(void *info)
 	rf5c68_state *chip = (rf5c68_state *)info;
 	UINT8 i;
 	pcm_channel* chan;
-	mem_stream* ms = &chip->memstrm;
 	
 	// Clear the PCM memory.
 	memset(chip->data, 0x00, chip->datasize);
@@ -337,12 +264,6 @@ static void device_reset_rf5c68(void *info)
 		chan->step = 0;
 		chan->loopst = 0;
 	}
-	
-	ms->BaseAddr = 0x0000;
-	ms->CurAddr = 0x0000;
-	ms->EndAddr = 0x0000;
-	ms->CurStep = 0x0000;
-	ms->MemPnt = NULL;
 }
 
 void rf5c68_set_sample_end_callback(void *info, SAMPLE_END_CB callback, void* param)
@@ -448,30 +369,12 @@ static UINT8 rf5c68_mem_r(void *info, UINT16 offset)
 static void rf5c68_mem_w(void *info, UINT16 offset, UINT8 data)
 {
 	rf5c68_state *chip = (rf5c68_state *)info;
-	rf5c68_mem_stream_flush(chip);
 	chip->data[chip->wbank * 0x1000 | offset] = data;
-}
-
-static void rf5c68_mem_stream_flush(rf5c68_state *chip)
-{
-	mem_stream* ms = &chip->memstrm;
-	
-	if (ms->CurAddr >= ms->EndAddr)
-		return;
-	
-	memcpy(chip->data + ms->CurAddr, ms->MemPnt + (ms->CurAddr - ms->BaseAddr), ms->EndAddr - ms->CurAddr);
-	ms->CurAddr = ms->EndAddr;
-	
-	return;
 }
 
 static void rf5c68_write_ram(void *info, UINT32 offset, UINT32 length, const UINT8* data)
 {
 	rf5c68_state *chip = (rf5c68_state *)info;
-	mem_stream* ms = &chip->memstrm;
-	UINT16 BytCnt;
-	
-	rf5c68_mem_stream_flush(chip);
 	
 	//offset |= chip->wbank * 0x1000;
 	if (offset >= chip->datasize)
@@ -479,21 +382,7 @@ static void rf5c68_write_ram(void *info, UINT32 offset, UINT32 length, const UIN
 	if (offset + length > chip->datasize)
 		length = chip->datasize - offset;
 	
-	//memcpy(chip->data + offset, data, length);
-	
-	ms->BaseAddr = offset;
-	ms->CurAddr = ms->BaseAddr;
-	ms->EndAddr = ms->BaseAddr + length;
-	ms->CurStep = 0x0000;
-	ms->MemPnt = data;
-	
-	//BytCnt = (STEAM_STEP * 32) >> 11;
-	BytCnt = 0x40;	// SegaSonic Arcade: Run! Run! Run! needs such a high value
-	if (ms->CurAddr + BytCnt > ms->EndAddr)
-		BytCnt = ms->EndAddr - ms->CurAddr;
-	
-	memcpy(chip->data + ms->CurAddr, ms->MemPnt + (ms->CurAddr - ms->BaseAddr), BytCnt);
-	ms->CurAddr += BytCnt;
+	memcpy(chip->data + offset, data, length);
 	
 	return;
 }

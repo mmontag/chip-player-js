@@ -730,14 +730,24 @@ UINT32 VGMPlayer::GetLoopTicks(void) const
 UINT8 VGMPlayer::Start(void)
 {
 	size_t curStrm;
+	UINT8 chipID;
 	
 	InitDevices();
 	
+	// TODO: do all this as well when resetting the VGM
 	_dacStreams.clear();
 	for (curStrm = 0; curStrm < 0x100; curStrm ++)
 		_dacStrmMap[curStrm] = (size_t)-1;
 	//memset(&_pcmBank, 0x00, sizeof(PCM_BANK) * _PCM_BANK_COUNT);
 	memset(&_pcmComprTbl, 0x00, sizeof(PCM_COMPR_TBL));
+	
+	_ym2612pcm_bnkPos = 0x00;
+	memset(_rf5cBank, 0x00, sizeof(_rf5cBank));
+	for (chipID = 0; chipID < 2; chipID ++)
+	{
+		memset(_qsWork[chipID].startAddrCache, 0x00, sizeof(_qsWork[0].startAddrCache));
+		memset(_qsWork[chipID].pitchCache, 0x00, sizeof(_qsWork[0].pitchCache));
+	}
 	
 	_playState |= PLAYSTATE_PLAY;
 	Reset();
