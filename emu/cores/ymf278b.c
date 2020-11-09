@@ -711,9 +711,9 @@ INLINE INT16 ymf278b_getSample(YMF278BChip* chip, YMF278BSlot* op)
 		// 12 bit
 		addr = op->startaddr + ((op->pos / 2) * 3);
 		if (op->pos & 1)
-			sample = (ymf278b_readMem(chip, addr + 2) << 8) | ((ymf278b_readMem(chip, addr + 1) & 0x0F) << 4);
+			sample = (ymf278b_readMem(chip, addr + 2) << 8) | ((ymf278b_readMem(chip, addr + 1) & 0xF0) << 0);
 		else
-			sample = (ymf278b_readMem(chip, addr + 0) << 8) | ((ymf278b_readMem(chip, addr + 1) & 0xF0) << 0);
+			sample = (ymf278b_readMem(chip, addr + 0) << 8) | ((ymf278b_readMem(chip, addr + 1) & 0x0F) << 4);
 		break;
 	case 2:
 		// 16 bit
