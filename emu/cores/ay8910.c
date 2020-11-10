@@ -690,7 +690,6 @@ struct _ay8910_context
 	UINT32 clock;
 	UINT8 chip_type;
 	UINT8 chip_flags;
-	UINT8 IsDisabled;
 	
 	DEVCB_SRATE_CHG SmpRateFunc;
 	void* SmpRateData;
@@ -1053,8 +1052,6 @@ void ay8910_write_reg(ay8910_context *psg, UINT8 r, UINT8 v)
 				//if (psg->port_b_write_cb != NULL)
 				//	psg->port_b_write_cb(psg, 0, (psg->regs[AY_ENABLE] & 0x80) ? psg->regs[AY_PORTB] : 0xff);
 			}
-			if (~v & 0x3F)	// one of the channels gets enabled -> enable emulation
-				psg->IsDisabled = 0x00;
 
 			psg->last_enable = psg->regs[AY_ENABLE] & 0xC0;
 			break;
@@ -1121,10 +1118,6 @@ void ay8910_update_one(void *param, UINT32 samples, DEV_SMPL **outputs)
 	
 	memset(outputs[0], 0x00, samples * sizeof(DEV_SMPL));
 	memset(outputs[1], 0x00, samples * sizeof(DEV_SMPL));
-	
-	// Speed hack for OPN chips (YM2203, YM26xx), that have an often unused AY8910
-	if (psg->IsDisabled)
-		return;
 	
 	/* The 8910 has three outputs, each output is the mix of one of the three */
 	/* tone generators and of the (single) noise generator. The two are mixed */
@@ -1465,9 +1458,6 @@ void ay8910_reset(void *chip)
 	//#define AY_ECOARSE    (12)
 	//#define AY_ESHAPE (13)
 #endif
-
-	if (psg->chip_type & 0x20)
-		psg->IsDisabled = 0x01;	// YM2203/2608/2610 SSG optimization
 }
 
 void ay8910_set_clock(void *chip, UINT32 clock)
