@@ -291,6 +291,8 @@ protected:
 	// tick/sample conversion rates
 	UINT64 _tsMult;
 	UINT64 _tsDiv;
+	UINT64 _ttMult;
+	UINT64 _ttDiv;
 	
 	UINT32 _filePos;
 	UINT32 _fileTick;
