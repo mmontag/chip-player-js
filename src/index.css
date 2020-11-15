@@ -91,9 +91,10 @@ select {
     background-image: /* A little down-arrow */
             linear-gradient(60deg, transparent 50%, var(--clickable) 50%),
             linear-gradient(120deg, var(--clickable) 50%, transparent 50%);
-    background-position: calc(100% - var(--charW2)) 5px, calc(100% - 12px) 5px;
-    background-size: 4px 12px, 4px 12px;
+    background-position: calc(100% - var(--charW1)*1.5) 5px, calc(100% - var(--charW1)) 5px;
+    background-size: calc(var(--charW1)*0.5) 12px, calc(var(--charW1)*0.5) 12px;
     background-repeat: no-repeat;
+    padding-right: var(--charW2);
     max-width: 240px;
 }
 select option                { font-size: 14px; }
