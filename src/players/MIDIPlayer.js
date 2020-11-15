@@ -48,10 +48,17 @@ const SOUNDFONTS = [
       {label: 'SNES GM (1.9 MB)', value: 'Super_Nintendo_Unofficial_update.sf2'},
       {label: 'Nokia 30 (2.2 MB)', value: 'Nokia_30.sf2'},
       {label: 'LG Wink/Motorola ROKR (3.3 MB)', value: 'LG_Wink_Style_T310_Soundfont.sf2'},
-      {label: 'Kururin Paradise GM (7.6 MB)', value: 'Kururin_Paradise_GM_Soundfont.sf2'},
       {label: 'Diddy Kong Racing DS (13.7 MB)', value: 'Diddy_Kong_Racing_DS_Soundfont.sf2'},
       {label: 'Regression FM v1.99g (14.4 MB)', value: 'R_FM_v1.99g-beta.sf2'},
       {label: 'Ultimate Megadrive (63.2 MB)', value: 'The Ultimate Megadrive Soundfont.sf2'},
+    ],
+  },
+  {
+    label: 'Piano Soundfonts',
+    items: [
+      {label: 'Yamaha Grand Lite v1.1 (21.8 MB)', value: 'Yamaha-Grand-Lite-v1.1.sf2'},
+      {label: 'Chateau Grand Lite v1.0 (49.1 MB)', value: 'Chateau Grand Lite-v1.0.sf2'},
+      {label: 'Steinway Grand v1.0 (145 MB)', value: 'Steinway Grand-SF4U-v1.sf2'},
     ],
   },
 ];
