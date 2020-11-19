@@ -967,8 +967,8 @@ static UINT8 FilePlayCallback(PlayerBase* player, void* userParam, UINT8 evtType
 				else
 				{
 					printf("Loop End.\n");
-					playState |= PLAYSTATE_END;
-					return 0x01;
+					playState |= PLAYSTATE_END;	// prevent "Song End" message
+					return 0x01;	// Note: will trigger PLREVT_END
 				}
 			}
 			if (player->GetState() & PLAYSTATE_SEEK)
@@ -977,6 +977,8 @@ static UINT8 FilePlayCallback(PlayerBase* player, void* userParam, UINT8 evtType
 		}
 		break;
 	case PLREVT_END:
+		if (playState & PLAYSTATE_END)
+			break;
 		playState |= PLAYSTATE_END;
 		printf("Song End.\n");
 		break;

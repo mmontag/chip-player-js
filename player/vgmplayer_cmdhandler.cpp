@@ -569,10 +569,12 @@ void VGMPlayer::Cmd_EndOfData(void)
 			UINT8 retVal;
 			
 			retVal = _eventCbFunc(this, _eventCbParam, PLREVT_LOOP, &_curLoop);
-			if (retVal == 0x01)
+			if (retVal == 0x01)	// "stop" signal?
 			{
 				_playState |= PLAYSTATE_END;
 				_psTrigger |= PLAYSTATE_END;
+				if (_eventCbFunc != NULL)
+					_eventCbFunc(this, _eventCbParam, PLREVT_END, NULL);
 				return;
 			}
 		}
@@ -820,6 +822,8 @@ void VGMPlayer::Cmd_PcmRamWrite(void)
 void VGMPlayer::Cmd_YM2612PCM_Delay(void)
 {
 	CHIP_DEVICE* cDev = GetDevicePtr(0x02, 0);
+	_fileTick += (fData[0x00] & 0x0F);
+	
 	if (cDev == NULL || cDev->write8 == NULL)
 		return;
 	if (_ym2612pcm_bnkPos >= _pcmBank[0].data.size())
@@ -830,7 +834,6 @@ void VGMPlayer::Cmd_YM2612PCM_Delay(void)
 	_ym2612pcm_bnkPos ++;
 	// TODO: clip when exceeding pcmBank size
 	
-	_fileTick += (fData[0x00] & 0x0F);
 	return;
 }
 

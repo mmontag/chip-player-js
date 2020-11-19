@@ -1091,10 +1091,12 @@ void S98Player::HandleEOF(void)
 			UINT8 retVal;
 			
 			retVal = _eventCbFunc(this, _eventCbParam, PLREVT_LOOP, &_curLoop);
-			if (retVal == 0x01)
+			if (retVal == 0x01)	// "stop" signal?
 			{
 				_playState |= PLAYSTATE_END;
 				_psTrigger |= PLAYSTATE_END;
+				if (_eventCbFunc != NULL)
+					_eventCbFunc(this, _eventCbParam, PLREVT_END, NULL);
 				return;
 			}
 		}
