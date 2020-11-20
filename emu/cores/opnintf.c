@@ -175,7 +175,7 @@ static UINT8 get_ssg_funcs(const DEV_DEF* devDef, ssg_callbacks* retFuncs)
 	retVal = SndEmu_GetDeviceFunc(devDef, RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, (void**)&retFuncs->read);
 	if (retVal)
 		return retVal;
-	retVal = SndEmu_GetDeviceFunc(devDef, RWF_REGISTER | RWF_CLOCK, DEVRW_VALUE, 0, (void**)&retFuncs->set_clock);
+	retVal = SndEmu_GetDeviceFunc(devDef, RWF_CLOCK | RWF_WRITE, DEVRW_VALUE, 0, (void**)&retFuncs->set_clock);
 	if (retVal)
 		return retVal;
 	

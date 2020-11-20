@@ -50,9 +50,9 @@ typedef void (*DEVFUNC_WRITE_VOL_LR)(void* info, INT32 volL, INT32 volR);
 #define RWF_REGISTER	0x00	// register r/w
 #define RWF_MEMORY		0x10	// memory (RAM) r/w
 #define RWF_CLOCK		0x80	// chip clock
-#define RWF_SRATE		0x81	// sample rate
-#define RWF_VOLUME		0x82	// volume (all channels)
-#define RWF_VOLUME_LR	0x83	// volume (left/right separately)
+#define RWF_SRATE		0x82	// sample rate
+#define RWF_VOLUME		0x84	// volume (all speakers)
+#define RWF_VOLUME_LR	0x86	// volume (left/right separately)
 
 #define DEVRW_VALUE		0x00
 #define DEVRW_A8D8		0x11	//  8-bit address,  8-bit data
