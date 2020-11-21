@@ -1587,6 +1587,8 @@ void VGMPlayer::ParseFile(UINT32 ticks)
 	
 	if (_filePos >= _fileHdr.dataEnd)
 	{
+		if (_playState & PLAYSTATE_SEEK)	// recalculate playSmpl to fix state when triggering callbacks
+			_playSmpl = Tick2Sample(_fileTick);	// Note: fileTick results in more accurate position
 		_playState |= PLAYSTATE_END;
 		_psTrigger |= PLAYSTATE_END;
 		if (_eventCbFunc != NULL)

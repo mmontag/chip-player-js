@@ -1073,6 +1073,8 @@ void S98Player::HandleEOF(void)
 {
 	UINT8 doLoop = (_fileHdr.loopOfs != 0);
 	
+	if (_playState & PLAYSTATE_SEEK)	// recalculate playSmpl to fix state when triggering callbacks
+		_playSmpl = Tick2Sample(_fileTick);	// Note: fileTick results in more accurate position
 	if (doLoop)
 	{
 		if (_lastLoopTick == _fileTick)
@@ -1118,6 +1120,8 @@ void S98Player::DoCommand(void)
 {
 	if (_filePos >= DataLoader_GetSize(_dLoad))
 	{
+		if (_playState & PLAYSTATE_SEEK)	// recalculate playSmpl to fix state when triggering callbacks
+			_playSmpl = Tick2Sample(_fileTick);	// Note: fileTick results in more accurate position
 		_playState |= PLAYSTATE_END;
 		_psTrigger |= PLAYSTATE_END;
 		if (_eventCbFunc != NULL)

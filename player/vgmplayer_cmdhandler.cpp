@@ -549,6 +549,8 @@ void VGMPlayer::Cmd_EndOfData(void)
 	UINT8 silenceStop = 0;
 	UINT8 doLoop = (_fileHdr.loopOfs != 0);
 	
+	if (_playState & PLAYSTATE_SEEK)	// recalculate playSmpl to fix state when triggering callbacks
+		_playSmpl = Tick2Sample(_fileTick);	// Note: fileTick results in more accurate position
 	if (doLoop)
 	{
 		if (_lastLoopTick == _fileTick)
@@ -566,9 +568,7 @@ void VGMPlayer::Cmd_EndOfData(void)
 		_curLoop ++;
 		if (_eventCbFunc != NULL)
 		{
-			UINT8 retVal;
-			
-			retVal = _eventCbFunc(this, _eventCbParam, PLREVT_LOOP, &_curLoop);
+			UINT8 retVal = _eventCbFunc(this, _eventCbParam, PLREVT_LOOP, &_curLoop);
 			if (retVal == 0x01)	// "stop" signal?
 			{
 				_playState |= PLAYSTATE_END;

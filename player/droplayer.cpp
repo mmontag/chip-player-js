@@ -379,7 +379,7 @@ UINT8 DROPlayer::GetSongDeviceInfo(std::vector<PLR_DEV_INFO>& devInfList) const
 		
 		devInf.id = curDev;
 		devInf.type = _devTypes[curDev];
-		devInf.instance = curDev;
+		devInf.instance = (UINT8)curDev;
 		devInf.devCfg = devCfg;
 		if (! _devices.empty())
 		{
@@ -720,11 +720,11 @@ UINT8 DROPlayer::Reset(void)
 			continue;
 		
 		if (_devTypes[curDev] == DEVID_YMF262)
-			WriteReg((curDev << _portShift) | 1, 0x05, 0x01);	// temporary OPL3 enable for proper register reset
+			WriteReg((UINT8)(curDev << _portShift) | 1, 0x05, 0x01);	// temporary OPL3 enable for proper register reset
 		
 		for (curPort = 0; curPort <= _portMask; curPort ++)
 		{
-			devport = (curDev << _portShift) | curPort;
+			devport = (UINT8)(curDev << _portShift) | curPort;
 			for (curReg = 0xFF; curReg >= 0x20; curReg --)
 			{
 				// [optimization] only send registers that are NOT part of the initialization block
@@ -732,7 +732,7 @@ UINT8 DROPlayer::Reset(void)
 					WriteReg(devport, curReg, 0x00);
 			}
 		}
-		devport = (curDev << _portShift);
+		devport = (UINT8)(curDev << _portShift);
 		WriteReg(devport | 0, 0x08, 0x00);
 		WriteReg(devport | 0, 0x01, 0x00);
 		
@@ -964,6 +964,8 @@ void DROPlayer::DoCommand_v2(void)
 
 void DROPlayer::DoFileEnd(void)
 {
+	if (_playState & PLAYSTATE_SEEK)	// recalculate playSmpl to fix state when triggering callbacks
+		_playSmpl = Tick2Sample(_fileTick);	// Note: fileTick results in more accurate position
 	_playState |= PLAYSTATE_END;
 	_psTrigger |= PLAYSTATE_END;
 	if (_eventCbFunc != NULL)
