@@ -49,18 +49,24 @@ typedef void (*DEVFUNC_WRITE_VOL_LR)(void* info, INT32 volL, INT32 volR);
 #define RWF_QUICKREAD	(0x02 | RWF_READ)
 #define RWF_REGISTER	0x00	// register r/w
 #define RWF_MEMORY		0x10	// memory (RAM) r/w
+// Note: These chip setting constants can be ORed with RWF_WRITE/RWF_READ.
 #define RWF_CLOCK		0x80	// chip clock
 #define RWF_SRATE		0x82	// sample rate
 #define RWF_VOLUME		0x84	// volume (all speakers)
 #define RWF_VOLUME_LR	0x86	// volume (left/right separately)
+#define RWF_CHN_MUTE	0x90	// set channel muting (DEVRW_VALUE = single channel, DEVRW_ALL = mask)
+#define RWF_CHN_PAN		0x92	// set channel panning (DEVRW_VALUE = single channel, DEVRW_ALL = array)
 
-#define DEVRW_VALUE		0x00
+// register/memory DEVRW constants
 #define DEVRW_A8D8		0x11	//  8-bit address,  8-bit data
 #define DEVRW_A8D16		0x12	//  8-bit address, 16-bit data
 #define DEVRW_A16D8		0x21	// 16-bit address,  8-bit data
 #define DEVRW_A16D16	0x22	// 16-bit address, 16-bit data
 #define DEVRW_BLOCK		0x80	// write sample ROM/RAM
 #define DEVRW_MEMSIZE	0x81	// set ROM/RAM size
+// chip setting DEVRW constants
+#define DEVRW_VALUE		0x00
+#define DEVRW_ALL		0x01
 
 typedef struct _devdef_readwrite_function
 {

@@ -936,9 +936,12 @@ UINT8 S98Player::Reset(void)
 	for (curDev = 0; curDev < _devices.size(); curDev ++)
 	{
 		S98_CHIPDEV* cDev = &_devices[curDev];
+		DEV_INFO* defInf = &cDev->base.defInf;
 		VGM_BASEDEV* clDev;
+		if (defInf->dataPtr == NULL)
+			continue;
 		
-		cDev->base.defInf.devDef->Reset(cDev->base.defInf.dataPtr);
+		defInf->devDef->Reset(defInf->dataPtr);
 		for (clDev = &cDev->base; clDev != NULL; clDev = clDev->linkDev)
 		{
 			// TODO: Resmpl_Reset(&clDev->resmpl);
@@ -946,7 +949,6 @@ UINT8 S98Player::Reset(void)
 		
 		if (_devHdrs[curDev].devType == S98DEV_OPNA)
 		{
-			DEV_INFO* defInf = &cDev->base.defInf;
 			DEVFUNC_WRITE_MEMSIZE SetRamSize = NULL;
 			
 			// setup DeltaT RAM size
@@ -1132,41 +1134,45 @@ void S98Player::DoCommand(void)
 	{
 	case 0xFF:	// advance 1 tick
 		_fileTick ++;
-		return;
+		break;
 	case 0xFE:	// advance multiple ticks
 		_fileTick += 2 + ReadVarInt(_filePos);
-		return;
+		break;
 	case 0xFD:
 		HandleEOF();
-		return;
+		break;
+	default:
+		DoRegWrite(curCmd >> 1, curCmd & 0x01, _fileData[_filePos + 0x00], _fileData[_filePos + 0x01]);
+		_filePos += 0x02;
+		break;
 	}
 	
+	return;
+}
+
+void S98Player::DoRegWrite(UINT8 deviceID, UINT8 port, UINT8 reg, UINT8 data)
+{
+	if (deviceID >= _devices.size())
+		return;
+	
+	S98_CHIPDEV* cDev = &_devices[deviceID];
+	DEV_DATA* dataPtr = cDev->base.defInf.dataPtr;
+	if (dataPtr == NULL || cDev->write == NULL)
+		return;
+	
+	if (_devHdrs[deviceID].devType == S98DEV_DCSG)
 	{
-		UINT8 deviceID = curCmd >> 1;
-		if (deviceID < _devices.size())
-		{
-			S98_CHIPDEV* cDev = &_devices[deviceID];
-			DEV_DATA* dataPtr = cDev->base.defInf.dataPtr;
-			
-			UINT8 port = curCmd & 0x01;
-			UINT8 reg = _fileData[_filePos + 0x00];
-			UINT8 data = _fileData[_filePos + 0x01];
-			
-			if (_devHdrs[deviceID].devType == S98DEV_DCSG)
-			{
-				if (reg == 1)	// GG stereo
-					cDev->write(dataPtr, SN76496_W_GGST, data);
-				else
-					cDev->write(dataPtr, SN76496_W_REG, data);
-			}
-			else
-			{
-				cDev->write(dataPtr, (port << 1) | 0, reg);
-				cDev->write(dataPtr, (port << 1) | 1, data);
-			}
-		}
+		if (reg == 1)	// GG stereo
+			cDev->write(dataPtr, SN76496_W_GGST, data);
+		else
+			cDev->write(dataPtr, SN76496_W_REG, data);
 	}
-	_filePos += 0x02;
+	else
+	{
+		cDev->write(dataPtr, (port << 1) | 0, reg);
+		cDev->write(dataPtr, (port << 1) | 1, data);
+	}
+	
 	return;
 }
 

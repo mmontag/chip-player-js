@@ -980,7 +980,7 @@ void DROPlayer::WriteReg(UINT8 port, UINT8 reg, UINT8 data)
 		return;
 	DRO_CHIPDEV* cDev = &_devices[devID];
 	DEV_DATA* dataPtr = cDev->base.defInf.dataPtr;
-	if (dataPtr == NULL)
+	if (dataPtr == NULL || cDev->write == NULL)
 		return;
 	
 	port &= _portMask;

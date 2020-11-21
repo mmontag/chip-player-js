@@ -111,6 +111,7 @@ private:
 	void ParseFile(UINT32 ticks);
 	void HandleEOF(void);
 	void DoCommand(void);
+	void DoRegWrite(UINT8 deviceID, UINT8 port, UINT8 reg, UINT8 data);
 	
 	enum
 	{
