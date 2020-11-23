@@ -3,10 +3,6 @@
 #include <vector>
 #include <string>
 
-#ifndef NO_EXTERNAL_ROM
-#include <stdio.h>
-#endif
-
 #define INLINE	static inline
 
 #include "../common_def.h"
@@ -1446,30 +1442,28 @@ VGMPlayer::CHIP_DEVICE* VGMPlayer::GetDevicePtr(UINT8 chipType, UINT8 chipID)
 
 void VGMPlayer::LoadOPL4ROM(CHIP_DEVICE* chipDev)
 {
-#ifndef NO_EXTERNAL_ROM
+	static const char* romFile = "yrw801.rom";
+	
+	if (_fileReqCbFunc == NULL)
+		return;
 	if (chipDev->romWrite == NULL)
 		return;
 	
-	const char* romFile = "yrw801.rom";
-	FILE* hFile;
-	std::vector<UINT8> yrwData;
-	
-	hFile = fopen(romFile, "rb");
-	if (hFile == NULL)
-	{
-		debug("Warning: Couldn't load %s!\n", romFile);
+	DATA_LOADER* romDLoad = _fileReqCbFunc(_fileReqCbParam, this, romFile);
+	if (romDLoad == NULL)
 		return;
-	}
+	DataLoader_ReadAll(romDLoad);
 	
-	fseek(hFile, 0, SEEK_END);
-	yrwData.resize(ftell(hFile));
-	rewind(hFile);
-	fread(&yrwData[0], 1, yrwData.size(), hFile);
-	fclose(hFile);
+	UINT32 yrwSize = DataLoader_GetSize(romDLoad);
+	const UINT8* yrwData = DataLoader_GetData(romDLoad);
+	if (yrwSize == 0 || yrwData == NULL)
+		return;
 	
-	chipDev->romSize(chipDev->base.defInf.dataPtr, yrwData.size());
-	chipDev->romWrite(chipDev->base.defInf.dataPtr, 0x00, yrwData.size(), &yrwData[0]);
-#endif
+	if (chipDev->romSize != NULL)
+		chipDev->romSize(chipDev->base.defInf.dataPtr, yrwSize);
+	chipDev->romWrite(chipDev->base.defInf.dataPtr, 0x00, yrwSize, yrwData);
+	
+	return;
 }
 
 UINT8 VGMPlayer::Seek(UINT8 unit, UINT32 pos)

@@ -104,7 +104,7 @@ public:
 	//UINT32 GetSampleRate(void) const;
 	UINT8 SetSampleRate(UINT32 sampleRate);
 	//UINT8 SetPlaybackSpeed(double speed);
-	//void SetCallback(PLAYER_EVENT_CB cbFunc, void* cbParam);
+	//void SetEventCallback(PLAYER_EVENT_CB cbFunc, void* cbParam);
 	UINT32 Tick2Sample(UINT32 ticks) const;
 	UINT32 Sample2Tick(UINT32 samples) const;
 	double Tick2Second(UINT32 ticks) const;

@@ -5,7 +5,9 @@
 PlayerBase::PlayerBase() :
 	_outSmplRate(0),
 	_eventCbFunc(NULL),
-	_eventCbParam(NULL)
+	_eventCbParam(NULL),
+	_fileReqCbFunc(NULL),
+	_fileReqCbParam(NULL)
 {
 }
 
@@ -62,10 +64,18 @@ UINT8 PlayerBase::SetPlaybackSpeed(double speed)
 	return 0xFF;	// not yet supported
 }
 
-void PlayerBase::SetCallback(PLAYER_EVENT_CB cbFunc, void* cbParam)
+void PlayerBase::SetEventCallback(PLAYER_EVENT_CB cbFunc, void* cbParam)
 {
 	_eventCbFunc = cbFunc;
 	_eventCbParam = cbParam;
+	
+	return;
+}
+
+void PlayerBase::SetFileReqCallback(PLAYER_FILEREQ_CB cbFunc, void* cbParam)
+{
+	_fileReqCbFunc = cbFunc;
+	_fileReqCbParam = cbParam;
 	
 	return;
 }

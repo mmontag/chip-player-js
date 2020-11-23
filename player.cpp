@@ -53,6 +53,7 @@ static const char* GetFileTitle(const char* filePath);
 static UINT32 CalcCurrentVolume(UINT32 playbackSmpl);
 static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void* Data);
 static UINT8 FilePlayCallback(PlayerBase* player, void* userParam, UINT8 evtType, void* evtParam);
+static DATA_LOADER* RequestFileCallback(void* userParam, PlayerBase* player, const char* fileName);
 static UINT32 GetNthAudioDriver(UINT8 adrvType, INT32 drvNumber);
 static UINT8 InitAudioSystem(void);
 static UINT8 DeinitAudioSystem(void);
@@ -167,7 +168,8 @@ int main(int argc, char* argv[])
 		fprintf(stderr, "Error 0x%02X loading file!\n", retVal);
 		continue;
 	}
-	player->SetCallback(&FilePlayCallback, NULL);
+	player->SetEventCallback(FilePlayCallback, NULL);
+	player->SetFileReqCallback(RequestFileCallback, NULL);
 	
 	if (player->GetPlayerType() == FCC_S98)
 	{
@@ -984,6 +986,16 @@ static UINT8 FilePlayCallback(PlayerBase* player, void* userParam, UINT8 evtType
 		break;
 	}
 	return 0x00;
+}
+
+static DATA_LOADER* RequestFileCallback(void* userParam, PlayerBase* player, const char* fileName)
+{
+	DATA_LOADER* dLoad = FileLoader_Init(fileName);
+	UINT8 retVal = DataLoader_Load(dLoad);
+	if (! retVal)
+		return dLoad;
+	DataLoader_Deinit(dLoad);
+	return NULL;
 }
 
 static UINT32 GetNthAudioDriver(UINT8 adrvType, INT32 drvNumber)

@@ -154,7 +154,8 @@ public:
 	//UINT32 GetSampleRate(void) const;
 	UINT8 SetSampleRate(UINT32 sampleRate);
 	//UINT8 SetPlaybackSpeed(double speed);
-	//void SetCallback(PLAYER_EVENT_CB cbFunc, void* cbParam);
+	//void SetEventCallback(PLAYER_EVENT_CB cbFunc, void* cbParam);
+	//void SetFileReqCallback(PLAYER_FILEREQ_CB cbFunc, void* cbParam);
 	UINT32 Tick2Sample(UINT32 ticks) const;
 	UINT32 Sample2Tick(UINT32 samples) const;
 	double Tick2Second(UINT32 ticks) const;
@@ -305,6 +306,8 @@ protected:
 	UINT8 _psTrigger;	// used to temporarily trigger special commands
 	//PLAYER_EVENT_CB _eventCbFunc;
 	//void* _eventCbParam;
+	//PLAYER_FILEREQ_CB _fileReqCbFunc;
+	//void* _fileReqCbParam;
 	
 	static const UINT8 _OPT_DEV_LIST[_OPT_DEV_COUNT];	// list of configurable libvgm devices (different from VGM chip list]
 	static const UINT8 _DEV_LIST[_CHIP_COUNT];	// VGM chip ID -> libvgm device ID

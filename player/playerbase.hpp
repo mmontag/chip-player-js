@@ -28,6 +28,8 @@ typedef UINT8 (*PLAYER_EVENT_CB)(PlayerBase* player, void* userParam, UINT8 evtT
 #define PLREVT_LOOP		0x03	// starting next loop [evtParam: UINT32* loopNumber, ret == 0x01 -> stop processing]
 #define PLREVT_END		0x04	// reached the end of the song
 
+typedef DATA_LOADER* (*PLAYER_FILEREQ_CB)(void* userParam, PlayerBase* player, const char* fileName);
+
 struct PLR_SONG_INFO
 {
 	UINT32 format;		// four-character-code for file format
@@ -103,7 +105,8 @@ public:
 	virtual UINT32 GetSampleRate(void) const;
 	virtual UINT8 SetSampleRate(UINT32 sampleRate);
 	virtual UINT8 SetPlaybackSpeed(double speed);
-	virtual void SetCallback(PLAYER_EVENT_CB cbFunc, void* cbParam);
+	virtual void SetEventCallback(PLAYER_EVENT_CB cbFunc, void* cbParam);
+	virtual void SetFileReqCallback(PLAYER_FILEREQ_CB cbFunc, void* cbParam);
 	virtual UINT32 Tick2Sample(UINT32 ticks) const = 0;
 	virtual UINT32 Sample2Tick(UINT32 samples) const = 0;
 	virtual double Tick2Second(UINT32 ticks) const = 0;
@@ -126,6 +129,8 @@ protected:
 	UINT32 _outSmplRate;
 	PLAYER_EVENT_CB _eventCbFunc;
 	void* _eventCbParam;
+	PLAYER_FILEREQ_CB _fileReqCbFunc;
+	void* _fileReqCbParam;
 };
 
 #endif	// __PLAYERBASE_HPP__
