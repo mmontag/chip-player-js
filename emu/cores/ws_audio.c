@@ -34,6 +34,7 @@ static DEVDEF_RWFUNC devFunc[] =
 	{RWF_MEMORY | RWF_WRITE, DEVRW_A16D8, 0, ws_write_ram_byte},
 	{RWF_MEMORY | RWF_READ, DEVRW_A16D8, 0, ws_read_ram_byte},
 	//{RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, ws_write_ram_block},
+	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, ws_set_mute_mask},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef =

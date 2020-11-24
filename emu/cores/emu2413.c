@@ -36,6 +36,8 @@ static DEVDEF_RWFUNC devFunc[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, EOPLL_writeIO},
 	{RWF_REGISTER | RWF_QUICKWRITE, DEVRW_A8D8, 0, EOPLL_writeReg},
+	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, ym2413_set_mute_mask_emu},
+	{RWF_CHN_PAN | RWF_WRITE, DEVRW_ALL, 0, ym2413_pan_emu},
 	{0x00, 0x00, 0, NULL}
 };
 DEV_DEF devDef_YM2413_Emu =

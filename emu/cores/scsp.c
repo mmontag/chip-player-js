@@ -70,6 +70,7 @@ static DEVDEF_RWFUNC devFunc[] =
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A16D16, 0, SCSP_w16},
 	{RWF_REGISTER | RWF_READ, DEVRW_A16D16, 0, SCSP_r16},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, scsp_write_ram},
+	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, scsp_set_mute_mask},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef =

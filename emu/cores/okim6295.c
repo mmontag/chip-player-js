@@ -90,6 +90,7 @@ static DEVDEF_RWFUNC devFunc[] =
 	{RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, okim6295_alloc_rom},
 	{RWF_CLOCK | RWF_WRITE, DEVRW_VALUE, 0, okim6295_set_clock},
 	{RWF_SRATE | RWF_READ, DEVRW_VALUE, 0, okim6295_get_rate},
+	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, okim6295_set_mute_mask},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef =

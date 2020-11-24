@@ -66,6 +66,7 @@ static DEVDEF_RWFUNC devFunc[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, c6280mame_w},
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, c6280mame_r},
+	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, c6280mame_set_mute_mask},
 	{0x00, 0x00, 0, NULL}
 };
 DEV_DEF devDef_C6280_MAME =

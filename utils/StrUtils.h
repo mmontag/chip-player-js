@@ -7,6 +7,7 @@ extern "C"
 #endif
 
 #include "../stdtype.h"
+#include <stddef.h>	// for size_t
 
 typedef struct _codepage_conversion CPCONV;
 

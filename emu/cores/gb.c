@@ -85,6 +85,7 @@ static DEVDEF_RWFUNC devFunc[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, gb_sound_w},
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, gb_sound_r},
+	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, gameboy_sound_set_mute_mask},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef =

@@ -57,6 +57,7 @@ static DEVDEF_RWFUNC devFunc_MAME[] =
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, nes_w_mame},
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, nes_r_mame},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, nes_write_ram},
+	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, nes_set_mute_mask_mame},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef_MAME =
@@ -83,6 +84,7 @@ static DEVDEF_RWFUNC devFunc_NSFPlay[] =
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, nes_w_nsfplay},
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, nes_r_nsfplay},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, nes_write_ram},
+	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, nes_set_mute_mask_nsfplay},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef_NSFPlay =

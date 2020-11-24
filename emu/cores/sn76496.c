@@ -166,6 +166,7 @@ static void sn76496_w_mame(void *chip, UINT8 reg, UINT8 data);
 static DEVDEF_RWFUNC devFunc[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, sn76496_w_mame},
+	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, sn76496_set_mutemask},
 	{0x00, 0x00, 0, NULL}
 };
 DEV_DEF devDef_SN76496_MAME =

@@ -13,7 +13,7 @@
 #endif
 
 #include "oplintf.h"
-#if defined(EC_YM3812_MAME) || defined(SNDDEV_YM3526)
+#if defined(EC_YM3812_MAME) || defined(SNDDEV_YM3526) || defined(SNDDEV_Y8950)
 #include "fmopl.h"
 #endif
 #ifdef EC_YM3812_ADLIBEMU
@@ -38,6 +38,7 @@ static DEVDEF_RWFUNC devFunc3812_MAME[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, ym3812_write},
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, ym3812_read},
+	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, opl_set_mute_mask},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef3812_MAME =
@@ -63,6 +64,7 @@ static DEVDEF_RWFUNC devFunc3812_Emu[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, adlib_OPL2_writeIO},
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, adlib_OPL2_reg_read},
+	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, adlib_OPL2_set_mute_mask},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef3812_AdLibEmu =
@@ -88,6 +90,7 @@ static DEVDEF_RWFUNC devFunc3812_Nuked[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, nukedopl3_write},
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, nukedopl3_read},
+	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, nukedopl3_set_mutemask},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef3812_Nuked =
@@ -131,6 +134,7 @@ static DEVDEF_RWFUNC devFunc3526_MAME[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, ym3526_write},
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, ym3526_read},
+	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, opl_set_mute_mask},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef3526_MAME =
@@ -166,6 +170,7 @@ static DEVDEF_RWFUNC devFunc8950_MAME[] =
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, y8950_read},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, y8950_write_pcmrom},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, y8950_alloc_pcmrom},
+	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, opl_set_mute_mask},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef8950_MAME =

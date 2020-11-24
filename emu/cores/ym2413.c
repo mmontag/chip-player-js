@@ -74,6 +74,7 @@ static DEVDEF_RWFUNC devFunc[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, ym2413_write},
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, ym2413_read},
+	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, ym2413_set_mutemask},
 	{0x00, 0x00, 0, NULL}
 };
 DEV_DEF devDef_YM2413_MAME =

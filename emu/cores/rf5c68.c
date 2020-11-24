@@ -41,6 +41,7 @@ static DEVDEF_RWFUNC devFunc[] =
 	{RWF_MEMORY | RWF_WRITE, DEVRW_A16D8, 0, rf5c68_mem_w},
 	{RWF_MEMORY | RWF_READ, DEVRW_A16D8, 0, rf5c68_mem_r},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, rf5c68_write_ram},
+	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, rf5c68_set_mute_mask},
 	{0x00, 0x00, 0, NULL}
 };
 DEV_DEF devDef_RF5C68_MAME =

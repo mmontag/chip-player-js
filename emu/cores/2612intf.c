@@ -31,6 +31,7 @@ static DEVDEF_RWFUNC devFunc_MAME[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, ym2612_write},
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, ym2612_read},
+	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, ym2612_set_mutemask},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef_MAME =

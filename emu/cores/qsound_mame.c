@@ -61,6 +61,7 @@ static DEVDEF_RWFUNC devFunc[] =
 	{RWF_REGISTER | RWF_QUICKWRITE, DEVRW_A8D16, 0, qsound_write_data},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, qsound_write_rom},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, qsound_alloc_rom},
+	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, qsound_set_mute_mask},
 	{0x00, 0x00, 0, NULL}
 };
 DEV_DEF devDef_QSound_MAME =

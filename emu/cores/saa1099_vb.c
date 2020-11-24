@@ -56,6 +56,7 @@ static void saa1099v_update(void* param, UINT32 samples, DEV_SMPL** outputs);
 static DEVDEF_RWFUNC devFunc[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, saa1099v_write},
+	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, saa1099v_set_mute_mask},
 	{0x00, 0x00, 0, NULL}
 };
 DEV_DEF devDef_SAA1099_VB =

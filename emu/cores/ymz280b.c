@@ -61,6 +61,7 @@ static DEVDEF_RWFUNC devFunc[] =
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, ymz280b_r},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, ymz280b_write_rom},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, ymz280b_alloc_rom},
+	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, ymz280b_set_mute_mask},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef =

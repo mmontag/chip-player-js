@@ -137,6 +137,7 @@ static DEVDEF_RWFUNC devFunc[] =
 	{RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0x524F, ymf278b_alloc_rom},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0x5241, ymf278b_write_ram},	// 0x5241 = 'RA' for RAM
 	{RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0x5241, ymf278b_alloc_ram},
+	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, ymf278b_set_mute_mask},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef =

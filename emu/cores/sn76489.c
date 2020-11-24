@@ -37,6 +37,8 @@
 static DEVDEF_RWFUNC devFunc[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, sn76496_w_maxim},
+	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, sn76489_mute_maxim},
+	{RWF_CHN_PAN | RWF_WRITE, DEVRW_ALL, 0, sn76489_pan_maxim},
 	{0x00, 0x00, 0, NULL}
 };
 DEV_DEF devDef_SN76489_Maxim =
