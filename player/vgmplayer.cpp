@@ -237,6 +237,8 @@ UINT8 VGMPlayer::LoadFile(DATA_LOADER *dataLoader)
 	// parse tags
 	LoadTags();
 	
+	RefreshTSRates();	// make Tick2Sample etc. work
+	
 	return 0x00;
 }
 
