@@ -1136,6 +1136,7 @@ void VGMPlayer::InitDevices(void)
 		CHIP_DEVICE chipDev;
 		DEV_INFO* devInf;
 		PLR_DEV_OPTS* devOpts;
+		DEVFUNC_PANALL funcPan;
 		UINT8 retVal;
 		
 		memset(&chipDev, 0x00, sizeof(CHIP_DEVICE));
@@ -1337,24 +1338,25 @@ void VGMPlayer::InitDevices(void)
 				devInf->devDef->SetOptionBits(devInf->dataPtr, devOpts->coreOpts);
 			RefreshMuting(chipDev, devOpts->muteOpts);
 		}
-		if (devInf->devDef->SetPanning != NULL)
+		retVal = SndEmu_GetDeviceFunc(devInf->devDef, RWF_CHN_PAN | RWF_WRITE, DEVRW_ALL, 0, (void**)&funcPan);
+		if (funcPan != NULL)
 		{
 			if (chipType == DEVID_SN76496)
 			{
 				INT16 panPos[4] = {0x00, -0x80, +0x80, 0x00};
-				devInf->devDef->SetPanning(devInf->dataPtr, panPos);
+				funcPan(devInf->dataPtr, panPos);
 			}
 			else if (chipType == DEVID_YM2413)
 			{
 				INT16 panPos[14] = {
 					-0x100, +0x100, -0x80, +0x80, -0x40, +0x40, -0xC0, +0xC0, 0x00,
 					-0x60, +0x60, 0x00, -0xC0, +0xC0};
-				devInf->devDef->SetPanning(devInf->dataPtr, panPos);
+				funcPan(devInf->dataPtr, panPos);
 			}
 			else if (chipType == DEVID_AY8910)
 			{
 				INT16 panPos[3] = {-0x80, +0x80, 0x00};
-				devInf->devDef->SetPanning(devInf->dataPtr, panPos);
+				funcPan(devInf->dataPtr, panPos);
 			}
 		}
 		

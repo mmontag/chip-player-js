@@ -480,6 +480,7 @@ static void InitVGMChips(void)
 	VGM_LINKCDEV* clDev;
 	DEV_INFO* devInf;
 	UINT8 retVal;
+	DEVFUNC_PANALL funcPan;
 	
 	memset(&VGMChips, 0x00, sizeof(VGMChips));
 	vgmHdrArr = (UINT8*)&VGMHdr;	// can't use VGMData due to the data offset
@@ -532,10 +533,11 @@ static void InitVGMChips(void)
 					break;
 				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&cDev->write8);
 				
-				if (cDev->defInf.devDef->SetPanning != NULL)
+				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_CHN_PAN | RWF_WRITE, DEVRW_ALL, 0, (void**)&funcPan);
+				if (funcPan != NULL)
 				{
 					INT16 panPos[4] = {0x00, -0x80, +0x80, 0x00};
-					cDev->defInf.devDef->SetPanning(cDev->defInf.dataPtr, panPos);
+					funcPan(cDev->defInf.dataPtr, panPos);
 				}
 			}
 			break;
@@ -626,10 +628,11 @@ static void InitVGMChips(void)
 					break;
 				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&cDev->write8);
 				
-				if (cDev->defInf.devDef->SetPanning != NULL)
+				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_CHN_PAN | RWF_WRITE, DEVRW_ALL, 0, (void**)&funcPan);
+				if (funcPan != NULL)
 				{
 					INT16 panPos[3] = {-0x80, +0x80, 0x00};
-					cDev->defInf.devDef->SetPanning(cDev->defInf.dataPtr, panPos);
+					funcPan(cDev->defInf.dataPtr, panPos);
 				}
 			}
 			break;

@@ -90,7 +90,7 @@ struct _device_definition
 	
 	DEVFUNC_OPTMASK SetOptionBits;
 	DEVFUNC_OPTMASK SetMuteMask;
-	DEVFUNC_PANALL SetPanning;
+	DEVFUNC_PANALL SetPanning;		// **NOTE: deprecated, moved to rwFuncs**
 	DEVFUNC_SRCCB SetSRateChgCB;	// used to set callback function for realtime sample rate changes
 	DEVFUNC_LINKDEV LinkDevice;		// used to link multiple devices together
 	
