@@ -547,7 +547,7 @@ size_t VGMPlayer::DeviceID2OptionID(UINT32 id) const
 	}
 	else if (id < _devices.size())
 	{
-		type = _DEV_LIST[_devices[id].vgmChipType];
+		type = _devices[id].chipType;
 		instance = _devices[id].chipID;
 	}
 	else
@@ -1146,6 +1146,7 @@ void VGMPlayer::InitDevices(void)
 		
 		sdCfg.deviceID = (size_t)-1;
 		chipDev.vgmChipType = sdCfg.vgmChipType;
+		chipDev.chipType = sdCfg.type;
 		chipDev.chipID = chipID;
 		chipDev.optID = _devOptMap[chipType][chipID];
 		chipDev.base.defInf.dataPtr = NULL;
@@ -1384,7 +1385,7 @@ void VGMPlayer::InitDevices(void)
 			Resmpl_Init(&clDev->resmpl);
 		}
 		
-		if (_DEV_LIST[chipDev.vgmChipType] == DEVID_YM3812)
+		if (chipDev.chipType == DEVID_YM3812)
 		{
 			if (GetChipClock(chipDev.vgmChipType, chipDev.chipID) & 0x80000000)
 			{

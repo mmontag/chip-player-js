@@ -54,6 +54,7 @@ public:
 	{
 		VGM_BASEDEV base;
 		UINT8 vgmChipType;
+		UINT8 chipType;
 		UINT8 chipID;
 		UINT32 flags;
 		size_t optID;
