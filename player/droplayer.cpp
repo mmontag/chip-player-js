@@ -614,7 +614,7 @@ UINT8 DROPlayer::Start(void)
 		cDev->optID = DeviceID2OptionID(curDev);
 		
 		devOpts = (cDev->optID != (size_t)-1) ? &_devOpts[cDev->optID] : NULL;
-		devCfg->emuCore = (devOpts != NULL) ? devOpts->emuCore : 0x00;
+		devCfg->emuCore = (devOpts != NULL) ? devOpts->emuCore[0] : 0x00;
 		devCfg->srMode = (devOpts != NULL) ? devOpts->srMode : DEVRI_SRMODE_NATIVE;
 		if (devOpts != NULL && devOpts->smplRate)
 			devCfg->smplRate = devOpts->smplRate;

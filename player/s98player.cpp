@@ -741,16 +741,6 @@ UINT32 S98Player::GetLoopTicks(void) const
 }
 
 
-static void SetSSGCore(void* userParam, VGM_BASEDEV* cDev, DEVLINK_INFO* dLink)
-{
-	if (dLink->devID == DEVID_AY8910)
-	{
-		// possible AY8910 sound core selection here
-	}
-	
-	return;
-}
-
 void S98Player::GenerateDeviceConfig(void)
 {
 	size_t curDev;
@@ -815,6 +805,22 @@ void S98Player::GenerateDeviceConfig(void)
 	return;
 }
 
+/*static*/ void S98Player::DeviceLinkCallback(void* userParam, VGM_BASEDEV* cDev, DEVLINK_INFO* dLink)
+{
+	DEVLINK_CB_DATA* cbData = (DEVLINK_CB_DATA*)userParam;
+	S98Player* oThis = cbData->player;
+	const S98_CHIPDEV& chipDev = *cbData->chipDev;
+	const PLR_DEV_OPTS* devOpts = (chipDev.optID != (size_t)-1) ? &oThis->_devOpts[chipDev.optID] : NULL;
+	
+	if (devOpts != NULL && devOpts->emuCore[1])
+	{
+		// set emulation core of linked device (OPN(A) SSG)
+		dLink->cfg->emuCore = devOpts->emuCore[1];
+	}
+	
+	return;
+}
+
 UINT8 S98Player::Start(void)
 {
 	size_t curDev;
@@ -853,7 +859,7 @@ UINT8 S98Player::Start(void)
 			cDev->optID = (size_t)-1;
 			devOpts = NULL;
 		}
-		devCfg->emuCore = (devOpts != NULL) ? devOpts->emuCore : 0x00;
+		devCfg->emuCore = (devOpts != NULL) ? devOpts->emuCore[0] : 0x00;
 		devCfg->srMode = (devOpts != NULL) ? devOpts->srMode : DEVRI_SRMODE_NATIVE;
 		if (devOpts != NULL && devOpts->smplRate)
 			devCfg->smplRate = devOpts->smplRate;
@@ -869,7 +875,12 @@ UINT8 S98Player::Start(void)
 		}
 		SndEmu_GetDeviceFunc(cDev->base.defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&cDev->write);
 		
-		SetupLinkedDevices(&cDev->base, &SetSSGCore, this);
+		{
+			DEVLINK_CB_DATA dlCbData;
+			dlCbData.player = this;
+			dlCbData.chipDev = cDev;
+			SetupLinkedDevices(&cDev->base, &DeviceLinkCallback, &dlCbData);
+		}
 		
 		if (devOpts != NULL)
 		{

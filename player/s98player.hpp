@@ -49,7 +49,12 @@ private:
 	{
 		std::vector<UINT8> data;
 	};
-	
+	struct DEVLINK_CB_DATA
+	{
+		S98Player* player;
+		S98_CHIPDEV* chipDev;
+	};
+
 public:
 	S98Player();
 	~S98Player();
@@ -106,6 +111,7 @@ private:
 	void RefreshTSRates(void);
 	
 	void GenerateDeviceConfig(void);
+	static void DeviceLinkCallback(void* userParam, VGM_BASEDEV* cDev, DEVLINK_INFO* dLink);
 	UINT8 SeekToTick(UINT32 tick);
 	UINT8 SeekToFilePos(UINT32 pos);
 	void ParseFile(UINT32 ticks);

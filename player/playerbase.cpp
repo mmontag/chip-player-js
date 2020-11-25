@@ -37,7 +37,8 @@ UINT8 PlayerBase::CanLoadFile(DATA_LOADER *dataLoader) const
 
 /*static*/ UINT8 PlayerBase::InitDeviceOptions(PLR_DEV_OPTS& devOpts)
 {
-	devOpts.emuCore = 0x00;
+	devOpts.emuCore[0] = 0x00;
+	devOpts.emuCore[1] = 0x00;
 	devOpts.srMode = DEVRI_SRMODE_NATIVE;
 	devOpts.resmplMode = 0x00;
 	devOpts.smplRate = 0;

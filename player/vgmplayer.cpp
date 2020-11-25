@@ -1137,7 +1137,7 @@ void VGMPlayer::InitDevices(void)
 		DEV_GEN_CFG* devCfg = (DEV_GEN_CFG*)&sdCfg.cfgData[0];
 		CHIP_DEVICE chipDev;
 		DEV_INFO* devInf;
-		PLR_DEV_OPTS* devOpts;
+		const PLR_DEV_OPTS* devOpts;
 		DEVFUNC_PANALL funcPan;
 		UINT8 retVal;
 		
@@ -1153,7 +1153,7 @@ void VGMPlayer::InitDevices(void)
 		chipDev.base.linkDev = NULL;
 		
 		devOpts = (chipDev.optID != (size_t)-1) ? &_devOpts[chipDev.optID] : NULL;
-		devCfg->emuCore = (devOpts != NULL) ? devOpts->emuCore : 0x00;
+		devCfg->emuCore = (devOpts != NULL) ? devOpts->emuCore[0] : 0x00;
 		devCfg->srMode = (devOpts != NULL) ? devOpts->srMode : DEVRI_SRMODE_NATIVE;
 		if (devOpts != NULL && devOpts->smplRate)
 			devCfg->smplRate = devOpts->smplRate;
@@ -1331,7 +1331,13 @@ void VGMPlayer::InitDevices(void)
 		}
 		sdCfg.deviceID = _devices.size();
 		
-		SetupLinkedDevices(&chipDev.base, &DeviceLinkCallback, this);
+		{
+			DEVLINK_CB_DATA dlCbData;
+			dlCbData.player = this;
+			dlCbData.sdCfg = &sdCfg;
+			dlCbData.chipDev = &chipDev;
+			SetupLinkedDevices(&chipDev.base, &DeviceLinkCallback, &dlCbData);
+		}
 		// already done by SndEmu_Start()
 		//devInf->devDef->Reset(devInf->dataPtr);
 		
@@ -1415,19 +1421,30 @@ void VGMPlayer::InitDevices(void)
 /*static*/ void VGMPlayer::DeviceLinkCallback(void* userParam, VGM_BASEDEV* cDev, DEVLINK_INFO* dLink)
 {
 	DEVLINK_CB_DATA* cbData = (DEVLINK_CB_DATA*)userParam;
-	VGMPlayer* oThis = cbData->object;
+	VGMPlayer* oThis = cbData->player;
+	//const SONG_DEV_CFG& sdCfg = *cbData->sdCfg;
+	const CHIP_DEVICE& chipDev = *cbData->chipDev;
+	const PLR_DEV_OPTS* devOpts = (chipDev.optID != (size_t)-1) ? &oThis->_devOpts[chipDev.optID] : NULL;
 	
-	if (dLink->devID == DEVID_AY8910)
-		dLink->cfg->emuCore = FCC_EMU_;
-	else if (dLink->devID == DEVID_YMF262)
-		dLink->cfg->emuCore = FCC_ADLE;
+	if (devOpts != NULL && devOpts->emuCore[1])
+	{
+		// set emulation core of linked device (OPN(A) SSG / OPL4 FM)
+		dLink->cfg->emuCore = devOpts->emuCore[1];
+	}
+	else
+	{
+		if (dLink->devID == DEVID_AY8910)
+			dLink->cfg->emuCore = FCC_EMU_;
+		else if (dLink->devID == DEVID_YMF262)
+			dLink->cfg->emuCore = FCC_ADLE;
+	}
 	
 	if (dLink->devID == DEVID_AY8910)
 	{
 		AY8910_CFG* ayCfg = (AY8910_CFG*)dLink->cfg;
-		if (cbData->chipType == DEVID_YM2203)
+		if (chipDev.chipType == DEVID_YM2203)
 			ayCfg->chipFlags = oThis->_hdrBuffer[0x7A];	// YM2203 SSG flags
-		else if (cbData->chipType == DEVID_YM2608)
+		else if (chipDev.chipType == DEVID_YM2608)
 			ayCfg->chipFlags = oThis->_hdrBuffer[0x7B];	// YM2608 SSG flags
 	}
 	

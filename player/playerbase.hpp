@@ -64,7 +64,7 @@ struct PLR_MUTE_OPTS
 
 struct PLR_DEV_OPTS
 {
-	UINT32 emuCore;		// enforce a certain sound core (0 = use default)
+	UINT32 emuCore[2];	// enforce a certain sound core (0 = use default, [1] is used for linked devices)
 	UINT8 srMode;		// sample rate mode (see DEVRI_SRMODE)
 	UINT8 resmplMode;	// resampling mode (0 - high quality, 1 - low quality, 2 - LQ down, HQ up)
 	UINT32 smplRate;	// emulaiton sample rate

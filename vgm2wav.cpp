@@ -394,7 +394,7 @@ static void set_core(PlayerBase *player, UINT8 devId, UINT32 coreId) {
     /* just going to set the first instance */
     id = PLR_DEV_ID(devId,0);
     if(player->GetDeviceOptions(id,devOpts)) return;
-    devOpts.emuCore = coreId;
+    devOpts.emuCore[0] = coreId;
     player->SetDeviceOptions(id,devOpts);
     return;
 }

@@ -112,8 +112,9 @@ protected:
 	typedef void (VGMPlayer::*COMMAND_FUNC)(void);	// VGM command member function callback
 	struct DEVLINK_CB_DATA
 	{
-		VGMPlayer* object;
-		UINT8 chipType;
+		VGMPlayer* player;
+		SONG_DEV_CFG* sdCfg;
+		CHIP_DEVICE* chipDev;
 	};
 	struct COMMAND_INFO
 	{

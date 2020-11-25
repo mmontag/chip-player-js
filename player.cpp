@@ -439,6 +439,7 @@ Sound Chip ID:
 			Note: The number is the ID of the active sound chip (as shown by device info).
 			      All sound chips can be controlled with 0x800I00NN (NN = libvgm device ID, I = instance, i.e. 0 or 1)
 		C param - set emulation core to param (four-character code, case sensitive, empty = use default)
+		LC param - set emulation core of *linked device* (OPN SSG/OPL4 FM) to param (four-character code, case sensitive, empty = use default)
 		O param - set sound core options (core-specific)
 		SRM param - set sample rate mode (0/1/2, see DEVRI_SRMODE_*)
 		SR param - set emulated sample rate (0 = use rate of output stream)
@@ -490,7 +491,7 @@ static void DoChipControlMode(PlayerBase* player)
 				}
 				
 				printf("Cfg: Core %s, Opts 0x%X, srMode 0x%02X, sRate %u, resampleMode 0x%02X\n",
-					FCC2Str(devOpts.emuCore).c_str(), devOpts.coreOpts, devOpts.srMode,
+					FCC2Str(devOpts.emuCore[0]).c_str(), devOpts.coreOpts, devOpts.srMode,
 					devOpts.smplRate, devOpts.resmplMode);
 				printf("Muting: Chip %s [0x%02X], Channel Mask: 0x%02X\n",
 					(devOpts.muteOpts.disable & 0x01) ? "Off" : "On", devOpts.muteOpts.disable,
@@ -543,8 +544,8 @@ static void DoChipControlMode(PlayerBase* player)
 				continue;
 			}
 			
-			// Core / Opts / SRMode / SampleRate / ReSampleMode / Muting
-			printf("Command [C/O/SRM/SR/RSM/M data]: ");
+			// Core / Linked Core / Opts / SRMode / SampleRate / ReSampleMode / Muting
+			printf("Command [C/LC/O/SRM/SR/RSM/M data]: ");
 			fgets(line, 0x80, stdin);
 			StripNewline(line);
 			
@@ -557,7 +558,16 @@ static void DoChipControlMode(PlayerBase* player)
 			{
 				std::string fccStr(tokenStr);
 				fccStr.resize(4, 0x00);
-				devOpts.emuCore =
+				devOpts.emuCore[0] =
+					(fccStr[0] << 24) | (fccStr[1] << 16) |
+					(fccStr[2] <<  8) | (fccStr[3] <<  0);
+				player->SetDeviceOptions((UINT32)chipID, devOpts);
+			}
+			else if (! strcmp(line, "LC"))
+			{
+				std::string fccStr(tokenStr);
+				fccStr.resize(4, 0x00);
+				devOpts.emuCore[1] =
 					(fccStr[0] << 24) | (fccStr[1] << 16) |
 					(fccStr[2] <<  8) | (fccStr[3] <<  0);
 				player->SetDeviceOptions((UINT32)chipID, devOpts);
