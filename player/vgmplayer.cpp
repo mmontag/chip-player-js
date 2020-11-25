@@ -1347,7 +1347,8 @@ void VGMPlayer::InitDevices(void)
 				devInf->devDef->SetOptionBits(devInf->dataPtr, devOpts->coreOpts);
 			RefreshMuting(chipDev, devOpts->muteOpts);
 		}
-		retVal = SndEmu_GetDeviceFunc(devInf->devDef, RWF_CHN_PAN | RWF_WRITE, DEVRW_ALL, 0, (void**)&funcPan);
+		funcPan = NULL;
+		SndEmu_GetDeviceFunc(devInf->devDef, RWF_CHN_PAN | RWF_WRITE, DEVRW_ALL, 0, (void**)&funcPan);
 		if (funcPan != NULL)
 		{
 			if (chipType == DEVID_SN76496)

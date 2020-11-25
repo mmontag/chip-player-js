@@ -533,6 +533,7 @@ static void InitVGMChips(void)
 					break;
 				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&cDev->write8);
 				
+				funcPan = NULL;
 				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_CHN_PAN | RWF_WRITE, DEVRW_ALL, 0, (void**)&funcPan);
 				if (funcPan != NULL)
 				{
@@ -628,6 +629,7 @@ static void InitVGMChips(void)
 					break;
 				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&cDev->write8);
 				
+				funcPan = NULL;
 				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_CHN_PAN | RWF_WRITE, DEVRW_ALL, 0, (void**)&funcPan);
 				if (funcPan != NULL)
 				{
