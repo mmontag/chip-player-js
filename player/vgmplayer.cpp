@@ -1449,24 +1449,30 @@ void VGMPlayer::LoadOPL4ROM(CHIP_DEVICE* chipDev)
 {
 	static const char* romFile = "yrw801.rom";
 	
-	if (_fileReqCbFunc == NULL)
-		return;
 	if (chipDev->romWrite == NULL)
 		return;
 	
-	DATA_LOADER* romDLoad = _fileReqCbFunc(_fileReqCbParam, this, romFile);
-	if (romDLoad == NULL)
-		return;
-	DataLoader_ReadAll(romDLoad);
-	
-	UINT32 yrwSize = DataLoader_GetSize(romDLoad);
-	const UINT8* yrwData = DataLoader_GetData(romDLoad);
-	if (yrwSize == 0 || yrwData == NULL)
+	if (_yrwRom.empty())
+	{
+		if (_fileReqCbFunc == NULL)
+			return;
+		DATA_LOADER* romDLoad = _fileReqCbFunc(_fileReqCbParam, this, romFile);
+		if (romDLoad == NULL)
+			return;
+		DataLoader_ReadAll(romDLoad);
+		
+		UINT32 yrwSize = DataLoader_GetSize(romDLoad);
+		const UINT8* yrwData = DataLoader_GetData(romDLoad);
+		if (yrwSize > 0 && yrwData != NULL)
+			_yrwRom.assign(yrwData, yrwData + yrwSize);
+		DataLoader_Deinit(romDLoad);
+	}
+	if (_yrwRom.empty())
 		return;
 	
 	if (chipDev->romSize != NULL)
-		chipDev->romSize(chipDev->base.defInf.dataPtr, yrwSize);
-	chipDev->romWrite(chipDev->base.defInf.dataPtr, 0x00, yrwSize, yrwData);
+		chipDev->romSize(chipDev->base.defInf.dataPtr, _yrwRom.size());
+	chipDev->romWrite(chipDev->base.defInf.dataPtr, 0x00, _yrwRom.size(), &_yrwRom[0]);
 	
 	return;
 }
