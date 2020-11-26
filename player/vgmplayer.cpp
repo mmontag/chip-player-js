@@ -1026,6 +1026,13 @@ void VGMPlayer::GenerateDeviceConfig(void)
 					SaveDeviceConfig(sdCfg.cfgData, &spCfg, sizeof(SEGAPCM_CFG));
 				}
 				break;
+			case DEVID_RF5C68:
+				if (vgmChip == 0x05)	// RF5C68
+					devCfg.flags = 0;
+				else //if (vgmChip == 0x10)	// RF5C164
+					devCfg.flags = 1;
+				SaveDeviceConfig(sdCfg.cfgData, &devCfg, sizeof(DEV_GEN_CFG));
+				break;
 			case DEVID_AY8910:
 				{
 					AY8910_CFG ayCfg;
@@ -1183,10 +1190,10 @@ void VGMPlayer::InitDevices(void)
 		case DEVID_RF5C68:
 			if (! devCfg->emuCore)
 			{
-				if (sdCfg.vgmChipType == 0x05)	// RF5C68
-					devCfg->emuCore = FCC_MAME;
-				else //if (sdCfg.vgmChipType == 0x10)	// RF5C164
+				if (devCfg->flags == 1)	// RF5C164
 					devCfg->emuCore = FCC_GENS;
+				else //if (devCfg->flags == 0)	// RF5C68
+					devCfg->emuCore = FCC_MAME;
 			}
 			retVal = SndEmu_Start(chipType, devCfg, devInf);
 			if (retVal)

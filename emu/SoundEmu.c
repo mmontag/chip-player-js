@@ -475,6 +475,13 @@ const char* SndEmu_GetDevName(UINT8 deviceID, UINT8 opts, const DEV_GEN_CFG* dev
 #endif
 #ifdef SNDDEV_RF5C68
 	case DEVID_RF5C68:
+		if (devCfg != NULL)
+		{
+			if (devCfg->flags == 1)
+				return "RF5C164";
+			else if (devCfg->flags == 2)
+				return "RF5C105";
+		}
 		return "RF5C68";
 #endif
 #ifdef SNDDEV_YM2203
