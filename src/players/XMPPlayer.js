@@ -19,8 +19,8 @@ export default class XMPPlayer extends Player {
     this.xmpCtx = chipCore._xmp_create_context();
     this.xmp_frame_infoPtr = chipCore._malloc(2048);
     this.fileExtensions = fileExtensions;
-    this.initialBPM = 125;
-    this.tempoScale = 1;
+    this.lastBPM = 125;
+    this.tempoScale = this.lastTempoScale = 1;
     this._positionMs = 0;
     this._durationMs = 1000;
     this.buffer = chipCore.allocate(this.bufferSize * 16, 'i16', chipCore.ALLOC_NORMAL);
@@ -104,7 +104,7 @@ export default class XMPPlayer extends Player {
     // Filename fallback
     if (!meta.title) meta.title = this.filepathMeta.title;
 
-    this.initialBPM = meta.initialBPM;
+    this.lastBPM = meta.initialBPM;
 
     return meta;
   }
@@ -153,9 +153,19 @@ export default class XMPPlayer extends Player {
     const xmp = this.lib;
     const minBPM = 20;
     const maxBPM = 255;
-    const targetBPM = Math.floor(Math.max(Math.min(this.metadata.initialBPM * this.tempoScale, maxBPM), minBPM));
+    const estimatedBPM = Math.floor(Math.max(Math.min(this.lastBPM * this.tempoScale, maxBPM), minBPM));
 
-    if (targetBPM === measuredBPM) return;
+    if (estimatedBPM === measuredBPM) return;
+
+    let targetBPM = this.metadata.initialBPM;
+    if (this.lastTempoScale === this.tempoScale) {  // tempo event received
+      this.lastBPM = measuredBPM;
+      if (this.tempoScale === 1) return;
+      targetBPM = Math.floor(Math.max(Math.min(measuredBPM * this.tempoScale, maxBPM), minBPM));
+    } else {                                        // `Speed` slider changed
+      targetBPM = estimatedBPM;
+      this.lastTempoScale = this.tempoScale;
+    }
 
     console.log('Injecting %d BPM into libxmp. (Initial: %d)', targetBPM, this.metadata.initialBPM);
     const xmp_eventPtr = xmp._malloc(8);
