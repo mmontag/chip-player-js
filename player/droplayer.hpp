@@ -56,6 +56,7 @@ struct DRO_HEADER
 	UINT8 cmdDlyLong;
 	UINT8 regCmdCnt;
 	UINT8 regCmdMap[0x80];
+	UINT32 dataOfs;
 };
 
 // DRO v2 often incorrectly specify DualOPL2 instead of OPL3
@@ -148,7 +149,6 @@ private:
 	UINT8 _realHwType;
 	UINT8 _portShift;	// 0 for OPL2 (1 port per chip), 1 for OPL3 (2 ports per chip)
 	UINT8 _portMask;	// (1 << _portShift) - 1
-	UINT32 _dataOfs;
 	UINT32 _tickFreq;
 	UINT32 _totalTicks;
 	

@@ -134,14 +134,14 @@ UINT8 DROPlayer::LoadFile(DATA_LOADER *dataLoader)
 			_fileHdr.lengthMS = ReadLE32(&_fileData[0x08]);
 			_fileHdr.dataSize = ReadLE32(&_fileData[0x0C]);
 			_fileHdr.hwType = _fileData[0x10];
-			_dataOfs = 0x11;
+			_fileHdr.dataOfs = 0x11;
 			break;
 		case 1:
 			_fileHdr.lengthMS = ReadLE32(&_fileData[0x0C]);
 			_fileHdr.dataSize = ReadLE32(&_fileData[0x10]);
 			tempLng = ReadLE32(&_fileData[0x14]);
 			_fileHdr.hwType = (tempLng <= 0xFF) ? (UINT8)tempLng : 0xFF;
-			_dataOfs = 0x18;
+			_fileHdr.dataOfs = 0x18;
 			break;
 		}
 		// swap DualOPL2 and OPL3 values
@@ -164,7 +164,7 @@ UINT8 DROPlayer::LoadFile(DATA_LOADER *dataLoader)
 		_fileHdr.cmdDlyShort = _fileData[0x17];
 		_fileHdr.cmdDlyLong = _fileData[0x18];
 		_fileHdr.regCmdCnt = _fileData[0x19];
-		_dataOfs = 0x1A + _fileHdr.regCmdCnt;
+		_fileHdr.dataOfs = 0x1A + _fileHdr.regCmdCnt;
 		
 		if (_fileHdr.regCmdCnt > 0x80)
 			_fileHdr.regCmdCnt = 0x80;	// only 0x80 values are possible
@@ -241,7 +241,7 @@ void DROPlayer::ScanInitBlock(void)
 	std::fill(_initRegSet.begin(), _initRegSet.end(), false);
 	_initOPL3Enable = 0x00;
 	
-	filePos = _dataOfs;
+	filePos = _fileHdr.dataOfs;
 	if (_fileHdr.verMajor < 2)
 	{
 		selPort = 0;
@@ -325,7 +325,7 @@ UINT8 DROPlayer::UnloadFile(void)
 	_dLoad = NULL;
 	_fileData = NULL;
 	_fileHdr.verMajor = 0xFF;
-	_dataOfs = 0x00;
+	_fileHdr.dataOfs = 0x00;
 	_devTypes.clear();
 	_devPanning.clear();
 	_devCfgs.clear();
@@ -689,7 +689,7 @@ UINT8 DROPlayer::Reset(void)
 	UINT8 curPort;
 	UINT8 devport;
 	
-	_filePos = _dataOfs;
+	_filePos = _fileHdr.dataOfs;
 	_fileTick = 0;
 	_playTick = 0;
 	_playSmpl = 0;
