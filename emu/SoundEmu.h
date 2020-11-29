@@ -68,7 +68,7 @@ const char* SndEmu_GetDevName(UINT8 deviceID, UINT8 opts, const DEV_GEN_CFG* dev
 #define EERR_OK			0x00
 #define EERR_MORE_FOUND	0x01	// success, but more items were found
 #define EERR_UNK_DEVICE	0xF0	// unknown/invalid device ID
-#define EERR_NOT_FOUND	0xF8	// sound core of function not found
+#define EERR_NOT_FOUND	0xF8	// sound core or function not found
 #define EERR_INIT_ERR	0xFF	// sound core initialization error (usually malloc error)
 
 #ifdef __cplusplus

@@ -215,7 +215,7 @@ static void* saa1099v_create(UINT32 clock, UINT32 sampleRate)
 	RC_SET_RATIO(&saa->stepCntr, saa->clock, saa->sampleRate * 128);
 	
 	for (curVol = 0x00; curVol < 0x10; curVol ++)
-		saa->volTbl[curVol] = curVol * 0x8000 / 16 / 6;
+		saa->volTbl[curVol] = curVol * 0x4000 / 16 / 6;
 	
 	saa1099v_set_mute_mask(saa, 0x00);
 	
