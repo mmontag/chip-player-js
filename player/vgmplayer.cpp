@@ -1318,23 +1318,6 @@ void VGMPlayer::InitDevices(void)
 		default:
 			if (chipType == DEVID_C219)
 				chipDev.flags |= 0x01;	// enable 16-bit byteswap patch on all ROM data
-			if (! devCfg->emuCore)
-			{
-				if (chipType == DEVID_YM2612)
-					devCfg->emuCore = FCC_GPGX;
-				else if (chipType == DEVID_YM3812)
-					devCfg->emuCore = FCC_ADLE;
-				else if (chipType == DEVID_YMF262)
-					devCfg->emuCore = FCC_NUKE;
-				else if (chipType == DEVID_AY8910)
-					devCfg->emuCore = FCC_EMU_;
-				else if (chipType == DEVID_NES_APU)
-					devCfg->emuCore = FCC_NSFP;
-				else if (chipType == DEVID_C6280)
-					devCfg->emuCore = FCC_OOTK;
-				else if (chipType == DEVID_SAA1099)
-					devCfg->emuCore = FCC_VBEL;
-			}
 			
 			retVal = SndEmu_Start(chipType, devCfg, devInf);
 			if (retVal)
@@ -1343,10 +1326,6 @@ void VGMPlayer::InitDevices(void)
 			SndEmu_GetDeviceFunc(devInf->devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A16D8, 0, (void**)&chipDev.writeM8);
 			SndEmu_GetDeviceFunc(devInf->devDef, RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, (void**)&chipDev.romSize);
 			SndEmu_GetDeviceFunc(devInf->devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&chipDev.romWrite);
-			if (chipType == DEVID_YM2612)
-				devInf->devDef->SetOptionBits(devInf->dataPtr, 0x80);	// enable legacy mode
-			else if (chipType == DEVID_GB_DMG)
-				devInf->devDef->SetOptionBits(devInf->dataPtr, 0x80);	// enable legacy mode
 			break;
 		}
 		if (retVal)
@@ -1370,7 +1349,14 @@ void VGMPlayer::InitDevices(void)
 		if (devOpts != NULL)
 		{
 			if (devInf->devDef->SetOptionBits != NULL)
-				devInf->devDef->SetOptionBits(devInf->dataPtr, devOpts->coreOpts);
+			{
+				UINT32 coreOpts = devOpts->coreOpts;
+				if (chipType == DEVID_YM2612)
+					coreOpts |= 0x80;	// enable legacy mode [TODO: disable after sample 0]
+				else if (chipType == DEVID_GB_DMG)
+					coreOpts |= 0x80;	// enable legacy mode (fix playback of old VGMs)
+				devInf->devDef->SetOptionBits(devInf->dataPtr, coreOpts);
+			}
 			RefreshMuting(chipDev, devOpts->muteOpts);
 			RefreshPanning(chipDev, devOpts->panOpts);
 		}

@@ -16,14 +16,14 @@
 
 const DEV_DEF* devDefList_SAA1099[] =
 {
+#ifdef EC_SAA1099_VB
+	&devDef_SAA1099_VB,
+#endif
 #ifdef EC_SAA1099_MAME
 	&devDef_SAA1099_MAME,
 #endif
 #ifdef EC_SAA1099_NRS
 	&devDef_SAA1099_NRS,
-#endif
-#ifdef EC_SAA1099_VB
-	&devDef_SAA1099_VB,
 #endif
 	NULL
 };
