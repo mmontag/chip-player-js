@@ -432,7 +432,7 @@ static void sn76489_mute_maxim(SN76489_Context* chip, UINT32 MuteMask)
 	return;
 }
 
-static void sn76489_pan_maxim(SN76489_Context* chip, INT16* PanVals)
+static void sn76489_pan_maxim(SN76489_Context* chip, const INT16* PanVals)
 {
 	SN76489_SetPanning(chip, PanVals[0x00], PanVals[0x01], PanVals[0x02], PanVals[0x03]);
 	return;

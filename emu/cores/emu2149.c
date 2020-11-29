@@ -598,7 +598,7 @@ void EPSG_set_pan (EPSG * psg, uint8_t ch, int16_t pan)
   Panning_Calculate( psg->pan[ch], pan );
 }
 
-static void ay8910_pan_emu(void* chipptr, INT16* PanVals)
+static void ay8910_pan_emu(void* chipptr, const INT16* PanVals)
 {
   UINT8 curChn;
   

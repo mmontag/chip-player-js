@@ -39,6 +39,8 @@ extern "C" int __cdecl _kbhit(void);
 #include "audio/AudioStream.h"
 #include "audio/AudioStream_SpcDrvFuns.h"
 #include "emu/Resampler.h"
+#include "emu/SoundDevs.h"	// for DEVID_*
+#include "emu/EmuCores.h"
 #include "utils/OSMutex.h"
 
 //#define USE_MEMORY_LOADER 1	// define to use the in-memory loader
@@ -250,6 +252,41 @@ int main(int argc, char* argv[])
 	}
 	
 	putchar('\n');
+	
+	{
+		PLR_DEV_OPTS devOpts;
+		UINT32 devOptID;
+		
+		devOptID = PLR_DEV_ID(DEVID_SN76496, 0);
+		retVal = player->GetDeviceOptions(devOptID, devOpts);
+		if (! (retVal & 0x80))
+		{
+			static const INT16 panPos[4] = {0x00, -0x80, +0x80, 0x100};
+			devOpts.emuCore[0] = FCC_MAXM;
+			memcpy(devOpts.panOpts.chnPan, panPos, sizeof(panPos));
+			player->SetDeviceOptions(devOptID, devOpts);
+		}
+		
+		devOptID = PLR_DEV_ID(DEVID_YM2413, 0);
+		retVal = player->GetDeviceOptions(devOptID, devOpts);
+		if (! (retVal & 0x80))
+		{
+			static const INT16 panPos[14] = {
+				-0x100, +0x100, -0x80, +0x80, -0x40, +0x40, -0xC0, +0xC0, 0x00,
+				-0x60, +0x60, 0x00, -0xC0, +0xC0};
+			memcpy(devOpts.panOpts.chnPan, panPos, sizeof(panPos));
+			player->SetDeviceOptions(devOptID, devOpts);
+		}
+		
+		devOptID = PLR_DEV_ID(DEVID_AY8910, 0);
+		retVal = player->GetDeviceOptions(devOptID, devOpts);
+		if (! (retVal & 0x80))
+		{
+			static const INT16 panPos[3] = {-0x80, +0x80, 0x00};
+			memcpy(devOpts.panOpts.chnPan, panPos, sizeof(panPos));
+			player->SetDeviceOptions(devOptID, devOpts);
+		}
+	}
 	
 	player->SetSampleRate(sampleRate);
 	player->Start();

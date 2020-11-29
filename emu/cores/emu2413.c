@@ -29,7 +29,7 @@
 static UINT8 device_start_ym2413_emu(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
 static void ym2413_update_emu(void *chip, UINT32 samples, DEV_SMPL **out);
 static void ym2413_set_mute_mask_emu(void *chip, UINT32 MuteMask);
-static void ym2413_pan_emu(void* chip, INT16* PanVals);
+static void ym2413_pan_emu(void* chip, const INT16* PanVals);
 
 
 static DEVDEF_RWFUNC devFunc[] =
@@ -1608,7 +1608,7 @@ static const uint8_t PAN_MAP[14] = {
 	9, 11, 12, 13, 10
 };
 
-static void ym2413_pan_emu(void* chip, INT16* PanVals)
+static void ym2413_pan_emu(void* chip, const INT16* PanVals)
 {
 	EOPLL *opll = (EOPLL *)chip;
 	uint8_t curChn;

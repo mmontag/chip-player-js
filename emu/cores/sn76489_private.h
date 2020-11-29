@@ -88,6 +88,6 @@ static void SN76489_SetPanning(SN76489_Context* chip, INT16 ch0, INT16 ch1, INT1
 static UINT8 device_start_sn76496_maxim(const SN76496_CFG* cfg, DEV_INFO* retDevInf);
 static void sn76496_w_maxim(SN76489_Context* chip, UINT8 reg, UINT8 data);
 static void sn76489_mute_maxim(SN76489_Context* chip, UINT32 MuteMask);
-static void sn76489_pan_maxim(SN76489_Context* chip, INT16* PanVals);
+static void sn76489_pan_maxim(SN76489_Context* chip, const INT16* PanVals);
 
 #endif	// __SN76489_PRIVATE_H__

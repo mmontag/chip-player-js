@@ -127,6 +127,7 @@ public:
 private:
 	size_t DeviceID2OptionID(UINT32 id) const;
 	void RefreshMuting(DRO_CHIPDEV& chipDev, const PLR_MUTE_OPTS& muteOpts);
+	void RefreshPanning(DRO_CHIPDEV& chipDev, const PLR_PAN_OPTS& panOpts);
 	
 	void ScanInitBlock(void);
 	

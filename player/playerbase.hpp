@@ -2,7 +2,8 @@
 #define __PLAYERBASE_HPP__
 
 #include "../stdtype.h"
-#include "../emu/Resampler.h"
+#include "../emu/EmuStructs.h"	// for DEV_GEN_CFG
+#include "../emu/Resampler.h"	// for WAVE_32BS
 #include "../utils/DataLoader.h"
 #include <vector>
 
@@ -59,6 +60,10 @@ struct PLR_MUTE_OPTS
 	UINT8 disable;		// suspend emulation (0x01 = main device, 0x02 = linked, 0xFF = all)
 	UINT32 chnMute[2];	// channel muting mask ([1] is used for linked devices)
 };
+struct PLR_PAN_OPTS
+{
+	INT16 chnPan[2][32];	// channel panning [TODO: rethink how this should be really configured]
+};
 
 #define PLR_DEV_ID(chip, instance)	(0x80000000 | (instance << 16) | (chip << 0))
 
@@ -70,6 +75,7 @@ struct PLR_DEV_OPTS
 	UINT32 smplRate;	// emulaiton sample rate
 	UINT32 coreOpts;
 	PLR_MUTE_OPTS muteOpts;
+	PLR_PAN_OPTS panOpts;
 };
 
 

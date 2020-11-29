@@ -186,6 +186,7 @@ protected:
 	
 	size_t DeviceID2OptionID(UINT32 id) const;
 	void RefreshMuting(CHIP_DEVICE& chipDev, const PLR_MUTE_OPTS& muteOpts);
+	void RefreshPanning(CHIP_DEVICE& chipDev, const PLR_PAN_OPTS& panOpts);
 	
 	void RefreshTSRates(void);
 	

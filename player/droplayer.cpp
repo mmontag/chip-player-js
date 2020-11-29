@@ -444,6 +444,19 @@ void DROPlayer::RefreshMuting(DRO_CHIPDEV& chipDev, const PLR_MUTE_OPTS& muteOpt
 	return;
 }
 
+void DROPlayer::RefreshPanning(DRO_CHIPDEV& chipDev, const PLR_PAN_OPTS& panOpts)
+{
+	DEV_INFO* devInf = &chipDev.base.defInf;
+	if (devInf->dataPtr == NULL)
+		return;
+	DEVFUNC_PANALL funcPan = NULL;
+	UINT8 retVal = SndEmu_GetDeviceFunc(devInf->devDef, RWF_CHN_PAN | RWF_WRITE, DEVRW_ALL, 0, (void**)&funcPan);
+	if (retVal != EERR_NOT_FOUND && funcPan != NULL)
+		funcPan(devInf->dataPtr, &panOpts.chnPan[0][0]);
+	
+	return;
+}
+
 UINT8 DROPlayer::SetDeviceOptions(UINT32 id, const PLR_DEV_OPTS& devOpts)
 {
 	size_t optID = DeviceID2OptionID(id);

@@ -576,6 +576,25 @@ void VGMPlayer::RefreshMuting(VGMPlayer::CHIP_DEVICE& chipDev, const PLR_MUTE_OP
 	return;
 }
 
+void VGMPlayer::RefreshPanning(VGMPlayer::CHIP_DEVICE& chipDev, const PLR_PAN_OPTS& panOpts)
+{
+	VGM_BASEDEV* clDev;
+	UINT8 linkCntr = 0;
+	
+	for (clDev = &chipDev.base; clDev != NULL && linkCntr < 2; clDev = clDev->linkDev, linkCntr ++)
+	{
+		DEV_INFO* devInf = &clDev->defInf;
+		if (devInf->dataPtr == NULL)
+			continue;
+		DEVFUNC_PANALL funcPan = NULL;
+		UINT8 retVal = SndEmu_GetDeviceFunc(devInf->devDef, RWF_CHN_PAN | RWF_WRITE, DEVRW_ALL, 0, (void**)&funcPan);
+		if (retVal != EERR_NOT_FOUND && funcPan != NULL)
+			funcPan(devInf->dataPtr, &panOpts.chnPan[linkCntr][0]);
+	}
+	
+	return;
+}
+
 UINT8 VGMPlayer::SetDeviceOptions(UINT32 id, const PLR_DEV_OPTS& devOpts)
 {
 	size_t optID = DeviceID2OptionID(id);
@@ -592,6 +611,7 @@ UINT8 VGMPlayer::SetDeviceOptions(UINT32 id, const PLR_DEV_OPTS& devOpts)
 			devInf->devDef->SetOptionBits(devInf->dataPtr, _devOpts[optID].coreOpts);
 		
 		RefreshMuting(_devices[devID], _devOpts[optID].muteOpts);
+		RefreshPanning(_devices[devID], _devOpts[optID].panOpts);
 	}
 	return 0x00;
 }
@@ -1145,7 +1165,6 @@ void VGMPlayer::InitDevices(void)
 		CHIP_DEVICE chipDev;
 		DEV_INFO* devInf;
 		const PLR_DEV_OPTS* devOpts;
-		DEVFUNC_PANALL funcPan;
 		UINT8 retVal;
 		
 		memset(&chipDev, 0x00, sizeof(CHIP_DEVICE));
@@ -1353,28 +1372,7 @@ void VGMPlayer::InitDevices(void)
 			if (devInf->devDef->SetOptionBits != NULL)
 				devInf->devDef->SetOptionBits(devInf->dataPtr, devOpts->coreOpts);
 			RefreshMuting(chipDev, devOpts->muteOpts);
-		}
-		funcPan = NULL;
-		SndEmu_GetDeviceFunc(devInf->devDef, RWF_CHN_PAN | RWF_WRITE, DEVRW_ALL, 0, (void**)&funcPan);
-		if (funcPan != NULL)
-		{
-			if (chipType == DEVID_SN76496)
-			{
-				INT16 panPos[4] = {0x00, -0x80, +0x80, 0x00};
-				funcPan(devInf->dataPtr, panPos);
-			}
-			else if (chipType == DEVID_YM2413)
-			{
-				INT16 panPos[14] = {
-					-0x100, +0x100, -0x80, +0x80, -0x40, +0x40, -0xC0, +0xC0, 0x00,
-					-0x60, +0x60, 0x00, -0xC0, +0xC0};
-				funcPan(devInf->dataPtr, panPos);
-			}
-			else if (chipType == DEVID_AY8910)
-			{
-				INT16 panPos[3] = {-0x80, +0x80, 0x00};
-				funcPan(devInf->dataPtr, panPos);
-			}
+			RefreshPanning(chipDev, devOpts->panOpts);
 		}
 		
 		_vdDevMap[sdCfg.vgmChipType][chipID] = _devices.size();

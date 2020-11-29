@@ -46,6 +46,7 @@ UINT8 PlayerBase::CanLoadFile(DATA_LOADER *dataLoader) const
 	devOpts.muteOpts.disable = 0x00;
 	devOpts.muteOpts.chnMute[0] = 0x00;
 	devOpts.muteOpts.chnMute[1] = 0x00;
+	memset(devOpts.panOpts.chnPan, 0x00, sizeof(devOpts.panOpts.chnPan));
 	return 0x00;
 }
 

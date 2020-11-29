@@ -96,7 +96,7 @@ extern "C"
   void EPSG_setMuteMask (EPSG *, UINT32 mask);
   void EPSG_setStereoMask (EPSG *psg, UINT32 mask);
   void EPSG_set_pan (EPSG * psg, uint8_t ch, int16_t pan);
-  static void ay8910_pan_emu(void* chipptr, INT16* PanVals);
+  static void ay8910_pan_emu(void* chipptr, const INT16* PanVals);
     
 #ifdef __cplusplus
 }

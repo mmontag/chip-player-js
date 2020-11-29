@@ -615,6 +615,25 @@ void S98Player::RefreshMuting(S98_CHIPDEV& chipDev, const PLR_MUTE_OPTS& muteOpt
 	return;
 }
 
+void S98Player::RefreshPanning(S98_CHIPDEV& chipDev, const PLR_PAN_OPTS& panOpts)
+{
+	VGM_BASEDEV* clDev;
+	UINT8 linkCntr = 0;
+	
+	for (clDev = &chipDev.base; clDev != NULL && linkCntr < 2; clDev = clDev->linkDev, linkCntr ++)
+	{
+		DEV_INFO* devInf = &clDev->defInf;
+		if (devInf->dataPtr == NULL)
+			continue;
+		DEVFUNC_PANALL funcPan = NULL;
+		UINT8 retVal = SndEmu_GetDeviceFunc(devInf->devDef, RWF_CHN_PAN | RWF_WRITE, DEVRW_ALL, 0, (void**)&funcPan);
+		if (retVal != EERR_NOT_FOUND && funcPan != NULL)
+			funcPan(devInf->dataPtr, &panOpts.chnPan[linkCntr][0]);
+	}
+	
+	return;
+}
+
 UINT8 S98Player::SetDeviceOptions(UINT32 id, const PLR_DEV_OPTS& devOpts)
 {
 	size_t optID = DeviceID2OptionID(id);
@@ -625,7 +644,10 @@ UINT8 S98Player::SetDeviceOptions(UINT32 id, const PLR_DEV_OPTS& devOpts)
 	
 	size_t devID = _optDevMap[optID];
 	if (devID < _devices.size())
+	{
 		RefreshMuting(_devices[devID], _devOpts[optID].muteOpts);
+		RefreshPanning(_devices[devID], _devOpts[optID].panOpts);
+	}
 	return 0x00;
 }
 
@@ -887,6 +909,7 @@ UINT8 S98Player::Start(void)
 			if (cDev->base.defInf.devDef->SetOptionBits != NULL)
 				cDev->base.defInf.devDef->SetOptionBits(cDev->base.defInf.dataPtr, devOpts->coreOpts);
 			RefreshMuting(*cDev, devOpts->muteOpts);
+			RefreshPanning(*cDev, devOpts->panOpts);
 			
 			_optDevMap[cDev->optID] = curDev;
 		}
