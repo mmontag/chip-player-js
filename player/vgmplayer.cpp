@@ -1565,13 +1565,25 @@ UINT32 VGMPlayer::Render(UINT32 smplCnt, WAVE_32BS* data)
 {
 	UINT32 curSmpl;
 	UINT32 smplFileTick;
+	UINT32 maxSmpl;
+	INT32 smplStep;	// might be negative due to rounding errors in Tick2Sample
 	size_t curDev;
 	
-	for (curSmpl = 0; curSmpl < smplCnt; curSmpl ++)
+	// Note: use do {} while(), so that "smplCnt == 0" can be used to process until reaching the next sample.
+	curSmpl = 0;
+	do
 	{
 		smplFileTick = Sample2Tick(_playSmpl);
 		ParseFile(smplFileTick - _playTick);
-		_playSmpl ++;
+		
+		// render as many samples at once as possible (for better performance)
+		maxSmpl = Tick2Sample(_fileTick);
+		smplStep = maxSmpl - _playSmpl;
+		// When DAC streams are active, limit step size to 1, so that DAC streams and sound chip emulation are in sync.
+		if (smplStep < 1 || ! _dacStreams.empty())
+			smplStep = 1;	// must render at least 1 sample in order to advance
+		if ((UINT32)smplStep > smplCnt - curSmpl)
+			smplStep = smplCnt - curSmpl;
 		
 		for (curDev = 0; curDev < _devices.size(); curDev ++)
 		{
@@ -1582,21 +1594,23 @@ UINT32 VGMPlayer::Render(UINT32 smplCnt, WAVE_32BS* data)
 			for (clDev = &cDev->base; clDev != NULL; clDev = clDev->linkDev, disable >>= 1)
 			{
 				if (clDev->defInf.dataPtr != NULL && ! (disable & 0x01))
-					Resmpl_Execute(&clDev->resmpl, 1, &data[curSmpl]);
+					Resmpl_Execute(&clDev->resmpl, smplStep, &data[curSmpl]);
 			}
 		}
 		for (curDev = 0; curDev < _dacStreams.size(); curDev ++)
 		{
 			DEV_INFO* dacDInf = &_dacStreams[curDev].defInf;
-			dacDInf->devDef->Update(dacDInf->dataPtr, 1, NULL);
+			dacDInf->devDef->Update(dacDInf->dataPtr, smplStep, NULL);
 		}
 		
+		curSmpl += smplStep;
+		_playSmpl += smplStep;
 		if (_psTrigger & PLAYSTATE_END)
 		{
 			_psTrigger &= ~PLAYSTATE_END;
-			return curSmpl + 1;
+			break;
 		}
-	}
+	} while(curSmpl < smplCnt);
 	
 	return curSmpl;
 }

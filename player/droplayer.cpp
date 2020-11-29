@@ -808,8 +808,9 @@ UINT32 DROPlayer::Render(UINT32 smplCnt, WAVE_32BS* data)
 	INT32 smplStep;	// might be negative due to rounding errors in Tick2Sample
 	size_t curDev;
 	
+	// Note: use do {} while(), so that "smplCnt == 0" can be used to process until reaching the next sample.
 	curSmpl = 0;
-	while(curSmpl < smplCnt)
+	do
 	{
 		smplFileTick = Sample2Tick(_playSmpl);
 		ParseFile(smplFileTick - _playTick);
@@ -818,8 +819,8 @@ UINT32 DROPlayer::Render(UINT32 smplCnt, WAVE_32BS* data)
 		maxSmpl = Tick2Sample(_fileTick);
 		smplStep = maxSmpl - _playSmpl;
 		if (smplStep < 1)
-			smplStep = 1;
-		else if ((UINT32)smplStep > smplCnt - curSmpl)
+			smplStep = 1;	// must render at least 1 sample in order to advance
+		if ((UINT32)smplStep > smplCnt - curSmpl)
 			smplStep = smplCnt - curSmpl;
 		
 		for (curDev = 0; curDev < _devices.size(); curDev ++)
@@ -841,7 +842,7 @@ UINT32 DROPlayer::Render(UINT32 smplCnt, WAVE_32BS* data)
 			_psTrigger &= ~PLAYSTATE_END;
 			break;
 		}
-	}
+	} while(curSmpl < smplCnt);
 	
 	return curSmpl;
 }
