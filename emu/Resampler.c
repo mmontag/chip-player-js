@@ -1,3 +1,6 @@
+// TODO:
+//	- properly handle resampling of blocks larger than the sample buffer size (CAA->smplBufSize).
+//	  Those currently cause memory access errors.
 #include <stddef.h>
 #include <stdlib.h>	// for malloc/free
 
@@ -58,7 +61,7 @@ void Resmpl_Init(RESMPL_STATE* CAA)
 			CAA->resampler = RESALGO_OLD;
 	}*/
 	
-	CAA->smplBufSize = CAA->smpRateSrc / 10;
+	CAA->smplBufSize = CAA->smpRateSrc / 1;	// reserve buffer for 1 second of samples
 	CAA->smplBufs[0] = (DEV_SMPL*)malloc(CAA->smplBufSize * 2 * sizeof(DEV_SMPL));
 	CAA->smplBufs[1] = &CAA->smplBufs[0][CAA->smplBufSize];
 	
