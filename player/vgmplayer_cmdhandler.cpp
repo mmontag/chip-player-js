@@ -694,6 +694,9 @@ void VGMPlayer::Cmd_DataBlock(void)
 	{
 	case 0x00:	// uncompressed data block
 	case 0x40:	// compressed data block
+		if (_curLoop > 0)
+			return;	// skip during the 2nd/3rd/... loop, as these blocks were already loaded
+		
 		if (dblkType == 0x7F)
 		{
 			ReadPCMComprTable(dblkLen, &fData[0x00], &_pcmComprTbl);
@@ -727,7 +730,7 @@ void VGMPlayer::Cmd_DataBlock(void)
 				memcpy(&pcmBnk->data[oldLen], dataPtr, dataLen);
 			}
 			
-			// TODO: refresh DAC Stream pointers
+			// TODO: refresh DAC Stream pointers (call daccontrol_refresh_data)
 		}
 		break;
 	case 0x80:	// ROM/RAM write

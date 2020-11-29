@@ -261,7 +261,7 @@ int main(int argc, char* argv[])
 		retVal = player->GetDeviceOptions(devOptID, devOpts);
 		if (! (retVal & 0x80))
 		{
-			static const INT16 panPos[4] = {0x00, -0x80, +0x80, 0x100};
+			static const INT16 panPos[4] = {0x00, -0x80, +0x80, 0x00};
 			devOpts.emuCore[0] = FCC_MAXM;
 			memcpy(devOpts.panOpts.chnPan, panPos, sizeof(panPos));
 			player->SetDeviceOptions(devOptID, devOpts);
