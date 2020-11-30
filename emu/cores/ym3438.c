@@ -34,6 +34,10 @@
 #include "ym3438.h"
 #include "ym3438_int.h"
 
+// superctr's MegaDrive model 1 filter
+#define FILTER_CUTOFF 0.512331301282628 // 5894Hz  single pole IIR low pass
+#define FILTER_CUTOFF_I (1-FILTER_CUTOFF)
+
 enum {
     eg_num_attack = 0,
     eg_num_decay = 1,
@@ -1214,7 +1218,8 @@ void NOPN2_Reset(ym3438_t *chip, Bit32u clock, Bit32u rate)
 
 void NOPN2_SetChipType(ym3438_t *chip, Bit32u type)
 {
-    chip->chip_type = type;
+    chip->chip_type = type & 0x0F;
+    chip->use_filter = type & 0x10;
 }
 
 void NOPN2_Clock(ym3438_t *chip, Bit32s *buffer)
@@ -1539,8 +1544,16 @@ void NOPN2_GenerateResampled(ym3438_t *chip, Bit32s *buf)
             }
             chip->writebuf_samplecnt++;
         }
-        chip->samples[0] *= 11;
-        chip->samples[1] *= 11;
+        if(!chip->use_filter)
+        {
+            chip->samples[0] *= 11;
+            chip->samples[1] *= 11;
+        }
+        else
+        {
+            chip->samples[0] = chip->oldsamples[0] + FILTER_CUTOFF_I * (chip->samples[0]*(11+1) - chip->oldsamples[0]);
+            chip->samples[1] = chip->oldsamples[1] + FILTER_CUTOFF_I * (chip->samples[1]*(11+1) - chip->oldsamples[1]);
+        }
         chip->samplecnt -= chip->rateratio;
     }
     buf[0] = (Bit32s)((chip->oldsamples[0] * (chip->rateratio - chip->samplecnt)
@@ -1582,6 +1595,9 @@ void nukedopn2_set_options(void *chip, UINT32 flags)
     case 0x02: // Discrete YM3438
         NOPN2_SetChipType(opn2, ym3438_mode_ym2612 | ym3438_mode_readmode);
         break;
+    case 0x03: // YM2612 + MD1 filter (temporary hack)
+        NOPN2_SetChipType(opn2, ym3438_mode_ym2612 | 0x10);
+        break;
     }
 }
 
@@ -1621,16 +1637,19 @@ void nukedopn2_reset_chip(void *chip)
     DEV_DATA devData;
     UINT32 mute;
     Bit32u type;
+    Bit32u filter;
     
     devData = opn2->_devData;
     mute = 0;
     for (i = 0; i < 7; i++)
         mute |= (opn2->mute[i] << i);
     type = opn2->chip_type;
+    filter = opn2->use_filter;
     
     NOPN2_Reset(opn2, opn2->clock, opn2->smplRate);
     
     opn2->_devData = devData;
     nukedopn2_set_mutemask(opn2, mute);
     opn2->chip_type = type;
+    opn2->use_filter = filter;
 }

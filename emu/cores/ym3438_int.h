@@ -205,6 +205,7 @@ typedef struct
     Bit32u status_time;
     
     Bit32u chip_type;
+    Bit32u use_filter;
     Bit32u mute[7];
     Bit32s rateratio;
     Bit32s samplecnt;

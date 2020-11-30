@@ -1,6 +1,7 @@
 #include "playerbase.hpp"
 
 #include <stdlib.h>
+#include <string.h>	// for memset()
 
 PlayerBase::PlayerBase() :
 	_outSmplRate(0),
