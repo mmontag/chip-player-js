@@ -3,6 +3,10 @@
 #include <string.h>
 #include <zlib.h>
 
+#ifdef _MSC_VER
+#define strdup	_strdup
+#endif
+
 #include "../common_def.h"
 #include "FileLoader.h"
 
@@ -32,7 +36,7 @@ struct _file_loader
 	UINT8 modeCompr;
 	UINT32 bytesTotal;
 	LOADER_HANDLES hLoad;
-	const char *fileName;
+	char *fileName;
 
 	FLOAD_READ Read;
 	FLOAD_SEEK Seek;
@@ -63,6 +67,7 @@ static INT32 FileLoader_TellGZ(FILE_LOADER *loader);
 static UINT8 FileLoader_EofGZ(FILE_LOADER *loader);
 
 //DATA_LOADER *FileLoader_Init(const char *fileName);
+static void FileLoader_dfree(FILE_LOADER *loader);
 
 
 INLINE UINT32 ReadLE32(const UINT8 *data)
@@ -230,11 +235,17 @@ DATA_LOADER *FileLoader_Init(const char *fileName)
 		return NULL;
 	}
 
-	fLoader->fileName = fileName;
+	fLoader->fileName = strdup(fileName);
 
 	DataLoader_Setup(dLoader,&fileLoader,fLoader);
 
 	return dLoader;
+}
+
+static void FileLoader_dfree(FILE_LOADER *loader)
+{
+	free(loader->fileName);
+	free(loader);
 }
 
 const DATA_LOADER_CALLBACKS fileLoader = {
@@ -247,4 +258,5 @@ const DATA_LOADER_CALLBACKS fileLoader = {
 	FileLoader_dtell,
 	FileLoader_dlength,
 	FileLoader_deof,
+	FileLoader_dfree,
 };

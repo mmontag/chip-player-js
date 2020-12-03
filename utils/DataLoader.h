@@ -8,6 +8,7 @@ extern "C" {
 #include "../stdtype.h"
 
 typedef UINT8 (*DLOADCB_GENERIC)(void *context);
+typedef void (*DLOADCB_GEN_CALL)(void *context);
 typedef UINT32 (*DLOADCB_READ)(void *context, UINT8 *buffer, UINT32 numBytes);
 typedef UINT8 (*DLOADCB_SEEK)(void *context, UINT32 offset, UINT8 whence);
 typedef INT32 (*DLOADCB_TELL)(void *context);
@@ -24,6 +25,7 @@ typedef struct _data_loader_callbacks
 	DLOADCB_TELL dtell;     /* returns the current position of the data */
 	DLOADCB_LENGTH dlength; /* returns the length of the data, in bytes */
 	DLOADCB_GENERIC deof;   /* determines if we've seen eof or not (return 1 for eof) */
+	DLOADCB_GEN_CALL ddeinit;   /* deinitialize loader and free context, may be NULL */
 } DATA_LOADER_CALLBACKS;
 
 enum

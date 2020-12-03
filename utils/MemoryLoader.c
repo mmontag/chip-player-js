@@ -180,4 +180,5 @@ const DATA_LOADER_CALLBACKS memoryLoader = {
 	MemoryLoader_dtell,
 	MemoryLoader_dlength,
 	MemoryLoader_deof,
+	NULL,
 };

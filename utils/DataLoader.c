@@ -125,7 +125,13 @@ void DataLoader_Deinit(DATA_LOADER *dLoader)
 {
 	if(dLoader == NULL) return;
 	DataLoader_Reset(dLoader);
-	if(dLoader->_context) free(dLoader->_context);
+	if(dLoader->_context != NULL)
+	{
+		if (dLoader->_callbacks->ddeinit)
+			dLoader->_callbacks->ddeinit(dLoader->_context);
+		else
+			free(dLoader->_context);
+	}
 	free(dLoader);
 }
 
