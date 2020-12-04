@@ -3,12 +3,17 @@
 #include <string.h>
 #include <zlib.h>
 
-#ifdef _MSC_VER
-#define strdup	_strdup
-#endif
-
 #include "../common_def.h"
 #include "FileLoader.h"
+
+#if HAVE_FILELOADER_W
+#include <wchar.h>
+#endif
+
+#ifdef _MSC_VER
+#define strdup	_strdup
+#define wcsdup	_wcsdup
+#endif
 
 enum
 {
@@ -37,6 +42,9 @@ struct _file_loader
 	UINT32 bytesTotal;
 	LOADER_HANDLES hLoad;
 	char *fileName;
+#if HAVE_FILELOADER_W
+	wchar_t* fileNameW;	// Note: used when fileName == NULL
+#endif
 
 	FLOAD_READ Read;
 	FLOAD_SEEK Seek;
@@ -67,6 +75,7 @@ static INT32 FileLoader_TellGZ(FILE_LOADER *loader);
 static UINT8 FileLoader_EofGZ(FILE_LOADER *loader);
 
 //DATA_LOADER *FileLoader_Init(const char *fileName);
+//DATA_LOADER *FileLoader_InitW(const wchar_t *fileName);
 static void FileLoader_dfree(FILE_LOADER *loader);
 
 
@@ -82,7 +91,12 @@ static UINT8 FileLoader_dopen(void *context)
 	UINT8 fileHdr[4];
 	size_t readBytes;
 
-	loader->hLoad.hFileRaw = fopen(loader->fileName, "rb");
+#if HAVE_FILELOADER_W
+	if (loader->fileName == NULL)
+		loader->hLoad.hFileRaw = _wfopen(loader->fileNameW, L"rb");
+	else
+#endif
+		loader->hLoad.hFileRaw = fopen(loader->fileName, "rb");
 	if (loader->hLoad.hFileRaw == NULL) return 0x01;
 
 	readBytes = fread(fileHdr, 0x01, 4, loader->hLoad.hFileRaw);
@@ -100,7 +114,12 @@ static UINT8 FileLoader_dopen(void *context)
 		fclose(loader->hLoad.hFileRaw);
 		loader->hLoad.hFileRaw = NULL;
 
-		loader->hLoad.hFileGZ = gzopen(loader->fileName, "rb");
+#if HAVE_FILELOADER_W
+		if (loader->fileName == NULL)
+			loader->hLoad.hFileGZ = gzopen_w(loader->fileNameW, "rb");
+		else
+#endif
+			loader->hLoad.hFileGZ = gzopen(loader->fileName, "rb");
 		if (loader->hLoad.hFileGZ == NULL)
 			return 0x01;
 		loader->modeCompr = FLMODE_CMP_GZ;
@@ -242,8 +261,37 @@ DATA_LOADER *FileLoader_Init(const char *fileName)
 	return dLoader;
 }
 
+#if HAVE_FILELOADER_W
+DATA_LOADER *FileLoader_InitW(const wchar_t *fileName)
+{
+	DATA_LOADER *dLoader;
+	FILE_LOADER *fLoader;
+
+	dLoader = (DATA_LOADER *)calloc(1, sizeof(DATA_LOADER));
+	if(dLoader == NULL) return NULL;
+
+	fLoader = (FILE_LOADER *)calloc(1, sizeof(FILE_LOADER));
+	if(fLoader == NULL)
+	{
+		free(dLoader);
+		return NULL;
+	}
+
+	fLoader->fileName = NULL;	// explicitly mark as "unused"
+	fLoader->fileNameW = wcsdup(fileName);
+
+	DataLoader_Setup(dLoader,&fileLoader,fLoader);
+
+	return dLoader;
+}
+#endif
+
 static void FileLoader_dfree(FILE_LOADER *loader)
 {
+#if HAVE_FILELOADER_W
+	if (loader->fileName == NULL)
+		free(loader->fileNameW);
+#endif
 	free(loader->fileName);
 	free(loader);
 }

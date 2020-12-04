@@ -5,9 +5,18 @@
 extern "C" {
 #endif
 
+#ifdef _WIN32
+#define HAVE_FILELOADER_W	1
+#endif
+
 #include "DataLoader.h"
 
 DATA_LOADER *FileLoader_Init(const char *fileName);
+#ifdef HAVE_FILELOADER_W
+#include <wchar.h>
+DATA_LOADER *FileLoader_InitW(const wchar_t *fileName);
+#endif
+
 #define FileLoader_Load				DataLoader_Load
 #define FileLoader_Reset			DataLoader_Reset
 #define FileLoader_GetData			DataLoader_GetData
