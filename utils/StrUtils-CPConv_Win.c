@@ -139,16 +139,21 @@ UINT8 CPConv_StrConvert(CPCONV* cpc, size_t* outSize, char** outStr, size_t inSi
 	int wcBufSize;
 	wchar_t* wcBuf;
 	const wchar_t* wcStr;
-	int convChrs;
 	
 	if (inSize == 0)
-		inSize = strlen(inStr);
+	{
+		// add +1 for conuting the terminating \0 character
+		if (cpc->cpiFrom == CP_UTF16_NE || cpc->cpiFrom == CP_UTF16_OE)
+			inSize = (wcslen((const wchar_t*)inStr) + 1) * sizeof(wchar_t);
+		else
+			inSize = (strlen(inStr) + 1) * sizeof(char);
+	}
 	if (inSize == 0)
 	{
 		*outSize = 0;
 		return 0x02;	// nothing to convert
 	}
-
+	
 	if (cpc->cpiFrom == CP_UTF16_NE)	// UTF-16, native endian
 	{
 		wcBufSize = inSize / sizeof(wchar_t);
@@ -174,7 +179,7 @@ UINT8 CPConv_StrConvert(CPCONV* cpc, size_t* outSize, char** outStr, size_t inSi
 	{
 		wcBufSize = MultiByteToWideChar(cpc->cpiFrom, 0x00, inStr, inSize, NULL, 0);
 		if (wcBufSize < 0 || (wcBufSize == 0 && inSize > 0))
-			return 0xFF;
+			return 0x80;	// conversion error
 		wcBuf = (wchar_t*)malloc(wcBufSize * sizeof(wchar_t));
 		wcBufSize = MultiByteToWideChar(cpc->cpiFrom, 0x00, inStr, inSize, wcBuf, wcBufSize);
 		if (wcBufSize < 0)
@@ -182,21 +187,50 @@ UINT8 CPConv_StrConvert(CPCONV* cpc, size_t* outSize, char** outStr, size_t inSi
 		wcStr = wcBuf;
 	}
 	
-	if (wcBufSize > 0 && wcStr[wcBufSize - 1] == L'\0')
-		wcBufSize --;	// remove trailing \0 character
-	convChrs = WideCharToMultiByte(cpc->cpiTo, 0x00, wcStr, wcBufSize, NULL, 0, NULL, NULL);
-	if (convChrs < 0)
-	{
-		free(wcBuf);
-		*outSize = 0;
-		return 0x80;	// conversion error
-	}
-	*outSize = (size_t)convChrs;
-	*outStr = (char*)malloc((*outSize + 1) * sizeof(char));
-	convChrs = WideCharToMultiByte(cpc->cpiTo, 0x00, wcStr, wcBufSize, *outStr, *outSize, NULL, NULL);
-	*outSize = (convChrs >= 0) ? (size_t)convChrs : 0;
-	(*outStr)[*outSize] = '\0';
+	// at this point we have a "wide-character" (UTF-16) string in wcStr
 	
-	free(wcBuf);
-	return (convChrs >= 0) ? 0x00 : 0x01;
+	if (cpc->cpiTo == CP_UTF16_NE || cpc->cpiTo == CP_UTF16_OE)
+	{
+		*outSize = (size_t)wcBufSize * sizeof(wchar_t);
+		if (wcStr == wcBuf)
+		{
+			*outStr = (char*)wcBuf;
+		}
+		else
+		{
+			*outStr = (char*)malloc(*outSize * sizeof(wchar_t));
+			memcpy(*outStr, wcStr, *outSize);
+			free(wcBuf);
+		}
+		if (cpc->cpiTo == CP_UTF16_OE)
+		{
+			size_t curChrPos;
+			char* bufPtr = *outStr;
+			for (curChrPos = 0; curChrPos < *outSize; curChrPos += 0x02)
+			{
+				char temp = bufPtr[curChrPos + 0x00];
+				bufPtr[curChrPos + 0x00] = bufPtr[curChrPos + 0x01];
+				bufPtr[curChrPos + 0x01] = temp;
+			}
+		}
+		
+		return 0x00;
+	}
+	else
+	{
+		int convChrs = WideCharToMultiByte(cpc->cpiTo, 0x00, wcStr, wcBufSize, NULL, 0, NULL, NULL);
+		if (convChrs < 0)
+		{
+			free(wcBuf);
+			*outSize = 0;
+			return 0x80;	// conversion error
+		}
+		*outSize = (size_t)convChrs;
+		*outStr = (char*)malloc((*outSize) * sizeof(char));
+		convChrs = WideCharToMultiByte(cpc->cpiTo, 0x00, wcStr, wcBufSize, *outStr, *outSize, NULL, NULL);
+		*outSize = (convChrs >= 0) ? (size_t)convChrs : 0;
+		
+		free(wcBuf);
+		return (convChrs >= 0) ? 0x00 : 0x01;
+	}
 }
