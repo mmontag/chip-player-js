@@ -10,6 +10,12 @@
 #define strdup		_strdup
 #define stricmp		_stricmp
 #define strnicmp	_strnicmp
+#else
+#ifdef _POSIX_C_SOURCE
+#include <strings.h>
+#endif
+#define stricmp strcasecmp
+#define strnicmp strncasecmp
 #endif
 
 #include <iconv.h>
