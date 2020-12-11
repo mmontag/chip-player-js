@@ -8,7 +8,7 @@
 #include <stddef.h>
 #include <ctype.h>
 #include <wchar.h>
-#include <Windows.h>
+#include <windows.h>
 
 #ifdef _MSC_VER
 #define strdup		_strdup

@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 
-#include <Windows.h>
+#include <windows.h>
 
 #include "../stdtype.h"
 #include "OSSignal.h"
