@@ -10,6 +10,7 @@ set(PLAYER_FILES
 	s98player.cpp
 	vgmplayer_cmdhandler.cpp
 	vgmplayer.cpp
+	playera.cpp
 )
 # export headers
 set(PLAYER_HEADERS
@@ -20,6 +21,7 @@ set(PLAYER_HEADERS
 	droplayer.hpp
 	s98player.hpp
 	vgmplayer.hpp
+	playera.hpp
 )
 set(PLAYER_INCLUDES)
 set(PLAYER_LIBS)
