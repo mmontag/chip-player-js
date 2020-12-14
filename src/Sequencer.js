@@ -1,6 +1,12 @@
 import promisify from "./promisifyXhr";
 import {CATALOG_PREFIX} from "./config";
 
+export const REPEAT_OFF = 0;
+export const REPEAT_ALL = 1;
+export const REPEAT_ONE = 2;
+export const NUM_REPEAT_MODES = 3;
+export const REPEAT_LABELS = ['Off', 'All', 'One'];
+
 export default class Sequencer {
   constructor(players, onSequencerStateUpdate, onError) {
     this.playSong = this.playSong.bind(this);
@@ -32,6 +38,7 @@ export default class Sequencer {
     this.tempo = 1;
     this.shuffle = false;
     this.songRequest = null;
+    this.repeat = REPEAT_OFF;
   }
 
   setPlayers(players) {
@@ -71,18 +78,29 @@ export default class Sequencer {
     this.shuffle = !!shuffle;
   }
 
+  setRepeat(repeat) {
+    this.repeat = repeat;
+  }
+
   advanceSong(direction) {
     if (this.context == null) return;
 
-    this.currIdx += direction;
+    if (this.repeat !== REPEAT_ONE) {
+      this.currIdx += direction;
+    }
 
     if (this.currIdx < 0 || this.currIdx >= this.context.length) {
-      console.debug('Sequencer.advanceSong(direction=%s) %s passed end of context length %s',
-        direction, this.currIdx, this.context.length);
-      this.currIdx = 0;
-      this.context = null;
-      this.player.stop();
-      this.onSequencerStateUpdate(true);
+      if (this.repeat === REPEAT_ALL) {
+        this.currIdx = (this.currIdx + this.context.length) % this.context.length;
+        this.playSong(this.context[this.currIdx]);
+      } else {
+        console.debug('Sequencer.advanceSong(direction=%s) %s passed end of context length %s',
+          direction, this.currIdx, this.context.length);
+        this.currIdx = 0;
+        this.context = null;
+        this.player.stop();
+        this.onSequencerStateUpdate(true);
+      }
     } else {
       this.playSong(this.context[this.currIdx]);
     }

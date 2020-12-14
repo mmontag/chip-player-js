@@ -26,7 +26,7 @@ import Browse from './Browse';
 import DropMessage from './DropMessage';
 import Favorites from './Favorites';
 import Search from './Search';
-import Sequencer from './Sequencer';
+import Sequencer, { NUM_REPEAT_MODES, REPEAT_OFF } from './Sequencer';
 import Visualizer from './Visualizer';
 
 const NUMERIC_COLLATOR = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
@@ -43,6 +43,7 @@ class App extends React.Component {
     this.nextSong = this.nextSong.bind(this);
     this.prevSubtune = this.prevSubtune.bind(this);
     this.nextSubtune = this.nextSubtune.bind(this);
+    this.handleCycleRepeat = this.handleCycleRepeat.bind(this);
     this.handleVolumeChange = this.handleVolumeChange.bind(this);
     this.handleTimeSliderChange = this.handleTimeSliderChange.bind(this);
     this.handleTempoChange = this.handleTempoChange.bind(this);
@@ -131,7 +132,7 @@ class App extends React.Component {
       faves: [],
       songUrl: null,
       volume: 100,
-
+      repeat: REPEAT_OFF,
       directories: {},
     };
 
@@ -542,6 +543,12 @@ class App extends React.Component {
     this.playerNode.gain.value = Math.max(0, Math.min(1, volume * 0.01));
   }
 
+  handleCycleRepeat() {
+    const repeat = (this.state.repeat + 1) % NUM_REPEAT_MODES;
+    this.setState({ repeat });
+    this.sequencer.setRepeat(repeat);
+  }
+
   toggleInfo() {
     this.setState({
       showInfo: !this.state.showInfo,
@@ -702,6 +709,7 @@ class App extends React.Component {
               ejected={this.state.ejected}
               faves={this.state.faves}
               getCurrentSongLink={this.getCurrentSongLink}
+              handleCycleRepeat={this.handleCycleRepeat}
               handlePlayerError={this.handlePlayerError}
               handlePlayRandom={this.handlePlayRandom}
               handleSetVoices={this.handleSetVoices}
@@ -717,6 +725,7 @@ class App extends React.Component {
               playerError={this.state.playerError}
               prevSong={this.prevSong}
               prevSubtune={this.prevSubtune}
+              repeat={this.state.repeat}
               sequencer={this.sequencer}
               showPlayerSettings={this.state.showPlayerSettings}
               songUrl={this.state.songUrl}
