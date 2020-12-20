@@ -645,6 +645,7 @@ static void InitVGMChips(void)
 			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D16, 0, (void**)&cDev->writeD16);
 			break;
 		case DEVID_YMW258:
+			devCfg.clock = devCfg.clock * 224 / 180;
 			retVal = SndEmu_Start(curChip, &devCfg, &cDev->defInf);
 			if (retVal)
 				break;

@@ -1057,8 +1057,6 @@ void ay8910_write_reg(ay8910_context *psg, UINT8 r, UINT8 v)
 			psg->last_enable = psg->regs[AY_ENABLE] & 0xC0;
 			break;
 		case AY_ESHAPE:
-			//if ( (v & 0x0f) > 0)
-			//	osd_printf_verbose("EShape\n");
 			psg->attack = (psg->regs[AY_ESHAPE] & 0x04) ? psg->env_step_mask : 0x00;
 			if ((psg->regs[AY_ESHAPE] & 0x08) == 0)
 			{

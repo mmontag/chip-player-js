@@ -1072,6 +1072,10 @@ void VGMPlayer::GenerateDeviceConfig(void)
 					SaveDeviceConfig(sdCfg.cfgData, &ayCfg, sizeof(AY8910_CFG));
 				}
 				break;
+			case DEVID_YMW258:
+				devCfg.clock = devCfg.clock * 224 / 180;	// fix VGM clock, which is based on the old /180 clock divider
+				SaveDeviceConfig(sdCfg.cfgData, &devCfg, sizeof(DEV_GEN_CFG));
+				break;
 			case DEVID_OKIM6258:
 				{
 					OKIM6258_CFG okiCfg;

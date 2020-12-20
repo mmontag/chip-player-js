@@ -13,24 +13,25 @@
  * 3: MSB of pitch (ooooppppppppppxx) (o=octave (4 bit signed), p=pitch (10 bits), x=unused?
  * 4: voice control: top bit = 1 for key on, 0 for key off
  * 5: bit 0: 0: interpolate volume changes, 1: direct set volume,
-      bits 1-7 = volume attenuate (0=max, 7f=min)
+ *    bits 1-7 = volume attenuate (0=max, 7f=min)
  * 6: LFO frequency + Phase LFO depth
  * 7: Amplitude LFO size
  *
- * The first sample ROM contains a variable length table with 12
- * bytes per instrument/sample. This is very similar to the YMF278B.
+ * The first sample ROM contains a variable length metadata table with 12
+ * bytes per instrument sample. This is very similar to the YMF278B 'OPL4'.
  * This sample format might be derived from the one used by the older YM7138 'GEW6' chip.
  *
- * The first 3 bytes are the offset into the file (big endian). (0, 1, 2)
- * The next 2 are the loop start offset into the file (big endian) (3, 4)
- * The next 2 are the 2's complement of the total sample size (big endian) (5, 6)
+ * The first 3 bytes are the offset into the file (big endian). (0, 1, 2).
+ * Bit 23 is the sample format flag: 0 for 8-bit linear, 1 for 12-bit linear.
+ * Bits 21 and 22 are used by the MU5 on some samples for as-yet unknown purposes.
+ * The next 2 are the loop start point, in samples (big endian) (3, 4)
+ * The next 2 are the 2's complement negation of of the total number of samples (big endian) (5, 6)
  * The next byte is LFO freq + depth (copied to reg 6 ?) (7, 8)
  * The next 3 are envelope params (Attack, Decay1 and 2, sustain level, release, Key Rate Scaling) (9, 10, 11)
  * The next byte is Amplitude LFO size (copied to reg 7 ?)
  *
  * TODO
- * - http://dtech.lv/techarticles_yamaha_chips.html indicates FM and 12-bit sample support,
- *   which we don't have yet.
+ * - http://dtech.lv/techarticles_yamaha_chips.html indicates FM support, which we don't have yet.
  */
 
 #include <math.h>
@@ -95,7 +96,7 @@ const DEV_DEF* devDefList_YMW258[] =
 };
 
 
-#define MULTIPCM_CLOCKDIV   180.0f
+#define MULTIPCM_CLOCKDIV   224.0f
 
 typedef struct
 {
@@ -110,6 +111,7 @@ typedef struct
 	UINT8 key_rate_scale;
 	UINT8 lfo_vibrato_reg;
 	UINT8 lfo_amplitude_reg;
+	UINT8 format;
 } sample_t;
 
 typedef enum
@@ -158,6 +160,7 @@ typedef struct
 	envelope_gen_t envelope_gen;
 	lfo_t pitch_lfo; // Pitch lfo
 	lfo_t amplitude_lfo; // AM lfo
+	UINT8 format;
 	
 	UINT8 muted;
 } slot_t;
@@ -246,6 +249,8 @@ static void init_sample(MultiPCM *ptChip, sample_t *sample, UINT16 index)
 	UINT32 address = (index * 12) & ptChip->ROMMask;
 
 	sample->start = (ptChip->ROM[address + 0] << 16) | (ptChip->ROM[address + 1] << 8) | ptChip->ROM[address + 2];
+	sample->format = (sample->start>>20) & 0xfe;
+	sample->start &= 0x3fffff;
 	sample->loop = (ptChip->ROM[address + 3] << 8) | ptChip->ROM[address + 4];
 	sample->end = 0xffff - ((ptChip->ROM[address + 5] << 8) | ptChip->ROM[address + 6]);
 	sample->attack_reg = (ptChip->ROM[address + 8] >> 4) & 0xf;
@@ -499,6 +504,7 @@ static void write_slot(MultiPCM *ptChip, slot_t *slot, INT32 reg, UINT8 data)
 				slot->offset = 0;
 				slot->prev_sample = 0;
 				slot->total_level = slot->dest_total_level << TL_SHIFT;
+				slot->format = slot->sample.format;
 
 				envelope_generator_calc(ptChip, slot);
 				slot->envelope_gen.state = ATTACK;
@@ -559,6 +565,11 @@ static void write_slot(MultiPCM *ptChip, slot_t *slot, INT32 reg, UINT8 data)
 	}
 }
 
+INLINE UINT8 read_byte(MultiPCM *ptChip, UINT32 addr)
+{
+	return ptChip->ROM[addr & ptChip->ROMMask];
+}
+
 static void MultiPCM_update(void *info, UINT32 samples, DEV_SMPL **outputs)
 {
 	MultiPCM *ptChip = (MultiPCM *)info;
@@ -574,11 +585,49 @@ static void MultiPCM_update(void *info, UINT32 samples, DEV_SMPL **outputs)
 			if (slot->playing && ! slot->muted)
 			{
 				UINT32 vol = (slot->total_level >> TL_SHIFT) | (slot->pan << 7);
-				UINT32 adr = slot->offset >> TL_SHIFT;
+				UINT32 spos = slot->offset >> TL_SHIFT;
 				UINT32 step = slot->step;
-				INT32 csample = (INT16) (ptChip->ROM[(slot->base + adr) & ptChip->ROMMask] << 8);
+				INT32 csample;
 				INT32 fpart = slot->offset & ((1 << TL_SHIFT) - 1);
-				INT32 sample = (csample * fpart + slot->prev_sample * ((1 << TL_SHIFT) - fpart)) >> TL_SHIFT;
+				INT32 sample;
+
+				if (slot->format & 8)	// 12-bit linear
+				{
+					UINT32 adr = slot->base + (spos >> 2) * 6;
+					switch (spos & 3)
+					{
+						case 0:
+						{ // ab.c .... ....
+							INT16 w0 = read_byte(ptChip, adr) << 8 | ((read_byte(ptChip, adr + 1) & 0xf) << 4);
+							csample = w0;
+							break;
+						}
+						case 1:
+						{ // ..C. AB.. ....
+							INT16 w0 = (read_byte(ptChip, adr + 2) << 8) | (read_byte(ptChip, adr + 1) & 0xf0);
+							csample = w0;
+							break;
+						}
+						case 2:
+						{ // .... ..ab .c..
+							INT16 w0 = read_byte(ptChip, adr + 3) << 8 | ((read_byte(ptChip, adr + 4) & 0xf) << 4);
+							csample = w0;
+							break;
+						}
+						case 3:
+						{ // .... .... C.AB
+							INT16 w0 = (read_byte(ptChip, adr + 5) << 8) | (read_byte(ptChip, adr + 4) & 0xf0);
+							csample = w0;
+							break;
+						}
+					}
+				}
+				else
+				{
+					csample = (INT16)(read_byte(ptChip, slot->base + spos) << 8);
+				}
+
+				sample = (csample * fpart + slot->prev_sample * ((1 << TL_SHIFT) - fpart)) >> TL_SHIFT;
 
 				if (slot->regs[6] & 7) // Vibrato enabled
 				{
@@ -592,7 +641,7 @@ static void MultiPCM_update(void *info, UINT32 samples, DEV_SMPL **outputs)
 					slot->offset = slot->sample.loop << TL_SHIFT;
 				}
 
-				if (adr ^ (slot->offset >> TL_SHIFT))
+				if (spos ^ (slot->offset >> TL_SHIFT))
 				{
 					slot->prev_sample = csample;
 				}
