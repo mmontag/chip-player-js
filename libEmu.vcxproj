@@ -150,6 +150,7 @@
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="emu\cores\2151intf.c" />
     <ClCompile Include="emu\cores\2413intf.c" />
     <ClCompile Include="emu\cores\2612intf.c" />
     <ClCompile Include="emu\cores\262intf.c" />
@@ -188,6 +189,7 @@
     <ClCompile Include="emu\cores\np_nes_fds.c" />
     <ClCompile Include="emu\cores\nukedopl3.c" />
     <ClCompile Include="emu\cores\nukedopll.c" />
+    <ClCompile Include="emu\cores\nukedopm.c" />
     <ClCompile Include="emu\cores\okiadpcm.c" />
     <ClCompile Include="emu\cores\okim6258.c" />
     <ClCompile Include="emu\cores\Ootake_PSG.c" />
@@ -236,6 +238,7 @@
     <ClCompile Include="emu\SoundEmu.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="emu\cores\2151intf.h" />
     <ClInclude Include="emu\cores\2413intf.h" />
     <ClInclude Include="emu\cores\2612intf.h" />
     <ClInclude Include="emu\cores\262intf.h" />
@@ -273,6 +276,8 @@
     <ClInclude Include="emu\cores\nukedopll.h" />
     <ClInclude Include="emu\cores\nukedopll_int.h" />
     <ClInclude Include="emu\cores\nukedopl3_int.h" />
+    <ClInclude Include="emu\cores\nukedopm.h" />
+    <ClInclude Include="emu\cores\nukedopm_int.h" />
     <ClInclude Include="emu\cores\okiadpcm.h" />
     <ClInclude Include="emu\cores\okim6258.h" />
     <ClInclude Include="emu\cores\Ootake_PSG.h" />

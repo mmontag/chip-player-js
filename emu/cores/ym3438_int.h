@@ -226,6 +226,6 @@ void NOPN2_Write(ym3438_t *chip, Bit32u port, Bit8u data);
 void NOPN2_SetTestPin(ym3438_t *chip, Bit32u value);
 Bit32u NOPN2_ReadTestPin(ym3438_t *chip);
 Bit32u NOPN2_ReadIRQPin(ym3438_t *chip);
-UINT8 NOPN2_Read(ym3438_t *chip, Bit32u port);
+Bit8u NOPN2_Read(ym3438_t *chip, Bit32u port);
 
 #endif	// __YM3438_INT_H__

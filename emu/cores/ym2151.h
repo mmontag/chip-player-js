@@ -3,6 +3,6 @@
 
 #include "../EmuStructs.h"
 
-extern const DEV_DEF* devDefList_YM2151[];
+extern DEV_DEF devDef_YM2151_MAME;
 
 #endif	// __YM2151_H__

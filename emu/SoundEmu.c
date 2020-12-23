@@ -61,7 +61,7 @@
 #include "cores/2612intf.h"
 #endif
 #ifdef SNDDEV_YM2151
-#include "cores/ym2151.h"
+#include "cores/2151intf.h"
 #endif
 #ifdef SNDDEV_SEGAPCM
 #include "cores/segapcm.h"
