@@ -710,16 +710,22 @@ void S98Player::RefreshTSRates(void)
 
 UINT32 S98Player::Tick2Sample(UINT32 ticks) const
 {
+	if (ticks == (UINT32)-1)
+		return -1;
 	return (UINT32)(ticks * _tsMult / _tsDiv);
 }
 
 UINT32 S98Player::Sample2Tick(UINT32 samples) const
 {
+	if (samples == (UINT32)-1)
+		return -1;
 	return (UINT32)(samples * _tsDiv / _tsMult);
 }
 
 double S98Player::Tick2Second(UINT32 ticks) const
 {
+	if (ticks == (UINT32)-1)
+		return -1.0;
 	return ticks * _fileHdr.tickMult / (double)_fileHdr.tickDiv;
 }
 

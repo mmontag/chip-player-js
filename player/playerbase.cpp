@@ -85,10 +85,14 @@ void PlayerBase::SetFileReqCallback(PLAYER_FILEREQ_CB cbFunc, void* cbParam)
 
 double PlayerBase::Sample2Second(UINT32 samples) const
 {
+	if (samples == (UINT32)-1)
+		return -1.0;
 	return samples / (double)_outSmplRate;
 }
 
 UINT32 PlayerBase::GetTotalPlayTicks(UINT32 numLoops) const
 {
+	if (numLoops == 0 && GetLoopTicks() > 0)
+		return (UINT32)-1;
 	return GetTotalTicks() + GetLoopTicks() * (numLoops - 1);
 }

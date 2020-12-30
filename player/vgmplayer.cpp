@@ -696,16 +696,22 @@ void VGMPlayer::RefreshTSRates(void)
 
 UINT32 VGMPlayer::Tick2Sample(UINT32 ticks) const
 {
+	if (ticks == (UINT32)-1)
+		return -1;
 	return (UINT32)(ticks * _tsMult / _tsDiv);
 }
 
 UINT32 VGMPlayer::Sample2Tick(UINT32 samples) const
 {
+	if (samples == (UINT32)-1)
+		return -1;
 	return (UINT32)(samples * _tsDiv / _tsMult);
 }
 
 double VGMPlayer::Tick2Second(UINT32 ticks) const
 {
+	if (ticks == (UINT32)-1)
+		return -1.0;
 	return ticks * _ttMult / (double)(INT64)_tsDiv;
 }
 

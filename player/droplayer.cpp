@@ -535,16 +535,22 @@ UINT8 DROPlayer::SetSampleRate(UINT32 sampleRate)
 
 UINT32 DROPlayer::Tick2Sample(UINT32 ticks) const
 {
+	if (ticks == (UINT32)-1)
+		return -1;
 	return (UINT32)(ticks * _tsMult / _tsDiv);
 }
 
 UINT32 DROPlayer::Sample2Tick(UINT32 samples) const
 {
+	if (samples == (UINT32)-1)
+		return -1;
 	return (UINT32)(samples * _tsDiv / _tsMult);
 }
 
 double DROPlayer::Tick2Second(UINT32 ticks) const
 {
+	if (ticks == (UINT32)-1)
+		return -1.0;
 	return ticks / (double)_tickFreq;
 }
 
