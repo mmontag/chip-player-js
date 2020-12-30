@@ -1,3 +1,6 @@
+#ifndef __PLAYERA_HPP__
+#define __PLAYERA_HPP__
+
 #include <vector>
 #include "../stdtype.h"
 #include "../utils/DataLoader.h"
@@ -7,6 +10,7 @@
 #define PLAYSTATE_FADE	0x10	// is fading
 #define PLAYSTATE_FIN	0x20	// finished playing (file end + fading + trailing silence)
 
+// TODO: find a proper name for this class
 class PlayerA
 {
 public:
@@ -33,6 +37,8 @@ public:
 	void SetPlaybackSpeed(double speed);
 	UINT32 GetLoopCount(void) const;
 	void SetLoopCount(UINT32 loops);
+	INT32 GetMasterVolume(void) const;
+	void SetMasterVolume(INT32 volume);
 	UINT32 GetFadeSamples(void) const;
 	void SetFadeSamples(UINT32 smplCnt);
 	UINT32 GetEndSilenceSamples(void) const;
@@ -49,9 +55,11 @@ public:
 	UINT32 GetCurLoop(void) const;
 	double GetLoopTime(void) const;
 	PlayerBase* GetPlayer(void);
+	const PlayerBase* GetPlayer(void) const;
 	
 	UINT8 LoadFile(DATA_LOADER* dLoad);
 	UINT8 UnloadFile(void);
+	UINT32 GetFileSize(void);
 	UINT8 Start(void);
 	UINT8 Stop(void);
 	UINT8 Reset(void);
@@ -80,3 +88,5 @@ private:
 	UINT32 _fadeSmplStart;
 	UINT32 _endSilenceStart;
 };
+
+#endif	// __PLAYERA_HPP__

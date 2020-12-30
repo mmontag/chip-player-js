@@ -22,6 +22,15 @@ PlayerA::PlayerA()
 	_outSmplBits = 16;
 	_smplRate = 44100;
 	_outSmplSize = _outSmplChns * _outSmplBits / 8;
+	
+	_plrCbFunc = NULL;
+	_plrCbParam = NULL;
+	_myPlayState = 0x00;
+	_player = NULL;
+	_dLoad = NULL;
+	_fadeSmplStart = (UINT32)-1;
+	_endSilenceStart = (UINT32)-1;
+	
 	return;
 }
 
@@ -35,6 +44,10 @@ PlayerA::~PlayerA()
 
 void PlayerA::RegisterPlayerEngine(PlayerBase* player)
 {
+	player->SetEventCallback(PlayerA::PlayCallbackS, this);
+	//player->SetFileReqCallback(_frCbFunc, _frCbParam);
+	player->SetSampleRate(_smplRate);
+	player->SetPlaybackSpeed(_config.pbSpeed);
 	_avbPlrs.push_back(player);
 	return;
 }
@@ -61,7 +74,7 @@ UINT8 PlayerA::SetOutputSettings(UINT32 smplRate, UINT8 channels, UINT8 smplBits
 	
 	_outSmplChns = channels;
 	_outSmplBits = smplBits;
-	_smplRate = smplRate;
+	SetSampleRate(smplRate);
 	_outSmplSize = _outSmplChns * _outSmplBits / 8;
 	_smplBuf.resize(smplBufferLen);
 	return 0x00;
@@ -75,6 +88,12 @@ UINT32 PlayerA::GetSampleRate(void) const
 void PlayerA::SetSampleRate(UINT32 sampleRate)
 {
 	_smplRate = sampleRate;
+	for (size_t curPlr = 0; curPlr < _avbPlrs.size(); curPlr++)
+	{
+		if (_avbPlrs[curPlr] == _player && (_player->GetState() & PLAYSTATE_PLAY))
+			continue;
+		_avbPlrs[curPlr]->SetSampleRate(_smplRate);
+	}
 	return;
 }
 
@@ -105,6 +124,17 @@ void PlayerA::SetLoopCount(UINT32 loops)
 UINT32 PlayerA::GetFadeSamples(void) const
 {
 	return _config.fadeSmpls;
+}
+
+INT32 PlayerA::GetMasterVolume(void) const
+{
+	return _config.masterVol;
+}
+
+void PlayerA::SetMasterVolume(INT32 volume)
+{
+	_config.masterVol = volume;
+	return;
 }
 
 void PlayerA::SetFadeSamples(UINT32 smplCnt)
@@ -214,6 +244,11 @@ PlayerBase* PlayerA::GetPlayer(void)
 	return _player;
 }
 
+const PlayerBase* PlayerA::GetPlayer(void) const
+{
+	return _player;
+}
+
 void PlayerA::FindPlayerEngine(void)
 {
 	size_t curPlr;
@@ -238,7 +273,6 @@ UINT8 PlayerA::LoadFile(DATA_LOADER* dLoad)
 	FindPlayerEngine();
 	if (_player == NULL)
 		return 0xFF;
-	_player->SetEventCallback(PlayerA::PlayCallbackS, this);
 	
 	UINT8 retVal = _player->LoadFile(dLoad);
 	if (retVal >= 0x80)
@@ -254,7 +288,20 @@ UINT8 PlayerA::UnloadFile(void)
 	_player->Stop();
 	UINT8 retVal = _player->UnloadFile();
 	_player = NULL;
+	_dLoad = NULL;
 	return retVal;
+}
+
+UINT32 PlayerA::GetFileSize(void)
+{
+	if (_dLoad == NULL)
+		return 0x00;
+	
+	UINT32 result = DataLoader_GetTotalSize(_dLoad);
+	if (result != (UINT32)-1)
+		return result;
+	else
+		return DataLoader_GetSize(_dLoad);
 }
 
 UINT8 PlayerA::Start(void)

@@ -447,9 +447,11 @@ const char* SndEmu_GetDevName(UINT8 deviceID, UINT8 opts, const DEV_GEN_CFG* dev
 				break;
 			case 0x11:
 				return (snCfg->clkDiv == 1) ? "SN76494" : "SN76489A";
+			default:
+				return "SN764xx";
 			}
 		}
-		return "SN764xx";
+		return "SN76496";
 #endif
 #ifdef SNDDEV_YM2413
 	case DEVID_YM2413:

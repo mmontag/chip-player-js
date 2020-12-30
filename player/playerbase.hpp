@@ -83,6 +83,7 @@ struct PLR_DEV_OPTS
 //	- Player class does file rendering at fixed volume (but changeable speed)
 //	- host program handles master volume + fading + stopping after X loops (notified via callback)
 
+// TODO: rename to "PlayerEngine"
 class PlayerBase
 {
 public:

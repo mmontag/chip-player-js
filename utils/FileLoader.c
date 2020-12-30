@@ -121,7 +121,7 @@ static UINT8 FileLoader_dopen(void *context)
 #endif
 			loader->hLoad.hFileGZ = gzopen(loader->fileName, "rb");
 		if (loader->hLoad.hFileGZ == NULL)
-			return 0x01;
+			return 0x01;	// TODO: separate error code for "invalid .gz file"
 		loader->modeCompr = FLMODE_CMP_GZ;
 		loader->Read = &FileLoader_ReadGZ;
 		loader->Seek = &FileLoader_SeekGZ;
