@@ -139,6 +139,7 @@ UINT8 CPConv_StrConvert(CPCONV* cpc, size_t* outSize, char** outStr, size_t inSi
 	int wcBufSize;
 	wchar_t* wcBuf;
 	const wchar_t* wcStr;
+	UINT8 canAlloc;
 	
 	if (inSize == 0)
 	{
@@ -153,6 +154,7 @@ UINT8 CPConv_StrConvert(CPCONV* cpc, size_t* outSize, char** outStr, size_t inSi
 		*outSize = 0;
 		return 0x02;	// nothing to convert
 	}
+	canAlloc = (*outStr == NULL);
 	
 	if (cpc->cpiFrom == CP_UTF16_NE)	// UTF-16, native endian
 	{
@@ -191,17 +193,27 @@ UINT8 CPConv_StrConvert(CPCONV* cpc, size_t* outSize, char** outStr, size_t inSi
 	
 	if (cpc->cpiTo == CP_UTF16_NE || cpc->cpiTo == CP_UTF16_OE)
 	{
-		*outSize = (size_t)wcBufSize * sizeof(wchar_t);
-		if (wcStr == wcBuf)
+		size_t reqSize = (size_t)wcBufSize * sizeof(wchar_t);
+		if (! canAlloc)
 		{
+			if (*outSize > reqSize)
+				*outSize = reqSize;
+			memcpy(*outStr, wcStr, *outSize);
+			free(wcBuf);
+		}
+		else if (wcStr == wcBuf)
+		{
+			*outSize = reqSize;
 			*outStr = (char*)wcBuf;
 		}
 		else
 		{
+			*outSize = reqSize;
 			*outStr = (char*)malloc(*outSize * sizeof(wchar_t));
 			memcpy(*outStr, wcStr, *outSize);
 			free(wcBuf);
 		}
+		
 		if (cpc->cpiTo == CP_UTF16_OE)
 		{
 			size_t curChrPos;
@@ -214,23 +226,37 @@ UINT8 CPConv_StrConvert(CPCONV* cpc, size_t* outSize, char** outStr, size_t inSi
 			}
 		}
 		
-		return 0x00;
+		if (*outSize < reqSize)
+			return 0x10;	// conversion incomplete due to lack of buffer space
+		else
+			return 0x00;	// conversion successfull
 	}
 	else
 	{
-		int convChrs = WideCharToMultiByte(cpc->cpiTo, 0x00, wcStr, wcBufSize, NULL, 0, NULL, NULL);
-		if (convChrs < 0)
+		int reqSize;
+		int convChrs;
+		
+		reqSize = WideCharToMultiByte(cpc->cpiTo, 0x00, wcStr, wcBufSize, NULL, 0, NULL, NULL);
+		if (reqSize < 0)
 		{
 			free(wcBuf);
 			*outSize = 0;
 			return 0x80;	// conversion error
 		}
-		*outSize = (size_t)convChrs;
-		*outStr = (char*)malloc((*outSize) * sizeof(char));
+		if (canAlloc)
+		{
+			*outSize = (size_t)reqSize;
+			*outStr = (char*)malloc((*outSize) * sizeof(char));
+		}
 		convChrs = WideCharToMultiByte(cpc->cpiTo, 0x00, wcStr, wcBufSize, *outStr, *outSize, NULL, NULL);
 		*outSize = (convChrs >= 0) ? (size_t)convChrs : 0;
 		
 		free(wcBuf);
-		return (convChrs >= 0) ? 0x00 : 0x01;
+		if (convChrs <= 0)
+			return 0x80;	// conversion error
+		else if (convChrs < reqSize)
+			return 0x10;	// conversion incomplete due to lack of buffer space
+		else
+			return 0x00;	// conversion successfull
 	}
 }

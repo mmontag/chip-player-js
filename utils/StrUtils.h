@@ -16,8 +16,11 @@ void CPConv_Deinit(CPCONV* cpc);
 // parameters:
 //	cpc: codepage conversion object
 //	outSize: [input] size of output buffer, [output] size of converted string
-//	outStr: [input/output] pointer to output buffer, if *outStr is NULL, it will be allocated automatically
-//	inSize: [input] length of input string, may be 0 (in that case, strlen() is used to determine the string's length)
+//	outStr: [input/output] pointer to output buffer
+//	        *outStr == NULL: The routine will allocate a buffer large enough to hold all the data.
+//	        *outStr != NULL: place results into the existing buffer (no reallocation when buffer is too small)
+//	inSize: [input] length of input string
+//	        inSize == 0: automatically determine the string's length, includes the terminating \0 character.
 //	inStr: [input] input string
 UINT8 CPConv_StrConvert(CPCONV* cpc, size_t* outSize, char** outStr, size_t inSize, const char* inStr);
 
