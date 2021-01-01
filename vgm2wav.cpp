@@ -95,13 +95,10 @@ extensible_guid_trailer= "\x00\x00\x00\x00\x10\x00\x80\x00\x00\xAA\x00\x38\x9B\x
 int main(int argc, const char *argv[]) {
     PlayerBase *player;
 
-    unsigned int i;
     unsigned int totalFrames;
     unsigned int fadeFrames;
     unsigned int curFrames;
     const char *const *tags;
-    const char *f_input;
-    const char *f_output;
     const char *self;
     const char *c;
     const char *s;
@@ -404,7 +401,6 @@ static void dump_info(PlayerBase *player) {
     PLR_SONG_INFO songInfo;
     const DEV_DEF **devDefList;
     UINT32 i;
-    UINT8 ret;
     char str[5];
 
     fprintf(stderr,"PlayerName: %s\n",player->GetPlayerName());
