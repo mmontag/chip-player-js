@@ -14,11 +14,14 @@
 #include "../emu/EmuCores.h"
 #include "../emu/dac_control.h"
 #include "../emu/cores/sn764intf.h"	// for SN76496_CFG
+#include "../emu/cores/2612intf.h"
 #include "../emu/cores/segapcm.h"		// for SEGAPCM_CFG
 #include "../emu/cores/ayintf.h"		// for AY8910_CFG
+#include "../emu/cores/gb.h"
 #include "../emu/cores/okim6258.h"		// for OKIM6258_CFG
 #include "../emu/cores/k054539.h"
 #include "../emu/cores/c140.h"
+#include "../emu/cores/qsoundintf.h"
 #include "../emu/cores/es5503.h"
 #include "../emu/cores/es5506.h"
 
@@ -1369,11 +1372,14 @@ void VGMPlayer::InitDevices(void)
 		{
 			if (devInf->devDef->SetOptionBits != NULL)
 			{
+				// TODO: apply these patches in SetDeviceOptions() as well
 				UINT32 coreOpts = devOpts->coreOpts;
 				if (chipType == DEVID_YM2612)
-					coreOpts |= 0x80;	// enable legacy mode [TODO: disable after sample 0]
+					coreOpts |= OPT_YM2612_LEGACY_MODE;	// enable legacy mode [TODO: disable after sample 0]
 				else if (chipType == DEVID_GB_DMG)
-					coreOpts |= 0x80;	// enable legacy mode (fix playback of old VGMs)
+					coreOpts |= OPT_GB_DMG_LEGACY_MODE;	// enable legacy mode (fix playback of old VGMs)
+				else if (chipType == DEVID_QSOUND)
+					coreOpts |= OPT_QSOUND_NOWAIT;	// make sure seeking works
 				devInf->devDef->SetOptionBits(devInf->dataPtr, coreOpts);
 			}
 			RefreshMuting(chipDev, devOpts->muteOpts);

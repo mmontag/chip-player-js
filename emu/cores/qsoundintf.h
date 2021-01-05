@@ -10,6 +10,9 @@
 #endif
 
 
+#define OPT_QSOUND_NOWAIT		0x01	// don't require waiting after initialization/filter changes
+
+
 extern const DEV_DEF* devDefList_QSound[];
 
 #endif	// __QSOUNDINTF_H__

@@ -110,12 +110,15 @@ struct qsound_chip {
 	int state_counter;
 	UINT8 ready_flag;
 
+	UINT8 opt_nowait;
+
 	UINT16 *register_map[256];
 };
 
 static void init_pan_tables(struct qsound_chip *chip);
 static void init_register_map(struct qsound_chip *chip);
 static void update_sample(struct qsound_chip *chip);
+static void update_flush(struct qsound_chip *chip);
 
 static void state_init(struct qsound_chip *chip);
 static void state_refresh_filter_1(struct qsound_chip *chip);
@@ -144,6 +147,7 @@ static void qsoundc_write_data(void* info, UINT8 address, UINT16 data);
 
 static void qsoundc_alloc_rom(void* info, UINT32 memsize);
 static void qsoundc_write_rom(void* info, UINT32 offset, UINT32 length, const UINT8* data);
+static void qsoundc_set_options(void* info, UINT32 options);
 static void qsoundc_set_mute_mask(void* info, UINT32 MuteMask);
 
 static DEVDEF_RWFUNC devFunc[] =
@@ -165,7 +169,7 @@ DEV_DEF devDef_QSound_ctr =
 	device_reset_qsound_ctr,
 	qsoundc_update,
 	
-	NULL,	// SetOptionBits
+	qsoundc_set_options,	// SetOptionBits
 	qsoundc_set_mute_mask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
@@ -185,6 +189,7 @@ static UINT8 device_start_qsound_ctr(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf
 	chip->romData = NULL;
 	chip->romSize = 0x00;
 	chip->romMask = 0x00;
+	chip->opt_nowait = 0;
 	
 	qsoundc_set_mute_mask(chip, 0x00000);
 	
@@ -251,7 +256,10 @@ static void qsoundc_w(void* info, UINT8 offset, UINT8 data)
 static void qsoundc_write_data(void* info, UINT8 address, UINT16 data)
 {
 	struct qsound_chip* chip = (struct qsound_chip*)info;
-	
+
+	if (! chip->ready_flag && chip->opt_nowait)
+		update_flush(chip);
+
 	UINT16 *destination = chip->register_map[address];
 	if(destination)
 		*destination = data;
@@ -304,6 +312,15 @@ static void qsoundc_write_rom(void* info, UINT32 offset, UINT32 length, const UI
 	
 	memcpy(chip->romData + offset, data, length);
 	
+	return;
+}
+
+static void qsoundc_set_options(void* info, UINT32 options)
+{
+	struct qsound_chip* chip = (struct qsound_chip*)info;
+
+	chip->opt_nowait = (options >> 0) & 0x01;
+
 	return;
 }
 
@@ -547,6 +564,17 @@ static void update_sample(struct qsound_chip *chip)
 			state_normal_update(chip);
 			return;
 	}
+}
+
+// flush all pending state changes
+// (required for proper seeking in VGMs)
+static void update_flush(struct qsound_chip *chip)
+{
+	while(chip->next_state != STATE_NORMAL1 && chip->next_state != STATE_NORMAL2)
+		update_sample(chip);
+	while(chip->state != STATE_NORMAL1 && chip->state != STATE_NORMAL2)
+		update_sample(chip);
+	return;
 }
 
 // Initialization routine
