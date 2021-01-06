@@ -242,6 +242,21 @@ UINT8 S98Player::LoadFile(DATA_LOADER *dataLoader)
 	GenerateDeviceConfig();
 	CalcSongLength();
 	
+	if (_fileHdr.loopOfs)
+	{
+		if (_fileHdr.loopOfs < _fileHdr.dataOfs || _fileHdr.loopOfs >= DataLoader_GetSize(_dLoad))
+		{
+			debug("Invalid VGM loop offset 0x%06X - ignoring!\n", _fileHdr.loopOfs);
+			_fileHdr.loopOfs = 0x00;
+		}
+		if (_fileHdr.loopOfs && _loopTick == _totalTicks)
+		{
+			// 0-Sample-Loops causes the program to hang in the playback routine
+			debug("Warning! Ignored Zero-Sample-Loop!\n");
+			_fileHdr.loopOfs = 0x00;
+		}
+	}
+	
 	// parse tags
 	LoadTags();
 	
@@ -295,6 +310,8 @@ UINT8 S98Player::LoadTags(void)
 	_tagList.push_back(NULL);
 	if (! _fileHdr.tagOfs)
 		return 0x00;
+	if (_fileHdr.tagOfs >= DataLoader_GetSize(_dLoad))
+		return 0xF3;	// tag error (offset out-of-range)
 	
 	const char* startPtr;
 	const char* endPtr;

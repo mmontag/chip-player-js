@@ -387,11 +387,15 @@ UINT8 VGMPlayer::LoadTags(void)
 		_tagData[curTag].clear();
 	_tagList[0] = NULL;
 	if (! _fileHdr.gd3Ofs)
-		return 0x00;
+		return 0x00;	// no GD3 tag present
+	if (_fileHdr.gd3Ofs >= _fileHdr.eofOfs)
+		return 0xF3;	// tag error (offset out-of-range)
 	
 	UINT32 curPos;
 	UINT32 eotPos;
 	
+	if (_fileHdr.gd3Ofs + 0x0C > _fileHdr.eofOfs)	// separate check to catch overflows
+		return 0xF3;	// tag error (GD3 header incomplete)
 	if (memcmp(&_fileData[_fileHdr.gd3Ofs + 0x00], "Gd3 ", 4))
 		return 0xF0;	// bad tag
 	
