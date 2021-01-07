@@ -256,11 +256,12 @@ static void qsoundc_w(void* info, UINT8 offset, UINT8 data)
 static void qsoundc_write_data(void* info, UINT8 address, UINT16 data)
 {
 	struct qsound_chip* chip = (struct qsound_chip*)info;
+	UINT16 *destination;
 
 	if (! chip->ready_flag && chip->opt_nowait)
 		update_flush(chip);
 
-	UINT16 *destination = chip->register_map[address];
+	destination = chip->register_map[address];
 	if(destination)
 		*destination = data;
 	chip->ready_flag = 0;
