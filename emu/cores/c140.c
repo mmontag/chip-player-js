@@ -326,8 +326,8 @@ static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 					dt=(INT32)(((INT64)v->dltdt*v->ptoffset)>>16)+v->prevdt;
 
 					/* Write the data to the sample buffers */
-					lmix[j]+=(dt*vreg->volume_left)>>8;
-					rmix[j]+=(dt*vreg->volume_right)>>8;
+					lmix[j]+=(dt*vreg->volume_left)>>9;
+					rmix[j]+=(dt*vreg->volume_right)>>9;
 				}
 			}
 			else
@@ -365,8 +365,8 @@ static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 					dt=(INT32)(((INT64)v->dltdt*v->ptoffset)>>16)+v->prevdt;
 
 					/* Write the data to the sample buffers */
-					lmix[j]+=(dt*vreg->volume_left)>>8;
-					rmix[j]+=(dt*vreg->volume_right)>>8;
+					lmix[j]+=(dt*vreg->volume_left)>>9;
+					rmix[j]+=(dt*vreg->volume_right)>>9;
 				}
 			}
 		}
