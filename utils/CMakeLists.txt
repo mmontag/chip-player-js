@@ -1,40 +1,41 @@
 #### miscellaneous utility functions/classes ####
 project(vgm-utils)
 
+option(UTIL_LOADERS "build data (file/memory) loaders, requires zlib" ON)
+option(UTIL_THREADING "build threading utilities (thread/mutex/signal)" ON)
+option(UTIL_CHARSET_CONV "build charset conversion functions" ON)
+
+
 set(UTIL_DEFS)
 set(UTIL_FILES)
-# export headers
-set(UTIL_HEADERS
-	DataLoader.h
-	FileLoader.h
-	MemoryLoader.h
-	OSMutex.h
-	OSSignal.h
-	OSThread.h
-	StrUtils.h
-)
+set(UTIL_HEADERS)	# export headers
 set(UTIL_INCLUDES)
 set(UTIL_LIBS)
 
-set(UTILS_PC_CFLAGS)
-set(UTILS_PC_LDFLAGS)
-set(UTILS_PC_PKGS)
+set(UTIL_PC_CFLAGS)
+set(UTIL_PC_LDFLAGS)
+set(UTIL_PC_PKGS)
 
 
 
 # File Functions
 # --------------
+if(UTIL_LOADERS)
 find_package(ZLIB REQUIRED)
-set(UTIL_FILES ${UTIL_FILES} MemoryLoader.c FileLoader.c DataLoader.c)
+set(UTIL_HEADERS ${UTIL_HEADERS} DataLoader.h FileLoader.h MemoryLoader.h)
+set(UTIL_FILES ${UTIL_FILES} DataLoader.c FileLoader.c MemoryLoader.c)
 set(UTIL_LIBS ${UTIL_LIBS} ZLIB::ZLIB)
-set(UTILS_PC_PKGS ${UTILS_PC_PKGS} "zlib")
+set(UTIL_PC_PKGS ${UTIL_PC_PKGS} "zlib")
+endif(UTIL_LOADERS)
 
 
 
 # Threads and Synchronization
 # ---------------------------
+if(UTIL_THREADING)
 find_package(Threads REQUIRED)
 
+set(UTIL_HEADERS ${UTIL_HEADERS} OSMutex.h OSSignal.h OSThread.h)
 if(CMAKE_USE_WIN32_THREADS_INIT)
 	set(UTIL_FILES ${UTIL_FILES}
 		OSMutex_Win.c
@@ -49,12 +50,14 @@ elseif(CMAKE_USE_PTHREADS_INIT)
 	)
 endif()
 set(UTIL_LIBS ${UTIL_LIBS} Threads::Threads)
-set(UTILS_PC_LDFLAGS ${UTILS_PC_LDFLAGS} ${CMAKE_THREAD_LIBS_INIT})
+set(UTIL_PC_LDFLAGS ${UTIL_PC_LDFLAGS} ${CMAKE_THREAD_LIBS_INIT})
+endif(UTIL_THREADING)
 
 
 
 # String Codepage Conversion
 # --------------------------
+if(UTIL_CHARSET_CONV)
 find_package(Iconv QUIET)
 if(WIN32)
 	if(${ICONV_FOUND})
@@ -71,6 +74,7 @@ option(UTIL_CHARCNV_ICONV "Charset Conversion: iconv" ${ICONV_FOUND})
 option(UTIL_CHARCNV_WINAPI "Charset Conversion: WinAPI" ${CAN_WINAPI})
 
 
+set(UTIL_HEADERS ${UTIL_HEADERS} StrUtils.h)
 if(UTIL_CHARCNV_WINAPI)
 	set(UTIL_FILES ${UTIL_FILES} StrUtils-CPConv_Win.c)
 elseif(UTIL_CHARCNV_ICONV)
@@ -78,9 +82,10 @@ elseif(UTIL_CHARCNV_ICONV)
 	set(UTIL_FILES ${UTIL_FILES} StrUtils-CPConv_IConv.c)
 	set(UTIL_LIBS ${UTIL_LIBS} Iconv::Iconv)
 	if(NOT Iconv_IS_BUILT_IN)
-		set(UTILS_PC_LDFLAGS ${UTILS_PC_LDFLAGS} "-liconv")
+		set(UTIL_PC_LDFLAGS ${UTIL_PC_LDFLAGS} "-liconv")
 	endif()
 endif()
+endif(UTIL_CHARSET_CONV)
 
 
 
@@ -99,10 +104,10 @@ pkgcfg_configure("${LIBVGM_SOURCE_DIR}/cmake/libvgm.pc.in" "${CMAKE_CURRENT_BINA
 		DESC "LibVGM utility library"
 		VERSION ${LIBVGM_VERSION}
 		DEFINES ${UTIL_DEFS}
-		CFLAGS ${UTILS_PC_CFLAGS}
-		LDFLAGS_PRIV ${UTILS_PC_LDFLAGS}
+		CFLAGS ${UTIL_PC_CFLAGS}
+		LDFLAGS_PRIV ${UTIL_PC_LDFLAGS}
 		LDFLAGS_PUB "-l${PROJECT_NAME}"
-		PKGS_PRIV ${UTILS_PC_PKGS}
+		PKGS_PRIV ${UTIL_PC_PKGS}
 	)
 
 install(TARGETS ${PROJECT_NAME}

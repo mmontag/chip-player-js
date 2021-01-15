@@ -108,7 +108,7 @@ option(BUILD_LIBPLAYER "build player library" ON)
 option(BUILD_TESTS "build test programs" OFF)
 option(BUILD_PLAYER "build player application" ON)
 option(BUILD_VGM2WAV "build sample vgm2wav application" ON)
-set(LIBRARY_TYPE CACHE STRING "library type (static/shared)")
+set(LIBRARY_TYPE "STATIC" CACHE STRING "library build type (static/shared)")
 set_property(CACHE LIBRARY_TYPE PROPERTY STRINGS "SHARED;STATIC")
 option(USE_SANITIZERS "use sanitizers" ON)
 
