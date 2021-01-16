@@ -22,6 +22,7 @@ void CPConv_Deinit(CPCONV* cpc);
 //	inSize: [input] length of input string
 //	        inSize == 0: automatically determine the string's length, includes the terminating \0 character.
 //	inStr: [input] input string
+//	Note: For nonzero return codes, the \0-terminator will be missing!
 UINT8 CPConv_StrConvert(CPCONV* cpc, size_t* outSize, char** outStr, size_t inSize, const char* inStr);
 
 #ifdef __cplusplus

@@ -116,6 +116,7 @@ UINT8 CPConv_StrConvert(CPCONV* cpc, size_t* outSize, char** outStr, size_t inSi
 	size_t wrtBytes;
 	char resVal;
 	UINT8 canRealloc;
+	char* outPtrPrev;
 	
 	iconv(cpc->hIConv, NULL, NULL, NULL, NULL);	// reset conversion state
 	
@@ -144,14 +145,16 @@ UINT8 CPConv_StrConvert(CPCONV* cpc, size_t* outSize, char** outStr, size_t inSi
 	outPtr = *outStr;
 	
 	resVal = 0x00;	// default: conversion successfull
+	outPtrPrev = NULL;
 	wrtBytes = iconv(cpc->hIConv, &inPtr, &remBytesIn, &outPtr, &remBytesOut);
 	while(wrtBytes == (size_t)-1)
 	{
-		if (errno == EILSEQ || errno == EINVAL)
+		int err = errno;
+		if (err == EILSEQ || err == EINVAL)
 		{
 			// invalid encoding
 			resVal = 0x80;
-			if (errno == EINVAL && remBytesIn <= 1)
+			if (err == EINVAL && remBytesIn <= 1)
 			{
 				// assume that the string got truncated
 				iconv(cpc->hIConv, NULL, NULL, &outPtr, &remBytesOut);
@@ -159,10 +162,15 @@ UINT8 CPConv_StrConvert(CPCONV* cpc, size_t* outSize, char** outStr, size_t inSi
 			}
 			break;
 		}
-		// errno == E2BIG
+		// err == E2BIG
 		if (! canRealloc)
 		{
 			resVal = 0x10;	// conversion incomplete due to lack of buffer space
+			break;
+		}
+		if (outPtrPrev == outPtr)
+		{
+			resVal = 0xF0;	// unexpected conversion error
 			break;
 		}
 		wrtBytes = outPtr - *outStr;
@@ -171,6 +179,7 @@ UINT8 CPConv_StrConvert(CPCONV* cpc, size_t* outSize, char** outStr, size_t inSi
 		outPtr = *outStr + wrtBytes;
 		remBytesOut = outBufSize - wrtBytes;
 		
+		outPtrPrev = outPtr;
 		wrtBytes = iconv(cpc->hIConv, &inPtr, &remBytesIn, &outPtr, &remBytesOut);
 	}
 	
