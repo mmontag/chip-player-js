@@ -26,6 +26,9 @@
 
 #ifdef _DEBUG
 #define logerror	printf
+#elif defined(_MSC_VER) && _MSC_VER < 1400
+// MS VC6 doesn't support the variadic macro syntax
+#define logerror	
 #else
 #define logerror(...) {}
 #endif

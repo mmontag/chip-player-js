@@ -17,6 +17,10 @@
 #define snprintf	_snprintf
 #endif
 
+#ifndef LSTATUS	// for MS VC6
+#define	LSTATUS	LONG
+#endif
+
 #include "../stdtype.h"
 #include "StrUtils.h"
 

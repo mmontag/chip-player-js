@@ -510,7 +510,7 @@ const S98_HEADER* S98Player::GetFileHeader(void) const
 
 const char* const* S98Player::GetTags(void)
 {
-	return _tagList.data();
+	return &_tagList[0];
 }
 
 UINT8 S98Player::GetSongInfo(PLR_SONG_INFO& songInf)

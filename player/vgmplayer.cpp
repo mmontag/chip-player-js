@@ -383,8 +383,10 @@ void VGMPlayer::ParseXHdr_Data16(UINT32 fileOfs, std::vector<XHDR_DATA16>& xData
 
 UINT8 VGMPlayer::LoadTags(void)
 {
-	for (size_t curTag = 0; curTag < _TAG_COUNT; curTag ++)
-		_tagData[curTag].clear();
+	size_t curTag;
+	
+	for (curTag = 0; curTag < _TAG_COUNT; curTag ++)
+		_tagData[curTag] = std::string();
 	_tagList[0] = NULL;
 	if (! _fileHdr.gd3Ofs)
 		return 0x00;	// no GD3 tag present
@@ -410,7 +412,7 @@ UINT8 VGMPlayer::LoadTags(void)
 		eotPos = _fileHdr.eofOfs;
 	
 	const char **tagListEnd = _tagList;
-	for (size_t curTag = 0; curTag < _TAG_COUNT; curTag ++)
+	for (curTag = 0; curTag < _TAG_COUNT; curTag ++)
 	{
 		UINT32 startPos = curPos;
 		if (curPos >= eotPos)
@@ -461,7 +463,7 @@ UINT8 VGMPlayer::UnloadFile(void)
 	_devCfgs.clear();
 	_devices.clear();
 	for (size_t curTag = 0; curTag < _TAG_COUNT; curTag ++)
-		_tagData[curTag].clear();
+		_tagData[curTag] = std::string();
 	_tagList[0] = NULL;
 	
 	return 0x00;
@@ -719,7 +721,7 @@ double VGMPlayer::Tick2Second(UINT32 ticks) const
 {
 	if (ticks == (UINT32)-1)
 		return -1.0;
-	return ticks * _ttMult / (double)(INT64)_tsDiv;
+	return (INT64)(ticks * _ttMult) / (double)(INT64)_tsDiv;
 }
 
 UINT8 VGMPlayer::GetState(void) const
