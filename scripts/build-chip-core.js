@@ -360,6 +360,43 @@ const chipModules = [
       '-fno-strict-aliasing',
     ],
   },
+  {
+    name: 'mdx',
+    enabled: true,
+    sourceFiles: [
+      'mdxmini/src/mdxmini.c',
+      'mdxmini/src/mdx2151.c',
+      'mdxmini/src/mdxmml_ym2151.c',
+      'mdxmini/src/mdxfile.c',
+      'mdxmini/src/nlg.c',
+      'mdxmini/src/pcm8.c',
+      'mdxmini/src/pdxfile.c',
+      'mdxmini/src/ym2151.c', // TODO(montag): unify with gme; slightly different versions
+    ],
+    exportedFunctions: [
+      '_mdx_set_rate',
+      '_mdx_set_dir',
+      '_mdx_open',
+      '_mdx_close',
+      '_mdx_next_frame',
+      '_mdx_frame_length',
+      '_mdx_calc_sample',
+      '_mdx_calc_log',
+      '_mdx_get_title',
+      '_mdx_get_length',
+      '_mdx_set_max_loop',
+      '_mdx_get_tracks',
+      '_mdx_get_current_notes',
+      '_mdx_set_speed',
+      '_mdx_get_position_ms',
+      '_mdx_set_position_ms',
+      '_mdx_create_context',
+      '_mdx_get_pdx_filename',
+      '_mdx_get_track_name',
+      '_mdx_set_track_mask',
+    ],
+    flags: [],
+  },
 ];
 
 const compiler = process.env.EMPP_BIN || 'em++';
