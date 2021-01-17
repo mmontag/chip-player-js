@@ -15,6 +15,7 @@ const FFT_SIZES = [
 const FFT_LABELS = [
   '512', '1K', '2K', '4K', '8K', '16K'
 ];
+const VIS_WIDTH = 448;
 
 export default class Visualizer extends PureComponent {
   constructor(props) {
@@ -75,6 +76,8 @@ export default class Visualizer extends PureComponent {
   render() {
     const enabledStyle = {
       display: this.state.enabled ? 'block' : 'none',
+      width: VIS_WIDTH,
+      boxSizing: 'border-box',
     };
     return (
       <div className='Visualizer'>
@@ -133,16 +136,17 @@ export default class Visualizer extends PureComponent {
             </div>
           }
         </div>
-        <canvas style={enabledStyle} className='Visualizer-analyzer' width={448} height={60}
+        <canvas style={enabledStyle} className='Visualizer-analyzer' width={VIS_WIDTH} height={60}
                 ref={this.freqCanvasRef}/>
-        <canvas style={enabledStyle} className='Visualizer-spectrogram' width={448} height={400}
+        <canvas style={enabledStyle} className='Visualizer-spectrogram' width={VIS_WIDTH} height={400}
                 ref={this.specCanvasRef}/>
         <img src={pianoKeys}
              className='Visualizer-overlay'
              ref={this.pianoKeysRef}
              alt='Piano keys'
              style={{
-               display: (this.state.enabled && this.state.vizMode === 2) ? 'block' : 'none'
+               display: (this.state.enabled && this.state.vizMode === 2) ? 'block' : 'none',
+               width: VIS_WIDTH,
              }}/>
       </div>
     );
