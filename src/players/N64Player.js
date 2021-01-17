@@ -14,7 +14,7 @@ export default class N64Player extends Player {
     super(audioCtx, destNode, chipCore, onPlayerStateUpdate);
     this.loadData = this.loadData.bind(this);
 
-    // Initialize Soundfont filesystem
+    // Initialize N64 filesystem
     chipCore.FS.mkdirTree(MOUNTPOINT);
     chipCore.FS.mount(chipCore.FS.filesystems.IDBFS, {}, MOUNTPOINT);
     chipCore.FS.syncfs(true, (err) => {
