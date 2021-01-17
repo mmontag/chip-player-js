@@ -21,6 +21,9 @@ typedef struct
 
 typedef struct
 {
+  // number of samples remaining to do for current MDX frame;
+  // used during mdx_calc_sample and may be carried over
+  // from previous invocation
 	int samples;
 	int channels;
 	MDX_DATA *mdx;
@@ -28,12 +31,20 @@ typedef struct
 	void *self;
 	songdata *songdata;
     int nlg_tempo;
+    int position_ms;
+    int seek_to_ms;
+    float playback_speed;
+    int track_mute_mask;
 
 } t_mdxmini;
 
 #include "pcm8.h"
 
 #define MDX_FREQ (PCM8_MASTER_PCM_RATE)
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * \brief Sets the frequency at which raw PCM data is generated.
@@ -84,7 +95,7 @@ int  mdx_frame_length(t_mdxmini *data);
  *
  * \param data a t_mdxmini struct representing an open song.
  * \param buf a buffer in which songdata will be rendered.
- * \param buffer_size the length, in bytes, of data to render into the buffer.
+ * \param buffer_size the length, in samples, of the buffer.
  */
 int  mdx_calc_sample(t_mdxmini *data, short *buf, int buffer_size);
 /**
@@ -139,5 +150,23 @@ int  mdx_get_tracks(t_mdxmini *data);
  * \param len the number of tracks' worth of notes to read; usually the output of mdx_get_tracks().
  */
 void mdx_get_current_notes(t_mdxmini *data, int *notes, int len);
+
+int mdx_get_position_ms(t_mdxmini *data);
+
+void mdx_set_position_ms(t_mdxmini *data, int pos);
+
+void mdx_set_speed(t_mdxmini *data, float speed);
+
+const char* mdx_get_pdx_filename(t_mdxmini *data, char* filename);
+
+const char* mdx_get_track_name(t_mdxmini *data, int index);
+
+void mdx_set_track_mask(t_mdxmini* data, int mask);
+
+t_mdxmini* mdx_create_context();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

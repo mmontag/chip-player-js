@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <emscripten.h>
 
 #include "mdxmini.h"
 #include "class.h"
@@ -92,8 +93,12 @@ extern void ym2151_set_logging( int flag, songdata * );
 int mdx_open( t_mdxmini *data, char *filename , char *pcmdir )
 {
   data->nlg_tempo = -1;
+  data->position_ms = 0;
+  data->playback_speed = 1.f;
+  data->seek_to_ms = -1;
+  data->track_mute_mask = 0;
 
-  data->songdata = malloc(sizeof(songdata));
+  data->songdata = (songdata*)malloc(sizeof(songdata));
 
   MDX_DATA *mdx = NULL;
   PDX_DATA *pdx = NULL;
@@ -130,17 +135,16 @@ int mdx_open( t_mdxmini *data, char *filename , char *pcmdir )
     /* failed to create class instances */
     return -1;
   }
-    /* load mdx file */
+  /* load mdx file */
 
-    data->mdx = mdx_open_mdx( filename );
-    if ( !data->mdx ) 
-		return -1;
-		
-	mdx = data->mdx;
-	
-	if ( pcmdir )
-		strcpy(mdx->pdx_dir , pcmdir );
-	
+  data->mdx = mdx_open_mdx(filename);
+  if (!data->mdx)
+    return -1;
+
+  mdx = data->mdx;
+
+  if (pcmdir)
+    strcpy(mdx->pdx_dir, pcmdir);
 
     mdx->is_use_pcm8         = no_pdx      == FLAG_TRUE ? FLAG_FALSE:FLAG_TRUE;
     mdx->is_use_fm           = no_fm       == FLAG_TRUE ? FLAG_FALSE:FLAG_TRUE;
@@ -159,7 +163,7 @@ int mdx_open( t_mdxmini *data, char *filename , char *pcmdir )
     mdx->dsp_device          = dsp_device;
     mdx->dump_voice          = dump_voice;
     mdx->is_output_titles    = output_titles;
-	mdx->dsp_speed           = dsp_speed;
+    mdx->dsp_speed           = dsp_speed;
 
     mdx->is_use_reverb       = is_use_reverb;
     mdx->reverb_predelay     = reverb_predelay;
@@ -188,6 +192,12 @@ int mdx_open( t_mdxmini *data, char *filename , char *pcmdir )
 			
 	data->samples = 0;
 	data->channels = pcm8_get_output_channels(data->songdata);
+
+
+  EM_ASM_({ console.log('MDX channels: %d.', $0); }, data->channels);
+  EM_ASM_({ console.log('MDX dsp_speed: %d.', $0); }, mdx->dsp_speed);
+//  printf("MDX channels: %d", data->channels);
+//	printf("MDX dsp_speed: %d", mdx->dsp_speed);
 
 	return 0;
 }
@@ -221,7 +231,7 @@ int mdx_next_frame ( t_mdxmini *data )
 {
 	if (data->self)
 	{
-		return mdx_parse_mml_ym2151_async(data->songdata);
+		return mdx_parse_mml_ym2151_async(data->songdata, data->track_mute_mask);
 	}
 	return 0;
 }
@@ -248,51 +258,71 @@ void mdx_make_buffer( t_mdxmini *data, short *buf , int buffer_size )
 	mdx_parse_mml_ym2151_make_samples(buf , buffer_size, data->songdata);
 }
 
-int mdx_calc_sample(t_mdxmini *data, short *buf, int buffer_size)
-{
-	int s_pos;
-	int next,frame;
-	
-	next = 1;
-	s_pos = 0;
-	
-	do
-	{
-		if (!data->samples)
-		{
+int mdx_calc_sample(t_mdxmini *data, short *buf, int buffer_size) {
+  int samples_done;
+  int has_next;
+  // MDX frame duration in microseconds
+  int frame_microsec;
+
+  has_next = 1;
+  samples_done = 0;
+
+  do {
+    if (data->samples <= 0) {
 #ifdef USE_NLG
-            if (data->nlg_tempo != data->mdx->tempo)
-            {
-                data->nlg_tempo = data->mdx->tempo;
+      if (data->nlg_tempo != data->mdx->tempo)
+      {
+          data->nlg_tempo = data->mdx->tempo;
 
-                int tempo_us = (1000 * 1024 * (256 - data->nlg_tempo)) / 4000;
-                WriteNLG_CTC(nlgctx, CMD_CTC0, 4); // 4 * 64 = 256us
-                WriteNLG_CTC(nlgctx, CMD_CTC3, (tempo_us / 256));
+          int tempo_us = (1000 * 1024 * (256 - data->nlg_tempo)) / 4000;
+          WriteNLG_CTC(nlgctx, CMD_CTC0, 4); // 4 * 64 = 256us
+          WriteNLG_CTC(nlgctx, CMD_CTC3, (tempo_us / 256));
 
-            }
-            WriteNLG_IRQ(nlgctx);
+      }
+      WriteNLG_IRQ(nlgctx);
 #endif
-			next = mdx_next_frame(data);
-			frame = mdx_frame_length(data);
-			data->samples = (data->mdx->dsp_speed * frame)/1000000;
-		}
-        
-        int calc_len = data->samples;
-        
-		if (calc_len + s_pos >= buffer_size)
-            calc_len = buffer_size - s_pos;
-        
-        mdx_parse_mml_ym2151_make_samples(
-                buf + (s_pos * data->channels),
-                calc_len,
-                data->songdata);
-			
-        data->samples -= calc_len;
-        s_pos += calc_len;
-		
-	}while(s_pos < buffer_size);
+      if (data->seek_to_ms != -1) {
+        if (data->seek_to_ms < data->position_ms) {
+          // reset song state to 0
+          data->position_ms = 0;
+          data->self = mdx_parse_mml_ym2151_async_initialize(data->mdx, data->pdx, data->songdata);
+        }
+        while (data->position_ms < data->seek_to_ms) {
+          // advance frames without rendering audio
+          has_next = mdx_next_frame(data);
+          frame_microsec = mdx_frame_length(data);
+          // prevent lock
+          if (frame_microsec <= 0) frame_microsec = 1000;
+          data->position_ms += frame_microsec / 1000;
+        }
+        data->seek_to_ms = -1;
+      } else {
+        has_next = mdx_next_frame(data);
+        frame_microsec = mdx_frame_length(data);
+        // prevent lock
+        if (frame_microsec <= 0) frame_microsec = 1000;
+      }
+      data->position_ms += frame_microsec / 1000;
+      data->samples = data->mdx->dsp_speed * (int)((float)frame_microsec / data->playback_speed) / 1000000;
+    }
 
-	return next;
+    int batch_size = data->samples;
+
+    // if batch would exceed buffer, shrink to fit
+    if (batch_size + samples_done >= buffer_size)
+      batch_size = buffer_size - samples_done;
+
+    // limitation of mdx_parse_mml_ym2151_make_samples
+    if (batch_size > 1024) batch_size = 1024;
+
+    mdx_parse_mml_ym2151_make_samples(buf + (samples_done * data->channels), batch_size, data->songdata);
+
+    data->samples -= batch_size;
+    samples_done += batch_size;
+
+  } while (samples_done < buffer_size);
+
+  return has_next;
 }
 
 int mdx_calc_log(t_mdxmini *data, short *buf, int buffer_size)
@@ -321,6 +351,7 @@ int mdx_calc_log(t_mdxmini *data, short *buf, int buffer_size)
 #endif
 			next = mdx_next_frame(data);
 			frame = mdx_frame_length(data);
+
 			data->samples = (data->mdx->dsp_speed * frame)/1000000;
 		}
         
@@ -356,6 +387,10 @@ int  mdx_get_length( t_mdxmini *data )
 
 int  mdx_get_tracks ( t_mdxmini *data )
 {
+  if (data == NULL || data->mdx == NULL || data->mdx->tracks < 0)
+    return 0;
+  if (data->mdx->tracks > MDX_MAX_TRACK_NUMBER)
+    return MDX_MAX_TRACK_NUMBER;
 	return data->mdx->tracks;
 }
 
@@ -382,6 +417,17 @@ void mdx_close(t_mdxmini *data)
     self_destroy(data->songdata);
 }
 
+t_mdxmini *mdx_create_context() {
+  t_mdxmini* data;
+  data = (t_mdxmini*)calloc(1, sizeof(t_mdxmini));
+
+  if (data == NULL) {
+    return NULL;
+  }
+
+  return data;
+}
+
 int  mdx_get_sample_size ( t_mdxmini *data )
 {
 	return pcm8_get_sample_size(data->songdata);
@@ -390,6 +436,43 @@ int  mdx_get_sample_size ( t_mdxmini *data )
 int  mdx_get_buffer_size ( t_mdxmini *data )
 {
 	return pcm8_get_buffer_size(data->songdata);
+}
+
+int mdx_get_position_ms(t_mdxmini *data) {
+  return data->position_ms;
+}
+
+void mdx_set_speed(t_mdxmini *data, float speed) {
+  data->playback_speed = speed;
+}
+
+void mdx_set_position_ms(t_mdxmini *data, int pos) {
+  data->seek_to_ms = pos;
+}
+
+const char* mdx_get_pdx_filename(t_mdxmini *data, char *filename) {
+  data->mdx = mdx_open_mdx(filename);
+  if (data->mdx == NULL)
+    return NULL;
+  return data->mdx->haspdx == FLAG_TRUE ? data->mdx->pdx_name : NULL;
+}
+
+const char* mdx_get_track_name(t_mdxmini *data, int index) {
+  static const char track_names[16][12] = {
+    "FM 1", "FM 2", "FM 3", "FM 4",
+    "FM 5", "FM 6", "FM 7", "FM 8/Noise",
+    "PCM 1", "PCM 2", "PCM 3", "PCM 4",
+    "PCM 5", "PCM 6", "PCM 7", "PCM 8"
+  };
+  if (index < 16) {
+    return track_names[index];
+  }
+  return NULL;
+}
+
+void mdx_set_track_mask(t_mdxmini *data, int mask) {
+  if (data != NULL)
+    data->track_mute_mask = mask;
 }
 
 /* pdx loading */
@@ -473,18 +556,17 @@ _get_pdx(MDX_DATA* mdx, char* mdxpath)
     buf[0] = 0;
   
   strcat( buf, mdx->pdx_name );
-  if ( (pdx=_open_pdx( buf )) == NULL ) 
-  {
+  if ((pdx = _open_pdx(buf)) == NULL) {
     // specified pdx directory
-	strcpy( buf, mdx->pdx_dir );
-	int len = (int)strlen( buf );
-	
-	if (len > 0 && buf [ len - 1 ] != '/' )
-			strcat( buf, "/" );
-	
-	strcat( buf, mdx->pdx_name );
-	if ((pdx=_open_pdx( buf )) != NULL )
-		goto get_pdx_file;
+    strcpy(buf, mdx->pdx_dir);
+    int len = (int) strlen(buf);
+
+    if (len > 0 && buf[len - 1] != '/')
+      strcat(buf, "/");
+
+    strcat(buf, mdx->pdx_name);
+    if ((pdx = _open_pdx(buf)) != NULL)
+      goto get_pdx_file;
   }
   else
     goto get_pdx_file;

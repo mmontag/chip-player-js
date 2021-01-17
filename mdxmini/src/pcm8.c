@@ -86,7 +86,7 @@ static const unsigned char riff[]={
 
 extern void* _get_pcm8(songdata *songdata);
 
-#define __GETSELF(data) pcm8_instances* self = data->pcm8
+#define __GETSELF(data) pcm8_instances* self = (pcm8_instances*)data->pcm8
 
 void*
 _pcm8_initialize(void)

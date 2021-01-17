@@ -173,9 +173,9 @@ void SetBaseClkNLG(NLGCTX *ctx, int clock)
 // 書き込み用NLGファイルを開く
 NLGCTX *CreateNLG(const char *file)
 {
-    char *name;
+    const char *name;
     
-    NLGCTX *ctx = malloc(sizeof(NLGCTX));
+    NLGCTX *ctx = (NLGCTX*)malloc(sizeof(NLGCTX));
     
     if (!ctx)
     {

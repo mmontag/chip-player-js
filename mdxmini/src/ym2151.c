@@ -1015,7 +1015,7 @@ INLINE void refresh_EG(YM2151Operator * op)
 /* write a register on YM2151 chip number 'n' */
 void YM2151WriteReg(void *_chip, int r, int v)
 {
-	YM2151 *chip = _chip;
+	YM2151 *chip = (YM2151*)_chip;
 	YM2151Operator *op = &chip->oper[ (r&0x07)*4+((r&0x18)>>3) ];
 
 	/* adjust bus to 8 bits */
@@ -1334,7 +1334,7 @@ static void cymfile_callback (int n)
 
 int YM2151ReadStatus( void *_chip )
 {
-	YM2151 *chip = _chip;
+	YM2151 *chip = (YM2151*)_chip;
 	return chip->status;
 }
 
@@ -1524,7 +1524,7 @@ void * YM2151Init(int index, int clock, int rate)
 
 void YM2151Shutdown(void *_chip)
 {
-	YM2151 *chip = _chip;
+	YM2151 *chip = (YM2151*)_chip;
 
 	free (chip);
 
@@ -1556,7 +1556,7 @@ void YM2151Shutdown(void *_chip)
 void YM2151ResetChip(void *_chip)
 {
 	int i;
-	YM2151 *chip = _chip;
+	YM2151 *chip = (YM2151*)_chip;
 
 
 	/* initialize hardware registers */
@@ -2345,7 +2345,7 @@ void YM2151UpdateOne(void *chip, SAMP **buffers, int length)
 	bufL = buffers[0];
 	bufR = buffers[1];
 
-	PSG = chip;
+	PSG = (YM2151*)chip;
 
 #ifdef USE_MAME_TIMERS
 		/* ASG 980324 - handled by real timers now */
@@ -2451,13 +2451,13 @@ void YM2151UpdateOne(void *chip, SAMP **buffers, int length)
 
 void YM2151SetIrqHandler(void *chip, void(*handler)(int irq))
 {
-	YM2151 *PSG = chip;
+	YM2151 *PSG = (YM2151*)chip;
 	PSG->irqhandler = handler;
 }
 
 void YM2151SetPortWriteHandler(void *chip, write8_handler handler)
 {
-	YM2151 *PSG = chip;
+	YM2151 *PSG = (YM2151*)chip;
 	PSG->porthandler = handler;
 }
 

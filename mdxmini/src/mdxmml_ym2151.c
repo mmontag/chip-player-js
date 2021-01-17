@@ -63,7 +63,7 @@ typedef struct _mdxmml_ym2151_instances {
 /* ------------------------------------------------------------------ */
 /* local functions */
 
-static int  set_new_event( int, songdata * );
+static int  set_new_event( int, songdata *, int muted );
 static void set_tempo( int, songdata * );
 static void note_off( int, songdata * );
 static void note_on( int, int, songdata * );
@@ -201,7 +201,7 @@ mdx_parse_mml_ym2151( MDX_DATA *orig_mdx, PDX_DATA *orig_pdx, songdata *data )
 
       count--;
       while ( count == 0 ) {
-	count=set_new_event( i, data );
+	count=set_new_event( i, data, 0 );
       }
 
       self->mdx->track[i].counter = count;
@@ -273,7 +273,7 @@ mdx_parse_mml_ym2151_async_finalize(songdata *data)
 }
 
 int
-mdx_parse_mml_ym2151_async(songdata *data)
+mdx_parse_mml_ym2151_async(songdata *data, int track_mute_mask)
 {
   int i;
   long count;
@@ -316,7 +316,7 @@ mdx_parse_mml_ym2151_async(songdata *data)
 
     count--;
     while ( count == 0 ) {
-      count=set_new_event( i, data );
+      count=set_new_event( i, data, track_mute_mask & (1 << i) );
     }
 
     self->mdx->track[i].counter = count;
@@ -348,7 +348,7 @@ int mdx_parse_mml_ym2151_async_get_length(songdata *data)
   next = 1;
   while(next && self->mdx->elapsed_time < (1200 * 1000000))
   {
-	next = mdx_parse_mml_ym2151_async(data);
+	next = mdx_parse_mml_ym2151_async(data, 0);
   }
   
   sec = (int)self->mdx->elapsed_time / 1000000;
@@ -463,7 +463,7 @@ mdx_init_track_work_area_ym2151( songdata *data )
 }
 
 static int
-set_new_event( int t, songdata *songdata )
+set_new_event( int t, songdata *songdata, int muted )
 {
   int ptr;
   unsigned char *data;
@@ -488,8 +488,10 @@ set_new_event( int t, songdata *songdata )
     mdx->track[t].gate = count+1;
     follower=0;
 
-  } else if ( data[ptr] <= MDX_MAX_NOTE ) { /* note */
-    note_on( t, data[ptr], songdata);
+  } else if ( data[ptr] <= MDX_MAX_NOTE) { /* note */
+    if (muted == 0) {
+      note_on(t, data[ptr], songdata);
+    }
     count = data[ptr+1]+1;
     do_quantize( t, count, songdata );
     follower = 1;

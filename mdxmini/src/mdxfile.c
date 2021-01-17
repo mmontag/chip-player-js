@@ -80,7 +80,7 @@ MDX_DATA *mdx_open_mdx( char *name ) {
 
   /* allocate work area */
 
-  mdx = __alloc_mdxwork();
+  mdx = (MDX_DATA*)__alloc_mdxwork();
   if ( mdx == NULL ) return NULL;
 
   /* data read */

@@ -1,3 +1,5 @@
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "bugprone-reserved-identifier"
 /*
   mdx.h  mdx data structure
 
@@ -216,7 +218,7 @@ extern int mdx_init_track_work_area_opl3( void );
 extern void error_end( char * );
 
 extern void* mdx_parse_mml_ym2151_async_initialize(MDX_DATA* in_mdx, PDX_DATA* in_pdx, songdata *data);
-extern int mdx_parse_mml_ym2151_async(songdata *data);
+extern int mdx_parse_mml_ym2151_async(songdata *data, int track_mute_mask);
 extern int mdx_parse_mml_ym2151_make_samples(short *buffer,int buffer_size, songdata *);
 extern int mdx_parse_mml_get_tempo(void* in_self);
 
@@ -268,3 +270,5 @@ extern int mdx_output_titles( MDX_DATA * );
 					   stop playing */
 
 #endif /*_MDX_H_*/
+
+#pragma clang diagnostic pop
