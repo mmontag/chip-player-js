@@ -9,6 +9,7 @@ const REPLACE_STATE_ON_SEEK = false;
 const FORMATS =  [
   'ay',
   'it',
+  'mdx',
   'mid',
   'miniusf',
   'mod',

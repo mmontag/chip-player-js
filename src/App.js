@@ -19,6 +19,7 @@ import MIDIPlayer from './players/MIDIPlayer';
 import V2MPlayer from './players/V2MPlayer';
 import XMPPlayer from './players/XMPPlayer';
 import N64Player from './players/N64Player';
+import MDXPlayer from './players/MDXPlayer';
 
 import AppFooter from './AppFooter';
 import AppHeader from './AppHeader';
@@ -152,6 +153,7 @@ class App extends React.Component {
             new MIDIPlayer(audioCtx, playerNode, chipCore),
             new V2MPlayer(audioCtx, playerNode, chipCore),
             new N64Player(audioCtx, playerNode, chipCore),
+            new MDXPlayer(audioCtx, playerNode, chipCore),
           ]);
           this.setState({ loading: false });
 
