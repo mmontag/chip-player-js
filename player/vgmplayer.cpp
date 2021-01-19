@@ -325,6 +325,13 @@ UINT8 VGMPlayer::ParseHeader(void)
 		}
 	}
 	
+	_p2612Fix = 0x00;
+	if (_fileHdr.fileVer <= 0x150)
+	{
+		if (GetChipCount(0x02) == 1)	// there must be exactly 1x YM2612 present
+			_p2612Fix = 0x80;	// enable fix for Project2612 VGMs
+	}
+	
 	return 0x00;
 }
 
@@ -570,6 +577,25 @@ size_t VGMPlayer::DeviceID2OptionID(UINT32 id) const
 		return (size_t)-1;
 }
 
+void VGMPlayer::RefreshDevOptions(CHIP_DEVICE& chipDev, const PLR_DEV_OPTS& devOpts)
+{
+	UINT8 chipType = chipDev.chipType;
+	DEV_INFO* devInf = &chipDev.base.defInf;
+	if (devInf->devDef->SetOptionBits == NULL)
+		return;
+	
+	UINT32 coreOpts = devOpts.coreOpts;
+	if (chipType == DEVID_YM2612 && (_p2612Fix & 0x01))
+		coreOpts |= OPT_YM2612_LEGACY_MODE;	// enable legacy mode
+	else if (chipType == DEVID_GB_DMG)
+		coreOpts |= OPT_GB_DMG_LEGACY_MODE;	// enable legacy mode (fix playback of old VGMs)
+	else if (chipType == DEVID_QSOUND)
+		coreOpts |= OPT_QSOUND_NOWAIT;	// make sure seeking works
+	
+	devInf->devDef->SetOptionBits(devInf->dataPtr, coreOpts);
+	return;
+}
+
 void VGMPlayer::RefreshMuting(VGMPlayer::CHIP_DEVICE& chipDev, const PLR_MUTE_OPTS& muteOpts)
 {
 	VGM_BASEDEV* clDev;
@@ -616,9 +642,7 @@ UINT8 VGMPlayer::SetDeviceOptions(UINT32 id, const PLR_DEV_OPTS& devOpts)
 	if (devID < _devices.size())
 	{
 		DEV_INFO* devInf = &_devices[devID].base.defInf;
-		if (devInf->devDef->SetOptionBits != NULL)
-			devInf->devDef->SetOptionBits(devInf->dataPtr, _devOpts[optID].coreOpts);
-		
+		RefreshDevOptions(_devices[devID], _devOpts[optID]);
 		RefreshMuting(_devices[devID], _devOpts[optID].muteOpts);
 		RefreshPanning(_devices[devID], _devOpts[optID].panOpts);
 	}
@@ -864,6 +888,17 @@ UINT8 VGMPlayer::Reset(void)
 		{
 			// TODO: Resmpl_Reset(&clDev->resmpl);
 		}
+	}
+	
+	if ((_p2612Fix & 0x80) && ! (_p2612Fix & 0x01))
+	{
+		_p2612Fix |= 0x01;	// enable Project2612 fix (YM2612 "legacy" mode)
+		
+		size_t optID = _devOptMap[DEVID_YM2612][0];
+		size_t devID = (optID == (size_t)-1) ? (size_t)-1 : _optDevMap[optID];
+		// refresh options, adding OPT_YM2612_LEGACY_MODE
+		if (devID < _devices.size())
+			RefreshDevOptions(_devices[devID], _devOpts[optID]);
 	}
 	
 	return 0x00;
@@ -1187,6 +1222,12 @@ void VGMPlayer::InitDevices(void)
 	for (curChip = 0; curChip < _OPT_DEV_COUNT * 2; curChip ++)
 		_optDevMap[curChip] = (size_t)-1;
 	
+	// When the Project2612 fix is enabled [bit 7], enable it during chip init [bit 0].
+	if (_p2612Fix & 0x80)
+		_p2612Fix |= 0x01;
+	else
+		_p2612Fix &= ~0x01;
+	
 	for (curChip = 0; curChip < _devCfgs.size(); curChip ++)
 	{
 		SONG_DEV_CFG& sdCfg = _devCfgs[curChip];
@@ -1379,18 +1420,7 @@ void VGMPlayer::InitDevices(void)
 		
 		if (devOpts != NULL)
 		{
-			if (devInf->devDef->SetOptionBits != NULL)
-			{
-				// TODO: apply these patches in SetDeviceOptions() as well
-				UINT32 coreOpts = devOpts->coreOpts;
-				if (chipType == DEVID_YM2612)
-					coreOpts |= OPT_YM2612_LEGACY_MODE;	// enable legacy mode [TODO: disable after sample 0]
-				else if (chipType == DEVID_GB_DMG)
-					coreOpts |= OPT_GB_DMG_LEGACY_MODE;	// enable legacy mode (fix playback of old VGMs)
-				else if (chipType == DEVID_QSOUND)
-					coreOpts |= OPT_QSOUND_NOWAIT;	// make sure seeking works
-				devInf->devDef->SetOptionBits(devInf->dataPtr, coreOpts);
-			}
+			RefreshDevOptions(chipDev, *devOpts);
 			RefreshMuting(chipDev, devOpts->muteOpts);
 			RefreshPanning(chipDev, devOpts->panOpts);
 		}
@@ -1645,6 +1675,20 @@ void VGMPlayer::ParseFile(UINT32 ticks)
 		COMMAND_FUNC func = _CMD_INFO[curCmd].func;
 		(this->*func)();
 		_filePos += _CMD_INFO[curCmd].cmdLen;
+	}
+	
+	if (_p2612Fix & 0x01)
+	{
+		_p2612Fix &= ~0x01;	// disable Project2612 fix
+		// Note: Due to the way the Legacy Mode is implemented in YM2612 GPGX right now,
+		//       it should be no problem to keep it enabled during the whole song.
+		//       But let's just turn it off for safety.
+		
+		size_t optID = _devOptMap[DEVID_YM2612][0];
+		size_t devID = (optID == (size_t)-1) ? (size_t)-1 : _optDevMap[optID];
+		// refresh options, removing OPT_YM2612_LEGACY_MODE
+		if (devID < _devices.size())
+			RefreshDevOptions(_devices[devID], _devOpts[optID]);
 	}
 	
 	if (_filePos >= _fileHdr.dataEnd)

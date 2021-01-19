@@ -802,14 +802,11 @@ INLINE void FM_KEYOFF(FM_OPN2 *OPN, FM_CH *CH , int s )
 		}
 		if (OPN->LegacyMode)	// workaround for VGMs trimmed with VGMTool
 		{
-			if ((CH - OPN->P_CH) == 2 && (OPN->ST.mode & 0xc0) && s < 3)
+			// When at maximum release rate AND there was a Key On just this sample, enforce an instant Key Off.
+			if (SLOT->rr >= 94 && SLOT->phase == 0)
 			{
-				int fs = (s & 2) ? s : (s ^ 1);	// 0 -> 1, 2 -> 2, 1 -> 0
-				refresh_fc_eg_slot(OPN, SLOT , OPN->SL3.fc[fs] , OPN->SL3.kcode[fs]);
-			}
-			else
-			{
-				refresh_fc_eg_slot(OPN, SLOT, CH->fc, CH->kcode);
+				SLOT->volume = MAX_ATT_INDEX;
+				SLOT->state = EG_OFF;
 			}
 		}
 	}

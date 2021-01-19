@@ -185,6 +185,7 @@ protected:
 	std::string GetUTF8String(const UINT8* startPtr, const UINT8* endPtr);
 	
 	size_t DeviceID2OptionID(UINT32 id) const;
+	void RefreshDevOptions(CHIP_DEVICE& chipDev, const PLR_DEV_OPTS& devOpts);
 	void RefreshMuting(CHIP_DEVICE& chipDev, const PLR_MUTE_OPTS& muteOpts);
 	void RefreshPanning(CHIP_DEVICE& chipDev, const PLR_PAN_OPTS& panOpts);
 	
@@ -339,6 +340,7 @@ protected:
 	PCM_BANK _pcmBank[_PCM_BANK_COUNT];
 	PCM_COMPR_TBL _pcmComprTbl;
 	
+	UINT8 _p2612Fix;	// enable hack/fix for Project2612 VGMs
 	UINT32 _ym2612pcm_bnkPos;
 	UINT8 _rf5cBank[2][2];	// [0 RF5C68 / 1 RF5C164][chipID]
 	QSOUND_WORK _qsWork[2];
