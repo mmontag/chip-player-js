@@ -15,6 +15,7 @@ const FFT_SIZES = [
 const FFT_LABELS = [
   '512', '1K', '2K', '4K', '8K', '16K'
 ];
+const VIS_WIDTH = 448;
 
 export default class Visualizer extends PureComponent {
   constructor(props) {
@@ -75,6 +76,8 @@ export default class Visualizer extends PureComponent {
   render() {
     const enabledStyle = {
       display: this.state.enabled ? 'block' : 'none',
+      width: VIS_WIDTH,
+      boxSizing: 'border-box',
     };
     return (
       <div className='Visualizer'>
@@ -142,7 +145,8 @@ export default class Visualizer extends PureComponent {
              ref={this.pianoKeysRef}
              alt='Piano keys'
              style={{
-               display: (this.state.enabled && this.state.vizMode === 2) ? 'block' : 'none'
+               display: (this.state.enabled && this.state.vizMode === 2) ? 'block' : 'none',
+               width: VIS_WIDTH,
              }}/>
       </div>
     );
