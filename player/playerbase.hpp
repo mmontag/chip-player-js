@@ -40,7 +40,7 @@ struct PLR_SONG_INFO
 	UINT32 tickRateDiv;	// internal ticks per second: denumerator
 	// 1 second = 1 tick * tickMult / tickDiv
 	UINT32 songLen;		// song length in ticks
-	UINT32 loopTick;	// tick position where the loop begins
+	UINT32 loopTick;	// tick position where the loop begins (-1 = no loop)
 	UINT32 deviceCnt;	// number of used sound devices
 };
 

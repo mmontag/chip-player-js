@@ -119,7 +119,7 @@ UINT8 WASAPI_IsAvailable(void)
 	UINT8 resVal;
 	
 	resVal = 0;
-	retVal = CoInitialize(NULL);
+	retVal = CoInitializeEx(NULL, COINIT_MULTITHREADED);
 	if (! (retVal == S_OK || retVal == S_FALSE))
 		return 0;
 	
@@ -159,7 +159,7 @@ UINT8 WASAPI_Init(void)
 	deviceList.devNames = NULL;
 	devListIDs = NULL;
 	
-	retVal = CoInitialize(NULL);
+	retVal = CoInitializeEx(NULL, COINIT_MULTITHREADED);
 	if (! (retVal == S_OK || retVal == S_FALSE))
 		return AERR_API_ERR;
 	
@@ -384,7 +384,7 @@ UINT8 WASAPI_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* aud
 	bufTime = (REFERENCE_TIME)10000000 * drv->bufSmpls * drv->bufCount;
 	bufTime = (bufTime + options->sampleRate / 2) / options->sampleRate;
 	
-	retVal = CoInitialize(NULL);	// call again, in case Init() was called by another thread
+	retVal = CoInitializeEx(NULL, COINIT_MULTITHREADED);	// call again, in case Init() was called by another thread
 	if (! (retVal == S_OK || retVal == S_FALSE))
 		return AERR_API_ERR;
 	

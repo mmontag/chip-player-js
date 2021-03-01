@@ -771,7 +771,6 @@ INLINE void FM_KEYON(FM_OPN2 *OPN, FM_CH *CH , int s )
 	SLOT->key = 1;
 }
 
-INLINE void refresh_fc_eg_slot(FM_OPN2 *OPN, FM_SLOT *SLOT , int fc , int kc );
 INLINE void FM_KEYOFF(FM_OPN2 *OPN, FM_CH *CH , int s )
 {
 	FM_SLOT *SLOT = &CH->SLOT[s];
