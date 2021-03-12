@@ -365,6 +365,7 @@ INLINE void CSM_Key_Control(ym2612_ *YM2612)
 }
 
 
+static
 int SLOT_SET(ym2612_ *YM2612, int Adr, unsigned char data)
 {
   channel_ *CH;
@@ -527,6 +528,7 @@ int SLOT_SET(ym2612_ *YM2612, int Adr, unsigned char data)
 }
 
 
+static
 int CHANNEL_SET(ym2612_ *YM2612, int Adr, unsigned char data)
 {
   channel_ *CH;
@@ -691,6 +693,7 @@ int CHANNEL_SET(ym2612_ *YM2612, int Adr, unsigned char data)
 }
 
 
+static
 int YM_SET(ym2612_ *YM2612, int Adr, unsigned char data)
 {
   channel_ *CH;
