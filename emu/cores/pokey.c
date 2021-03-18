@@ -498,7 +498,7 @@ static void pokey_device_reset(void *info)
 
 	/* reset more internal state */
 	memset(d->m_clock_cnt,0,sizeof(d->m_clock_cnt));
-	memset(d->m_clock_cnt,0,sizeof(d->m_POTx));
+	memset(d->m_POTx,0,sizeof(d->m_POTx));
 
 }
 
