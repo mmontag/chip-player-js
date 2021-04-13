@@ -97,7 +97,7 @@ class App extends React.Component {
     });
 
     // Initialize audio graph
-    const audioCtx = this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const audioCtx = this.audioCtx = new (window.AudioContext || window.webkitAudioContext)({latencyHint: 'playback'});
     const gainNode = audioCtx.createGain();
     gainNode.gain.value = 1;
     gainNode.connect(audioCtx.destination);
