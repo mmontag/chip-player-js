@@ -826,12 +826,18 @@ static UINT8 *SlurpFile(const char *fileName, UINT32 *fileSize)
 	hFileSize = ftell(hFile);
 	rewind(hFile);
 	fileData = (UINT8 *)malloc(hFileSize);
-	if(fileData == NULL) return NULL;
+	if(fileData == NULL)
+	{
+		fclose(hFile);
+		return NULL;
+	}
 	if(fread(fileData,1,hFileSize,hFile) != hFileSize)
 	{
 		free(fileData);
+		fclose(hFile);
 		return NULL;
 	}
+	fclose(hFile);
 	*fileSize = hFileSize;
 	return fileData;
 }
