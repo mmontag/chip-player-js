@@ -164,6 +164,7 @@ export default class MIDIPlayer extends Player {
     this.getParameter = this.getParameter.bind(this);
     this.getParamDefs = this.getParamDefs.bind(this);
     this.switchSynthBasedOnFilename = this.switchSynthBasedOnFilename.bind(this);
+    this.ensureWebMidiInitialized = this.ensureWebMidiInitialized.bind(this);
 
     lib = chipCore;
     lib._tp_init(audioCtx.sampleRate);
@@ -212,29 +213,7 @@ export default class MIDIPlayer extends Player {
     this.paramDefs.find(def => def.id === 'opl3bank').options =
       [{ label: 'OPL3 Bank', items: oplBanks }];
 
-    // Initialize MIDI output devices
-    if (typeof navigator.requestMIDIAccess === 'function') {
-      navigator.requestMIDIAccess({ sysex: true }).then((access) => {
-        if (access.outputs.length === 0) {
-          console.warn('No MIDI output devices found.');
-        } else {
-          [...access.outputs.values()].forEach(midiOutput => {
-            console.log('MIDI Output:', midiOutput);
-            midiDevices.push(midiOutput);
-            this.paramDefs.find(def => def.id === 'mididevice').options[0].items.push({
-              label: midiOutput.name,
-              value: midiDevices.length - 1,
-            });
-          });
-
-          // TODO: remove if removing Dummy Device
-          this.setParameter('mididevice', 1);
-        }
-      });
-    } else {
-      console.warn('Web MIDI API not supported. Try Chrome if you want to use external MIDI output devices.');
-    }
-
+    this.webMidiIsInitialized = false;
     // this.midiFilePlayer = new MIDIFilePlayer({ output: dummyMidiOutput });
 
     // Initialize parameters
@@ -306,7 +285,36 @@ export default class MIDIPlayer extends Player {
     return meta;
   }
 
+  ensureWebMidiInitialized() {
+    if (this.webMidiIsInitialized === true) return;
+    this.webMidiIsInitialized = true;
+
+    // Initialize MIDI output devices
+    if (typeof navigator.requestMIDIAccess === 'function') {
+      navigator.requestMIDIAccess({ sysex: true }).then((access) => {
+        if (access.outputs.length === 0) {
+          console.warn('No MIDI output devices found.');
+        } else {
+          [...access.outputs.values()].forEach(midiOutput => {
+            console.log('MIDI Output:', midiOutput);
+            midiDevices.push(midiOutput);
+            this.paramDefs.find(def => def.id === 'mididevice').options[0].items.push({
+              label: midiOutput.name,
+              value: midiDevices.length - 1,
+            });
+          });
+
+          // TODO: remove if removing Dummy Device
+          this.setParameter('mididevice', 1);
+        }
+      });
+    } else {
+      console.warn('Web MIDI API not supported. Try Chrome if you want to use external MIDI output devices.');
+    }
+  }
+
   loadData(data, filepath) {
+    this.ensureWebMidiInitialized();
     this.filepathMeta = this.metadataFromFilepath(filepath);
 
     if (this.getParameter('autoengine')) {
