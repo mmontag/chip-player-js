@@ -1,5 +1,4 @@
-import {PureComponent} from 'react';
-import React from 'react';
+import React, { PureComponent } from 'react';
 
 export default class PlayerParams extends PureComponent {
   constructor(props) {
@@ -41,7 +40,7 @@ export default class PlayerParams extends PureComponent {
         {this.props.tempo.toFixed(2)}<br/>
 
         Voices:{' '}
-        <div style={{display: 'flex', flexWrap: 'wrap', marginRight: '-8px'}}>
+        <div style={css.voiceList}>
           {[...Array(this.props.numVoices)].map((_, i) => {
             return (
               <label className='App-voice-label inline' key={i}>
@@ -131,5 +130,10 @@ export default class PlayerParams extends PureComponent {
 const css = {
   paramLabel: {
     display: 'block',
+  },
+  voiceList: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    marginRight: '-8px',
   },
 };
