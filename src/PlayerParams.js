@@ -7,6 +7,43 @@ export default class PlayerParams extends PureComponent {
     this.handleVoiceToggle = this.handleVoiceToggle.bind(this);
   }
 
+  // Voicename polling implementation left here for reference.
+  //
+  // Polling for voice updates is only useful for MIDIPlayer
+  // because MIDI Player is the only player where voice names can update
+  // in the middle of a song. Polling is probably a bad pattern.
+  // This forces the player to keep a copy of voices in an array.
+  //
+  // Instead, the player should probably emit an event when voices have updated.
+  //
+  // Right now the only way for players to notify the UI is to invoke the
+  // 'onPlayerStateUpdate' callback, which is really coarse and brittle.
+  // It will trigger a setstate on the App level.
+  //
+  // A better way to bridge between the player engines and the
+  // React UI is probably with an Event Bus (pubsub).
+  //
+  // The event bus can be passed down to children at arbitrary depth,
+  // and each child can subscribe to events it cares about.
+  //
+  // componentDidMount() {
+  //   const updateVoiceNames = () => {
+  //     const voiceNames = this.props.getVoiceNames();
+  //     if (voiceNames !== this.state.voiceNames) {
+  //       console.debug("Updated voice names.");
+  //       this.setState({
+  //         voiceNames,
+  //       });
+  //     }
+  //   };
+  //   updateVoiceNames();
+  //   this.timer = setInterval(updateVoiceNames, UPDATE_INTERVAL_MS);
+  // }
+  //
+  // componentWillUnmount() {
+  //   clearInterval(this.timer);
+  // }
+
   handleVoiceToggle(e, index) {
     const voices = this.props.voices;
     e = e.nativeEvent || {};

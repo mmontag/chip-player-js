@@ -5,6 +5,7 @@ import Player from './Player';
 import { SOUNDFONT_URL_PATH } from '../config';
 import { ensureEmscFileWithUrl } from '../util';
 import { GM_DRUM_KITS, GM_INSTRUMENTS } from '../gm-patch-map';
+import debounce from 'lodash/debounce';
 
 let lib = null;
 const MOUNTPOINT = '/soundfonts';
@@ -184,6 +185,8 @@ export default class MIDIPlayer extends Player {
     this.buffer = lib.allocate(this.bufferSize * 8, 'i32', lib.ALLOC_NORMAL);
     this.filepathMeta = {};
     this.midiFilePlayer = new MIDIFilePlayer({
+      // onPlayerStateUpdate must be debounced/throttled
+      programChangeCb: () => this.onPlayerStateUpdate(false),
       output: dummyMidiOutput,
       skipSilence: true,
       sampleRate: this.sampleRate,
@@ -221,6 +224,10 @@ export default class MIDIPlayer extends Player {
     this.paramDefs.forEach(param => this.setParameter(param.id, param.defaultValue));
 
     this.setAudioProcess(this.midiAudioProcess);
+  }
+
+  setOnPlayerStateUpdate(fn) {
+    this.onPlayerStateUpdate = debounce(fn, 200);
   }
 
   midiAudioProcess(e) {

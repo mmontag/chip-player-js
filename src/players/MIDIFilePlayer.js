@@ -1,5 +1,21 @@
 const MIDIEvents = require('midievents');
 
+/**
+ * The MIDIFilePlayer is the engine that parses MIDI file data, and fires
+ * appropriate methods on a MIDI softsynth (noteOn, noteOff, etc.) or forwards
+ * MIDI messages to Web MIDI devices.
+ *
+ * A lot of complexity was introduced in the MIDIFilePlayer in an effort to
+ * play nicely with hardware MIDI devices. Behaviors that are deterministic
+ * in a softsynth can be nondeterministic on a hardware device, such as
+ * skipping silence at the beginning of a MIDI file, or seeking through the
+ * file. Non-note events must be replayed in these cases, and throttled for
+ * hardware devices, especially in the case of sysex commands that might make
+ * the hardware busy for 0.5 seconds, such as a GM reset command sent to a
+ * Roland SC-55. The time allowed for these events is a best-guess - so your
+ * mileage may vary.
+ */
+
 // Constants
 const BUFFER_AHEAD = 33;
 const DELAY_MS_PER_CC_EVENT = 2;
@@ -21,6 +37,7 @@ function MIDIPlayer(options) {
   options = options || {};
   this.output = options.output || null; // Web MIDI output device (has a .send() method)
   this.synth = options.synth || null; // MIDI synth (has .noteOn(), .noteOff(), render()...)
+  this.programChangeCb = options.programChangeCb;
   this.speed = 1;
   this.skipSilence = options.skipSilence || false; // skip silence at beginning of file
   this.lastProcessPlayTimestamp = 0;
@@ -43,6 +60,7 @@ function MIDIPlayer(options) {
   this.getChannelsInUseAndInitialPrograms = this.getChannelsInUseAndInitialPrograms.bind(this);
   this.getDuration = this.getDuration.bind(this);
   this.getPosition = this.getPosition.bind(this);
+  this.handleProgramChange = this.handleProgramChange.bind(this);
   this.panic = this.panic.bind(this);
   this.reset = this.reset.bind(this);
   this.resume = this.resume.bind(this);
@@ -174,6 +192,7 @@ MIDIPlayer.prototype.processPlaySynth = function(buffer, bufferSize) {
             synth.noteOff(event.channel, event.param1);
             break;
           case MIDIEvents.EVENT_MIDI_PROGRAM_CHANGE:
+            this.handleProgramChange(event.channel, event.param1);
             synth.programChange(event.channel, event.param1);
             break;
           case MIDIEvents.EVENT_MIDI_PITCH_BEND:
@@ -255,6 +274,9 @@ MIDIPlayer.prototype.processPlay = function() {
     } else {
       switch (event.subtype) {
         case MIDIEvents.EVENT_MIDI_PROGRAM_CHANGE:
+          this.handleProgramChange(event.channel, event.param1);
+          message = [(event.subtype << 4) + event.channel, event.param1];
+          break;
         case MIDIEvents.EVENT_MIDI_CHANNEL_AFTERTOUCH:
           message = [(event.subtype << 4) + event.channel, event.param1];
           break;
@@ -284,6 +306,11 @@ MIDIPlayer.prototype.processPlay = function() {
     this.position = 0;
     this.paused = true;
   }
+};
+
+MIDIPlayer.prototype.handleProgramChange = function(channel, program) {
+  this.channelProgramNums[channel] = program;
+  this.programChangeCb();
 };
 
 MIDIPlayer.prototype.togglePause = function() {
@@ -371,6 +398,7 @@ MIDIPlayer.prototype.setPositionSynth = function(eventList) {
   eventList.forEach(event => {
     switch (event.subtype) {
       case MIDIEvents.EVENT_MIDI_PROGRAM_CHANGE:
+        // handleProgramChange() is called in setPosition()
         synth.programChange(event.channel, event.param1);
         break;
       case MIDIEvents.EVENT_MIDI_CONTROLLER:
@@ -388,6 +416,7 @@ MIDIPlayer.prototype.setPositionWebMidi = function(ms, eventList) {
   let message;
   eventList.forEach((event, i) => {
     if (event.subtype === MIDIEvents.EVENT_MIDI_PROGRAM_CHANGE) {
+      // handleProgramChange() is called in setPosition()
       message = [(event.subtype << 4) + event.channel, event.param1];
     } else if (event.subtype === MIDIEvents.EVENT_MIDI_CONTROLLER) {
       message = [(event.subtype << 4) + event.channel, event.param1, event.param2];
@@ -419,6 +448,7 @@ MIDIPlayer.prototype.setPosition = function(ms) {
   while (this.events[pos] && this.events[pos].playTime < ms) {
     const event = this.events[pos];
     if (event.subtype === MIDIEvents.EVENT_MIDI_PROGRAM_CHANGE) {
+      this.handleProgramChange(event.channel, event.param1);
       eventMap[`${event.subtype}-${event.channel}`] = event;
     } else if (event.subtype === MIDIEvents.EVENT_MIDI_CONTROLLER) {
       // These controllers (RPN, NRPN, Data Entry) must be sequenced in order
@@ -469,7 +499,7 @@ MIDIPlayer.prototype.getChannelsInUseAndInitialPrograms = function() {
       channelsInUse[event.channel] = 1;
     }
     if (event.subtype === MIDIEvents.EVENT_MIDI_PROGRAM_CHANGE && !channelProgramNums[event.channel]) {
-      channelProgramNums[event.channel] = event.param1;
+      this.handleProgramChange(event.channel, event.param1);
     }
   }
 };
