@@ -23,7 +23,9 @@ const catalog = require(CATALOG_PATH);
 const DIRECTORIES_PATH = './directories.json';
 const directories = require(DIRECTORIES_PATH);
 
-const PUBLIC_CATALOG_URL = 'https://gifx.co/music';
+const PUBLIC_CATALOG_URL = process.env.DEV ?
+  'http://localhost:8000/catalog' :
+  'https://gifx.co/music';
 const LOCAL_CATALOG_ROOT = process.env.DEV ?
   '/Users/montag/Music/Chip Archive' :
   '/var/www/gifx.co/public_html/music';
@@ -101,28 +103,6 @@ const routes = {
 
   'browse': async (params) => {
     return directories[params.path];
-  },
-
-  // TODO: delete this after massive frontend deploy
-  'image': async (params) => {
-    let imageUrl = null;
-    if (params.path) {
-      const segments = params.path.split('/');
-      while (segments.length) {
-        const dir = segments.join('/');
-        const images = glob.sync(`${LOCAL_CATALOG_ROOT}/${dir}/*.{gif,png,jpg,jpeg}`, {nocase: true});
-        if (images.length > 0) {
-          const imageFile = encodeURI(path.basename(images[0]));
-          const imageDir = encodeURI(dir);
-          imageUrl = `${PUBLIC_CATALOG_URL}${imageDir}/${imageFile}`;
-          break;
-        }
-        segments.pop();
-      }
-    }
-    return {
-      imageUrl: imageUrl,
-    };
   },
 
   'metadata': async (params) => {
