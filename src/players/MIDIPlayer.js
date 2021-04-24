@@ -2,9 +2,9 @@ import MIDIFile from 'midifile';
 import MIDIFilePlayer from './MIDIFilePlayer';
 
 import Player from './Player';
-import GENERAL_MIDI_PATCH_MAP from '../gm-patch-map';
 import { SOUNDFONT_URL_PATH } from '../config';
 import { ensureEmscFileWithUrl } from '../util';
+import { GM_DRUM_KITS, GM_INSTRUMENTS } from '../gm-patch-map';
 
 let lib = null;
 const MOUNTPOINT = '/soundfonts';
@@ -415,12 +415,9 @@ export default class MIDIPlayer extends Player {
   }
 
   getVoiceName(index) {
-    const channel = this.activeChannels[index];
-    if (channel === 9) {
-      return 'Drums';
-    } else {
-      return GENERAL_MIDI_PATCH_MAP[this.midiFilePlayer.getChannelProgramNum(channel)];
-    }
+    const ch = this.activeChannels[index];
+    const pgm = this.midiFilePlayer.channelProgramNums[ch];
+    return ch === 9 ? (GM_DRUM_KITS[pgm] || GM_DRUM_KITS[0]) : GM_INSTRUMENTS[pgm]
   }
 
   setVoices(voices) {

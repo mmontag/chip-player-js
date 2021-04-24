@@ -1,4 +1,4 @@
-export default [
+export const GM_INSTRUMENTS = [
   'Piano         ',
   'Bright Piano  ',
   'Electric Piano',
@@ -54,7 +54,7 @@ export default [
   'Choir Aahs    ',
   'Voice Oohs    ',
   'Synth Voice   ',
-  'Orchestra Hit ',
+  'Orch Hit      ',
   'Trumpet       ',
   'Trombone      ',
   'Tuba          ',
@@ -128,3 +128,13 @@ export default [
   'Applause      ',
   'Gunshot       ',
 ];
+
+export const GM_DRUM_KITS = {
+  0:  'Std Drum Kit  ',
+  8:  'Room Drum Kit ',
+  16: 'Power Drum Kit',
+  24: 'Elec Drum Kit ',
+  25: 'TR808 Drum Kit',
+  32: 'Jazz Drum Kit ',
+  40: 'Brush Drum Kit',
+};
