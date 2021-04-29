@@ -35,12 +35,29 @@ export default class Browse extends PureComponent {
 
     this.navigate = this.navigate.bind(this);
     this.handleShufflePlay = this.handleShufflePlay.bind(this);
+    this.handleScroll = this.handleScroll.bind(this);
 
     this.contexts = {};
   }
 
   componentDidMount() {
     this.navigate();
+    this.props.scrollContainerRef.current.addEventListener('scroll', this.handleScroll);
+  }
+
+  componentWillUnmount() {
+    this.props.scrollContainerRef.current.removeEventListener('scroll', this.handleScroll);
+  }
+
+  handleScroll(e) {
+    console.log("handleScroll", e);
+
+    const { browsePath } = this.props;
+    const scrollTop = e.target.scrollTop;
+    if (scrollTop !== 0) {
+      console.log("browsePath=", browsePath, "scrollTop=", scrollTop);
+      sessionStorage.setItem(browsePath, scrollTop);
+    }
   }
 
   componentDidUpdate() {
