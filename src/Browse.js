@@ -4,7 +4,6 @@ import BrowseList from './BrowseList';
 
 const ITEM_HEIGHT = 19; // should match --charH CSS variable
 const ITEM_BUFFER = 10;
-const VIRTUAL_LIST_POS_Y = 3 * ITEM_HEIGHT; // 3 static lines of text above the list in the scroll container
 
 const mapToVirtualProps = (props, state) => {
   const { items, itemHeight } = props;
