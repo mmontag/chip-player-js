@@ -1,4 +1,4 @@
-import React, {Fragment, PureComponent} from 'react';
+import React, { Fragment, PureComponent } from 'react';
 import VirtualList from 'react-virtual-list';
 import BrowseList from './BrowseList';
 
@@ -34,33 +34,70 @@ export default class Browse extends PureComponent {
 
     this.navigate = this.navigate.bind(this);
     this.handleShufflePlay = this.handleShufflePlay.bind(this);
-    this.handleScroll = this.handleScroll.bind(this);
+    this.saveScrollPosition = this.saveScrollPosition.bind(this);
 
     this.contexts = {};
   }
 
   componentDidMount() {
     this.navigate();
-    this.props.scrollContainerRef.current.addEventListener('scroll', this.handleScroll);
   }
 
   componentWillUnmount() {
-    this.props.scrollContainerRef.current.removeEventListener('scroll', this.handleScroll);
+    this.saveScrollPosition(this.props.locationKey);
   }
 
-  handleScroll(e) {
-    console.log("handleScroll", e);
+  saveScrollPosition(locationKey) {
+    const scrollTop = Math.round(this.props.scrollContainerRef.current.scrollTop);
+    sessionStorage.setItem(locationKey, scrollTop.toString());
+    // console.log("Browse.storeScroll: %s stored at %s", locationKey, scrollTop);
+  }
 
-    const { browsePath } = this.props;
-    const scrollTop = e.target.scrollTop;
-    if (scrollTop !== 0) {
-      console.log("browsePath=", browsePath, "scrollTop=", scrollTop);
-      sessionStorage.setItem(browsePath, scrollTop);
-    }
+  componentWillUpdate(nextProps, nextState, nextContext) {
+    if (nextProps.browsePath === this.props.browsePath) return;
+
+    this.saveScrollPosition(this.props.locationKey);
   }
 
   componentDidUpdate() {
     this.navigate();
+
+    /*
+    PROBLEM:
+
+    When ?play=... is appended to URL, location.key becomes orphaned (undefined).
+    The React Router history object might need to be shimmed to make this param
+    completely transparent to browser navigation.
+    See https://stackoverflow.com/a/56823112/264970.
+
+    Consequences of trying to make ?play=... orthogonal to browse history:
+
+    browse/b
+      [click link]
+    browse/b/c
+      [play Song_X]
+    browse/b/c?play=Song_X
+      [scroll down]
+      [back]
+    browse/b
+      [next song]
+    browse/b?play=Song_Y (now location.key will be undefined)
+      [forward]
+    browse/b/c?play=Song_X (play param incorrectly reverts to Song_X)
+
+    using back and forward has always been problematic with the play param,
+    since it restores invalid URLs. Only now it breaks scroll restoration too.
+
+    ...therefore, play param is now disabled.
+     */
+    if (this.props.historyAction === "POP") { // User has just navigated back or forward
+      const { browsePath, locationKey } = this.props;
+      if (sessionStorage.getItem(locationKey)) {
+        const scrollToPosY = sessionStorage.getItem(locationKey);
+        this.props.scrollContainerRef.current.scrollTo(0, scrollToPosY);
+        console.debug("%s (%s) scroll position restored to %s", browsePath, locationKey, scrollToPosY);
+      }
+    }
   }
 
   handleShufflePlay() {

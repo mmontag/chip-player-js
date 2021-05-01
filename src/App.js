@@ -325,7 +325,8 @@ class App extends React.Component {
         imageUrl: null,
         songUrl: null,
       });
-      updateQueryString({ play: undefined });
+      // TODO: Disabled to support scroll restoration.
+      // updateQueryString({ play: undefined });
 
       if ('mediaSession' in navigator) {
         this.mediaSessionAudio.pause();
@@ -344,8 +345,9 @@ class App extends React.Component {
         const pathParts = url.split('/');
         pathParts.pop();
 
-        const filepath = url.replace(CATALOG_PREFIX, '');
-        updateQueryString({ play: filepath, t: undefined });
+        // TODO: Disabled to support scroll restoration.
+        // const filepath = url.replace(CATALOG_PREFIX, '');
+        // updateQueryString({ play: filepath, t: undefined });
 
         // Fetch artwork/info for this file (cancelable request)
         if (this.metaRequest) this.metaRequest.abort();
@@ -676,7 +678,7 @@ class App extends React.Component {
                         toggleFavorite={this.handleToggleFavorite}
                         favorites={this.state.faves}/>
                     )}/>
-                    <Route path="/browse/:browsePath*" render={({ match }) => {
+                    <Route path="/browse/:browsePath*" render={({ history, match, location }) => {
                       // Undo the react-router-dom double-encoded % workaround - see DirectoryLink.js
                       if (match.params.browsePath)
                         match.params.browsePath = match.params.browsePath.replace('%25', '%');
@@ -684,6 +686,8 @@ class App extends React.Component {
                         this.contentAreaRef.current &&
                         <Browse currContext={currContext}
                                 currIdx={currIdx}
+                                historyAction={history.action}
+                                locationKey={location.key}
                                 browsePath={match.params.browsePath || ''}
                                 directories={this.state.directories}
                                 fetchDirectory={this.fetchDirectory}
