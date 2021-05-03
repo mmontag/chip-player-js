@@ -255,6 +255,7 @@ class App extends React.Component {
 
     document.addEventListener('keydown', (e) => {
       if (e.key !== 'Escape' && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) return;
+      if (e.ctrlKey || e.metaKey) return; // avoid browser keyboard shortcuts
 
       switch (e.key) {
         case 'Escape':
