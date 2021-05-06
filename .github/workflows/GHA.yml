@@ -1,0 +1,114 @@
+name: Build Tests
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        config:
+          - { os: windows-latest, shell: "msys2 {0}", build_type: Release, extra_settings: "-G 'MSYS Makefiles'" }
+          - { os: windows-latest, shell: "msys2 {0}", build_type: Debug, extra_settings: "-G 'MSYS Makefiles'" }
+          - { os: macos-latest, shell: bash, build_type: Release }
+          - { os: macos-latest, shell: bash, build_type: Debug }
+          - { os: ubuntu-latest, shell: bash, build_type: Release }
+          - { os: ubuntu-latest, shell: bash, build_type: Debug }
+      fail-fast: false
+
+    runs-on: ${{ matrix.config.os }}
+    defaults:
+      run:
+        shell: ${{ matrix.config.shell }}
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Dependencies [Windows]
+      if: runner.os == 'Windows'
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        update: true
+        install: |
+          make mingw-w64-x86_64-cmake
+          mingw-w64-x86_64-toolchain
+          mingw-w64-x86_64-zlib mingw-w64-x86_64-libiconv
+
+    - name: Dependencies [macOS]
+      if: runner.os == 'macOS'
+      run: |
+        export HOMEBREW_NO_INSTALL_CLEANUP=1
+        brew update
+        brew install libao
+
+    - name: Dependencies [Linux]
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt update
+        sudo apt install \
+          libasound2-dev \
+          libpulse-dev \
+          libao-dev \
+          zlib1g-dev \
+
+    - name: Configuring
+      run: |
+        cmake ${{ matrix.config.extra_settings }} \
+          -B ${GITHUB_WORKSPACE}/build \
+          -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install \
+          -DCMAKE_BUILD_TYPE=${{ matrix.config.build_type }} \
+          -DBUILD_TESTS=ON \
+
+    - name: Build
+      run: |
+        cmake \
+          --build ${GITHUB_WORKSPACE}/build \
+          --config ${{ matrix.config.build_type }} \
+          --parallel 2 \
+
+    - name: Install
+      run: |
+        cmake \
+          --install ${GITHUB_WORKSPACE}/build \
+
+    - name: Check
+      run: |
+        echo "Listing what we installed"
+        echo "========================="
+        find ${GITHUB_WORKSPACE}/install
+        echo ""
+        
+        function file_lib() {
+          echo "$(basename "$1")"
+          file "$1"
+          echo ""
+        }
+        export -f file_lib
+        
+        echo "Checking compiled libraries"
+        echo "==========================="
+        find ${GITHUB_WORKSPACE}/install \
+          -name 'libvgm-*' \
+          -exec bash -c "file_lib \"{}\"" \;
+        
+        function print_pc() {
+          echo "$(basename "$1")"
+          cat "$1"
+          echo ""
+        }
+        export -f print_pc
+        
+        echo "Listing pkg-config file contents"
+        echo "================================"
+        find ${GITHUB_WORKSPACE}/install/lib/pkgconfig \
+          -name '*.pc' \
+          -exec bash -c "print_pc \"{}\"" \;
