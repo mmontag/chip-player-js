@@ -15,8 +15,12 @@ jobs:
     strategy:
       matrix:
         config:
-          - { os: windows-latest, shell: "msys2 {0}", build_type: Release, extra_settings: "-G 'MSYS Makefiles'" }
-          - { os: windows-latest, shell: "msys2 {0}", build_type: Debug, extra_settings: "-G 'MSYS Makefiles'" }
+          - { os: windows-latest, shell: bash, compiler: msvc, build_type: Release, extra_settings: "-A Win32" }
+          - { os: windows-latest, shell: bash, compiler: msvc, build_type: Debug, extra_settings: "-A Win32" }
+          #- { os: windows-latest, shell: bash, compiler: msvc, build_type: Release, extra_settings: "-A x64" }
+          #- { os: windows-latest, shell: bash, compiler: msvc, build_type: Debug, extra_settings: "-A x64" }
+          - { os: windows-latest, shell: "msys2 {0}", compiler: mingw, build_type: Release, extra_settings: "-G 'MSYS Makefiles'" }
+          - { os: windows-latest, shell: "msys2 {0}", compiler: mingw, build_type: Debug, extra_settings: "-G 'MSYS Makefiles'" }
           - { os: macos-latest, shell: bash, build_type: Release }
           - { os: macos-latest, shell: bash, build_type: Debug }
           - { os: ubuntu-latest, shell: bash, build_type: Release }
@@ -32,8 +36,8 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
-    - name: Dependencies [Windows]
-      if: runner.os == 'Windows'
+    - name: Dependencies [Windows MinGW]
+      if: ${{ runner.os == 'Windows' && matrix.config.compiler == 'mingw' }}
       uses: msys2/setup-msys2@v2
       with:
         msystem: MINGW64
@@ -42,6 +46,17 @@ jobs:
           make mingw-w64-x86_64-cmake
           mingw-w64-x86_64-toolchain
           mingw-w64-x86_64-zlib mingw-w64-x86_64-libiconv
+
+    - name: Dependencies [Windows MSVC]
+      if: ${{ runner.os == 'Windows' && matrix.config.compiler == 'msvc' }}
+      run: |
+        # avoid linker errors by enforcing WinAPI (instead of libiconv)
+        # and zdll.lib (DLL instead of static)
+        # The libraries that are shipped with libvgm were built with VC6 and VC2010
+        # and don't work with VC2015 and higher.
+        echo "CMAKE_OPTS=-DUTIL_CHARCNV_ICONV=OFF -DUTIL_CHARCNV_WINAPI=ON " \
+        "-DZLIB_LIBRARY_DEBUG=${GITHUB_WORKSPACE}/libs/lib/zdll.lib " \
+        "-DZLIB_LIBRARY_RELEASE=${GITHUB_WORKSPACE}/libs/lib/zdll.lib" >> $GITHUB_ENV
 
     - name: Dependencies [macOS]
       if: runner.os == 'macOS'
@@ -66,6 +81,7 @@ jobs:
           -B ${GITHUB_WORKSPACE}/build \
           -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install \
           -DCMAKE_BUILD_TYPE=${{ matrix.config.build_type }} \
+          ${CMAKE_OPTS} \
           -DBUILD_TESTS=ON \
 
     - name: Build
@@ -79,6 +95,7 @@ jobs:
       run: |
         cmake \
           --install ${GITHUB_WORKSPACE}/build \
+          --config ${{ matrix.config.build_type }}
 
     - name: Check
       run: |
