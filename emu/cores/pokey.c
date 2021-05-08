@@ -81,7 +81,7 @@ static void pokey_device_reset(void *);
 static void pokey_device_set_mute_mask(void *, UINT32 mutes);
 
 static void pokey_device_step_one_clock(pokey_device *);
-static inline void pokey_device_process_channel(pokey_device *d, int ch);
+INLINE void pokey_device_process_channel(pokey_device *d, int ch);
 
 static void poly_init_4_5(UINT32 *poly, int size, int xorbit, int invert);
 static void poly_init_9_17(UINT32 *poly, int size);
@@ -210,7 +210,7 @@ struct pokey_channel
 struct pokey_device
 {
 	DEV_DATA _devData;
-    UINT8 m_muted[POKEY_CHANNELS];
+	UINT8 m_muted[POKEY_CHANNELS];
 
 	pokey_channel m_channel[POKEY_CHANNELS];
 	UINT32 m_out_raw;         /* raw output */
@@ -256,17 +256,17 @@ struct pokey_device
 	int m_icount;
 };
 
-static inline void pokey_channel_sample(pokey_channel *c)
+INLINE void pokey_channel_sample(pokey_channel *c)
 {
 	c->m_filter_sample = c->m_output;
 }
 
-static inline void pokey_channel_reset_channel(pokey_channel *c)
+INLINE void pokey_channel_reset_channel(pokey_channel *c)
 {
 	c->m_counter = c->m_AUDF ^ 0xff;
 }
 
-static inline void pokey_channel_inc_chan(pokey_channel *c)
+INLINE void pokey_channel_inc_chan(pokey_channel *c)
 {
 	c->m_counter = (c->m_counter + 1) & 0xff;
 	if (c->m_counter == 0 && c->m_borrow_cnt == 0)
@@ -280,7 +280,7 @@ static inline void pokey_channel_inc_chan(pokey_channel *c)
 	}
 }
 
-static inline int pokey_channel_check_borrow(pokey_channel *c)
+INLINE int pokey_channel_check_borrow(pokey_channel *c)
 {
 	if (c->m_borrow_cnt > 0)
 	{
@@ -400,7 +400,8 @@ static void set_output_discrete(pokey_device *d)
 static void pokey_device_set_mute_mask(void *info, UINT32 mask)
 {
 	pokey_device *d = (pokey_device *)info;
-	for(UINT8 ch = 0; ch < POKEY_CHANNELS; ch++) {
+	UINT8 ch;
+	for(ch = 0; ch < POKEY_CHANNELS; ch++) {
 		d->m_muted[ch] = (mask >> ch) & 0x01;
 	}
 }
@@ -430,9 +431,10 @@ static UINT8 pokey_device_start(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 static void pokey_device_reset(void *info)
 {
 	pokey_device *d = (pokey_device *)info;
+	int i;
 
 	/* Setup channels */
-	for (int i=0; i<POKEY_CHANNELS; i++)
+	for (i=0; i<POKEY_CHANNELS; i++)
 	{
 		d->m_channel[i].m_parent = d;
 		d->m_channel[i].m_INTMask = 0;
@@ -531,6 +533,10 @@ static void pokey_device_step_one_clock(pokey_device *d)
 	/* Clocks only count if we are not in a reset */
 	if (d->m_SKCTL & SK_RESET)
 	{
+		int clock_triggered[3] = {1,0,0};
+		int const base_clock = (d->m_AUDCTL & CLK_15KHZ) ? CLK_114 : CLK_28;
+		int clk;
+
 		/* polynom pointers */
 		if (++d->m_p4 == 0x0000f)
 			d->m_p4 = 0;
@@ -542,7 +548,7 @@ static void pokey_device_step_one_clock(pokey_device *d)
 			d->m_p17 = 0;
 
 		/* CLK_1: no presacler */
-		int clock_triggered[3] = {1,0,0};
+		//int clock_triggered[3] = {1,0,0};
 		/* CLK_28: prescaler 63.9211 kHz */
 		if (++d->m_clock_cnt[CLK_28] >= DIV_64)
 		{
@@ -556,8 +562,8 @@ static void pokey_device_step_one_clock(pokey_device *d)
 			clock_triggered[CLK_114] = 1;
 		}
 
-		int const base_clock = (d->m_AUDCTL & CLK_15KHZ) ? CLK_114 : CLK_28;
-		int clk = (d->m_AUDCTL & CH1_HICLK) ? CLK_1 : base_clock;
+		//int const base_clock = (d->m_AUDCTL & CLK_15KHZ) ? CLK_114 : CLK_28;
+		clk = (d->m_AUDCTL & CH1_HICLK) ? CLK_1 : base_clock;
 		if (clock_triggered[clk])
 			pokey_channel_inc_chan(&d->m_channel[CHAN1]);
 
@@ -623,7 +629,8 @@ static void pokey_device_step_one_clock(pokey_device *d)
 	if (d->m_old_raw_inval)
 	{
 		UINT32 sum = 0;
-		for (int ch = 0; ch < 4; ch++)
+		int ch;
+		for (ch = 0; ch < 4; ch++)
 		{
 			if(!d->m_muted[ch]) {
 				sum |= (((d->m_channel[ch].m_output ^ d->m_channel[ch].m_filter_sample) || (d->m_channel[ch].m_AUDC & VOLUME_ONLY)) ?
@@ -644,14 +651,16 @@ static void pokey_device_step_one_clock(pokey_device *d)
 void pokey_device_update(void *info, UINT32 samples, DEV_SMPL **outputs)
 {
 	pokey_device *d = (pokey_device *)info;
+	UINT32 sampindex;
 
-	for(UINT32 sampindex = 0; sampindex < samples; sampindex++) {
+	for(sampindex = 0; sampindex < samples; sampindex++) {
 		pokey_device_execute_run(d);
 
 		if (d->m_output_type == LEGACY_LINEAR)
 		{
 			INT32 out = 0;
-			for (int i = 0; i < 4; i++)
+			int i;
+			for (i = 0; i < 4; i++)
 				out += ((d->m_out_raw >> (4*i)) & 0x0f);
 			out *= POKEY_DEFAULT_GAIN;
 			out = (out > 0x7fff) ? 0x7fff : out;
@@ -849,13 +858,14 @@ void pokey_device_write(pokey_device *d, UINT8 offset, UINT8 data)
 		break;
 
 	case STIMER_C:
-
+	{
 		/* From the pokey documentation:
 		 * reset all counters to zero (side effect)
 		 * Actually this takes 4 cycles to actually happen.
 		 * FIXME: Use timer for delayed reset !
 		 */
-		for (int i = 0; i < POKEY_CHANNELS; i++)
+		int i;
+		for (i = 0; i < POKEY_CHANNELS; i++)
 		{
 			pokey_channel_reset_channel(&d->m_channel[i]);
 			d->m_channel[i].m_output = 0;
@@ -863,6 +873,7 @@ void pokey_device_write(pokey_device *d, UINT8 offset, UINT8 data)
 		}
 		d->m_old_raw_inval = 1;
 		break;
+	}
 
 	case SKREST_C:
 		/* reset SKSTAT */
@@ -932,7 +943,7 @@ void pokey_device_write(pokey_device *d, UINT8 offset, UINT8 data)
 //  private stuff
 //-------------------------------------------------
 
-static inline void pokey_device_process_channel(pokey_device *d, int ch)
+INLINE void pokey_device_process_channel(pokey_device *d, int ch)
 {
 	if ((d->m_channel[ch].m_AUDC & NOTPOLY5) || (d->m_poly5[d->m_p5] & 1))
 	{
@@ -975,11 +986,12 @@ static void pokey_device_vol_init(pokey_device *d)
 	double r_off = 8e6;
 	double r_chan[16];
 	double rTot;
+	int i, j;
 
-	for (int j=0; j<16; j++)
+	for (j=0; j<16; j++)
 	{
 		rTot = 1.0 / 1e12; /* avoid div by 0 */;
-		for (int i=0; i<4; i++)
+		for (i=0; i<4; i++)
 		{
 			if (j & (1 << i))
 				rTot += 1.0 / resistors[i];
@@ -989,10 +1001,10 @@ static void pokey_device_vol_init(pokey_device *d)
 		r_chan[j] = 1.0 / rTot;
 	}
 
-	for (int j=0; j<0x10000; j++)
+	for (j=0; j<0x10000; j++)
 	{
 		rTot = 0;
-		for (int i=0; i<4; i++)
+		for (i=0; i<4; i++)
 		{
 			rTot += 1.0 / r_chan[(j >> (i*4)) & 0x0f];
 		}
