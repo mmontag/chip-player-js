@@ -177,7 +177,7 @@ if(SNDEMU__PRESET_NES)
 	set(SNDEMU_YM2413_ALL ON)	# VRC7
 	set(SNDEMU_AY8910_ALL ON)	# Sunsoft 5B
 endif()
-if(SNDEMU__PRESET_PC)
+if(SNDEMU__PRESET_IBM_PC)
 	set(SNDEMU_SN76496_ALL ON)	# Tandy
 	set(SNDEMU_SAA1099_ALL ON)	# CMS / Game Blaster
 	set(SNDEMU_YM3812_ALL ON)	# AdLib / Sound Blaster 1/2

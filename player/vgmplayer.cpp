@@ -287,17 +287,6 @@ UINT8 VGMPlayer::ParseHeader(void)
 		_fileHdr.volumeGain = _hdrBuffer[0x7C] - 0x100;
 	_fileHdr.volumeGain <<= 3;	// 3.5 fixed point -> 8.8 fixed point
 	
-	if (_fileHdr.extraHdrOfs)
-	{
-		UINT32 xhLen;
-		
-		xhLen = ReadLE32(&_fileData[_fileHdr.extraHdrOfs]);
-		if (xhLen >= 0x08)
-			_fileHdr.xhChpClkOfs = ReadRelOfs(_fileData, _fileHdr.extraHdrOfs + 0x04);
-		if (xhLen >= 0x0C)
-			_fileHdr.xhChpVolOfs = ReadRelOfs(_fileData, _fileHdr.extraHdrOfs + 0x08);
-	}
-	
 	if (! _fileHdr.eofOfs || _fileHdr.eofOfs > DataLoader_GetSize(_dLoad))
 	{
 		fprintf(stderr, "Warning! Invalid EOF Offset 0x%06X! (should be: 0x%06X)\n",
@@ -310,6 +299,15 @@ UINT8 VGMPlayer::ParseHeader(void)
 	if (_fileHdr.gd3Ofs && (_fileHdr.gd3Ofs < _fileHdr.dataEnd && _fileHdr.gd3Ofs >= _fileHdr.dataOfs))
 		_fileHdr.dataEnd = _fileHdr.gd3Ofs;
 	
+	if (_fileHdr.extraHdrOfs && _fileHdr.extraHdrOfs < _fileHdr.eofOfs)
+	{
+		UINT32 xhLen = ReadLE32(&_fileData[_fileHdr.extraHdrOfs]);
+		if (xhLen >= 0x08)
+			_fileHdr.xhChpClkOfs = ReadRelOfs(_fileData, _fileHdr.extraHdrOfs + 0x04);
+		if (xhLen >= 0x0C)
+			_fileHdr.xhChpVolOfs = ReadRelOfs(_fileData, _fileHdr.extraHdrOfs + 0x08);
+	}
+
 	if (_fileHdr.loopOfs)
 	{
 		if (_fileHdr.loopOfs < _fileHdr.dataOfs || _fileHdr.loopOfs >= _fileHdr.dataEnd)
