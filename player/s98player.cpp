@@ -980,6 +980,7 @@ UINT8 S98Player::Stop(void)
 UINT8 S98Player::Reset(void)
 {
 	size_t curDev;
+	std::vector<UINT8> tmp(0x40000, 0x00);
 	
 	_filePos = _fileHdr.dataOfs;
 	_fileTick = 0;
@@ -1009,11 +1010,16 @@ UINT8 S98Player::Reset(void)
 		if (_devHdrs[curDev].devType == S98DEV_OPNA)
 		{
 			DEVFUNC_WRITE_MEMSIZE SetRamSize = NULL;
+			DEVFUNC_WRITE_BLOCK SetRamData = NULL;
 			
 			// setup DeltaT RAM size
 			SndEmu_GetDeviceFunc(defInf->devDef, RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, (void**)&SetRamSize);
+			SndEmu_GetDeviceFunc(defInf->devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&SetRamData);
 			if (SetRamSize != NULL)
 				SetRamSize(defInf->dataPtr, 0x40000);	// 256 KB
+			// initialize DeltaT RAM with 00, because come S98 files seem to expect that (e.g. King Breeder/11.s98)
+			if (SetRamData != NULL)
+				SetRamData(defInf->dataPtr, 0x00, (UINT32)tmp.size(), &tmp[0]);
 			
 			// The YM2608 defaults to OPN mode. (YM2203 fallback),
 			// so put it into OPNA mode (6 channels).
