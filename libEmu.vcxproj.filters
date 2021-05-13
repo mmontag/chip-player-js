@@ -51,9 +51,6 @@
     <ClCompile Include="emu\cores\2612intf.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="emu\cores\fmopn2612.c">
-      <Filter>Quelldateien</Filter>
-    </ClCompile>
     <ClCompile Include="emu\cores\ym2612.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
