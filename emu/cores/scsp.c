@@ -974,7 +974,7 @@ INLINE INT32 SCSP_UpdateSlot(scsp_state *scsp, SCSP_SLOT *slot)
 	}
 	else if (SSCTL(slot) == 1)  // Internally generated data (Noise)
 		sample = (INT16)(rand() & 0xffff); // Unknown algorithm
-	else if (SSCTL(slot) >= 2)  // Internally generated data (All 0)
+	else //if (SSCTL(slot) >= 2)  // Internally generated data (All 0)
 		sample = 0;
 
 	if(SBCTL(slot)&0x1)

@@ -76,7 +76,7 @@ static UINT8 FileLoader_EofGZ(FILE_LOADER *loader);
 
 //DATA_LOADER *FileLoader_Init(const char *fileName);
 //DATA_LOADER *FileLoader_InitW(const wchar_t *fileName);
-static void FileLoader_dfree(FILE_LOADER *loader);
+static void FileLoader_dfree(void *context);
 
 
 INLINE UINT32 ReadLE32(const UINT8 *data)
@@ -286,8 +286,9 @@ DATA_LOADER *FileLoader_InitW(const wchar_t *fileName)
 }
 #endif
 
-static void FileLoader_dfree(FILE_LOADER *loader)
+static void FileLoader_dfree(void *context)
 {
+	FILE_LOADER *loader = (FILE_LOADER *)context;
 #if HAVE_FILELOADER_W
 	if (loader->fileName == NULL)
 		free(loader->fileNameW);
