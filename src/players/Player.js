@@ -19,7 +19,7 @@
 // "stopped" is synonymous with closed/empty.
 //
 export default class Player {
-  constructor(audioCtx, destNode, chipCore, onPlayerStateUpdate) {
+  constructor(audioCtx, destNode, chipCore, bufferSize, onPlayerStateUpdate) {
     this._outerAudioProcess = this._outerAudioProcess.bind(this);
 
     this.paused = true;
@@ -28,7 +28,7 @@ export default class Player {
     this.audioCtx = audioCtx;
     this.destinationNode = destNode;
     this.onPlayerStateUpdate = onPlayerStateUpdate;
-    this.bufferSize = 2048;
+    this.bufferSize = bufferSize;
     this._innerAudioProcess = null;
     this.audioNode = this.audioCtx.createScriptProcessor(this.bufferSize, 2, 2);
     this.audioNode.onaudioprocess = this._outerAudioProcess;
