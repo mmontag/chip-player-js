@@ -99,10 +99,10 @@ class App extends React.Component {
 
     // Initialize audio graph
     const audioCtx = this.audioCtx = window.audioCtx = new (window.AudioContext || window.webkitAudioContext)({
-      latencyHint: 0.040 // (sec.) Instead of 'playback', prefer roughly 2048 sample buffer size
+      latencyHint: 'playback'
     });
-    const bufferSize = audioCtx.baseLatency ? // Make sure script node bufferSize is at least baseLatency
-      Math.pow(2, Math.ceil(Math.log2(audioCtx.baseLatency * audioCtx.sampleRate))) : 2048;
+    const bufferSize = Math.max( // Make sure script node bufferSize is at least baseLatency
+      Math.pow(2, Math.ceil(Math.log2((audioCtx.baseLatency || 0.001) * audioCtx.sampleRate))), 2048);
     const gainNode = audioCtx.createGain();
     gainNode.gain.value = 1;
     gainNode.connect(audioCtx.destination);
