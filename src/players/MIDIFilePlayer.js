@@ -38,14 +38,14 @@ function MIDIPlayer(options) {
   this.output = options.output || null; // Web MIDI output device (has a .send() method)
   this.synth = options.synth || null; // MIDI synth (has .noteOn(), .noteOff(), render()...)
   this.programChangeCb = options.programChangeCb;
+  this.sampleRate = options.sampleRate || 44100;
   this.speed = 1;
-  this.skipSilence = options.skipSilence || false; // skip silence at beginning of file
+  this.skipSilence = false; // skip silence at beginning of file
   this.lastProcessPlayTimestamp = 0;
   this.lastSendTimestamp = 0;
   this.events = [];
   this.paused = true;
   this.useWebMIDI = false;
-  this.sampleRate = options.sampleRate || 44100;
 
   this.channelsInUse = [];
   this.channelsMuted = [];
@@ -84,6 +84,14 @@ MIDIPlayer.prototype.load = function(midiFile) {
   this.position = 0;
   this.elapsedTime = 0;
   this.events = midiFile.getEvents();
+  // this.header = midiFile.header;
+  this.ticksPerQuarter = midiFile.header.getTicksPerBeat(); // PPQ. Comes from word 0x0C of MIDI header
+  // See https://www.recordingblogs.com/wiki/header-chunk-of-a-midi-file
+  this.ticksPerBeat = this.ticksPerQuarter; // May change if time signature changes, i.e. 3/4 to 6/8 means a beat is half as long
+  this.beatsPerBar = 4; // MIDI default time signature is 4/4
+  this.bar = 0;
+  this.beat = 0;
+  this.tick = 0;
   this.getChannelsInUseAndInitialPrograms();
 };
 
@@ -100,6 +108,17 @@ MIDIPlayer.prototype.doSkipSilence = function() {
       while (this.events[this.position] !== firstNote) {
         const event = this.events[this.position];
         this.position++;
+
+        // TODO(montag): this appears in at least 3 places; refactor
+        this.tick += event.delta;
+        while (this.tick >= this.ticksPerBeat) {
+          this.tick -= this.ticksPerBeat;
+          this.beat++;
+        }
+        while (this.beat >= this.beatsPerBar) {
+          this.beat -= this.beatsPerBar;
+          this.bar++
+        }
 
         // Throttle sysex events
         // (In some cases this may actually increase the time to first note)
@@ -122,6 +141,13 @@ MIDIPlayer.prototype.doSkipSilence = function() {
           firstNoteDelay += DELAY_MS_PER_CC_EVENT;
           messageDelay += DELAY_MS_PER_CC_EVENT;
           message = [(event.subtype << 4) + event.channel, event.param1, (event.param2 || 0x00)];
+        } else if (event.type === MIDIEvents.EVENT_META_TIME_SIGNATURE) {
+          const denominator = Math.pow(2, event.param2);
+          this.beatsPerBar = event.param1;
+          // See https://www.recordingblogs.com/wiki/time-division-of-a-midi-file
+          this.ticksPerBeat = this.ticksPerQuarter * 4 / denominator;
+          console.log("Time signature at %d:%d:%d: %d/%d", this.bar, this.beat, this.tick, this.beatsPerBar, denominator);
+          console.log("Beats per bar: %d  Ticks per beat: %d", this.beatsPerBar, this.ticksPerBeat);
         } else {
           continue;
         }
@@ -201,6 +227,15 @@ MIDIPlayer.prototype.processPlaySynth = function(buffer, bufferSize) {
           case MIDIEvents.EVENT_MIDI_CONTROLLER:
             synth.controlChange(event.channel, event.param1, event.param2);
             break;
+          case MIDIEvents.EVENT_META_TIME_SIGNATURE:
+            // Time signature can only change at the end of a bar
+            // See https://www.recordingblogs.com/wiki/time-division-of-a-midi-file
+            this.pendingTimeSig = {
+              beatsPerBar: event.param1,
+              denominator: Math.pow(2, event.param2),
+              ticksPerBeat: this.ticksPerQuarter * 4 / Math.pow(2, event.param2),
+            };
+            break;
           // case MIDIEvents.EVENT_MIDI_CHANNEL_AFTERTOUCH:
           //   synth.channelAftertouch(event.channel, event.param1);
           //   break;
@@ -210,7 +245,27 @@ MIDIPlayer.prototype.processPlaySynth = function(buffer, bufferSize) {
           default:
             break;
         }
+
+        this.tick += event.delta;
+        while (this.tick >= this.ticksPerBeat) {
+          this.tick -= this.ticksPerBeat;
+          this.beat++;
+        }
+        while (this.beat >= this.beatsPerBar) {
+          this.beat -= this.beatsPerBar;
+          this.bar++
+        }
+        // Apply pending time signature change
+        if (this.beat === 0 && this.pendingTimeSig) {
+          this.beatsPerBar = this.pendingTimeSig.beatsPerBar;
+          this.ticksPerBeat = this.pendingTimeSig.ticksPerBeat;
+          console.log("Time signature at %d:%d:%d: %d/%d",
+            this.bar, this.beat, this.tick, this.beatsPerBar, this.pendingTimeSig.denominator);
+          console.log("Beats per bar: %d  Ticks per beat: %d", this.beatsPerBar, this.ticksPerBeat);
+          this.pendingTimeSig = null;
+        }
       }
+
       this.position = pos;
     }
 
@@ -288,9 +343,38 @@ MIDIPlayer.prototype.processPlay = function() {
           if (this.channelsMuted[event.channel]) break;
           message = [(event.subtype << 4) + event.channel, event.param1, event.param2 || 0x00];
           break;
+        case MIDIEvents.EVENT_META_TIME_SIGNATURE:
+          // Time signature can only change at the end of a bar
+          // See https://www.recordingblogs.com/wiki/time-division-of-a-midi-file
+          this.pendingTimeSig = {
+            beatsPerBar: event.param1,
+            denominator: Math.pow(2, event.param2),
+            ticksPerBeat: this.ticksPerQuarter * 4 / Math.pow(2, event.param2),
+          };
+          break;
         default:
       }
     }
+
+    this.tick += event.delta;
+    while (this.tick >= this.ticksPerBeat) {
+      this.tick -= this.ticksPerBeat;
+      this.beat++;
+    }
+    while (this.beat >= this.beatsPerBar) {
+      this.beat -= this.beatsPerBar;
+      this.bar++
+    }
+    // Apply pending time signature change
+    if (this.beat === 0 && this.pendingTimeSig) {
+      this.beatsPerBar = this.pendingTimeSig.beatsPerBar;
+      this.ticksPerBeat = this.pendingTimeSig.ticksPerBeat;
+      console.log("Time signature at %d:%d:%d: %d/%d",
+        this.bar, this.beat, this.tick, this.beatsPerBar, this.pendingTimeSig.denominator);
+      console.log("Beats per bar: %d  Ticks per beat: %d", this.beatsPerBar, this.ticksPerBeat);
+      this.pendingTimeSig = null;
+    }
+
     if (message) {
       const scaledPlayTime = (event.playTime - this.elapsedTime) / this.speed + this.lastProcessPlayTimestamp;
       this.send(message, scaledPlayTime + throttleDelayMs);
@@ -310,7 +394,9 @@ MIDIPlayer.prototype.processPlay = function() {
 
 MIDIPlayer.prototype.handleProgramChange = function(channel, program) {
   this.channelProgramNums[channel] = program;
-  this.programChangeCb();
+  if (this.programChangeCb) {
+    this.programChangeCb();
+  }
 };
 
 MIDIPlayer.prototype.togglePause = function() {
@@ -409,7 +495,7 @@ MIDIPlayer.prototype.setPositionSynth = function(eventList) {
   });
 };
 
-MIDIPlayer.prototype.setPositionWebMidi = function(ms, eventList) {
+MIDIPlayer.prototype.setPositionWebMidi = function(eventList) {
   const wasPaused = this.paused;
   this.paused = true;
 
@@ -466,7 +552,7 @@ MIDIPlayer.prototype.setPosition = function(ms) {
   eventList = Object.values(eventMap).concat(eventList);
 
   if (this.useWebMIDI) {
-    this.setPositionWebMidi(ms, eventList);
+    this.setPositionWebMidi(eventList);
   } else {
     this.setPositionSynth(eventList);
   }
@@ -474,6 +560,84 @@ MIDIPlayer.prototype.setPosition = function(ms) {
   this.elapsedTime = ms;
   this.position = pos;
 };
+
+MIDIPlayer.prototype.seekToBarBeatTick = function(bar, beat, tick) {
+  bar = bar || 0;
+  beat = beat || 0;
+  tick = tick || 0;
+
+  this.panic(this.lastSendTimestamp + 10);
+
+  let eventMap = {};
+  let eventList = [];
+  let pos = 0;
+  this.bar = 0;
+  this.beat = 0;
+  this.tick = 0;
+  for (let event of this.events) {
+    if (event.subtype === MIDIEvents.EVENT_MIDI_PROGRAM_CHANGE) {
+      this.handleProgramChange(event.channel, event.param1);
+      eventMap[`${event.subtype}-${event.channel}`] = event;
+    } else if (event.subtype === MIDIEvents.EVENT_MIDI_CONTROLLER) {
+      // These controllers (RPN, NRPN, Data Entry) must be sequenced in order
+      if (SEQUENCED_CONTROLLERS.includes(event.param1)) {
+        // console.log('Sequenced event: ch %d -- %d - %d -- %d ms', event.channel, event.param1, event.param2, event.playTime);
+        eventList.push(event);
+      } else {
+        // All others, we only care about the last event
+        eventMap[`${event.subtype}-${event.channel}-${event.param1}`] = event;
+      }
+    } else if (event.subtype === MIDIEvents.EVENT_META_TIME_SIGNATURE) {
+      // Time signature can only change at the end of a bar
+      // See https://www.recordingblogs.com/wiki/time-division-of-a-midi-file
+      this.pendingTimeSig = {
+        beatsPerBar: event.param1,
+        denominator: Math.pow(2, event.param2),
+        ticksPerBeat: this.ticksPerQuarter * 4 / Math.pow(2, event.param2),
+      };
+    }
+
+    this.tick += event.delta;
+    while (this.tick >= this.ticksPerBeat) {
+      this.tick -= this.ticksPerBeat;
+      this.beat++;
+    }
+    while (this.beat >= this.beatsPerBar) {
+      this.beat -= this.beatsPerBar;
+      this.bar++
+    }
+    // Apply pending time signature change
+    if (this.beat === 0 && this.pendingTimeSig) {
+      this.beatsPerBar = this.pendingTimeSig.beatsPerBar;
+      this.ticksPerBeat = this.pendingTimeSig.ticksPerBeat;
+      console.log("Time signature at %d:%d:%d: %d/%d",
+        this.bar, this.beat, this.tick, this.beatsPerBar, this.pendingTimeSig.denominator);
+      console.log("Beats per bar: %d  Ticks per beat: %d", this.beatsPerBar, this.ticksPerBeat);
+      this.pendingTimeSig = null;
+    }
+
+    // This control structure allows for invalid beats/ticks;
+    // i.e. 17:5:000 in 4/4 time will be interpreted as 18:0:000.
+    if (this.bar > bar) break;
+    else if (this.bar === bar) {
+      if (this.beat > beat) break;
+      else if (this.beat === beat) {
+        if (this.tick >= tick) break;
+      }
+    }
+    if (pos >= this.events.length - 1) break;
+    pos++;
+  }
+
+  if (this.useWebMIDI) {
+    this.setPositionWebMidi(eventList);
+  } else {
+    this.setPositionSynth(eventList);
+  }
+
+  this.elapsedTime = this.events[pos].playTime;
+  this.position = pos;
+}
 
 MIDIPlayer.prototype.getChannelInUse = function(ch) {
   return !!this.channelsInUse[ch];

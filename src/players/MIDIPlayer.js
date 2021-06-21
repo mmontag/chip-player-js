@@ -184,7 +184,7 @@ export default class MIDIPlayer extends Player {
     this.activeChannels = [];
     this.buffer = lib.allocate(this.bufferSize * 8, 'i32', lib.ALLOC_NORMAL);
     this.filepathMeta = {};
-    this.midiFilePlayer = new MIDIFilePlayer({
+    this.midiFilePlayer = window.midiFilePlayer = new MIDIFilePlayer({
       // onPlayerStateUpdate must be debounced/throttled
       programChangeCb: () => this.onPlayerStateUpdate(false),
       output: dummyMidiOutput,
@@ -407,6 +407,11 @@ export default class MIDIPlayer extends Player {
 
   getPositionMs() {
     return this.midiFilePlayer.getPosition();
+  }
+
+  getBarBeatTick() {
+    const { bar, beat, tick } = this.midiFilePlayer;
+    return { bar, beat, tick };
   }
 
   seekMs(ms) {

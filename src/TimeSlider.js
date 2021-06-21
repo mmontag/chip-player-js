@@ -42,7 +42,14 @@ export default class TimeSlider extends Component {
     const val = this.state.draggedSongPositionMs >= 0 ?
       this.state.draggedSongPositionMs :
       this.state.currentSongPositionMs;
-    return this.getTime(val);
+
+    let barBeatTick = '';
+    const bbt = this.props.getBarBeatTick();
+    if (bbt && bbt.tick != null) {
+      barBeatTick = ` [${bbt.bar + 1}.${bbt.beat + 1}.${bbt.tick.toString().padStart(3, '0')}]`;
+    }
+
+    return this.getTime(val) + barBeatTick;
   }
 
   getTime(ms) {

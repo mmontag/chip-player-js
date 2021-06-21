@@ -116,6 +116,12 @@ export default class AppFooter extends React.PureComponent {
             <div style={{ display: 'flex', flexDirection: 'row' }}>
               <TimeSlider
                 currentSongDurationMs={currentSongDurationMs}
+                getBarBeatTick={() => {
+                  if (sequencer && sequencer.getPlayer()) {
+                    return sequencer.getPlayer().getBarBeatTick();
+                  }
+                  return null;
+                }}
                 getCurrentPositionMs={() => {
                   // TODO: reevaluate this approach
                   if (sequencer && sequencer.getPlayer()) {

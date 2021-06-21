@@ -89,6 +89,10 @@ export default class Player {
     return 0;
   }
 
+  getBarBeatTick() {
+    return null;
+  }
+
   seekMs(ms) {
     console.warn('Player.seekMs() not implemented for this player.');
   }
