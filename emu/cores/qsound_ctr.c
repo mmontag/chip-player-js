@@ -522,6 +522,9 @@ INLINE INT16 get_sample(struct qsound_chip *chip, UINT16 bank,UINT16 address)
 
 	bank &= 0x7FFF;
 	rom_addr = (bank << 16) | (address << 0);
+	rom_addr &= chip->romMask;
+	if (rom_addr >= chip->romSize)
+		return 0;
 	
 	sample_data = chip->romData[rom_addr];
 	
