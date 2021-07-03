@@ -226,14 +226,14 @@ void NES_FDS_Reset(void* chip)
 	fds->master_env_speed = 0xFF;
 
 	// NOTE: the FDS BIOS reset only does the following related to audio:
-	//   $4023 = $00
-	//   $4023 = $83 enables master_io
-	//   $4080 = $80 output volume = 0, envelope disabled
-	//   $408A = $FF master envelope speed set to slowest
+	//	 $4023 = $00
+	//	 $4023 = $83 enables master_io
+	//	 $4080 = $80 output volume = 0, envelope disabled
+	//	 $408A = $E8 master envelope speed
 	NES_FDS_Write(fds, 0x4023, 0x00);
 	NES_FDS_Write(fds, 0x4023, 0x83);
 	NES_FDS_Write(fds, 0x4080, 0x80);
-	NES_FDS_Write(fds, 0x408A, 0xFF);
+	NES_FDS_Write(fds, 0x408A, 0xE8);
 
 	// reset other stuff
 	NES_FDS_Write(fds, 0x4082, 0x00);	// wav freq 0
@@ -486,9 +486,9 @@ bool NES_FDS_Write(void* chip, UINT16 adr, UINT8 val)
 		if (fds->mod_halt)
 		{
 			// writes to current playback position (there is no direct way to set phase)
-			fds->wave[TMOD][(fds->phase[TMOD] >> 16) & 0x3F] = val & 0x7F;
+			fds->wave[TMOD][(fds->phase[TMOD] >> 16) & 0x3F] = val & 0x07;
 			fds->phase[TMOD] = (fds->phase[TMOD] + 0x010000) & 0x3FFFFF;
-			fds->wave[TMOD][(fds->phase[TMOD] >> 16) & 0x3F] = val & 0x7F;
+			fds->wave[TMOD][(fds->phase[TMOD] >> 16) & 0x3F] = val & 0x07;
 			fds->phase[TMOD] = (fds->phase[TMOD] + 0x010000) & 0x3FFFFF;
 			fds->mod_write_pos = fds->phase[TMOD] >> 16;	// used by OPT_4085_RESET
 		}
@@ -515,7 +515,7 @@ bool NES_FDS_Read(void* chip, UINT16 adr, UINT8* val)
 {
 	NES_FDS* fds = (NES_FDS*)chip;
 
-	if (adr >= 0x4040 && adr < 0x407F)
+	if (adr >= 0x4040 && adr <= 0x407F)
 	{
 		// TODO: if wav_write is not enabled, the
 		// read address may not be reliable? need

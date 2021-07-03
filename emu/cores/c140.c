@@ -177,10 +177,25 @@ static UINT32 find_sample(c140_state *info, UINT32 adrs, UINT8 bank, int voice)
 	return 0;
 }
 
+INLINE UINT8 c140_keyon_status_read(c140_state *info, UINT16 offset)
+{
+	//m_stream->update();
+	C140_VOICE const *v = &info->voi[offset >> 4];
+
+	// suzuka 8 hours and final lap games read from here, expecting bit 6 to be an in-progress sample flag.
+	// four trax also expects bit 4 high for some specific channels to make engine noises to work properly
+	// (sounds kinda bogus when player crashes in an object and jump spin, needs real HW verification)
+	return (v->key ? 0x40 : 0x00) | (info->REG[offset] & 0x3f);
+}
+
 static UINT8 c140_r(void *chip, UINT16 offset)
 {
 	c140_state *info = (c140_state *)chip;
 	offset&=0x1ff;
+
+	if ((offset & 0xf) == 0x5 && offset < 0x180)
+		return c140_keyon_status_read(info, offset);
+
 	return info->REG[offset];
 }
 

@@ -144,6 +144,7 @@ typedef struct
 	UINT32  sample_start;
 	UINT32  sample_end;
 	UINT32  sample_loop;
+	UINT8   key;
 	UINT8   Muted;
 } C219_VOICE;
 
@@ -183,12 +184,29 @@ static UINT32 find_sample(c219_state *info, UINT32 adrs, int voice)
 	return ((bank << 17) | adrs) & info->pRomMask;
 }
 
+INLINE UINT8 c219_keyon_status_read(c219_state *info, UINT16 offset)
+{
+	//m_stream->update();
+	C219_VOICE const *v = &info->voi[offset >> 4];
+
+	// suzuka 8 hours and final lap games read from here, expecting bit 6 to be an in-progress sample flag.
+	// four trax also expects bit 4 high for some specific channels to make engine noises to work properly
+	// (sounds kinda bogus when player crashes in an object and jump spin, needs real HW verification)
+	return (v->key ? 0x40 : 0x00) | (info->REG[offset] & 0x3f);
+}
+
 static UINT8 c219_r(void *chip, UINT16 offset)
 {
 	c219_state *info = (c219_state *)chip;
 	offset &= 0x1ff;
 	if (offset >= 0x1f8 && (offset & 0x001))
 		offset &= ~0x008;
+
+	// assume same as c140
+	// TODO: what happens here on reading unmapped voice regs?
+	if ((offset & 0xf) == 0x5 && offset < 0x100)
+		return c219_keyon_status_read(info, offset);
+
 	return info->REG[offset];
 }
 
@@ -216,6 +234,7 @@ static void c219_w(void *chip, UINT16 offset, UINT8 data)
 				v->sample_loop = ((vreg->loop_msb<<8) | vreg->loop_lsb)*2;
 				v->sample_start = ((vreg->start_msb<<8) | vreg->start_lsb)*2;
 				v->sample_end = ((vreg->end_msb<<8) | vreg->end_lsb)*2;
+				v->key=1;
 				v->pos = v->sample_start;
 				v->pofs = 0xFFFF;
 				v->sample = 0;
@@ -228,6 +247,10 @@ static void c219_w(void *chip, UINT16 offset, UINT8 data)
 					find_sample(info, v->sample_loop, v->bank, offset>>4),
 					find_sample(info, v->sample_end, v->bank, offset>>4));
 				#endif
+			}
+			else
+			{
+				v->key=0;
 			}
 		}
 	}
@@ -263,7 +286,7 @@ static void c219_fetch_sample(c219_state *chip, UINT32 vid)
 			}
 			else
 			{
-				vreg->mode &= ~C219_MODE_KEYON;
+				v->key=0;
 				v->sample = 0;
 			}
 		}
@@ -291,7 +314,7 @@ static void c219_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 			C219_VOICE* v = &chip->voi[j];
 			const C219_VREGS* vreg = (C219_VREGS*)&chip->REG[j*16];
 
-			if ((vreg->mode & C219_MODE_KEYON) && ! v->Muted)
+			if (v->key && ! v->Muted)
 			{
 				UINT32 frequency = (vreg->frequency_msb<<8) | vreg->frequency_lsb;
 				INT32 newofs;

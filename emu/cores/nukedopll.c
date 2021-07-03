@@ -441,6 +441,7 @@ static void OPLL_DoRegWrite(opll_t *chip) {
     }
 
 }
+
 static void OPLL_PreparePatch1(opll_t *chip) {
     uint8_t instr;
     uint32_t mcsel = ((chip->cycles + 1) / 3) & 0x01;
@@ -609,8 +610,7 @@ static void OPLL_PhaseCalcIncrement(opll_t *chip) {
     chip->pg_inc = (freq * pg_multi[chip->c_multi]) >> 1;
 }
 
-static void OPLL_EnvelopeKSLTL(opll_t *chip)
-{
+static void OPLL_EnvelopeKSLTL(opll_t *chip) {
     int32_t ksl;
 
     ksl = eg_ksltable[chip->c_ksl_freq]-((8-chip->c_ksl_block)<<3);
@@ -629,8 +629,7 @@ static void OPLL_EnvelopeKSLTL(opll_t *chip)
     chip->eg_ksltl = ksl + (chip->c_tl<<1);
 }
 
-static void OPLL_EnvelopeOutput(opll_t *chip)
-{
+static void OPLL_EnvelopeOutput(opll_t *chip) {
     int32_t level = chip->eg_level[(chip->cycles+17)%18];
 
     level += chip->eg_ksltl;
@@ -730,13 +729,8 @@ static void OPLL_EnvelopeGenerate(opll_t *chip) {
     switch (state) {
     case eg_num_attack:
         if (!chip->eg_maxrate && (chip->eg_kon & 2) && !zero) {
-            int32_t shift = chip->eg_rate_hi - 11 + chip->eg_inc_hi;
-            if (chip->eg_inc_lo) {
-                shift = 1;
-            }
+            int32_t shift = (chip->eg_rate_hi < 12) ? chip->eg_inc_lo : (chip->eg_rate_hi - 11 + chip->eg_inc_hi);
             if (shift > 0) {
-                if (shift > 4)
-                    shift = 4;
                 step = ~level >> (5 - shift);
             }
         }

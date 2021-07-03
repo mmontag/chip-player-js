@@ -29,6 +29,7 @@ enum
 	OPT_NONLINEAR_MIXER,
 	OPT_PHASE_REFRESH,
 	OPT_DUTY_SWAP,
+	OPT_NEGATE_SWEEP_INIT,
 	OPT_END
 };
 
@@ -54,6 +55,7 @@ struct _NES_APU
 	UINT32 rate, clock;
 
 	INT32 square_table[32];		// nonlinear mixer
+	INT32 square_linear;		// linear mix approximation
 
 	int scounter[2];			// frequency divider
 	int sphase[2];				// phase counter
@@ -156,7 +158,6 @@ void NES_APU_np_FrameSequence(void* chip, int s)
 				if (apu->freq[i] >= 8 && apu->sfreq[i] < 0x800 && apu->sweep_amount[i] > 0) // update frequency if appropriate
 				{
 					apu->freq[i] = apu->sfreq[i] < 0 ? 0 : apu->sfreq[i];
-					if (apu->scounter[i] > apu->freq[i]) apu->scounter[i] = apu->freq[i];
 				}
 				apu->sweep_div[i] = apu->sweep_div_period[i] + 1;
 
@@ -181,16 +182,16 @@ static INT32 calc_sqr(NES_APU* apu, int i, UINT32 clocks)
 		{0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0},
 		{1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
 	};
-	INT32 ret = 0;
+	INT32 ret;
 
-	apu->scounter[i] += clocks;
-	while (apu->scounter[i] > apu->freq[i])
+	apu->scounter[i] -= clocks;
+	while (apu->scounter[i] < 0)
 	{
 		apu->sphase[i] = (apu->sphase[i] + 1) & 15;
-		apu->scounter[i] -= (apu->freq[i] + 1);
+		apu->scounter[i] += apu->freq[i] + 1;
 	}
 
-	//INT32 ret = 0;
+	ret = 0;
 	if (apu->length_counter[i] > 0 &&
 		apu->freq[i] >= 8 &&
 		apu->sfreq[i] < 0x800
@@ -244,10 +245,8 @@ UINT32 NES_APU_np_Render(void* chip, INT32 b[2])
 
 	if(apu->option[OPT_NONLINEAR_MIXER])
 	{
-		INT32 voltage;
 		INT32 ref;
-		
-		voltage = apu->square_table[apu->out[0] + apu->out[1]];
+		INT32 voltage = apu->square_table[apu->out[0] + apu->out[1]];
 		m[0] = apu->out[0] << 6;
 		m[1] = apu->out[1] << 6;
 		ref = m[0] + m[1];
@@ -264,8 +263,8 @@ UINT32 NES_APU_np_Render(void* chip, INT32 b[2])
 	}
 	else
 	{
-		m[0] = apu->out[0] << 6;
-		m[1] = apu->out[1] << 6;
+		m[0] = (apu->out[0] * apu->square_linear) / 15;
+		m[1] = (apu->out[1] * apu->square_linear) / 15;
 	}
 
 	// Shifting is (x-2) to match the volume of MAME's NES APU sound core
@@ -295,10 +294,13 @@ void* NES_APU_np_Create(UINT32 clock, UINT32 rate)
 	apu->option[OPT_PHASE_REFRESH] = true;
 	apu->option[OPT_NONLINEAR_MIXER] = true;
 	apu->option[OPT_DUTY_SWAP] = false;
+	apu->option[OPT_NEGATE_SWEEP_INIT] = false;
 
 	apu->square_table[0] = 0;
 	for(i=1;i<32;i++)
 		apu->square_table[i]=(INT32)((8192.0*95.88)/(8128.0/i+100));
+
+	apu->square_linear = apu->square_table[15]; // match linear scale to one full volume square of nonlinear
 
 	for(c=0;c<2;++c)
 		for(t=0;t<2;++t)
@@ -341,6 +343,11 @@ void NES_APU_np_Reset(void* chip)
 	NES_APU_np_Write(apu, 0x4015, 0);
 	if (apu->option[OPT_UNMUTE_ON_RESET])
 		NES_APU_np_Write(apu, 0x4015, 0x0f);
+	if (apu->option[OPT_NEGATE_SWEEP_INIT])
+	{
+		NES_APU_np_Write(apu, 0x4001, 0x08);
+		NES_APU_np_Write(apu, 0x4005, 0x08);
+	}
 
 	for (i = 0; i < 2; i++)
 		apu->out[i] = 0;
@@ -448,13 +455,11 @@ bool NES_APU_np_Write(void* chip, UINT16 adr, UINT8 val)
 		case 0x6:
 			apu->freq[ch] = val | (apu->freq[ch] & 0x700) ;
 			sweep_sqr(apu, ch);
-			if (apu->scounter[ch] > apu->freq[ch]) apu->scounter[ch] = apu->freq[ch];
 			break;
 
 		case 0x3:
 		case 0x7:
 			apu->freq[ch] = (apu->freq[ch] & 0xFF) | ((val & 0x7) << 8) ;
-
 			if (apu->option[OPT_PHASE_REFRESH])
 				apu->sphase[ch] = 0;
 			apu->envelope_write[ch] = true;
@@ -463,7 +468,6 @@ bool NES_APU_np_Write(void* chip, UINT16 adr, UINT8 val)
 				apu->length_counter[ch] = length_table[(val >> 3) & 0x1f];
 			}
 			sweep_sqr(apu, ch);
-			if (apu->scounter[ch] > apu->freq[ch]) apu->scounter[ch] = apu->freq[ch];
 			break;
 
 		default:
