@@ -94,6 +94,27 @@ emcmake cmake -DDISABLE_SF3=1 .. # Cmake will generate a Makefile by default
 emmake make fluidlite-static
 ```
 
+#### Subproject: psflib and lazyusf2
+
+Our goal is to produce **psflib/libpsflib.a** and **lazyusf2/liblazyusf.a**. These use a special Emscripten.Makefile (loosely based on [Jeurgen Wothke's webn64 .bat script](https://github.com/wothke/webn64/blob/master/emscripten/makeEmscripten.bat)).
+
+Build psflib:
+
+```sh
+cd chip-player-js/psflib/
+source ~/src/emsdk/emsdk_env.sh  # load the emscripten environment variables
+emmake make -f Emscripten.Makefile libpsflib.a
+```
+
+Build liblazyusf:
+
+```sh
+cd ../lazyusf2/
+emmake make -f Emscripten.Makefile liblazyusf.a
+```
+
+#### WebAssembly build
+
 Once these are in place we can build the parent project.
 Our goal is to produce **public/chip-core.wasm**.
 
