@@ -48,7 +48,7 @@ class App extends React.Component {
     this.handleVolumeChange = this.handleVolumeChange.bind(this);
     this.handleTimeSliderChange = this.handleTimeSliderChange.bind(this);
     this.handleTempoChange = this.handleTempoChange.bind(this);
-    this.handleSetVoices = this.handleSetVoices.bind(this);
+    this.handleSetVoiceMask = this.handleSetVoiceMask.bind(this);
     this.handleSequencerStateUpdate = this.handleSequencerStateUpdate.bind(this);
     this.handlePlayerError = this.handlePlayerError.bind(this);
     this.handlePlayRandom = this.handlePlayRandom.bind(this);
@@ -128,7 +128,7 @@ class App extends React.Component {
       currentSongDurationMs: 1,
       currentSongPositionMs: 0,
       tempo: 1,
-      voices: Array(MAX_VOICES).fill(true),
+      voiceMask: Array(MAX_VOICES).fill(true),
       voiceNames: Array(MAX_VOICES).fill(''),
       imageUrl: null,
       infoTexts: [],
@@ -415,7 +415,7 @@ class App extends React.Component {
         currentSongNumSubtunes: player.getNumSubtunes(),
         tempo: 1,
         voiceNames: [...Array(player.getNumVoices())].map((_, i) => player.getVoiceName(i)),
-        voices: [...Array(player.getNumVoices())].fill(true),
+        voiceMask: player.getVoiceMask(),
         songUrl: url,
       });
     }
@@ -498,11 +498,11 @@ class App extends React.Component {
     }, 100);
   }
 
-  handleSetVoices(voices) {
+  handleSetVoiceMask(voiceMask) {
     if (!this.sequencer.getPlayer()) return;
 
-    this.sequencer.getPlayer().setVoices(voices);
-    this.setState({ voices: [...voices] });
+    this.sequencer.getPlayer().setVoiceMask(voiceMask);
+    this.setState({ voiceMask: [...voiceMask] });
   }
 
   handleTempoChange(event) {
@@ -724,7 +724,7 @@ class App extends React.Component {
               handleCycleRepeat={this.handleCycleRepeat}
               handlePlayerError={this.handlePlayerError}
               handlePlayRandom={this.handlePlayRandom}
-              handleSetVoices={this.handleSetVoices}
+              handleSetVoiceMask={this.handleSetVoiceMask}
               handleTempoChange={this.handleTempoChange}
               handleTimeSliderChange={this.handleTimeSliderChange}
               handleToggleFavorite={this.handleToggleFavorite}
@@ -748,7 +748,7 @@ class App extends React.Component {
               togglePause={this.togglePause}
               toggleSettings={this.toggleSettings}
               voiceNames={this.state.voiceNames}
-              voices={this.state.voices}
+              voiceMask={this.state.voiceMask}
               volume={this.state.volume}
             />
           </div>

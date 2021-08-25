@@ -71,10 +71,6 @@ export default class Player {
     console.warn('Player.setTempo() not implemented for this player.');
   }
 
-  setVoices() {
-    console.warn('Player.setVoices() not implemented for this player.');
-  }
-
   setFadeout(startMs) {
     console.warn('Player.setFadeout() not implemented for this player.');
   }
@@ -95,6 +91,15 @@ export default class Player {
 
   getVoiceName(index) {
     console.warn('Player.getVoiceName() not implemented for this player.');
+  }
+
+  getVoiceMask() {
+    console.warn('Player.getVoiceMask() not implemented for this player.');
+    return [];
+  }
+
+  setVoiceMask() {
+    console.warn('Player.setVoiceMask() not implemented for this player.');
   }
 
   getNumVoices() {

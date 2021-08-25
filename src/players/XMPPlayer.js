@@ -135,8 +135,16 @@ export default class XMPPlayer extends Player {
     this.onPlayerStateUpdate(false);
   }
 
-  setVoices(voices) {
-    voices.forEach((isEnabled, i) => {
+  getVoiceMask() {
+    const voiceMask = [];
+    for (let i = 0; i < this.metadata.numChannels; i++) {
+      voiceMask.push(!this.lib._xmp_channel_mute(this.xmpCtx, i, -1));
+    }
+    return voiceMask;
+  }
+
+  setVoiceMask(voiceMask) {
+    voiceMask.forEach((isEnabled, i) => {
       this.lib._xmp_channel_mute(this.xmpCtx, i, isEnabled ? 0 : 1);
     });
   }

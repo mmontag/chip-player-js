@@ -29,7 +29,7 @@ export default class AppFooter extends React.PureComponent {
       tempo,
       title,
       voiceNames,
-      voices,
+      voiceMask,
       volume,
 
       // this.
@@ -37,7 +37,7 @@ export default class AppFooter extends React.PureComponent {
       handleCycleRepeat,
       handlePlayerError,
       handlePlayRandom,
-      handleSetVoices,
+      handleSetVoiceMask,
       handleTempoChange,
       handleTimeSliderChange,
       handleToggleFavorite,
@@ -168,10 +168,10 @@ export default class AppFooter extends React.PureComponent {
               ejected={ejected}
               tempo={tempo}
               numVoices={currentSongNumVoices}
-              voices={voices}
+              voiceMask={voiceMask}
               voiceNames={voiceNames}
               handleTempoChange={handleTempoChange}
-              handleSetVoices={handleSetVoices}
+              handleSetVoiceMask={handleSetVoiceMask}
               getParameter={sequencer.getPlayer().getParameter}
               setParameter={sequencer.getPlayer().setParameter}
               paramDefs={sequencer.getPlayer().getParamDefs()}/>

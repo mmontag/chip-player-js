@@ -48,7 +48,7 @@ function MIDIPlayer(options) {
   this.sampleRate = options.sampleRate || 44100;
 
   this.channelsInUse = [];
-  this.channelsMuted = [];
+  this.channelMask = [];
   this.channelProgramNums = [];
 
   this.doSkipSilence = this.doSkipSilence.bind(this);
@@ -182,7 +182,7 @@ MIDIPlayer.prototype.processPlaySynth = function(buffer, bufferSize) {
         event = this.events[pos];
         switch (event.subtype) {
           case MIDIEvents.EVENT_MIDI_NOTE_ON:
-            if (this.channelsMuted[event.channel]) break;
+            if (!this.channelMask[event.channel]) break;
             if (event.param2 === 0) // velocity
               synth.noteOff(event.channel, event.param1);
             else
@@ -285,7 +285,7 @@ MIDIPlayer.prototype.processPlay = function() {
         case MIDIEvents.EVENT_MIDI_NOTE_AFTERTOUCH:
         case MIDIEvents.EVENT_MIDI_CONTROLLER:
         case MIDIEvents.EVENT_MIDI_PITCH_BEND:
-          if (this.channelsMuted[event.channel]) break;
+          if (!this.channelMask[event.channel]) break;
           message = [(event.subtype << 4) + event.channel, event.param1, event.param2 || 0x00];
           break;
         default:
@@ -486,11 +486,11 @@ MIDIPlayer.prototype.getChannelProgramNum = function(ch) {
 MIDIPlayer.prototype.getChannelsInUseAndInitialPrograms = function() {
   const channelsInUse = this.channelsInUse;
   const channelProgramNums = this.channelProgramNums;
-  const channelsMuted = this.channelsMuted;
+  const channelMask = this.channelMask;
   for (let i = 0; i < 16; i++) {
     channelsInUse[i] = 0;
     channelProgramNums[i] = 0;
-    channelsMuted[i] = 0;
+    channelMask[i] = true;
   }
 
   for (let j = 0; j < this.events.length; j++) {
@@ -505,7 +505,7 @@ MIDIPlayer.prototype.getChannelsInUseAndInitialPrograms = function() {
 };
 
 MIDIPlayer.prototype.setChannelMute = function(ch, isMuted) {
-  this.channelsMuted[ch] = isMuted;
+  this.channelMask[ch] = !isMuted;
   if (isMuted) {
     // TODO separate synth from webMidi
     const timestamp = this.lastSendTimestamp + 10;

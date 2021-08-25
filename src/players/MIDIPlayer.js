@@ -427,9 +427,14 @@ export default class MIDIPlayer extends Player {
     return ch === 9 ? (GM_DRUM_KITS[pgm] || GM_DRUM_KITS[0]) : GM_INSTRUMENTS[pgm]
   }
 
-  setVoices(voices) {
-    voices.forEach((isEnabled, i) => {
-      this.midiFilePlayer.setChannelMute(this.activeChannels[i], !isEnabled);
+  getVoiceMask() {
+    return this.activeChannels.map(ch => this.midiFilePlayer.channelMask[ch]);
+  }
+
+  setVoiceMask(voiceMask) {
+    voiceMask.forEach((isEnabled, i) => {
+      const ch = this.activeChannels[i];
+      this.midiFilePlayer.setChannelMute(ch, !isEnabled);
     });
   }
 

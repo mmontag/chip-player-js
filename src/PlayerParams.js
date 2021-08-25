@@ -45,23 +45,23 @@ export default class PlayerParams extends PureComponent {
   // }
 
   handleVoiceToggle(e, index) {
-    const voices = this.props.voices;
+    const voiceMask = this.props.voiceMask;
     e = e.nativeEvent || {};
     if (e.altKey || e.shiftKey || e.metaKey) {
       // Behaves like Photoshop (toggling layer visibility with alt+click)
-      if (voices.every((enabled, i) => (i === index) === enabled)) {
+      if (voiceMask.every((enabled, i) => (i === index) === enabled)) {
         // Alt-click on a single enabled channel unmutes everything
-        voices.fill(true);
+        voiceMask.fill(true);
       } else {
         // Solo the channel
-        voices.fill(false);
-        voices[index] = true;
+        voiceMask.fill(false);
+        voiceMask[index] = true;
       }
     } else {
       // Regular toggle behavior
-      voices[index] = !voices[index];
+      voiceMask[index] = !voiceMask[index];
     }
-    this.props.handleSetVoices(voices);
+    this.props.handleSetVoiceMask(voiceMask);
   }
 
   render() {
@@ -85,7 +85,7 @@ export default class PlayerParams extends PureComponent {
                   title='Alt+click to solo. Alt+click again to unmute all.'
                   type='checkbox'
                   onChange={(e) => this.handleVoiceToggle(e, i)}
-                  checked={this.props.voices[i]}/>
+                  checked={this.props.voiceMask[i]}/>
                 {this.props.voiceNames[i]}
               </label>
             )

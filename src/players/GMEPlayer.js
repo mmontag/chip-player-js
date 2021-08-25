@@ -30,6 +30,7 @@ export default class GMEPlayer extends Player {
     this.subtune = 0;
     this.tempo = 1.0;
     this.params = { subbass: 1 };
+    this.voiceMask = []; // GME does not expose a method to get the current voice mask
 
     this.buffer = libgme.allocate(this.bufferSize * 16, 'i16', libgme.ALLOC_NORMAL);
     this.emuPtr = libgme.allocate(1, 'i32', libgme.ALLOC_NORMAL);
@@ -124,6 +125,7 @@ export default class GMEPlayer extends Player {
       throw Error('Unable to load this file!');
     }
     emu = libgme.getValue(this.emuPtr, "i32");
+    this.voiceMask = Array(libgme._gme_voice_count(emu)).fill(true);
 
     this.connect();
     this.resume();
@@ -267,14 +269,21 @@ export default class GMEPlayer extends Player {
     if (emu) libgme._gme_set_fade(emu, startMs, 4000);
   }
 
-  setVoices(voices) {
-    let mask = 0;
-    voices.forEach((isEnabled, i) => {
-      if (!isEnabled) {
-        mask += 1 << i;
-      }
-    });
-    if (emu) libgme._gme_mute_voices(emu, mask);
+  getVoiceMask() {
+    return this.voiceMask;
+  }
+
+  setVoiceMask(voiceMask) {
+    if (emu) {
+      let bitmask = 0;
+      voiceMask.forEach((isEnabled, i) => {
+        if (!isEnabled) {
+          bitmask += 1 << i;
+        }
+      });
+      libgme._gme_mute_voices(emu, bitmask);
+      this.voiceMask = voiceMask;
+    }
   }
 
   seekMs(positionMs) {

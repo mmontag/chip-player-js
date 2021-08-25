@@ -138,9 +138,9 @@ export default class MDXPlayer extends Player {
     if (this.mdxCtx) return this.lib._mdx_get_tracks(this.mdxCtx);
   }
 
-  setVoices(voices) {
+  setVoiceMask(voiceMask) {
     let mask = 0;
-    voices.forEach((isEnabled, i) => {
+    voiceMask.forEach((isEnabled, i) => {
       if (!isEnabled) {
         mask += 1 << i;
       }

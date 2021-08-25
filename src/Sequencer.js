@@ -220,7 +220,7 @@ export default class Sequencer {
     this.player.loadData(uint8Array, filepath);
     const numVoices = this.player.getNumVoices();
     this.player.setTempo(this.tempo);
-    this.player.setVoices([...Array(numVoices)].fill(true));
+    this.player.setVoiceMask([...Array(numVoices)].fill(true));
 
     console.debug('Sequencer.playSong(...) song request completed');
   }
