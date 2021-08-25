@@ -73,7 +73,7 @@ const css = {
     display: 'flex',
   },
   colName: {
-    overflowX: 'hidden',
+    overflowX: 'hidden', // truncates Japanese charaters/fallback font
     whiteSpace: 'nowrap',
     textOverflow: 'ellipsis',
     flexGrow: 1,
