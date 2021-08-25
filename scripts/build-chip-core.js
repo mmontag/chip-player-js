@@ -393,6 +393,7 @@ const chipModules = [
       '_mdx_create_context',
       '_mdx_get_pdx_filename',
       '_mdx_get_track_name',
+      '_mdx_get_track_mask',
       '_mdx_set_track_mask',
     ],
     flags: [],
