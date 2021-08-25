@@ -68,8 +68,13 @@ export default class MDXPlayer extends Player {
             throw Error('Unable to load this file!');
           }
 
-          // TODO: MDX metadata
-          this.metadata = { title: filename };
+          // Metadata
+          const ptr = this.lib._malloc(256);
+          this.lib._mdx_get_title(this.mdxCtx, ptr);
+          const buf = this.lib.HEAPU8.subarray(ptr, ptr + 256);
+          const len = buf.indexOf(0);
+          const title = new TextDecoder("shift-jis").decode(buf.subarray(0, len));
+          this.metadata = { title: title || path.basename(filename) };
 
           this.connect();
           this.resume();
