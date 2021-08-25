@@ -259,7 +259,9 @@ class App extends React.Component {
     }
 
     document.addEventListener('keydown', (e) => {
-      if (e.key !== 'Escape' && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) return;
+      // Keyboard shortcuts: tricky to get it just right and keep the browser behavior intact.
+      // The order of switch-cases matters. More privileged keys appear at the top.
+      // More restricted keys appear at the bottom, after various input focus states are filtered out.
       if (e.ctrlKey || e.metaKey) return; // avoid browser keyboard shortcuts
 
       switch (e.key) {
@@ -267,17 +269,15 @@ class App extends React.Component {
           this.setState({ showInfo: false });
           e.target.blur();
           break;
-        case 'ArrowLeft':
-          this.seekRelative(-5000);
-          break;
-        case 'ArrowRight':
-          this.seekRelative(5000);
-          break;
+        default:
+      }
+
+      if (e.target.tagName === 'INPUT' && e.target.type === 'text') return; // text input has focus
+
+      switch (e.key) {
         case ' ':
-          if (e.target.tagName !== 'BUTTON') {
-            this.togglePause();
-            e.preventDefault();
-          }
+          this.togglePause();
+          e.preventDefault();
           break;
         case '-':
           this.setSpeedRelative(-0.1);
@@ -290,6 +290,20 @@ class App extends React.Component {
           break;
         case '+':
           this.setSpeedRelative(0.01);
+          break;
+        default:
+      }
+
+      if (e.target.tagName === 'INPUT' && e.target.type === 'range') return; // a range slider has focus
+
+      switch (e.key) {
+        case 'ArrowLeft':
+          this.seekRelative(-5000);
+          e.preventDefault();
+          break;
+        case 'ArrowRight':
+          this.seekRelative(5000);
+          e.preventDefault();
           break;
         default:
       }
