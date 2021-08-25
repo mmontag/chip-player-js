@@ -161,6 +161,8 @@ const char* mdx_get_pdx_filename(t_mdxmini *data, char* filename);
 
 const char* mdx_get_track_name(t_mdxmini *data, int index);
 
+int mdx_get_track_mask(t_mdxmini* data);
+
 void mdx_set_track_mask(t_mdxmini* data, int mask);
 
 t_mdxmini* mdx_create_context();

@@ -470,6 +470,12 @@ const char* mdx_get_track_name(t_mdxmini *data, int index) {
   return NULL;
 }
 
+int mdx_get_track_mask(t_mdxmini *data) {
+  if (data != NULL)
+    return data->track_mute_mask;
+  return 0;
+}
+
 void mdx_set_track_mask(t_mdxmini *data, int mask) {
   if (data != NULL)
     data->track_mute_mask = mask;
