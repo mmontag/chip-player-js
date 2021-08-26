@@ -10,7 +10,6 @@ import Dropzone from 'react-dropzone';
 
 import ChipCore from './chip-core';
 import firebaseConfig from './config/firebaseConfig';
-import promisify from './promisifyXhr';
 import { API_BASE, CATALOG_PREFIX, MAX_VOICES, REPLACE_STATE_ON_SEEK } from './config';
 import { replaceRomanWithArabic, titlesFromMetadata, unlockAudioContext } from './util';
 
@@ -29,6 +28,7 @@ import Favorites from './Favorites';
 import Search from './Search';
 import Sequencer, { NUM_REPEAT_MODES, REPEAT_OFF } from './Sequencer';
 import Visualizer from './Visualizer';
+import requestCache from './RequestCache';
 
 const NUMERIC_COLLATOR = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
 
@@ -359,43 +359,30 @@ class App extends React.Component {
     } else {
       const player = this.sequencer.getPlayer();
       const url = this.sequencer.getCurrUrl();
-      if (url && url !== this.state.songUrl) {
+      if (url) {
         const path = url.replace(CATALOG_PREFIX, '/');
-        const getMetadataUrl = `${API_BASE}/metadata?path=${encodeURIComponent(path)}`;
-        const pathParts = url.split('/');
-        pathParts.pop();
-
+        const metadataUrl = `${API_BASE}/metadata?path=${encodeURIComponent(path)}`;
         // TODO: Disabled to support scroll restoration.
         // const filepath = url.replace(CATALOG_PREFIX, '');
         // updateQueryString({ play: filepath, t: undefined });
+        requestCache.fetchCached(metadataUrl).then(response => {
+          const { imageUrl, infoTexts } = response;
+          this.setState({ imageUrl: imageUrl, infoTexts: infoTexts });
 
-        // Fetch artwork/info for this file (cancelable request)
-        if (this.metaRequest) this.metaRequest.abort();
-        this.metaRequest = promisify(new XMLHttpRequest());
-        this.metaRequest.responseType = 'json';
-        this.metaRequest.open('GET', getMetadataUrl);
-        this.metaRequest.send()
-          .then(xhr => {
-            if (xhr.status >= 200 && xhr.status < 400) {
-              const { imageUrl, infoTexts } = xhr.response;
-              this.setState({ imageUrl: imageUrl, infoTexts: infoTexts });
+          if ('mediaSession' in navigator) {
+            // Clear artwork if imageUrl is null.
+            navigator.mediaSession.metadata.artwork = (imageUrl == null) ? [] : [{
+              src: imageUrl,
+              sizes: '512x512',
+            }];
+          }
 
-              if ('mediaSession' in navigator) {
-                // Clear artwork if imageUrl is null.
-                navigator.mediaSession.metadata.artwork = (imageUrl == null) ? [] : [{
-                  src: imageUrl,
-                  sizes: '512x512',
-                }];
-              }
-
-              if (infoTexts.length === 0) {
-                this.setState({ showInfo: false });
-              }
-            }
-          })
-          .catch(e => {
-            this.setState({ imageUrl: null, infoTexts: [], showInfo: false });
-          });
+          if (infoTexts.length === 0) {
+            this.setState({ showInfo: false });
+          }
+        }).catch(e => {
+          this.setState({ imageUrl: null, infoTexts: [], showInfo: false });
+        });
       } else {
         // Drag & dropped files reach this branch
         this.setState({ imageUrl: null, infoTexts: [], showInfo: false });
