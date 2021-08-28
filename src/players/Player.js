@@ -67,6 +67,11 @@ export default class Player {
     throw Error('Player.isPlaying() must be implemented.');
   }
 
+  getTempo() { // TODO: rename all tempo to speed
+    console.warn('Player.getTempo() not implemented for this player.');
+    return 1;
+  }
+
   setTempo() {
     console.warn('Player.setTempo() not implemented for this player.');
   }

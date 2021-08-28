@@ -20,7 +20,7 @@ export default class XMPPlayer extends Player {
     this.xmp_frame_infoPtr = chipCore._malloc(2048);
     this.fileExtensions = fileExtensions;
     this.initialBPM = 125;
-    this.tempoScale = 1;
+    this.tempoScale = 1; // TODO: rename to speed
     this._positionMs = 0;
     this._durationMs = 1000;
     this.buffer = chipCore.allocate(this.bufferSize * 16, 'i16', chipCore.ALLOC_NORMAL);
@@ -147,6 +147,10 @@ export default class XMPPlayer extends Player {
     voiceMask.forEach((isEnabled, i) => {
       this.lib._xmp_channel_mute(this.xmpCtx, i, isEnabled ? 0 : 1);
     });
+  }
+
+  getTempo() {
+    return this.tempoScale;
   }
 
   setTempo(val) {

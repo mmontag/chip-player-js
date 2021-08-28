@@ -414,7 +414,7 @@ class App extends React.Component {
         currentSongPositionMs: player.getPositionMs(),
         currentSongDurationMs: player.getDurationMs(),
         currentSongNumSubtunes: player.getNumSubtunes(),
-        tempo: 1,
+        tempo: player.getTempo(),
         voiceNames: [...Array(player.getNumVoices())].map((_, i) => player.getVoiceName(i)),
         voiceMask: player.getVoiceMask(),
         songUrl: url,

@@ -260,6 +260,10 @@ export default class GMEPlayer extends Player {
     return !this.isPaused() && libgme._gme_track_ended(emu) !== 1;
   }
 
+  getTempo() {
+    return this.tempo;
+  }
+
   setTempo(val) {
     this.tempo = val;
     if (emu) libgme._gme_set_tempo(emu, val);

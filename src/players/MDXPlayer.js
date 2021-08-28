@@ -24,6 +24,7 @@ export default class MDXPlayer extends Player {
       }
     });
 
+    this.speed = 1;
     this.lib = chipCore;
     this.mdxCtx = chipCore._mdx_create_context();
     chipCore._mdx_set_rate(audioCtx.sampleRate);
@@ -67,6 +68,7 @@ export default class MDXPlayer extends Player {
             console.error("mdx_load_file failed. error code: %d", err);
             throw Error('Unable to load this file!');
           }
+          this.lib._mdx_set_speed(this.mdxCtx, this.speed);
 
           // Metadata
           const ptr = this.lib._malloc(256);
@@ -115,7 +117,12 @@ export default class MDXPlayer extends Player {
     }
   }
 
+  getTempo() {
+    return this.speed;
+  }
+
   setTempo(val) {
+    this.speed = val;
     return this.lib._mdx_set_speed(this.mdxCtx, val);
   }
 

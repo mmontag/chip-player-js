@@ -35,7 +35,6 @@ export default class Sequencer {
     this.currIdx = 0;
     this.context = null;
     this.currUrl = null;
-    this.tempo = 1;
     this.shuffle = false;
     this.songRequest = null;
     this.repeat = REPEAT_OFF;
@@ -217,9 +216,9 @@ export default class Sequencer {
   playSongBuffer(filepath, buffer) {
     let uint8Array;
     uint8Array = new Uint8Array(buffer);
+    this.player.setTempo(1);
     this.player.loadData(uint8Array, filepath);
     const numVoices = this.player.getNumVoices();
-    this.player.setTempo(this.tempo);
     this.player.setVoiceMask([...Array(numVoices)].fill(true));
 
     console.debug('Sequencer.playSong(...) song request completed');

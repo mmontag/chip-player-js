@@ -413,6 +413,10 @@ export default class MIDIPlayer extends Player {
     return this.midiFilePlayer.setPosition(ms);
   }
 
+  getTempo() {
+    return this.midiFilePlayer.getSpeed();
+  }
+
   setTempo(tempo) {
     this.midiFilePlayer.setSpeed(tempo);
   }
