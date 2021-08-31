@@ -124,9 +124,17 @@ export default class AppFooter extends React.PureComponent {
                   return 0;
                 }}
                 onChange={handleTimeSliderChange}/>
-              <VolumeSlider onChange={(e) => {
-                handleVolumeChange(e.target.value);
-              }} value={volume}/>
+              <VolumeSlider
+                onChange={(e) => {
+                  handleVolumeChange(e.target.value);
+                }}
+                handleReset={(e) => {
+                  handleVolumeChange(100);
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                title="Double-click or right-click to reset to 100%."
+                value={volume}/>
             </div>
             {!ejected &&
             <div className="SongDetails">

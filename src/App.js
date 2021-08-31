@@ -551,7 +551,7 @@ class App extends React.Component {
 
   handleVolumeChange(volume) {
     this.setState({ volume });
-    this.playerNode.gain.value = Math.max(0, Math.min(1, volume * 0.01));
+    this.playerNode.gain.value = Math.max(0, Math.min(2, volume * 0.01));
   }
 
   handleCycleRepeat() {
