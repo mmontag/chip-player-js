@@ -120,6 +120,19 @@ export default class MIDIPlayer extends Player {
       },
     },
     {
+      id: 'fluidpoly',
+      label: 'Polyphony',
+      type: 'number',
+      min: 4.0,
+      max: 128.0,
+      step: 4.0,
+      defaultValue: 64,
+      dependsOn: {
+        param: 'synthengine',
+        value: MIDI_ENGINE_LIBFLUIDLITE,
+      },
+    },
+    {
       id: 'opl3bank',
       label: 'OPL3 Bank',
       type: 'enum',
@@ -191,6 +204,11 @@ export default class MIDIPlayer extends Player {
       skipSilence: true,
       sampleRate: this.sampleRate,
       synth: {
+        // TODO: Consider removing the tiny player (tp), since a lot of MIDI is now implemented in JS.
+        //       All it's really doing is hiding the FluidSynth and libADLMIDI insances behind a singleton.
+        //       C object ("context") pointers could also be hidden at the JS layer, if those are annoying.
+        //       The original benefit was to tie in tml.h (MIDI file reader) which is not used any more.
+        //       Besides, MIDIPlayer.js already calls directly into libADLMIDI functions.
         noteOn: lib._tp_note_on,
         noteOff: lib._tp_note_off,
         pitchBend: lib._tp_pitch_bend,
@@ -447,6 +465,7 @@ export default class MIDIPlayer extends Player {
   }
 
   getParameter(id) {
+    if (id === 'fluidpoly') return lib._tp_get_polyphony();
     return this.params[id];
   }
 
@@ -474,6 +493,10 @@ export default class MIDIPlayer extends Player {
       case 'reverb':
         value = parseFloat(value);
         lib._tp_set_reverb(value);
+        break;
+      case 'fluidpoly':
+        value = parseInt(value, 10);
+        lib._tp_set_polyphony(value);
         break;
       case 'opl3bank':
         value = parseInt(value, 10);

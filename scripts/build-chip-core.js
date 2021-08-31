@@ -25,7 +25,8 @@ const chipModules = [
     flags: [],
   },
   {
-    // TODO: decouple from libADLMIDI and fluidlite
+    // TODO: decouple from libADLMIDI and fluidlite,
+    //       see also MIDIPlayer.js:207.
     name: 'player',
     enabled: true,
     sourceFiles: [
@@ -45,6 +46,8 @@ const chipModules = [
       '_tp_get_duration_ms',
       '_tp_get_position_ms',
       '_tp_set_reverb',
+      '_tp_get_polyphony',
+      '_tp_set_polyphony',
       '_tp_get_channel_in_use',
       '_tp_get_channel_program',
       '_tp_set_channel_mute',
@@ -257,6 +260,8 @@ const chipModules = [
       '_fluid_synth_all_sounds_off',
       '_fluid_synth_write_float',
       '_fluid_synth_set_reverb',
+      '_fluid_synth_get_polyphony',
+      '_fluid_synth_set_polyphony',
     ],
     flags: [],
   },

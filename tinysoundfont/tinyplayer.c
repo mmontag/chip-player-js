@@ -180,6 +180,16 @@ extern void tp_init(int sampleRate) {
   g_adlSynth = adl_init(sampleRate);
   adl_setSoftPanEnabled(g_adlSynth, 1);
   adl_setVolumeRangeModel(g_adlSynth, ADLMIDI_VolumeModel_AUTO);
+  /*
+   * Polyphony varies based on YMF262 configuration:
+   *
+   * 18 2-operator channels
+   * 15 2-operator channels + 5 drum channels (drum setting on)
+   * 6 2-operator channels + 6 4-operator channels (4-op setting on)
+   * 3 2-operator channels + 6 4-operator channels + 5 drum channels (both settings on)
+   *
+   * Roughly speaking, 12 to 18 voices per chip.
+   */
   adl_setNumChips(g_adlSynth, 4);
 
   g_Synths[0] = fluidSynth;
@@ -361,6 +371,14 @@ extern void tp_set_reverb(double level) {
   // Override MIDI channel reverb levels
   for (int i = 0; i < 16; i++)
     fluid_synth_cc(g_FluidSynth, i, 91, 64);
+}
+
+extern int tp_get_polyphony() {
+  return fluid_synth_get_polyphony(g_FluidSynth);
+}
+
+extern void tp_set_polyphony(int poly) {
+  fluid_synth_set_polyphony(g_FluidSynth, poly);
 }
 
 extern char tp_get_channel_in_use(int chan) {
