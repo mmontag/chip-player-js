@@ -132,7 +132,7 @@ export default class PlayerParams extends PureComponent {
                          }}
                          value={value}>
                   </input>{' '}
-                  {value !== undefined && value.toFixed(2)}
+                  {value !== undefined && param.step >= 1 ? value : value.toFixed(2)}
                 </label>
               );
             case 'toggle':

@@ -123,9 +123,9 @@ export default class MIDIPlayer extends Player {
       id: 'fluidpoly',
       label: 'Polyphony',
       type: 'number',
-      min: 4.0,
-      max: 128.0,
-      step: 4.0,
+      min: 4,
+      max: 256,
+      step: 4,
       defaultValue: 64,
       dependsOn: {
         param: 'synthengine',
