@@ -1,0 +1,5 @@
+LIBRARY "libADLMIDIConfig"
+
+EXPORTS
+    CPlApplet
+    ToolDlgProc

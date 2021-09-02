@@ -1,7 +1,7 @@
 /*
  * Wohlstand's OPL3 Bank File - a bank format to store OPL3 timbre data and setup
  *
- * Copyright (c) 2015-2019 Vitaly Novichkov <admin@wohlnet.ru>
+ * Copyright (c) 2015-2021 Vitaly Novichkov <admin@wohlnet.ru>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -173,7 +173,8 @@ static void WOPL_parseInstrument(WOPLInstrument *ins, uint8_t *cursor, uint16_t 
 static void WOPL_writeInstrument(WOPLInstrument *ins, uint8_t *cursor, uint16_t version, uint8_t has_sounding_delays)
 {
     int l;
-    strncpy((char*)cursor, ins->inst_name, 32);
+    memcpy((char*)cursor, ins->inst_name, 32);
+    cursor[32] = '\0';
     fromSint16BE(ins->note_offset1, cursor + 32);
     fromSint16BE(ins->note_offset2, cursor + 34);
     cursor[36] = (uint8_t)ins->midi_velocity_offset;
@@ -278,7 +279,7 @@ WOPLFile *WOPL_LoadBankFromMem(void *mem, size_t length, int *error)
         outFile->version        = version;
         outFile->opl_flags      = head[4];
         outFile->volume_model   = head[5];
-    }    
+    }
 
     bankslots_sizes[0] = count_melodic_banks;
     bankslots[0] = outFile->banks_melodic;

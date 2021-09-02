@@ -4,11 +4,11 @@
 #include "../progs_cache.h"
 #include "../midi_inst_list.h"
 
-static bool LoadJunglevision(const char *fn, unsigned bank, const char *prefix)
+bool BankFormats::LoadJunglevision(BanksDump &db, const char *fn, unsigned bank, const std::string &bankTitle, const char *prefix)
 {
-    #ifdef HARD_BANKS
+#ifdef HARD_BANKS
     writeIni("Junglevision", fn, prefix, bank, INI_Both);
-    #endif
+#endif
     FILE *fp = std::fopen(fn, "rb");
     if(!fp)
         return false;
@@ -21,6 +21,10 @@ static bool LoadJunglevision(const char *fn, unsigned bank, const char *prefix)
         return false;
     }
     std::fclose(fp);
+
+    size_t bankDb = db.initBank(bank, bankTitle, BanksDump::BankEntry::SETUP_Win9X);
+    BanksDump::MidiBank bnkMelodique;
+    BanksDump::MidiBank bnkPercussion;
 
     uint16_t ins_count  = uint16_t(data[0x20] + (data[0x21] << 8));
     uint16_t drum_count = uint16_t(data[0x22] + (data[0x23] << 8));
@@ -38,7 +42,14 @@ static bool LoadJunglevision(const char *fn, unsigned bank, const char *prefix)
                          : gmno < 128 + 88 ? int(gmno - 35)
                          : -1;
 
-        insdata tmp[2];
+        bool isPercussion = a >= ins_count;
+        size_t patchId = (a < ins_count) ? (a + first_ins) : ((a - ins_count) + first_drum);
+        BanksDump::MidiBank &bnk = isPercussion ? bnkPercussion : bnkMelodique;
+        BanksDump::InstrumentEntry inst;
+        BanksDump::Operator ops[5];
+        uint8_t notenum;
+
+        InstBuffer tmp[2];
 
         tmp[0].data[0] = data[offset + 2];
         tmp[0].data[1] = data[offset + 8];
@@ -51,8 +62,7 @@ static bool LoadJunglevision(const char *fn, unsigned bank, const char *prefix)
         tmp[0].data[8] = data[offset + 3];
         tmp[0].data[9] = data[offset + 9];
         tmp[0].data[10] = data[offset + 7] & 0x0F;//~0x30;
-        tmp[0].finetune = 0;
-        tmp[0].diff = false;
+        inst.noteOffset1 = 0;
 
         tmp[1].data[0] = data[offset + 2 + 11];
         tmp[1].data[1] = data[offset + 8 + 11];
@@ -65,52 +75,39 @@ static bool LoadJunglevision(const char *fn, unsigned bank, const char *prefix)
         tmp[1].data[8] = data[offset + 3 + 11];
         tmp[1].data[9] = data[offset + 9 + 11];
         tmp[1].data[10] = data[offset + 7 + 11] & 0x0F;//~0x30;
-        tmp[1].finetune = 0;
-        tmp[1].diff = (data[offset] != 0);
+        inst.noteOffset2 = 0;
 
-        struct ins tmp2;
-        tmp2.notenum  = data[offset + 1];
-        tmp2.pseudo4op = false;
-        tmp2.real4op = (data[offset] != 0);
-        tmp2.voice2_fine_tune = 0.0;
-        tmp2.midi_velocity_offset = 0;
-        tmp2.rhythmModeDrum = 0;
+        notenum = data[offset + 1];
 
-        while(tmp2.notenum && tmp2.notenum < 20)
+        while(notenum && notenum < 20)
         {
-            tmp2.notenum += 12;
-            tmp[0].finetune -= 12;
-            tmp[1].finetune -= 12;
+            notenum += 12;
+            inst.noteOffset1 -= 12;
+            inst.noteOffset2 -= 12;
         }
 
+        if(data[offset] != 0)
+            inst.instFlags |= BanksDump::InstrumentEntry::WOPL_Ins_4op;
+        inst.percussionKeyNumber = notenum;
+        inst.setFbConn(data[offset + 7], data[offset + 7 + 11]);
+        db.toOps(tmp[0].d, ops, 0);
+        db.toOps(tmp[1].d, ops, 2);
+
         std::string name;
-        if(midi_index >= 0) name = std::string(1, '\377') + MidiInsName[midi_index];
+        if(midi_index >= 0)
+            name = std::string(1, '\377') + MidiInsName[midi_index];
 
         char name2[512];
         sprintf(name2, "%s%c%u", prefix,
                 (gmno < 128 ? 'M' : 'P'), gmno & 127);
 
-        if(!data[offset])
-        {
-            size_t resno = InsertIns(tmp[0], tmp2, name, name2);
-            SetBank(bank, gmno, resno);
-        }
-        else // Double instrument
-        {
-            size_t resno = InsertIns(tmp[0], tmp[1], tmp2, name, name2);
-            SetBank(bank, gmno, resno);
-        }
+        db.addInstrument(bnk, patchId, inst, ops, fn);
     }
 
-    AdlBankSetup setup;
-    setup.volumeModel = VOLUME_9X;
-    setup.deepTremolo = true;
-    setup.deepVibrato = true;
-    setup.scaleModulators = false;
-    SetBankSetup(bank, setup);
+    db.addMidiBank(bankDb, false, bnkMelodique);
+    db.addMidiBank(bankDb, true, bnkPercussion);
 
     return true;
 }
 
 #endif // LOAD_JV_H
-

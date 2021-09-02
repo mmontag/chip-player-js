@@ -1,7 +1,7 @@
 /*****************************************************************************
  * libadlmidi.c: Software MIDI synthesizer using OPL3 Synth emulation
  *****************************************************************************
- * Copyright © 2015-2018 Vitaly Novichkov
+ * Copyright © 2015-2021 Vitaly Novichkov
  * $Id$
  *
  * This program is free software: you can redistribute it and/or modify
@@ -81,7 +81,7 @@
 #define FULL_RANGE_CC74_LONGTEXT N_( \
     "Scale range of CC-74 \"Brightness\" with full 0~127 range. By default is only 0~64 affects the sounding.")
 
-static const int volume_models_values[] = { 0, 1, 2, 3, 4, 5 };
+static const int volume_models_values[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
 static const char * const volume_models_descriptions[] =
 {
     N_("Auto (defined by bank)"),
@@ -89,7 +89,13 @@ static const char * const volume_models_descriptions[] =
     N_("OPL3 Native"),
     N_("DMX"),
     N_("Apogee Sound System"),
-    N_("Win9x driver"),
+    N_("Win9x SB16 driver"),
+    N_("DMX (Fixed AM)"),
+    N_("Apogee Sound System (Fixed AM)"),
+    N_("Audio Interfaces Library (AIL)"),
+    N_("Win9x Generic FM driver"),
+    N_("HMI Sound Operating System"),
+    N_("HMI Sound Operating System (Old)"),
     NULL
 };
 
@@ -103,6 +109,8 @@ static const char * const emulator_type_descriptions[] =
     N_("Nuked OPL3 1.8"),
     N_("Nuked OPL3 1.7.4 (Optimized)"),
     N_("DOSBox"),
+    N_("Opal"),
+    N_("Java OPL3"),
     NULL
 };
 
@@ -274,12 +282,14 @@ static void Flush (decoder_t *p_dec)
 #if (LIBVLC_VERSION_MAJOR >= 3)
 static int DecodeBlock (decoder_t *p_dec, block_t *p_block)
 {
+    size_t it;
     decoder_sys_t *p_sys = p_dec->p_sys;
     block_t *p_out = NULL;
 
 #else
 static block_t *DecodeBlock (decoder_t *p_dec, block_t **pp_block)
 {
+    size_t it;
     block_t *p_block;
     decoder_sys_t *p_sys = p_dec->p_sys;
     block_t *p_out = NULL;
@@ -398,6 +408,10 @@ static block_t *DecodeBlock (decoder_t *p_dec, block_t **pp_block)
                                  (ADL_UInt8*)p_out->p_buffer,
                                  (ADL_UInt8*)(p_out->p_buffer + g_output_format.containerSize),
                                  &g_output_format);
+
+    for (it = 0; it < samples; ++it)
+        ((float*)p_out->p_buffer)[it] *= 2.0f;
+
     samples /= 2;
     p_out->i_length = date_Increment (&p_sys->end_date, samples) - p_out->i_pts;
 

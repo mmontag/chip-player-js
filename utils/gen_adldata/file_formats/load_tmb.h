@@ -4,11 +4,11 @@
 #include "../progs_cache.h"
 #include "../midi_inst_list.h"
 
-static bool LoadTMB(const char *fn, unsigned bank, const char *prefix)
+bool BankFormats::LoadTMB(BanksDump &db, const char *fn, unsigned bank, const std::string &bankTitle, const char *prefix)
 {
-    #ifdef HARD_BANKS
+#ifdef HARD_BANKS
     writeIni("TMB", fn, prefix, bank, INI_Both);
-    #endif
+#endif
     FILE *fp = std::fopen(fn, "rb");
     if(!fp)
         return false;
@@ -22,7 +22,11 @@ static bool LoadTMB(const char *fn, unsigned bank, const char *prefix)
     }
     std::fclose(fp);
 
-    for(unsigned a = 0; a < 256; ++a)
+    size_t bankDb = db.initBank(bank, bankTitle, BanksDump::BankEntry::SETUP_Apogee);
+    BanksDump::MidiBank bnkMelodique;
+    BanksDump::MidiBank bnkPercussion;
+
+    for(unsigned a = 0, patchId = 0; a < 256; ++a, patchId++)
     {
         unsigned offset = a * 0x0D;
         unsigned gmno = a;
@@ -30,8 +34,14 @@ static bool LoadTMB(const char *fn, unsigned bank, const char *prefix)
                          : gmno < 128 + 35 ? -1
                          : gmno < 128 + 88 ? int(gmno - 35)
                          : -1;
+        if(patchId == 128)
+            patchId = 0;
+        bool isPercussion = a >= 128;
+        BanksDump::MidiBank &bnk = isPercussion ? bnkPercussion : bnkMelodique;
+        BanksDump::InstrumentEntry inst;
+        BanksDump::Operator ops[5];
 
-        insdata tmp;
+        InstBuffer tmp;
 
         tmp.data[0] = data[offset + 0];
         tmp.data[1] = data[offset + 1];
@@ -44,16 +54,11 @@ static bool LoadTMB(const char *fn, unsigned bank, const char *prefix)
         tmp.data[8] = data[offset + 2];
         tmp.data[9] = data[offset + 3];
         tmp.data[10] = data[offset + 10];
-        tmp.finetune = 0;
-        tmp.diff = false;
 
-        struct ins tmp2;
-        tmp2.notenum   = data[offset + 11];
-        tmp2.pseudo4op = false;
-        tmp2.real4op = false;
-        tmp2.voice2_fine_tune = 0.0;
-        tmp2.midi_velocity_offset = (int8_t)data[offset + 12];
-        tmp2.rhythmModeDrum = 0;
+        inst.percussionKeyNumber = data[offset + 11];
+        inst.midiVelocityOffset = (int8_t)data[offset + 12];
+        inst.fbConn = data[offset + 10];
+        db.toOps(tmp.d, ops, 0);
 
         std::string name;
         if(midi_index >= 0) name = std::string(1, '\377') + MidiInsName[midi_index];
@@ -62,16 +67,11 @@ static bool LoadTMB(const char *fn, unsigned bank, const char *prefix)
         sprintf(name2, "%s%c%u", prefix,
                 (gmno < 128 ? 'M' : 'P'), gmno & 127);
 
-        size_t resno = InsertIns(tmp, tmp2, name, name2);
-        SetBank(bank, gmno, resno);
+        db.addInstrument(bnk, patchId, inst, ops, fn);
     }
 
-    AdlBankSetup setup;
-    setup.volumeModel = VOLUME_APOGEE;
-    setup.deepTremolo = false;
-    setup.deepVibrato = false;
-    setup.scaleModulators = false;
-    SetBankSetup(bank, setup);
+    db.addMidiBank(bankDb, false, bnkMelodique);
+    db.addMidiBank(bankDb, true, bnkPercussion);
 
     return true;
 }

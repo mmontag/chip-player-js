@@ -1,15 +1,20 @@
 set(CMAKE_CXX_STANDARD 11)
 
-find_package(OpenMP)
+find_package(OpenMP QUIET)
 if(OPENMP_FOUND)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
 
 if(NOT WIN32 AND NOT ADLMIDI_DOS)
-    set(ADLMIDI2_HAS_PUZZLE_GAME TRUE)
-    set(ADLMIDI2_VIDEO_OUT_SUPPORT TRUE)
+    option(ADLMIDI2_HAS_PUZZLE_GAME     "Enable the built-in puzzle game" ON)
 endif()
+if(NOT ADLMIDI_DOS)
+    option(ADLMIDI2_VIDEO_OUT_SUPPORT   "Allow video recording with using of FFMPEG" ON)
+endif()
+
+try_compile(HAS_TERMIO ${CMAKE_BINARY_DIR}/compile_tests "${CMAKE_CURRENT_SOURCE_DIR}/cmake/check-termio.c")
+try_compile(HAS_TERMIOS ${CMAKE_BINARY_DIR}/compile_tests "${CMAKE_CURRENT_SOURCE_DIR}/cmake/check-termios.c")
 
 set(adlmidi2_src)
 list(APPEND adlmidi2_src
@@ -27,6 +32,16 @@ target_link_libraries(adlmidi2 PRIVATE ADLMIDI)
 if(NOT WIN32 AND NOT ADLMIDI_DOS)
     libADLMIDI_find_SDL2()
     target_link_libraries(adlmidi2 PRIVATE ADLMIDI_SDL2)
+endif()
+
+set_nopie(adlmidi2)
+
+if(HAS_TERMIO)
+    target_compile_definitions(adlmidi2 PRIVATE -DHAS_TERMIO)
+endif()
+
+if(HAS_TERMIOS)
+    target_compile_definitions(adlmidi2 PRIVATE -DHAS_TERMIOS)
 endif()
 
 if(ADLMIDI2_HAS_PUZZLE_GAME)
@@ -49,10 +64,6 @@ elseif(NOT ADLMIDI_DOS)
         target_link_libraries(adlmidi2 PRIVATE dl)
     endif()
     target_link_libraries(adlmidi2 PRIVATE pthread m)
-endif()
-
-if(NOT WITH_CPP_EXTRAS)
-    message(FATAL_ERROR "ADLMIDI2 Requires C++ Extras. Please enable WITH_CPP_EXTRAS option!")
 endif()
 
 if(MSVC)

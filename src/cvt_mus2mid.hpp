@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2014  Bret Curtis
  * Copyright (C) WildMIDI Developers  2015-2016
- * ADLMIDI Library API: Copyright (c) 2015-2019 Vitaly Novichkov <admin@wohlnet.ru>
+ * ADLMIDI Library API: Copyright (c) 2015-2021 Vitaly Novichkov <admin@wohlnet.ru>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -307,11 +307,11 @@ static int Convert_mus2midi(uint8_t *in, uint32_t insize,
     mus2mid_write1(&ctx, (MUS_TEMPO & 0x0000ff00) >> 8);
     mus2mid_write1(&ctx, (MUS_TEMPO & 0x00ff0000) >> 16);
 
-    /* Percussions channel starts out at full volume */
+    /* Percussions channel starts out at volume 100 */
     mus2mid_write1(&ctx, 0x00);
     mus2mid_write1(&ctx, 0xB9);
     mus2mid_write1(&ctx, 0x07);
-    mus2mid_write1(&ctx, 127);
+    mus2mid_write1(&ctx, 100);
 
     /* get current position in source, and end of position */
     cur = in + header.scoreStart;
@@ -340,7 +340,7 @@ static int Convert_mus2midi(uint8_t *in, uint32_t insize,
         if (channelMap[channel] < 0) {
             *out_local++ = 0xB0 + currentChannel;
             *out_local++ = 0x07;
-            *out_local++ = 127;
+            *out_local++ = 100;
             *out_local++ = 0x00;
             channelMap[channel] = currentChannel++;
             if (currentChannel == 9)

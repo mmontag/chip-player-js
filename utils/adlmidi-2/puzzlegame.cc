@@ -310,7 +310,7 @@ Recursion:
 
                 // Find out the extents of this piece, and how many
                 // cells of the piece contribute into full (completed) rows.
-                char full[4] = { -1, -1, -1, -1};
+                signed char full[4] = {-1, -1, -1, -1};
                 int miny = n.y + 9, maxy = n.y - 9, minx = n.x + 9, maxx = n.x - 9, num_eroded = 0;
                 (void)(n > [&](int x, int y) -> bool
                 {

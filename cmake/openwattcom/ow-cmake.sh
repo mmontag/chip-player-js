@@ -1,5 +1,5 @@
 #!/bin/bash
-export WATCOM=$HOME/Qt/Tools/ow-snapshot-2.0
+export WATCOM=/opt/watcom
 export EDPATH=$WATCOM/eddat
 export WIPFC=$WATCOM/wipfc
 export INCLUDE="$WATCOM/lh"
