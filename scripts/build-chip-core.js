@@ -272,7 +272,7 @@ const chipModules = [
       'chips/dosbox_opl3.cpp',
       'chips/dosbox/dbopl.cpp',
       'wopl/wopl_file.c',
-      'adldata.cpp',
+      'inst_db.cpp',
       'adlmidi.cpp',
       'adlmidi_load.cpp',
       'adlmidi_midiplay.cpp',
