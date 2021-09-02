@@ -79,17 +79,21 @@ bool BankFormats::LoadDoom(BanksDump &db, const char *fn, unsigned bank, const s
     {
         const size_t offset1 = 0x18A4 + a * 32;
         const size_t offset2 = 8      + a * 36;
-        BanksDump::MidiBank &bnk = a < 128 ? bnkMelodique : bnkPercussion;
+        bool isDrum = a >= 128;
+        BanksDump::MidiBank &bnk = isDrum ? bnkPercussion : bnkMelodique;
         BanksDump::InstrumentEntry inst;
         BanksDump::Operator ops[5];
+
         std::string name;
         for(unsigned p = 0; p < 32; ++p)
+        {
             if(data[offset1] != '\0')
                 name += char(data[offset1 + p]);
+        }
 
         //printf("%3d %3d %3d %8s: ", a,b,c, name.c_str());
         int gmno = int(a < 128 ? a : ((a | 128) + 35));
-        size_t patchId = a < 128 ? a : ((a - 128) + 35);
+        size_t patchId = isDrum ? ((a - 128) + 35) : a;
 
         char name2[512];
         snprintf(name2, 512, "%s%c%u", prefix, (gmno < 128 ? 'M' : 'P'), gmno & 127);
@@ -103,23 +107,28 @@ bool BankFormats::LoadDoom(BanksDump &db, const char *fn, unsigned bank, const s
         for(size_t index = 0; index < 2; ++index)
         {
             const Doom_OPL2instrument &src = ins.patchdata[index];
-            tmp[index].data[0] = src.trem_vibr_1;
-            tmp[index].data[1] = src.trem_vibr_2;
-            tmp[index].data[2] = src.att_dec_1;
-            tmp[index].data[3] = src.att_dec_2;
-            tmp[index].data[4] = src.sust_rel_1;
-            tmp[index].data[5] = src.sust_rel_2;
-            tmp[index].data[6] = src.wave_1;
-            tmp[index].data[7] = src.wave_2;
-            tmp[index].data[8] = src.scale_1 | src.level_1;
-            tmp[index].data[9] = src.scale_2 | src.level_2;
-            tmp[index].data[10] = src.feedback;
-            noteOffset[index] = toSint16LE(src.basenote) + 12;
+            tmp[index].d.op1_amvib = src.trem_vibr_1;
+            tmp[index].d.op2_amvib = src.trem_vibr_2;
+            tmp[index].d.op1_atdec = src.att_dec_1;
+            tmp[index].d.op2_atdec = src.att_dec_2;
+            tmp[index].d.op1_susrel = src.sust_rel_1;
+            tmp[index].d.op2_susrel = src.sust_rel_2;
+            tmp[index].d.op1_wave = src.wave_1;
+            tmp[index].d.op2_wave = src.wave_2;
+            tmp[index].d.op1_ksltl = src.scale_1 | src.level_1;
+            tmp[index].d.op2_ksltl = src.scale_2 | src.level_2;
+            tmp[index].d.fbconn = src.feedback;
+            if(isDrum)
+                noteOffset[index] = 12;
+            else
+                noteOffset[index] = toSint16LE(src.basenote) + 12;
             inst.fbConn |= (uint_fast16_t(src.feedback) << (index == 1 ? 8 : 0));
             db.toOps(tmp[index].d, ops, index * 2);
         }
 
-        uint8_t notenum  = ins.note;
+        uint8_t notenum = ins.note;
+        if(isDrum)
+            notenum = (flags & FL_FIXED_PITCH) ? ins.note : 60;
 
         while(notenum && notenum < 20)
         {

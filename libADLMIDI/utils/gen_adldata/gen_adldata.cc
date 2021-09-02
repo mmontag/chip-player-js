@@ -210,6 +210,7 @@ int main(int argc, char**argv)
     }
 
     MeasureThreaded measureCounter;
+    bool dontOverride = false;
 
     {
         measureCounter.LoadCache("fm_banks/adldata-cache.dat");
@@ -225,10 +226,22 @@ int main(int argc, char**argv)
         }
         std::fflush(stdout);
         measureCounter.waitAll();
-        measureCounter.SaveCache("fm_banks/adldata-cache.dat");
+        if(measureCounter.m_cache_matches != measureCounter.m_total)
+        {
+            std::printf("-- Cache data was changed, saving...\n");
+            std::fflush(stdout);
+            measureCounter.SaveCache("fm_banks/adldata-cache.dat");
+            dontOverride = false;
+        }
+        else
+        {
+            std::printf("-- Cache data was not changes.\n");
+            std::fflush(stdout);
+            dontOverride = true;
+        }
     }
 
-    db.exportBanks(std::string(outFile_s));
+    db.exportBanks(std::string(outFile_s), dontOverride);
 
     std::printf("Generation of ADLMIDI data has been completed!\n");
     std::fflush(stdout);

@@ -1,4 +1,7 @@
+#include <stdio.h>
+#include <signal.h>
 #include <SDL2/SDL.h>
+
 #include <adlmidi.h>
 
 /* prototype for our audio callback */
@@ -7,15 +10,25 @@ void my_audio_callback(void *midi_player, Uint8 *stream, int len);
 
 /* variable declarations */
 static Uint32 is_playing = 0; /* remaining length of the sample we have to play */
-static short buffer[4096]; /* Audio buffer */
+static Uint8 buffer[8192]; /* Audio buffer */
 
+static struct ADLMIDI_AudioFormat s_audioFormat;
+
+static void stop_playing(int sig)
+{
+    (void)sig;
+    is_playing = 0;
+}
 
 int main(int argc, char *argv[])
 {
     /* local variables */
-    static SDL_AudioSpec            spec; /* the specs of our piece of music */
+    static SDL_AudioSpec            spec, obtained; /* the specs of our piece of music */
     static struct ADL_MIDIPlayer    *midi_player = NULL; /* Instance of ADLMIDI player */
     static const char               *music_path = NULL; /* Path to music file */
+
+    signal(SIGINT, stop_playing);
+    signal(SIGTERM, stop_playing);
 
     if (argc < 2)
     {
@@ -47,16 +60,52 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    adl_switchEmulator(midi_player, ADLMIDI_EMU_NUKED);
+
     /* set the callback function */
     spec.callback = my_audio_callback;
     /* set ADLMIDI's descriptor as userdata to use it for sound generation */
     spec.userdata = midi_player;
 
     /* Open the audio device */
-    if (SDL_OpenAudio(&spec, NULL) < 0)
+    if (SDL_OpenAudio(&spec, &obtained) < 0)
     {
         fprintf(stderr, "Couldn't open audio: %s\n", SDL_GetError());
         return 1;
+    }
+
+    switch(obtained.format)
+    {
+    case AUDIO_S8:
+        s_audioFormat.type = ADLMIDI_SampleType_S8;
+        s_audioFormat.containerSize = sizeof(int8_t);
+        s_audioFormat.sampleOffset = sizeof(int8_t) * 2;
+        break;
+    case AUDIO_U8:
+        s_audioFormat.type = ADLMIDI_SampleType_U8;
+        s_audioFormat.containerSize = sizeof(uint8_t);
+        s_audioFormat.sampleOffset = sizeof(uint8_t) * 2;
+        break;
+    case AUDIO_S16:
+        s_audioFormat.type = ADLMIDI_SampleType_S16;
+        s_audioFormat.containerSize = sizeof(int16_t);
+        s_audioFormat.sampleOffset = sizeof(int16_t) * 2;
+        break;
+    case AUDIO_U16:
+        s_audioFormat.type = ADLMIDI_SampleType_U16;
+        s_audioFormat.containerSize = sizeof(uint16_t);
+        s_audioFormat.sampleOffset = sizeof(uint16_t) * 2;
+        break;
+    case AUDIO_S32:
+        s_audioFormat.type = ADLMIDI_SampleType_S32;
+        s_audioFormat.containerSize = sizeof(int32_t);
+        s_audioFormat.sampleOffset = sizeof(int32_t) * 2;
+        break;
+    case AUDIO_F32:
+        s_audioFormat.type = ADLMIDI_SampleType_F32;
+        s_audioFormat.containerSize = sizeof(float);
+        s_audioFormat.sampleOffset = sizeof(float) * 2;
+        break;
     }
 
     /* Optionally Setup ADLMIDI as you want */
@@ -106,10 +155,13 @@ void my_audio_callback(void *midi_player, Uint8 *stream, int len)
     struct ADL_MIDIPlayer* p = (struct ADL_MIDIPlayer*)midi_player;
 
     /* Convert bytes length into total count of samples in all channels */
-    int samples_count = len / 2;
+    int samples_count = len / s_audioFormat.containerSize;
 
     /* Take some samples from the ADLMIDI */
-    samples_count = adl_play(p, samples_count, (short*)buffer);
+    samples_count = adl_playFormat(p, samples_count,
+                                   buffer,
+                                   buffer + s_audioFormat.containerSize,
+                                   &s_audioFormat);
 
     if(samples_count <= 0)
     {
@@ -119,6 +171,6 @@ void my_audio_callback(void *midi_player, Uint8 *stream, int len)
     }
 
     /* Send buffer to the audio device */
-    SDL_memcpy(stream, (Uint8*)buffer, samples_count * 2);
+    SDL_memcpy(stream, buffer, samples_count * s_audioFormat.containerSize);
 }
 

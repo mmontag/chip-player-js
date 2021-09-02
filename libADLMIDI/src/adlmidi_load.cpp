@@ -2,7 +2,7 @@
  * libADLMIDI is a free Software MIDI synthesizer library with OPL3 emulation
  *
  * Original ADLMIDI code: Copyright (c) 2010-2014 Joel Yliluoma <bisqwit@iki.fi>
- * ADLMIDI Library API:   Copyright (c) 2015-2020 Vitaly Novichkov <admin@wohlnet.ru>
+ * ADLMIDI Library API:   Copyright (c) 2015-2021 Vitaly Novichkov <admin@wohlnet.ru>
  *
  * Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 emulation:
  * http://iki.fi/bisqwit/source/adlmidi.html
@@ -26,7 +26,9 @@
 #include "adlmidi_private.hpp"
 #include "adlmidi_cvt.hpp"
 #include "file_reader.hpp"
+#ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
 #include "midi_sequencer.hpp"
+#endif
 #include "wopl/wopl_file.h"
 
 bool MIDIplay::LoadBank(const std::string &filename)
@@ -43,12 +45,12 @@ bool MIDIplay::LoadBank(const void *data, size_t size)
     return LoadBank(file);
 }
 
-void cvt_ADLI_to_FMIns(adlinsdata2 &ins, const ADL_Instrument &in)
+void cvt_ADLI_to_FMIns(OplInstMeta &ins, const ADL_Instrument &in)
 {
     return cvt_generic_to_FMIns(ins, in);
 }
 
-void cvt_FMIns_to_ADLI(ADL_Instrument &ins, const adlinsdata2 &in)
+void cvt_FMIns_to_ADLI(ADL_Instrument &ins, const OplInstMeta &in)
 {
     cvt_FMIns_to_generic(ins, in);
 }
@@ -133,8 +135,8 @@ bool MIDIplay::LoadBank(FileAndMemReader &fr)
             Synth::Bank &bank = synth.m_insBanks[bankno];
             for(int j = 0; j < 128; j++)
             {
-                adlinsdata2 &ins = bank.ins[j];
-                std::memset(&ins, 0, sizeof(adlinsdata2));
+                OplInstMeta &ins = bank.ins[j];
+                std::memset(&ins, 0, sizeof(OplInstMeta));
                 WOPLInstrument &inIns = slots_src_ins[ss][i].ins[j];
                 cvt_generic_to_FMIns(ins, inIns);
             }
@@ -192,8 +194,8 @@ bool MIDIplay::LoadMIDI_post()
             /*std::printf("Ins %3u: %02X %02X %02X %02X  %02X %02X %02X %02X  %02X %02X %02X %02X  %02X %02X %02X %02X\n",
                         i, InsData[0],InsData[1],InsData[2],InsData[3], InsData[4],InsData[5],InsData[6],InsData[7],
                            InsData[8],InsData[9],InsData[10],InsData[11], InsData[12],InsData[13],InsData[14],InsData[15]);*/
-            adlinsdata2 &adlins = synth.m_insBanks[bank].ins[i % 128];
-            adldata    adl;
+            OplInstMeta &adlins = synth.m_insBanks[bank].ins[i % 128];
+            OplTimbre    adl;
             adl.modulator_E862 =
                 ((static_cast<uint32_t>(insData[8] & 0x07) << 24) & 0xFF000000) //WaveForm
                 | ((static_cast<uint32_t>(insData[6]) << 16) & 0x00FF0000) //Sustain/Release
@@ -207,12 +209,12 @@ bool MIDIplay::LoadMIDI_post()
             adl.modulator_40 = insData[2];
             adl.carrier_40   = insData[3];
             adl.feedconn     = insData[10] & 0x0F;
-            adl.finetune = 0;
-            adlins.adl[0] = adl;
-            adlins.adl[1] = adl;
-            adlins.ms_sound_kon  = 1000;
-            adlins.ms_sound_koff = 500;
-            adlins.tone  = 0;
+            adl.noteOffset = 0;
+            adlins.op[0] = adl;
+            adlins.op[1] = adl;
+            adlins.soundKeyOnMs  = 1000;
+            adlins.soundKeyOffMs = 500;
+            adlins.drumTone  = 0;
             adlins.flags = 0;
             adlins.voice2_fine_tune = 0.0;
         }
