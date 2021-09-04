@@ -137,7 +137,7 @@ export default class MIDIPlayer extends Player {
       label: 'OPL3 Bank',
       type: 'enum',
       options: [],
-      defaultValue: 0,
+      defaultValue: 16, // Windows 95 bank
       dependsOn: {
         param: 'synthengine',
         value: MIDI_ENGINE_LIBADLMIDI,
