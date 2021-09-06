@@ -242,6 +242,23 @@ const chipModules = [
     flags: [],
   },
   {
+    /*
+    TODO: implement libvgm.
+    Wait for libvgm player to get a C interface.
+    https://github.com/ValleyBell/libvgm/blob/master/player/playera.hpp
+    Or, use WebIDL Binder or Embind to interact with libvgm C++ player class.
+    https://emscripten.org/docs/porting/connecting_cpp_and_javascript/WebIDL-Binder.html#a-quick-example
+    https://emscripten.org/docs/porting/connecting_cpp_and_javascript/WebIDL-Binder.html#webidl-binder-type-name
+    */
+    name: 'libvgm',
+    enabled: false,
+    sourceFiles: [
+      '../libvgm/build2/bin/libvgm-emu.a',
+    ],
+    exportedFunctions: [],
+    flags: [],
+  },
+  {
     name: 'fluidlite',
     enabled: true,
     sourceFiles: [
