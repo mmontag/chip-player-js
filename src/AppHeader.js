@@ -3,8 +3,8 @@ import React from "react";
 export default class AppHeader extends React.PureComponent {
   render() {
     return (
-      <header className="App-header">
-        <a className="App-title" href="./">Chip Player JS</a>{' '}
+      <header className="AppHeader">
+        <a className="AppHeader-title" href="./">Chip Player JS</a>{' '}
         {this.props.user ?
           <span>
               • Logged in as {this.props.user.displayName}.{' '}
@@ -16,8 +16,8 @@ export default class AppHeader extends React.PureComponent {
             </span>
         }
         {!this.props.isPhone &&
-        <p className="App-subtitle">
-            <span className="App-byline">Feedback:{' '}
+        <p className="AppHeader-subtitle">
+            <span className="AppHeader-byline">Feedback:{' '}
               <a href="https://twitter.com/matthewmontag" target="_blank" rel="noopener noreferrer">
                 @matthewmontag
               </a>

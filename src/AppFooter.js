@@ -55,9 +55,9 @@ export default class AppFooter extends React.PureComponent {
     const pathLinks = pathToLinks(songUrl);
 
     return (
-      <div className="App-footer">
-        <div className="App-footer-main">
-          <div className="App-footer-main-inner">
+      <div className="AppFooter">
+        <div className="AppFooter-main">
+          <div className="AppFooter-main-inner">
             <button onClick={prevSong}
                     className="box-button"
                     disabled={ejected}>
@@ -91,7 +91,7 @@ export default class AppFooter extends React.PureComponent {
                 onClick={nextSubtune}>&gt;
               </button>
             </span>}
-            <span className="App-footer-more-buttons">
+            <span className="AppFooter-more-buttons">
               <button title="Cycle Repeat (repeat off, repeat all songs in the context, or repeat one song)" className="box-button" onClick={handleCycleRepeat}>
                 <img alt="Repeat" src={repeatImage} style={{ verticalAlign: 'bottom' }}/>
                 {REPEAT_LABELS[repeat]}
@@ -159,7 +159,7 @@ export default class AppFooter extends React.PureComponent {
           </div>
         </div>
         {showPlayerSettings &&
-        <div className="App-footer-settings">
+        <div className="AppFooter-settings">
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
@@ -187,7 +187,7 @@ export default class AppFooter extends React.PureComponent {
             <div>(No active player)</div>}
         </div>}
         {imageUrl &&
-        <img alt="Cover art" className="App-footer-art" src={imageUrl}/>}
+        <img alt="Cover art" className="AppFooter-art" src={imageUrl}/>}
       </div>
     );
   }
