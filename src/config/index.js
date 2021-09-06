@@ -19,6 +19,7 @@ const FORMATS =  [
   'spc',
   'kss',
   's3m',
+  'smf',
   'v2m',
   'vgm',
   'vgz',

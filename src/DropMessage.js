@@ -7,7 +7,7 @@ export default class DropMessage extends React.PureComponent {
         <div className="message-box-inner">
           Drop files to play!<br/>
           Formats: .ay .it .kss .mid .mod <br/>
-          .nsf .nsfe .sgc .spc .s3m .vgm .vgz .xm
+          .nsf .nsfe .sgc .smf .spc .s3m .vgm .vgz .xm
         </div>
       </div>
     </div>;

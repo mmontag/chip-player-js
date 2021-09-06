@@ -73,6 +73,7 @@ const midiDevices = [
 const fileExtensions = [
   'mid',
   'midi',
+  'smf',
 ];
 
 const MIDI_ENGINE_LIBFLUIDLITE = 0;
