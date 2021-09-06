@@ -2,8 +2,7 @@ import React, {Component} from "react";
 
 export class VolumeSlider extends Component {
   render() {
-    return <div
-      style={{flexShrink: 0, marginTop: "var(--charH)", marginBottom: "var(--charH)", marginLeft: "var(--charW2)"}}>
+    return <div className="VolumeSlider">
       <input type='range'
              title={"Volume"}
              min={0} max={150} step={1}

@@ -91,7 +91,7 @@ export default class AppFooter extends React.PureComponent {
                 onClick={nextSubtune}>&gt;
               </button>
             </span>}
-            <span style={{ float: 'right' }}>
+            <span className="App-footer-more-buttons">
               <button title="Cycle Repeat (repeat off, repeat all songs in the context, or repeat one song)" className="box-button" onClick={handleCycleRepeat}>
                 <img alt="Repeat" src={repeatImage} style={{ verticalAlign: 'bottom' }}/>
                 {REPEAT_LABELS[repeat]}
