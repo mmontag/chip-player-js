@@ -351,6 +351,10 @@ body,#root {
 .BrowseList-colDir, .BrowseList-colSize { flex-shrink : 0; }
 .BrowseList-colSize { text-align: right; text-transform: uppercase; white-space: nowrap; min-width: 80px; }
 
+.DirectoryLink-dim { color: var(--neutral2); }
+.DirectoryLink-folderIcon { vertical-align: bottom; }
+.DirectoryLink-folderIconDim { vertical-align: bottom; filter: grayscale(100%) brightness(0.75); }
+
 .SongDetails {}
 .SongDetails-title {color: var(--neutral4);}
 .SongDetails-subtitle, .SongDetails-subtitle, .SongDetails-filepath {
