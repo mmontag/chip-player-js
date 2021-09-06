@@ -30,14 +30,14 @@ export default function BrowseList({ virtual, ...props }) {
           const isPlaying = currContext === contexts[browsePath] && currIdx === item.idx;
           if (item.type === 'directory') {
             return (
-              <div key={name} style={css.row}>
-                <div style={css.colName}>
+              <div key={name} className="BrowseList-row">
+                <div className="BrowseList-colName">
                   <DirectoryLink to={'/browse/' + path}>{name}</DirectoryLink>
                 </div>
-                <div style={css.colDir}>
+                <div className="BrowseList-colDir">
                   {dirToken}
                 </div>
-                <div style={css.colSize}>
+                <div className="BrowseList-colSize">
                   {item.size != null && bytes(item.size, {unitSeparator: ' '})}
                 </div>
               </div>
@@ -45,8 +45,8 @@ export default function BrowseList({ virtual, ...props }) {
           } else {
             const href = CATALOG_PREFIX + path;
             return (
-              <div key={name} style={css.row} className={isPlaying ? 'Song-now-playing' : ''}>
-                <div style={css.colName}>
+              <div key={name} className={isPlaying ? 'Song-now-playing BrowseList-row' : 'BrowseList-row'}>
+                <div className="BrowseList-colName">
                   {favorites &&
                   <FavoriteButton favorites={favorites}
                                   href={href}
@@ -56,7 +56,7 @@ export default function BrowseList({ virtual, ...props }) {
                     {name}
                   </a>
                 </div>
-                <div style={css.colSize}>
+                <div className="BrowseList-colSize">
                   {bytes(item.size, {unitSeparator: ' '})}
                 </div>
               </div>
@@ -66,26 +66,4 @@ export default function BrowseList({ virtual, ...props }) {
       </div>
     </div>
   );
-};
-
-const css = {
-  row: {
-    display: 'flex',
-  },
-  colName: {
-    overflowX: 'hidden', // truncates Japanese charaters/fallback font
-    whiteSpace: 'nowrap',
-    textOverflow: 'ellipsis',
-    flexGrow: 1,
-  },
-  colDir: {
-    flexShrink: 0,
-  },
-  colSize: {
-    textAlign: 'right',
-    textTransform: 'uppercase',
-    whiteSpace: 'nowrap',
-    flexShrink: 0,
-    minWidth: '80px',
-  },
 };
