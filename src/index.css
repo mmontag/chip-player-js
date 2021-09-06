@@ -344,6 +344,8 @@ body,#root {
     box-shadow: none;
 }
 
+.Browse-topRow { display: flex; justify-content: space-between; margin-bottom: var(--charH); }
+
 .BrowseList-row { display: flex; }
 .BrowseList-colName { overflow-x: hidden; white-space: nowrap; text-overflow: ellipsis; flex-grow: 1; }
 .BrowseList-colDir, .BrowseList-colSize { flex-shrink : 0; }

@@ -135,7 +135,7 @@ export default class Browse extends PureComponent {
 
     return (
       <Fragment>
-        <div style={css.row}>
+        <div className="Browse-topRow">
           /{browsePath}{' '}
           <button
             className="box-button"
@@ -156,11 +156,3 @@ export default class Browse extends PureComponent {
     );
   }
 }
-
-const css = {
-  row: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    marginBottom: 'var(--charH)',
-  },
-};
