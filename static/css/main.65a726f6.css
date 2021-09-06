@@ -198,11 +198,14 @@ body,#root {
     display: flex;
     -ms-flex-direction: column;
         flex-direction: column;
-    height: 100vh;
     -webkit-box-sizing: border-box;
             box-sizing: border-box;
-    margin: 0 auto;
     font-variant-numeric: tabular-nums;
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
 }
 
 .App-header {
@@ -280,6 +283,11 @@ body,#root {
     -ms-flex-negative: 0;
         flex-shrink: 0;
 }
+@media screen and (max-width: 600px) {
+    .App-footer-art {
+        display: none;
+    }
+}
 
 .App-footer-main {
     -ms-flex-positive: 1;
@@ -319,6 +327,13 @@ body,#root {
     color: var(--neutral4);
     margin: 0 var(--charW1);
     padding: 0 var(--charW1);
+}
+
+.App-footer-more-buttons {
+    float: right;
+}
+@media screen and (max-width: 600px) {
+    .App-footer-more-buttons { display: none; }
 }
 
 .App .Slider {
@@ -386,8 +401,13 @@ body,#root {
 .Visualizer-analyzer { display: block; -ms-interpolation-mode: nearest-neighbor; image-rendering: -webkit-optimize-contrast; image-rendering: -moz-crisp-edges; image-rendering: -o-pixelated; image-rendering: pixelated; }
 .Visualizer-spectrogram { display: block; -ms-flex-positive: 1; flex-grow: 1; min-height: 0; -ms-interpolation-mode: nearest-neighbor; image-rendering: -webkit-optimize-contrast; image-rendering: -moz-crisp-edges; image-rendering: -o-pixelated; image-rendering: pixelated; }
 
-.TimeSlider { margin: var(--charH) 0; -ms-flex-positive: 1; flex-grow: 1 }
+.TimeSlider { -ms-flex-positive: 1; flex-grow: 1; margin: var(--charH) 0; }
 .TimeSlider-labels, .VolumeSlider-labels { display: -ms-flexbox; display: flex; -ms-flex-direction: row; flex-direction: row; -ms-flex-pack: justify; justify-content: space-between; }
+
+.VolumeSlider { -ms-flex-negative: 0; flex-shrink: 0; margin-top: var(--charH); margin-bottom: var(--charH); margin-left: var(--charW2); }
+@media screen and (max-width: 600px) {
+    .VolumeSlider { display: none; }
+}
 
 .Song-now-playing {
     background-color: var(--button);
@@ -538,4 +558,4 @@ img { -ms-interpolation-mode: nearest-neighbor; image-rendering: -webkit-optimiz
 }
 
 
-/*# sourceMappingURL=main.18d62fa8.css.map*/
+/*# sourceMappingURL=main.65a726f6.css.map*/
