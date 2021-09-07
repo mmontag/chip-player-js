@@ -312,7 +312,7 @@ body,#root {
     .AppFooter-more-buttons { display: none; }
 }
 
-.App .Slider {
+.Slider {
     height: var(--charH);
     padding: 0;
     cursor: pointer;
@@ -322,7 +322,7 @@ body,#root {
     border: 0;
 }
 
-.App .Slider-rail {
+.Slider-rail {
     width: calc(100% + var(--charW1));
     height: 3px;
     margin-top: -2px;
@@ -333,7 +333,7 @@ body,#root {
     border: 1px solid var(--clickable);
 }
 
-.App .Slider-knob {
+.Slider-knob {
     height: var(--charH);
     width: var(--charW1);
     margin: 0;
@@ -422,6 +422,7 @@ img { image-rendering: pixelated; }
     margin-bottom: -1px;
 }
 
+/* message-box is used by Info box and DropMessage component. */
 .message-box-outer {
     position: absolute;
     z-index: 100;

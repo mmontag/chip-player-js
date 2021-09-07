@@ -1,5 +1,4 @@
 import React, {PureComponent} from 'react';
-import './Slider.css';
 
 export default class Slider extends PureComponent {
   constructor(props) {
