@@ -8,17 +8,17 @@ import 'firebase/firestore';
 import { BrowserRouter as Router, NavLink, Route, Switch } from 'react-router-dom';
 import Dropzone from 'react-dropzone';
 
-import ChipCore from './chip-core';
-import firebaseConfig from './config/firebaseConfig';
-import { API_BASE, CATALOG_PREFIX, MAX_VOICES, REPLACE_STATE_ON_SEEK } from './config';
-import { replaceRomanWithArabic, titlesFromMetadata, unlockAudioContext } from './util';
+import ChipCore from '../chip-core';
+import firebaseConfig from '../config/firebaseConfig';
+import { API_BASE, CATALOG_PREFIX, MAX_VOICES, REPLACE_STATE_ON_SEEK } from '../config';
+import { replaceRomanWithArabic, titlesFromMetadata, unlockAudioContext } from '../util';
 
-import GMEPlayer from './players/GMEPlayer';
-import MIDIPlayer from './players/MIDIPlayer';
-import V2MPlayer from './players/V2MPlayer';
-import XMPPlayer from './players/XMPPlayer';
-import N64Player from './players/N64Player';
-import MDXPlayer from './players/MDXPlayer';
+import GMEPlayer from '../players/GMEPlayer';
+import MIDIPlayer from '../players/MIDIPlayer';
+import V2MPlayer from '../players/V2MPlayer';
+import XMPPlayer from '../players/XMPPlayer';
+import N64Player from '../players/N64Player';
+import MDXPlayer from '../players/MDXPlayer';
 
 import AppFooter from './AppFooter';
 import AppHeader from './AppHeader';
@@ -26,9 +26,9 @@ import Browse from './Browse';
 import DropMessage from './DropMessage';
 import Favorites from './Favorites';
 import Search from './Search';
-import Sequencer, { NUM_REPEAT_MODES, REPEAT_OFF } from './Sequencer';
+import Sequencer, { NUM_REPEAT_MODES, REPEAT_OFF } from '../Sequencer';
 import Visualizer from './Visualizer';
-import requestCache from './RequestCache';
+import requestCache from '../RequestCache';
 
 const NUMERIC_COLLATOR = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
 

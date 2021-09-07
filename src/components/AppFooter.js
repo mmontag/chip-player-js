@@ -1,12 +1,12 @@
 import React from 'react';
-import diceImage from './images/dice.png';
-import repeatImage from './images/repeat.png';
+import diceImage from '../images/dice.png';
+import repeatImage from '../images/repeat.png';
 import TimeSlider from './TimeSlider';
 import { VolumeSlider } from './VolumeSlider';
 import FavoriteButton from './FavoriteButton';
 import PlayerParams from './PlayerParams';
-import { pathToLinks } from './util';
-import { REPEAT_LABELS } from './Sequencer';
+import { pathToLinks } from '../util';
+import { REPEAT_LABELS } from '../Sequencer';
 
 export default class AppFooter extends React.PureComponent {
   render() {

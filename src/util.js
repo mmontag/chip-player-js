@@ -3,7 +3,7 @@ import React from 'react';
 import { toArabic } from 'roman-numerals';
 import path from 'path';
 
-import DirectoryLink from './DirectoryLink';
+import DirectoryLink from './components/DirectoryLink';
 
 const ROMAN_NUMERAL_REGEX = /\b([IVXLC]+|[ivxlc]+)[-.,)]/; // All upper case or all lower case
 const CATALOG_PREFIX_REGEX = /^https?:\/\/[a-z0-9\-.:]+\/(music|catalog)\//;

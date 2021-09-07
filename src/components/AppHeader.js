@@ -4,7 +4,7 @@ export default class AppHeader extends React.PureComponent {
   render() {
     return (
       <header className="AppHeader">
-        <a className="AppHeader-title" href="./">Chip Player JS</a>{' '}
+        <a className="AppHeader-title" href="..">Chip Player JS</a>{' '}
         {this.props.user ?
           <span>
               • Logged in as {this.props.user.displayName}.{' '}

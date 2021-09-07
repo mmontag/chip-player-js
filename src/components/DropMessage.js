@@ -1,5 +1,5 @@
 import React from 'react';
-const { FORMATS } = require('./config');
+const { FORMATS } = require('../config');
 
 const formatList = FORMATS.filter(f => f !== 'miniusf').map(f => `.${f}`);
 const splitPoint = Math.floor(formatList.length / 2) - 1;

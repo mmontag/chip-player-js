@@ -1,5 +1,5 @@
 import {Link} from "react-router-dom";
-import folder from "./images/folder.png";
+import folder from "../images/folder.png";
 import * as PropTypes from "prop-types";
 import React from "react";
 import queryString from 'querystring';

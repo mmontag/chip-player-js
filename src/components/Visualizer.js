@@ -1,5 +1,5 @@
-import pianoKeys from './images/piano-keys.png';
-import Spectrogram from './Spectrogram';
+import pianoKeys from '../images/piano-keys.png';
+import Spectrogram from '../Spectrogram';
 import React, {PureComponent} from 'react';
 
 const SPECTROGRAM_MODES = [

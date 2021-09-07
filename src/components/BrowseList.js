@@ -1,6 +1,6 @@
 import React, {Fragment} from 'react';
 import bytes from 'bytes';
-import {CATALOG_PREFIX} from './config';
+import {CATALOG_PREFIX} from '../config';
 import DirectoryLink from './DirectoryLink';
 import FavoriteButton from './FavoriteButton';
 
