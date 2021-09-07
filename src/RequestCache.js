@@ -1,4 +1,4 @@
-import promisify from './promisifyXhr';
+import promisify from './promisify-xhr';
 
 class RequestCache {
   constructor() {

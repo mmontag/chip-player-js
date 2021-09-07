@@ -1,4 +1,4 @@
-import promisify from "./promisifyXhr";
+import promisify from "./promisify-xhr";
 import {CATALOG_PREFIX} from "./config";
 
 export const REPEAT_OFF = 0;

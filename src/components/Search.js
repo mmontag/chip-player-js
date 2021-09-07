@@ -3,7 +3,7 @@ import React, { Fragment, PureComponent } from 'react';
 import queryString from 'querystring';
 import debounce from 'lodash/debounce';
 import { API_BASE, CATALOG_PREFIX } from '../config';
-import promisify from '../promisifyXhr';
+import promisify from '../promisify-xhr';
 import { updateQueryString } from '../util';
 import DirectoryLink from './DirectoryLink';
 import FavoriteButton from './FavoriteButton';
