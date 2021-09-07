@@ -1,16 +1,12 @@
 //
 // TinyPlayer
 //
-// A tiny wrapper for TinyMidiLoader.
 // Uses synth engines from libFluidSynth and libADLMIDI.
 // Created by Matt Montag on 9/4/18.
 //
-#define TML_NO_STDIO
-#define TML_IMPLEMENTATION
-
 #include <math.h>
 #include <emscripten.h>
-#include "tml.h"
+
 #include "../fluidlite/include/fluidlite.h"
 #include "../libADLMIDI/include/adlmidi.h"
 
@@ -26,8 +22,7 @@ struct ADLMIDI_AudioFormat adl_AudioFormat = {
         sizeof(float_t),
         2 * sizeof(float_t),
 };
-tml_message *g_MidiEvt;      // next message to be played
-tml_message *g_FirstEvt;     // first event in current file
+
 double g_MidiTimeMs;         // current playback time
 double g_Speed = 1.0;
 int g_SampleRate;
@@ -197,150 +192,6 @@ extern void tp_init(int sampleRate) {
   g_synth = g_Synths[0];
 }
 
-
-// Returns the number of bytes written. Value of 0 means the song has ended.
-extern int tp_write_audio(float *buffer, int bufferSize) {
-  int bytesWritten = 0;
-  int batchSize = 128; // Timing of MIDI events will be quantized by the sample batch size.
-
-  double msPerBatch = g_Speed * 1000.0 * (batchSize / (float) g_SampleRate) / 2;
-  for (int samplesRemaining = bufferSize * 2; samplesRemaining > 0; samplesRemaining -= batchSize) {
-    //We progress the MIDI playback and then process `batchSize` samples at once
-    if (batchSize > samplesRemaining) batchSize = samplesRemaining;
-
-    //Loop through all MIDI messages which need to be played up until the current playback time
-    for (g_MidiTimeMs += msPerBatch;
-         g_MidiEvt && g_MidiTimeMs >= g_MidiEvt->time;
-         g_MidiEvt = g_MidiEvt->next) {
-      switch (g_MidiEvt->type) {
-        case TML_NOTE_ON:
-          if (g_ChannelsMuted[g_MidiEvt->channel]) break;
-          if (g_MidiEvt->velocity == 0)
-            g_synth.noteOff(g_MidiEvt->channel, g_MidiEvt->key);
-          else
-            g_synth.noteOn(g_MidiEvt->channel, g_MidiEvt->key, g_MidiEvt->velocity);
-          break;
-        case TML_NOTE_OFF:
-          if (g_ChannelsMuted[g_MidiEvt->channel]) break;
-          g_synth.noteOff(g_MidiEvt->channel, g_MidiEvt->key);
-          break;
-        case TML_PROGRAM_CHANGE:
-          g_synth.programChange(g_MidiEvt->channel, g_MidiEvt->program);
-          break;
-        case TML_PITCH_BEND:
-          g_synth.pitchBend(g_MidiEvt->channel, g_MidiEvt->pitch_bend);
-          break;
-        case TML_CONTROL_CHANGE:
-          g_synth.controlChange(g_MidiEvt->channel, g_MidiEvt->control, g_MidiEvt->control_value);
-          break;
-        case TML_CHANNEL_PRESSURE:
-          g_synth.channelPressure(g_MidiEvt->channel, g_MidiEvt->channel_pressure);
-        default:
-          break;
-      }
-
-    }
-    // Render the block of audio samples in float format
-    g_synth.render(buffer, batchSize);
-
-    buffer += batchSize;
-    bytesWritten += batchSize;
-  }
-
-  if (g_MidiEvt == NULL) {
-    // Last MIDI event has been processed.
-    // Continue synthesis until silence is detected.
-    // This allows voices with a long release tail to complete.
-    // Crude method: when entire buffer is below threshold, consider it silence.
-    int synthStillActive = 0;
-    float threshold = 0.05;
-    for (int i = 0; i < bufferSize; i++) {
-      if (buffer[i * 2] > threshold) { // Check left channel only
-        synthStillActive = 1;          // Exit early
-        break;
-      }
-    }
-    if (synthStillActive == 0) return 0;
-  }
-
-  return bytesWritten;
-}
-
-extern unsigned int tp_get_duration_ms() {
-  if (g_DurationMs == 0 && g_FirstEvt) {
-    tml_get_info(g_FirstEvt, NULL, NULL, NULL, NULL, &g_DurationMs);
-  }
-  return g_DurationMs;
-}
-
-extern void tp_seek(int ms) {
-  // It's only possible to seek forward due to the statefulness of the synth.
-  // If we need to seek backward, reset to the first event and seek forward from there.
-  if (ms < g_MidiTimeMs) {
-    g_MidiEvt = g_FirstEvt;
-  }
-
-  g_synth.panic();
-
-  while (g_MidiEvt && g_MidiEvt->time < ms) {
-    switch (g_MidiEvt->type) {
-      // Ignore note on/note off events during seek
-      case TML_PROGRAM_CHANGE:
-        g_synth.programChange(g_MidiEvt->channel, g_MidiEvt->program);
-        break;
-      case TML_PITCH_BEND:
-        g_synth.pitchBend(g_MidiEvt->channel, g_MidiEvt->pitch_bend);
-        break;
-      case TML_CONTROL_CHANGE:
-        if (g_MidiEvt->control == 91) break; // ignore reverb CC from MIDI files
-        g_synth.controlChange(g_MidiEvt->channel, g_MidiEvt->control, g_MidiEvt->control_value);
-        break;
-      default:
-        break;
-    }
-    g_MidiEvt = g_MidiEvt->next;
-  }
-
-  g_MidiTimeMs = ms;
-}
-
-extern double tp_get_position_ms() {
-  return g_MidiTimeMs;
-}
-
-extern void tp_set_speed(float speed) {
-  g_Speed = fmax(fmin(speed, 10.0), 0.1);
-}
-
-extern void tp_stop() {
-  g_synth.panic();
-  g_MidiEvt = NULL;
-}
-
-extern void tp_restart() {
-  g_synth.panic();
-  g_MidiEvt = g_FirstEvt;
-}
-
-extern void tp_open(const void *data, int length) {
-  g_synth.reset();
-  g_MidiTimeMs = 0;
-  g_DurationMs = 0;
-  g_MidiEvt = tml_load_memory(data, length);
-  g_FirstEvt = g_MidiEvt;
-  memset(g_ChannelsInUse, 0, sizeof g_ChannelsInUse);
-  memset(g_ChannelsMuted, 0, sizeof g_ChannelsMuted);
-  tml_get_channels_in_use_and_initial_programs(g_MidiEvt, g_ChannelsInUse, g_ChannelProgramNums);
-
-  // Skip to first note to eliminate silence
-  unsigned int firstNoteTimeMs;
-  tml_get_info(g_FirstEvt, NULL, NULL, NULL, &firstNoteTimeMs, NULL);
-  g_MidiTimeMs = (double) firstNoteTimeMs;
-
-  EM_ASM_({ console.log('Tiny MIDI Player loaded %d bytes.', $0); }, length);
-  EM_ASM_({ console.log('First note appears at %d ms.', $0); }, g_MidiTimeMs);
-}
-
 extern void tp_unload_soundfont() {
   if (fluid_synth_sfcount(g_FluidSynth) > 0) {
     fluid_sfont_t *sfont = fluid_synth_get_sfont(g_FluidSynth, 0);
@@ -406,9 +257,6 @@ extern int tp_set_synth_engine(int synthId) {
   g_synth.panic();
   g_synthId = synthId;
   g_synth = g_Synths[g_synthId];
-  // restore state
-  if (g_MidiEvt != NULL && g_MidiEvt != g_FirstEvt)
-    tp_seek((int)tp_get_position_ms() - 1);
   return 0;
 }
 

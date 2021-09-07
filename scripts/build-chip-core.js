@@ -13,7 +13,7 @@ const chipModules = [
     name: 'visualizer',
     enabled: true,
     sourceFiles: [
-      'tinysoundfont/showcqtbar.c',
+      'src/showcqtbar.c',
     ],
     exportedFunctions: [
       // ---- Visualizer functions: ----
@@ -30,21 +30,21 @@ const chipModules = [
     name: 'player',
     enabled: true,
     sourceFiles: [
-      'tinysoundfont/tinyplayer.c',
+      'src/tinyplayer.c',
     ],
     exportedFunctions: [
       // ---- Tiny player functions: ----
-      '_tp_write_audio',
-      '_tp_open',
+      // '_tp_write_audio',
+      // '_tp_open',
       '_tp_init',
       '_tp_unload_soundfont',
       '_tp_load_soundfont',
       '_tp_add_soundfont',
-      '_tp_stop',
-      '_tp_seek',
-      '_tp_set_speed',
-      '_tp_get_duration_ms',
-      '_tp_get_position_ms',
+      // '_tp_stop',
+      // '_tp_seek',
+      // '_tp_set_speed',
+      // '_tp_get_duration_ms',
+      // '_tp_get_position_ms',
       '_tp_set_reverb',
       '_tp_get_polyphony',
       '_tp_set_polyphony',
