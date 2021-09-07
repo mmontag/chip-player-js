@@ -364,10 +364,12 @@ body,#root {
 }
 .SongDetails-filepath a {color: var(--neutral2);}
 
-/*.Search-label { margin-right: */
-.Search-button-clear { white-space: pre; }
-.Search-button-clear::before { content: ' ×'; }
-.Search-button-clear::after  { content: ' '; }
+.Search-input { width: calc(var(--charW1) * 20); }
+.Search-clearButton { white-space: pre; }
+.Search-clearButton::before { content: ' ×'; }
+.Search-clearButton::after  { content: ' '; }
+.Search-results { margin-top: var(--charH); }
+.Search-resultsLabel { white-space: nowrap; }
 
 .Song-now-playing .Favorite-button { color: var(--background); }
 .Favorite-button:active { color: var(--clickable); }

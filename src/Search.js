@@ -1,12 +1,12 @@
 /* eslint import/no-webpack-loader-syntax: off */
-import React, {Fragment, PureComponent} from 'react';
+import React, { Fragment, PureComponent } from 'react';
 import queryString from 'querystring';
-import FavoriteButton from "./FavoriteButton";
 import debounce from 'lodash/debounce';
-import promisify from "./promisifyXhr";
-import {API_BASE, CATALOG_PREFIX} from "./config";
-import DirectoryLink from "./DirectoryLink";
-import {updateQueryString} from './util';
+import { API_BASE, CATALOG_PREFIX } from './config';
+import promisify from './promisifyXhr';
+import { updateQueryString } from './util';
+import DirectoryLink from './DirectoryLink';
+import FavoriteButton from './FavoriteButton';
 
 const MAX_RESULTS = 100;
 
@@ -175,15 +175,15 @@ export default class Search extends PureComponent {
                    autoCorrect="false"
                    autoCapitalize="none"
                    ref={this.textInput}
-                   style={css.textInput}
+                   className="Search-input"
                    value={this.state.totalSongs ? this.state.query || '' : ''}
                    onChange={this.onChange}/>
             {
               this.state.searching &&
               <Fragment>
-                <button className="Search-button-clear" onClick={this.handleClear}/>
+                <button className="Search-clearButton" onClick={this.handleClear}/>
                 {' '}
-                <span style={css.resultsLabel}>
+                <span className="Search-resultsLabel">
                   {this.state.resultsCount} result{this.state.resultsCount !== 1 && 's'}
                 </span>
               </Fragment>
@@ -192,7 +192,7 @@ export default class Search extends PureComponent {
         </div>
         {
           this.state.searching ?
-            <div style={css.searchResults}>
+            <div className="Search-results">
               {this.state.results.map(this.renderResultItem)}
             </div>
             :
@@ -202,13 +202,3 @@ export default class Search extends PureComponent {
     );
   }
 }
-
-const css = {
-  searchResults: {
-    marginTop: 'var(--charH)',
-  },
-  resultsLabel: { whiteSpace: 'nowrap' },
-  textInput: {
-    width: 'calc(var(--charW) * 20)',
-  }
-};
