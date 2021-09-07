@@ -208,22 +208,22 @@ body,#root {
     left: 0;
 }
 
-.App-header {
+.AppHeader {
     padding: var(--charH) var(--charW2);
     margin: 0 var(--charW2neg);
     -ms-flex-positive: 0;
         flex-grow: 0;
 }
 
-.App-subtitle {
+.AppHeader-subtitle {
     margin: var(--charH) 0 0 0;
 }
 
-.App-title, .App-title:visited, .App-title:link {
+.AppHeader-title, .AppHeader-title:visited, .AppHeader-title:link {
     color: var(--neutral4);
 }
 
-.App-byline {
+.AppHeader-byline {
     float: right;
 }
 
@@ -262,7 +262,7 @@ body,#root {
     -webkit-overflow-scrolling: touch;
 }
 
-.App-footer {
+.AppFooter {
     border-top: 1px solid var(--clickable);
     margin: 0 var(--charW2neg);
     -ms-flex-negative: 0;
@@ -272,7 +272,7 @@ body,#root {
     display: flex;
 }
 
-.App-footer-art {
+.AppFooter-art {
     width: 210px;
     height: 210px;
     background-color: var(--neutral0);
@@ -284,12 +284,12 @@ body,#root {
         flex-shrink: 0;
 }
 @media screen and (max-width: 600px) {
-    .App-footer-art {
+    .AppFooter-art {
         display: none;
     }
 }
 
-.App-footer-main {
+.AppFooter-main {
     -ms-flex-positive: 1;
         flex-grow: 1;
     overflow: auto;
@@ -299,11 +299,11 @@ body,#root {
  Required due to strange flexbox/padding behavior in Safari.
  https://stackoverflow.com/questions/42802717
 */
-.App-footer-main-inner {
+.AppFooter-main-inner {
     padding: var(--charH) var(--charW2);
 }
 
-.App-footer-settings {
+.AppFooter-settings {
     border-left: 1px solid var(--clickable);
     padding: var(--charH) var(--charW2);
     max-width: 360px;
@@ -329,14 +329,14 @@ body,#root {
     padding: 0 var(--charW1);
 }
 
-.App-footer-more-buttons {
+.AppFooter-more-buttons {
     float: right;
 }
 @media screen and (max-width: 600px) {
-    .App-footer-more-buttons { display: none; }
+    .AppFooter-more-buttons { display: none; }
 }
 
-.App .Slider {
+.Slider {
     height: var(--charH);
     padding: 0;
     cursor: pointer;
@@ -347,7 +347,7 @@ body,#root {
     border: 0;
 }
 
-.App .Slider-rail {
+.Slider-rail {
     width: calc(100% + var(--charW1));
     height: 3px;
     margin-top: -2px;
@@ -359,7 +359,7 @@ body,#root {
     border: 1px solid var(--clickable);
 }
 
-.App .Slider-knob {
+.Slider-knob {
     height: var(--charH);
     width: var(--charW1);
     margin: 0;
@@ -370,6 +370,20 @@ body,#root {
     box-shadow: none;
 }
 
+.Browse-topRow { display: -ms-flexbox; display: flex; -ms-flex-pack: justify; justify-content: space-between; margin-bottom: var(--charH); }
+
+.BrowseList-row { display: -ms-flexbox; display: flex; }
+.BrowseList-colName { overflow-x: hidden; white-space: nowrap; text-overflow: ellipsis; -ms-flex-positive: 1; flex-grow: 1; }
+.BrowseList-colDir, .BrowseList-colSize { -ms-flex-negative : 0; flex-shrink : 0; }
+.BrowseList-colSize { text-align: right; text-transform: uppercase; white-space: nowrap; min-width: 80px; }
+
+.DirectoryLink-dim { color: var(--neutral2); }
+.DirectoryLink-folderIcon { vertical-align: bottom; }
+.DirectoryLink-folderIconDim { vertical-align: bottom; -webkit-filter: grayscale(100%) brightness(0.75); filter: grayscale(100%) brightness(0.75); }
+
+.PlayerParams-label { display: block; }
+.PlayerParams-voiceList { display: -ms-flexbox; display: flex; -ms-flex-wrap: wrap; flex-wrap: wrap; margin-right: calc(var(--charW1) * -1); }
+
 .SongDetails {}
 .SongDetails-title {color: var(--neutral4);}
 .SongDetails-subtitle, .SongDetails-subtitle, .SongDetails-filepath {
@@ -379,10 +393,12 @@ body,#root {
 }
 .SongDetails-filepath a {color: var(--neutral2);}
 
-/*.Search-label { margin-right: */
-.Search-button-clear { white-space: pre; }
-.Search-button-clear::before { content: ' \D7'; }
-.Search-button-clear::after  { content: ' '; }
+.Search-input { width: calc(var(--charW1) * 20); }
+.Search-clearButton { white-space: pre; }
+.Search-clearButton::before { content: ' \D7'; }
+.Search-clearButton::after  { content: ' '; }
+.Search-results { margin-top: var(--charH); }
+.Search-resultsLabel { white-space: nowrap; }
 
 .Song-now-playing .Favorite-button { color: var(--background); }
 .Favorite-button:active { color: var(--clickable); }
@@ -437,6 +453,7 @@ img { -ms-interpolation-mode: nearest-neighbor; image-rendering: -webkit-optimiz
     margin-bottom: -1px;
 }
 
+/* message-box is used by Info box and DropMessage component. */
 .message-box-outer {
     position: absolute;
     z-index: 100;
@@ -529,33 +546,5 @@ img { -ms-interpolation-mode: nearest-neighbor; image-rendering: -webkit-optimiz
 
 .message-box-button        { background: var(--background); padding: 0 var(--charW2); -webkit-box-shadow: none; box-shadow: none; }
 
-.Slider {
-    height: 0;
-    padding: 16px 0;
-    cursor: pointer;
-    position: relative;
-    width: 100%;
-}
 
-.Slider-rail {
-    width: 100%;
-    height: 2px;
-    margin-top: -1px;
-    background: #aaa;
-    position: absolute;
-    top: 50%;
-}
-
-.Slider-knob {
-    height: 16px;
-    width: 16px;
-    margin: -8px 0 0 -8px;
-    border-radius: 8px;
-    background-color: #fff;
-    position: absolute;
-    -webkit-box-shadow: inset 0 0 0 3px #aaa;
-            box-shadow: inset 0 0 0 3px #aaa;
-}
-
-
-/*# sourceMappingURL=main.65a726f6.css.map*/
+/*# sourceMappingURL=main.60ecb739.css.map*/
