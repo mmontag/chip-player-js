@@ -2,67 +2,12 @@ import MIDIFile from 'midifile';
 import MIDIFilePlayer from './MIDIFilePlayer';
 
 import Player from './Player';
-import { SOUNDFONT_URL_PATH } from '../config';
+import { SOUNDFONTS, SOUNDFONT_MOUNTPOINT, SOUNDFONT_URL_PATH } from '../config';
 import { ensureEmscFileWithUrl } from '../util';
 import { GM_DRUM_KITS, GM_INSTRUMENTS } from '../gm-patch-map';
 import debounce from 'lodash/debounce';
 
 let lib = null;
-const MOUNTPOINT = '/soundfonts';
-const SOUNDFONTS = [
-  {
-    label: 'Small Soundfonts',
-    items: [
-      {label: 'GMGSx Plus (6.2 MB)', value: 'gmgsx-plus.sf2'},
-      {label: 'Roland SC-55/SCC1 (3.3 MB)', value: 'Scc1t2.sf2'},
-      {label: 'Yamaha DB50XG (3.9 MB)', value: 'Yamaha DB50XG.sf2'},
-      {label: 'Gravis Ultrasound (5.9 MB)', value: 'Gravis_Ultrasound_Classic_PachSet_v1.6.sf2'},
-      {label: 'Tim GM (6 MB)', value: 'TimGM6mb.sf2'},
-      {label: 'Alan Chan 5MBGMGS (4.9 MB)', value: '5MBGMGS.SF2'},
-      {label: 'E-mu 2MBGMGS (2.1 MB)', value: '2MBGMGS.SF2'},
-      {label: 'E-mu 8MBGMGS (8.2 MB)', value: '8MBGMGS.SF2'},
-    ],
-  },
-  {
-    label: 'Large Soundfonts',
-    items: [
-      {label: 'Masquerade 55 v006 (18.4 MB)', value: 'masquerade55v006.sf2'},
-      {label: 'GeneralUser GS v1.471 (31.3 MB)', value: 'generaluser.sf2'},
-      {label: 'Chorium Revision A (28.9 MB)', value: 'choriumreva.sf2'},
-      {label: 'Unison (29.3 MB)', value: 'Unison.SF2'},
-      {label: 'Creative 28MBGM (29.7 MB)', value: '28MBGM.sf2'},
-      {label: 'Musica Theoria 2 (30.5 MB)', value: 'mustheory2.sf2'},
-      {label: 'Personal Copy Lite (31.4 MB)', value: 'PCLite.sf2'},
-      {label: 'AnotherXG (31.4 MB)', value: 'bennetng_AnotherXG_v2-1.sf2'},
-      {label: 'NTONYX 32Mb GM Stereo (32.5 MB)', value: '32MbGMStereo.sf2'},
-      {label: 'Weeds GM 3 (54.9 MB)', value: 'weedsgm3.sf2'},
-    ],
-  },
-  {
-    label: 'Novelty Soundfonts',
-    items: [
-      {label: 'PC Beep (31 KB)', value: 'pcbeep.sf2'},
-      {label: 'Nokia 6230i (227 KB)', value: 'Nokia_6230i_RM-72_.sf2'},
-      {label: 'Kirby\'s Dream Land (271 KB)', value: 'Kirby\'s_Dream_Land_3.sf2'},
-      {label: 'Vintage Waves v2 (315 KB)', value: 'Vintage Dreams Waves v2.sf2'},
-      {label: 'Setzer\'s SPC Soundfont (1.2 MB)', value: 'Setzer\'s_SPC_Soundfont.sf2'},
-      {label: 'SNES GM (1.9 MB)', value: 'Super_Nintendo_Unofficial_update.sf2'},
-      {label: 'Nokia 30 (2.2 MB)', value: 'Nokia_30.sf2'},
-      {label: 'LG Wink/Motorola ROKR (3.3 MB)', value: 'LG_Wink_Style_T310_Soundfont.sf2'},
-      {label: 'Diddy Kong Racing DS (13.7 MB)', value: 'Diddy_Kong_Racing_DS_Soundfont.sf2'},
-      {label: 'Regression FM v1.99g (14.4 MB)', value: 'R_FM_v1.99g-beta.sf2'},
-      {label: 'Ultimate Megadrive (63.2 MB)', value: 'The Ultimate Megadrive Soundfont.sf2'},
-    ],
-  },
-  {
-    label: 'Piano Soundfonts',
-    items: [
-      {label: 'Yamaha Grand Lite v1.1 (21.8 MB)', value: 'Yamaha-Grand-Lite-v1.1.sf2'},
-      {label: 'Chateau Grand Lite v1.0 (49.1 MB)', value: 'Chateau Grand Lite-v1.0.sf2'},
-      {label: 'Steinway Grand v1.0 (145 MB)', value: 'Steinway Grand-SF4U-v1.sf2'},
-    ],
-  },
-];
 
 const dummyMidiOutput = { send: () => {} };
 
@@ -186,8 +131,8 @@ export default class MIDIPlayer extends Player {
     this.sampleRate = audioCtx.sampleRate;
 
     // Initialize Soundfont filesystem
-    lib.FS.mkdir(MOUNTPOINT);
-    lib.FS.mount(lib.FS.filesystems.IDBFS, {}, MOUNTPOINT);
+    lib.FS.mkdir(SOUNDFONT_MOUNTPOINT);
+    lib.FS.mount(lib.FS.filesystems.IDBFS, {}, SOUNDFONT_MOUNTPOINT);
     lib.FS.syncfs(true, (err) => {
       if (err) {
         console.log('Error populating FS from indexeddb.', err);
@@ -488,7 +433,7 @@ export default class MIDIPlayer extends Player {
         break;
       case 'soundfont':
         const url = `${SOUNDFONT_URL_PATH}/${value}`;
-        ensureEmscFileWithUrl(lib, `${MOUNTPOINT}/${value}`, url)
+        ensureEmscFileWithUrl(lib, `${SOUNDFONT_MOUNTPOINT}/${value}`, url)
           .then(filename => this._loadSoundfont(filename));
         break;
       case 'reverb':
