@@ -355,6 +355,9 @@ body,#root {
 .DirectoryLink-folderIcon { vertical-align: bottom; }
 .DirectoryLink-folderIconDim { vertical-align: bottom; filter: grayscale(100%) brightness(0.75); }
 
+.PlayerParams-label { display: block; }
+.PlayerParams-voiceList { display: flex; flex-wrap: wrap; margin-right: calc(var(--charW1) * -1); }
+
 .SongDetails {}
 .SongDetails-title {color: var(--neutral4);}
 .SongDetails-subtitle, .SongDetails-subtitle, .SongDetails-filepath {

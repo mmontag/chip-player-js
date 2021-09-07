@@ -77,7 +77,7 @@ export default class PlayerParams extends PureComponent {
         {this.props.tempo.toFixed(2)}<br/>
 
         Voices:{' '}
-        <div style={css.voiceList}>
+        <div className="PlayerParams-voiceList">
           {[...Array(this.props.numVoices)].map((_, i) => {
             return (
               <label className='App-voice-label inline' key={i}>
@@ -101,7 +101,7 @@ export default class PlayerParams extends PureComponent {
           switch (param.type) {
             case 'enum':
               return (
-                <label key={param.id} title={param.hint} style={css.paramLabel}>
+                <label key={param.id} title={param.hint} className="PlayerParams-label">
                   {param.label}:{' '}
                   <select
                     onChange={(e) => {
@@ -121,7 +121,7 @@ export default class PlayerParams extends PureComponent {
               );
             case 'number':
               return (
-                <label key={param.id} title={param.hint} style={css.paramLabel}>
+                <label key={param.id} title={param.hint} className="PlayerParams-label">
                   {param.label}:{' '}
                   <input type='range'
                          title={param.hint}
@@ -137,7 +137,7 @@ export default class PlayerParams extends PureComponent {
               );
             case 'toggle':
               return (
-                <label key={param.id} title={param.hint} style={css.paramLabel}>
+                <label key={param.id} title={param.hint} className="PlayerParams-label">
                   <input type='checkbox'
                          onChange={(e) => {
                            this.props.setParameter(param.id, e.target.checked);
@@ -163,14 +163,3 @@ export default class PlayerParams extends PureComponent {
     );
   }
 }
-
-const css = {
-  paramLabel: {
-    display: 'block',
-  },
-  voiceList: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    marginRight: '-8px',
-  },
-};
