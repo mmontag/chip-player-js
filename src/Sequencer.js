@@ -24,7 +24,6 @@ export default class Sequencer {
     this.getCurrUrl = this.getCurrUrl.bind(this);
     this.getCurrContext = this.getCurrContext.bind(this);
     this.getCurrIdx = this.getCurrIdx.bind(this);
-    this.setPlayers = this.setPlayers.bind(this);
     this.setShuffle = this.setShuffle.bind(this);
 
     this.player = null;
@@ -38,12 +37,9 @@ export default class Sequencer {
     this.shuffle = false;
     this.songRequest = null;
     this.repeat = REPEAT_OFF;
-  }
 
-  setPlayers(players) {
-    this.players = players;
     this.players.forEach(player => {
-      player.setOnPlayerStateUpdate(this.onPlayerStateUpdate);
+      player.on('playerStateUpdate', this.onPlayerStateUpdate);
     });
   }
 

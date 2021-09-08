@@ -112,9 +112,6 @@ class App extends React.Component {
     console.log('Sample rate: %d hz. Base latency: %d. Buffer size: %d.',
       audioCtx.sampleRate, audioCtx.baseLatency * audioCtx.sampleRate, bufferSize);
 
-    // Initialize sequencer with empty players array
-    this.sequencer = new Sequencer([], this.handleSequencerStateUpdate, this.handlePlayerError);
-
     this.state = {
       loading: true,
       loadingUser: true,
@@ -152,14 +149,15 @@ class App extends React.Component {
           return prefix + path;
         },
         onRuntimeInitialized: () => {
-          this.sequencer.setPlayers([
+          this.sequencer = new Sequencer([
             new GMEPlayer(audioCtx, playerNode, chipCore, bufferSize),
             new XMPPlayer(audioCtx, playerNode, chipCore, bufferSize),
             new MIDIPlayer(audioCtx, playerNode, chipCore, bufferSize),
             new V2MPlayer(audioCtx, playerNode, chipCore, bufferSize),
             new N64Player(audioCtx, playerNode, chipCore, bufferSize),
             new MDXPlayer(audioCtx, playerNode, chipCore, bufferSize),
-          ]);
+          ], this.handleSequencerStateUpdate, this.handlePlayerError);
+
           this.setState({ loading: false });
 
           // Experimental: Split Module Support
@@ -625,8 +623,8 @@ class App extends React.Component {
 
   render() {
     const {title, subtitle} = titlesFromMetadata(this.state.currentSongMetadata);
-    const currContext = this.sequencer.getCurrContext();
-    const currIdx = this.sequencer.getCurrIdx();
+    const currContext = this.sequencer?.getCurrContext();
+    const currIdx = this.sequencer?.getCurrIdx();
     const search = { search: window.location.search };
     return (
       <Router basename={process.env.PUBLIC_URL}>

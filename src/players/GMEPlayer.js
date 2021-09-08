@@ -18,8 +18,8 @@ const fileExtensions = [
 ];
 
 export default class GMEPlayer extends Player {
-  constructor(audioCtx, destNode, chipCore, onPlayerStateUpdate) {
-    super(audioCtx, destNode, chipCore, onPlayerStateUpdate);
+  constructor(audioCtx, destNode, chipCore, bufferSize) {
+    super(audioCtx, destNode, chipCore, bufferSize);
     this.setParameter = this.setParameter.bind(this);
     this.getParameter = this.getParameter.bind(this);
     this.getParamDefs = this.getParamDefs.bind(this);
@@ -91,7 +91,7 @@ export default class GMEPlayer extends Player {
           this.subtune,
           libgme._gme_track_count(emu)
         );
-        this.onPlayerStateUpdate(true);
+        this.emit('playerStateUpdate', true);
       }
     }
   }
@@ -101,7 +101,7 @@ export default class GMEPlayer extends Player {
     this.subtune = subtune;
     this.metadata = this._parseMetadata(subtune);
     console.debug('GMEPlayer.playSubtune(subtune=%s)', subtune);
-    this.onPlayerStateUpdate(false);
+    this.emit('playerStateUpdate', false);
     return libgme._gme_start_track(emu, subtune);
   }
 
@@ -302,6 +302,6 @@ export default class GMEPlayer extends Player {
     if (emu) libgme._gme_delete(emu);
     emu = null;
     console.debug('GMEPlayer.stop()');
-    this.onPlayerStateUpdate(true);
+    this.emit('playerStateUpdate', true);
   }
 }

@@ -5,8 +5,8 @@ const fileExtensions = [
 ];
 
 export default class V2MPlayer extends Player {
-  constructor(audioCtx, destNode, chipCore, onPlayerStateUpdate = function() {}) {
-    super(audioCtx, destNode, chipCore, onPlayerStateUpdate);
+  constructor(audioCtx, destNode, chipCore, bufferSize) {
+    super(audioCtx, destNode, chipCore, bufferSize);
     this.loadData = this.loadData.bind(this);
 
     this.speed = 1;
@@ -35,7 +35,7 @@ export default class V2MPlayer extends Player {
 
     this.connect();
     this.resume();
-    this.onPlayerStateUpdate(false);
+    this.emit('playerStateUpdate', false);
   }
 
   v2mAudioProcess(e) {
@@ -102,6 +102,6 @@ export default class V2MPlayer extends Player {
     this.suspend();
     this.lib._v2m_close();
     console.debug('V2MPlayer.stop()');
-    this.onPlayerStateUpdate(true);
+    this.emit('playerStateUpdate', true);
   }
 }

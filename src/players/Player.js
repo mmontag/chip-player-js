@@ -1,3 +1,4 @@
+import EventEmitter from 'events';
 //
 // Player can be viewed as a state machine with
 // 3 states (playing, paused, stopped) and 5 transitions
@@ -18,8 +19,10 @@
 // In the "stop" transition, it is disconnected.
 // "stopped" is synonymous with closed/empty.
 //
-export default class Player {
-  constructor(audioCtx, destNode, chipCore, bufferSize, onPlayerStateUpdate) {
+export default class Player extends EventEmitter {
+  constructor(audioCtx, destNode, chipCore, bufferSize) {
+    super();
+
     this._outerAudioProcess = this._outerAudioProcess.bind(this);
 
     this.paused = true;
@@ -27,7 +30,6 @@ export default class Player {
     this.metadata = {};
     this.audioCtx = audioCtx;
     this.destinationNode = destNode;
-    this.onPlayerStateUpdate = onPlayerStateUpdate;
     this.bufferSize = bufferSize;
     this._innerAudioProcess = null;
     this.audioNode = this.audioCtx.createScriptProcessor(this.bufferSize, 2, 2);
@@ -140,10 +142,6 @@ export default class Player {
   suspend() {
     this.stopped = true;
     this.paused = true;
-  }
-
-  setOnPlayerStateUpdate(fn) {
-    this.onPlayerStateUpdate = fn;
   }
 
   setAudioProcess(fn) {

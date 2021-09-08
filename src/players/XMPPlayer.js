@@ -12,8 +12,8 @@ const fileExtensions = [
 ];
 
 export default class XMPPlayer extends Player {
-  constructor(audioCtx, destNode, chipCore, onPlayerStateUpdate = function() {}) {
-    super(audioCtx, destNode, chipCore, onPlayerStateUpdate);
+  constructor(audioCtx, destNode, chipCore, bufferSize) {
+    super(audioCtx, destNode, chipCore, bufferSize);
 
     this.lib = chipCore;
     this.xmpCtx = chipCore._xmp_create_context();
@@ -132,7 +132,7 @@ export default class XMPPlayer extends Player {
 
     this.connect();
     this.resume();
-    this.onPlayerStateUpdate(false);
+    this.emit('playerStateUpdate', false);
   }
 
   getVoiceMask() {
@@ -214,6 +214,6 @@ export default class XMPPlayer extends Player {
     this.suspend();
     this.lib._xmp_stop_module(this.xmpCtx);
     console.debug('XMPPlayer.stop()');
-    this.onPlayerStateUpdate(true);
+    this.emit('playerStateUpdate', true);
   }
 }

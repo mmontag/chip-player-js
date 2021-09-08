@@ -10,9 +10,8 @@ const MOUNTPOINT = '/mdx';
 const INT16_MAX = Math.pow(2, 16) - 1;
 
 export default class MDXPlayer extends Player {
-  constructor(audioCtx, destNode, chipCore, onPlayerStateUpdate = function () {
-  }) {
-    super(audioCtx, destNode, chipCore, onPlayerStateUpdate);
+  constructor(audioCtx, destNode, chipCore, bufferSize) {
+    super(audioCtx, destNode, chipCore, bufferSize);
     this.loadData = this.loadData.bind(this);
 
     // Initialize MDX filesystem
@@ -80,7 +79,7 @@ export default class MDXPlayer extends Player {
 
           this.connect();
           this.resume();
-          this.onPlayerStateUpdate(false);
+          this.emit('playerStateUpdate', false);
         });
       });
   }
@@ -179,6 +178,6 @@ export default class MDXPlayer extends Player {
     this.suspend();
     this.lib._mdx_close(this.mdxCtx);
     console.debug('MDXPlayer.stop()');
-    this.onPlayerStateUpdate(true);
+    this.emit('playerStateUpdate', true);
   }
 }

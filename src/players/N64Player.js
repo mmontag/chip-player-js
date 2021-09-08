@@ -10,8 +10,8 @@ const MOUNTPOINT = '/n64';
 const INT16_MAX = Math.pow(2, 16) - 1;
 
 export default class N64Player extends Player {
-  constructor(audioCtx, destNode, chipCore, onPlayerStateUpdate = function() {}) {
-    super(audioCtx, destNode, chipCore, onPlayerStateUpdate);
+  constructor(audioCtx, destNode, chipCore, bufferSize) {
+    super(audioCtx, destNode, chipCore, bufferSize);
     this.loadData = this.loadData.bind(this);
 
     // Initialize N64 filesystem
@@ -68,7 +68,7 @@ export default class N64Player extends Player {
 
           this.connect();
           this.resume();
-          this.onPlayerStateUpdate(false);
+          this.emit('playerStateUpdate', false);
         });
       });
   }
@@ -135,6 +135,6 @@ export default class N64Player extends Player {
     this.suspend();
     this.lib._n64_shutdown();
     console.debug('N64Player.stop()');
-    this.onPlayerStateUpdate(true);
+    this.emit('playerStateUpdate', true);
   }
 }
