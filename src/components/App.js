@@ -12,6 +12,8 @@ import ChipCore from '../chip-core';
 import firebaseConfig from '../config/firebaseConfig';
 import { API_BASE, CATALOG_PREFIX, MAX_VOICES, REPLACE_STATE_ON_SEEK } from '../config';
 import { replaceRomanWithArabic, titlesFromMetadata, unlockAudioContext } from '../util';
+import requestCache from '../RequestCache';
+import Sequencer, { NUM_REPEAT_MODES, REPEAT_OFF } from '../Sequencer';
 
 import GMEPlayer from '../players/GMEPlayer';
 import MIDIPlayer from '../players/MIDIPlayer';
@@ -26,9 +28,7 @@ import Browse from './Browse';
 import DropMessage from './DropMessage';
 import Favorites from './Favorites';
 import Search from './Search';
-import Sequencer, { NUM_REPEAT_MODES, REPEAT_OFF } from '../Sequencer';
 import Visualizer from './Visualizer';
-import requestCache from '../RequestCache';
 
 const NUMERIC_COLLATOR = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
 
