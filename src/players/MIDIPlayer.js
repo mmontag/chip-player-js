@@ -72,7 +72,7 @@ export default class MIDIPlayer extends Player {
       min: 4,
       max: 256,
       step: 4,
-      defaultValue: 64,
+      defaultValue: 128,
       dependsOn: {
         param: 'synthengine',
         value: MIDI_ENGINE_LIBFLUIDLITE,
@@ -321,7 +321,7 @@ export default class MIDIPlayer extends Player {
     if (opl3def) {
       const opl3banks = opl3def.options[0].items;
       const findBank = (str) => opl3banks.findIndex(bank => bank.label.indexOf(str) > -1);
-      let bankId = 0;
+      let bankId = opl3def.defaultValue;
       if (fp.indexOf('[rick]') > -1) {
         bankId = findBank('Descent:: Rick');
       } else if (fp.indexOf('[ham]') > -1) {

@@ -108,7 +108,7 @@ export default class PlayerParams extends PureComponent {
                       this.props.setParameter(param.id, e.target.value);
                       this.forceUpdate();
                     }}
-                    defaultValue={param.defaultValue}>
+                    value={value}>
                     {param.options.map(optgroup =>
                       <optgroup key={optgroup.label} label={optgroup.label}>
                         {optgroup.items.map(option =>
