@@ -190,11 +190,6 @@ export default class MIDIPlayer extends Player {
     this.setAudioProcess(this.midiAudioProcess);
   }
 
-  // TODO: Y*CK yUCK Uh-Oh
-  // setOnPlayerStateUpdate(fn) {
-  //   this.onPlayerStateUpdate = debounce(fn, 200);
-  // }
-
   midiAudioProcess(e) {
     let i, channel;
     const channels = [];
