@@ -1,11 +1,12 @@
 import React from 'react';
 import isMobile from 'ismobilejs';
 import clamp from 'lodash/clamp';
+import path from 'path';
 import queryString from 'querystring';
 import * as firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
-import { BrowserRouter as Router, NavLink, Route, Switch } from 'react-router-dom';
+import { BrowserRouter as Router, NavLink, Route, Switch, withRouter } from 'react-router-dom';
 import Dropzone from 'react-dropzone';
 
 import ChipCore from '../chip-core';
@@ -175,6 +176,9 @@ class App extends React.Component {
           if (urlParams.play) {
             // Allow a little time for initial page render before starting the song.
             // This is not absolutely necessary but helps prevent stuttering.
+            const dirname = path.dirname(urlParams.play);
+            // props.history comes from react-router-dom's withRouter(App).
+            this.props.history.replace('/browse/' + dirname + window.location.search);
             setTimeout(() => {
               this.sequencer.playSonglist([urlParams.play]);
               if (urlParams.t) {
@@ -627,7 +631,6 @@ class App extends React.Component {
     const currIdx = this.sequencer?.getCurrIdx();
     const search = { search: window.location.search };
     return (
-      <Router basename={process.env.PUBLIC_URL}>
         <Dropzone
           disableClick
           style={{}}
@@ -752,9 +755,8 @@ class App extends React.Component {
             />
           </div>
         )}</Dropzone>
-      </Router>
     );
   }
 }
 
-export default App;
+export default withRouter(App);
