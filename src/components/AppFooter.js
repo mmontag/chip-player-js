@@ -1,5 +1,6 @@
 import React from 'react';
 import diceImage from '../images/dice.png';
+import linkImage from '../images/link.png';
 import repeatImage from '../images/repeat.png';
 import TimeSlider from './TimeSlider';
 import { VolumeSlider } from './VolumeSlider';
@@ -145,7 +146,10 @@ export default class AppFooter extends React.PureComponent {
                                 href={songUrl}/>
               </div>}
               <div className="SongDetails-title">
-                <a style={{ color: 'var(--neutral4)' }} href={getCurrentSongLink()}>{title}</a>
+                <a style={{ color: 'var(--neutral4)' }} href={getCurrentSongLink()}>
+                  {title}{' '}
+                  <img alt="Copy link" src={linkImage} style={{ verticalAlign: 'bottom' }}/>
+                </a>
                 {' '}
                 {infoTexts.length > 0 &&
                 <a onClick={(e) => toggleInfo(e)} href='#'>
