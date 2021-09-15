@@ -174,13 +174,18 @@ class App extends React.Component {
 
           const urlParams = queryString.parse(window.location.search.substr(1));
           if (urlParams.play) {
+            const play = urlParams.play;
+            const dirname = path.dirname(urlParams.play);
+            // We treat play param as a "transient command" and strip it away after starting playback.
+            delete urlParams.play;
+            const qs = queryString.stringify(urlParams);
+            const search = qs ? `?${qs}` : '';
+            // Navigate to song's containing folder. History comes from withRouter().
+            this.props.history.replace(`/browse/${dirname}${search}`);
             // Allow a little time for initial page render before starting the song.
             // This is not absolutely necessary but helps prevent stuttering.
-            const dirname = path.dirname(urlParams.play);
-            // props.history comes from react-router-dom's withRouter(App).
-            this.props.history.replace('/browse/' + dirname + window.location.search);
             setTimeout(() => {
-              this.sequencer.playSonglist([urlParams.play]);
+              this.sequencer.playSonglist([play]);
               if (urlParams.t) {
                 setTimeout(() => {
                   if (this.sequencer.getPlayer()) {
