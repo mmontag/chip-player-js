@@ -138,6 +138,7 @@ class App extends React.Component {
       volume: 100,
       repeat: REPEAT_OFF,
       directories: {},
+      playContexts: {},
     };
 
     // Load the chip-core Emscripten runtime
@@ -177,15 +178,22 @@ class App extends React.Component {
             const play = urlParams.play;
             const dirname = path.dirname(urlParams.play);
             // We treat play param as a "transient command" and strip it away after starting playback.
+            // See comment in Browse.js for more about why a stateful play param is not a good idea.
             delete urlParams.play;
             const qs = queryString.stringify(urlParams);
             const search = qs ? `?${qs}` : '';
             // Navigate to song's containing folder. History comes from withRouter().
+            // TODO: eliminate the flaky 500ms delay; await directory fetch.
             this.props.history.replace(`/browse/${dirname}${search}`);
             // Allow a little time for initial page render before starting the song.
             // This is not absolutely necessary but helps prevent stuttering.
             setTimeout(() => {
-              this.sequencer.playSonglist([play]);
+              if (this.state.playContexts[dirname]) {
+                const index = this.state.playContexts[dirname].indexOf(play);
+                this.playContext(this.state.playContexts[dirname], index);
+              } else {
+                this.sequencer.playSonglist([play]);
+              }
               if (urlParams.t) {
                 setTimeout(() => {
                   if (this.sequencer.getPlayer()) {
@@ -611,7 +619,13 @@ class App extends React.Component {
           ...this.state.directories,
           [path]: items,
         };
-        this.setState({ directories });
+        const playContexts = {
+          ...this.state.playContexts,
+          [path]: items.map(item =>
+            item.path.replace('%', '%25').replace('#', '%23').replace(/^\//, '')
+          ),
+        };
+        this.setState({ directories, playContexts });
       });
   }
 
@@ -693,16 +707,16 @@ class App extends React.Component {
                     )}/>
                     <Route path="/browse/:browsePath*" render={({ history, match, location }) => {
                       // Undo the react-router-dom double-encoded % workaround - see DirectoryLink.js
-                      if (match.params.browsePath)
-                        match.params.browsePath = match.params.browsePath.replace('%25', '%');
+                      const browsePath = match.params?.browsePath?.replace('%25', '%') || '';
                       return (
                         this.contentAreaRef.current &&
                         <Browse currContext={currContext}
                                 currIdx={currIdx}
                                 historyAction={history.action}
                                 locationKey={location.key}
-                                browsePath={match.params.browsePath || ''}
-                                directories={this.state.directories}
+                                browsePath={browsePath}
+                                listing={this.state.directories[browsePath]}
+                                playContext={this.state.playContexts[browsePath]}
                                 fetchDirectory={this.fetchDirectory}
                                 handleSongClick={this.handleSongClick}
                                 handleShufflePlay={this.handleShufflePlay}

@@ -14,7 +14,7 @@ export default function BrowseList({ virtual, ...props }) {
     toggleFavorite,
     handleSongClick,
     browsePath,
-    contexts,
+    playContext,
   } = props;
 
   return (
@@ -27,7 +27,7 @@ export default function BrowseList({ virtual, ...props }) {
             browsePath.substr(0, browsePath.lastIndexOf('/')) : // parent path
             item.path.replace('%', '%25').replace('#', '%23').replace(/^\//, '');
           const name = item.path.split('/').pop();
-          const isPlaying = currContext === contexts[browsePath] && currIdx === item.idx;
+          const isPlaying = currContext === playContext && currIdx === item.idx;
           if (item.type === 'directory') {
             return (
               <div key={name} className="BrowseList-row">
@@ -51,7 +51,7 @@ export default function BrowseList({ virtual, ...props }) {
                   <FavoriteButton favorites={favorites}
                                   href={href}
                                   toggleFavorite={toggleFavorite}/>}
-                  <a onClick={(e) => handleSongClick(href, contexts[browsePath], item.idx)(e)}
+                  <a onClick={(e) => handleSongClick(href, playContext, item.idx)(e)}
                      href='#'>
                     {name}
                   </a>

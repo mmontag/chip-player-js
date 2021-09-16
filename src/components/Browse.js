@@ -35,8 +35,6 @@ export default class Browse extends PureComponent {
     this.navigate = this.navigate.bind(this);
     this.handleShufflePlay = this.handleShufflePlay.bind(this);
     this.saveScrollPosition = this.saveScrollPosition.bind(this);
-
-    this.contexts = {};
   }
 
   componentDidMount() {
@@ -105,16 +103,13 @@ export default class Browse extends PureComponent {
   }
 
   navigate() {
-    const browsePath = this.props.browsePath;
-    const directories = this.props.directories;
-    const fetchDirectory = this.props.fetchDirectory;
-    if (!directories[browsePath]) {
+    const {
+      browsePath,
+      listing,
+      fetchDirectory,
+    } = this.props;
+    if (!listing) {
       fetchDirectory(browsePath);
-    }
-    if (directories[browsePath] && !this.contexts[browsePath]) {
-      this.contexts[browsePath] = directories[browsePath].map(item =>
-        item.path.replace('%', '%25').replace('#', '%23').replace(/^\//, '')
-      );
     }
   }
 
@@ -124,14 +119,14 @@ export default class Browse extends PureComponent {
 
   render() {
     const {
-      directories,
+      listing,
       browsePath,
+      playContext,
     } = this.props;
-    const listing = directories[browsePath] || [];
     const listingWithParent = [{
       path: '..',
       type: 'directory',
-    }, ...listing];
+    }, ...(listing || [])];
 
     return (
       <Fragment>
@@ -147,7 +142,7 @@ export default class Browse extends PureComponent {
         <this.VirtualDirectoryListing
           key={browsePath}
           {...this.props}
-          contexts={this.contexts}
+          playContext={playContext}
           items={listingWithParent}
           itemHeight={ITEM_HEIGHT}
           itemBuffer={ITEM_BUFFER}
