@@ -65,6 +65,7 @@ class App extends React.Component {
 
     this.attachMediaKeyHandlers();
     this.contentAreaRef = React.createRef();
+    window.ChipPlayer = this;
 
     // Initialize Firebase
     if (firebase.apps.length === 0) firebase.initializeApp(firebaseConfig);
