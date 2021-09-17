@@ -65,6 +65,7 @@ class App extends React.Component {
 
     this.attachMediaKeyHandlers();
     this.contentAreaRef = React.createRef();
+    this.playContexts = {};
     window.ChipPlayer = this;
 
     // Initialize Firebase
@@ -139,7 +140,6 @@ class App extends React.Component {
       volume: 100,
       repeat: REPEAT_OFF,
       directories: {},
-      playContexts: {},
     };
 
     // Load the chip-core Emscripten runtime
@@ -184,17 +184,11 @@ class App extends React.Component {
             const qs = queryString.stringify(urlParams);
             const search = qs ? `?${qs}` : '';
             // Navigate to song's containing folder. History comes from withRouter().
-            // TODO: eliminate the flaky 500ms delay; await directory fetch.
-            this.props.history.replace(`/browse/${dirname}${search}`);
-            // Allow a little time for initial page render before starting the song.
-            // This is not absolutely necessary but helps prevent stuttering.
-            setTimeout(() => {
-              if (this.state.playContexts[dirname]) {
-                const index = this.state.playContexts[dirname].indexOf(play);
-                this.playContext(this.state.playContexts[dirname], index);
-              } else {
-                this.sequencer.playSonglist([play]);
-              }
+            this.fetchDirectory(dirname).then(() => {
+              this.props.history.replace(`/browse/${dirname}${search}`);
+              const index = this.playContexts[dirname].indexOf(play);
+              this.playContext(this.playContexts[dirname], index);
+
               if (urlParams.t) {
                 setTimeout(() => {
                   if (this.sequencer.getPlayer()) {
@@ -202,7 +196,7 @@ class App extends React.Component {
                   }
                 }, 100);
               }
-            }, 500);
+            });
           }
         },
       });
@@ -583,7 +577,7 @@ class App extends React.Component {
   }
 
   fetchDirectory(path) {
-    fetch(`${API_BASE}/browse?path=%2F${encodeURIComponent(path)}`)
+    return fetch(`${API_BASE}/browse?path=%2F${encodeURIComponent(path)}`)
       .then(response => response.json())
       .then(json => {
         const arabicMap = {};
@@ -616,17 +610,14 @@ class App extends React.Component {
             item.idx = i;
             return item;
           });
+        this.playContexts[path] = items.map(item =>
+          item.path.replace('%', '%25').replace('#', '%23').replace(/^\//, '')
+        );
         const directories = {
           ...this.state.directories,
           [path]: items,
         };
-        const playContexts = {
-          ...this.state.playContexts,
-          [path]: items.map(item =>
-            item.path.replace('%', '%25').replace('#', '%23').replace(/^\//, '')
-          ),
-        };
-        this.setState({ directories, playContexts });
+        this.setState({ directories });
       });
   }
 
@@ -717,7 +708,7 @@ class App extends React.Component {
                                 locationKey={location.key}
                                 browsePath={browsePath}
                                 listing={this.state.directories[browsePath]}
-                                playContext={this.state.playContexts[browsePath]}
+                                playContext={this.playContexts[browsePath]}
                                 fetchDirectory={this.fetchDirectory}
                                 handleSongClick={this.handleSongClick}
                                 handleShufflePlay={this.handleShufflePlay}
