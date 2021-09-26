@@ -18,6 +18,7 @@
     "case-sensitive-paths-webpack-plugin": "2.1.1",
     "chalk": "^2.4.1",
     "chroma-js": "^1.4.0",
+    "comlink": "^4.3.1",
     "css-loader": "0.28.7",
     "directory-tree": "^2.2.1",
     "dotenv": "4.0.0",
@@ -87,7 +88,8 @@
     "trie-search": "1.2.8",
     "unzipper": "^0.9.3",
     "webpack-bundle-analyzer": "^3.3.2",
-    "worker-loader": "^2.0.0"
+    "worker-loader": "^2.0.0",
+    "worklet-loader": "^2.0.0"
   },
   "homepage": "http://mmontag.github.io/chip-player-js",
   "scripts": {
