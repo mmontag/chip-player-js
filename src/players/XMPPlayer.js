@@ -12,8 +12,8 @@ const fileExtensions = [
 ];
 
 export default class XMPPlayer extends Player {
-  constructor(audioCtx, destNode, chipCore, bufferSize) {
-    super(audioCtx, destNode, chipCore, bufferSize);
+  constructor(chipCore, sampleRate) {
+    super(chipCore, sampleRate);
 
     this.lib = chipCore;
     this.xmpCtx = chipCore._xmp_create_context();
@@ -28,23 +28,20 @@ export default class XMPPlayer extends Player {
     this.setAudioProcess(this.xmpAudioProcess);
   }
 
-  xmpAudioProcess(e) {
+  xmpAudioProcess(channels) {
     let err;
-    let i, channel;
+    let i, ch;
     const infoPtr = this.xmp_frame_infoPtr;
-    const channels = [];
-    for (channel = 0; channel < e.outputBuffer.numberOfChannels; channel++) {
-      channels[channel] = e.outputBuffer.getChannelData(channel);
-    }
+    const bufferSize = channels[0].length;
 
     if (this.paused) {
-      for (channel = 0; channel < channels.length; channel++) {
-        channels[channel].fill(0);
+      for (ch = 0; ch < channels.length; ch++) {
+        channels[ch].fill(0);
       }
       return;
     }
 
-    err = this.lib._xmp_play_buffer(this.xmpCtx, this.buffer, this.bufferSize * 4, 1);
+    err = this.lib._xmp_play_buffer(this.xmpCtx, this.buffer, bufferSize * 4, 1);
     if (err === -1) {
       this.stop();
     } else if (err !== 0) {
@@ -60,12 +57,12 @@ export default class XMPPlayer extends Player {
     this._positionMs = this.lib.getValue(infoPtr + 7 * 4, 'i32'); // xmp_frame_info.time
     this._maybeInjectTempo(bpm);
 
-    for (channel = 0; channel < channels.length; channel++) {
-      for (i = 0; i < this.bufferSize; i++) {
-        channels[channel][i] = this.lib.getValue(
+    for (ch = 0; ch < channels.length; ch++) {
+      for (i = 0; i < bufferSize; i++) {
+        channels[ch][i] = this.lib.getValue(
           this.buffer +           // Interleaved channel format
           i * 2 * 2 +             // frame offset   * bytes per sample * num channels +
-          channel * 2,            // channel offset * bytes per sample
+          ch * 2,                 // channel offset * bytes per sample
           'i16'                   // the sample values are signed 16-bit integers
         ) / INT16_MAX;            // convert int16 to float
       }
@@ -123,16 +120,15 @@ export default class XMPPlayer extends Player {
       throw Error('Unable to load this file!');
     }
 
-    err = this.lib._xmp_start_player(this.xmpCtx, this.audioCtx.sampleRate, 0);
+    err = this.lib._xmp_start_player(this.xmpCtx, this.sampleRate, 0);
     if (err !== 0) {
       console.error('xmp_start_player failed. error code: %d', err);
     }
 
     this.metadata = this._parseMetadata(filename);
 
-    this.connect();
     this.resume();
-    this.emit('playerStateUpdate', false);
+    this.emit('playerStateUpdate', { isStopped: false });
   }
 
   getVoiceMask() {
@@ -214,6 +210,6 @@ export default class XMPPlayer extends Player {
     this.suspend();
     this.lib._xmp_stop_module(this.xmpCtx);
     console.debug('XMPPlayer.stop()');
-    this.emit('playerStateUpdate', true);
+    this.emit('playerStateUpdate', { isStopped: true });
   }
 }
