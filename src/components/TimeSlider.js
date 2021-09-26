@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 import Slider from "./Slider";
 
 //  46 ms = 2048/44100 sec or 21.5 fps
@@ -23,10 +23,13 @@ export default class TimeSlider extends Component {
 
   componentDidMount() {
     this.timer = setInterval(() => {
-      const {getCurrentPositionMs, currentSongDurationMs} = this.props;
-      this.setState({
-        currentSongPositionMs: Math.min(getCurrentPositionMs(), currentSongDurationMs),
-      });
+      const { getCurrentPositionMs, currentSongDurationMs } = this.props;
+      if (getCurrentPositionMs && getCurrentPositionMs()) {
+        getCurrentPositionMs().then(positionMs =>
+          this.setState({
+            currentSongPositionMs: Math.min(positionMs, currentSongDurationMs),
+          }));
+      }
     }, UPDATE_INTERVAL_MS);
   }
 
