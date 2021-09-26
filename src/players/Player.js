@@ -20,21 +20,18 @@ import EventEmitter from 'events';
 // "stopped" is synonymous with closed/empty.
 //
 export default class Player extends EventEmitter {
-  constructor(audioCtx, destNode, chipCore, bufferSize) {
+  constructor(chipCore, sampleRate, bufferSize=2048, debug=false) {
     super();
 
-    this._outerAudioProcess = this._outerAudioProcess.bind(this);
+    this.process = this.process.bind(this);
 
     this.paused = true;
     this.fileExtensions = [];
     this.metadata = {};
-    this.audioCtx = audioCtx;
-    this.destinationNode = destNode;
+    this.sampleRate = sampleRate;
     this.bufferSize = bufferSize;
     this._innerAudioProcess = null;
-    this.audioNode = this.audioCtx.createScriptProcessor(this.bufferSize, 2, 2);
-    this.audioNode.onaudioprocess = this._outerAudioProcess;
-    this.debug = window.location.search.indexOf('debug=true') !== -1;
+    this.debug = debug; // window.location.search.indexOf('debug=true') !== -1;
     this.timeCount = 0;
     this.renderTime = 0;
     this.perfLoggingInterval = 100;
@@ -42,6 +39,7 @@ export default class Player extends EventEmitter {
 
   togglePause() {
     this.paused = !this.paused;
+    this.emit('playerStateUpdate', { paused: this.paused });
     return this.paused;
   }
 
@@ -132,13 +130,6 @@ export default class Player extends EventEmitter {
     return [];
   }
 
-  connect() {
-    if (!this._innerAudioProcess) {
-      throw Error('Player.setAudioProcess has not been called.');
-    }
-    this.audioNode.connect(this.destinationNode);
-  }
-
   suspend() {
     this.stopped = true;
     this.paused = true;
@@ -151,17 +142,18 @@ export default class Player extends EventEmitter {
     this._innerAudioProcess = fn;
   }
 
-  _outerAudioProcess(event) {
-    const start = performance.now();
-    this._innerAudioProcess(event);
-    const end = performance.now();
+  process(output) {
+    // TODO: AudioWorkletGlobalScope's currentTime doesn't work for performance measurement
+    const start = global.currentTime || performance.now();
+    this._innerAudioProcess(output);
+    const end = global.currentTime || performance.now();
 
     if (this.debug) {
       this.renderTime += end - start;
       this.timeCount++;
       if (this.timeCount >= this.perfLoggingInterval) {
         const cost = this.renderTime / this.timeCount;
-        const budget = 1000 * this.bufferSize / this.audioCtx.sampleRate;
+        const budget = 1000 * this.bufferSize / this.sampleRate;
         console.log(
           '[%s] %s ms to render %d frames (%s ms) (%s% utilization)',
           this.constructor.name,
