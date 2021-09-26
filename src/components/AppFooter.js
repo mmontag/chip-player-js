@@ -19,8 +19,10 @@ export default class AppFooter extends React.PureComponent {
       currentSongSubtune,
       ejected,
       faves,
+      hasPlayer,
       imageUrl,
       infoTexts,
+      paramDefs,
       paused,
       playerError,
       repeat,
@@ -117,13 +119,7 @@ export default class AppFooter extends React.PureComponent {
             <div style={{ display: 'flex', flexDirection: 'row' }}>
               <TimeSlider
                 currentSongDurationMs={currentSongDurationMs}
-                getCurrentPositionMs={() => {
-                  // TODO: reevaluate this approach
-                  if (sequencer && sequencer.getPlayer()) {
-                    return sequencer.getPlayer().getPositionMs();
-                  }
-                  return 0;
-                }}
+                getCurrentPositionMs={sequencer ? sequencer.getPositionMs : null}
                 onChange={handleTimeSliderChange}/>
               <VolumeSlider
                 onChange={(e) => {
@@ -175,7 +171,7 @@ export default class AppFooter extends React.PureComponent {
               Close
             </button>
           </div>
-          {sequencer.getPlayer() ?
+          {false && hasPlayer ?
             <PlayerParams
               ejected={ejected}
               tempo={tempo}
@@ -184,9 +180,9 @@ export default class AppFooter extends React.PureComponent {
               voiceNames={voiceNames}
               handleTempoChange={handleTempoChange}
               handleSetVoiceMask={handleSetVoiceMask}
-              getParameter={sequencer.getPlayer().getParameter}
-              setParameter={sequencer.getPlayer().setParameter}
-              paramDefs={sequencer.getPlayer().getParamDefs()}/>
+              getParameter={sequencer.getParameter}
+              setParameter={sequencer.setParameter}
+              paramDefs={paramDefs}/>
             :
             <div>(No active player)</div>}
         </div>}
