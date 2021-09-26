@@ -77,8 +77,9 @@ export default class GMEPlayer extends Player {
       if (this.params.subbass > 0) {
         for (i = 0; i < this.bufferSize; i++) {
           const sub = this.subBass.process(channels[0][i]) * this.params.subbass;
-          channels[0][i] += sub;
-          channels[1][i] += sub;
+          for (let ch = 0; ch < channels.length; ch++) {
+            channels[ch][i] += sub;
+          }
         }
       }
     } else {
