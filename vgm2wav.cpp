@@ -16,6 +16,7 @@
 #include "player/vgmplayer.hpp"
 #include "player/s98player.hpp"
 #include "player/droplayer.hpp"
+#include "player/playera.hpp"
 #include "utils/DataLoader.h"
 #include "utils/FileLoader.h"
 #include "emu/SoundDevs.h"
@@ -75,13 +76,10 @@ static int
 write_wav_header(FILE *f, unsigned int totalFrames);
 
 static void
-pack_frames(UINT8 *d, unsigned int frame_count, WAVE_32BS *data);
+frames_to_little_endian(UINT8 *data, unsigned int frame_count);
 
 static int
 write_frames(FILE *f, unsigned int frame_count, UINT8 *d);
-
-static void
-fade_frames(unsigned int frames_rem, unsigned int frames_fade, unsigned int frame_count, WAVE_32BS *data);
 
 static unsigned int
 scan_uint(const char *str);
@@ -93,7 +91,8 @@ static const char *
 extensible_guid_trailer= "\x00\x00\x00\x00\x10\x00\x80\x00\x00\xAA\x00\x38\x9B\x71";
 
 int main(int argc, const char *argv[]) {
-    PlayerBase *player;
+    PlayerA player;
+    PlayerBase* plrEngine;
 
     unsigned int totalFrames;
     unsigned int fadeFrames;
@@ -104,7 +103,6 @@ int main(int argc, const char *argv[]) {
     const char *s;
     FILE *f;
     DATA_LOADER *loader;
-    WAVE_32BS *buffer;
     UINT8 *packed;
     double complete;
     double inc;
@@ -209,15 +207,6 @@ int main(int argc, const char *argv[]) {
      * Since this is just a CLI app, we can just quit and let
      * the OS handle everything. */
 
-    /* libvgm renders sames to a WAVE_32BS object - a struct
-     * representing left and right samples (in that order) of
-     * a single PCM frame */
-    buffer = (WAVE_32BS *)malloc(sizeof(WAVE_32BS) * BUFFER_LEN);
-    if(buffer == NULL) {
-        fprintf(stderr,"out of memory\n");
-        return 1;
-    }
-
     /* we'll want to make sure to pack our audio samples
      * into little-endian, interleaved format.
      * If we only supported 16-bit samples this could be
@@ -228,6 +217,26 @@ int main(int argc, const char *argv[]) {
     if(packed == NULL) {
         fprintf(stderr,"out of memory\n");
         return 1;
+    }
+
+    /* Register all player engines.
+     * libvgm will automatically choose the correct one depending on the file format. */
+    player.RegisterPlayerEngine(new VGMPlayer);
+    player.RegisterPlayerEngine(new S98Player);
+    player.RegisterPlayerEngine(new DROPlayer);
+
+    /* setup the player's output parameters and allocate internal buffers */
+    player.SetOutputSettings(sample_rate, 2, bit_depth, BUFFER_LEN);
+
+    /* set playback parameters */
+    {
+        PlayerA::Config pCfg = player.GetConfiguration();
+        pCfg.masterVol = 0x10000;	// == 1.0 == 100%
+        pCfg.loopCount = loops;
+        pCfg.fadeSmpls = sample_rate * fade_len;
+        pCfg.endSilenceSmpls = 0;
+        pCfg.pbSpeed = 1.0;
+        player.SetConfiguration(pCfg);
     }
 
     f = fopen(argv[1],"wb");
@@ -255,27 +264,13 @@ int main(int argc, const char *argv[]) {
         return 1;
     }
 
-    /* figure out a player */
-    if(VGMPlayer::PlayerCanLoadFile(loader) == 0) {
-        player = new VGMPlayer();
-    }
-    else if(S98Player::PlayerCanLoadFile(loader) == 0) {
-        player = new S98Player();
-    }
-    else if(DROPlayer::PlayerCanLoadFile(loader) == 0) {
-        player = new DROPlayer();
-    }
-    else {
-        fprintf(stderr,"Unsupported file\n");
-        return 1;
-    }
-
     /* associate the fileloader to the player -
      * automatically reads the rest of the file */
-    if(player->LoadFile(loader)) {
+    if(player.LoadFile(loader)) {
         fprintf(stderr,"failed to load file\n");
         return 1;
     }
+    plrEngine = player.GetPlayer();
 
     /* example for setting cores */
     /* TODO provide interface for user to specify cores
@@ -285,38 +280,35 @@ int main(int argc, const char *argv[]) {
      *   ???
      */
     /* commented-out since NUKE uses a lot of CPU */
-    // set_core(player,DEVID_YM2612,FCC_NUKE);
+    // set_core(plrEngine,DEVID_YM2612,FCC_NUKE);
 
     /* let's get some tags! just printing for now.
      * if we wanted to get *really* fancy we could add
      * an "id3 " chunk or "LIST" "INFO" chunk to the
      * wave file. */
-    tags = player->GetTags();
+    tags = plrEngine->GetTags();
     while(*tags) {
         fprintf(stderr,"%s: %s\n",tags[0],tags[1]);
         tags += 2;
     }
 
-    /* set our desired sample rate */
-    player->SetSampleRate(sample_rate);
-
     /* need to call Start before calls like Tick2Sample or
      * checking any kind of timing info, because
      * Start updates the sample rate multiplier/divisors */
-    player->Start();
+    player.Start();
 
-    dump_info(player);
+    dump_info(plrEngine);
 
     /* libvgm uses the term "Sample" but its' really a PCM frame! */
     /* In a mono configuration, 1 frame = 1 sample, in a stereo
      * configuration, 1 frame = (left sample + right sample) */
 
     /* figure out how many total frames we're going to render */
-    totalFrames = player->Tick2Sample(player->GetTotalPlayTicks(loops));
+    totalFrames = plrEngine->Tick2Sample(plrEngine->GetTotalPlayTicks(loops));
 
     /* we only want to fade if there's a looping section. Assumption is
      * if the VGM doesn't specify a loop, it's a song with an actual ending */
-    if(player->GetLoopTicks()) {
+    if(plrEngine->GetLoopTicks()) {
         fadeFrames = sample_rate * fade_len;
         totalFrames += fadeFrames;
     }
@@ -326,7 +318,7 @@ int main(int argc, const char *argv[]) {
     fprintf(stderr,"Samplerate: %u\n",sample_rate);
     fprintf(stderr,"BPS: %u\n",bit_depth);
     fprintf(stderr,"Channels: 2\n");
-    fprintf(stderr,"Length: %s\n",fmt_time(player->Sample2Second(totalFrames)));
+    fprintf(stderr,"Length: %s\n",fmt_time(plrEngine->Sample2Second(totalFrames)));
 
     write_wav_header(f,totalFrames);
 
@@ -340,25 +332,21 @@ int main(int argc, const char *argv[]) {
 
     while(totalFrames) {
 
-        memset(buffer,0,sizeof(WAVE_32BS) * BUFFER_LEN);
         memset(packed,0,sizeof(INT32)     * BUFFER_LEN * 2);
 
         /* default to BUFFER_LEN PCM frames unless we have under BUFFER_LEN remaining */
         curFrames = (BUFFER_LEN > totalFrames ? totalFrames : BUFFER_LEN);
 
-        player->Render(curFrames,buffer);
+        player.Render(curFrames * ((bit_depth / 8) * 2),packed);
 
-        /* apply a fade if we've entered the fade section, nothing otherwise */
-        fade_frames(totalFrames, fadeFrames, curFrames, buffer);
-
-        /* back our WAVE_32BS frames into little-endian bytes */
+        /* convert machine-native frames into little-endian bytes */
         /* if this were a plugin in a music player, we likely wouldn't
          * want to pack into bytes like this - presumably, the host
          * application would handle converting machine-native PCM frames
          * into whatever's needed. We could have to "pack" into machine-native
          * samples, like INT16, or maybe de-interleave into separate buffers
          * for the left and right channels. */
-        pack_frames(packed, curFrames, buffer);
+        frames_to_little_endian(packed, curFrames);
 
         /* write out to disk */
         write_frames(f, curFrames, packed);
@@ -374,13 +362,14 @@ int main(int argc, const char *argv[]) {
         }
     }
     fprintf(stderr,"]\n");
+    player.Stop();
+    player.UnloadFile();
 
-    free(buffer);
     free(packed);
+    player.UnregisterAllPlayers();
     DataLoader_Deinit(loader);
     fclose(f);
 
-    delete player;
     return 0;
 }
 
@@ -581,30 +570,18 @@ static int write_wav_header(FILE *f, unsigned int totalFrames) {
     return 1;
 }
 
-static void pack_frames(UINT8 *d, unsigned int frame_count, WAVE_32BS *data) {
+static void frames_to_little_endian(UINT8 *data, unsigned int frame_count) {
     unsigned int i = 0;
     while(i<frame_count) {
-        if(data[i].L < -8388608) {
-            data[i].L = -8388608;
-        } else if(data[i].L > 8388607) {
-            data[i].L = 8388607;
-        }
-        if(data[i].R < -8388608) {
-            data[i].R = -8388608;
-        } else if(data[i].R > 8388607) {
-            data[i].R = 8388607;
-        }
         if(bit_depth == 16) {
-            data[i].L = (INT16)((UINT32)data[i].L >> 8);
-            data[i].R = (INT16)((UINT32)data[i].R >> 8);
-            pack_int16le(&d[ 0 ], (INT16)data[i].L);
-            pack_int16le(&d[ 2 ], (INT16)data[i].R);
+            pack_int16le(&data[0], *(INT16*)&data[0]);
+            pack_int16le(&data[2], *(INT16*)&data[2]);
         } else {
-            pack_int24le(&d[ 0 ], data[i].L);
-            pack_int24le(&d[ 3 ], data[i].R);
+            pack_int24le(&data[0], *(INT32*)&data[0] & 0x00FFFFFF);
+            pack_int24le(&data[3], *(INT32*)&data[3] & 0x00FFFFFF);
         }
         i++;
-        d += ((bit_depth / 8) * 2);
+        data += ((bit_depth / 8) * 2);
     }
 }
 
@@ -612,38 +589,6 @@ static int write_frames(FILE *f, unsigned int frame_count, UINT8 *d) {
     return fwrite(d,(bit_depth / 8) * 2,frame_count,f) == frame_count;
 }
 
-
-/* apply a fade to a buffer of frames */
-/* frames_rem - remaining total frames, includes fade frames */
-/* frames_fade - total number of fade sampes */
-/* frame_count - number of frames being rendered right now */
-static void fade_frames(unsigned int frames_rem, unsigned int frames_fade, unsigned int frame_count, WAVE_32BS *data) {
-    unsigned int i = 0;
-    unsigned int f = frames_fade;
-    UINT64 fade_vol;
-    double fade;
-
-    if(frames_rem - frame_count > frames_fade) return;
-    if(frames_rem > frames_fade) {
-        i = frames_rem - frames_fade;
-        f += i;
-    } else {
-        f = frames_rem;
-    }
-    while(i<frame_count) {
-        fade = (double)(f-i) / (double)frames_fade;
-        fade *= fade;
-        fade_vol = (UINT64)((f - i)) * (1 << 16);
-        fade_vol /= frames_fade;
-        fade_vol *= fade_vol;
-        fade_vol >>= 16;
-
-        data[i].L = (INT32)(((UINT64)data[i].L * fade_vol) >> 16);
-        data[i].R = (INT32)(((UINT64)data[i].R * fade_vol) >> 16);
-        i++;
-    }
-    return;
-}
 
 static unsigned int scan_uint(const char *str) {
     const char *s = str;
@@ -657,4 +602,3 @@ static unsigned int scan_uint(const char *str) {
 
     return num;
 }
-

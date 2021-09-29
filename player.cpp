@@ -36,6 +36,7 @@ extern "C" int __cdecl _kbhit(void);
 #include "player/s98player.hpp"
 #include "player/droplayer.hpp"
 #include "player/vgmplayer.hpp"
+#include "player/playera.hpp"
 #include "audio/AudioStream.h"
 #include "audio/AudioStream_SpcDrvFuns.h"
 #include "emu/Resampler.h"
@@ -50,9 +51,7 @@ static void DoChipControlMode(PlayerBase* player);
 static void StripNewline(char* str);
 static std::string FCC2Str(UINT32 fcc);
 static UINT8 *SlurpFile(const char *fileName, UINT32 *fileSize);
-static UINT8 GetPlayerForFile(DATA_LOADER *dLoad, PlayerBase** retPlayer);
 static const char* GetFileTitle(const char* filePath);
-static UINT32 CalcCurrentVolume(UINT32 playbackSmpl);
 static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void* Data);
 static UINT8 FilePlayCallback(PlayerBase* player, void* userParam, UINT8 evtType, void* evtParam);
 static DATA_LOADER* RequestFileCallback(void* userParam, PlayerBase* player, const char* fileName);
@@ -70,13 +69,9 @@ static int _kbhit(void);
 #endif
 
 
-static UINT32 smplSize;
 static void* audDrv;
 static void* audDrvLog;
-static UINT32 smplAlloc;
-static WAVE_32BS* smplData;
-static UINT32 localAudBufSize;
-static void* localAudBuffer;
+static std::vector<UINT8> locAudBuf;	// local audio buffer (for WAV dumping)
 static OS_MUTEX* renderMtx;	// render thread mutex
 
 static UINT32 sampleRate = 44100;
@@ -92,22 +87,17 @@ static INT32 AudioOutDrv = -2;
 static INT32 WaveWrtDrv = -1;
 
 static UINT32 masterVol = 0x10000;	// fixed point 16.16
-static UINT32 fadeSmplStart;
-static UINT32 fadeSmplTime;
 
 static UINT8 showTags = 1;
 static bool showFileInfo = false;
 
-static DROPlayer* droPlr;
-static S98Player* s98Plr;
-static VGMPlayer* vgmPlr;
+static PlayerA mainPlr;
 
 int main(int argc, char* argv[])
 {
 	int argbase;
 	UINT8 retVal;
 	DATA_LOADER *dLoad;
-	PlayerBase* player;
 	int curSong;
 	bool needRefresh;
 	
@@ -134,16 +124,27 @@ int main(int argc, char* argv[])
 	
 	// I'll keep the instances of the players for the program's life time.
 	// This way player/chip options are kept between track changes.
-	droPlr = new DROPlayer;
-	s98Plr = new S98Player;
-	vgmPlr = new VGMPlayer;
-	
+	mainPlr.RegisterPlayerEngine(new VGMPlayer);
+	mainPlr.RegisterPlayerEngine(new S98Player);
+	mainPlr.RegisterPlayerEngine(new DROPlayer);
+	mainPlr.SetEventCallback(FilePlayCallback, NULL);
+	mainPlr.SetFileReqCallback(RequestFileCallback, NULL);
+	//mainPlr.SetOutputSettings() is done in StartAudioDevice()
+	{
+		PlayerA::Config pCfg = mainPlr.GetConfiguration();
+		pCfg.masterVol = masterVol;
+		pCfg.loopCount = maxLoops;
+		pCfg.fadeSmpls = sampleRate * 4;	// fade over 4 seconds
+		pCfg.endSilenceSmpls = sampleRate / 2;	// 0.5 seconds of silence at the end
+		pCfg.pbSpeed = 1.0;
+		mainPlr.SetConfiguration(pCfg);
+	}
+
 	for (curSong = argbase; curSong < argc; curSong ++)
 	{
 	
 	printf("Loading %s ...  ", GetFileTitle(argv[curSong]));
 	fflush(stdout);
-	player = NULL;
 
 #ifdef USE_MEMORY_LOADER
 	UINT32 fileSize;
@@ -159,20 +160,20 @@ int main(int argc, char* argv[])
 	if (retVal)
 	{
 		DataLoader_CancelLoading(dLoad);
+		DataLoader_Deinit(dLoad);
 		fprintf(stderr, "Error 0x%02X loading file!\n", retVal);
 		continue;
 	}
-	retVal = GetPlayerForFile(dLoad, &player);
+	retVal = mainPlr.LoadFile(dLoad);
 	if (retVal)
 	{
 		DataLoader_CancelLoading(dLoad);
-		player = NULL;
+		DataLoader_Deinit(dLoad);
 		fprintf(stderr, "Error 0x%02X loading file!\n", retVal);
 		continue;
 	}
-	player->SetEventCallback(FilePlayCallback, NULL);
-	player->SetFileReqCallback(RequestFileCallback, NULL);
 	
+	PlayerBase* player = mainPlr.GetPlayer();
 	if (player->GetPlayerType() == FCC_S98)
 	{
 		S98Player* s98play = dynamic_cast<S98Player*>(player);
@@ -288,13 +289,11 @@ int main(int argc, char* argv[])
 		}
 	}
 	
-	player->SetSampleRate(sampleRate);
-	player->Start();
-	fadeSmplTime = player->GetSampleRate() * 4;
-	fadeSmplStart = (UINT32)-1;
+	mainPlr.Start();
 	
 	if (showFileInfo)
 	{
+		// only after calling PlayerA::Start() we can obtain info about the currently used sound cores
 		PLR_SONG_INFO sInf;
 		std::vector<PLR_DEV_INFO> diList;
 		size_t curDev;
@@ -315,7 +314,7 @@ int main(int argc, char* argv[])
 	StartDiskWriter("waveOut.wav");
 	
 	if (audDrv != NULL)
-		retVal = AudioDrv_SetCallback(audDrv, FillBuffer, &player);
+		retVal = AudioDrv_SetCallback(audDrv, FillBuffer, &mainPlr);
 	else
 		retVal = 0xFF;
 	manualRenderLoop = (retVal != 0x00);
@@ -334,20 +333,21 @@ int main(int argc, char* argv[])
 			
 			if (playState & PLAYSTATE_PAUSE)
 				pState = "Paused";
-			else if (fadeSmplStart != (UINT32)-1)
-				pState = "Fading";
+			else if (mainPlr.GetState() & PLAYSTATE_END)
+				pState = "Finish ";
+			else if (mainPlr.GetState() & PLAYSTATE_FADE)
+				pState = "Fading ";
 			else
 				pState = "Playing";
-			printf("%s %.2f / %.2f ...   \r", pState, player->Sample2Second(player->GetCurPos(PLAYPOS_SAMPLE)),
-					player->Tick2Second(player->GetTotalPlayTicks(maxLoops)));
+			printf("%s %.2f / %.2f ...   \r", pState, mainPlr.GetCurTime(1), mainPlr.GetTotalTime(1));
 			fflush(stdout);
 			needRefresh = false;
 		}
 		
 		if (manualRenderLoop && ! (playState & PLAYSTATE_PAUSE))
 		{
-			UINT32 wrtBytes = FillBuffer(audDrvLog, &player, localAudBufSize, localAudBuffer);
-			AudioDrv_WriteData(audDrvLog, wrtBytes, localAudBuffer);
+			UINT32 wrtBytes = FillBuffer(audDrvLog, &mainPlr, (UINT32)locAudBuf.size(), &locAudBuf[0]);
+			AudioDrv_WriteData(audDrvLog, wrtBytes, &locAudBuf[0]);
 		}
 		else
 		{
@@ -373,8 +373,7 @@ int main(int argc, char* argv[])
 			else if (letter == 'R')	// restart
 			{
 				OSMutex_Lock(renderMtx);
-				player->Reset();
-				fadeSmplStart = (UINT32)-1;
+				mainPlr.Reset();
 				OSMutex_Unlock(renderMtx);
 			}
 			else if (letter >= '0' && letter <= '9')
@@ -384,12 +383,10 @@ int main(int argc, char* argv[])
 				UINT32 destPos;
 				
 				OSMutex_Lock(renderMtx);
-				maxPos = player->GetTotalPlayTicks(maxLoops);
+				maxPos = mainPlr.GetPlayer()->GetTotalPlayTicks(maxLoops);
 				pbPos10 = letter - '0';
 				destPos = maxPos * pbPos10 / 10;
-				player->Seek(PLAYPOS_TICK, destPos);
-				if (player->GetCurPos(PLAYPOS_SAMPLE) < fadeSmplStart)
-					fadeSmplStart = (UINT32)-1;
+				mainPlr.Seek(PLAYPOS_TICK, destPos);
 				OSMutex_Unlock(renderMtx);
 			}
 			else if (letter == 'B')	// previous file
@@ -412,11 +409,13 @@ int main(int argc, char* argv[])
 			}
 			else if (letter == 'F')	// fade out
 			{
-				fadeSmplStart = player->GetCurPos(PLAYPOS_SAMPLE);
+				OSMutex_Lock(renderMtx);
+				mainPlr.FadeOut();
+				OSMutex_Unlock(renderMtx);
 			}
 			else if (letter == 'C')	// chip control
 			{
-				DoChipControlMode(player);
+				DoChipControlMode(mainPlr.GetPlayer());
 			}
 			needRefresh = true;
 		}
@@ -431,19 +430,16 @@ int main(int argc, char* argv[])
 	
 	StopDiskWriter();
 	
-	player->Stop();
-	player->UnloadFile();
-	DataLoader_Deinit(dLoad);
-	player = NULL; dLoad = NULL;
+	mainPlr.Stop();
+	mainPlr.UnloadFile();
+	DataLoader_Deinit(dLoad);	dLoad = NULL;
 #ifdef USE_MEMORY_LOADER
 	free(fileData);
 #endif
 	
 	}	// end for(curSong)
 	
-	delete droPlr;
-	delete s98Plr;
-	delete vgmPlr;
+	mainPlr.UnregisterAllPlayers();
 	
 	StopAudioDevice();
 	DeinitAudioSystem();
@@ -842,26 +838,6 @@ static UINT8 *SlurpFile(const char *fileName, UINT32 *fileSize)
 	return fileData;
 }
 
-static UINT8 GetPlayerForFile(DATA_LOADER *dLoad, PlayerBase** retPlayer)
-{
-	UINT8 retVal;
-	PlayerBase* player;
-	
-	if (! vgmPlr->CanLoadFile(dLoad))
-		player = vgmPlr;
-	else if (! s98Plr->CanLoadFile(dLoad))
-		player = s98Plr;
-	else if (! droPlr->CanLoadFile(dLoad))
-		player = droPlr;
-	else
-		return 0xFF;
-	
-	retVal = player->LoadFile(dLoad);
-	if (retVal < 0x80)
-		*retPlayer = player;
-	return retVal;
-}
-
 static const char* GetFileTitle(const char* filePath)
 {
 	const char* dirSep1;
@@ -875,128 +851,22 @@ static const char* GetFileTitle(const char* filePath)
 	return (dirSep1 == NULL) ? filePath : (dirSep1 + 1);
 }
 
-#if 1
-#define VOLCALC64
-#define VOL_BITS	16	// use .X fixed point for working volume
-#else
-#define VOL_BITS	8	// use .X fixed point for working volume
-#endif
-#define VOL_SHIFT	(16 - VOL_BITS)	// shift for master volume -> working volume
-
-// Pre- and post-shifts are used to make the calculations as accurate as possible
-// without causing the sample data (likely 24 bits) to overflow while applying the volume gain.
-// Smaller values for VOL_PRESH are more accurate, but have a higher risk of overflows during calculations.
-// (24 + VOL_POSTSH) must NOT be larger than 31
-#define VOL_PRESH	4	// sample data pre-shift
-#define VOL_POSTSH	(VOL_BITS - VOL_PRESH)	// post-shift after volume multiplication
-
-static UINT32 CalcCurrentVolume(UINT32 playbackSmpl)
-{
-	UINT32 curVol;	// 16.16 fixed point
-	
-	// 1. master volume
-	curVol = masterVol;
-	
-	// 2. apply fade-out factor
-	if (playbackSmpl >= fadeSmplStart)
-	{
-		UINT32 fadeSmpls;
-		UINT64 fadeVol;	// 64 bit for less type casts when doing multiplications with .16 fixed point
-		
-		fadeSmpls = playbackSmpl - fadeSmplStart;
-		if (fadeSmpls >= fadeSmplTime)
-			return 0x0000;	// going beyond fade time -> volume 0
-		
-		fadeVol = (UINT64)fadeSmpls * 0x10000 / fadeSmplTime;
-		fadeVol = 0x10000 - fadeVol;	// fade from full volume to silence
-		fadeVol = fadeVol * fadeVol;	// logarithmic fading sounds nicer
-		curVol = (UINT32)((fadeVol * curVol) >> 32);
-	}
-	
-	return curVol;
-}
-
 static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void* data)
 {
-	PlayerBase* player;
-	UINT32 basePbSmpl;
-	UINT32 smplCount;
-	UINT32 smplRendered;
-	INT16* SmplPtr16;
-	UINT32 curSmpl;
-	WAVE_32BS fnlSmpl;	// final sample value
-	INT32 curVolume;
-	
-	smplCount = bufSize / smplSize;
-	if (! smplCount)
-		return 0;
-	
-	player = *(PlayerBase**)userParam;
-	if (player == NULL)
+	PlayerA& myPlr = *(PlayerA*)userParam;
+	if (! (myPlr.GetState() & PLAYSTATE_PLAY))
 	{
-		memset(data, 0x00, smplCount * smplSize);
-		return smplCount * smplSize;
-	}
-	if (! (player->GetState() & PLAYSTATE_PLAY))
-	{
-		fprintf(stderr, "Player Warning: calling Render while not playing! playState = 0x%02X\n", player->GetState());
-		memset(data, 0x00, smplCount * smplSize);
-		return smplCount * smplSize;
+		fprintf(stderr, "Player Warning: calling Render while not playing! playState = 0x%02X\n", myPlr.GetState());
+		memset(data, 0x00, bufSize);
+		return bufSize;
 	}
 	
+	UINT32 renderedBytes;
 	OSMutex_Lock(renderMtx);
-	if (smplCount > smplAlloc)
-		smplCount = smplAlloc;
-	memset(smplData, 0, smplCount * sizeof(WAVE_32BS));
-	basePbSmpl = player->GetCurPos(PLAYPOS_SAMPLE);
-	smplRendered = player->Render(smplCount, smplData);
-	smplCount = smplRendered;
-	
-	curVolume = (INT32)CalcCurrentVolume(basePbSmpl) >> VOL_SHIFT;
-	SmplPtr16 = (INT16*)data;
-	for (curSmpl = 0; curSmpl < smplCount; curSmpl ++, basePbSmpl ++, SmplPtr16 += 2)
-	{
-		if (basePbSmpl >= fadeSmplStart)
-		{
-			UINT32 fadeSmpls;
-			
-			fadeSmpls = basePbSmpl - fadeSmplStart;
-			if (fadeSmpls >= fadeSmplTime && ! (playState & PLAYSTATE_END))
-			{
-				playState |= PLAYSTATE_END;
-				break;
-			}
-			
-			curVolume = (INT32)CalcCurrentVolume(basePbSmpl) >> VOL_SHIFT;
-		}
-		
-		// Input is about 24 bits (some cores might output a bit more)
-		fnlSmpl = smplData[curSmpl];
-		
-#ifdef VOLCALC64
-		fnlSmpl.L = (INT32)( ((INT64)fnlSmpl.L * curVolume) >> VOL_BITS );
-		fnlSmpl.R = (INT32)( ((INT64)fnlSmpl.R * curVolume) >> VOL_BITS );
-#else
-		fnlSmpl.L = ((fnlSmpl.L >> VOL_PRESH) * curVolume) >> VOL_POSTSH;
-		fnlSmpl.R = ((fnlSmpl.R >> VOL_PRESH) * curVolume) >> VOL_POSTSH;
-#endif
-		
-		fnlSmpl.L >>= 8;	// 24 bit -> 16 bit
-		fnlSmpl.R >>= 8;
-		if (fnlSmpl.L < -0x8000)
-			fnlSmpl.L = -0x8000;
-		else if (fnlSmpl.L > +0x7FFF)
-			fnlSmpl.L = +0x7FFF;
-		if (fnlSmpl.R < -0x8000)
-			fnlSmpl.R = -0x8000;
-		else if (fnlSmpl.R > +0x7FFF)
-			fnlSmpl.R = +0x7FFF;
-		SmplPtr16[0] = (INT16)fnlSmpl.L;
-		SmplPtr16[1] = (INT16)fnlSmpl.R;
-	}
+	renderedBytes = myPlr.Render(bufSize, data);
 	OSMutex_Unlock(renderMtx);
 	
-	return curSmpl * smplSize;
+	return renderedBytes;
 }
 
 static UINT8 FilePlayCallback(PlayerBase* player, void* userParam, UINT8 evtType, void* evtParam)
@@ -1012,20 +882,6 @@ static UINT8 FilePlayCallback(PlayerBase* player, void* userParam, UINT8 evtType
 	case PLREVT_LOOP:
 		{
 			UINT32* curLoop = (UINT32*)evtParam;
-			if (*curLoop >= maxLoops)
-			{
-				if (fadeSmplTime)
-				{
-					if (fadeSmplStart == (UINT32)-1)
-						fadeSmplStart = player->GetCurPos(PLAYPOS_SAMPLE);
-				}
-				else
-				{
-					printf("Loop End.\n");
-					playState |= PLAYSTATE_END;	// prevent "Song End" message
-					return 0x01;	// Note: will trigger PLREVT_END
-				}
-			}
 			if (player->GetState() & PLAYSTATE_SEEK)
 				break;
 			printf("Loop %u.\n", 1 + *curLoop);
@@ -1161,10 +1017,12 @@ static UINT8 StartAudioDevice(void)
 {
 	AUDIO_OPTS* opts;
 	UINT8 retVal;
+	UINT32 smplSize;
+	UINT32 smplAlloc;
+	UINT32 localAudBufSize;
 	
 	opts = NULL;
 	smplAlloc = 0x00;
-	smplData = NULL;
 	
 	if (audDrv != NULL)
 		opts = AudioDrv_GetOptions(audDrv);
@@ -1196,8 +1054,8 @@ static UINT8 StartAudioDevice(void)
 		localAudBufSize = smplAlloc * smplSize;
 	}
 	
-	smplData = (WAVE_32BS*)malloc(smplAlloc * sizeof(WAVE_32BS));
-	localAudBuffer = localAudBufSize ? malloc(localAudBufSize) : NULL;
+	locAudBuf.resize(localAudBufSize);
+	mainPlr.SetOutputSettings(opts->sampleRate, opts->numChannels, opts->numBitsPerSmpl, smplAlloc);
 	
 	return 0x00;
 }
@@ -1209,8 +1067,7 @@ static UINT8 StopAudioDevice(void)
 	retVal = 0x00;
 	if (audDrv != NULL)
 		retVal = AudioDrv_Stop(audDrv);
-	free(smplData);	smplData = NULL;
-	free(localAudBuffer);	localAudBuffer = NULL;
+	locAudBuf.clear();
 	
 	return retVal;
 }
