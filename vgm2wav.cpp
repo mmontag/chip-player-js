@@ -226,7 +226,10 @@ int main(int argc, const char *argv[]) {
     player.RegisterPlayerEngine(new DROPlayer);
 
     /* setup the player's output parameters and allocate internal buffers */
-    player.SetOutputSettings(sample_rate, 2, bit_depth, BUFFER_LEN);
+    if (player.SetOutputSettings(sample_rate, 2, bit_depth, BUFFER_LEN)) {
+        fprintf(stderr, "Unsupported sample rate / bps\n");
+        return 1;
+    }
 
     /* set playback parameters */
     {

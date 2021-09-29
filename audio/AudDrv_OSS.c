@@ -290,10 +290,9 @@ UINT8 OSS_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audDrv
 		drv->ossParams.format = AFMT_U8;
 	else if (drv->waveFmt.wBitsPerSample == 16)
 		drv->ossParams.format = AFMT_S16_NE;
-#ifdef AFMT_S24_NE
+#ifdef AFMT_S24_PACKED
 	else if (drv->waveFmt.wBitsPerSample == 24)
-		//drv->ossParams.format = AFMT_S24_NE;
-		return 0xCF;	// this is 32-bit samples with a 24-bit range, but we'd need 3-byte samples
+		drv->ossParams.format = AFMT_S24_PACKED;
 #endif
 #ifdef AFMT_S32_NE
 	else if (drv->waveFmt.wBitsPerSample == 32)

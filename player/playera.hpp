@@ -23,7 +23,8 @@ public:
 		UINT32 endSilenceSmpls;
 		double pbSpeed;
 	};
-	
+	typedef void (*PLR_SMPL_PACK)(void* buffer, INT32 value);
+
 	PlayerA();
 	~PlayerA();
 	void RegisterPlayerEngine(PlayerBase* player);
@@ -81,7 +82,9 @@ private:
 	
 	UINT8 _outSmplChns;
 	UINT8 _outSmplBits;
-	UINT32 _outSmplSize;
+	UINT32 _outSmplSize1;	// for 1 channel
+	UINT32 _outSmplSizeA;	// for all channels
+	PLR_SMPL_PACK _outSmplPack;
 	std::vector<WAVE_32BS> _smplBuf;
 	PlayerBase* _player;
 	DATA_LOADER* _dLoad;

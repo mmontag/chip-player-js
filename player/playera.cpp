@@ -9,6 +9,74 @@
 
 #include "playera.hpp"
 
+struct int24_s
+{
+	INT32 data : 24;
+};
+
+static void SampleConv_toU8(void* buffer, INT32 value)
+{
+	value >>= 16;	// 24 bit -> 8 bit
+	if (value < -0x80)
+		value = -0x80;
+	else if (value > +0x7F)
+		value = +0x7F;
+	*(UINT8*)buffer = (UINT8)(0x80 + value);
+	return;
+}
+
+static void SampleConv_toS16(void* buffer, INT32 value)
+{
+	value >>= 8;	// 24 bit -> 16 bit
+	if (value < -0x8000)
+		value = -0x8000;
+	else if (value > +0x7FFF)
+		value = +0x7FFF;
+	*(INT16*)buffer = (INT16)value;
+	return;
+}
+
+static void SampleConv_toS24(void* buffer, INT32 value)
+{
+	if (value < -0x800000)
+		value = -0x800000;
+	else if (value > +0x7FFFFF)
+		value = +0x7FFFFF;
+	((int24_s*)buffer)->data = value;
+	return;
+}
+
+static void SampleConv_toS32(void* buffer, INT32 value)
+{
+	if (value < -0x800000)
+		value = -0x800000;
+	else if (value > +0x7FFFFF)
+		value = +0x7FFFFF;
+	value <<= 8;	// 24 bit -> 32 bit
+	*(INT32*)buffer = value;
+	return;
+}
+
+static void SampleConv_toF32(void* buffer, INT32 value)
+{
+	*(float*)buffer = value / (float)0x800000;
+	return;
+}
+
+static PlayerA::PLR_SMPL_PACK GetSampleConvFunc(UINT8 bits)
+{
+	if (bits == 8)
+		return SampleConv_toU8;
+	else if (bits == 16)
+		return SampleConv_toS16;
+	else if (bits == 24)
+		return SampleConv_toS24;
+	else if (bits == 32)
+		return SampleConv_toS32;
+	else
+		return NULL;
+}
+
 PlayerA::PlayerA()
 {
 	_config.masterVol = 0x10000;	// fixed point 16.16
@@ -20,8 +88,10 @@ PlayerA::PlayerA()
 	
 	_outSmplChns = 2;
 	_outSmplBits = 16;
+	_outSmplPack = GetSampleConvFunc(_outSmplBits);
 	_smplRate = 44100;
-	_outSmplSize = _outSmplChns * _outSmplBits / 8;
+	_outSmplSize1 = _outSmplBits / 8;
+	_outSmplSizeA = _outSmplSize1 * _outSmplChns;
 	
 	_plrCbFunc = NULL;
 	_plrCbParam = NULL;
@@ -68,14 +138,17 @@ const std::vector<PlayerBase*>& PlayerA::GetRegisteredPlayers(void) const
 UINT8 PlayerA::SetOutputSettings(UINT32 smplRate, UINT8 channels, UINT8 smplBits, UINT32 smplBufferLen)
 {
 	if (channels != 2)
-		return 0xFF;	// TODO: support channels = 1
-	if (smplBits != 16)
-		return 0xFF;	// TODO: support 24 bits / 32 bits
+		return 0xF0;	// TODO: support channels = 1
+	PLR_SMPL_PACK smplPackFunc = GetSampleConvFunc(smplBits);
+	if (smplPackFunc == NULL)
+		return 0xF1;	// unsupported sample format
 	
 	_outSmplChns = channels;
 	_outSmplBits = smplBits;
+	_outSmplPack = smplPackFunc;
 	SetSampleRate(smplRate);
-	_outSmplSize = _outSmplChns * _outSmplBits / 8;
+	_outSmplSize1 = _outSmplBits / 8;
+	_outSmplSizeA = _outSmplSize1 * _outSmplChns;
 	_smplBuf.resize(smplBufferLen);
 	return 0x00;
 }
@@ -406,25 +479,25 @@ INT32 PlayerA::CalcCurrentVolume(UINT32 playbackSmpl)
 
 UINT32 PlayerA::Render(UINT32 bufSize, void* data)
 {
+	UINT8* bData = (UINT8*)data;
 	UINT32 basePbSmpl;
 	UINT32 smplCount;
 	UINT32 smplRendered;
-	INT16* SmplPtr16;
 	UINT32 curSmpl;
 	WAVE_32BS fnlSmpl;	// final sample value
 	INT32 curVolume;
 	
-	smplCount = bufSize / _outSmplSize;
+	smplCount = bufSize / _outSmplSizeA;
 	if (_player == NULL)
 	{
-		memset(data, 0x00, smplCount * _outSmplSize);
-		return smplCount * _outSmplSize;
+		memset(data, 0x00, smplCount * _outSmplSizeA);
+		return smplCount * _outSmplSizeA;
 	}
 	if (! (_player->GetState() & PLAYSTATE_PLAY))
 	{
 		//fprintf(stderr, "Player Warning: calling Render while not playing! playState = 0x%02X\n", _player->GetState());
-		memset(data, 0x00, smplCount * _outSmplSize);
-		return smplCount * _outSmplSize;
+		memset(data, 0x00, smplCount * _outSmplSizeA);
+		return smplCount * _outSmplSizeA;
 	}
 	
 	if (! smplCount)
@@ -441,8 +514,7 @@ UINT32 PlayerA::Render(UINT32 bufSize, void* data)
 	smplCount = smplRendered;
 	
 	curVolume = CalcCurrentVolume(basePbSmpl) >> VOL_SHIFT;
-	SmplPtr16 = (INT16*)data;
-	for (curSmpl = 0; curSmpl < smplCount; curSmpl ++, basePbSmpl ++, SmplPtr16 += 2)
+	for (curSmpl = 0; curSmpl < smplCount; curSmpl ++, basePbSmpl ++)
 	{
 		if (basePbSmpl >= _fadeSmplStart)
 		{
@@ -487,21 +559,11 @@ UINT32 PlayerA::Render(UINT32 bufSize, void* data)
 		if (_config.chnInvert & 0x02)
 			fnlSmpl.R = -fnlSmpl.R;
 		
-		fnlSmpl.L >>= 8;	// 24 bit -> 16 bit
-		fnlSmpl.R >>= 8;
-		if (fnlSmpl.L < -0x8000)
-			fnlSmpl.L = -0x8000;
-		else if (fnlSmpl.L > +0x7FFF)
-			fnlSmpl.L = +0x7FFF;
-		if (fnlSmpl.R < -0x8000)
-			fnlSmpl.R = -0x8000;
-		else if (fnlSmpl.R > +0x7FFF)
-			fnlSmpl.R = +0x7FFF;
-		SmplPtr16[0] = (INT16)fnlSmpl.L;
-		SmplPtr16[1] = (INT16)fnlSmpl.R;
+		_outSmplPack(&bData[(curSmpl * 2 + 0) * _outSmplSize1], fnlSmpl.L);
+		_outSmplPack(&bData[(curSmpl * 2 + 1) * _outSmplSize1], fnlSmpl.R);
 	}
 	
-	return curSmpl * _outSmplSize;
+	return curSmpl * _outSmplSizeA;
 }
 
 /*static*/ UINT8 PlayerA::PlayCallbackS(PlayerBase* player, void* userParam, UINT8 evtType, void* evtParam)
