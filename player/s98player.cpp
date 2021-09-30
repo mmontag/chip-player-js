@@ -525,6 +525,7 @@ UINT8 S98Player::GetSongInfo(PLR_SONG_INFO& songInf)
 	songInf.tickRateDiv = _fileHdr.tickDiv;
 	songInf.songLen = GetTotalTicks();
 	songInf.loopTick = _fileHdr.loopOfs ? GetLoopTicks() : (UINT32)-1;
+	songInf.volGain = 0x10000;
 	songInf.deviceCnt = _devHdrs.size();
 	
 	return 0x00;

@@ -41,6 +41,7 @@ struct PLR_SONG_INFO
 	// 1 second = 1 tick * tickMult / tickDiv
 	UINT32 songLen;		// song length in ticks
 	UINT32 loopTick;	// tick position where the loop begins (-1 = no loop)
+	INT32 volGain;		// song-specific volume gain, 16.16 fixed point factor (0x10000 = 100%)
 	UINT32 deviceCnt;	// number of used sound devices
 };
 

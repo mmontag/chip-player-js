@@ -48,6 +48,7 @@ static void SampleConv_toS24(void* buffer, INT32 value)
 
 static void SampleConv_toS32(void* buffer, INT32 value)
 {
+	// internal scale is 24-bit, so limit to that
 	if (value < -0x800000)
 		value = -0x800000;
 	else if (value > +0x7FFFFF)
@@ -59,6 +60,7 @@ static void SampleConv_toS32(void* buffer, INT32 value)
 
 static void SampleConv_toF32(void* buffer, INT32 value)
 {
+	// limiting not required here
 	*(float*)buffer = value / (float)0x800000;
 	return;
 }
@@ -80,6 +82,7 @@ static PlayerA::PLR_SMPL_PACK GetSampleConvFunc(UINT8 bits)
 PlayerA::PlayerA()
 {
 	_config.masterVol = 0x10000;	// fixed point 16.16
+	_config.ignoreVolGain = false;
 	_config.chnInvert = 0x00;
 	_config.loopCount = 2;
 	_config.fadeSmpls = 0;
@@ -98,6 +101,7 @@ PlayerA::PlayerA()
 	_myPlayState = 0x00;
 	_player = NULL;
 	_dLoad = NULL;
+	_songVolume = CalcSongVolume();
 	_fadeSmplStart = (UINT32)-1;
 	_endSilenceStart = (UINT32)-1;
 	
@@ -207,7 +211,13 @@ INT32 PlayerA::GetMasterVolume(void) const
 void PlayerA::SetMasterVolume(INT32 volume)
 {
 	_config.masterVol = volume;
+	_songVolume = CalcSongVolume();
 	return;
+}
+
+INT32 PlayerA::GetSongVolume(void) const
+{
+	return _songVolume;
 }
 
 void PlayerA::SetFadeSamples(UINT32 smplCnt)
@@ -383,6 +393,7 @@ UINT8 PlayerA::Start(void)
 		return 0xFF;
 	_player->SetSampleRate(_smplRate);
 	_player->SetPlaybackSpeed(_config.pbSpeed);
+	_songVolume = CalcSongVolume();
 	_fadeSmplStart = (UINT32)-1;
 	_endSilenceStart = (UINT32)-1;
 	
@@ -451,12 +462,30 @@ UINT8 PlayerA::Seek(UINT8 unit, UINT32 pos)
 #define VOL_PRESH	4	// sample data pre-shift
 #define VOL_POSTSH	(VOL_BITS - VOL_PRESH)	// post-shift after volume multiplication
 
+// 16.16 fixed point multiplication
+#define MUL16X16_FIXED(a, b)	(INT32)(((INT64)a * b) >> 16)
+
+INT32 PlayerA::CalcSongVolume(void)
+{
+	INT32 volume = _config.masterVol;
+	
+	if (! _config.ignoreVolGain && _player != NULL)
+	{
+		PLR_SONG_INFO songInfo;
+		UINT8 retVal = _player->GetSongInfo(songInfo);
+		if (! retVal)
+			volume = MUL16X16_FIXED(volume, songInfo.volGain);
+	}
+	
+	return volume;
+}
+
 INT32 PlayerA::CalcCurrentVolume(UINT32 playbackSmpl)
 {
 	INT32 curVol;	// 16.16 fixed point
 	
 	// 1. master volume
-	curVol = _config.masterVol;
+	curVol = _songVolume;
 	
 	// 2. apply fade-out factor
 	if (playbackSmpl >= _fadeSmplStart)

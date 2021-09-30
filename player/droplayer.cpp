@@ -357,6 +357,7 @@ UINT8 DROPlayer::GetSongInfo(PLR_SONG_INFO& songInf)
 	songInf.tickRateDiv = _tickFreq;
 	songInf.songLen = GetTotalTicks();
 	songInf.loopTick = (UINT32)-1;
+	songInf.volGain = 0x10000;
 	songInf.deviceCnt = _devTypes.size();
 	
 	return 0x00;

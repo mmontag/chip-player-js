@@ -17,6 +17,7 @@ public:
 	struct Config
 	{
 		INT32 masterVol;	// master volume (16.16 fixed point, negative value = phase inversion)
+		bool ignoreVolGain;	// ignore track-specific volume gain
 		UINT8 chnInvert;	// channel phase inversion (bit 0 - left, bit 1 - right)
 		UINT32 loopCount;
 		UINT32 fadeSmpls;
@@ -40,6 +41,7 @@ public:
 	void SetLoopCount(UINT32 loops);
 	INT32 GetMasterVolume(void) const;
 	void SetMasterVolume(INT32 volume);
+	INT32 GetSongVolume(void) const;
 	UINT32 GetFadeSamples(void) const;
 	void SetFadeSamples(UINT32 smplCnt);
 	UINT32 GetEndSilenceSamples(void) const;
@@ -69,6 +71,7 @@ public:
 	UINT32 Render(UINT32 bufSize, void* data);
 private:
 	void FindPlayerEngine(void);
+	INT32 CalcSongVolume(void);
 	INT32 CalcCurrentVolume(UINT32 playbackSmpl);
 	static UINT8 PlayCallbackS(PlayerBase* player, void* userParam, UINT8 evtType, void* evtParam);
 	UINT8 PlayCallback(PlayerBase* player, UINT8 evtType, void* evtParam);
@@ -88,6 +91,7 @@ private:
 	std::vector<WAVE_32BS> _smplBuf;
 	PlayerBase* _player;
 	DATA_LOADER* _dLoad;
+	INT32 _songVolume;
 	UINT32 _fadeSmplStart;
 	UINT32 _endSilenceStart;
 };

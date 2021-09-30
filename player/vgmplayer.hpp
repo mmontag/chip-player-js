@@ -34,9 +34,9 @@ struct VGM_HEADER
 	UINT32 loopTicks;	// number of samples for the looping part
 	UINT32 recordHz;	// rate of the recording in Hz (60 for NTSC, 50 for PAL, 0 disables rate scaling)
 	
-	INT8 loopBase;
-	UINT8 loopModifier;	// 4.4 fixed point
-	INT16 volumeGain;	// 8.8 fixed point, +0x100 = +6 db
+	INT8 loopBase;		// to be subtracted from total number of loops
+	UINT8 loopModifier;	// 4.4 fixed point, loop multiplicator applies to default number of loops
+	INT16 volumeGain;	// 8.8 fixed point, log scale, +0x100 = +6 db
 };
 
 struct VGM_PLAY_OPTIONS

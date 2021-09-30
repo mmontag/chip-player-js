@@ -498,6 +498,7 @@ UINT8 VGMPlayer::GetSongInfo(PLR_SONG_INFO& songInf)
 	songInf.tickRateDiv = 44100;
 	songInf.songLen = GetTotalTicks();
 	songInf.loopTick = _fileHdr.loopOfs ? GetLoopTicks() : (UINT32)-1;
+	songInf.volGain = (INT32)(0x10000 * pow(2.0, _fileHdr.volumeGain / (double)0x100) + 0.5);
 	songInf.deviceCnt = 0;
 	for (vgmChip = 0x00; vgmChip < _CHIP_COUNT; vgmChip ++)
 		songInf.deviceCnt += GetChipCount(vgmChip);
