@@ -161,6 +161,12 @@ static void IremGA20_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 
 	outL = outputs[0];
 	outR = outputs[1];
+	if (chip->rom == NULL)
+	{
+		memset(outL, 0, samples * sizeof(DEV_SMPL));
+		memset(outR, 0, samples * sizeof(DEV_SMPL));
+		return;
+	}
 
 	for (i = 0; i < samples; i++)
 	{

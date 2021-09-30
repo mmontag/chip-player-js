@@ -288,9 +288,12 @@ static void okim6295_update(void* info, UINT32 samples, DEV_SMPL** outputs)
 	// reset the output stream
 	memset(outputs[0], 0, samples * sizeof(*outputs[0]));
 
-	// iterate over voices and accumulate sample data
-	for (i = 0; i < OKIM6295_VOICES; i++)
-		generate_adpcm(chip, &chip->voice[i], outputs[0], samples);
+	if (chip->ROM != NULL)
+	{
+		// iterate over voices and accumulate sample data
+		for (i = 0; i < OKIM6295_VOICES; i++)
+			generate_adpcm(chip, &chip->voice[i], outputs[0], samples);
+	}
 
 	memcpy(outputs[1], outputs[0], samples * sizeof(*outputs[0]));
 }

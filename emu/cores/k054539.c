@@ -191,14 +191,14 @@ static void k054539_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 #define VOL_CAP 1.80
 
 	static const INT16 dpcm[16] = {
-		0 * 0x100,     1 * 0x100,   4 * 0x100,   9 * 0x100,  16 * 0x100, 25 * 0x100, 36 * 0x100, 49 * 0x100,
+		  0 * 0x100,   1 * 0x100,   4 * 0x100,   9 * 0x100,  16 * 0x100, 25 * 0x100, 36 * 0x100, 49 * 0x100,
 		-64 * 0x100, -49 * 0x100, -36 * 0x100, -25 * 0x100, -16 * 0x100, -9 * 0x100, -4 * 0x100, -1 * 0x100
 	};
 
 	INT16 *rbase = (INT16 *)info->ram;
 	UINT32 sample, ch;
 
-	if(!(info->regs[0x22f] & 1))
+	if(info->rom == NULL || !(info->regs[0x22f] & 1))
 	{
 		memset(outputs[0], 0, samples*sizeof(*outputs[0]));
 		memset(outputs[1], 0, samples*sizeof(*outputs[1]));

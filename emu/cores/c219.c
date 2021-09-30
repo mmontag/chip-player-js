@@ -304,6 +304,8 @@ static void c219_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 
 	memset(outputs[0], 0, samples * sizeof(DEV_SMPL));
 	memset(outputs[1], 0, samples * sizeof(DEV_SMPL));
+	if (chip->pRom == NULL)
+		return;
 
 	for (i = 0; i < samples; i ++)
 	{

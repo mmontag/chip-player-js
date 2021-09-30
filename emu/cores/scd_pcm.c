@@ -361,7 +361,7 @@ static void SCD_PCM_Update(void* info, UINT32 Length, DEV_SMPL **buf)
 	memset(bufR, 0, Length * sizeof(DEV_SMPL));
 	
 	// if PCM disable, no sound
-	if (!chip->Enable)
+	if (chip->RAM == NULL || !chip->Enable)
 		return;
 	
 	// for long update

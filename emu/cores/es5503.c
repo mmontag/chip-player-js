@@ -214,6 +214,8 @@ static void es5503_pcm_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 
 	memset(outputs[0], 0, samples * sizeof(DEV_SMPL));
 	memset(outputs[1], 0, samples * sizeof(DEV_SMPL));
+	if (chip->docram == NULL)
+		return;
 
 	chnsStereo = chip->output_channels & ~1;
 	for (osc = 0; osc < chip->oscsenabled; osc++)

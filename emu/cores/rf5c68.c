@@ -115,7 +115,7 @@ static void rf5c68_update(void *info, UINT32 samples, DEV_SMPL **outputs)
 	memset(right, 0, samples * sizeof(*right));
 
 	/* bail if not enabled */
-	if (!chip->enable)
+	if (chip->data == NULL || !chip->enable)
 		return;
 
 	/* loop over channels */

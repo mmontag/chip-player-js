@@ -566,6 +566,8 @@ static void ymz280b_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 	/* clear out the accumulator */
 	memset(lacc, 0, samples * sizeof(lacc[0]));
 	memset(racc, 0, samples * sizeof(racc[0]));
+	if (chip->mem_base == NULL)
+		return;
 
 	/* loop over voices */
 	for (v = 0; v < 8; v++)

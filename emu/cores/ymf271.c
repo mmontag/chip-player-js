@@ -760,7 +760,7 @@ static void ymf271_update(void *info, UINT32 samples, DEV_SMPL** outputs)
 		YMF271Group *slot_group = &chip->groups[j];
 		mixp = chip->mix_buffer;
 
-		if (slot_group->Muted)
+		if (slot_group->Muted || chip->mem_base == NULL)
 			continue;
 
 		if (slot_group->pfm && slot_group->sync != 3)

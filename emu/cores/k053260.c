@@ -401,7 +401,7 @@ static void k053260_update(void* param, UINT32 samples, DEV_SMPL **outputs)
 {
 	k053260_state *info = (k053260_state *)param;
 
-	if (info->mode & 2)
+	if ((info->mode & 2) && info->rom != NULL)
 	{
 		UINT32 i, j;
 

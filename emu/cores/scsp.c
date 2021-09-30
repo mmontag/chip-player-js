@@ -1086,6 +1086,13 @@ static void SCSP_DoMasterSamples(void* info, UINT32 nsamples, DEV_SMPL **outputs
 	bufl = outputs[0];
 	bufr = outputs[1];
 
+	if (scsp->SCSPRAM == NULL)
+	{
+		memset(bufl, 0, nsamples * sizeof(DEV_SMPL));
+		memset(bufr, 0, nsamples * sizeof(DEV_SMPL));
+		return;
+	}
+
 	for(s=0;s<nsamples;++s)
 	{
 		DEV_SMPL smpl, smpr;

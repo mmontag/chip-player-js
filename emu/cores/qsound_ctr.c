@@ -274,9 +274,13 @@ static void qsoundc_update(void* param, UINT32 samples, DEV_SMPL** outputs)
 	struct qsound_chip* chip = (struct qsound_chip*)param;
 	UINT32 curSmpl;
 	
-	memset(outputs[0], 0, samples * sizeof(*outputs[0]));
-	memset(outputs[1], 0, samples * sizeof(*outputs[1]));
-	
+	if (chip->romData == NULL)
+	{
+		memset(outputs[0], 0, samples * sizeof(*outputs[0]));
+		memset(outputs[1], 0, samples * sizeof(*outputs[1]));
+		return;
+	}
+
 	for (curSmpl = 0; curSmpl < samples; curSmpl ++)
 	{
 		update_sample(chip);

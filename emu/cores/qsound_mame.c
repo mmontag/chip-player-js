@@ -328,7 +328,7 @@ static void qsound_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 	// Clear the buffers
 	memset(outputs[0], 0, samples * sizeof(*outputs[0]));
 	memset(outputs[1], 0, samples * sizeof(*outputs[1]));
-	if (! chip->sample_rom_length)
+	if (chip->sample_rom == NULL || ! chip->sample_rom_length)
 		return;
 
 	for (j = 0; j < QSOUND_CHANNELS; j++)
