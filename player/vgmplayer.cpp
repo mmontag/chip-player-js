@@ -1282,7 +1282,10 @@ void VGMPlayer::InitDevices(void)
 				if (otherDev != NULL)
 				{
 					SN76496_CFG* snCfg = (SN76496_CFG*)devCfg;
+					// set pointer to other instance, for connecting both
 					snCfg->t6w28_tone = otherDev->base.defInf.dataPtr;
+					// ensure that both instances use the same core, as they are going to cross-reference each other
+					snCfg->_genCfg.emuCore = otherDev->base.defInf.devDef->coreID;
 				}
 			}
 			
