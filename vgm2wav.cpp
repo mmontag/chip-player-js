@@ -275,6 +275,12 @@ int main(int argc, const char *argv[]) {
     }
     plrEngine = player.GetPlayer();
 
+    if (plrEngine->GetPlayerType() == FCC_VGM)
+    {
+        VGMPlayer* vgmplay = dynamic_cast<VGMPlayer*>(plrEngine);
+        player.SetLoopCount(vgmplay->GetModifiedLoopCount(loops));
+    }
+
     /* example for setting cores */
     /* TODO provide interface for user to specify cores
      * for devices, like:

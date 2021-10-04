@@ -174,6 +174,7 @@ int main(int argc, char* argv[])
 	}
 	
 	PlayerBase* player = mainPlr.GetPlayer();
+	mainPlr.SetLoopCount(maxLoops);
 	if (player->GetPlayerType() == FCC_S98)
 	{
 		S98Player* s98play = dynamic_cast<S98Player*>(player);
@@ -190,6 +191,7 @@ int main(int argc, char* argv[])
 		
 		printf("VGM v%3X, Total Length: %.2f s, Loop Length: %.2f s", vgmhdr->fileVer,
 				player->Tick2Second(player->GetTotalTicks()), player->Tick2Second(player->GetLoopTicks()));
+		mainPlr.SetLoopCount(vgmplay->GetModifiedLoopCount(maxLoops));
 	}
 	else if (player->GetPlayerType() == FCC_DRO)
 	{
@@ -285,6 +287,14 @@ int main(int argc, char* argv[])
 		{
 			static const INT16 panPos[3] = {-0x80, +0x80, 0x00};
 			memcpy(devOpts.panOpts.chnPan, panPos, sizeof(panPos));
+			player->SetDeviceOptions(devOptID, devOpts);
+		}
+
+		devOptID = PLR_DEV_ID(DEVID_C6280, 0);
+		retVal = player->GetDeviceOptions(devOptID, devOpts);
+		if (! (retVal & 0x80))
+		{
+			devOpts.emuCore[0] = FCC_MAME;
 			player->SetDeviceOptions(devOptID, devOpts);
 		}
 	}

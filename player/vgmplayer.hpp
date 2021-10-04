@@ -170,6 +170,8 @@ public:
 	UINT32 GetLoopTicks(void) const;	// get time for one loop in ticks
 	//UINT32 GetTotalPlayTicks(UINT32 numLoops) const;	// get time for playing + looping (without fading)
 	
+	UINT32 GetModifiedLoopCount(UINT32 defaultLoops) const;	// get loop count, modified according to LoopModified/LoopBase header
+	
 	UINT8 Start(void);
 	UINT8 Stop(void);
 	UINT8 Reset(void);

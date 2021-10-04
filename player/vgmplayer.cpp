@@ -787,6 +787,21 @@ UINT32 VGMPlayer::GetLoopTicks(void) const
 		return _fileHdr.loopTicks;
 }
 
+UINT32 VGMPlayer::GetModifiedLoopCount(UINT32 defaultLoops) const
+{
+	if (defaultLoops == 0)
+		return 0;
+	UINT32 loopCntModified;
+	if (_fileHdr.loopModifier)
+		loopCntModified = (defaultLoops * _fileHdr.loopModifier + 0x08) / 0x10;
+	else
+		loopCntModified = defaultLoops;
+	if ((INT32)loopCntModified <= _fileHdr.loopBase)
+		return 1;
+	else
+		return loopCntModified - _fileHdr.loopBase;
+}
+
 
 UINT8 VGMPlayer::Start(void)
 {
