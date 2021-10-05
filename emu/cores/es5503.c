@@ -450,7 +450,7 @@ static UINT8 es5503_r(void *info, UINT8 offset)
 					}
 				}
 
-				return retval;
+				return retval | 0x41;
 
 			case 0xe1:  // oscillator enable
 				return (chip->oscsenabled-1)<<1;

@@ -1018,7 +1018,7 @@ INLINE void TimerBOver(FM_ST *ST)
 				TimerAOver( ST );                       \
 				/* CSM mode auto key on */              \
 				if( ((ST)->mode & 0xC0) == 0x80 )       \
-					CSMKeyControll( OPN, CSM_CH );      \
+					CSMKeyControl( OPN, CSM_CH );       \
 			}                                           \
 	}
 /* ---------- calculate timer B ---------- */
@@ -1676,7 +1676,7 @@ INLINE void chan_calc(FM_OPN *OPN, FM_CH *CH, int chnum)
 		/* 3-slot mode */
 		if ((OPN->ST.mode & 0xC0) && (CH == &OPN->P_CH[2]))
 		{
-			/* keyscale code is not modifiedby LFO */
+			/* keyscale code is not modified by LFO */
 			UINT8 kc = CH->kcode;
 			UINT32 pm = CH->pms + OPN->LFO_PM;
 			update_phase_lfo_slot(OPN, &CH->SLOT[SLOT1], pm, kc, OPN->SL3.block_fnum[1]);
@@ -1699,8 +1699,8 @@ INLINE void chan_calc(FM_OPN *OPN, FM_CH *CH, int chnum)
 }
 
 
-/* CSM Key Controll */
-INLINE void CSMKeyControll(FM_OPN *OPN, FM_CH *CH)
+/* CSM Key Control */
+INLINE void CSMKeyControl(FM_OPN *OPN, FM_CH *CH)
 {
 	/* all key ON (verified by Nemesis on real hardware) */
 	FM_KEYON_CSM(OPN,CH,SLOT1);
@@ -2640,10 +2640,10 @@ UINT8 ym2203_timer_over(void *chip,UINT8 c)
 		ym2203_update_req(F2203);
 		/* timer update */
 		TimerAOver( &(F2203->OPN.ST) );
-		/* CSM mode key,TL controll */
+		/* CSM mode key,TL control */
 		if ((F2203->OPN.ST.mode & 0xc0) == 0x80)
 		{   /* CSM mode total level latch and auto key on */
-			CSMKeyControll( &F2203->OPN, &(F2203->CH[2]) );
+			CSMKeyControl( &F2203->OPN, &(F2203->CH[2]) );
 		}
 	}
 	return F2203->OPN.ST.irq;
@@ -3514,10 +3514,10 @@ UINT8 ym2608_timer_over(void *chip,UINT8 c)
 			ym2608_update_req(F2608);
 			/* timer update */
 			TimerAOver( &(F2608->OPN.ST) );
-			/* CSM mode key,TL controll */
+			/* CSM mode key,TL control */
 			if ((F2608->OPN.ST.mode & 0xc0) == 0x80)
 			{   /* CSM mode total level latch and auto key on */
-				CSMKeyControll( &F2608->OPN, &(F2608->CH[2]) );
+				CSMKeyControl( &F2608->OPN, &(F2608->CH[2]) );
 			}
 		}
 		break;
@@ -4227,10 +4227,10 @@ UINT8 ym2610_timer_over(void *chip,UINT8 c)
 		ym2610_update_req(F2610);
 		/* timer update */
 		TimerAOver( &(F2610->OPN.ST) );
-		/* CSM mode key,TL controll */
+		/* CSM mode key,TL control */
 		if ((F2610->OPN.ST.mode & 0xc0) == 0x80)
 		{   /* CSM mode total level latch and auto key on */
-			CSMKeyControll( &F2610->OPN, &(F2610->CH[2]) );
+			CSMKeyControl( &F2610->OPN, &(F2610->CH[2]) );
 		}
 	}
 	return F2610->OPN.ST.irq;
@@ -4743,10 +4743,10 @@ UINT8 ym2612_timer_over(void *chip,UINT8 c)
 		ym2612_update_req(F2612);
 		/* timer update */
 		TimerAOver( &(F2612->OPN.ST) );
-		/* CSM mode key,TL controll */
+		/* CSM mode key,TL control */
 		if ((F2612->OPN.ST.mode & 0xc0) == 0x80)
 		{   /* CSM mode total level latch and auto key on */
-			CSMKeyControll( &F2612->OPN, &(F2612->CH[2]) );
+			CSMKeyControl( &F2612->OPN, &(F2612->CH[2]) );
 		}
 	}
 	return F2612->OPN.ST.irq;

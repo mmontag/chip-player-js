@@ -97,6 +97,7 @@ typedef struct {
 	INT16 dda;
 	UINT8 noise_control;
 	UINT32 noise_counter;
+	UINT32 noise_seed;
 	UINT32 counter;
 	UINT8 Muted;
 } t_channel;
@@ -142,6 +143,50 @@ static void c6280_calculate_clocks(c6280_t *p, double clk, double rate)
 }
 
 
+/* Write Register Layout
+
+       76543210
+    00 -----xxx Channel Select
+       -----000 Channel 0
+       -----001 Channel 1
+       -----010 Channel 2
+       -----011 Channel 3
+       -----100 Channel 4
+       -----101 Channel 5
+
+    01 xxxx---- Overall Left Volume
+       ----xxxx Overall Right Volume
+
+    02 xxxxxxxx Frequency (Low 8 bits)
+
+    03 ----xxxx Frequency (High 4 bits)
+
+    04 x------- Channel Enable
+       -x------ Direct D/A
+       00------ Write Data
+       01------ Reset Counter
+       10------ Mixing (Sound Output)
+       11------ Direct D/A
+       ---xxxxx Channel Master Volume
+
+    05 xxxx---- Channel Left Volume
+       ----xxxx Channel Right Volume
+
+    06 ---xxxxx Waveform Data
+
+    07 x------- Noise Enable (channel 5, 6 only)
+       ---xxxxx Noise Frequency ^ 0x1f
+
+    08 xxxxxxxx LFO Frequency
+
+    09 x------- LFO Reset
+       ------xx LFO Control
+       ------00 LFO off
+       ------01 Direct Addition
+       ------10 2 bit Shift Addition
+       ------11 4 bit Shift Addition
+*/
+
 static void c6280mame_w(void *chip, UINT8 offset, UINT8 data)
 {
 	c6280_t *p = (c6280_t *)chip;
@@ -172,9 +217,13 @@ static void c6280mame_w(void *chip, UINT8 offset, UINT8 data)
 		case 0x04: /* Channel control (key-on, DDA mode, volume) */
 
 			/* 1-to-0 transition of DDA bit resets waveform index */
-			if((chan->control & 0x40) && ((data & 0x40) == 0))
+			if ((chan->control & 0x40) && ((data & 0x40) == 0))
 			{
 				chan->index = 0;
+			}
+			if (((chan->control & 0x80) == 0) && (data & 0x80))
+			{
+				chan->counter = 0;
 			}
 			chan->control = data;
 			break;
@@ -185,18 +234,15 @@ static void c6280mame_w(void *chip, UINT8 offset, UINT8 data)
 
 		case 0x06: /* Channel waveform data */
 
-			switch(chan->control & 0xC0)
+			switch(chan->control & 0x40)
 			{
-				case 0x00:
-				case 0x80:
+				case 0x00: /* Waveform */
 					chan->waveform[chan->index & 0x1F] = data & 0x1F;
-					chan->index = (chan->index + 1) & 0x1F;
+					if (!(chan->control & 0x80)) // TODO : wave pointer is increased at writing data when sound playback is off??
+						chan->index = (chan->index + 1) & 0x1F;
 					break;
 
-				case 0x40:
-					break;
-
-				case 0xC0:
+				case 0x40: /* Direct D/A */
 					chan->dda = data & 0x1F;
 					break;
 			}
@@ -223,19 +269,12 @@ static void c6280mame_w(void *chip, UINT8 offset, UINT8 data)
 
 static void c6280mame_update(void* param, UINT32 samples, DEV_SMPL **outputs)
 {
-	static const UINT8 scale_tab[] = {
-		0x00, 0x03, 0x05, 0x07, 0x09, 0x0B, 0x0D, 0x0F,
-		0x10, 0x13, 0x15, 0x17, 0x19, 0x1B, 0x1D, 0x1F
-	};
 	int ch;
 	UINT32 i;
 	c6280_t *p = (c6280_t *)param;
 
 	UINT8 lmal = (p->balance >> 4) & 0x0F;
 	UINT8 rmal = (p->balance >> 0) & 0x0F;
-
-	lmal = scale_tab[lmal];
-	rmal = scale_tab[rmal];
 
 	/* Clear buffer */
 	memset(outputs[0], 0x00, samples * sizeof(DEV_SMPL));
@@ -248,21 +287,18 @@ static void c6280mame_update(void* param, UINT32 samples, DEV_SMPL **outputs)
 		{
 			UINT8 lal = (p->channel[ch].balance >> 4) & 0x0F;
 			UINT8 ral = (p->channel[ch].balance >> 0) & 0x0F;
-			UINT8 al  = p->channel[ch].control & 0x1F;
+			UINT8 al  = (p->channel[ch].control >> 1) & 0x0F; // only high 4 bit is affected to calculating volume, low 1 bit is independent
 			INT16 vll, vlr;
 
-			lal = scale_tab[lal];
-			ral = scale_tab[ral];
+			// verified from both patent and manual
+			vll = (0xf - lmal) + (0xf - al) + (0xf - lal);
+			if (vll > 0xf) vll = 0xf;
 
-			/* Calculate volume just as the patent says */
-			vll = (0x1F - lal) + (0x1F - al) + (0x1F - lmal);
-			if(vll > 0x1F) vll = 0x1F;
+			vlr = (0xf - rmal) + (0xf - al) + (0xf - ral);
+			if (vlr > 0xf) vlr = 0xf;
 
-			vlr = (0x1F - ral) + (0x1F - al) + (0x1F - rmal);
-			if(vlr > 0x1F) vlr = 0x1F;
-
-			vll = p->volume_table[vll];
-			vlr = p->volume_table[vlr];
+			vll = p->volume_table[(vll << 1) | (~p->channel[ch].control & 1)];
+			vlr = p->volume_table[(vlr << 1) | (~p->channel[ch].control & 1)];
 
 			/* Check channel mode */
 			if((ch >= 4) && (p->channel[ch].noise_control & 0x80))
@@ -271,11 +307,14 @@ static void c6280mame_update(void* param, UINT32 samples, DEV_SMPL **outputs)
 				UINT32 step = p->noise_freq_tab[(p->channel[ch].noise_control & 0x1F) ^ 0x1F];
 				for(i = 0; i < samples; i += 1)
 				{
-					static int data = 0;
+					INT16 data = (p->channel[ch].noise_seed & 1) ? 0x1F : 0;
 					p->channel[ch].noise_counter += step;
 					if(p->channel[ch].noise_counter >= 0x800)
 					{
-						data = (rand() & 1) ? 0x1F : 0;
+						UINT32 seed = p->channel[ch].noise_seed;
+						// based on Charles MacDonald's research
+						UINT32 feedback = ((seed) ^ (seed >> 1) ^ (seed >> 11) ^ (seed >> 12) ^ (seed >> 17)) & 1;
+						p->channel[ch].noise_seed = (p->channel[ch].noise_seed >> 1) ^ (feedback << 17);
 					}
 					p->channel[ch].noise_counter &= 0x7FF;
 					outputs[0][i] += (vll * (data - 16));
@@ -294,28 +333,37 @@ static void c6280mame_update(void* param, UINT32 samples, DEV_SMPL **outputs)
 			}
 			else
 			{
+				//if ((p->lfo_control & 3) && (ch < 2))
 				if ((p->lfo_control & 0x80) && (ch < 2))
 				{
 					if (ch == 0) // CH 0 only, CH 1 is muted
 					{
 						/* Waveform mode with LFO */
-						UINT32 step = p->channel[0].frequency;
 						UINT16 lfo_step = p->channel[1].frequency;
 						for (i = 0; i < samples; i += 1)
 						{
-							int offset, lfooffset;
-							INT16 data, lfo_data;
-							lfooffset = (p->channel[1].counter >> 12) & 0x1F;
-							p->channel[1].counter += p->wave_freq_tab[(lfo_step * p->lfo_frequency) & 0xfff]; // TODO : multiply? verify this from real hardware.
-							p->channel[1].counter &= 0x1FFFF;
-							lfo_data = p->channel[1].waveform[lfooffset];
-							if (p->lfo_control & 3)
-								step += ((lfo_data - 16) << (((p->lfo_control & 3)-1)<<1)); // verified from patent, TODO : same in real hardware?
-
+							UINT32 step = p->channel[0].frequency;
+							UINT8 offset;
+							INT16 data;
+							if (p->lfo_control & 0x80) // reset LFO
+							{
+								p->channel[1].counter = 0;
+							}
+							else
+							{
+								int lfooffset = (p->channel[1].counter >> 12) & 0x1F;
+								INT16 lfo_data = p->channel[1].waveform[lfooffset];
+								p->channel[1].counter += p->wave_freq_tab[(lfo_step * p->lfo_frequency) & 0xfff]; // TODO : multiply? verify this from real hardware.
+								p->channel[1].counter &= 0x1FFFF;
+								p->channel[1].index = (p->channel[1].counter >> 12) & 0x1F;
+								if (p->lfo_control & 3)
+									step += ((lfo_data - 16) << (((p->lfo_control & 3)-1)<<1)); // verified from patent, TODO : same in real hardware?
+							}
 							offset = (p->channel[0].counter >> 12) & 0x1F;
+							data = p->channel[0].waveform[offset];
 							p->channel[0].counter += p->wave_freq_tab[step & 0xfff];
 							p->channel[0].counter &= 0x1FFFF;
-							data = p->channel[0].waveform[offset];
+							p->channel[0].index = (p->channel[0].counter >> 12) & 0x1F;
 							outputs[0][i] += (vll * (data - 16));
 							outputs[1][i] += (vlr * (data - 16));
 						}
@@ -327,12 +375,11 @@ static void c6280mame_update(void* param, UINT32 samples, DEV_SMPL **outputs)
 					UINT32 step = p->wave_freq_tab[p->channel[ch].frequency];
 					for (i = 0; i < samples; i += 1)
 					{
-						int offset;
-						INT16 data;
-						offset = (p->channel[ch].counter >> 12) & 0x1F;
+						UINT8 offset = (p->channel[ch].counter >> 12) & 0x1F;
+						INT16 data = p->channel[ch].waveform[offset];
 						p->channel[ch].counter += step;
 						p->channel[ch].counter &= 0x1FFFF;
-						data = p->channel[ch].waveform[offset];
+						p->channel[ch].index = (p->channel[ch].counter >> 12) & 0x1F;
 						outputs[0][i] += (vll * (data - 16));
 						outputs[1][i] += (vlr * (data - 16));
 					}
@@ -383,12 +430,12 @@ static void* device_start_c6280mame(UINT32 clock, UINT32 rate)
 	/* Make volume table */
 	/* PSG has 48dB volume range spread over 32 steps */
 	step = 48.0 / 32.0;
-	for (i = 0; i < 31; i++)
+	for (i = 0; i < 30; i++)
 	{
 		info->volume_table[i] = (UINT16)level;
 		level /= pow(10.0, step / 20.0);
 	}
-	info->volume_table[31] = 0;
+	info->volume_table[30] = info->volume_table[31] = 0;
 
 	c6280mame_set_mute_mask(info, 0x00);
 
@@ -427,6 +474,7 @@ static void device_reset_c6280mame(void* chip)
 		TempChn->dda = 0x00;
 		TempChn->noise_control = 0x00;
 		TempChn->noise_counter = 0x00;
+		TempChn->noise_seed = 1;
 		TempChn->counter = 0x00;
 	}
 	

@@ -24,7 +24,7 @@ Ootake
 ・LFO処理のの実装。"はにいいんざすかい"のOPや、フラッシュハイダースの効果音が
   実機の音に近づいた。v1.59
 
-Copyright(C)2006-2017 Kitao Nakamura.
+Copyright(C)2006-2021 Kitao Nakamura.
 	改造版・後継版を公開なさるときは必ずソースコードを添付してください。
 	その際に事後でかまいませんので、ひとことお知らせいただけると幸いです。
 	商的な利用は禁じます。
@@ -101,12 +101,13 @@ typedef UINT8	BOOL;
 //#define PSG_FRQ		3579545.0
 //#define SAMPLE_RATE			44100.0 //Kitao更新。現状は速度優先でサンプルレートを44100固定とした。
 #define OVERSAMPLE_RATE		1.0 //Kitao更新。PSGはオーバーサンプリングすると響きの美しさが損なわれてしまうのでオーバーサンプリングしないようにした。速度的にもアップ。
-#define PSG_DECLINE			(20.3149*6.0) //20.3149。Kitao追加。PSG音量の減少値。*6.0は各チャンネル足したぶんを割る意味。大きいほど音は減る。CDDAが100%のときにちょうど良いぐらいの音量に合わせよう。v2.19,v2.37,v2.39,v2.62更新
+#define PSG_DECLINE			(18.8797*6.0) //18.8797。Kitao追加。PSG音量の減少値。*6.0は各チャンネル足したぶんを割る意味。大きいほど音は減る。CDDAが100%のときにちょうど良いぐらいの音量に合わせよう。スナッチャー最適。v2.19,v2.37,v2.39,v2.62,2.99更新
 #define VOL_TABLE_DECLINE	-1.08689999991 //-1.08689999991で雀探物語２OK。Kitao追加。音量テーブルの減少値。マイナスが大きいほど小さい音が聞こえづらくなる。マイナスが小さすぎると平面的な音になる。v2.19,v2.37,v2.39,v2.40,v2.62,v2.65更新
-									       //  ※PSG_DECLINEの値を変更した場合、減退率のベスト値も変更する必要がある。雀探物語２(マイナスが小さいとPSGが目立ちすぎてADPCMが聴きづらい)，大魔界村(マイナスが小さいとパンチがありすぎる),ソルジャーブレイドで、PSG_DECLINE=(14.4701*6.0)で減退率-1.0498779900db前後が飛び抜けていい響き(うちの環境で主観)。
+									       //※PSG_DECLINEの値を変更した場合、減退率のベスト値も変更する必要がある。雀探物語２(マイナスが小さいとPSGが目立ちすぎてADPCMが聴きづらい)，大魔界村(マイナスが小さいとパンチがありすぎる),ソルジャーブレイドで、PSG_DECLINE=(14.4701*6.0)で減退率-1.0498779900db前後が飛び抜けていい響き(うちの環境で主観)。
 										   //																		  モトローダー(マイナスやや大き目がいい),１９４１(マイナス小さめがいい)なども微妙な値変更で大きく変わる。
-#define NOISE_TABLE_VALUE	-18 : -1 //キレと聴きやすさで-18:-1をベストとした。最大値が大きい(+に近い)と重い音に。２つの値が離れていると重い音に。フォーメーションサッカー，大魔界村のエンディングのドラムなどで調整。v1.46,v2.40,v2.62更新
-									 //  ※VOL_TABLE_DECLINEによってこの値の最適値も変化する。
+#define NOISE_TABLE_VALUE	-18 : 0 //キレと聴きやすさで-18:0をベストとした。最大値が大きい(+に近い)と重い音に。２つの値が離れていると重い音に。フォーメーションサッカー，大魔界村のエンディングやファンタジーゾーンのドラムなどで調整。v1.46,v2.40,v2.62,v2.99更新
+									//v2.98までは-18:-1。v2.99から-18:0。
+									//※VOL_TABLE_DECLINEによってこの値の最適値も変化する。
 #define SAMPLE_FADE_DECLINE	 0.305998999951 //0.30599899951。Kitao追加。サンプリング音の消音時の音の減退量。ソルジャーブレイド,将棋初心者無用の音声で調整。基本的にこの値が小さいほうがノイズが減る(逆のケースもある)。v2.40
 											//							サンプリングドラムの音色が決まるので大事な値。値が大きすぎるとファイナルソルジャーやソルジャーブレイド,モトローダーなどでドラムがしょぼくなる。
 
@@ -467,20 +468,6 @@ write_reg(
 			}
 			PSGChn->bDDA = ((data & 0x40) != 0);
 
-			//Kitao追加。dataのbit7,6が01のときにWaveインデックスをリセットする。
-			if ((data & 0xC0) == 0x40)
-			{
-				if ((PSGChn->bDDA)&&(PSGChn->waveIndex == 0)&& //DDAモードでwaveIndexが0のとき、Waveデータをリセットする。実機で同様の動きかは未確認。F1トリプルバトル。フォーメーションサッカー'90試合中BGM。v2.79
-					((PSGChn->volumeL > 0)||(PSGChn->volumeR > 0))) //Volumeが0のときに行うとゼビウスでPAUSE後音が薄くなる。v2.82追加
-				{
-					//PRINTF("test4 %X %X %X %X %X",info->Channel,data,PSGChn->waveIndex,PSGChn->volumeL,PSGChn->volumeR); //Kitaoテスト用
-					info->bWaveReset[info->Channel] = TRUE; //v2.81追加。フォーメーションサッカー'90，F1トリプルバトル，ファイプロシリーズで必要。
-				}
-				else
-					info->bWaveReset[info->Channel] = FALSE; //v2.81追加
-				PSGChn->waveIndex = 0;
-			}
-
 			PSGChn->volume = data & 0x1F;
 			if ((PSGChn->volume == 0)||(PSGChn->volumeL == 0)) //スーパーバレーボールの笛後等に必要。v2.81追加
 				PSGChn->outVolumeL = 0;
@@ -490,6 +477,23 @@ write_reg(
 				PSGChn->outVolumeR = 0;
 			else
 				PSGChn->outVolumeR = _VolumeTable[PSGChn->volume + (info->MainVolumeR + PSGChn->volumeR) * 2];
+
+			//PRINTF("test4 %X %X %X %X %X %X %X %X",info->Channel,data,PSGChn->waveIndex,PSGChn->volumeL,PSGChn->volumeR,info->MainVolumeL,info->MainVolumeR,PSGChn->ddaSample); //Kitaoテスト用
+			//Kitao追加。dataのbit7,6が01のときにWaveインデックスをリセットする。
+			if ((data & 0xC0) == 0x40)
+			{
+				if ((PSGChn->bDDA)&&(PSGChn->waveIndex == 0)&& //DDAモードでwaveIndexが0のとき、Waveデータをリセットする。実機で同様の動きかは未確認。F1トリプルバトル。フォーメーションサッカー'90試合中BGM。v2.79
+					(PSGChn->wave[31] != -14)&& //これが無いとゼビウスの３面でドラムが鳴り始めると音が薄くなる。v2.92追加
+					((PSGChn->volumeL > 0)||(PSGChn->volumeR > 0))) //Volumeが0のときに行うとゼビウスでPAUSE後音が薄くなる。v2.82追加
+				{
+					//PRINTF("test4 %X %X %X %X %X %X %X %X %X %X",info->Channel,data,PSGChn->waveIndex,PSGChn->volumeL,PSGChn->volumeR,info->MainVolumeL,info->MainVolumeR,PSGChn->ddaSample,PSGChn->bNoiseOn,PSGChn->noiseFrq); //Kitaoテスト用
+					//PRINTF("test4 %X %X %X %X %X",info->Channel,data,PSGChn->waveIndex,PSGChn->volumeL,PSGChn->volumeR); //Kitaoテスト用
+					info->bWaveReset[info->Channel] = TRUE; //v2.81追加。フォーメーションサッカー'90，F1トリプルバトル，ファイプロシリーズで必要。
+				}
+				else
+					info->bWaveReset[info->Channel] = FALSE; //v2.81追加
+				PSGChn->waveIndex = 0;
+			}
 			break;
 
 		case 5:	// LAL, RAL
@@ -511,20 +515,28 @@ write_reg(
 			PSGChn = &info->Psg[info->Channel];
 			data &= 0x1F;
 
+			//PRINTF("test6 %X %X %X %X %X %X %X %X",info->Channel,data,PSGChn->waveIndex,PSGChn->volumeL,PSGChn->volumeR,info->MainVolumeL,info->MainVolumeR,PSGChn->ddaSample); //Kitaoテスト用
 			if ((info->bWaveReset[info->Channel])&&(PSGChn->bDDA)&&(PSGChn->waveIndex == 0)&& //DDAモードでwaveIndexが0のとき、Waveデータをリセットする。実機で同様の動きかは未確認。F1トリプルバトル。フォーメーションサッカー'90試合中BGM。v2.79
+				(PSGChn->wave[31] != -14)&& //これが無いとゼビウスの３面でドラムが鳴り始めると音が薄くなる。v2.92追加
 				((PSGChn->volumeL > 0)||(PSGChn->volumeR > 0))) //Volumeが0のときに行うとゼビウスでPAUSE後音が薄くなる。v2.82追加
 			{
-				//PRINTF("test6 %X %X %X %X %X",info->Channel,data,PSGChn->waveIndex,PSGChn->volumeL,PSGChn->volumeR); //Kitaoテスト用
+				//PRINTF("test6 %X %X %X %X %X %X %X %X",info->Channel,data,PSGChn->waveIndex,PSGChn->volumeL,PSGChn->volumeR,info->MainVolumeL,info->MainVolumeR,PSGChn->ddaSample); //Kitaoテスト用
+				//PRINTF("test6 %X %X %X %X",info->Channel,data,PSGChn->waveIndex,PSGChn->wave[31]); //Kitaoテスト用
 				for (i=0; i<32; i++)
 					PSGChn->wave[i] = -14; //最小値で初期化。フォーメーションサッカー'90，F1トリプルバトル，ファイプロシリーズで必要。
 			}
-			else
-				info->bWaveReset[info->Channel] = FALSE; //v2.82追加
+			info->bWaveReset[info->Channel] = FALSE; //v2.82追加
 
 			if (!PSGChn->bOn) //Kitao追加。音を鳴らしていないときだけWaveデータを更新する。v0.65。F1トリプルバトルのエンジン音。
 			{
 				PSGChn->wave[PSGChn->waveIndex++] = 17 - data; //17。Kitao更新。一番心地よく響く値に。ミズバク大冒険，モトローダー，ドラゴンスピリット等で調整。
 				PSGChn->waveIndex &= 0x1F;
+			}
+			else
+			{
+				// reload waveform while playing - fixes games from the "Fire Pro Wrestling" series -Valley Bell
+				Uint32 waveIndex = PSGChn->phase >> 27;
+				PSGChn->wave[waveIndex] = 17 - data;
 			}
 
 			if (PSGChn->bDDA)

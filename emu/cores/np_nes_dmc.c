@@ -73,7 +73,7 @@ struct _NES_DMC
 	int mode;
 	bool irq;
 
-	UINT32 counter[3];	// frequency dividers
+	INT32 counter[3];	// frequency dividers
 	int tphase;			// triangle phase
 	UINT32 nfreq;		// noise frequency
 	UINT32 dfreq;		// DPCM frequency
@@ -320,7 +320,7 @@ UINT32 calc_tri(NES_DMC* dmc, UINT32 clocks)
 	// additional option to prevent even more clicks -Valley Bell
 	else if (dmc->option[OPT_TRI_NULL])
 	{
-		if (dmc->tphase && dmc->tphase < 31)
+		if (dmc->tphase > 0 && dmc->tphase < 31)
 		{
 			// Finish the Triangle wave to prevent clicks.
 			dmc->counter[0] -= clocks;
