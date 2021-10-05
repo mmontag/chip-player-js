@@ -399,7 +399,7 @@ UINT32 calc_noise(NES_DMC* dmc, UINT32 clocks)
 // DMCチャンネルの計算 戻り値は0-127
 UINT32 calc_dmc(NES_DMC* dmc, UINT32 clocks)
 {
-	dmc->counter[2] += clocks;
+	dmc->counter[2] -= clocks;
 //	assert(dmc->dfreq > 0);	// prevent infinite loop
 	if (dmc->dfreq <= 0)	// prevent infinite loop -VB
 		return (dmc->damp<<1) + dmc->dac_lsb;

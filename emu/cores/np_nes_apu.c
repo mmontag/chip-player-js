@@ -323,19 +323,29 @@ void NES_APU_np_Reset(void* chip)
 	apu->gclock = 0;
 	//apu->mask = 0;
 
-	apu->scounter[0] = 0;
-	apu->scounter[1] = 0;
-	apu->sphase[0] = 0;
-	apu->sphase[0] = 0;
-
-	apu->sweep_div[0] = 1;
-	apu->sweep_div[1] = 1;
-	apu->envelope_div[0] = 0;
-	apu->envelope_div[1] = 0;
-	apu->length_counter[0] = 0;
-	apu->length_counter[1] = 0;
-	apu->envelope_counter[0] = 0;
-	apu->envelope_counter[1] = 0;
+	for (i=0; i<2; ++i)
+	{
+		apu->scounter[i] = 0;
+		apu->sphase[i] = 0;
+		apu->duty[i] = 0;
+		apu->volume[i] = 0;
+		apu->freq[i] = 0;
+		apu->sfreq[i] = 0;
+		apu->sweep_enable[i] = 0;
+		apu->sweep_mode[i] = 0;
+		apu->sweep_write[i] = 0;
+		apu->sweep_div_period[i] = 0;
+		apu->sweep_div[i] = 1;
+		apu->sweep_amount[i] = 0;
+		apu->envelope_disable[i] = 0;
+		apu->envelope_loop[i] = 0;
+		apu->envelope_write[i] = 0;
+		apu->envelope_div_period[i] = 0;
+		apu->envelope_div[i] = 0;
+		apu->envelope_counter[i] = 0;
+		apu->length_counter[i] = 0;
+		apu->enable[i] = 0;
+	}
 
 	for (i = 0x4000; i < 0x4008; i++)
 		NES_APU_np_Write(apu, i, 0);
