@@ -802,6 +802,11 @@ UINT32 VGMPlayer::GetModifiedLoopCount(UINT32 defaultLoops) const
 		return loopCntModified - _fileHdr.loopBase;
 }
 
+const std::vector<VGMPlayer::DACSTRM_DEV>& VGMPlayer::GetStreamDevInfo(void) const
+{
+	return _dacStreams;
+}
+
 
 UINT8 VGMPlayer::Start(void)
 {

@@ -320,6 +320,12 @@ int main(int argc, char* argv[])
 				(int)pdi.id, pdi.type, (INT8)pdi.instance, FCC2Str(pdi.core).c_str(), pdi.devCfg->clock, pdi.smplRate, pdi.volume);
 		}
 	}
+	const std::vector<VGMPlayer::DACSTRM_DEV>* vgmPcmStrms = NULL;
+	if (player->GetPlayerType() == FCC_VGM)
+	{
+		VGMPlayer* vgmplay = dynamic_cast<VGMPlayer*>(player);
+		vgmPcmStrms = &vgmplay->GetStreamDevInfo();
+	}
 	
 	StartDiskWriter("waveOut.wav");
 	
@@ -349,7 +355,25 @@ int main(int argc, char* argv[])
 				pState = "Fading ";
 			else
 				pState = "Playing";
-			printf("%s %.2f / %.2f ...   \r", pState, mainPlr.GetCurTime(1), mainPlr.GetTotalTime(1));
+			if (vgmPcmStrms == NULL || vgmPcmStrms->empty())
+			{
+				printf("%s %.2f / %.2f ...   \r", pState, mainPlr.GetCurTime(1), mainPlr.GetTotalTime(1));
+			}
+			else
+			{
+				const VGMPlayer::DACSTRM_DEV* strmDev = &(*vgmPcmStrms)[0];
+				std::string pbMode = " ";
+				if (strmDev->pbMode & 0x10)
+					pbMode += 'R';	// reverse playback
+				if (strmDev->pbMode & 0x80)
+					pbMode += 'L';	// looping
+				if (pbMode.length() == 1)
+					pbMode.clear();
+				printf("%s %.2f / %.2f [%02X / %02X at %4.1f KHz%s] ...     \r",
+					pState, mainPlr.GetCurTime(1), mainPlr.GetTotalTime(1),
+					1 + strmDev->lastItem, strmDev->maxItems, strmDev->freq / 1000.0,
+					pbMode.c_str());
+			}
 			fflush(stdout);
 			needRefresh = false;
 		}

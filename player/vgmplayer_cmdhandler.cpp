@@ -869,6 +869,10 @@ void VGMPlayer::Cmd_DACCtrl_Setup(void)	// DAC Stream Control: Setup Chip
 		dacStrm.defInf.devDef->Reset(dacStrm.defInf.dataPtr);
 		dacStrm.streamID = fData[0x01];
 		dacStrm.bankID = 0xFF;
+		dacStrm.pbMode = 0x00;
+		dacStrm.freq = 0;
+		dacStrm.lastItem = (UINT32)-1;
+		dacStrm.maxItems = 0;
 		
 		_dacStrmMap[dacStrm.streamID] = _dacStreams.size();
 		_dacStreams.push_back(dacStrm);
@@ -900,6 +904,7 @@ void VGMPlayer::Cmd_DACCtrl_SetData(void)	// DAC Stream Control: Set Data Bank
 		return;
 	PCM_BANK* pcmBnk = &_pcmBank[dacStrm->bankID];
 	
+	dacStrm->maxItems = (UINT32)pcmBnk->bankOfs.size();
 	daccontrol_set_data(dacStrm->defInf.dataPtr, &pcmBnk->data[0], (UINT32)pcmBnk->data.size(), fData[0x03], fData[0x04]);
 	return;
 }
@@ -911,8 +916,8 @@ void VGMPlayer::Cmd_DACCtrl_SetFrequency(void)	// DAC Stream Control: Set Freque
 		return;
 	DACSTRM_DEV* dacStrm = &_dacStreams[dsID];
 	
-	UINT32 freq = ReadLE32(&fData[0x02]);
-	daccontrol_set_frequency(dacStrm->defInf.dataPtr, freq);
+	dacStrm->freq = ReadLE32(&fData[0x02]);
+	daccontrol_set_frequency(dacStrm->defInf.dataPtr, dacStrm->freq);
 	return;
 }
 
@@ -925,7 +930,9 @@ void VGMPlayer::Cmd_DACCtrl_PlayData_Loc(void)	// DAC Stream Control: Play Data 
 	
 	UINT32 startOfs = ReadLE32(&fData[0x02]);
 	UINT32 soundLen = ReadLE32(&fData[0x07]);
-	daccontrol_start(dacStrm->defInf.dataPtr, startOfs, fData[0x06], soundLen);
+	dacStrm->lastItem = (UINT32)-1;
+	dacStrm->pbMode = fData[0x06];
+	daccontrol_start(dacStrm->defInf.dataPtr, startOfs, dacStrm->pbMode, soundLen);
 	return;
 }
 
@@ -933,8 +940,12 @@ void VGMPlayer::Cmd_DACCtrl_Stop(void)	// DAC Stream Control: Stop immediately
 {
 	if (fData[0x01] == 0xFF)
 	{
-		for (size_t curStrm = 0; curStrm < _dacStreams.size(); curStrm ++)
-			daccontrol_stop(_dacStreams[curStrm].defInf.dataPtr);
+		for (size_t curStrm = 0; curStrm < _dacStreams.size(); curStrm++)
+		{
+			DACSTRM_DEV* dacStrm = &_dacStreams[curStrm];
+			dacStrm->lastItem = (UINT32)-1;
+			daccontrol_stop(dacStrm->defInf.dataPtr);
+		}
 		return;
 	}
 	
@@ -943,6 +954,7 @@ void VGMPlayer::Cmd_DACCtrl_Stop(void)	// DAC Stream Control: Stop immediately
 		return;
 	DACSTRM_DEV* dacStrm = &_dacStreams[dsID];
 	
+	dacStrm->lastItem = (UINT32)-1;
 	daccontrol_stop(dacStrm->defInf.dataPtr);
 	return;
 }
@@ -958,12 +970,16 @@ void VGMPlayer::Cmd_DACCtrl_PlayData_Blk(void)	// DAC Stream Control: Play Data 
 	PCM_BANK* pcmBnk = &_pcmBank[dacStrm->bankID];
 	
 	UINT16 sndID = ReadLE16(&fData[0x02]);
+	dacStrm->lastItem = sndID;
+	dacStrm->maxItems = (UINT32)pcmBnk->bankOfs.size();
+	if (sndID >= pcmBnk->bankOfs.size())
+		return;
 	UINT32 startOfs = pcmBnk->bankOfs[sndID];
 	UINT32 soundLen = pcmBnk->bankSize[sndID];
-	UINT8 flags = DCTRL_LMODE_BYTES |
-				((fData[0x04] & 0x10) << 0) |	// Reverse Mode
-				((fData[0x04] & 0x01) << 7);	// Looping
-	daccontrol_start(dacStrm->defInf.dataPtr, startOfs, flags, soundLen);
+	dacStrm->pbMode = DCTRL_LMODE_BYTES |
+					((fData[0x04] & 0x10) << 0) |	// Reverse Mode
+					((fData[0x04] & 0x01) << 7);	// Looping
+	daccontrol_start(dacStrm->defInf.dataPtr, startOfs, dacStrm->pbMode, soundLen);
 	return;
 }
 

@@ -67,7 +67,17 @@ public:
 		DEVFUNC_WRITE_MEMSIZE romSizeB;
 		DEVFUNC_WRITE_BLOCK romWriteB;
 	};
-	
+	struct DACSTRM_DEV
+	{
+		DEV_INFO defInf;
+		UINT8 streamID;
+		UINT8 bankID;
+		UINT8 pbMode;
+		UINT32 freq;
+		UINT32 lastItem;
+		UINT32 maxItems;
+	};
+
 protected:
 	struct HDR_CHIP_DEF
 	{
@@ -96,12 +106,6 @@ protected:
 		std::vector<UINT8> cfgData;
 	};
 	
-	struct DACSTRM_DEV
-	{
-		DEV_INFO defInf;
-		UINT8 streamID;
-		UINT8 bankID;
-	};
 	struct PCM_BANK
 	{
 		std::vector<UINT8> data;
@@ -171,6 +175,7 @@ public:
 	//UINT32 GetTotalPlayTicks(UINT32 numLoops) const;	// get time for playing + looping (without fading)
 	
 	UINT32 GetModifiedLoopCount(UINT32 defaultLoops) const;	// get loop count, modified according to LoopModified/LoopBase header
+	const std::vector<DACSTRM_DEV>& GetStreamDevInfo(void) const;
 	
 	UINT8 Start(void);
 	UINT8 Stop(void);
