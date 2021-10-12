@@ -2,6 +2,7 @@
 // Required libraries:
 //	- ole32.lib (COM stuff)
 #define _CRTDBG_MAP_ALLOC
+#define _WIN32_DCOM	// for CoInitializeEx() / COINIT_MULTITHREADED
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

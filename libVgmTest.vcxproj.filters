@@ -51,6 +51,9 @@
     <ClInclude Include="utils\StrUtils.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
+    <ClInclude Include="player\playera.hpp">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="emutest.c">
@@ -102,6 +105,9 @@
       <Filter>Quelldateien</Filter>
     </ClCompile>
     <ClCompile Include="utils\StrUtils-CPConv_Win.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="player\playera.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
   </ItemGroup>

@@ -368,7 +368,7 @@ int main(int argc, char* argv[])
 				if (strmDev->pbMode & 0x80)
 					pbMode += 'L';	// looping
 				if (pbMode.length() == 1)
-					pbMode.clear();
+					pbMode = "";
 				printf("%s %.2f / %.2f [%02X / %02X at %4.1f KHz%s] ...     \r",
 					pState, mainPlr.GetCurTime(1), mainPlr.GetTotalTime(1),
 					1 + strmDev->lastItem, strmDev->maxItems, strmDev->freq / 1000.0,
