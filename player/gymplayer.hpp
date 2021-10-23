@@ -50,6 +50,7 @@ private:
 	struct DevCfg
 	{
 		UINT8 type;
+		UINT16 volume;
 		std::vector<UINT8> data;
 	};
 public:

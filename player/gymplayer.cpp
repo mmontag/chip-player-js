@@ -341,7 +341,7 @@ UINT8 GYMPlayer::GetSongDeviceInfo(std::vector<PLR_DEV_INFO>& devInfList) const
 		else
 		{
 			devInf.core = 0x00;
-			devInf.volume = 0x100;
+			devInf.volume = _devCfgs[curDev].volume;
 			devInf.smplRate = 0;
 		}
 		devInfList.push_back(devInf);
@@ -535,14 +535,15 @@ void GYMPlayer::GenerateDeviceConfig(void)
 	{
 		DEV_GEN_CFG devCfg;
 		memset(&devCfg, 0x00, sizeof(DEV_GEN_CFG));
-		devCfg.clock = 7670453;
+		devCfg.clock = 7670453;	// YMAMP clock: 7670442
 		_devCfgs[0].type = DEVID_YM2612;
+		_devCfgs[0].volume = 0x100;
 		SaveDeviceConfig(_devCfgs[0].data, &devCfg, sizeof(DEV_GEN_CFG));
 	}
 	{
 		SN76496_CFG snCfg;
 		memset(&snCfg, 0x00, sizeof(SN76496_CFG));
-		snCfg._genCfg.clock = 3579545;
+		snCfg._genCfg.clock = 3579545;	// YMAMP clock: 3579580
 		snCfg.shiftRegWidth = 0x10;
 		snCfg.noiseTaps = 0x09;
 		snCfg.segaPSG = 1;
@@ -551,6 +552,7 @@ void GYMPlayer::GenerateDeviceConfig(void)
 		snCfg.clkDiv = 8;
 		snCfg.t6w28_tone = NULL;
 		_devCfgs[1].type = DEVID_SN76496;
+		_devCfgs[1].volume = 0x80;
 		SaveDeviceConfig(_devCfgs[1].data, &snCfg, sizeof(SN76496_CFG));
 	}
 	
@@ -607,7 +609,7 @@ UINT8 GYMPlayer::Start(void)
 		
 		for (clDev = &cDev->base; clDev != NULL; clDev = clDev->linkDev)
 		{
-			Resmpl_SetVals(&clDev->resmpl, 0xFF, 0x100, _outSmplRate);
+			Resmpl_SetVals(&clDev->resmpl, 0xFF, _devCfgs[curDev].volume, _outSmplRate);
 			Resmpl_DevConnect(&clDev->resmpl, &clDev->defInf);
 			Resmpl_Init(&clDev->resmpl);
 		}
