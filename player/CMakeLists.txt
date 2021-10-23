@@ -7,6 +7,7 @@ set(PLAYER_FILES
 	helper.c
 	playerbase.cpp
 	droplayer.cpp
+	gymplayer.cpp
 	s98player.cpp
 	vgmplayer_cmdhandler.cpp
 	vgmplayer.cpp
@@ -19,6 +20,7 @@ set(PLAYER_HEADERS
 	logging.h
 	playerbase.hpp
 	droplayer.hpp
+	gymplayer.hpp
 	s98player.hpp
 	vgmplayer.hpp
 	playera.hpp

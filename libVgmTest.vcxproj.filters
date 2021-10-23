@@ -54,6 +54,9 @@
     <ClInclude Include="player\playera.hpp">
       <Filter>Headerdateien</Filter>
     </ClInclude>
+    <ClInclude Include="player\gymplayer.hpp">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="emutest.c">
@@ -108,6 +111,9 @@
       <Filter>Quelldateien</Filter>
     </ClCompile>
     <ClCompile Include="player\playera.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="player\gymplayer.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
   </ItemGroup>

@@ -16,6 +16,7 @@
 #include "player/vgmplayer.hpp"
 #include "player/s98player.hpp"
 #include "player/droplayer.hpp"
+#include "player/gymplayer.hpp"
 #include "player/playera.hpp"
 #include "utils/DataLoader.h"
 #include "utils/FileLoader.h"
@@ -224,6 +225,7 @@ int main(int argc, const char *argv[]) {
     player.RegisterPlayerEngine(new VGMPlayer);
     player.RegisterPlayerEngine(new S98Player);
     player.RegisterPlayerEngine(new DROPlayer);
+    player.RegisterPlayerEngine(new GYMPlayer);
 
     /* setup the player's output parameters and allocate internal buffers */
     if (player.SetOutputSettings(sample_rate, 2, bit_depth, BUFFER_LEN)) {

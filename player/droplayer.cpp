@@ -662,7 +662,7 @@ UINT8 DROPlayer::Start(void)
 		
 		for (clDev = &cDev->base; clDev != NULL; clDev = clDev->linkDev)
 		{
-			if (clDev->defInf.devDef->SetMuteMask != NULL)
+			if (devOpts != NULL && clDev->defInf.devDef->SetMuteMask != NULL)
 				clDev->defInf.devDef->SetMuteMask(clDev->defInf.dataPtr, devOpts->muteOpts.chnMute[0]);
 			
 			Resmpl_SetVals(&clDev->resmpl, 0xFF, 0x100, _outSmplRate);
