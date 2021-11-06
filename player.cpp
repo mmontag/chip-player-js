@@ -56,6 +56,9 @@ static const char* GetFileTitle(const char* filePath);
 static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void* Data);
 static UINT8 FilePlayCallback(PlayerBase* player, void* userParam, UINT8 evtType, void* evtParam);
 static DATA_LOADER* RequestFileCallback(void* userParam, PlayerBase* player, const char* fileName);
+static const char* LogLevel2Str(UINT8 level);
+static void PlayerLogCallback(void* userParam, PlayerBase* player, UINT8 level, UINT8 srcType,
+	const char* srcTag, const char* message);
 static UINT32 GetNthAudioDriver(UINT8 adrvType, INT32 drvNumber);
 static UINT8 InitAudioSystem(void);
 static UINT8 DeinitAudioSystem(void);
@@ -131,6 +134,7 @@ int main(int argc, char* argv[])
 	mainPlr.RegisterPlayerEngine(new GYMPlayer);
 	mainPlr.SetEventCallback(FilePlayCallback, NULL);
 	mainPlr.SetFileReqCallback(RequestFileCallback, NULL);
+	mainPlr.SetLogCallback(PlayerLogCallback, NULL);
 	//mainPlr.SetOutputSettings() is done in StartAudioDevice()
 	{
 		PlayerA::Config pCfg = mainPlr.GetConfiguration();
@@ -267,7 +271,8 @@ int main(int argc, char* argv[])
 		if (! (retVal & 0x80))
 		{
 			static const INT16 panPos[4] = {0x00, -0x80, +0x80, 0x00};
-			devOpts.emuCore[0] = FCC_MAXM;
+			if (! devOpts.emuCore[0])
+				devOpts.emuCore[0] = FCC_MAXM;
 			memcpy(devOpts.panOpts.chnPan, panPos, sizeof(panPos));
 			player->SetDeviceOptions(devOptID, devOpts);
 		}
@@ -296,7 +301,8 @@ int main(int argc, char* argv[])
 		retVal = player->GetDeviceOptions(devOptID, devOpts);
 		if (! (retVal & 0x80))
 		{
-			devOpts.emuCore[0] = FCC_MAME;
+			if (! devOpts.emuCore[0])
+				devOpts.emuCore[0] = FCC_MAME;
 			player->SetDeviceOptions(devOptID, devOpts);
 		}
 	}
@@ -941,6 +947,26 @@ static DATA_LOADER* RequestFileCallback(void* userParam, PlayerBase* player, con
 		return dLoad;
 	DataLoader_Deinit(dLoad);
 	return NULL;
+}
+
+static const char* LogLevel2Str(UINT8 level)
+{
+	static const char* LVL_NAMES[6] = {" ??? ", "Error", "Warn ", "Info ", "Debug", "Trace"};
+	if (level >= (sizeof(LVL_NAMES) / sizeof(LVL_NAMES[0])))
+		level = 0;
+	return LVL_NAMES[level];
+}
+
+static void PlayerLogCallback(void* userParam, PlayerBase* player, UINT8 level, UINT8 srcType,
+	const char* srcTag, const char* message)
+{
+	if (level >= PLRLOG_TRACE)
+		return;	// don't print trace logs (debug is okay)
+	if (srcType == PLRLOGSRC_PLR)
+		printf("[%s] %s: %s", LogLevel2Str(level), player->GetPlayerName(), message);
+	else
+		printf("[%s] %s %s: %s", LogLevel2Str(level), player->GetPlayerName(), srcTag, message);
+	return;
 }
 
 static UINT32 GetNthAudioDriver(UINT8 adrvType, INT32 drvNumber)

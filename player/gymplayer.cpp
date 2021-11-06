@@ -527,10 +527,22 @@ UINT32 GYMPlayer::GetLoopTicks(void) const
 		return _totalTicks - _fileHdr.loopFrame;
 }
 
+/*static*/ void GYMPlayer::SndEmuLogCB(void* userParam, void* source, UINT8 level, const char* message)
+{
+	DEVLOG_CB_DATA* cbData = (DEVLOG_CB_DATA*)userParam;
+	GYMPlayer* player = cbData->player;
+	if (player->_logCbFunc == NULL)
+		return;
+	player->_logCbFunc(player->_logCbParam, player, level, PLRLOGSRC_EMU,
+		player->_devNames[cbData->chipDevID].c_str(), message);
+	return;
+}
+
 
 void GYMPlayer::GenerateDeviceConfig(void)
 {
 	_devCfgs.clear();
+	_devNames.clear();
 	_devCfgs.resize(2);
 	{
 		DEV_GEN_CFG devCfg;
@@ -539,6 +551,7 @@ void GYMPlayer::GenerateDeviceConfig(void)
 		_devCfgs[0].type = DEVID_YM2612;
 		_devCfgs[0].volume = 0x100;
 		SaveDeviceConfig(_devCfgs[0].data, &devCfg, sizeof(DEV_GEN_CFG));
+		_devNames.push_back("FM");
 	}
 	{
 		SN76496_CFG snCfg;
@@ -554,6 +567,7 @@ void GYMPlayer::GenerateDeviceConfig(void)
 		_devCfgs[1].type = DEVID_SN76496;
 		_devCfgs[1].volume = 0x80;
 		SaveDeviceConfig(_devCfgs[1].data, &snCfg, sizeof(SN76496_CFG));
+		_devNames.push_back("PSG");
 	}
 	
 	return;
@@ -597,6 +611,10 @@ UINT8 GYMPlayer::Start(void)
 		}
 		SndEmu_GetDeviceFunc(cDev->base.defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&cDev->write);
 		
+		cDev->logCbData.player = this;
+		cDev->logCbData.chipDevID = curDev;
+		if (cDev->base.defInf.devDef->SetLogCB != NULL)
+			cDev->base.defInf.devDef->SetLogCB(cDev->base.defInf.dataPtr, GYMPlayer::SndEmuLogCB, &cDev->logCbData);
 		SetupLinkedDevices(&cDev->base, NULL, NULL);
 		
 		if (devOpts != NULL)

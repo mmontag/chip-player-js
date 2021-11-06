@@ -33,15 +33,6 @@ struct S98_DEVICE
 	UINT32 app_spec;	// [v2: application-specific] [v3: reserved]
 };
 
-typedef struct _s98_chip_device S98_CHIPDEV;
-struct _s98_chip_device
-{
-	VGM_BASEDEV base;
-	size_t optID;
-	std::vector<UINT8> cfg;
-	DEVFUNC_WRITE_A8D8 write;
-};
-
 class S98Player : public PlayerBase
 {
 private:
@@ -49,12 +40,25 @@ private:
 	{
 		std::vector<UINT8> data;
 	};
+	struct DEVLOG_CB_DATA
+	{
+		S98Player* player;
+		size_t chipDevID;
+	};
+	struct S98_CHIPDEV
+	{
+		VGM_BASEDEV base;
+		size_t optID;
+		std::vector<UINT8> cfg;
+		DEVFUNC_WRITE_A8D8 write;
+		DEVLOG_CB_DATA logCbData;
+	};
 	struct DEVLINK_CB_DATA
 	{
 		S98Player* player;
 		S98_CHIPDEV* chipDev;
 	};
-
+	
 public:
 	S98Player();
 	~S98Player();
@@ -111,6 +115,8 @@ private:
 	
 	void RefreshTSRates(void);
 	
+	static void SndEmuLogCB(void* userParam, void* source, UINT8 level, const char* message);
+	
 	void GenerateDeviceConfig(void);
 	static void DeviceLinkCallback(void* userParam, VGM_BASEDEV* cDev, DEVLINK_INFO* dLink);
 	UINT8 SeekToTick(UINT32 tick);
@@ -148,6 +154,7 @@ private:
 	PLR_DEV_OPTS _devOpts[_OPT_DEV_COUNT * 2];	// space for 2 instances per chip
 	size_t _devOptMap[0x100][2];	// maps libvgm device ID to _devOpts vector
 	std::vector<S98_CHIPDEV> _devices;
+	std::vector<std::string> _devNames;
 	size_t _optDevMap[_OPT_DEV_COUNT * 2];	// maps _devOpts vector index to _devices vector
 	
 	UINT32 _filePos;

@@ -266,6 +266,13 @@ void PlayerA::SetFileReqCallback(PLAYER_FILEREQ_CB cbFunc, void* cbParam)
 	return;
 }
 
+void PlayerA::SetLogCallback(PLAYER_LOG_CB cbFunc, void* cbParam)
+{
+	for (size_t curPlr = 0; curPlr < _avbPlrs.size(); curPlr ++)
+		_avbPlrs[curPlr]->SetLogCallback(cbFunc, cbParam);
+	return;
+}
+
 UINT8 PlayerA::GetState(void) const
 {
 	if (_player == NULL)

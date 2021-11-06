@@ -36,14 +36,6 @@ struct GYM_HEADER
 	UINT32 realFileSize;	// internal file size after possible decompression
 };
 
-typedef struct _gym_chip_device GYM_CHIPDEV;
-struct _gym_chip_device
-{
-	VGM_BASEDEV base;
-	size_t optID;
-	DEVFUNC_WRITE_A8D8 write;
-};
-
 class GYMPlayer : public PlayerBase
 {
 private:
@@ -53,6 +45,19 @@ private:
 		UINT16 volume;
 		std::vector<UINT8> data;
 	};
+	struct DEVLOG_CB_DATA
+	{
+		GYMPlayer* player;
+		size_t chipDevID;
+	};
+	struct GYM_CHIPDEV
+	{
+		VGM_BASEDEV base;
+		size_t optID;
+		DEVFUNC_WRITE_A8D8 write;
+		DEVLOG_CB_DATA logCbData;
+	};
+	
 public:
 	GYMPlayer();
 	~GYMPlayer();
@@ -106,6 +111,8 @@ private:
 	void LoadTag(const char* tagName, const void* data, size_t maxlen);
 	std::string GetUTF8String(const char* startPtr, const char* endPtr);
 	
+	static void SndEmuLogCB(void* userParam, void* source, UINT8 level, const char* message);
+	
 	void GenerateDeviceConfig(void);
 	UINT8 SeekToTick(UINT32 tick);
 	UINT8 SeekToFilePos(UINT32 pos);
@@ -142,6 +149,7 @@ private:
 	
 	PLR_DEV_OPTS _devOpts[2];	// 0 = YM2612, 1 = SEGA PSG
 	std::vector<GYM_CHIPDEV> _devices;
+	std::vector<std::string> _devNames;
 	size_t _optDevMap[2];	// maps _devOpts vector index to _devices vector
 	
 	UINT32 _filePos;

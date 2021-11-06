@@ -330,6 +330,7 @@ UINT8 DROPlayer::UnloadFile(void)
 	_devPanning.clear();
 	_devCfgs.clear();
 	_devices.clear();
+	_devNames.clear();
 	
 	return 0x00;
 }
@@ -591,13 +592,27 @@ UINT32 DROPlayer::GetLoopTicks(void) const
 	return 0;
 }
 
+/*static*/ void DROPlayer::SndEmuLogCB(void* userParam, void* source, UINT8 level, const char* message)
+{
+	DEVLOG_CB_DATA* cbData = (DEVLOG_CB_DATA*)userParam;
+	DROPlayer* player = cbData->player;
+	if (player->_logCbFunc == NULL)
+		return;
+	player->_logCbFunc(player->_logCbParam, player, level, PLRLOGSRC_EMU,
+		player->_devNames[cbData->chipDevID].c_str(), message);
+	return;
+}
+
 
 void DROPlayer::GenerateDeviceConfig(void)
 {
 	size_t curDev;
+	const char* chipName;
+	char chipNameFull[0x10];
 	
 	_devCfgs.clear();
 	_devCfgs.resize(_devTypes.size());
+	_devNames.clear();
 	for (curDev = 0; curDev < _devCfgs.size(); curDev ++)
 	{
 		DEV_GEN_CFG* devCfg = &_devCfgs[curDev];
@@ -607,6 +622,17 @@ void DROPlayer::GenerateDeviceConfig(void)
 		if (_devTypes[curDev] == DEVID_YMF262)
 			devCfg->clock *= 4;	// OPL3 uses a 14 MHz clock
 		devCfg->flags = 0x00;
+		
+		chipName = (_devTypes[curDev] == DEVID_YMF262) ? "OPL3" : "OPL2";
+		if (_devCfgs.size() <= 1)
+		{
+			_devNames.push_back(chipName);
+		}
+		else
+		{
+			snprintf(chipNameFull, 0x10, "%s #%u", chipName, 1 + (unsigned int)curDev);
+			_devNames.push_back(chipNameFull);
+		}
 	}
 	
 	return;
@@ -650,6 +676,10 @@ UINT8 DROPlayer::Start(void)
 		}
 		SndEmu_GetDeviceFunc(cDev->base.defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&cDev->write);
 		
+		cDev->logCbData.player = this;
+		cDev->logCbData.chipDevID = curDev;
+		if (cDev->base.defInf.devDef->SetLogCB != NULL)
+			cDev->base.defInf.devDef->SetLogCB(cDev->base.defInf.dataPtr, DROPlayer::SndEmuLogCB, &cDev->logCbData);
 		SetupLinkedDevices(&cDev->base, NULL, NULL);
 		
 		if (devOpts != NULL)

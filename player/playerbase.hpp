@@ -31,6 +31,19 @@ typedef UINT8 (*PLAYER_EVENT_CB)(PlayerBase* player, void* userParam, UINT8 evtT
 
 typedef DATA_LOADER* (*PLAYER_FILEREQ_CB)(void* userParam, PlayerBase* player, const char* fileName);
 
+typedef void (*PLAYER_LOG_CB)(void* userParam, PlayerBase* player, UINT8 level, UINT8 srcType, const char* srcTag, const char* message);
+// log levels
+#define PLRLOG_OFF		DEVLOG_OFF
+#define PLRLOG_ERROR	DEVLOG_ERROR
+#define PLRLOG_WARN		DEVLOG_WARN
+#define PLRLOG_INFO		DEVLOG_INFO
+#define PLRLOG_DEBUG	DEVLOG_DEBUG
+#define PLRLOG_TRACE	DEVLOG_TRACE
+// log source types
+#define PLRLOGSRC_PLR	0x00	// player
+#define PLRLOGSRC_EMU	0x01	// sound emulation
+
+
 struct PLR_SONG_INFO
 {
 	UINT32 format;		// four-character-code for file format
@@ -115,6 +128,7 @@ public:
 	virtual UINT8 SetPlaybackSpeed(double speed);
 	virtual void SetEventCallback(PLAYER_EVENT_CB cbFunc, void* cbParam);
 	virtual void SetFileReqCallback(PLAYER_FILEREQ_CB cbFunc, void* cbParam);
+	virtual void SetLogCallback(PLAYER_LOG_CB cbFunc, void* cbParam);
 	virtual UINT32 Tick2Sample(UINT32 ticks) const = 0;
 	virtual UINT32 Sample2Tick(UINT32 samples) const = 0;
 	virtual double Tick2Second(UINT32 ticks) const = 0;
@@ -139,6 +153,8 @@ protected:
 	void* _eventCbParam;
 	PLAYER_FILEREQ_CB _fileReqCbFunc;
 	void* _fileReqCbParam;
+	PLAYER_LOG_CB _logCbFunc;
+	void* _logCbParam;
 };
 
 #endif	// __PLAYERBASE_HPP__

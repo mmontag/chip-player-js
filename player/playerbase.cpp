@@ -8,7 +8,9 @@ PlayerBase::PlayerBase() :
 	_eventCbFunc(NULL),
 	_eventCbParam(NULL),
 	_fileReqCbFunc(NULL),
-	_fileReqCbParam(NULL)
+	_fileReqCbParam(NULL),
+	_logCbFunc(NULL),
+	_logCbParam(NULL)
 {
 }
 
@@ -79,6 +81,14 @@ void PlayerBase::SetFileReqCallback(PLAYER_FILEREQ_CB cbFunc, void* cbParam)
 {
 	_fileReqCbFunc = cbFunc;
 	_fileReqCbParam = cbParam;
+	
+	return;
+}
+
+void PlayerBase::SetLogCallback(PLAYER_LOG_CB cbFunc, void* cbParam)
+{
+	_logCbFunc = cbFunc;
+	_logCbParam = cbParam;
 	
 	return;
 }

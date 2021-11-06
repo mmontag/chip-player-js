@@ -50,6 +50,11 @@ struct VGM_PLAY_OPTIONS
 class VGMPlayer : public PlayerBase
 {
 public:
+	struct DEVLOG_CB_DATA
+	{
+		VGMPlayer* player;
+		size_t chipDevID;
+	};
 	struct CHIP_DEVICE	// Note: has to be a POD, because I use memset() on it.
 	{
 		VGM_BASEDEV base;
@@ -66,6 +71,7 @@ public:
 		DEVFUNC_WRITE_BLOCK romWrite;
 		DEVFUNC_WRITE_MEMSIZE romSizeB;
 		DEVFUNC_WRITE_BLOCK romWriteB;
+		DEVLOG_CB_DATA logCbData;
 	};
 	struct DACSTRM_DEV
 	{
@@ -198,6 +204,8 @@ protected:
 	
 	void RefreshTSRates(void);
 	
+	static void SndEmuLogCB(void* userParam, void* source, UINT8 level, const char* message);
+	
 	UINT32 GetHeaderChipClock(UINT8 chipType) const;	// returns raw chip clock value from VGM header
 	inline UINT32 GetChipCount(UINT8 chipType) const;
 	UINT32 GetChipClock(UINT8 chipType, UINT8 chipID) const;
@@ -208,8 +216,8 @@ protected:
 	void InitDevices(void);
 	
 	static void DeviceLinkCallback(void* userParam, VGM_BASEDEV* cDev, DEVLINK_INFO* dLink);
-	void LoadOPL4ROM(CHIP_DEVICE* chipDev);
 	CHIP_DEVICE* GetDevicePtr(UINT8 chipType, UINT8 chipID);
+	void LoadOPL4ROM(CHIP_DEVICE* chipDev);
 	
 	UINT8 SeekToTick(UINT32 tick);
 	UINT8 SeekToFilePos(UINT32 pos);
@@ -340,6 +348,7 @@ protected:
 	size_t _vdDevMap[_CHIP_COUNT][2];	// maps VGM device ID to _devices vector
 	size_t _optDevMap[_OPT_DEV_COUNT * 2];	// maps _devOpts vector index to _devices vector
 	std::vector<CHIP_DEVICE> _devices;
+	std::vector<std::string> _devNames;
 	
 	size_t _dacStrmMap[0x100];	// maps VGM DAC stream ID -> _dacStreams vector
 	std::vector<DACSTRM_DEV> _dacStreams;

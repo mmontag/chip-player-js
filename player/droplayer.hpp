@@ -70,16 +70,22 @@ struct DRO_PLAY_OPTIONS
 };
 
 
-typedef struct _dro_chip_device DRO_CHIPDEV;
-struct _dro_chip_device
-{
-	VGM_BASEDEV base;
-	size_t optID;
-	DEVFUNC_WRITE_A8D8 write;
-};
-
 class DROPlayer : public PlayerBase
 {
+private:
+	struct DEVLOG_CB_DATA
+	{
+		DROPlayer* player;
+		size_t chipDevID;
+	};
+	struct DRO_CHIPDEV
+	{
+		VGM_BASEDEV base;
+		size_t optID;
+		DEVFUNC_WRITE_A8D8 write;
+		DEVLOG_CB_DATA logCbData;
+	};
+	
 public:
 	DROPlayer();
 	~DROPlayer();
@@ -131,6 +137,8 @@ private:
 	
 	void ScanInitBlock(void);
 	
+	static void SndEmuLogCB(void* userParam, void* source, UINT8 level, const char* message);
+	
 	void GenerateDeviceConfig(void);
 	UINT8 SeekToTick(UINT32 tick);
 	UINT8 SeekToFilePos(UINT32 pos);
@@ -167,6 +175,7 @@ private:
 	DRO_PLAY_OPTIONS _playOpts;
 	PLR_DEV_OPTS _devOpts[3];	// 0 = 1st OPL2, 1 = 2nd OPL2, 2 = 1st OPL3
 	std::vector<DRO_CHIPDEV> _devices;
+	std::vector<std::string> _devNames;
 	size_t _optDevMap[3];	// maps _devOpts vector index to _devices vector
 	
 	UINT32 _filePos;

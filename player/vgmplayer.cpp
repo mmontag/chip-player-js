@@ -31,6 +31,10 @@
 #include "helper.h"
 #include "logging.h"
 
+#ifdef _MSC_VER
+#define snprintf	_snprintf
+#endif
+
 /*static*/ const UINT8 VGMPlayer::_OPT_DEV_LIST[_OPT_DEV_COUNT] =
 {
 	DEVID_SN76496, DEVID_YM2413, DEVID_YM2612, DEVID_YM2151, DEVID_SEGAPCM, DEVID_RF5C68, DEVID_YM2203, DEVID_YM2608,
@@ -466,8 +470,9 @@ UINT8 VGMPlayer::UnloadFile(void)
 	_fileData = NULL;
 	_fileHdr.fileVer = 0xFFFFFFFF;
 	_fileHdr.dataOfs = 0x00;
-	_devCfgs.clear();
+	_devNames.clear();
 	_devices.clear();
+	_devCfgs.clear();
 	for (size_t curTag = 0; curTag < _TAG_COUNT; curTag ++)
 		_tagData[curTag] = std::string();
 	_tagList[0] = NULL;
@@ -807,6 +812,17 @@ const std::vector<VGMPlayer::DACSTRM_DEV>& VGMPlayer::GetStreamDevInfo(void) con
 	return _dacStreams;
 }
 
+/*static*/ void VGMPlayer::SndEmuLogCB(void* userParam, void* source, UINT8 level, const char* message)
+{
+	DEVLOG_CB_DATA* cbData = (DEVLOG_CB_DATA*)userParam;
+	VGMPlayer* player = cbData->player;
+	if (player->_logCbFunc == NULL)
+		return;
+	player->_logCbFunc(player->_logCbParam, player, level, PLRLOGSRC_EMU,
+		player->_devNames[cbData->chipDevID].c_str(), message);
+	return;
+}
+
 
 UINT8 VGMPlayer::Start(void)
 {
@@ -845,6 +861,7 @@ UINT8 VGMPlayer::Stop(void)
 	
 	for (curDev = 0; curDev < _devices.size(); curDev ++)
 		FreeDeviceTree(&_devices[curDev].base, 0);
+	_devNames.clear();
 	_devices.clear();
 	_devCfgs.clear();
 	if (_eventCbFunc != NULL)
@@ -1230,6 +1247,7 @@ void VGMPlayer::InitDevices(void)
 	size_t curChip;
 	
 	_devices.clear();
+	_devNames.clear();
 	{
 		UINT8 vgmChip;
 		UINT8 chipID;
@@ -1431,11 +1449,24 @@ void VGMPlayer::InitDevices(void)
 		}
 		sdCfg.deviceID = _devices.size();
 		
+		std::string devName = SndEmu_GetDevName(chipType, 0x00, devCfg);	// use short name for now
+		if (GetChipCount(sdCfg.vgmChipType) > 1)
+		{
+			char postFix[0x10];
+			snprintf(postFix, 0x10, " #%u", 1 + chipID);
+			devName += postFix;
+		}
+		chipDev.logCbData.player = this;
+		chipDev.logCbData.chipDevID = _devices.size();
+		_devNames.push_back(devName);	// push here, so that we can have logs during SetupLinkedDevices()
+		
 		{
 			DEVLINK_CB_DATA dlCbData;
 			dlCbData.player = this;
 			dlCbData.sdCfg = &sdCfg;
 			dlCbData.chipDev = &chipDev;
+			if (devInf->devDef->SetLogCB != NULL)	// allow for device link warnings
+				devInf->devDef->SetLogCB(devInf->dataPtr, VGMPlayer::SndEmuLogCB, &chipDev.logCbData);
 			SetupLinkedDevices(&chipDev.base, &DeviceLinkCallback, &dlCbData);
 		}
 		// already done by SndEmu_Start()
@@ -1459,7 +1490,12 @@ void VGMPlayer::InitDevices(void)
 	for (curChip = 0; curChip < _devices.size(); curChip ++)
 	{
 		CHIP_DEVICE& chipDev = _devices[curChip];
+		DEV_INFO* devInf = &chipDev.base.defInf;
 		VGM_BASEDEV* clDev;
+		
+		if (devInf->devDef->SetLogCB != NULL)
+			devInf->devDef->SetLogCB(devInf->dataPtr, VGMPlayer::SndEmuLogCB, &chipDev.logCbData);
+		
 		UINT8 linkCntr = 0;
 		for (clDev = &chipDev.base; clDev != NULL; clDev = clDev->linkDev, linkCntr ++)
 		{

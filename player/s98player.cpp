@@ -786,12 +786,24 @@ UINT32 S98Player::GetLoopTicks(void) const
 		return _totalTicks - _loopTick;
 }
 
+/*static*/ void S98Player::SndEmuLogCB(void* userParam, void* source, UINT8 level, const char* message)
+{
+	DEVLOG_CB_DATA* cbData = (DEVLOG_CB_DATA*)userParam;
+	S98Player* player = cbData->player;
+	if (player->_logCbFunc == NULL)
+		return;
+	player->_logCbFunc(player->_logCbParam, player, level, PLRLOGSRC_EMU,
+		player->_devNames[cbData->chipDevID].c_str(), message);
+	return;
+}
+
 
 void S98Player::GenerateDeviceConfig(void)
 {
 	size_t curDev;
 	
 	_devCfgs.clear();
+	_devNames.clear();
 	_devCfgs.resize(_devHdrs.size());
 	for (curDev = 0; curDev < _devCfgs.size(); curDev ++)
 	{
@@ -804,6 +816,7 @@ void S98Player::GenerateDeviceConfig(void)
 		devCfg.flags = 0x00;
 		
 		deviceID = (devHdr->devType < S98DEV_END) ? S98_DEV_LIST[devHdr->devType] : 0xFF;
+		const char* devName = SndEmu_GetDevName(deviceID, 0x00, &devCfg);	// use short name for now
 		switch(deviceID)
 		{
 		case DEVID_AY8910:
@@ -815,12 +828,14 @@ void S98Player::GenerateDeviceConfig(void)
 				{
 					ayCfg.chipType = AYTYPE_YM2149;
 					ayCfg.chipFlags = YM2149_PIN26_LOW;
+					devName = "YM2149";
 				}
 				else
 				{
 					ayCfg.chipType = AYTYPE_AY8910;
 					ayCfg.chipFlags = 0x00;
 					ayCfg._genCfg.clock /= 2;
+					devName = "AY8910";
 				}
 				
 				SaveDeviceConfig(_devCfgs[curDev].data, &ayCfg, sizeof(AY8910_CFG));
@@ -845,6 +860,16 @@ void S98Player::GenerateDeviceConfig(void)
 		default:
 			SaveDeviceConfig(_devCfgs[curDev].data, &devCfg, sizeof(DEV_GEN_CFG));
 			break;
+		}
+		if (_devCfgs.size() <= 1)
+		{
+			_devNames.push_back(devName);
+		}
+		else
+		{
+			char fullName[0x10];
+			snprintf(fullName, 0x10, "%u-%s", 1 + (unsigned int)curDev, devName);
+			_devNames.push_back(fullName);
 		}
 	}
 	
@@ -921,6 +946,10 @@ UINT8 S98Player::Start(void)
 		}
 		SndEmu_GetDeviceFunc(cDev->base.defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&cDev->write);
 		
+		cDev->logCbData.player = this;
+		cDev->logCbData.chipDevID = curDev;
+		if (cDev->base.defInf.devDef->SetLogCB != NULL)
+			cDev->base.defInf.devDef->SetLogCB(cDev->base.defInf.dataPtr, S98Player::SndEmuLogCB, &cDev->logCbData);
 		{
 			DEVLINK_CB_DATA dlCbData;
 			dlCbData.player = this;
