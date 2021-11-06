@@ -72,6 +72,7 @@ DEV_DEF devDef_SAA1099_VB =
 	saa1099v_set_mute_mask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	NULL,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	devFunc,	// rwFuncs

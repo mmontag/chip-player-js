@@ -131,6 +131,7 @@
 #include "../snddef.h"
 #include "../EmuHelper.h"
 #include "../EmuCores.h"
+#include "../logging.h"
 #include "upd7759.h"
 
 
@@ -155,6 +156,7 @@ static void upd7759_alloc_rom(void* info, UINT32 memsize);
 static void upd7759_write_rom(void* info, UINT32 offset, UINT32 length, const UINT8* data);
 
 static void upd7759_set_mute_mask(void *info, UINT32 MuteMask);
+static void upd7759_set_log_cb(void* info, DEVCB_LOG func, void* param);
 
 
 static DEVDEF_RWFUNC devFunc[] =
@@ -179,6 +181,7 @@ static DEV_DEF devDef =
 	upd7759_set_mute_mask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	upd7759_set_log_cb,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	devFunc,	// rwFuncs
@@ -203,7 +206,6 @@ const DEV_DEF* devDefList_uPD7759[] =
 
 
 #define DEBUG_STATES    (0)
-#define DEBUG_METHOD    logerror
 
 
 
@@ -248,6 +250,7 @@ typedef struct _upd7759_state upd7759_state;
 struct _upd7759_state
 {
 	DEV_DATA _devData;
+	DEV_LOGGER logger;
 
 	/* chip configuration */
 	UINT8     sample_offset_shift;        /* header sample address shift (access data > 0xffff) */
@@ -367,7 +370,7 @@ static void get_fifo_data(upd7759_state *chip)
 {
 	if (chip->dbuf_pos_read == chip->dbuf_pos_write)
 	{
-		logerror("Warning: UPD7759 reading empty FIFO!\n");
+		emu_logf(&chip->logger, DEVLOG_WARN, "reading empty FIFO!\n");
 		return;
 	}
 	
@@ -400,7 +403,7 @@ static void advance_state(upd7759_state *chip)
 		/* Start state: we begin here as soon as a sample is triggered */
 		case STATE_START:
 			chip->req_sample = chip->rom ? chip->fifo_in : 0x10;
-			if (DEBUG_STATES) DEBUG_METHOD("UPD7759: req_sample = %02X\n", chip->req_sample);
+			if (DEBUG_STATES) emu_logf(&chip->logger, DEVLOG_TRACE, "req_sample = %02X\n", chip->req_sample);
 
 			/* 35+ cycles after we get here, the /DRQ goes low
 			 *     (first byte (number of samples in ROM) should be sent in response)
@@ -416,7 +419,7 @@ static void advance_state(upd7759_state *chip)
 		/* First request state: issue a request for the first byte */
 		/* The expected response will be the index of the last sample */
 		case STATE_FIRST_REQ:
-			if (DEBUG_STATES) DEBUG_METHOD("UPD7759: first data request\n");
+			if (DEBUG_STATES) emu_logf(&chip->logger, DEVLOG_TRACE, "first data request\n");
 			chip->drq = 1;
 
 			/* 44 cycles later, we will latch this value and request another byte */
@@ -428,7 +431,7 @@ static void advance_state(upd7759_state *chip)
 		/* The second byte read will be just a dummy */
 		case STATE_LAST_SAMPLE:
 			chip->last_sample = chip->rom ? chip->rom[0] : chip->fifo_in;
-			if (DEBUG_STATES) DEBUG_METHOD("UPD7759: last_sample = %02X, requesting dummy 1\n", chip->last_sample);
+			if (DEBUG_STATES) emu_logf(&chip->logger, DEVLOG_TRACE, "last_sample = %02X, requesting dummy 1\n", chip->last_sample);
 			chip->drq = 1;
 
 			/* 28 cycles later, we will latch this value and request another byte */
@@ -439,7 +442,7 @@ static void advance_state(upd7759_state *chip)
 		/* First dummy state: ignore any data here and issue a request for the third byte */
 		/* The expected response will be the MSB of the sample address */
 		case STATE_DUMMY1:
-			if (DEBUG_STATES) DEBUG_METHOD("UPD7759: dummy1, requesting offset_hi\n");
+			if (DEBUG_STATES) emu_logf(&chip->logger, DEVLOG_TRACE, "dummy1, requesting offset_hi\n");
 			chip->drq = 1;
 
 			/* 32 cycles later, we will latch this value and request another byte */
@@ -451,7 +454,7 @@ static void advance_state(upd7759_state *chip)
 		/* The expected response will be the LSB of the sample address */
 		case STATE_ADDR_MSB:
 			chip->offset = (chip->rom ? chip->rom[chip->req_sample * 2 + 5] : chip->fifo_in) << (8 + chip->sample_offset_shift);
-			if (DEBUG_STATES) DEBUG_METHOD("UPD7759: offset_hi = %02X, requesting offset_lo\n", chip->offset >> (8 + chip->sample_offset_shift));
+			if (DEBUG_STATES) emu_logf(&chip->logger, DEVLOG_TRACE, "offset_hi = %02X, requesting offset_lo\n", chip->offset >> (8 + chip->sample_offset_shift));
 			chip->drq = 1;
 
 			/* 44 cycles later, we will latch this value and request another byte */
@@ -463,8 +466,8 @@ static void advance_state(upd7759_state *chip)
 		/* The expected response will be just a dummy */
 		case STATE_ADDR_LSB:
 			chip->offset |= (chip->rom ? chip->rom[chip->req_sample * 2 + 6] : chip->fifo_in) << chip->sample_offset_shift;
-			if (DEBUG_STATES) DEBUG_METHOD("UPD7759: offset_lo = %02X, requesting dummy 2\n", (chip->offset >> chip->sample_offset_shift) & 0xff);
-			if (chip->offset > chip->rommask) logerror("uPD7759 offset %X > rommask %X\n",chip->offset, chip->rommask);
+			if (DEBUG_STATES) emu_logf(&chip->logger, DEVLOG_TRACE, "offset_lo = %02X, requesting dummy 2\n", (chip->offset >> chip->sample_offset_shift) & 0xff);
+			if (chip->offset > chip->rommask) emu_logf(&chip->logger, DEVLOG_DEBUG, "offset %X > rommask %X\n",chip->offset, chip->rommask);
 			chip->drq = 1;
 
 			/* 36 cycles later, we will latch this value and request another byte */
@@ -477,7 +480,7 @@ static void advance_state(upd7759_state *chip)
 		case STATE_DUMMY2:
 			chip->offset++;
 			chip->first_valid_header = 0;
-			if (DEBUG_STATES) DEBUG_METHOD("UPD7759: dummy2, requesting block header\n");
+			if (DEBUG_STATES) emu_logf(&chip->logger, DEVLOG_TRACE, "dummy2, requesting block header\n");
 			chip->drq = 1;
 
 			/* 36?? cycles later, we will latch this value and request another byte */
@@ -495,7 +498,7 @@ static void advance_state(upd7759_state *chip)
 				chip->offset = chip->repeat_offset;
 			}
 			chip->block_header = chip->rom ? chip->rom[chip->offset++ & chip->rommask] : chip->fifo_in;
-			if (DEBUG_STATES) DEBUG_METHOD("UPD7759: header (@%05X) = %02X, requesting next byte\n", chip->offset, chip->block_header);
+			if (DEBUG_STATES) emu_logf(&chip->logger, DEVLOG_TRACE, "header (@%05X) = %02X, requesting next byte\n", chip->offset, chip->block_header);
 			chip->drq = 1;
 
 			/* our next step depends on the top two bits */
@@ -538,7 +541,7 @@ static void advance_state(upd7759_state *chip)
 		/* The expected response will be the first data byte */
 		case STATE_NIBBLE_COUNT:
 			chip->nibbles_left = (chip->rom ? chip->rom[chip->offset++ & chip->rommask] : chip->fifo_in) + 1;
-			if (DEBUG_STATES) DEBUG_METHOD("UPD7759: nibble_count = %u, requesting next byte\n", (unsigned)chip->nibbles_left);
+			if (DEBUG_STATES) emu_logf(&chip->logger, DEVLOG_TRACE, "nibble_count = %u, requesting next byte\n", (unsigned)chip->nibbles_left);
 			chip->drq = 1;
 
 			/* 36?? cycles later, we will latch this value and request another byte */
@@ -683,7 +686,7 @@ static void upd7759_slave_update(void *ptr)
 	advance_state(chip);
 
 	// if the DRQ changed, update it
-	//logerror("upd7759_slave_update: DRQ %d->%d\n", olddrq, chip->drq);
+	//emu_logf(&chip->logger, DEVLOG_DEBUG, "slave_update: DRQ %d->%d\n", olddrq, chip->drq);
 	if (olddrq != chip->drq && chip->drqcallback != NULL)
 		(*chip->drqcallback)(chip, chip->drq);
 
@@ -823,7 +826,7 @@ static void upd7759_start_w(void *info, UINT8 state)
 	UINT8 oldstart = chip->start;
 	chip->start = (state != 0);
 
-	//logerror("upd7759_start_w: %d->%d\n", oldstart, chip->start);
+	//emu_logf(&chip->logger, DEVLOG_DEBUG, "start_w: %d->%d\n", oldstart, chip->start);
 
 	/* on the rising edge, if we're idle, start going, but not if we're held in reset */
 	if (chip->state == STATE_IDLE && !oldstart && chip->start && chip->reset)
@@ -946,5 +949,12 @@ static void upd7759_set_mute_mask(void *info, UINT32 MuteMask)
 	
 	chip->Muted = MuteMask & 0x01;
 	
+	return;
+}
+
+static void upd7759_set_log_cb(void* info, DEVCB_LOG func, void* param)
+{
+	upd7759_state *chip = (upd7759_state *)info;
+	dev_logger_set(&chip->logger, chip, func, param);
 	return;
 }

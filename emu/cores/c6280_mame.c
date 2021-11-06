@@ -82,6 +82,7 @@ DEV_DEF devDef_C6280_MAME =
 	c6280mame_set_mute_mask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	NULL,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	devFunc,	// rwFuncs

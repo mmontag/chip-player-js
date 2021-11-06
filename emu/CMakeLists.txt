@@ -245,6 +245,7 @@ endif()
 set(EMU_FILES
 	SoundEmu.c
 	Resampler.c
+	logging.c
 	panning.c
 	dac_control.c
 )

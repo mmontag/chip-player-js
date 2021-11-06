@@ -61,6 +61,7 @@ Registers:
 #include "../EmuCores.h"
 #include "../snddef.h"
 #include "../EmuHelper.h"
+#include "../logging.h"
 #include "x1_010.h"
 
 
@@ -76,6 +77,7 @@ static void x1_010_alloc_rom(void* info, UINT32 memsize);
 static void x1_010_write_rom(void *chip, UINT32 offset, UINT32 length, const UINT8* data);
 
 static void x1_010_set_mute_mask(void *chip, UINT32 MuteMask);
+static void x1_010_set_log_cb(void *chip, DEVCB_LOG func, void* param);
 
 
 static DEVDEF_RWFUNC devFunc[] =
@@ -100,6 +102,7 @@ static DEV_DEF devDef =
 	x1_010_set_mute_mask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	x1_010_set_log_cb,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	devFunc,	// rwFuncs
@@ -116,7 +119,7 @@ const DEV_DEF* devDefList_X1_010[] =
 #define VERBOSE_REGISTER_WRITE 0
 #define VERBOSE_REGISTER_READ 0
 
-#define LOG_SOUND(x) do { if (VERBOSE_SOUND) logerror x; } while (0)
+//#define LOG_SOUND(x) do { if (VERBOSE_SOUND) logerror x; } while (0)
 #define LOG_REGISTER_WRITE(x) do { if (VERBOSE_REGISTER_WRITE) logerror x; } while (0)
 #define LOG_REGISTER_READ(x) do { if (VERBOSE_REGISTER_READ) logerror x; } while (0)
 
@@ -142,6 +145,7 @@ typedef struct _x1_010_state x1_010_state;
 struct _x1_010_state
 {
 	DEV_DATA _devData;
+	DEV_LOGGER logger;
 	
 	/* Variables only used here */
 	UINT32 ROMSize;
@@ -200,9 +204,9 @@ static void seta_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 				if( freq == 0 ) freq = 4;
 				smp_step = (UINT32)((float)info->base_clock/8192.0f
 							*freq*(1<<FREQ_BASE_BITS)/(float)info->rate+0.5f);
-				if( smp_offs == 0 ) {
-					LOG_SOUND(( "Play sample %p - %p, channel %X volume %d:%d freq %X step %X offset %X\n",
-						start, end, ch, volL, volR, freq, smp_step, smp_offs ));
+				if( smp_offs == 0 && VERBOSE_SOUND ) {
+					emu_logf(&info->logger, DEVLOG_TRACE, "Play sample %p - %p, channel %X volume %d:%d freq %X step %X offset %X\n",
+						start, end, ch, volL, volR, freq, smp_step, smp_offs );
 				}
 				for( i = 0; i < samples; i++ ) {
 					delta = smp_offs>>FREQ_BASE_BITS;
@@ -227,9 +231,9 @@ static void seta_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 				env_offs = info->env_offset[ch];
 				env_step = (UINT32)((float)info->base_clock/128.0/1024.0/4.0*reg->start*(1<<ENV_BASE_BITS)/(float)info->rate+0.5f);
 				/* Print some more debug info */
-				if( smp_offs == 0 ) {
-					LOG_SOUND(( "Play waveform %X, channel %X volume %X freq %4X step %X offset %X\n",
-						reg->volume, ch, reg->end, freq, smp_step, smp_offs ));
+				if( smp_offs == 0 && VERBOSE_SOUND ) {
+					emu_logf(&info->logger, DEVLOG_TRACE, "Play waveform %X, channel %X volume %X freq %4X step %X offset %X\n",
+						reg->volume, ch, reg->end, freq, smp_step, smp_offs );
 				}
 				for( i = 0; i < samples; i++ ) {
 					int vol;
@@ -376,5 +380,12 @@ static void x1_010_set_mute_mask(void *chip, UINT32 MuteMask)
 	for (CurChn = 0; CurChn < SETA_NUM_CHANNELS; CurChn ++)
 		info->Muted[CurChn] = (MuteMask >> CurChn) & 0x01;
 	
+	return;
+}
+
+static void x1_010_set_log_cb(void *chip, DEVCB_LOG func, void* param)
+{
+	x1_010_state *info = (x1_010_state *)chip;
+	dev_logger_set(&info->logger, info, func, param);
 	return;
 }

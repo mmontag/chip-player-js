@@ -49,6 +49,7 @@ Revisions:
 #include "../EmuCores.h"
 #include "../snddef.h"
 #include "../EmuHelper.h"
+#include "../logging.h"
 #include "iremga20.h"
 
 
@@ -65,6 +66,7 @@ static void iremga20_write_rom(void *info, UINT32 offset, UINT32 length, const U
 
 static void iremga20_set_mute_mask(void *info, UINT32 MuteMask);
 static void iremga20_set_options(void *chip, UINT32 Flags);
+static void iremga20_set_log_cb(void* info, DEVCB_LOG func, void* param);
 
 
 static DEVDEF_RWFUNC devFunc[] =
@@ -89,6 +91,7 @@ static DEV_DEF devDef =
 	iremga20_set_mute_mask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	iremga20_set_log_cb,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	devFunc,	// rwFuncs
@@ -125,6 +128,7 @@ typedef struct _ga20_state ga20_state;
 struct _ga20_state
 {
 	DEV_DATA _devData;
+	DEV_LOGGER logger;
 	
 	UINT8 *rom;
 	UINT32 rom_size;
@@ -211,7 +215,7 @@ static void irem_ga20_w(void *info, UINT8 offset, UINT8 data)
 	struct IremGA20_channel_def* ch;
 	int channel;
 
-	//logerror("GA20:  Offset %02x, data %04x\n",offset,data);
+	//emu_logf(&chip->logger, DEVLOG_DEBUG, Offset %02x, data %04x\n",offset,data);
 
 	offset &= 0x1F;
 	channel = offset >> 3;
@@ -289,7 +293,7 @@ static UINT8 irem_ga20_r(void *info, UINT8 offset)
 			return chip->channel[channel].play;
 
 		default:
-			logerror("GA20: read unk. register %d, channel %d\n", offset & 0x7, channel);
+			emu_logf(&chip->logger, DEVLOG_DEBUG, "read unk. register %d, channel %d\n", offset & 0x7, channel);
 			break;
 	}
 
@@ -393,5 +397,12 @@ static void iremga20_set_options(void *info, UINT32 Flags)
 	
 	chip->interpolate = Flags & OPT_GA20_INTERPOLATE;
 	
+	return;
+}
+
+static void iremga20_set_log_cb(void* info, DEVCB_LOG func, void* param)
+{
+	ga20_state *chip = (ga20_state *)info;
+	dev_logger_set(&chip->logger, chip, func, param);
 	return;
 }

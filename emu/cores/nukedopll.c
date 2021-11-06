@@ -58,6 +58,7 @@ DEV_DEF devDef_YM2413_Nuked =
 	nukedopll_set_mute_mask,
 	NULL,
 	NULL,	// SetSampleRateChangeCallback
+	NULL,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	devFunc,	// rwFuncs

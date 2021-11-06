@@ -173,6 +173,7 @@ DEV_DEF devDef_QSound_ctr =
 	qsoundc_set_mute_mask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	NULL,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	devFunc,	// rwFuncs

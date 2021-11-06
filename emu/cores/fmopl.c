@@ -78,6 +78,7 @@ Revision History:
 #include "../../stdtype.h"
 #include "../snddef.h"
 #include "../EmuHelper.h"
+#include "../logging.h"
 
 #ifndef SNDDEV_SELECT
 #define SNDDEV_YM3812
@@ -200,6 +201,7 @@ typedef struct
 typedef struct fm_opl_f
 {
 	DEV_DATA _devData;
+	DEV_LOGGER logger;
 
 	/* FM channel slots */
 	OPL_CH  P_CH[9];                /* OPL/OPL2 chips have 9 channels*/
@@ -1486,7 +1488,7 @@ static void OPLWriteReg(FM_OPL *OPL, UINT8 r, UINT8 v)
 				if(OPL->keyboardhandler_w)
 					OPL->keyboardhandler_w(OPL->keyboard_param,v);
 				else
-					logerror("Y8950: write unmapped KEYBOARD port\n");
+					emu_logf(&OPL->logger, DEVLOG_DEBUG, "write unmapped KEYBOARD port\n");
 			}
 			break;
 		case 0x07:  /* DELTA-T control 1 : START,REC,MEMDATA,REPT,SPOFF,x,x,RST */
@@ -1520,7 +1522,7 @@ static void OPLWriteReg(FM_OPL *OPL, UINT8 r, UINT8 v)
 		case 0x15:      /* DAC data high 8 bits (F7,F6...F2) */
 		case 0x16:      /* DAC data low 2 bits (F1, F0 in bits 7,6) */
 		case 0x17:      /* DAC data shift (S2,S1,S0 in bits 2,1,0) */
-			logerror("FMOPL.C: DAC data register written, but not implemented reg=%02x val=%02x\n",r,v);
+			emu_logf(&OPL->logger, DEVLOG_DEBUG, "DAC data register written, but not implemented reg=%02x val=%02x\n",r,v);
 			break;
 
 		case 0x18:      /* I/O CTRL (Direction) */
@@ -1537,7 +1539,7 @@ static void OPLWriteReg(FM_OPL *OPL, UINT8 r, UINT8 v)
 			break;
 #endif
 		default:
-			logerror("FMOPL.C: write to unknown register: %02x\n",r);
+			emu_logf(&OPL->logger, DEVLOG_DEBUG, "write to unknown register: %02x\n",r);
 			break;
 		}
 		break;
@@ -1875,7 +1877,7 @@ static UINT8 OPLRead(FM_OPL *OPL,UINT8 a)
 			if(OPL->keyboardhandler_r)
 				return OPL->keyboardhandler_r(OPL->keyboard_param);
 			else
-				logerror("Y8950: read unmapped KEYBOARD port\n");
+				emu_logf(&OPL->logger, DEVLOG_DEBUG, "read unmapped KEYBOARD port\n");
 		}
 		return 0;
 
@@ -1885,7 +1887,7 @@ static UINT8 OPLRead(FM_OPL *OPL,UINT8 a)
 			UINT8 val;
 
 			val = YM_DELTAT_ADPCM_Read(OPL->deltat);
-			/*logerror("Y8950: read ADPCM value read=%02x\n",val);*/
+			/*emu_logf(&OPL->logger, DEVLOG_DEBUG, "read ADPCM value read=%02x\n",val);*/
 			return val;
 		}
 		return 0;
@@ -1896,13 +1898,13 @@ static UINT8 OPLRead(FM_OPL *OPL,UINT8 a)
 			if(OPL->porthandler_r)
 				return OPL->porthandler_r(OPL->port_param);
 			else
-				logerror("Y8950:read unmapped I/O port\n");
+				emu_logf(&OPL->logger, DEVLOG_DEBUG, "read unmapped I/O port\n");
 		}
 		return 0;
 	case 0x1a: /* PCM-DATA    */
 		if(OPL->type&OPL_TYPE_ADPCM)
 		{
-			logerror("Y8950 A/D conversion is accessed but not implemented !\n");
+			emu_logf(&OPL->logger, DEVLOG_DEBUG, "A/D conversion is accessed but not implemented !\n");
 			return 0x80; /* 2's complement PCM data - result from A/D conversion */
 		}
 		return 0;
@@ -2245,6 +2247,7 @@ void *y8950_init(UINT32 clock, UINT32 rate)
 	if (Y8950 == NULL)
 		return NULL;
 	
+	Y8950->deltat->logger = &Y8950->logger;
 	Y8950->deltat->memory = NULL;
 	Y8950->deltat->memory_size = 0x00;
 	Y8950->deltat->memory_mask = 0x00;
@@ -2439,5 +2442,12 @@ void opl_set_mute_mask(void *chip, UINT32 MuteMask)
 	for (CurChn = 0; CurChn < 6; CurChn ++)
 		opl->MuteSpc[CurChn] = (MuteMask >> (9 + CurChn)) & 0x01;
 	
+	return;
+}
+
+void opl_set_log_cb(void* chip, DEVCB_LOG func, void* param)
+{
+	FM_OPL *opl = (FM_OPL *)chip;
+	dev_logger_set(&opl->logger, opl, func, param);
 	return;
 }

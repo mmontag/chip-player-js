@@ -144,6 +144,7 @@
 #include "../EmuStructs.h"
 #include "../EmuCores.h"
 #include "../EmuHelper.h"
+#include "../logging.h"
 #include "sn764intf.h"
 #include "sn76496.h"
 
@@ -158,6 +159,7 @@ static void sn76496_shutdown(void *chip);
 static void sn76496_reset(void *chip);
 static void sn76496_freq_limiter(void* chip, UINT32 sample_rate);
 static void sn76496_set_mute_mask(void *chip, UINT32 MuteMask);
+static void sn76496_set_log_cb(void *info, DEVCB_LOG func, void* param);
 
 static UINT8 device_start_sn76496_mame(const SN76496_CFG* cfg, DEV_INFO* retDevInf);
 static void sn76496_w_mame(void *chip, UINT8 reg, UINT8 data);
@@ -182,6 +184,7 @@ DEV_DEF devDef_SN76496_MAME =
 	sn76496_set_mute_mask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	sn76496_set_log_cb,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	devFunc,	// rwFuncs
@@ -195,6 +198,7 @@ typedef struct _sn76496_state sn76496_state;
 struct _sn76496_state
 {
 	DEV_DATA _devData;
+	DEV_LOGGER logger;
 	SN76496_CFG cfg;
 	
 	UINT32 clock;
@@ -238,7 +242,7 @@ static void sn76496_stereo_w(void *chip, UINT8 offset, UINT8 data)
 {
 	sn76496_state *R = (sn76496_state*)chip;
 	if (R->stereo) R->stereo_mask = data;
-	else logerror("sn76496_base_device: Call to stereo write with mono chip!\n");
+	else emu_logf(&R->logger, DEVLOG_WARN, "Call to stereo write with mono chip!\n");
 }
 
 static void sn76496_write_reg(void *chip, UINT8 offset, UINT8 data)
@@ -288,7 +292,7 @@ static void sn76496_write_reg(void *chip, UINT8 offset, UINT8 data)
 			break;
 		case 6: // noise: frequency, mode
 			{
-				//if ((data & 0x80) == 0) logerror("sn76496_base_device: write to reg 6 with bit 7 clear; data was %03x, new write is %02x! report this to LN!\n", R->Register[6], data);
+				//if ((data & 0x80) == 0) emu_logf(&R->logger, DEVLOG_DEBUG, "write to reg 6 with bit 7 clear; data was %03x, new write is %02x! report this to LN!\n", R->Register[6], data);
 				if ((data & 0x80) == 0) R->Register[r] = (R->Register[r] & 0x3f0) | (data & 0x0f);
 				n = R->Register[6]&3;
 				// N/512,N/1024,N/2048,Tone #3 output
@@ -606,6 +610,13 @@ static void sn76496_set_mute_mask(void *chip, UINT32 MuteMask)
 	for (CurChn = 0; CurChn < 4; CurChn ++)
 		R->MuteMsk[CurChn] = (MuteMask & (1 << CurChn)) ? 0 : ~0;
 	
+	return;
+}
+
+static void sn76496_set_log_cb(void *chip, DEVCB_LOG func, void* param)
+{
+	sn76496_state *R = (sn76496_state*)chip;
+	dev_logger_set(&R->logger, R, func, param);
 	return;
 }
 

@@ -90,6 +90,7 @@ DEV_DEF devDef_YM2413_MAME =
 	ym2413_set_mute_mask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	NULL,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	devFunc,	// rwFuncs

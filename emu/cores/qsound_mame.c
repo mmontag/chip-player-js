@@ -36,6 +36,7 @@
 #include "../EmuCores.h"
 #include "../snddef.h"
 #include "../EmuHelper.h"
+#include "../logging.h"
 #include "qsound_mame.h"
 
 
@@ -52,6 +53,7 @@ static void qsound_alloc_rom(void* info, UINT32 memsize);
 static void qsound_write_rom(void *info, UINT32 offset, UINT32 length, const UINT8* data);
 static void qsound_set_mute_mask(void *info, UINT32 MuteMask);
 static UINT32 qsound_get_mute_mask(void *info);
+static void qsound_set_log_cb(void* info, DEVCB_LOG func, void* param);
 
 
 static DEVDEF_RWFUNC devFunc[] =
@@ -77,17 +79,11 @@ DEV_DEF devDef_QSound_MAME =
 	qsound_set_mute_mask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	qsound_set_log_cb,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	devFunc,	// rwFuncs
 };
-
-
-/*
-Debug defines
-*/
-#define VERBOSE  0
-#define LOG(x) do { if (VERBOSE) logerror x; } while (0)
 
 
 #define QSOUND_CLOCK    60000000  /* default 60MHz clock */
@@ -116,6 +112,7 @@ typedef struct _qsound_state qsound_state;
 struct _qsound_state
 {
 	DEV_DATA _devData;
+	DEV_LOGGER logger;
 	
 	qsound_channel channel[QSOUND_CHANNELS];
 	
@@ -199,8 +196,7 @@ static void qsound_w(void *info, UINT8 offset, UINT8 data)
 			break;
 
 		default:
-			//logerror("%s: qsound_w %d = %02x\n", machine().describe_context(), offset, data);
-			logerror("QSound: unexpected qsound write to offset %d == %02X\n", offset, data);
+			emu_logf(&chip->logger, DEVLOG_DEBUG, "unexpected qsound write to offset %d == %02X\n", offset, data);
 			break;
 	}
 }
@@ -311,7 +307,7 @@ static void qsound_write_data(void *info, UINT8 address, UINT16 data)
 			break;
 
 		default:
-			//logerror("%s: write_data %02x = %04x\n", machine().describe_context(), address, data);
+			//emu_logf(&chip->logger, DEVLOG_DEBUG, "write_data %02x = %04x\n", address, data);
 			break;
 	}
 }
@@ -427,4 +423,11 @@ static UINT32 qsound_get_mute_mask(void *info)
 		muteMask |= (chip->channel[CurChn].Muted << CurChn);
 	
 	return muteMask;
+}
+
+static void qsound_set_log_cb(void* info, DEVCB_LOG func, void* param)
+{
+	qsound_state* chip = (qsound_state *)info;
+	dev_logger_set(&chip->logger, chip, func, param);
+	return;
 }

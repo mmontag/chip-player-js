@@ -2,6 +2,7 @@
 #define __YMDELTAT_H__
 
 #include "../../stdtype.h"
+#include "../logging.h"
 
 #define YM_DELTAT_SHIFT    (16)
 
@@ -14,6 +15,7 @@ typedef void (*STATUS_CHANGE_HANDLER)(void *chip, UINT8 status_bits);
 
 /* DELTA-T (adpcm type B) struct */
 typedef struct deltat_adpcm_state {     /* AT: rearranged and tightened structure */
+	DEV_LOGGER* logger;
 	UINT8	*memory;
 	INT32	*output_pointer;/* pointer of output pointers   */
 	INT32	*pan;			/* pan : &output_pointer[pan]   */

@@ -1,5 +1,5 @@
-#ifndef __PANNING_H__
-#define __PANNING_H__
+#ifndef __EMU_PANNING_H__
+#define __EMU_PANNING_H__
 
 #ifdef __cplusplus
 extern "C"
@@ -23,4 +23,4 @@ void Panning_Centre(INT32 channels[2]);
 }
 #endif
 
-#endif	// __PANNING_H__
+#endif	// __EMU_PANNING_H__

@@ -53,6 +53,7 @@ DEV_DEF devDef_YM2413_Emu =
 	ym2413_set_mute_mask_emu,
 	ym2413_pan_emu,
 	NULL,	// SetSampleRateChangeCallback
+	NULL,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	devFunc,	// rwFuncs

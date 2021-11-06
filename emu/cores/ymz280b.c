@@ -39,6 +39,7 @@
 #include "../EmuCores.h"
 #include "../snddef.h"
 #include "../EmuHelper.h"
+#include "../logging.h"
 #include "ymz280b.h"
 
 static void update_irq_state_timer_common(void *param, int voicenum);
@@ -53,6 +54,7 @@ static void ymz280b_alloc_rom(void* info, UINT32 memsize);
 static void ymz280b_write_rom(void *info, UINT32 offset, UINT32 length, const UINT8* data);
 
 static void ymz280b_set_mute_mask(void *info, UINT32 MuteMask);
+static void ymz280b_set_log_cb(void *info, DEVCB_LOG func, void* param);
 
 
 static DEVDEF_RWFUNC devFunc[] =
@@ -77,6 +79,7 @@ static DEV_DEF devDef =
 	ymz280b_set_mute_mask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	ymz280b_set_log_cb,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	devFunc,	// rwFuncs
@@ -140,6 +143,7 @@ typedef struct _ymz280b_state ymz280b_state;
 struct _ymz280b_state
 {
 	DEV_DATA _devData;
+	DEV_LOGGER logger;
 	
 	struct YMZ280BVoice voice[8];   /* the 8 voices */
 	UINT8 current_register;         /* currently accessible register */
@@ -208,14 +212,14 @@ INLINE void update_irq_state(ymz280b_state *chip)
 		chip->irq_state = 1;
 		if (chip->irq_handler != NULL)
 			chip->irq_handler(chip->irq_param, 1);
-		//else logerror("YMZ280B: IRQ generated, but no callback specified!");
+		//else emu_logf(&chip->logger, DEVLOG_TRACE, "IRQ generated, but no callback specified!");
 	}
 	else if (!irq_bits && chip->irq_state)
 	{
 		chip->irq_state = 0;
 		if (chip->irq_handler != NULL)
 			chip->irq_handler(chip->irq_param, 0);
-		//else logerror("YMZ280B: IRQ generated, but no callback specified!");
+		//else emu_logf(&chip->logger, DEVLOG_TRACE, "IRQ generated, but no callback specified!");
 	}
 }
 
@@ -889,7 +893,7 @@ static void write_to_register(ymz280b_state *chip, UINT8 data)
 				break;
 
 			default:
-				logerror("YMZ280B: unknown register write %02X = %02X\n", chip->current_register, data);
+				emu_logf(&chip->logger, DEVLOG_DEBUG, "unknown register write %02X = %02X\n", chip->current_register, data);
 				break;
 		}
 	}
@@ -903,7 +907,7 @@ static void write_to_register(ymz280b_state *chip, UINT8 data)
 			case 0x80: // d0-2: DSP Rch, d3: enable Rch (0: yes, 1: no), d4-6: DSP Lch, d7: enable Lch (0: yes, 1: no)
 			case 0x81: // d0: enable control of $82 (0: yes, 1: no)
 			case 0x82: // DSP data
-				logerror("YMZ280B: DSP register write %02X = %02X\n", chip->current_register, data);
+				emu_logf(&chip->logger, DEVLOG_DEBUG, "DSP register write %02X = %02X\n", chip->current_register, data);
 				break;
 
 			case 0x84:      /* ROM readback / RAM write (high) */
@@ -926,7 +930,7 @@ static void write_to_register(ymz280b_state *chip, UINT8 data)
 					if (chip->ext_write_handler != NULL)
 						chip->ext_write_handler(chip->ext_param, chip->ext_mem_address, data);
 					//else
-					//	logerror("YMZ280B attempted RAM write to %X\n", chip->ext_mem_address);
+					//	emu_logf(&chip->logger, DEVLOG_TRACE, "attempted RAM write to %X\n", chip->ext_mem_address);
 					chip->ext_mem_address = (chip->ext_mem_address + 1) & 0xffffff;
 				}
 				break;
@@ -963,7 +967,7 @@ static void write_to_register(ymz280b_state *chip, UINT8 data)
 				break;
 
 			default:
-				logerror("YMZ280B: unknown register write %02X = %02X\n", chip->current_register, data);
+				emu_logf(&chip->logger, DEVLOG_DEBUG, "unknown register write %02X = %02X\n", chip->current_register, data);
 				break;
 		}
 	}
@@ -1067,5 +1071,12 @@ static void ymz280b_set_mute_mask(void *info, UINT32 MuteMask)
 	for (CurChn = 0; CurChn < 8; CurChn ++)
 		chip->voice[CurChn].Muted = (MuteMask >> CurChn) & 0x01;
 	
+	return;
+}
+
+static void ymz280b_set_log_cb(void *info, DEVCB_LOG func, void* param)
+{
+	ymz280b_state *chip = (ymz280b_state *)info;
+	dev_logger_set(&chip->logger, chip, func, param);
 	return;
 }

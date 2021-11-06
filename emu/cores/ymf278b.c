@@ -104,6 +104,7 @@
 #include "../SoundDevs.h"
 #include "../SoundEmu.h"
 #include "../EmuHelper.h"
+#include "../logging.h"
 #include "ymf278b.h"
 
 
@@ -127,6 +128,7 @@ static void ymf278b_write_rom(void *info, UINT32 offset, UINT32 length, const UI
 static void ymf278b_write_ram(void *info, UINT32 offset, UINT32 length, const UINT8* data);
 
 static void ymf278b_set_mute_mask(void *info, UINT32 MuteMask);
+static void ymf278b_set_log_cb(void *info, DEVCB_LOG func, void* param);
 
 
 static DEVDEF_RWFUNC devFunc[] =
@@ -153,6 +155,7 @@ static DEV_DEF devDef =
 	ymf278b_set_mute_mask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	ymf278b_set_log_cb,	// SetLoggingCallback
 	device_ymf278b_link_opl3,	// LinkDevice
 	
 	devFunc,	// rwFuncs
@@ -218,6 +221,7 @@ typedef struct
 struct _YMF278BChip
 {
 	DEV_DATA _devData;
+	DEV_LOGGER logger;
 
 	YMF278BSlot slots[24];
 
@@ -883,7 +887,7 @@ static void ymf278b_A_w(YMF278BChip *chip, UINT8 reg, UINT8 data)
 			ymf278b_irq_check(chip);*/
 			break;
 		default:
-//			logerror("YMF278B:  Port A write %02x, %02x\n", reg, data);
+//			emu_logf(&chip->logger, DEVLOG_DEBUG, "Port A write %02x, %02x\n", reg, data);
 			break;
 	}
 }
@@ -1176,7 +1180,7 @@ static UINT8 ymf278b_r(void *info, UINT8 offset)
 			break;
 
 		default:
-			logerror("YMF278B: unexpected read at offset %X from ymf278b\n", offset);
+			emu_logf(&chip->logger, DEVLOG_DEBUG, "unexpected read at offset %X from ymf278b\n", offset);
 			break;
 	}
 
@@ -1219,7 +1223,7 @@ static void ymf278b_w(void *info, UINT8 offset, UINT8 data)
 			break;
 
 		default:
-			logerror("YMF278B: unexpected write at offset %X to ymf278b = %02X\n", offset, data);
+			emu_logf(&chip->logger, DEVLOG_DEBUG, "unexpected write at offset %X to ymf278b = %02X\n", offset, data);
 			break;
 	}
 }
@@ -1491,7 +1495,7 @@ static void device_reset_ymf278b(void *info)
 	refresh_opl3_volume(chip);
 }
 
-static UINT8 get_opl3_funcs(const DEV_DEF* devDef, OPL3FM* retFuncs)
+static UINT8 get_opl3_funcs(const DEV_DEF* devDef, OPL3FM* retFuncs, DEV_LOGGER* logger)
 {
 	UINT8 retVal;
 	
@@ -1503,7 +1507,7 @@ static UINT8 get_opl3_funcs(const DEV_DEF* devDef, OPL3FM* retFuncs)
 	if (retVal)
 	{
 		retFuncs->setVol = NULL;
-		logerror("YMF278B Warning: Unable to control OPL3 volume.\n");
+		emu_logf(logger, DEVLOG_WARN, "Unable to control OPL3 volume.\n");
 	}
 	
 	if (devDef->Reset == NULL)
@@ -1530,7 +1534,7 @@ static UINT8 device_ymf278b_link_opl3(void* param, UINT8 devID, const DEV_INFO* 
 	}
 	else
 	{
-		retVal = get_opl3_funcs(defInfOPL3->devDef, &chip->fm);
+		retVal = get_opl3_funcs(defInfOPL3->devDef, &chip->fm, &chip->logger);
 		if (! retVal)
 			chip->fm.chip = defInfOPL3->dataPtr;
 		refresh_opl3_volume(chip);
@@ -1603,5 +1607,12 @@ static void ymf278b_set_mute_mask(void *info, UINT32 MuteMask)
 	for (CurChn = 0; CurChn < 24; CurChn ++)
 		chip->slots[CurChn].Muted = (MuteMask >> CurChn) & 0x01;
 	
+	return;
+}
+
+static void ymf278b_set_log_cb(void *info, DEVCB_LOG func, void* param)
+{
+	YMF278BChip *chip = (YMF278BChip *)info;
+	dev_logger_set(&chip->logger, chip, func, param);
 	return;
 }

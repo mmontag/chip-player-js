@@ -57,6 +57,7 @@ DEV_DEF devDef_RF5C68_MAME =
 	rf5c68_set_mute_mask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	NULL,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	devFunc,	// rwFuncs

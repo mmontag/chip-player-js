@@ -54,6 +54,7 @@ DEV_DEF devDef_SN76489_Maxim =
 	(DEVFUNC_OPTMASK)sn76489_mute_maxim,
 	(DEVFUNC_PANALL)sn76489_pan_maxim,
 	NULL,	// SetSampleRateChangeCallback
+	NULL,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	devFunc,	// rwFuncs

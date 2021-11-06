@@ -19,6 +19,7 @@
 #include "../EmuCores.h"
 #include "../snddef.h"
 #include "../EmuHelper.h"
+#include "../logging.h"
 #include "k054539.h"
 
 static void k054539_update(void *param, UINT32 samples, DEV_SMPL **outputs);
@@ -36,6 +37,7 @@ static void k054539_alloc_rom(void* chip, UINT32 memsize);
 static void k054539_write_rom(void *chip, UINT32 offset, UINT32 length, const UINT8* data);
 
 static void k054539_set_mute_mask(void *chip, UINT32 MuteMask);
+static void k054539_set_log_cb(void* chip, DEVCB_LOG func, void* param);
 
 
 static DEVDEF_RWFUNC devFunc[] =
@@ -60,6 +62,7 @@ static DEV_DEF devDef =
 	k054539_set_mute_mask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	k054539_set_log_cb,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	devFunc,	// rwFuncs
@@ -70,9 +73,6 @@ const DEV_DEF* devDefList_K054539[] =
 	NULL
 };
 
-
-#define VERBOSE 0
-#define LOG(x) do { if (VERBOSE) logerror x; } while (0)
 
 /* Registers:
    00..ff: 20 bytes/channel, 8 channels
@@ -124,6 +124,7 @@ struct _k054539_channel {
 typedef struct _k054539_state k054539_state;
 struct _k054539_state {
 	DEV_DATA _devData;
+	DEV_LOGGER logger;
 	
 	double voltab[256];
 	double pantab[0xf];
@@ -367,7 +368,8 @@ static void k054539_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 					break;
 				}
 				default:
-					LOG(("Unknown sample type %x for channel %d\n", base2[0] & 0xc, ch));
+					emu_logf(&info->logger, DEVLOG_DEBUG, "Unknown sample type %x for channel %d\n", base2[0] & 0xc, ch);
+					info->regs[0x22c] &= ~(1<<ch);	// turn off channel to prevent spamming log messages
 					break;
 				}
 				lval += cur_val * lvol;
@@ -529,7 +531,7 @@ static void k054539_w(void *chip, UINT16 offset, UINT8 data)
 				}
 				if(1 || ((offset >= 0x200) && (offset <= 0x210)))
 					break;
-				logerror("K054539 %03x = %02x\n", offset, data);
+				emu_logf(&info->logger, DEVLOG_TRACE, "%03x = %02x\n", offset, data);
 			}
 #endif
 		break;
@@ -561,7 +563,7 @@ static UINT8 k054539_r(void *chip, UINT16 offset)
 	case 0x22c:
 		break;
 	default:
-		LOG(("K054539 read %03x\n", offset));
+		emu_logf(&info->logger, DEVLOG_TRACE, "read %03x\n", offset);
 		break;
 	}
 	return info->regs[offset];
@@ -692,5 +694,12 @@ static void k054539_set_mute_mask(void *chip, UINT32 MuteMask)
 	for (CurChn = 0; CurChn < 8; CurChn ++)
 		info->Muted[CurChn] = (MuteMask >> CurChn) & 0x01;
 	
+	return;
+}
+
+static void k054539_set_log_cb(void* chip, DEVCB_LOG func, void* param)
+{
+	k054539_state *info = (k054539_state *)chip;
+	dev_logger_set(&info->logger, info, func, param);
 	return;
 }

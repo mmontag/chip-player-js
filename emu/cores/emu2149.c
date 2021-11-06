@@ -67,6 +67,7 @@ DEV_DEF devDef_YM2149_Emu =
 	(DEVFUNC_OPTMASK)EPSG_setMuteMask,
 	ay8910_pan_emu,
 	NULL,	// SetSampleRateChangeCallback
+	NULL,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	devFunc,	// rwFuncs

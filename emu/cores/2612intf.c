@@ -47,6 +47,7 @@ static DEV_DEF devDef_MAME =
 	ym2612_set_mute_mask,	// SetMuteMask
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	ym2612_set_log_cb,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	devFunc_MAME,	// rwFuncs
@@ -72,6 +73,7 @@ static DEV_DEF devDef_Gens =
 	(DEVFUNC_OPTMASK)YM2612_SetMute,	// SetMuteMask
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	NULL,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	devFunc_Gens,	// rwFuncs
@@ -97,6 +99,7 @@ static DEV_DEF devDef_Nuked =
 	nukedopn2_set_mute_mask,	// SetMuteMask
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	NULL,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	devFunc_Nuked,	// rwFuncs

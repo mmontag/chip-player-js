@@ -56,6 +56,7 @@ DEV_DEF devDef_RF5C68_Gens =
 	SCD_PCM_SetMuteMask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	NULL,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	devFunc,	// rwFuncs

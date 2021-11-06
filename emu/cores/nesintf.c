@@ -73,6 +73,7 @@ static DEV_DEF devDef_MAME =
 	nes_set_mute_mask_mame,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	NULL,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	devFunc_MAME,	// rwFuncs
@@ -100,6 +101,7 @@ static DEV_DEF devDef_NSFPlay =
 	nes_set_mute_mask_nsfplay,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	NULL,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	devFunc_NSFPlay,	// rwFuncs

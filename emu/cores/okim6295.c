@@ -57,6 +57,7 @@
 #include "../snddef.h"
 #include "../EmuHelper.h"
 #include "../EmuCores.h"
+#include "../logging.h"
 #include "okim6295.h"
 #include "okiadpcm.h"
 
@@ -80,6 +81,7 @@ static void okim6295_alloc_rom(void* info, UINT32 memsize);
 static void okim6295_write_rom(void* info, UINT32 offset, UINT32 length, const UINT8* data);
 static void okim6295_set_mute_mask(void *info, UINT32 MuteMask);
 static void okim6295_set_srchg_cb(void* chip, DEVCB_SRATE_CHG CallbackFunc, void* DataPtr);
+static void okim6295_set_log_cb(void* chip, DEVCB_LOG func, void* param);
 
 
 static DEVDEF_RWFUNC devFunc[] =
@@ -106,6 +108,7 @@ static DEV_DEF devDef =
 	okim6295_set_mute_mask,
 	NULL,	// SetPanning
 	okim6295_set_srchg_cb,	// SetSampleRateChangeCallback
+	okim6295_set_log_cb,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	devFunc,	// rwFuncs
@@ -134,6 +137,7 @@ typedef struct _okim_voice
 struct _okim6295_state
 {
 	DEV_DATA _devData;
+	DEV_LOGGER logger;
 	
 	// internal state
 	#define OKIM6295_VOICES 4
@@ -510,14 +514,14 @@ static void okim6295_write_command(okim6295_state *info, UINT8 data)
 					// invalid samples go here
 					else
 					{
-						logerror("OKIM6295: Voice %u requested to play invalid sample %02x\n",voicenum,info->command);
+						emu_logf(&info->logger, DEVLOG_DEBUG, "Voice %u requested to play invalid sample %02x\n",voicenum,info->command);
 						voice->playing = 0;
 					}
 				}
 				else
 				{
 					// just displays warnings when seeking
-					//logerror("OKIM6295: Voice %u requested to play sample %02x on non-stopped voice\n",voicenum,info->command);
+					//emu_logf(&info->logger, DEVLOG_DEBUG, "Voice %u requested to play sample %02x on non-stopped voice\n",voicenum,info->command);
 				}
 			}
 
@@ -631,5 +635,12 @@ static void okim6295_set_srchg_cb(void* chip, DEVCB_SRATE_CHG CallbackFunc, void
 	info->SmpRateFunc = CallbackFunc;
 	info->SmpRateData = DataPtr;
 	
+	return;
+}
+
+static void okim6295_set_log_cb(void* chip, DEVCB_LOG func, void* param)
+{
+	okim6295_state *info = (okim6295_state *)chip;
+	dev_logger_set(&info->logger, info, func, param);
 	return;
 }

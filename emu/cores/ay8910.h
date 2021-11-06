@@ -92,5 +92,6 @@ void ay8910_update_one(void *param, UINT32 samples, DEV_SMPL **outputs);
 void ay8910_set_mute_mask(void *chip, UINT32 MuteMask);
 void ay8910_set_stereo_mask(void *chip, UINT32 StereoMask);
 void ay8910_set_srchg_cb(void *chip, DEVCB_SRATE_CHG CallbackFunc, void* DataPtr);
+void ay8910_set_log_cb(void* chip, DEVCB_LOG func, void* param);
 
 #endif	// __AY8910_H__

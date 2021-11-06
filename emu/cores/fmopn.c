@@ -164,6 +164,7 @@
 #include "../../stdtype.h"
 #include "../snddef.h"
 #include "../EmuHelper.h"
+#include "../logging.h"
 
 #ifndef SNDDEV_SELECT
 #define SNDDEV_YM2203
@@ -707,6 +708,7 @@ typedef struct
 
 	DEVCB_SRATE_CHG smpRateFunc;
 	void* smpRateData;
+	DEV_LOGGER logger;
 } FM_OPN;
 
 
@@ -2659,6 +2661,13 @@ void ym2203_set_mute_mask(void *chip, UINT32 MuteMask)
 	
 	return;
 }
+
+void ym2203_set_log_cb(void* chip, DEVCB_LOG func, void* param)
+{
+	YM2203 *F2203 = (YM2203 *)chip;
+	dev_logger_set(&F2203->OPN.logger, F2203, func, param);
+	return;
+}
 #endif /* BUILD_YM2203 */
 
 
@@ -2782,9 +2791,9 @@ INLINE void ADPCMA_calc_chan( YM2610 *F2610, ADPCM_CH *ch )
 				return;
 			}
 #if 0
-			if ( ch->now_addr > (F2610->pcmsizeA<<1) )
+			if ( ch->now_addr > (F2610->pcm_size<<1) )
 			{
-				LOG(LOG_WAR,("YM2610: Attempting to play past adpcm rom size!\n" ));
+				emu_logf(&F2610->OPN.logger, DEVLOG_WARN, "YM2610: Attempting to play past adpcm rom size!\n");
 				return;
 			}
 #endif
@@ -2792,7 +2801,7 @@ INLINE void ADPCMA_calc_chan( YM2610 *F2610, ADPCM_CH *ch )
 				data = ch->now_data & 0x0f;
 			else
 			{
-				ch->now_data = *(F2610->pcmbuf+(ch->now_addr>>1));
+				ch->now_data = F2610->pcmbuf[ch->now_addr>>1];
 				data = (ch->now_data >> 4) & 0x0f;
 			}
 
@@ -2849,19 +2858,19 @@ static void FM_ADPCMAWrite(YM2610 *F2610,int r,int v)
 
 					if(F2610->pcmbuf==NULL)
 					{                   /* Check ROM Mapped */
-						logerror("YM2608-YM2610: ADPCM-A rom not mapped\n");
+						emu_logf(&F2610->OPN.logger, DEVLOG_WARN, "ADPCM-A rom not mapped\n");
 						adpcm[c].flag = 0;
 					}
 					else
 					{
 						if(adpcm[c].end >= F2610->pcm_size)
 						{   /* Check End in Range */
-							logerror("YM2610: ADPCM-A end out of range: $%08x\n",adpcm[c].end);
+							emu_logf(&F2610->OPN.logger, DEVLOG_DEBUG, "ADPCM-A end out of range: $%08x\n",adpcm[c].end);
 							/*adpcm[c].end = F2610->pcm_size-1;*/ /* JB: DO NOT uncomment this, otherwise you will break the comparison in the ADPCM_CALC_CHA() */
 						}
 						if(adpcm[c].start >= F2610->pcm_size)   /* Check Start in Range */
 						{
-							logerror("YM2608-YM2610: ADPCM-A start out of range: $%08x\n",adpcm[c].start);
+							emu_logf(&F2610->OPN.logger, DEVLOG_DEBUG, "ADPCM-A start out of range: $%08x\n",adpcm[c].start);
 							adpcm[c].flag = 0;
 						}
 					}
@@ -3212,6 +3221,7 @@ void * ym2608_init(void *param, UINT32 clock, UINT32 rate,
 	OPNSetSmplRateChgCallback(&F2608->OPN, NULL, NULL);
 
 	/* DELTA-T */
+	F2608->deltaT.logger = &F2608->OPN.logger;
 	F2608->deltaT.memory = NULL;
 	F2608->deltaT.memory_size = 0x00;
 	F2608->deltaT.memory_mask = 0x00;
@@ -3432,7 +3442,7 @@ void ym2608_write(void *chip, UINT8 a,UINT8 v)
 			switch( addr )
 			{
 			case 0x0e:  /* DAC data */
-				logerror("YM2608: write to DAC data (unimplemented) value=%02x\n",v);
+				emu_logf(&F2608->OPN.logger, DEVLOG_TRACE, "write to DAC data (unimplemented) value=%02x\n",v);
 				break;
 			default:
 				/* 0x00-0x0d */
@@ -3483,7 +3493,7 @@ UINT8 ym2608_read(void *chip,UINT8 a)
 		}
 		else if(addr == 0x0f)
 		{
-			logerror("YM2608 A/D conversion is accessed but not implemented !\n");
+			emu_logf(&F2608->OPN.logger, DEVLOG_TRACE, "A/D conversion is accessed but not implemented !\n");
 			ret = 0x80; /* 2's complement PCM data - result from A/D conversion */
 		}
 		break;
@@ -3569,6 +3579,13 @@ void ym2608_set_mute_mask(void *chip, UINT32 MuteMask)
 	
 	return;
 }
+
+void ym2608_set_log_cb(void* chip, DEVCB_LOG func, void* param)
+{
+	YM2608 *F2608 = (YM2608 *)chip;
+	dev_logger_set(&F2608->OPN.logger, F2608, func, param);
+	return;
+}
 #endif /* BUILD_YM2608 */
 
 
@@ -3606,16 +3623,16 @@ void ym2610_update_one(void *chip, UINT32 length, DEV_SMPL **buffer)
 
 #ifdef YM2610B_WARNING
 #define FM_KEY_IS(SLOT) ((SLOT)->key)
-#define FM_MSG_YM2610B "YM2610-%p.CH%d is playing,Check whether the type of the chip is YM2610B\n"
+#define FM_MSG_YM2610B "CH%d is playing,Check whether the type of the chip is YM2610B\n"
 	/* Check YM2610B warning message */
 	if( FM_KEY_IS(&F2610->CH[0].SLOT[3]) )
 	{
-		LOG(LOG_WAR,(FM_MSG_YM2610B,F2610->OPN.ST.param,0));
+		emu_logf(&F2610->OPN.logger, DEVLOG_WARN, FM_MSG_YM2610B, 0);
 		FM_KEY_IS(&F2610->CH[0].SLOT[3]) = 0;
 	}
 	if( FM_KEY_IS(&F2610->CH[3].SLOT[3]) )
 	{
-		LOG(LOG_WAR,(FM_MSG_YM2610B,F2610->OPN.ST.param,3));
+		emu_logf(&F2610->OPN.logger, DEVLOG_WARN, FM_MSG_YM2610B, 3);
 		FM_KEY_IS(&F2610->CH[3].SLOT[3]) = 0;
 	}
 #endif
@@ -3967,6 +3984,7 @@ void *ym2610_init(void *param, UINT32 clock, UINT32 rate,
 	F2610->pcmbuf   = NULL;
 	F2610->pcm_size = 0x00;
 	/* DELTA-T */
+	F2610->deltaT.logger = &F2610->OPN.logger;
 	F2610->deltaT.memory = NULL;
 	F2610->deltaT.memory_size = 0x00;
 	F2610->deltaT.memory_mask = 0x00;
@@ -4147,7 +4165,7 @@ void ym2610_write(void *chip, UINT8 a, UINT8 v)
 				break;
 
 			default:
-				logerror("YM2610: write to unknown deltat register %02x val=%02x\n",addr,v);
+				emu_logf(&F2610->OPN.logger, DEVLOG_WARN, "write to unknown deltat register %02x val=%02x\n",addr,v);
 				break;
 			}
 
@@ -4302,6 +4320,13 @@ void ym2610_set_mute_mask(void *chip, UINT32 MuteMask)
 		F2610->adpcm[CurChn].Muted = (MuteMask >> (CurChn + 6)) & 0x01;
 	F2610->MuteDeltaT = (MuteMask >> 12) & 0x01;
 	
+	return;
+}
+
+void ym2610_set_log_cb(void* chip, DEVCB_LOG func, void* param)
+{
+	YM2610 *F2610 = (YM2610 *)chip;
+	dev_logger_set(&F2610->OPN.logger, F2610, func, param);
 	return;
 }
 #endif /* (BUILD_YM2610||BUILD_YM2610B) */
@@ -4724,7 +4749,7 @@ UINT8 ym2612_read(void *chip, UINT8 a)
 	case 1:
 	case 2:
 	case 3:
-		//LOG(LOG_WAR,("YM2612 #%p:A=%d read unmapped area\n",F2612->OPN.ST.param,a));
+		//emu_logf(&F2612->OPN.logger, DEVLOG_WARN, "A=%d read unmapped area\n", a);
 		return FM_STATUS_FLAG(&F2612->OPN.ST);
 	}
 	return 0;
@@ -4774,6 +4799,13 @@ void ym2612_set_options(void *chip, UINT32 Flags)
 	F2612->WaveOutMode = (PseudoStereo) ? 0x01 : 0x00;
 	F2612->OPN.LegacyMode = (Flags >> 7) & 0x01;
 	
+	return;
+}
+
+void ym2612_set_log_cb(void* chip, DEVCB_LOG func, void* param)
+{
+	YM2612 *F2612 = (YM2612 *)chip;
+	dev_logger_set(&F2612->OPN.logger, F2612, func, param);
 	return;
 }
 #endif /* (BUILD_YM2612) */

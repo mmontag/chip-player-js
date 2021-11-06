@@ -54,6 +54,7 @@ static DEV_DEF devDef3812_MAME =
 	opl_set_mute_mask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	opl_set_log_cb,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	devFunc3812_MAME,	// rwFuncs
@@ -80,6 +81,7 @@ static DEV_DEF devDef3812_AdLibEmu =
 	adlib_OPL2_set_mute_mask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	NULL,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	devFunc3812_Emu,	// rwFuncs
@@ -106,6 +108,7 @@ static DEV_DEF devDef3812_Nuked =
 	nukedopl3_set_mute_mask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	NULL,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	devFunc3812_Nuked,	// rwFuncs
@@ -150,6 +153,7 @@ static DEV_DEF devDef3526_MAME =
 	opl_set_mute_mask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	opl_set_log_cb,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	devFunc3526_MAME,	// rwFuncs
@@ -186,6 +190,7 @@ static DEV_DEF devDef8950_MAME =
 	opl_set_mute_mask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	opl_set_log_cb,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	devFunc8950_MAME,	// rwFuncs

@@ -75,6 +75,7 @@
 #include "../EmuStructs.h"
 #include "../EmuCores.h"
 #include "../EmuHelper.h"
+#include "../logging.h"
 #include "saa1099_mame.h"
 
 
@@ -89,6 +90,7 @@ static void saa1099m_destroy(void *info);
 static void saa1099m_reset(void *info);
 
 static void saa1099m_set_mute_mask(void *info, UINT32 MuteMask);
+static void saa1099m_set_log_cb(void* info, DEVCB_LOG func, void* param);
 
 
 static DEVDEF_RWFUNC devFunc[] =
@@ -110,6 +112,7 @@ DEV_DEF devDef_SAA1099_MAME =
 	saa1099m_set_mute_mask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	saa1099m_set_log_cb,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	devFunc,	// rwFuncs
@@ -147,6 +150,7 @@ typedef struct _saa1099_state saa1099_state;
 struct _saa1099_state
 {
 	DEV_DATA _devData;
+	DEV_LOGGER logger;
 	
 	UINT8 noise_params[2];          /* noise generators parameters */
 	UINT8 env_enable[2];            /* envelope generators enable */
@@ -478,7 +482,7 @@ static void saa1099_control_w(void *info, UINT8 data)
 	if ((data & 0xff) > 0x1c)
 	{
 		/* Error! */
-		logerror("SAA1099: Unknown register selected\n");
+		emu_logf(&saa->logger, DEVLOG_DEBUG, "Unknown register selected\n");
 	}
 
 	saa->selected_reg = data & 0x1f;
@@ -560,7 +564,7 @@ static void saa1099_data_w(void *info, UINT8 data)
 			int i;
 
 			/* Synch & Reset generators */
-			logerror("SAA1099: -reg 0x1c- Chip reset\n");
+			emu_logf(&saa->logger, DEVLOG_DEBUG, "-reg 0x1c- Chip reset\n");
 			for (i = 0; i < 6; i++)
 			{
 				saa->channels[i].level = 0;
@@ -570,7 +574,7 @@ static void saa1099_data_w(void *info, UINT8 data)
 		break;
 	default:    /* Error! */
 		if (data != 0)
-			logerror("SAA1099: Unknown operation (reg:%02x, data:%02x)\n", reg, data);
+			emu_logf(&saa->logger, DEVLOG_DEBUG, "Unknown operation (reg:%02x, data:%02x)\n", reg, data);
 	}
 }
 
@@ -583,5 +587,12 @@ static void saa1099m_set_mute_mask(void *info, UINT32 MuteMask)
 	for (CurChn = 0; CurChn < 6; CurChn ++)
 		saa->channels[CurChn].Muted = (MuteMask >> CurChn) & 0x01;
 	
+	return;
+}
+
+static void saa1099m_set_log_cb(void* info, DEVCB_LOG func, void* param)
+{
+	saa1099_state *saa = (saa1099_state *)info;
+	dev_logger_set(&saa->logger, saa, func, param);
 	return;
 }

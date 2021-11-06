@@ -80,6 +80,7 @@ DEV_DEF devDef_YM2151_MAME =
 	ym2151_set_mute_mask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	NULL,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	devFunc_MAME,	// rwFuncs

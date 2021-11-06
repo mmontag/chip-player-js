@@ -15,7 +15,8 @@ typedef struct _device_generic_config DEV_GEN_CFG;
 typedef struct _device_link_info DEVLINK_INFO;
 
 
-typedef void (*DEVCB_SRATE_CHG)(void* info, UINT32 newSRate);
+typedef void (*DEVCB_SRATE_CHG)(void* userParam, UINT32 newSRate);
+typedef void (*DEVCB_LOG)(void* userParam, void* source, UINT8 level, const char* message);
 
 typedef UINT8 (*DEVFUNC_START)(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
 typedef void (*DEVFUNC_CTRL)(void* info);
@@ -24,6 +25,7 @@ typedef void (*DEVFUNC_OPTMASK)(void* info, UINT32 optionBits);
 typedef void (*DEVFUNC_PANALL)(void* info, const INT16* channelPanVal);
 typedef void (*DEVFUNC_SRCCB)(void* info, DEVCB_SRATE_CHG SmpRateChgCallback, void* paramPtr);
 typedef UINT8 (*DEVFUNC_LINKDEV)(void* info, UINT8 devID, const DEV_INFO* devInfLink);
+typedef void (*DEVFUNC_SETLOGCB)(void* info, DEVCB_LOG logFunc, void* userParam);
 
 typedef UINT8 (*DEVFUNC_READ_A8D8)(void* info, UINT8 addr);
 typedef UINT16 (*DEVFUNC_READ_A8D16)(void* info, UINT8 addr);
@@ -68,6 +70,13 @@ typedef void (*DEVFUNC_WRITE_VOL_LR)(void* info, INT32 volL, INT32 volR);
 #define DEVRW_VALUE		0x00
 #define DEVRW_ALL		0x01
 
+#define DEVLOG_OFF		0x00
+#define DEVLOG_ERROR	0x01
+#define DEVLOG_WARN		0x02
+#define DEVLOG_INFO		0x03
+#define DEVLOG_DEBUG	0x04
+#define DEVLOG_TRACE	0x05
+
 typedef struct _devdef_readwrite_function
 {
 	UINT8 funcType;	// function type, see RWF_ constants
@@ -92,6 +101,7 @@ struct _device_definition
 	DEVFUNC_OPTMASK SetMuteMask;
 	DEVFUNC_PANALL SetPanning;		// **NOTE: deprecated, moved to rwFuncs**
 	DEVFUNC_SRCCB SetSRateChgCB;	// used to set callback function for realtime sample rate changes
+	DEVFUNC_SETLOGCB SetLogCB;		// set callback for logging
 	DEVFUNC_LINKDEV LinkDevice;		// used to link multiple devices together
 	
 	const DEVDEF_RWFUNC* rwFuncs;	// terminated by (funcPtr == NULL)

@@ -61,6 +61,7 @@
 #include "../EmuCores.h"
 #include "../snddef.h"
 #include "../EmuHelper.h"
+#include "../logging.h"
 #include "../RatioCntr.h"
 #include "k053260.h"
 
@@ -77,6 +78,7 @@ static void k053260_write(void* chip, UINT8 offset, UINT8 data);
 static void k053260_alloc_rom(void* chip, UINT32 memsize);
 static void k053260_write_rom(void *chip, UINT32 offset, UINT32 length, const UINT8* data);
 static void k053260_set_mute_mask(void* chip, UINT32 MuteMask);
+static void k053260_set_log_cb(void* chip, DEVCB_LOG func, void* param);
 
 
 static DEVDEF_RWFUNC devFunc[] =
@@ -101,6 +103,7 @@ static DEV_DEF devDef =
 	k053260_set_mute_mask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	k053260_set_log_cb,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	devFunc,	// rwFuncs
@@ -166,7 +169,7 @@ INLINE void KDSC_set_register(KDSC_Voice* voice, UINT8 offset, UINT8 data);
 INLINE void KDSC_set_loop_kadpcm(KDSC_Voice* voice, UINT8 data);
 INLINE void KDSC_set_pan(KDSC_Voice* voice, UINT8 data);
 INLINE void KDSC_update_pan_volume(KDSC_Voice* voice);
-INLINE void KDSC_key_on(KDSC_Voice* voice);
+INLINE void KDSC_key_on(k053260_state* info, KDSC_Voice* voice);
 INLINE void KDSC_key_off(KDSC_Voice* voice);
 INLINE void KDSC_play(KDSC_Voice* voice, DEV_SMPL *outputs, UINT16 cycles);
 INLINE UINT8 KDSC_read_rom(KDSC_Voice* voice);
@@ -175,6 +178,7 @@ INLINE UINT8 k053260_rom_data(k053260_state* info, UINT32 offs);
 struct _k053260_state
 {
 	DEV_DATA _devData;
+	DEV_LOGGER logger;
 	
 	// live state
 	UINT8           portdata[4];
@@ -301,11 +305,11 @@ static UINT8 k053260_read(void* chip, UINT8 offset)
 			if (info->mode & 1)
 				ret = KDSC_read_rom(&info->voice[0]);
 			else
-				logerror("Attempting to read K053260 ROM without mode bit set\n");
+				emu_logf(&info->logger, DEVLOG_WARN, "Attempting to read ROM without mode bit set\n");
 			break;
 
 		default:
-			logerror("Read from unknown K053260 register %02x\n", offset);
+			emu_logf(&info->logger, DEVLOG_DEBUG, "Read from unknown register %02x\n", offset);
 	}
 	return ret;
 }
@@ -343,7 +347,7 @@ static void k053260_write(void* chip, UINT8 offset, UINT8 data)
 			for (i = 0; i < 4; i++)
 			{
 				if (rising_edge & (1 << i))
-					KDSC_key_on(&info->voice[i]);
+					KDSC_key_on(info, &info->voice[i]);
 				else if (!(data & (1 << i)))
 					KDSC_key_off(&info->voice[i]);
 			}
@@ -387,7 +391,7 @@ static void k053260_write(void* chip, UINT8 offset, UINT8 data)
 			break;
 
 		default:
-			logerror("Write to unknown K053260 register %02x (data = %02x)\n",
+			emu_logf(&info->logger, DEVLOG_DEBUG, "Write to unknown register %02x (data = %02x)\n",
 					offset, data);
 	}
 }
@@ -509,13 +513,13 @@ INLINE void KDSC_update_pan_volume(KDSC_Voice* voice)
 	voice->pan_volume[1] = voice->volume * pan_mul[voice->pan][1];
 }
 
-INLINE void KDSC_key_on(KDSC_Voice* voice)
+INLINE void KDSC_key_on(k053260_state* info, KDSC_Voice* voice)
 {
 	voice->position = voice->kadpcm ? 1 : 0; // for kadpcm low bit is nybble offset, so must start at 1 due to preincrement
 	voice->counter = 0xFFFF; // force update on next sound_stream_update
 	voice->output = 0;
 	voice->playing = 1;
-	if (LOG) logerror("K053260: start = %06x, length = %06x, pitch = %04x, vol = %02x:%x, loop = %s, %s\n",
+	if (LOG) emu_logf(&info->logger, DEVLOG_TRACE, "start = %06x, length = %06x, pitch = %04x, vol = %02x:%x, loop = %s, %s\n",
 					voice->start, voice->length, voice->pitch, voice->volume, voice->pan, voice->loop ? "yes" : "no", voice->kadpcm ? "KADPCM" : "PCM" );
 }
 
@@ -634,5 +638,12 @@ static void k053260_set_mute_mask(void* chip, UINT32 MuteMask)
 	for (CurChn = 0; CurChn < 4; CurChn ++)
 		info->voice[CurChn].Muted = (MuteMask >> CurChn) & 0x01;
 	
+	return;
+}
+
+static void k053260_set_log_cb(void* chip, DEVCB_LOG func, void* param)
+{
+	k053260_state *info = (k053260_state *)chip;
+	dev_logger_set(&info->logger, info, func, param);
 	return;
 }

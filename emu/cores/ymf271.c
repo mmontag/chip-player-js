@@ -34,6 +34,7 @@
 #include "../EmuCores.h"
 #include "../snddef.h"
 #include "../EmuHelper.h"
+#include "../logging.h"
 #include "ymf271.h"
 
 #ifdef _MSC_VER
@@ -52,6 +53,7 @@ static void ymf271_alloc_rom(void* info, UINT32 memsize);
 static void ymf271_write_rom(void *info, UINT32 offset, UINT32 length, const UINT8* data);
 
 static void ymf271_set_mute_mask(void *info, UINT32 MuteMask);
+static void ymf271_set_log_cb(void *info, DEVCB_LOG func, void* param);
 
 
 static DEVDEF_RWFUNC devFunc[] =
@@ -76,6 +78,7 @@ static DEV_DEF devDef =
 	ymf271_set_mute_mask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	ymf271_set_log_cb,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	devFunc,	// rwFuncs
@@ -326,6 +329,7 @@ typedef struct
 typedef struct
 {
 	DEV_DATA _devData;
+	DEV_LOGGER logger;
 	
 	// lookup tables
 	INT16 *lut_waves[8];
@@ -641,7 +645,9 @@ static void update_pcm(YMF271Chip *chip, int slotnum, INT32 *mixp, UINT32 length
 
 	if (slot->waveform != 7)
 	{
-		logerror("Waveform %d in update_pcm !!!\n", slot->waveform);
+#ifdef _DEBUG	// include only in Debug mode, as this may spam a lot
+		emu_logf(&chip->logger, DEVLOG_DEBUG, "Waveform %d in update_pcm !!!\n", slot->waveform);
+#endif
 	}
 
 	for (i = 0; i < length; i++)
@@ -766,7 +772,7 @@ static void ymf271_update(void *info, UINT32 samples, DEV_SMPL** outputs)
 		if (slot_group->pfm && slot_group->sync != 3)
 		{
 			//popmessage("ymf271 PFM, contact MAMEdev");
-			logerror("ymf271 Group %d: PFM, Sync = %d, Waveform Slot1 = %d, Slot2 = %d, Slot3 = %d, Slot4 = %d\n",
+			emu_logf(&chip->logger, DEVLOG_WARN, "ymf271 Group %d: PFM, Sync = %d, Waveform Slot1 = %d, Slot2 = %d, Slot3 = %d, Slot4 = %d\n",
 				j, slot_group->sync, chip->slots[j+0].waveform, chip->slots[j+12].waveform, chip->slots[j+24].waveform, chip->slots[j+36].waveform);
 		}
 
@@ -1308,7 +1314,7 @@ static void ymf271_write_fm(YMF271Chip *chip, int bank, UINT8 address, UINT8 dat
 
 	if (groupnum == -1)
 	{
-		logerror("ymf271_write_fm invalid group %02X %02X\n", address, data);
+		emu_logf(&chip->logger, DEVLOG_DEBUG, "ymf271_write_fm invalid group %02X %02X\n", address, data);
 		return;
 	}
 
@@ -1405,7 +1411,7 @@ static void ymf271_write_pcm(YMF271Chip *chip, UINT8 address, UINT8 data)
 	YMF271Slot *slot;
 	if (slotnum == -1)
 	{
-		logerror("ymf271_write_pcm invalid slot %02X %02X\n", address, data);
+		emu_logf(&chip->logger, DEVLOG_DEBUG, "ymf271_write_pcm invalid slot %02X %02X\n", address, data);
 		return;
 	}
 	slot = &chip->slots[slotnum];
@@ -1522,7 +1528,7 @@ static void ymf271_write_timer(YMF271Chip *chip, UINT8 address, UINT8 data)
 		YMF271Group *group;
 		if (groupnum == -1)
 		{
-			logerror("ymf271_write_timer invalid group %02X %02X\n", address, data);
+			emu_logf(&chip->logger, DEVLOG_DEBUG, "ymf271_write_timer invalid group %02X %02X\n", address, data);
 			return;
 		}
 		group = &chip->groups[groupnum];
@@ -1930,7 +1936,7 @@ static void ymf271_write_rom(void *info, UINT32 offset, UINT32 length, const UIN
 	return;
 }
 
-void ymf271_set_mute_mask(void *info, UINT32 MuteMask)
+static void ymf271_set_mute_mask(void *info, UINT32 MuteMask)
 {
 	YMF271Chip *chip = (YMF271Chip *)info;
 	UINT8 CurChn;
@@ -1938,5 +1944,12 @@ void ymf271_set_mute_mask(void *info, UINT32 MuteMask)
 	for (CurChn = 0; CurChn < 12; CurChn ++)
 		chip->groups[CurChn].Muted = (MuteMask >> CurChn) & 0x01;
 	
+	return;
+}
+
+static void ymf271_set_log_cb(void *info, DEVCB_LOG func, void* param)
+{
+	YMF271Chip *chip = (YMF271Chip *)info;
+	dev_logger_set(&chip->logger, chip, func, param);
 	return;
 }

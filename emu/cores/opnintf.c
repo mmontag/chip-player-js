@@ -66,6 +66,7 @@ static DEV_DEF devDef_MAME_2203 =
 	ym2203_set_mute_mask,	// SetMuteMask
 	NULL,	// SetPanning
 	ym2203_set_srchg_cb,	// SetSampleRateChangeCallback
+	ym2203_set_log_cb,	// SetLoggingCallback
 	device_ym2203_link_ssg,	// LinkDevice
 	
 	devFunc_MAME_2203,	// rwFuncs
@@ -101,6 +102,7 @@ static DEV_DEF devDef_MAME_2608 =
 	ym2608_set_mute_mask,	// SetMuteMask
 	NULL,	// SetPanning
 	ym2608_set_srchg_cb,	// SetSampleRateChangeCallback
+	ym2608_set_log_cb,	// SetLoggingCallback
 	device_ym2608_link_ssg,	// LinkDevice
 	
 	devFunc_MAME_2608,	// rwFuncs
@@ -138,6 +140,7 @@ static DEV_DEF devDef_MAME_2610 =
 	ym2610_set_mute_mask,	// SetMuteMask
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback (not required, the YM2610 lacks the "prescaler" register)
+	ym2610_set_log_cb,	// SetLoggingCallback
 	device_ym2610_link_ssg,	// LinkDevice
 	
 	devFunc_MAME_2610,	// rwFuncs
@@ -155,6 +158,7 @@ static DEV_DEF devDef_MAME_2610B =
 	ym2610_set_mute_mask,	 // SetMuteMask
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback (not required, the YM2610 lacks the "prescaler" register)
+	ym2610_set_log_cb,	// SetLoggingCallback
 	device_ym2610_link_ssg,	// LinkDevice
 	
 	devFunc_MAME_2610,	// rwFuncs

@@ -19,6 +19,7 @@
 #include "../snddef.h"
 #include "../EmuHelper.h"
 #include "../EmuCores.h"
+#include "../logging.h"
 #include "okim6258.h"
 
 
@@ -40,6 +41,7 @@ static void okim6258_write(void *chip, UINT8 offset, UINT8 data);
 static void okim6258_set_options(void *chip, UINT32 Options);
 static void okim6258_set_srchg_cb(void *chip, DEVCB_SRATE_CHG CallbackFunc, void* DataPtr);
 static void okim6258_set_mute_mask(void *chip, UINT32 MuteMask);
+static void okim6258_set_log_cb(void* chip, DEVCB_LOG func, void* param);
 
 
 static DEVDEF_RWFUNC devFunc[] =
@@ -64,6 +66,7 @@ static DEV_DEF devDef =
 	okim6258_set_mute_mask,
 	NULL,	// SetPanning
 	okim6258_set_srchg_cb,	// SetSampleRateChangeCallback
+	okim6258_set_log_cb,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	devFunc,	// rwFuncs
@@ -88,6 +91,7 @@ typedef struct _okim6258_state okim6258_state;
 struct _okim6258_state
 {
 	DEV_DATA _devData;
+	DEV_LOGGER logger;
 
 	UINT8  status;
 
@@ -481,7 +485,7 @@ static void okim6258_data_w(void *chip, UINT8 data)
 	info->data_buf_pos &= 0xF7;
 	if ((info->data_buf_pos >> 4) == (info->data_buf_pos & 0x0F))
 	{
-		logerror("Warning: FIFO full!\n");
+		emu_logf(&info->logger, DEVLOG_WARN, "FIFO full!\n");
 		info->data_buf_pos = (info->data_buf_pos & 0xF0) | ((info->data_buf_pos-1) & 0x07);
 	}
 	info->data_empty = 0x00;
@@ -529,7 +533,7 @@ static void okim6258_ctrl_w(void *chip, UINT8 data)
 
 	if (data & COMMAND_RECORD)
 	{
-		logerror("M6258: Record enabled\n");
+		emu_logf(&info->logger, DEVLOG_ERROR, "Record enabled\n");
 		info->status |= STATUS_RECORDING;
 	}
 	else
@@ -610,5 +614,12 @@ static void okim6258_set_mute_mask(void *chip, UINT32 MuteMask)
 	
 	info->Muted = MuteMask & 0x01;
 	
+	return;
+}
+
+static void okim6258_set_log_cb(void* chip, DEVCB_LOG func, void* param)
+{
+	okim6258_state *info = (okim6258_state *)chip;
+	dev_logger_set(&info->logger, info, func, param);
 	return;
 }

@@ -61,6 +61,7 @@ DEV_DEF devDef_YM2151_Nuked =
 	nukedopm_set_mute_mask,
 	NULL,
 	NULL,	// SetSampleRateChangeCallback
+	NULL,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	devFunc,	// rwFuncs

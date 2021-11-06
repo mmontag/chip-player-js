@@ -139,6 +139,11 @@ UINT8 ym2203_timer_over(void *chip, UINT8 c);
 **  Channel Muting
 */
 void ym2203_set_mute_mask(void *chip, UINT32 MuteMask);
+
+/*
+**  logging function
+*/
+void ym2203_set_log_cb(void* chip, DEVCB_LOG func, void* param);
 #endif /* BUILD_YM2203 */
 
 #if BUILD_YM2608
@@ -158,6 +163,7 @@ void ym2608_alloc_pcmromb(void* chip, UINT32 memsize);
 void ym2608_write_pcmromb(void* chip, UINT32 offset, UINT32 length, const UINT8* data);
 
 void ym2608_set_mute_mask(void *chip, UINT32 MuteMask);
+void ym2608_set_log_cb(void* chip, DEVCB_LOG func, void* param);
 #endif /* BUILD_YM2608 */
 
 #if (BUILD_YM2610||BUILD_YM2610B)
@@ -182,6 +188,7 @@ void ym2610_alloc_pcmromb(void* chip, UINT32 memsize);
 void ym2610_write_pcmromb(void* chip, UINT32 offset, UINT32 length, const UINT8* data);
 
 void ym2610_set_mute_mask(void *chip, UINT32 MuteMask);
+void ym2610_set_log_cb(void* chip, DEVCB_LOG func, void* param);
 #endif /* (BUILD_YM2610||BUILD_YM2610B) */
 
 #if (BUILD_YM2612||BUILD_YM3438)
@@ -197,6 +204,7 @@ UINT8 ym2612_timer_over(void *chip, UINT8 c );
 
 void ym2612_set_mute_mask(void *chip, UINT32 MuteMask);
 void ym2612_set_options(void *chip, UINT32 Flags);
+void ym2612_set_log_cb(void* chip, DEVCB_LOG func, void* param);
 #endif /* (BUILD_YM2612||BUILD_YM3438) */
 
 #endif	// __FMOPN_H__

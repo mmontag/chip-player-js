@@ -39,6 +39,7 @@ static DEV_DEF devDef_DAC =
 	NULL,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	NULL,	// SetLoggingCallback
 	NULL,	// LinkDevice
 	
 	NULL,	// rwFuncs
