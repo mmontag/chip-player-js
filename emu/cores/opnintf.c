@@ -50,7 +50,7 @@ static DEVDEF_RWFUNC devFunc_MAME_2203[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, ym2203_write},
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, ym2203_read},
-	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, ym2203_set_mutemask},
+	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, ym2203_set_mute_mask},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef_MAME_2203 =
@@ -63,7 +63,7 @@ static DEV_DEF devDef_MAME_2203 =
 	ym2203_update_one,
 	
 	NULL,	// SetOptionBits
-	ym2203_set_mutemask,
+	ym2203_set_mute_mask,	// SetMuteMask
 	NULL,	// SetPanning
 	ym2203_set_srchg_cb,	// SetSampleRateChangeCallback
 	device_ym2203_link_ssg,	// LinkDevice
@@ -85,7 +85,7 @@ static DEVDEF_RWFUNC devFunc_MAME_2608[] =
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, ym2608_read},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 'B', ym2608_write_pcmromb},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 'B', ym2608_alloc_pcmromb},
-	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, ym2608_set_mutemask},
+	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, ym2608_set_mute_mask},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef_MAME_2608 =
@@ -98,7 +98,7 @@ static DEV_DEF devDef_MAME_2608 =
 	ym2608_update_one,
 	
 	NULL,	// SetOptionBits
-	ym2608_set_mutemask,
+	ym2608_set_mute_mask,	// SetMuteMask
 	NULL,	// SetPanning
 	ym2608_set_srchg_cb,	// SetSampleRateChangeCallback
 	device_ym2608_link_ssg,	// LinkDevice
@@ -122,7 +122,7 @@ static DEVDEF_RWFUNC devFunc_MAME_2610[] =
 	{RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 'A', ym2610_alloc_pcmroma},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 'B', ym2610_write_pcmromb},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 'B', ym2610_alloc_pcmromb},
-	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, ym2610_set_mutemask},
+	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, ym2610_set_mute_mask},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef_MAME_2610 =
@@ -135,7 +135,7 @@ static DEV_DEF devDef_MAME_2610 =
 	ym2610_update_one,
 	
 	NULL,	// SetOptionBits
-	ym2610_set_mutemask,
+	ym2610_set_mute_mask,	// SetMuteMask
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback (not required, the YM2610 lacks the "prescaler" register)
 	device_ym2610_link_ssg,	// LinkDevice
@@ -152,7 +152,7 @@ static DEV_DEF devDef_MAME_2610B =
 	ym2610b_update_one,
 	
 	NULL,	// SetOptionBits
-	ym2610_set_mutemask,
+	ym2610_set_mute_mask,	 // SetMuteMask
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback (not required, the YM2610 lacks the "prescaler" register)
 	device_ym2610_link_ssg,	// LinkDevice

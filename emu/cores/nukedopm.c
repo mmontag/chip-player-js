@@ -39,13 +39,13 @@ static UINT8 device_start_ym2151_nuked(const DEV_GEN_CFG* cfg, DEV_INFO* retDevI
 static void nukedopm_shutdown(void *chip);
 static void nukedopm_reset_chip(void *chipptr);
 static void nukedopm_update(void *chipptr, UINT32 samples, DEV_SMPL **out);
-static void nukedopm_set_mutemask(void *chipptr, UINT32 MuteMask);
+static void nukedopm_set_mute_mask(void *chipptr, UINT32 MuteMask);
 
 
 static DEVDEF_RWFUNC devFunc[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, nukedopm_write},
-	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, nukedopm_set_mutemask},
+	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, nukedopm_set_mute_mask},
 	{0x00, 0x00, 0, NULL}
 };
 DEV_DEF devDef_YM2151_Nuked =
@@ -58,7 +58,7 @@ DEV_DEF devDef_YM2151_Nuked =
 	nukedopm_update,
 	
 	NULL,	// SetOptionBits
-	nukedopm_set_mutemask,
+	nukedopm_set_mute_mask,
 	NULL,
 	NULL,	// SetSampleRateChangeCallback
 	NULL,	// LinkDevice
@@ -2151,7 +2151,7 @@ static UINT8 device_start_ym2151_nuked(const DEV_GEN_CFG* cfg, DEV_INFO* retDevI
     
     chip->clock = cfg->clock;
     chip->smplRate = rate; // save for reset
-    nukedopm_set_mutemask(chip, 0x00);
+    nukedopm_set_mute_mask(chip, 0x00);
     
     chip->_devData.chipInf = chip;
     INIT_DEVINF(retDevInf, &chip->_devData, rate, &devDef_YM2151_Nuked);
@@ -2202,7 +2202,7 @@ static void nukedopm_update(void *chipptr, UINT32 samples, DEV_SMPL **out)
     return;
 }
 
-static void nukedopm_set_mutemask(void *chipptr, UINT32 MuteMask)
+static void nukedopm_set_mute_mask(void *chipptr, UINT32 MuteMask)
 {
     opm_t *chip = (opm_t *)chipptr;
     UINT8 chn;

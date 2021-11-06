@@ -10,7 +10,7 @@ void* nukedopl3_init(UINT32 clock, UINT32 rate);
 void nukedopl3_shutdown(void *chip);
 void nukedopl3_reset_chip(void *chip);
 void nukedopl3_update(void *chip, UINT32 samples, DEV_SMPL **out);
-void nukedopl3_set_mutemask(void *chip, UINT32 MuteMask);
+void nukedopl3_set_mute_mask(void *chip, UINT32 MuteMask);
 void nukedopl3_set_volume(void *chip, INT32 volume);
 void nukedopl3_set_vol_lr(void *chip, INT32 volLeft, INT32 volRight);
 

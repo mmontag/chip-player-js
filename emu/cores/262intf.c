@@ -31,7 +31,7 @@ static DEVDEF_RWFUNC devFunc262_MAME[] =
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, ymf262_read},
 	{RWF_VOLUME | RWF_WRITE, DEVRW_VALUE, 0, ymf262_set_volume},
 	{RWF_VOLUME_LR | RWF_WRITE, DEVRW_VALUE, 0, ymf262_set_vol_lr},
-	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, ymf262_set_mutemask},
+	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, ymf262_set_mute_mask},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef262_MAME =
@@ -44,7 +44,7 @@ static DEV_DEF devDef262_MAME =
 	ymf262_update_one,
 	
 	NULL,	// SetOptionBits
-	ymf262_set_mutemask,
+	ymf262_set_mute_mask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
 	NULL,	// LinkDevice
@@ -87,7 +87,7 @@ static DEVDEF_RWFUNC devFunc262_Nuked[] =
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, nukedopl3_read},
 	{RWF_VOLUME | RWF_WRITE, DEVRW_VALUE, 0, nukedopl3_set_volume},
 	{RWF_VOLUME_LR | RWF_WRITE, DEVRW_VALUE, 0, nukedopl3_set_vol_lr},
-	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, nukedopl3_set_mutemask},
+	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, nukedopl3_set_mute_mask},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef262_Nuked =
@@ -100,7 +100,7 @@ static DEV_DEF devDef262_Nuked =
 	nukedopl3_update,
 	
 	NULL,	// SetOptionBits
-	nukedopl3_set_mutemask,
+	nukedopl3_set_mute_mask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
 	NULL,	// LinkDevice
@@ -186,7 +186,7 @@ static UINT8 device_start_ymf262_nuked(const DEV_GEN_CFG* cfg, DEV_INFO* retDevI
 		return 0xFF;
 	
 	nukedopl3_set_volume(chip, 0x10000);
-	nukedopl3_set_mutemask(chip, 0x000000);
+	nukedopl3_set_mute_mask(chip, 0x000000);
 	
 	devData = (DEV_DATA*)chip;
 	devData->chipInf = chip;

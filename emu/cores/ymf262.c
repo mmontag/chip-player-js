@@ -2296,7 +2296,7 @@ static OPL3 *OPL3Create(UINT32 clock, UINT32 rate, int type)
 	OPL3_initalize(chip);
 
 	ymf262_set_volume(chip, 0x10000);
-	ymf262_set_mutemask(chip, 0x000000);
+	ymf262_set_mute_mask(chip, 0x000000);
 
 	return chip;
 }
@@ -2473,7 +2473,7 @@ void ymf262_set_update_handler(void *chip,OPL3_UPDATEHANDLER UpdateHandler,void 
 	OPL3SetUpdateHandler((OPL3 *)chip, UpdateHandler, param);
 }
 
-void ymf262_set_mutemask(void *chip, UINT32 MuteMask)
+void ymf262_set_mute_mask(void *chip, UINT32 MuteMask)
 {
 	OPL3 *opl3 = (OPL3 *)chip;
 	UINT8 CurChn;

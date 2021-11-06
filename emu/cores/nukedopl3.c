@@ -1565,7 +1565,7 @@ void nukedopl3_update(void *chip, UINT32 samples, DEV_SMPL **out)
 	}
 }
 
-void nukedopl3_set_mutemask(void *chip, UINT32 MuteMask)
+void nukedopl3_set_mute_mask(void *chip, UINT32 MuteMask)
 {
 	opl3_chip* opl3 = (opl3_chip*)chip;
 	

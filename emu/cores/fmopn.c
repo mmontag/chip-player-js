@@ -2535,7 +2535,7 @@ void * ym2203_init(void *param, UINT32 clock, UINT32 rate,
 	OPNLinkSSG(&F2203->OPN, NULL, NULL);
 	OPNSetSmplRateChgCallback(&F2203->OPN, NULL, NULL);
 
-	ym2203_set_mutemask(F2203, 0x00);
+	ym2203_set_mute_mask(F2203, 0x00);
 
 	return F2203;
 }
@@ -2649,7 +2649,7 @@ UINT8 ym2203_timer_over(void *chip,UINT8 c)
 	return F2203->OPN.ST.irq;
 }
 
-void ym2203_set_mutemask(void *chip, UINT32 MuteMask)
+void ym2203_set_mute_mask(void *chip, UINT32 MuteMask)
 {
 	YM2203 *F2203 = (YM2203 *)chip;
 	UINT8 CurChn;
@@ -3234,7 +3234,7 @@ void * ym2608_init(void *param, UINT32 clock, UINT32 rate,
 
 	Init_ADPCMATable();
 
-	ym2608_set_mutemask(F2608, 0x00);
+	ym2608_set_mute_mask(F2608, 0x00);
 
 	return F2608;
 }
@@ -3556,7 +3556,7 @@ void ym2608_write_pcmromb(void* chip, UINT32 offset, UINT32 length, const UINT8*
 	return;
 }
 
-void ym2608_set_mutemask(void *chip, UINT32 MuteMask)
+void ym2608_set_mute_mask(void *chip, UINT32 MuteMask)
 {
 	YM2608 *F2608 = (YM2608 *)chip;
 	UINT8 CurChn;
@@ -3980,7 +3980,7 @@ void *ym2610_init(void *param, UINT32 clock, UINT32 rate,
 
 	Init_ADPCMATable();
 
-	ym2610_set_mutemask(F2610, 0x00);
+	ym2610_set_mute_mask(F2610, 0x00);
 
 	return F2610;
 }
@@ -4291,7 +4291,7 @@ void ym2610_write_pcmromb(void* chip, UINT32 offset, UINT32 length, const UINT8*
 	return;
 }
 
-void ym2610_set_mutemask(void *chip, UINT32 MuteMask)
+void ym2610_set_mute_mask(void *chip, UINT32 MuteMask)
 {
 	YM2610 *F2610 = (YM2610 *)chip;
 	UINT8 CurChn;
@@ -4567,7 +4567,7 @@ void * ym2612_init(void *param, UINT32 clock, UINT32 rate,
 	OPNLinkSSG(&F2612->OPN, NULL, NULL);
 	OPNSetSmplRateChgCallback(&F2612->OPN, NULL, NULL);
 
-	ym2612_set_mutemask(F2612, 0x00);
+	ym2612_set_mute_mask(F2612, 0x00);
 
 	return F2612;
 }
@@ -4753,7 +4753,7 @@ UINT8 ym2612_timer_over(void *chip,UINT8 c)
 }
 
 
-void ym2612_set_mutemask(void *chip, UINT32 MuteMask)
+void ym2612_set_mute_mask(void *chip, UINT32 MuteMask)
 {
 	YM2612 *F2612 = (YM2612 *)chip;
 	UINT8 CurChn;
@@ -4765,7 +4765,7 @@ void ym2612_set_mutemask(void *chip, UINT32 MuteMask)
 	return;
 }
 
-void ym2612_setoptions(void *chip, UINT32 Flags)
+void ym2612_set_options(void *chip, UINT32 Flags)
 {
 	YM2612 *F2612 = (YM2612 *)chip;
 	UINT8 PseudoStereo;

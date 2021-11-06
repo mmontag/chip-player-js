@@ -65,7 +65,7 @@ static UINT8 ym2413_read(void *chip, UINT8 a);
 static void ym2413_update_one(void *chip, UINT32 length, DEV_SMPL **buffers);
 
 //void ym2413_set_update_handler(void *chip, OPLL_UPDATEHANDLER UpdateHandler, void *param);
-static void ym2413_set_mutemask(void* chip, UINT32 MuteMask);
+static void ym2413_set_mute_mask(void* chip, UINT32 MuteMask);
 //void ym2413_set_chip_mode(void* chip, UINT8 Mode);
 //void ym2413_override_patches(void* chip, const UINT8* PatchDump);
 
@@ -74,7 +74,7 @@ static DEVDEF_RWFUNC devFunc[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, ym2413_write},
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, ym2413_read},
-	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, ym2413_set_mutemask},
+	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, ym2413_set_mute_mask},
 	{0x00, 0x00, 0, NULL}
 };
 DEV_DEF devDef_YM2413_MAME =
@@ -87,7 +87,7 @@ DEV_DEF devDef_YM2413_MAME =
 	ym2413_update_one,
 	
 	NULL,	// SetOptionBits
-	ym2413_set_mutemask,
+	ym2413_set_mute_mask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
 	NULL,	// LinkDevice
@@ -1794,7 +1794,7 @@ static YM2413 *OPLLCreate(UINT32 clock, UINT32 rate)
 	/* init global tables */
 	OPLL_initalize(chip);
 
-	ym2413_set_mutemask(chip, 0x0000);
+	ym2413_set_mute_mask(chip, 0x0000);
 
 	/* reset chip */
 	//OPLLResetChip(chip);
@@ -1943,7 +1943,7 @@ static void ym2413_update_one(void *_chip, UINT32 length, DEV_SMPL **buffers)
 	}
 }
 
-static void ym2413_set_mutemask(void* chip, UINT32 MuteMask)
+static void ym2413_set_mute_mask(void* chip, UINT32 MuteMask)
 {
 	YM2413* OPLL = (YM2413*)chip;
 	UINT8 CurChn;

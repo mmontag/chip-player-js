@@ -1601,7 +1601,7 @@ void nukedopn2_set_options(void *chip, UINT32 flags)
     }
 }
 
-void nukedopn2_set_mutemask(void *chip, UINT32 mute)
+void nukedopn2_set_mute_mask(void *chip, UINT32 mute)
 {
     ym3438_t* opn2 = (ym3438_t*)chip;
     Bit32u i;
@@ -1649,7 +1649,7 @@ void nukedopn2_reset_chip(void *chip)
     NOPN2_Reset(opn2, opn2->clock, opn2->smplRate);
     
     opn2->_devData = devData;
-    nukedopn2_set_mutemask(opn2, mute);
+    nukedopn2_set_mute_mask(opn2, mute);
     opn2->chip_type = type;
     opn2->use_filter = filter;
 }

@@ -157,7 +157,7 @@ static void sn76496_connect_t6w28(void *noisechip, void *tonechip);
 static void sn76496_shutdown(void *chip);
 static void sn76496_reset(void *chip);
 static void sn76496_freq_limiter(void* chip, UINT32 sample_rate);
-static void sn76496_set_mutemask(void *chip, UINT32 MuteMask);
+static void sn76496_set_mute_mask(void *chip, UINT32 MuteMask);
 
 static UINT8 device_start_sn76496_mame(const SN76496_CFG* cfg, DEV_INFO* retDevInf);
 static void sn76496_w_mame(void *chip, UINT8 reg, UINT8 data);
@@ -166,7 +166,7 @@ static void sn76496_w_mame(void *chip, UINT8 reg, UINT8 data);
 static DEVDEF_RWFUNC devFunc[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, sn76496_w_mame},
-	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, sn76496_set_mutemask},
+	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, sn76496_set_mute_mask},
 	{0x00, 0x00, 0, NULL}
 };
 DEV_DEF devDef_SN76496_MAME =
@@ -179,7 +179,7 @@ DEV_DEF devDef_SN76496_MAME =
 	sn76496_update,
 	
 	NULL,	// SetOptionBits
-	sn76496_set_mutemask,
+	sn76496_set_mute_mask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
 	NULL,	// LinkDevice
@@ -598,7 +598,7 @@ static void sn76496_freq_limiter(void* chip, UINT32 sample_rate)
 	return;
 }
 
-static void sn76496_set_mutemask(void *chip, UINT32 MuteMask)
+static void sn76496_set_mute_mask(void *chip, UINT32 MuteMask)
 {
 	sn76496_state *R = (sn76496_state*)chip;
 	UINT8 CurChn;
@@ -659,7 +659,7 @@ static UINT8 device_start_sn76496_mame(const SN76496_CFG* cfg, DEV_INFO* retDevI
 	}
 	chip->vol_table[15] = 0;
 	
-	sn76496_set_mutemask(chip, 0x00);
+	sn76496_set_mute_mask(chip, 0x00);
 	
 	chip->cfg = *cfg;
 	if (cfg->t6w28_tone != NULL)

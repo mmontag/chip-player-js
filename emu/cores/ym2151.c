@@ -53,7 +53,7 @@ static void * ym2151_init(UINT32 clock, UINT32 rate);
 static void ym2151_shutdown(void *_chip);
 static void ym2151_reset_chip(void *_chip);
 static void ym2151_update_one(void *chip, UINT32 length, DEV_SMPL **buffers);
-static void ym2151_set_mutemask(void *chip, UINT32 MuteMask);
+static void ym2151_set_mute_mask(void *chip, UINT32 MuteMask);
 static UINT8 device_start_ym2151(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
 static UINT8 ym2151_r(void *chip, UINT8 offset);
 static void ym2151_w(void *chip, UINT8 offset, UINT8 data);
@@ -64,7 +64,7 @@ static DEVDEF_RWFUNC devFunc_MAME[] =
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, ym2151_w},
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, ym2151_r},
 	{RWF_REGISTER | RWF_QUICKWRITE, DEVRW_A8D8, 0, ym2151_write_reg},
-	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, ym2151_set_mutemask},
+	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, ym2151_set_mute_mask},
 	{0x00, 0x00, 0, NULL}
 };
 DEV_DEF devDef_YM2151_MAME =
@@ -77,7 +77,7 @@ DEV_DEF devDef_YM2151_MAME =
 	ym2151_update_one,
 	
 	NULL,	// SetOptionBits
-	ym2151_set_mutemask,
+	ym2151_set_mute_mask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
 	NULL,	// LinkDevice
@@ -1243,7 +1243,7 @@ static void * ym2151_init(UINT32 clock, UINT32 rate)
 	PSG->eg_timer_add  = (1<<EG_SH)  * (clock/64.0) / PSG->sampfreq;
 	PSG->eg_timer_overflow = 3 * (1<<EG_SH);
 
-	ym2151_set_mutemask(PSG, 0x00);
+	ym2151_set_mute_mask(PSG, 0x00);
 
 	return PSG;
 }
@@ -2024,7 +2024,7 @@ void ym2151_set_irq_handler(void *chip, void(*handler)(void *param, UINT8 irq))
 	PSG->irqhandler = handler;
 }
 
-static void ym2151_set_mutemask(void *chip, UINT32 MuteMask)
+static void ym2151_set_mute_mask(void *chip, UINT32 MuteMask)
 {
 	YM2151 *PSG = (YM2151 *)chip;
 	UINT8 CurChn;
