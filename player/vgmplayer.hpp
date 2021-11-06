@@ -8,6 +8,7 @@
 #include "helper.h"
 #include "playerbase.hpp"
 #include "../utils/DataLoader.h"
+#include "../emu/logging.h"
 #include "dblk_compr.h"
 #include <vector>
 #include <string>
@@ -204,6 +205,7 @@ protected:
 	
 	void RefreshTSRates(void);
 	
+	static void PlayerLogCB(void* userParam, void* source, UINT8 level, const char* message);
 	static void SndEmuLogCB(void* userParam, void* source, UINT8 level, const char* message);
 	
 	UINT32 GetHeaderChipClock(UINT8 chipType) const;	// returns raw chip clock value from VGM header
@@ -269,6 +271,7 @@ protected:
 	void Cmd_AY_Stereo(void);				// command 30 - set AY8910 stereo mask
 	
 	CPCONV* _cpcUTF16;	// UTF-16 LE -> UTF-8 codepage conversion
+	DEV_LOGGER _logger;
 	DATA_LOADER *_dLoad;
 	const UINT8* _fileData;	// data pointer for quick access, equals _dLoad->GetFileData().data()
 	std::vector<UINT8> _yrwRom;	// cache for OPL4 sample ROM (yrw801.rom)

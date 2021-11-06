@@ -17,7 +17,6 @@ set(PLAYER_FILES
 set(PLAYER_HEADERS
 	dblk_compr.h
 	helper.h
-	logging.h
 	playerbase.hpp
 	droplayer.hpp
 	gymplayer.hpp

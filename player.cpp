@@ -94,6 +94,7 @@ static UINT32 masterVol = 0x10000;	// fixed point 16.16
 
 static UINT8 showTags = 1;
 static bool showFileInfo = false;
+static UINT8 logLevel = DEVLOG_INFO;
 
 static PlayerA mainPlr;
 
@@ -503,6 +504,7 @@ Sound Chip ID:
 	D - display configuration
 		T param - show tags (0/D/OFF - off, 1/E/ON - on)
 		FI param - show file information (see above)
+		LL param - set log level (0..5 = off/error/warn/info/debug/trace, see emu/EmuStructs.h)
 		Q - quit
 	P - player configuration
 		[DRO]
@@ -786,7 +788,7 @@ static void DoChipControlMode(PlayerBase* player)
 			char* tokenStr;
 			
 			// Tags / FileInfo
-			printf("Command [T/FI data]: ");
+			printf("Command [T/FI/LL data]: ");
 			fgets(line, 0x80, stdin);
 			StripNewline(line);
 			
@@ -817,6 +819,12 @@ static void DoChipControlMode(PlayerBase* player)
 					else if (! strcmp(line, "FI"))
 						showFileInfo = !!val;
 				}
+			}
+			else if (! strcmp(line, "LL"))
+			{
+				UINT8 newLevel = (UINT8)strtoul(tokenStr, &endPtr, 0);
+				if (endPtr > tokenStr)
+					logLevel = newLevel;
 			}
 			else if (! strcmp(line, "Q"))
 				mode = -1;
@@ -960,8 +968,8 @@ static const char* LogLevel2Str(UINT8 level)
 static void PlayerLogCallback(void* userParam, PlayerBase* player, UINT8 level, UINT8 srcType,
 	const char* srcTag, const char* message)
 {
-	if (level >= PLRLOG_TRACE)
-		return;	// don't print trace logs (debug is okay)
+	if (level > logLevel)
+		return;	// don't print messages with higher verbosity than current log level
 	if (srcType == PLRLOGSRC_PLR)
 		printf("[%s] %s: %s", LogLevel2Str(level), player->GetPlayerName(), message);
 	else

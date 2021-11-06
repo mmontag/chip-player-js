@@ -7,6 +7,7 @@
 #include "helper.h"
 #include "playerbase.hpp"
 #include "../utils/DataLoader.h"
+#include "../emu/logging.h"
 #include <vector>
 
 
@@ -137,6 +138,7 @@ private:
 	
 	void ScanInitBlock(void);
 	
+	static void PlayerLogCB(void* userParam, void* source, UINT8 level, const char* message);
 	static void SndEmuLogCB(void* userParam, void* source, UINT8 level, const char* message);
 	
 	void GenerateDeviceConfig(void);
@@ -148,6 +150,7 @@ private:
 	void DoFileEnd(void);
 	void WriteReg(UINT8 port, UINT8 reg, UINT8 data);
 	
+	DEV_LOGGER _logger;
 	DATA_LOADER* _dLoad;
 	const UINT8* _fileData;	// data pointer for quick access, equals _dLoad->GetFileData().data()
 	

@@ -532,7 +532,7 @@ void VGMPlayer::Cmd_invalid(void)
 	_psTrigger |= PLAYSTATE_END;
 	if (_eventCbFunc != NULL)
 		_eventCbFunc(this, _eventCbParam, PLREVT_END, NULL);
-	fprintf(stderr, "Invalid VGM command %02X found! (filePos 0x%06X)\n", fData[0x00], _filePos);
+	emu_logf(&_logger, PLRLOG_ERROR, "Invalid VGM command %02X found! (filePos 0x%06X)\n", fData[0x00], _filePos);
 	return;
 }
 
@@ -540,7 +540,7 @@ void VGMPlayer::Cmd_unknown(void)
 {
 	// The difference between "invalid" and "unknown" is, that there is a command length
 	// defined for "unknown" and thus it is possible to just skip it.
-	fprintf(stderr, "Unknown VGM command %02X found! (filePos 0x%06X)\n", fData[0x00], _filePos);
+	emu_logf(&_logger, PLRLOG_WARN, "Unknown VGM command %02X found! (filePos 0x%06X)\n", fData[0x00], _filePos);
 	return;
 }
 
@@ -556,7 +556,7 @@ void VGMPlayer::Cmd_EndOfData(void)
 		if (_lastLoopTick == _fileTick)
 		{
 			doLoop = 0;	// prevent freezing due to infinite loop
-			fprintf(stderr, "Warning! Ignored Zero-Sample-Loop!\n");
+			emu_logf(&_logger, PLRLOG_WARN, "Ignored Zero-Sample-Loop!\n");
 		}
 		else
 		{
@@ -722,8 +722,14 @@ void VGMPlayer::Cmd_DataBlock(void)
 			pcmBnk->data.resize(oldLen + dataLen);
 			if (dblkType & 0x40)
 			{
-				DecompressDataBlk(dataLen, &pcmBnk->data[oldLen],
-									dblkLen - dbCI.hdrSize, &dataPtr[dbCI.hdrSize], &dbCI.cmprInfo);
+				UINT8 retVal = DecompressDataBlk(dataLen, &pcmBnk->data[oldLen],
+					dblkLen - dbCI.hdrSize, &dataPtr[dbCI.hdrSize], &dbCI.cmprInfo);
+				if (retVal == 0x10)
+					emu_logf(&_logger, PLRLOG_ERROR, "Error loading table-compressed data block! No table loaded!\n");
+				else if (retVal == 0x11)
+					emu_logf(&_logger, PLRLOG_ERROR, "Data block and loaded value table incompatible!\n");
+				else if (retVal == 0x80)
+					emu_logf(&_logger, PLRLOG_ERROR, "Unknown data block compression!\n");
 			}
 			else
 			{
@@ -1142,7 +1148,7 @@ void VGMPlayer::Cmd_RF5C_Mem(void)
 	
 	UINT16 memOfs = ReadLE16(&fData[0x01]);
 	if (memOfs & 0xF000)
-		fprintf(stderr, "Warning: RF5C mem write to out-of-window offset 0x%04X\n", memOfs);
+		emu_logf(&_logger, PLRLOG_WARN, "RF5C mem write to out-of-window offset 0x%04X\n", memOfs);
 	cDev->writeM8(cDev->base.defInf.dataPtr, memOfs, fData[0x03]);
 	return;
 }
@@ -1327,7 +1333,7 @@ void VGMPlayer::Cmd_OKIM6295_Reg(void)
 		if (data & 0x80)
 		{
 			data &= 0x7F;	// remove "pin7" bit (bug in some MAME VGM logs)
-			//fprintf(stderr, "OKIM6295 Warning: SetClock command (%02X %02X) includes Pin7 bit!\n",
+			//emu_logf(&_logger, PLRLOG_WARN, "OKIM6295 SetClock command (%02X %02X) includes Pin7 bit!\n",
 			//	fData[0x00], fData[0x01]);
 		}
 	}

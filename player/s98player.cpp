@@ -18,7 +18,7 @@
 #include "../emu/cores/ayintf.h"		// for AY8910_CFG
 #include "../utils/StrUtils.h"
 #include "helper.h"
-#include "logging.h"
+#include "../emu/logging.h"
 
 enum S98_DEVTYPES
 {
@@ -97,6 +97,8 @@ S98Player::S98Player() :
 	UINT8 retVal;
 	UINT16 optChip;
 	UINT8 chipID;
+	
+	dev_logger_set(&_logger, this, S98Player::PlayerLogCB, NULL);
 	
 	for (optChip = 0x00; optChip < 0x100; optChip ++)
 	{
@@ -246,13 +248,13 @@ UINT8 S98Player::LoadFile(DATA_LOADER *dataLoader)
 	{
 		if (_fileHdr.loopOfs < _fileHdr.dataOfs || _fileHdr.loopOfs >= DataLoader_GetSize(_dLoad))
 		{
-			debug("Invalid VGM loop offset 0x%06X - ignoring!\n", _fileHdr.loopOfs);
+			emu_logf(&_logger, PLRLOG_WARN, "Invalid loop offset 0x%06X - ignoring!\n", _fileHdr.loopOfs);
 			_fileHdr.loopOfs = 0x00;
 		}
 		if (_fileHdr.loopOfs && _loopTick == _totalTicks)
 		{
 			// 0-Sample-Loops causes the program to hang in the playback routine
-			debug("Warning! Ignored Zero-Sample-Loop!\n");
+			emu_logf(&_logger, PLRLOG_WARN, "Warning! Ignored Zero-Sample-Loop!\n");
 			_fileHdr.loopOfs = 0x00;
 		}
 	}
@@ -335,8 +337,8 @@ UINT8 S98Player::LoadTags(void)
 		// tag offset = PSF tag
 		if (endPtr - startPtr < 5 || memcmp(startPtr, "[S98]", 5))
 		{
-			debug("Invalid S98 tag data!\n");
-			debug("tagData size: %zu, Signature: %.5s\n", endPtr - startPtr, startPtr);
+			emu_logf(&_logger, PLRLOG_ERROR, "Invalid S98 tag data!\n");
+			emu_logf(&_logger, PLRLOG_DEBUG, "tagData size: %zu, Signature: %.5s\n", endPtr - startPtr, startPtr);
 			return 0xF0;
 		}
 		startPtr += 5;
@@ -346,7 +348,7 @@ UINT8 S98Player::LoadTags(void)
 			{
 				tagIsUTF8 = true;
 				startPtr += 3;
-				debug("Info: Tags are UTF-8 encoded.");
+				emu_logf(&_logger, PLRLOG_DEBUG, "Note: Tags are UTF-8 encoded.");
 			}
 		}
 		
@@ -786,6 +788,15 @@ UINT32 S98Player::GetLoopTicks(void) const
 		return _totalTicks - _loopTick;
 }
 
+/*static*/ void S98Player::PlayerLogCB(void* userParam, void* source, UINT8 level, const char* message)
+{
+	S98Player* player = (S98Player*)source;
+	if (player->_logCbFunc == NULL)
+		return;
+	player->_logCbFunc(player->_logCbParam, player, level, PLRLOGSRC_PLR, NULL, message);
+	return;
+}
+
 /*static*/ void S98Player::SndEmuLogCB(void* userParam, void* source, UINT8 level, const char* message)
 {
 	DEVLOG_CB_DATA* cbData = (DEVLOG_CB_DATA*)userParam;
@@ -1176,7 +1187,7 @@ void S98Player::HandleEOF(void)
 		if (_lastLoopTick == _fileTick)
 		{
 			doLoop = 0;	// prevent freezing due to infinite loop
-			debug("Warning! Ignored Zero-Sample-Loop!\n");
+			emu_logf(&_logger, PLRLOG_WARN, "Ignored Zero-Sample-Loop!\n");
 		}
 		else
 		{
@@ -1222,7 +1233,7 @@ void S98Player::DoCommand(void)
 		_psTrigger |= PLAYSTATE_END;
 		if (_eventCbFunc != NULL)
 			_eventCbFunc(this, _eventCbParam, PLREVT_END, NULL);
-		debug("S98 file ends early! (filePos 0x%06X, fileSize 0x%06X)\n", _filePos, DataLoader_GetSize(_dLoad));
+		emu_logf(&_logger, PLRLOG_WARN, "S98 file ends early! (filePos 0x%06X, fileSize 0x%06X)\n", _filePos, DataLoader_GetSize(_dLoad));
 		return;
 	}
 	

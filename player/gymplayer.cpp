@@ -16,7 +16,7 @@
 #include "../emu/cores/sn764intf.h"	// for SN76496_CFG
 #include "../utils/StrUtils.h"
 #include "helper.h"
-#include "logging.h"
+#include "../emu/logging.h"
 
 INLINE UINT32 ReadLE32(const UINT8* data)
 {
@@ -43,6 +43,8 @@ GYMPlayer::GYMPlayer() :
 {
 	size_t curDev;
 	UINT8 retVal;
+	
+	dev_logger_set(&_logger, this, GYMPlayer::PlayerLogCB, NULL);
 	
 	for (curDev = 0; curDev < 2; curDev ++)
 		InitDeviceOptions(_devOpts[curDev]);
@@ -527,6 +529,15 @@ UINT32 GYMPlayer::GetLoopTicks(void) const
 		return _totalTicks - _fileHdr.loopFrame;
 }
 
+/*static*/ void GYMPlayer::PlayerLogCB(void* userParam, void* source, UINT8 level, const char* message)
+{
+	GYMPlayer* player = (GYMPlayer*)source;
+	if (player->_logCbFunc == NULL)
+		return;
+	player->_logCbFunc(player->_logCbParam, player, level, PLRLOGSRC_PLR, NULL, message);
+	return;
+}
+
 /*static*/ void GYMPlayer::SndEmuLogCB(void* userParam, void* source, UINT8 level, const char* message)
 {
 	DEVLOG_CB_DATA* cbData = (DEVLOG_CB_DATA*)userParam;
@@ -907,7 +918,7 @@ void GYMPlayer::DoCommand(void)
 					_ymLatch[latchID] = data;
 					if (needPatch)
 					{
-						//printf("GYM: Fixing missing freq p2: %03X=%02X + [%03X=%02X]\n",
+						//emu_logf(&_logger, PLRLOG_TRACE, "Fixing missing freq p2: %03X=%02X + [%03X=%02X]\n",
 						//	(port << 8) | reg, data, (port << 8) | (reg ^ 0x04), _ymFreqRegs[cacheReg ^ 0x04]);
 						// complete the 2-part write by sending the command for the 2nd part
 						cDev->write(dataPtr, (port << 1) | 0, reg ^ 0x04);
@@ -918,7 +929,7 @@ void GYMPlayer::DoCommand(void)
 				{
 					if (_ymLatch[latchID] != _ymFreqRegs[cacheReg ^ 0x04])
 					{
-						//printf("GYM: Fixing missing freq p1: [%03X=%02X] + %03X=%02X\n",
+						//emu_logf(&_logger, PLRLOG_TRACE, "Fixing missing freq p1: [%03X=%02X] + %03X=%02X\n",
 						//	(port << 8) | (reg ^ 0x04), _ymFreqRegs[cacheReg ^ 0x04], (port << 8) | reg, data);
 						// make sure to set the latch to the correct value
 						cDev->write(dataPtr, (port << 1) | 0, reg ^ 0x04);
@@ -965,7 +976,7 @@ void GYMPlayer::DoFileEnd(void)
 		if (_lastLoopTick == _fileTick)
 		{
 			doLoop = 0;	// prevent freezing due to infinite loop
-			debug("Warning! Ignored Zero-Sample-Loop!\n");
+			emu_logf(&_logger, PLRLOG_WARN, "Ignored Zero-Sample-Loop!\n");
 		}
 		else
 		{

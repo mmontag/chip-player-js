@@ -7,6 +7,7 @@ extern "C"
 #endif
 
 #include "../stdtype.h"
+#include "../common_def.h"
 
 typedef struct _pcm_compression_table
 {
@@ -49,13 +50,13 @@ typedef struct _pcm_compr_datablk_info
 
 // small functions to help calculating data sizes
 // Bit Packing/DPCM:
-static UINT32 BPACK_SIZE_CMP(UINT32 sizeDec, UINT32 bitsCmp, UINT32 bitsDec)
+INLINE UINT32 BPACK_SIZE_CMP(UINT32 sizeDec, UINT32 bitsCmp, UINT32 bitsDec)
 {
 	UINT32 byteBits = (bitsDec + 7) & ~7;
 	return (UINT32)(((UINT64)sizeDec * bitsCmp + 7) / byteBits);
 }
 
-static UINT32 BPACK_SIZE_DEC(UINT32 sizeCmp, UINT32 bitsCmp, UINT32 bitsDec)
+INLINE UINT32 BPACK_SIZE_DEC(UINT32 sizeCmp, UINT32 bitsCmp, UINT32 bitsDec)
 {
 	UINT32 byteBits = (bitsDec + 7) & ~7;
 	return (UINT32)((UINT64)sizeCmp * byteBits / bitsCmp);

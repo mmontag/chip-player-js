@@ -1,4 +1,3 @@
-// TODO: option to disable DualOPL2 -> OPL3 _realHwType patch
 #include <stdlib.h>
 #include <string.h>
 #include <vector>
@@ -14,7 +13,7 @@
 #include "../emu/SoundDevs.h"
 #include "../emu/EmuCores.h"
 #include "helper.h"
-#include "logging.h"
+#include "../emu/logging.h"
 
 enum DRO_HWTYPES
 {
@@ -45,6 +44,8 @@ DROPlayer::DROPlayer() :
 	_psTrigger(0x00)
 {
 	size_t curDev;
+	
+	dev_logger_set(&_logger, this, DROPlayer::PlayerLogCB, NULL);
 	
 	_playOpts.v2opl3Mode = DRO_V2OPL3_DETECT;
 	
@@ -592,6 +593,15 @@ UINT32 DROPlayer::GetLoopTicks(void) const
 	return 0;
 }
 
+/*static*/ void DROPlayer::PlayerLogCB(void* userParam, void* source, UINT8 level, const char* message)
+{
+	DROPlayer* player = (DROPlayer*)source;
+	if (player->_logCbFunc == NULL)
+		return;
+	player->_logCbFunc(player->_logCbParam, player, level, PLRLOGSRC_PLR, NULL, message);
+	return;
+}
+
 /*static*/ void DROPlayer::SndEmuLogCB(void* userParam, void* source, UINT8 level, const char* message)
 {
 	DEVLOG_CB_DATA* cbData = (DEVLOG_CB_DATA*)userParam;
@@ -927,7 +937,7 @@ void DROPlayer::DoCommand_v1(void)
 	
 	UINT8 curCmd;
 	
-	//debug("DRO v1: Ofs %04X, Command %02X data %02X\n", _filePos, _fileData[_filePos], _fileData[_filePos+1]);
+	//emu_logf(&_logger, PLRLOG_TRACE, "[DRO v1] Ofs %04X, Command %02X data %02X\n", _filePos, _fileData[_filePos], _fileData[_filePos+1]);
 	curCmd = _fileData[_filePos];
 	_filePos ++;
 	switch(curCmd)
@@ -953,7 +963,7 @@ void DROPlayer::DoCommand_v1(void)
 		_selPort = curCmd & 0x01;
 		if (_selPort >= (_devTypes.size() << _portShift))
 		{
-			//debug("More chips used than defined in header!\n");
+			//emu_logf(&_logger, PLRLOG_WARN, "More chips used than defined in header!\n");
 			//_shownMsgs[2] = true;
 		}
 		return;
@@ -988,7 +998,7 @@ void DROPlayer::DoCommand_v2(void)
 	UINT8 reg;
 	UINT8 data;
 	
-	//debug("DRO v2: Ofs %04X, Command %02X data %02X\n", _filePos, _fileData[_filePos], _fileData[_filePos+1]);
+	//emu_logf(&_logger, PLRLOG_TRACE, "[DRO v2] Ofs %04X, Command %02X data %02X\n", _filePos, _fileData[_filePos], _fileData[_filePos+1]);
 	reg = _fileData[_filePos + 0x00];
 	data = _fileData[_filePos + 0x01];
 	_filePos += 0x02;

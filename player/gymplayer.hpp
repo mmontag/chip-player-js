@@ -8,6 +8,7 @@
 #include "helper.h"
 #include "playerbase.hpp"
 #include "../utils/DataLoader.h"
+#include "../emu/logging.h"
 #include <vector>
 #include <map>
 #include <string>
@@ -111,6 +112,7 @@ private:
 	void LoadTag(const char* tagName, const void* data, size_t maxlen);
 	std::string GetUTF8String(const char* startPtr, const char* endPtr);
 	
+	static void PlayerLogCB(void* userParam, void* source, UINT8 level, const char* message);
 	static void SndEmuLogCB(void* userParam, void* source, UINT8 level, const char* message);
 	
 	void GenerateDeviceConfig(void);
@@ -121,6 +123,7 @@ private:
 	void DoFileEnd(void);
 	
 	CPCONV* _cpc1252;	// CP1252 -> UTF-8 codepage conversion
+	DEV_LOGGER _logger;
 	DATA_LOADER* _dLoad;
 	UINT32 _fileLen;
 	const UINT8* _fileData;	// data pointer for quick access, equals _dLoad->GetFileData().data()

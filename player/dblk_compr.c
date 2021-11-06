@@ -3,7 +3,6 @@
 
 #include "../common_def.h"
 #include "dblk_compr.h"
-#include "logging.h"
 
 // integer types for fast integer calculation
 // The bit number defines how many bits are required, but the types can be larger for increased speed.
@@ -145,14 +144,12 @@ static UINT8 Decompress_BitPacking_8(UINT32 outLen, UINT8* outData, UINT32 inLen
 		ent1B = cmpParams->comprTbl->values.d8;
 		if (! cmpParams->comprTbl->valueCount)
 		{
-			debug("Error loading table-compressed data block! No table loaded!\n");
-			return 0x10;
+			return 0x10;	// Error: no table loaded
 		}
 		else if (cmpParams->bitsDec != cmpParams->comprTbl->bitsDec ||
 			cmpParams->bitsCmp != cmpParams->comprTbl->bitsCmp)
 		{
-			debug("Warning! Data block and loaded value table incompatible!\n");
-			return 0x11;
+			return 0x11;	// Data block and loaded value table incompatible
 		}
 	}
 	
@@ -228,14 +225,12 @@ static UINT8 Decompress_BitPacking_16(UINT32 outLen, UINT8* outData, UINT32 inLe
 		ent2B = cmpParams->comprTbl->values.d16;
 		if (! cmpParams->comprTbl->valueCount)
 		{
-			debug("Error loading table-compressed data block! No table loaded!\n");
-			return 0x10;
+			return 0x10;	// Error: no table loaded
 		}
 		else if (cmpParams->bitsDec != cmpParams->comprTbl->bitsDec ||
 			cmpParams->bitsCmp != cmpParams->comprTbl->bitsCmp)
 		{
-			debug("Warning! Data block and loaded value table incompatible!\n");
-			return 0x11;
+			return 0x11;	// Data block and loaded value table incompatible
 		}
 	}
 	
@@ -311,14 +306,12 @@ static UINT8 Decompress_DPCM_8(UINT32 outLen, UINT8* outData, UINT32 inLen, cons
 	ent1B = cmpParams->comprTbl->values.d8;
 	if (! cmpParams->comprTbl->valueCount)
 	{
-		debug("Error loading table-compressed data block! No table loaded!\n");
-		return 0x10;
+		return 0x10;	// Error: no table loaded
 	}
 	else if (cmpParams->bitsDec != cmpParams->comprTbl->bitsDec ||
 		cmpParams->bitsCmp != cmpParams->comprTbl->bitsCmp)
 	{
-		debug("Warning! Data block and loaded value table incompatible!\n");
-		return 0x11;
+		return 0x11;	// Data block and loaded value table incompatible
 	}
 	
 	outMask = (1 << cmpParams->bitsDec) - 1;
@@ -370,14 +363,12 @@ static UINT8 Decompress_DPCM_16(UINT32 outLen, UINT8* outData, UINT32 inLen, con
 	ent2B = cmpParams->comprTbl->values.d16;
 	if (! cmpParams->comprTbl->valueCount)
 	{
-		debug("Error loading table-compressed data block! No table loaded!\n");
-		return 0x10;
+		return 0x10;	// Error: no table loaded
 	}
 	else if (cmpParams->bitsDec != cmpParams->comprTbl->bitsDec ||
 		cmpParams->bitsCmp != cmpParams->comprTbl->bitsCmp)
 	{
-		debug("Warning! Data block and loaded value table incompatible!\n");
-		return 0x11;
+		return 0x11;	// Data block and loaded value table incompatible
 	}
 	
 	outMask = (1 << cmpParams->bitsDec) - 1;
@@ -436,14 +427,12 @@ static UINT8 Compress_BitPacking_8(UINT32 outLen, UINT8* outData, UINT32 inLen, 
 		ent1B = cmpParams->comprTbl->values.d8;
 		if (! cmpParams->comprTbl->valueCount)
 		{
-			debug("Error storing table-compressed data block! No table loaded!\n");
-			return 0x10;
+			return 0x10;	// Error: no table loaded
 		}
 		else if (cmpParams->bitsDec != cmpParams->comprTbl->bitsDec ||
 			cmpParams->bitsCmp != cmpParams->comprTbl->bitsCmp)
 		{
-			debug("Warning! Data block and loaded value table incompatible!\n");
-			return 0x11;
+			return 0x11;	// Data block and loaded value table incompatible
 		}
 		ent1B = (UINT8*)malloc(ent1Count * sizeof(UINT8));
 		GenerateReverseLUT_8(ent1Count, ent1B, cmpParams->comprTbl->valueCount, cmpParams->comprTbl->values.d8);
@@ -529,14 +518,12 @@ static UINT8 Compress_BitPacking_16(UINT32 outLen, UINT8* outData, UINT32 inLen,
 		ent2B = cmpParams->comprTbl->values.d16;
 		if (! cmpParams->comprTbl->valueCount)
 		{
-			debug("Error storing table-compressed data block! No table loaded!\n");
-			return 0x10;
+			return 0x10;	// Error: no table loaded
 		}
 		else if (cmpParams->bitsDec != cmpParams->comprTbl->bitsDec ||
 			cmpParams->bitsCmp != cmpParams->comprTbl->bitsCmp)
 		{
-			debug("Warning! Data block and loaded value table incompatible!\n");
-			return 0x11;
+			return 0x11;	// Data block and loaded value table incompatible
 		}
 		ent2B = (UINT16*)malloc(ent2Count * sizeof(UINT16));
 		GenerateReverseLUT_16(ent2Count, ent2B, cmpParams->comprTbl->valueCount, cmpParams->comprTbl->values.d16);
@@ -619,8 +606,7 @@ UINT8 ReadComprDataBlkHdr(UINT32 inLen, const UINT8* inData, PCM_CDB_INF* retCdb
 		curPos += 0x05;
 		break;
 	default:
-		debug("Error: Unknown data block compression!\n");
-		return 0x80;
+		return 0x80;	// Error: unknown data block compression
 	}
 	
 	retCdbInf->hdrSize = curPos;
@@ -654,8 +640,7 @@ UINT8 WriteComprDataBlkHdr(UINT32 outLen, UINT8* outData, PCM_CDB_INF* cdbInf)
 		curPos += 0x05;
 		break;
 	default:
-		debug("Error: Unknown data block compression!\n");
-		return 0x80;
+		return 0x80;	// Error: unknown data block compression
 	}
 	
 	cdbInf->hdrSize = curPos;
@@ -754,7 +739,11 @@ void ReadPCMComprTable(UINT32 dataSize, const UINT8* data, PCM_COMPR_TBL* comprT
 	tblSize = comprTbl->valueCount * valSize;
 	
 	if (dataSize < 0x06 + tblSize)
-		debug("Warning! Bad PCM Table Length!\n");
+	{
+		//printf("Warning! Bad PCM Table Length!\n");
+		tblSize = dataSize - 0x06;
+		comprTbl->valueCount = tblSize / valSize;
+	}
 	
 	comprTbl->values.d8 = (UINT8*)realloc(comprTbl->values.d8, tblSize);
 	if (valSize < 0x02)
@@ -786,7 +775,7 @@ UINT32 WriteCompressionTable(UINT32 dataSize, UINT8* data, PCM_COMPR_TBL* comprT
 	
 	if (dataSize < 0x06 + tblSize)
 	{
-		debug("Warning! Bad PCM Table Length!\n");
+		//printf("Warning! Bad PCM Table Length!\n");
 		return (UINT32)-1;
 	}
 	

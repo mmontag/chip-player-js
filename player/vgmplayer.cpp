@@ -29,7 +29,7 @@
 #include "dblk_compr.h"
 #include "../utils/StrUtils.h"
 #include "helper.h"
-#include "logging.h"
+#include "../emu/logging.h"
 
 #ifdef _MSC_VER
 #define snprintf	_snprintf
@@ -149,6 +149,8 @@ VGMPlayer::VGMPlayer() :
 	UINT16 optChip;
 	UINT8 chipID;
 	
+	dev_logger_set(&_logger, this, VGMPlayer::PlayerLogCB, NULL);
+	
 	_playOpts.playbackHz = 0;
 	_playOpts.hardStopOld = 0;
 	
@@ -261,7 +263,7 @@ UINT8 VGMPlayer::ParseHeader(void)
 		_fileHdr.dataOfs = 0x40;	// offset not set - assume v1.00 header size
 	if (_fileHdr.dataOfs < 0x38)
 	{
-		fprintf(stderr, "Warning! Invalid Data Offset 0x%02X!\n", _fileHdr.dataOfs);
+		emu_logf(&_logger, PLRLOG_WARN, "Invalid Data Offset 0x%02X!\n", _fileHdr.dataOfs);
 		_fileHdr.dataOfs = 0x38;
 	}
 	_hdrLenFile = _fileHdr.dataOfs;
@@ -294,7 +296,7 @@ UINT8 VGMPlayer::ParseHeader(void)
 	
 	if (! _fileHdr.eofOfs || _fileHdr.eofOfs > DataLoader_GetSize(_dLoad))
 	{
-		fprintf(stderr, "Warning! Invalid EOF Offset 0x%06X! (should be: 0x%06X)\n",
+		emu_logf(&_logger, PLRLOG_WARN, "Invalid EOF Offset 0x%06X! (should be: 0x%06X)\n",
 				_fileHdr.eofOfs, DataLoader_GetSize(_dLoad));
 		_fileHdr.eofOfs = DataLoader_GetSize(_dLoad);	// catch invalid EOF values
 	}
@@ -317,13 +319,13 @@ UINT8 VGMPlayer::ParseHeader(void)
 	{
 		if (_fileHdr.loopOfs < _fileHdr.dataOfs || _fileHdr.loopOfs >= _fileHdr.dataEnd)
 		{
-			debug("Invalid VGM loop offset 0x%06X - ignoring!\n", _fileHdr.loopOfs);
+			emu_logf(&_logger, PLRLOG_WARN, "Invalid loop offset 0x%06X - ignoring!\n", _fileHdr.loopOfs);
 			_fileHdr.loopOfs = 0x00;
 		}
 		if (_fileHdr.loopOfs && _fileHdr.loopTicks == 0)
 		{
 			// 0-Sample-Loops causes the program to hang in the playback routine
-			debug("Warning! Ignored Zero-Sample-Loop!\n");
+			emu_logf(&_logger, PLRLOG_WARN, "Ignored Zero-Sample-Loop!\n");
 			_fileHdr.loopOfs = 0x00;
 		}
 	}
@@ -810,6 +812,15 @@ UINT32 VGMPlayer::GetModifiedLoopCount(UINT32 defaultLoops) const
 const std::vector<VGMPlayer::DACSTRM_DEV>& VGMPlayer::GetStreamDevInfo(void) const
 {
 	return _dacStreams;
+}
+
+/*static*/ void VGMPlayer::PlayerLogCB(void* userParam, void* source, UINT8 level, const char* message)
+{
+	VGMPlayer* player = (VGMPlayer*)source;
+	if (player->_logCbFunc == NULL)
+		return;
+	player->_logCbFunc(player->_logCbParam, player, level, PLRLOGSRC_PLR, NULL, message);
+	return;
 }
 
 /*static*/ void VGMPlayer::SndEmuLogCB(void* userParam, void* source, UINT8 level, const char* message)
@@ -1661,7 +1672,7 @@ UINT8 VGMPlayer::SeekToFilePos(UINT32 pos)
 		_psTrigger |= PLAYSTATE_END;
 		if (_eventCbFunc != NULL)
 			_eventCbFunc(this, _eventCbParam, PLREVT_END, NULL);
-		debug("VGM file ends early! (filePos 0x%06X, end at 0x%06X)\n", _filePos, _fileHdr.dataEnd);
+		emu_logf(&_logger, PLRLOG_WARN, "VGM file ends early! (filePos 0x%06X, end at 0x%06X)\n", _filePos, _fileHdr.dataEnd);
 	}
 	_playState &= ~PLAYSTATE_SEEK;
 	
@@ -1758,7 +1769,7 @@ void VGMPlayer::ParseFile(UINT32 ticks)
 		_psTrigger |= PLAYSTATE_END;
 		if (_eventCbFunc != NULL)
 			_eventCbFunc(this, _eventCbParam, PLREVT_END, NULL);
-		debug("VGM file ends early! (filePos 0x%06X, end at 0x%06X)\n", _filePos, _fileHdr.dataEnd);
+		emu_logf(&_logger, PLRLOG_WARN, "VGM file ends early! (filePos 0x%06X, end at 0x%06X)\n", _filePos, _fileHdr.dataEnd);
 	}
 	
 	return;
