@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>	// for snprintf()
 #include <vector>
 #include <algorithm>
 
@@ -14,6 +15,11 @@
 #include "../emu/EmuCores.h"
 #include "helper.h"
 #include "../emu/logging.h"
+
+#ifdef _MSC_VER
+#define snprintf	_snprintf
+#endif
+
 
 enum DRO_HWTYPES
 {

@@ -9,6 +9,7 @@
 #include "../utils/DataLoader.h"
 #include "../emu/logging.h"
 #include <vector>
+#include <string>
 
 
 #define FCC_DRO 	0x44524F00

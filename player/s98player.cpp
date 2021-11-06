@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>	// for snprintf()
 #include <ctype.h>
 #include <vector>
 #include <string>
@@ -19,6 +20,11 @@
 #include "../utils/StrUtils.h"
 #include "helper.h"
 #include "../emu/logging.h"
+
+#ifdef _MSC_VER
+#define snprintf	_snprintf
+#endif
+
 
 enum S98_DEVTYPES
 {

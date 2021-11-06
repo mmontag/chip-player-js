@@ -4,7 +4,7 @@
 #include "../stdtype.h"
 #include "logging.h"
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 #define vsnprintf	_vsnprintf
 #endif
 
@@ -21,10 +21,10 @@ void emu_logf(DEV_LOGGER* logger, UINT8 level, const char* format, ...)
 		return;
 	
 	va_start(arg_list, format);
-	retVal = _vsnprintf(buffer, LOGBUF_SIZE, format, arg_list);
+	retVal = vsnprintf(buffer, LOGBUF_SIZE, format, arg_list);
 	va_end(arg_list);
 	if (retVal < 0 || retVal >= LOGBUF_SIZE)
-		buffer[LOGBUF_SIZE - 1] = '\0';	// for older MSVC version and glibc <= 2.0.6
+		buffer[LOGBUF_SIZE - 1] = '\0';	// required for older MSVC versions
 	
 	logger->func(logger->param, logger->source, level, buffer);
 	return;

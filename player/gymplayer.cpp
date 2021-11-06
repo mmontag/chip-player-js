@@ -18,6 +18,7 @@
 #include "helper.h"
 #include "../emu/logging.h"
 
+
 INLINE UINT32 ReadLE32(const UINT8* data)
 {
 	return	(data[0x03] << 24) | (data[0x02] << 16) |
