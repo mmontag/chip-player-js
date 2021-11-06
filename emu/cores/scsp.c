@@ -522,7 +522,7 @@ static void SCSP_Init(scsp_state *scsp, UINT32 clock)
 		if(iTL&0x40) SegaDB-=24.0f;
 		if(iTL&0x80) SegaDB-=48.0f;
 
-		TL=pow(10.0,SegaDB/20.0);
+		TL=powf(10.0f,SegaDB/20.0f);
 
 		SegaDB=0;
 		if(iPAN&0x1) SegaDB-=3.0f;
@@ -530,8 +530,8 @@ static void SCSP_Init(scsp_state *scsp, UINT32 clock)
 		if(iPAN&0x4) SegaDB-=12.0f;
 		if(iPAN&0x8) SegaDB-=24.0f;
 
-		if((iPAN&0xf)==0xf) PAN=0.0;
-		else PAN=pow(10.0,SegaDB/20.0);
+		if((iPAN&0xf)==0xf) PAN=0.0f;
+		else PAN=powf(10.0f,SegaDB/20.0f);
 
 		if(iPAN<0x10)
 		{
@@ -545,12 +545,12 @@ static void SCSP_Init(scsp_state *scsp, UINT32 clock)
 		}
 
 		if(iSDL)
-			fSDL=pow(10.0,(SDLT[iSDL])/20.0);
+			fSDL=powf(10.0f,(SDLT[iSDL])/20.0f);
 		else
 			fSDL=0.0;
 
-		scsp->LPANTABLE[i]=FIX((4.0*LPAN*TL*fSDL));
-		scsp->RPANTABLE[i]=FIX((4.0*RPAN*TL*fSDL));
+		scsp->LPANTABLE[i]=FIX((4.0f*LPAN*TL*fSDL));
+		scsp->RPANTABLE[i]=FIX((4.0f*RPAN*TL*fSDL));
 	}
 
 	scsp->ARTABLE[0]=scsp->DRTABLE[0]=0;    //Infinite time

@@ -948,14 +948,14 @@ INLINE void build_single_table(double rl, const ay_ym_param *par, int normalize,
 			/* The following line generates values that cause clicks when starting/pausing/stopping
 				because there're off (the center is at zero, not the base).
 				That's quite bad for a player.
-			tab[j] = MAX_OUTPUT * (((temp[j] - min)/(max-min)) - 0.25) * 0.5;
+			tab[j] = (INT32)(MAX_OUTPUT * (((temp[j] - min)/(max-min)) - 0.25) * 0.5);
 			*/
-			tab[j] = MAX_OUTPUT * ((temp[j] - min)/(max-min)) / NUM_CHANNELS;
+			tab[j] = (INT32)(MAX_OUTPUT * ((temp[j] - min)/(max-min)) / NUM_CHANNELS);
 	}
 	else
 	{
 		for (j=0; j < par->res_count; j++)
-			tab[j] = MAX_OUTPUT * temp[j] / NUM_CHANNELS;
+			tab[j] = (INT32)(MAX_OUTPUT * temp[j] / NUM_CHANNELS);
 	}
 
 }

@@ -1723,7 +1723,7 @@ INLINE void advance_eg(YM2151 *PSG)
 				{
 					op->volume += eg_inc[op->eg_sel_d1r + ((PSG->eg_cnt>>op->eg_sh_d1r)&7)];
 
-					if ( op->volume >= op->d1l )
+					if ( op->volume >= (INT32)op->d1l )
 						op->state = EG_SUS;
 
 				}
