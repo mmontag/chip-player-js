@@ -257,6 +257,7 @@ set(EMU_HEADERS
 	SoundDevs.h
 	EmuCores.h
 	Resampler.h
+	logging.h
 	dac_control.h
 )
 set(EMU_CORE_HEADERS)
