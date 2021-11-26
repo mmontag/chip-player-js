@@ -534,7 +534,7 @@ UINT8 VGMPlayer::GetSongDeviceInfo(std::vector<PLR_DEV_INFO>& devInfList) const
 		// chip configuration from VGM header
 		memset(&devInf, 0x00, sizeof(PLR_DEV_INFO));
 		devInf.type = sdCfg.type;
-		devInf.id = sdCfg.deviceID;
+		devInf.id = (UINT32)sdCfg.deviceID;
 		devInf.instance = (UINT8)sdCfg.instance;
 		devInf.devCfg = dCfg;
 		if (cDev != NULL)
@@ -1615,8 +1615,8 @@ void VGMPlayer::LoadOPL4ROM(CHIP_DEVICE* chipDev)
 		return;
 	
 	if (chipDev->romSize != NULL)
-		chipDev->romSize(chipDev->base.defInf.dataPtr, _yrwRom.size());
-	chipDev->romWrite(chipDev->base.defInf.dataPtr, 0x00, _yrwRom.size(), &_yrwRom[0]);
+		chipDev->romSize(chipDev->base.defInf.dataPtr, (UINT32)_yrwRom.size());
+	chipDev->romWrite(chipDev->base.defInf.dataPtr, 0x00, (UINT32)_yrwRom.size(), &_yrwRom[0]);
 	
 	return;
 }

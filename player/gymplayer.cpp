@@ -132,7 +132,7 @@ UINT8 GYMPlayer::LoadFile(DATA_LOADER *dataLoader)
 	if (_fileHdr.uncomprSize > 0)
 	{
 		UINT8 retVal = DecompressZlibData();
-		if (retVal)
+		if (retVal & 0x80)
 			return 0xFF;	// decompression error
 	}
 	_fileHdr.realFileSize = _fileLen;
@@ -157,19 +157,23 @@ UINT8 GYMPlayer::DecompressZlibData(void)
 	zStream.next_in = (z_const Bytef*)&_fileData[_fileHdr.dataOfs];
 	ret = inflateInit2(&zStream, 0x20 | 15);
 	if (ret != Z_OK)
-		return 0x01;
-	zStream.avail_out = _decFData.size() - _fileHdr.dataOfs;
+		return 0xFF;
+	zStream.avail_out = (uInt)(_decFData.size() - _fileHdr.dataOfs);
 	zStream.next_out = (Bytef*)&_decFData[_fileHdr.dataOfs];
 	
 	ret = inflate(&zStream, Z_SYNC_FLUSH);
-	// TODO: handle errors (Z_OK and Z_STREAM_END are fine)
+	if (! (ret == Z_OK || ret == Z_STREAM_END))
+	{
+		emu_logf(&_logger, PLRLOG_ERROR, "GYM decompression error %d after decompressing %lu bytes.\n",
+			ret, zStream.total_out);
+	}
 	_decFData.resize(_fileHdr.dataOfs + zStream.total_out);
 	
 	inflateEnd(&zStream);
 	
 	_fileData = &_decFData[0];
-	_fileLen = _decFData.size();
-	return 0x00;
+	_fileLen = (UINT32)_decFData.size();
+	return (ret == Z_OK || ret == Z_STREAM_END) ? 0x00 : 0x01;
 }
 
 void GYMPlayer::CalcSongLength(void)
@@ -310,7 +314,7 @@ UINT8 GYMPlayer::GetSongInfo(PLR_SONG_INFO& songInf)
 	songInf.songLen = GetTotalTicks();
 	songInf.loopTick = _loopOfs ? GetLoopTicks() : (UINT32)-1;
 	songInf.volGain = 0x10000;
-	songInf.deviceCnt = _devCfgs.size();
+	songInf.deviceCnt = (UINT32)_devCfgs.size();
 	
 	return 0x00;
 }
@@ -330,7 +334,7 @@ UINT8 GYMPlayer::GetSongDeviceInfo(std::vector<PLR_DEV_INFO>& devInfList) const
 		PLR_DEV_INFO devInf;
 		memset(&devInf, 0x00, sizeof(PLR_DEV_INFO));
 		
-		devInf.id = curDev;
+		devInf.id = (UINT32)curDev;
 		devInf.type = _devCfgs[curDev].type;
 		devInf.instance = (UINT8)curDev;
 		devInf.devCfg = devCfg;
@@ -604,7 +608,7 @@ UINT8 GYMPlayer::Start(void)
 		
 		cDev->base.defInf.dataPtr = NULL;
 		cDev->base.linkDev = NULL;
-		cDev->optID = DeviceID2OptionID(curDev);
+		cDev->optID = DeviceID2OptionID((UINT32)curDev);
 		
 		devOpts = (cDev->optID != (size_t)-1) ? &_devOpts[cDev->optID] : NULL;
 		devCfg->emuCore = (devOpts != NULL) ? devOpts->emuCore[0] : 0x00;

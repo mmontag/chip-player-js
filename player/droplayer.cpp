@@ -366,7 +366,7 @@ UINT8 DROPlayer::GetSongInfo(PLR_SONG_INFO& songInf)
 	songInf.songLen = GetTotalTicks();
 	songInf.loopTick = (UINT32)-1;
 	songInf.volGain = 0x10000;
-	songInf.deviceCnt = _devTypes.size();
+	songInf.deviceCnt = (UINT32)_devTypes.size();
 	
 	return 0x00;
 }
@@ -386,7 +386,7 @@ UINT8 DROPlayer::GetSongDeviceInfo(std::vector<PLR_DEV_INFO>& devInfList) const
 		PLR_DEV_INFO devInf;
 		memset(&devInf, 0x00, sizeof(PLR_DEV_INFO));
 		
-		devInf.id = curDev;
+		devInf.id = (UINT32)curDev;
 		devInf.type = _devTypes[curDev];
 		devInf.instance = (UINT8)curDev;
 		devInf.devCfg = devCfg;
@@ -673,7 +673,7 @@ UINT8 DROPlayer::Start(void)
 		
 		cDev->base.defInf.dataPtr = NULL;
 		cDev->base.linkDev = NULL;
-		cDev->optID = DeviceID2OptionID(curDev);
+		cDev->optID = DeviceID2OptionID((UINT32)curDev);
 		
 		devOpts = (cDev->optID != (size_t)-1) ? &_devOpts[cDev->optID] : NULL;
 		devCfg->emuCore = (devOpts != NULL) ? devOpts->emuCore[0] : 0x00;

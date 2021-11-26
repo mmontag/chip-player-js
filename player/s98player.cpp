@@ -350,7 +350,7 @@ UINT8 S98Player::LoadTags(void)
 		startPtr += 5;
 		if (endPtr - startPtr >= 3)
 		{
-			if (startPtr[0] == 0xEF && startPtr[1] == 0xBB && startPtr[2] == 0xBF)	// check for UTF-8 BOM
+			if (! memcmp(&startPtr[0], "\xEF\xBB\xBF", 3))	// check for UTF-8 BOM
 			{
 				tagIsUTF8 = true;
 				startPtr += 3;
@@ -358,10 +358,10 @@ UINT8 S98Player::LoadTags(void)
 			}
 		}
 		
-		if (! tagIsUTF8)
-			tagData = GetUTF8String(startPtr, endPtr);
-		else
+		if (tagIsUTF8)
 			tagData.assign(startPtr, endPtr);
+		else
+			tagData = GetUTF8String(startPtr, endPtr);
 		ParsePSFTags(tagData);
 	}
 	
@@ -534,7 +534,7 @@ UINT8 S98Player::GetSongInfo(PLR_SONG_INFO& songInf)
 	songInf.songLen = GetTotalTicks();
 	songInf.loopTick = _fileHdr.loopOfs ? GetLoopTicks() : (UINT32)-1;
 	songInf.volGain = 0x10000;
-	songInf.deviceCnt = _devHdrs.size();
+	songInf.deviceCnt = (UINT32)_devHdrs.size();
 	
 	return 0x00;
 }
@@ -554,7 +554,7 @@ UINT8 S98Player::GetSongDeviceInfo(std::vector<PLR_DEV_INFO>& devInfList) const
 		PLR_DEV_INFO devInf;
 		memset(&devInf, 0x00, sizeof(PLR_DEV_INFO));
 		
-		devInf.id = curDev;
+		devInf.id = (UINT32)curDev;
 		devInf.type = S98_DEV_LIST[devHdr->devType];
 		devInf.instance = GetDeviceInstance(curDev);
 		devInf.devCfg = (const DEV_GEN_CFG*)&_devCfgs[curDev].data[0];

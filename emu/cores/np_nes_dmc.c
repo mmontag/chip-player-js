@@ -559,7 +559,7 @@ void NES_DMC_np_SetClock(void* chip, UINT32 c)
 
 	dmc->clock = c;
 	
-	if (abs(dmc->clock - DEFAULT_CLK_PAL) <= 1000)	// check for approximately DEFAULT_CLK_PAL
+	if (abs((int)dmc->clock - DEFAULT_CLK_PAL) <= 1000)	// check for approximately DEFAULT_CLK_PAL
 		NES_DMC_np_SetPal(dmc, true);
 	else
 		NES_DMC_np_SetPal(dmc, false);

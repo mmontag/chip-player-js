@@ -542,8 +542,8 @@ UINT32 PlayerA::Render(UINT32 bufSize, void* data)
 		return 0;
 	}
 	
-	if (smplCount > _smplBuf.size())
-		smplCount = _smplBuf.size();
+	if (smplCount > (UINT32)_smplBuf.size())
+		smplCount = (UINT32)_smplBuf.size();
 	memset(&_smplBuf[0], 0, smplCount * sizeof(WAVE_32BS));
 	basePbSmpl = _player->GetCurPos(PLAYPOS_SAMPLE);
 	smplRendered = _player->Render(smplCount, &_smplBuf[0]);

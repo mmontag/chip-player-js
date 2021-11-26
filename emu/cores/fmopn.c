@@ -1479,6 +1479,8 @@ INLINE void update_phase_lfo_slot(FM_OPN *OPN, FM_SLOT *SLOT, UINT32 pm, UINT8 k
 
 	if (lfo_fn_offset)    /* LFO phase modulation active */
 	{
+		int finc;
+
 		/* block is not modified by LFO PM */
 		UINT8 blk = fc >> 11;
 
@@ -1486,13 +1488,13 @@ INLINE void update_phase_lfo_slot(FM_OPN *OPN, FM_SLOT *SLOT, UINT32 pm, UINT8 k
 		UINT32 fn = ((fc << 1) + lfo_fn_offset) & 0xfff;
 
 		/* recalculate (frequency) phase increment counter */
-		fc = (OPN->fn_table[fn]>>(7-blk)) + SLOT->DT[kc];
+		finc = (OPN->fn_table[fn]>>(7-blk)) + SLOT->DT[kc];
 
 		/* (frequency) phase overflow (credits to Nemesis) */
-		if (fc < 0) fc += OPN->fn_max;
+		if (finc < 0) finc += OPN->fn_max;
 
 		/* update phase */
-		SLOT->phase += ((fc * SLOT->mul) >> 1);
+		SLOT->phase += ((finc * SLOT->mul) >> 1);
 	}
 	else    /* LFO phase modulation  = zero */
 	{
