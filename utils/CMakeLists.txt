@@ -11,6 +11,7 @@ set(UTIL_FILES)
 set(UTIL_HEADERS)	# export headers
 set(UTIL_INCLUDES)
 set(UTIL_LIBS)
+set(UTIL_DEPS)	# dependencies for CMake Config file
 
 set(UTIL_PC_CFLAGS)
 set(UTIL_PC_LDFLAGS)
@@ -22,6 +23,7 @@ set(UTIL_PC_PKGS)
 # --------------
 if(UTIL_LOADERS)
 find_package(ZLIB REQUIRED)
+set(UTIL_DEPS ${UTIL_DEPS} "ZLIB")
 set(UTIL_HEADERS ${UTIL_HEADERS} DataLoader.h FileLoader.h MemoryLoader.h)
 set(UTIL_FILES ${UTIL_FILES} DataLoader.c FileLoader.c MemoryLoader.c)
 set(UTIL_LIBS ${UTIL_LIBS} ZLIB::ZLIB)
@@ -34,6 +36,7 @@ endif(UTIL_LOADERS)
 # ---------------------------
 if(UTIL_THREADING)
 find_package(Threads REQUIRED)
+set(UTIL_DEPS ${UTIL_DEPS} "Threads")
 
 set(UTIL_HEADERS ${UTIL_HEADERS} OSMutex.h OSSignal.h OSThread.h)
 if(CMAKE_USE_WIN32_THREADS_INIT)
@@ -79,6 +82,7 @@ if(UTIL_CHARCNV_WINAPI)
 	set(UTIL_FILES ${UTIL_FILES} StrUtils-CPConv_Win.c)
 elseif(UTIL_CHARCNV_ICONV)
 	find_package(Iconv REQUIRED)
+	set(UTIL_DEPS ${UTIL_DEPS} "Iconv")
 	set(UTIL_FILES ${UTIL_FILES} StrUtils-CPConv_IConv.c)
 	set(UTIL_LIBS ${UTIL_LIBS} Iconv::Iconv)
 	if(NOT Iconv_IS_BUILT_IN)
@@ -119,3 +123,4 @@ install(TARGETS ${PROJECT_NAME}
 set(LIBVGM_INSTALL_TARGETS ${LIBVGM_INSTALL_TARGETS} "${PROJECT_NAME}" PARENT_SCOPE)
 install(FILES ${UTIL_HEADERS} DESTINATION "${LIBVGM_INSTALL_INCLUDE_DIR}/utils")
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/vgm-utils.pc DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
+set(LIBVGM_DEPS ${LIBVGM_DEPS} "${UTIL_DEPS}" PARENT_SCOPE)

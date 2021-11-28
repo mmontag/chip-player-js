@@ -54,10 +54,16 @@ endfunction()
 #		- NAME: package name (used for folder and namespace)
 #		- VERSION: package version
 #		- TARGETS: CMake targets to install
+#		- DEPS: dependencies
 function(cmake_cfg_install CFG_TEMPLATE)
 	set(args_single NAME VERSION)
-	set(args_multi TARGETS)
+	set(args_multi TARGETS DEPS)
 	cmake_parse_arguments(CMCFG "" "${args_single}" "${args_multi}" ${ARGN})
+	
+	set(PACKAGE_DEPENDENCIES "")
+	foreach(dep IN LISTS CMCFG_DEPS)
+		string(APPEND PACKAGE_DEPENDENCIES "find_dependency(${dep})\n")
+	endforeach()
 	
 	set(CONFIG_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${CMCFG_NAME}")
 	set(TARGETS_FILENAME "${CMCFG_NAME}Targets.cmake")	# Note: This variable is used by config.cmake.in.
