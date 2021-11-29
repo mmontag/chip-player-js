@@ -263,7 +263,6 @@ int main(int argc, const char *argv[]) {
     /* attempt to load 256 bytes, bail if not possible */
     DataLoader_SetPreloadBytes(loader,0x100);
     if(DataLoader_Load(loader)) {
-        DataLoader_CancelLoading(loader);
         fprintf(stderr,"failed to load DataLoader\n");
         DataLoader_Deinit(loader);
         return 1;

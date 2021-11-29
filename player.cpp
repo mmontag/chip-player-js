@@ -166,7 +166,6 @@ int main(int argc, char* argv[])
 	retVal = DataLoader_Load(dLoad);
 	if (retVal)
 	{
-		DataLoader_CancelLoading(dLoad);
 		DataLoader_Deinit(dLoad);
 		fprintf(stderr, "Error 0x%02X loading file!\n", retVal);
 		continue;
@@ -174,7 +173,6 @@ int main(int argc, char* argv[])
 	retVal = mainPlr.LoadFile(dLoad);
 	if (retVal)
 	{
-		DataLoader_CancelLoading(dLoad);
 		DataLoader_Deinit(dLoad);
 		fprintf(stderr, "Error 0x%02X loading file!\n", retVal);
 		continue;
