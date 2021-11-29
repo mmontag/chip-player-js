@@ -15,117 +15,28 @@ jobs:
     strategy:
       matrix:
         config:
-          - { os: windows-latest, shell: bash, compiler: msvc, build_type: Release, extra_settings: "-A Win32" }
-          - { os: windows-latest, shell: bash, compiler: msvc, build_type: Debug, extra_settings: "-A Win32" }
-          #- { os: windows-latest, shell: bash, compiler: msvc, build_type: Release, extra_settings: "-A x64" }
-          #- { os: windows-latest, shell: bash, compiler: msvc, build_type: Debug, extra_settings: "-A x64" }
-          - { os: windows-latest, shell: "msys2 {0}", compiler: mingw, build_type: Release, extra_settings: "-G 'MSYS Makefiles'" }
-          - { os: windows-latest, shell: "msys2 {0}", compiler: mingw, build_type: Debug, extra_settings: "-G 'MSYS Makefiles'" }
-          - { os: macos-latest, shell: bash, build_type: Release }
-          - { os: macos-latest, shell: bash, build_type: Debug }
-          - { os: ubuntu-latest, shell: bash, build_type: Release }
-          - { os: ubuntu-latest, shell: bash, build_type: Debug }
+          - { os: windows-latest, build_type: Release, compiler: msvc, extra_settings: '-A Win32' }
+          - { os: windows-latest, build_type: Debug, compiler: msvc, extra_settings: '-A Win32' }
+          #- { os: windows-latest, build_type: Release, compiler: msvc, extra_settings: '-A x64' }
+          #- { os: windows-latest, build_type: Debug, compiler: msvc, extra_settings: '-A x64' }
+          - { os: windows-latest, build_type: Release, compiler: mingw, extra_settings: '-G "MSYS Makefiles"' }
+          - { os: windows-latest, build_type: Debug, compiler: mingw, extra_settings: '-G "MSYS Makefiles"' }
+          - { os: macos-latest, build_type: Release }
+          - { os: macos-latest, build_type: Debug }
+          - { os: ubuntu-latest, build_type: Release }
+          - { os: ubuntu-latest, build_type: Debug }
       fail-fast: false
 
     runs-on: ${{ matrix.config.os }}
-    defaults:
-      run:
-        shell: ${{ matrix.config.shell }}
 
     steps:
     - name: Checkout
       uses: actions/checkout@v2
 
-    - name: Dependencies [Windows MinGW]
-      if: ${{ runner.os == 'Windows' && matrix.config.compiler == 'mingw' }}
-      uses: msys2/setup-msys2@v2
+    - uses: ./.github/workflows/action-build-libvgm
       with:
-        msystem: MINGW64
-        update: true
-        install: |
-          make mingw-w64-x86_64-cmake
-          mingw-w64-x86_64-toolchain
-          mingw-w64-x86_64-zlib mingw-w64-x86_64-libiconv
-
-    - name: Dependencies [Windows MSVC]
-      if: ${{ runner.os == 'Windows' && matrix.config.compiler == 'msvc' }}
-      run: |
-        # avoid linker errors by enforcing WinAPI (instead of libiconv)
-        # and zdll.lib (DLL instead of static)
-        # The libraries that are shipped with libvgm were built with VC6 and VC2010
-        # and don't work with VC2015 and higher.
-        echo "CMAKE_OPTS=-DUTIL_CHARCNV_ICONV=OFF -DUTIL_CHARCNV_WINAPI=ON " \
-        "-DZLIB_LIBRARY_DEBUG=${GITHUB_WORKSPACE}/libs/lib/zdll.lib " \
-        "-DZLIB_LIBRARY_RELEASE=${GITHUB_WORKSPACE}/libs/lib/zdll.lib" >> $GITHUB_ENV
-
-    - name: Dependencies [macOS]
-      if: runner.os == 'macOS'
-      run: |
-        export HOMEBREW_NO_INSTALL_CLEANUP=1
-        brew update
-        brew install libao
-
-    - name: Dependencies [Linux]
-      if: runner.os == 'Linux'
-      run: |
-        sudo apt update
-        sudo apt install \
-          libasound2-dev \
-          libpulse-dev \
-          libao-dev \
-          zlib1g-dev \
-
-    - name: Configuring
-      run: |
-        cmake ${{ matrix.config.extra_settings }} \
-          -B ${GITHUB_WORKSPACE}/build \
-          -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install \
-          -DCMAKE_BUILD_TYPE=${{ matrix.config.build_type }} \
-          ${CMAKE_OPTS} \
-          -DBUILD_TESTS=ON \
-
-    - name: Build
-      run: |
-        cmake \
-          --build ${GITHUB_WORKSPACE}/build \
-          --config ${{ matrix.config.build_type }} \
-          --parallel 2 \
-
-    - name: Install
-      run: |
-        cmake \
-          --install ${GITHUB_WORKSPACE}/build \
-          --config ${{ matrix.config.build_type }}
-
-    - name: Check
-      run: |
-        echo "Listing what we installed"
-        echo "========================="
-        find ${GITHUB_WORKSPACE}/install
-        echo ""
-        
-        function file_lib() {
-          echo "$(basename "$1")"
-          file "$1"
-          echo ""
-        }
-        export -f file_lib
-        
-        echo "Checking compiled libraries"
-        echo "==========================="
-        find ${GITHUB_WORKSPACE}/install \
-          -name 'libvgm-*' \
-          -exec bash -c "file_lib \"{}\"" \;
-        
-        function print_pc() {
-          echo "$(basename "$1")"
-          cat "$1"
-          echo ""
-        }
-        export -f print_pc
-        
-        echo "Listing pkg-config file contents"
-        echo "================================"
-        find ${GITHUB_WORKSPACE}/install/lib/pkgconfig \
-          -name '*.pc' \
-          -exec bash -c "print_pc \"{}\"" \;
+        checkout_path: ${{ github.workspace }}
+        install_path: ${{ github.workspace }}/install
+        build_type: ${{ matrix.config.build_type }}
+        with_msvc: ${{ matrix.config.compiler == 'msvc' }}
+        extra_settings: ${{ matrix.config.extra_settings }}
