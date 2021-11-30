@@ -272,7 +272,7 @@ INLINE void pokey_channel_inc_chan(pokey_channel *c)
 	c->m_counter = (c->m_counter + 1) & 0xff;
 	if (c->m_counter == 0 && c->m_borrow_cnt == 0)
 	{
-		c->m_borrow_cnt = 3;
+		c->m_borrow_cnt = /*3*/1;	/* immediate trigger = partly fix BMX Simulator */
 		if (c->m_parent->m_IRQEN & c->m_INTMask)
 		{
 			/* Exposed state has changed: This should only be updated after a resync ... */
@@ -423,7 +423,30 @@ static UINT8 pokey_device_start(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	d->m_clock_period = 1.0 / cfg->clock;
 	d->m_output_type = LEGACY_LINEAR;
 
-	pokey_device_reset(d);
+	// bind callbacks
+	/*
+	m_keyboard_r.resolve();
+	m_irq_f.resolve();
+	*/
+
+	/* calculate the A/D times
+	 * In normal, slow mode (SKCTL bit SK_PADDLE is clear) the conversion
+	 * takes N scanlines, where N is the paddle value. A single scanline
+	 * takes approximately 64us to finish (1.78979MHz clock).
+	 * In quick mode (SK_PADDLE set) the conversion is done very fast
+	 * (takes two scanlines) but the result is not as accurate.
+	 */
+
+	/* initialize the poly counters */
+	poly_init_4_5(d->m_poly4, 4, 1, 0);
+	poly_init_4_5(d->m_poly5, 5, 2, 1);
+
+	/* initialize 9 / 17 arrays */
+	poly_init_9_17(d->m_poly9,   9);
+	poly_init_9_17(d->m_poly17, 17);
+	pokey_device_vol_init(d);
+
+	pokey_device_set_mute_mask(d, 0x00);
 
 	INIT_DEVINF(retDevInf, &d->_devData, cfg->clock, &devDef);
 	return 0x00;
@@ -449,29 +472,6 @@ static void pokey_device_reset(void *info)
 	d->m_channel[CHAN1].m_INTMask = IRQ_TIMR1;
 	d->m_channel[CHAN2].m_INTMask = IRQ_TIMR2;
 	d->m_channel[CHAN4].m_INTMask = IRQ_TIMR4;
-
-	// bind callbacks
-	/*
-	m_keyboard_r.resolve();
-	m_irq_f.resolve();
-	*/
-
-	/* calculate the A/D times
-	 * In normal, slow mode (SKCTL bit SK_PADDLE is clear) the conversion
-	 * takes N scanlines, where N is the paddle value. A single scanline
-	 * takes approximately 64us to finish (1.78979MHz clock).
-	 * In quick mode (SK_PADDLE set) the conversion is done very fast
-	 * (takes two scanlines) but the result is not as accurate.
-	 */
-
-	/* initialize the poly counters */
-	poly_init_4_5(d->m_poly4, 4, 1, 0);
-	poly_init_4_5(d->m_poly5, 5, 2, 1);
-
-	/* initialize 9 / 17 arrays */
-	poly_init_9_17(d->m_poly9,   9);
-	poly_init_9_17(d->m_poly17, 17);
-	pokey_device_vol_init(d);
 
 	/* The pokey does not have a reset line. These should be initialized
 	 * with random values.
@@ -581,15 +581,6 @@ static void pokey_device_step_one_clock(pokey_device *d)
 		}
 	}
 
-	/* do CHAN2 before CHAN1 because CHAN1 may set borrow! */
-	if (pokey_channel_check_borrow(&d->m_channel[CHAN2]))
-	{
-		if (d->m_AUDCTL & CH12_JOINED)
-			pokey_channel_reset_channel(&d->m_channel[CHAN1]);
-		pokey_channel_reset_channel(&d->m_channel[CHAN2]);
-		pokey_device_process_channel(d,CHAN2);
-	}
-
 	if (pokey_channel_check_borrow(&d->m_channel[CHAN1]))
 	{
 		if (d->m_AUDCTL & CH12_JOINED)
@@ -599,18 +590,14 @@ static void pokey_device_step_one_clock(pokey_device *d)
 		pokey_device_process_channel(d,CHAN1);
 	}
 
-	/* do CHAN4 before CHAN3 because CHAN3 may set borrow! */
-	if (pokey_channel_check_borrow(&d->m_channel[CHAN4]))
+	/* do CHAN2 before CHAN1 because CHAN1 may set borrow! */
+	/* NOT doing it + borrow = 1 cycle = partly fix BMX Simulator (same for CHAN3/4) */
+	if (pokey_channel_check_borrow(&d->m_channel[CHAN2]))
 	{
-		if (d->m_AUDCTL & CH34_JOINED)
-			pokey_channel_reset_channel(&d->m_channel[CHAN3]);
-		pokey_channel_reset_channel(&d->m_channel[CHAN4]);
-		pokey_device_process_channel(d,CHAN4);
-		/* is this a filtering channel (3/4) and is the filter active? */
-		if (d->m_AUDCTL & CH2_FILTER)
-			pokey_channel_sample(&d->m_channel[CHAN2]);
-		else
-			d->m_channel[CHAN2].m_filter_sample = 1;
+		if (d->m_AUDCTL & CH12_JOINED)
+			pokey_channel_reset_channel(&d->m_channel[CHAN1]);
+		pokey_channel_reset_channel(&d->m_channel[CHAN2]);
+		pokey_device_process_channel(d,CHAN2);
 	}
 
 	if (pokey_channel_check_borrow(&d->m_channel[CHAN3]))
@@ -625,6 +612,20 @@ static void pokey_device_step_one_clock(pokey_device *d)
 			pokey_channel_sample(&d->m_channel[CHAN1]);
 		else
 			d->m_channel[CHAN1].m_filter_sample = 1;
+	}
+
+	/* do CHAN4 before CHAN3 because CHAN3 may set borrow! */
+	if (pokey_channel_check_borrow(&d->m_channel[CHAN4]))
+	{
+		if (d->m_AUDCTL & CH34_JOINED)
+			pokey_channel_reset_channel(&d->m_channel[CHAN3]);
+		pokey_channel_reset_channel(&d->m_channel[CHAN4]);
+		pokey_device_process_channel(d,CHAN4);
+		/* is this a filtering channel (3/4) and is the filter active? */
+		if (d->m_AUDCTL & CH2_FILTER)
+			pokey_channel_sample(&d->m_channel[CHAN2]);
+		else
+			d->m_channel[CHAN2].m_filter_sample = 1;
 	}
 
 	if (d->m_old_raw_inval)
