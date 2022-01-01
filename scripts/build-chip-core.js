@@ -491,6 +491,7 @@ const flags = [
 
 console.log('Compiling to %s...', jsOutFile);
 console.log(`Invocation:\n${compiler} ${chalk.blue(flags.join(' '))} ${chalk.gray(sourceFiles.join(' '))}\n`);
+const preJs = `/*eslint-disable*/`;
 const args = [].concat(flags, sourceFiles);
 const build_proc = spawn(compiler, args, {stdio: 'inherit'});
 build_proc.on('exit', function (code) {
@@ -504,15 +505,7 @@ build_proc.on('exit', function (code) {
     }
 
     // Don't use --pre-js because it can get stripped out by closure.
-    const eslint_disable = '/*eslint-disable*/\n';
-    console.log('Prepending %s with %s.', jsOutFile, eslint_disable.trim());
-    const data = fs.readFileSync(jsOutFile);
-    const fd = fs.openSync(jsOutFile, 'w+');
-    const insert = new Buffer(eslint_disable);
-    fs.writeSync(fd, insert, 0, insert.length, 0);
-    fs.writeSync(fd, data, 0, data.length, insert.length);
-    fs.close(fd, (err) => {
-      if (err) throw err;
-    });
+    console.log('Prepending %s: \n%s\n', jsOutFile, preJs.trim());
+    execSync(`cat <<EOF > ${jsOutFile}\n${preJs}\n$(cat ${jsOutFile})\nEOF`);
   }
 });
