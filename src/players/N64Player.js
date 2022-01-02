@@ -10,13 +10,16 @@ const MOUNTPOINT = '/n64';
 const INT16_MAX = Math.pow(2, 16) - 1;
 
 export default class N64Player extends Player {
-  constructor(audioCtx, destNode, chipCore, bufferSize) {
-    super(audioCtx, destNode, chipCore, bufferSize);
+  constructor(chipCore, sampleRate) {
+    super(chipCore, sampleRate);
     this.loadData = this.loadData.bind(this);
+    this.process = this.process.bind(this);
+    this.setAudioProcess = this.setAudioProcess.bind(this);
+    this.muteAudioDuringCall = this.muteAudioDuringCall.bind(this);
 
     // Initialize N64 filesystem
     chipCore.FS.mkdirTree(MOUNTPOINT);
-    chipCore.FS.mount(chipCore.FS.filesystems.IDBFS, {}, MOUNTPOINT);
+    chipCore.FS.mount(chipCore.FS.filesystems.MEMFS, {}, MOUNTPOINT);
     chipCore.FS.syncfs(true, (err) => {
       if (err) {
         console.log('Error populating FS from indexeddb.', err);
@@ -50,13 +53,15 @@ export default class N64Player extends Player {
       }),
     ];
 
+    // const muteAudioDuringCall = this.muteAudioDuringCall.bind(this);
+
     Promise.all(promises)
       .then(([fsFilename]) => {
-        this.muteAudioDuringCall(this.audioNode, () => {
+        this.muteAudioDuringCall(() => {
           err = this.lib.ccall(
             'n64_load_file', 'number',
             ['string', 'number', 'number', 'number'],
-            [fsFilename, this.buffer, this.bufferSize, this.audioCtx.sampleRate],
+            [fsFilename, this.buffer, this.bufferSize, this.sampleRate],
           );
 
           if (err !== 0) {
@@ -66,19 +71,18 @@ export default class N64Player extends Player {
 
           this.metadata = { title: filename };
 
-          this.connect();
           this.resume();
-          this.emit('playerStateUpdate', false);
+          this.emit('playerStateUpdate', {
+            ...this.getBasePlayerState(),
+            isStopped: false,
+          });
         });
       });
   }
 
-  n64AudioProcess(e) {
+  n64AudioProcess(channels) {
     let i, channel;
-    const channels = [];
-    for (channel = 0; channel < e.outputBuffer.numberOfChannels; channel++) {
-      channels[channel] = e.outputBuffer.getChannelData(channel);
-    }
+    const bufferSize = channels[0].length;
 
     if (this.paused) {
       for (channel = 0; channel < channels.length; channel++) {
@@ -87,13 +91,13 @@ export default class N64Player extends Player {
       return;
     }
 
-    const samplesWritten = this.lib._n64_render_audio(this.buffer, this.bufferSize);
+    const samplesWritten = this.lib._n64_render_audio(this.buffer, bufferSize);
     if (samplesWritten <= 0) {
       this.stop();
     }
 
     for (channel = 0; channel < channels.length; channel++) {
-      for (i = 0; i < this.bufferSize; i++) {
+      for (i = 0; i < bufferSize; i++) {
         channels[channel][i] = this.lib.getValue(
           this.buffer +           // Interleaved channel format
           i * 2 * 2 +             // frame offset   * bytes per sample * num channels +
@@ -126,7 +130,7 @@ export default class N64Player extends Player {
   }
 
   seekMs(seekMs) {
-    this.muteAudioDuringCall(this.audioNode, () =>
+    this.muteAudioDuringCall(() =>
       this.lib._n64_seek_ms(seekMs)
     );
   }
@@ -135,6 +139,6 @@ export default class N64Player extends Player {
     this.suspend();
     this.lib._n64_shutdown();
     console.debug('N64Player.stop()');
-    this.emit('playerStateUpdate', true);
+    this.emit('playerStateUpdate', { isStopped: true });
   }
 }
