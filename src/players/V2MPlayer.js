@@ -5,8 +5,8 @@ const fileExtensions = [
 ];
 
 export default class V2MPlayer extends Player {
-  constructor(audioCtx, destNode, chipCore, bufferSize) {
-    super(audioCtx, destNode, chipCore, bufferSize);
+  constructor(chipCore, sampleRate) {
+    super(chipCore, sampleRate);
     this.loadData = this.loadData.bind(this);
 
     this.speed = 1;
@@ -23,7 +23,7 @@ export default class V2MPlayer extends Player {
     err = this.lib.ccall(
       'v2m_open', 'number',
       ['array', 'number', 'number'],
-      [data, data.byteLength, this.audioCtx.sampleRate]
+      [data, data.byteLength, this.sampleRate]
     );
 
     if (err !== 0) {
@@ -33,17 +33,16 @@ export default class V2MPlayer extends Player {
 
     this.metadata = { title: filename };
 
-    this.connect();
     this.resume();
-    this.emit('playerStateUpdate', false);
+    this.emit('playerStateUpdate', {
+      ...this.getBasePlayerState(),
+      isStopped: false,
+    });
   }
 
-  v2mAudioProcess(e) {
+  v2mAudioProcess(channels) {
     let i, channel;
-    const channels = [];
-    for (channel = 0; channel < e.outputBuffer.numberOfChannels; channel++) {
-      channels[channel] = e.outputBuffer.getChannelData(channel);
-    }
+    const bufferSize = channels[0].length;
 
     if (this.paused) {
       for (channel = 0; channel < channels.length; channel++) {
@@ -52,13 +51,13 @@ export default class V2MPlayer extends Player {
       return;
     }
 
-    const samplesWritten = this.lib._v2m_write_audio(this.buffer, this.bufferSize);
+    const samplesWritten = this.lib._v2m_write_audio(this.buffer, bufferSize);
     if (samplesWritten === 0) {
       this.stop();
     }
 
     for (channel = 0; channel < channels.length; channel++) {
-      for (i = 0; i < this.bufferSize; i++) {
+      for (i = 0; i < bufferSize; i++) {
         channels[channel][i] = this.lib.getValue(
           this.buffer +           // Interleaved channel format
           i * 4 * 2 +             // frame offset   * bytes per sample * num channels +
@@ -102,6 +101,6 @@ export default class V2MPlayer extends Player {
     this.suspend();
     this.lib._v2m_close();
     console.debug('V2MPlayer.stop()');
-    this.emit('playerStateUpdate', true);
+    this.emit('playerStateUpdate', { isStopped: true });
   }
 }
