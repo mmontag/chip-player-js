@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -26,16 +26,16 @@
 
 #ifndef LIBXMP_CORE_PLAYER
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <limits.h>
+#if defined(_MSC_VER) || defined(__WATCOMC__)
+#include <io.h>
+#else
 #include <unistd.h>
-
+#endif
 #ifdef HAVE_UMASK
 #include <sys/stat.h>
 #endif
 
+#include "common.h"
 #include "tempfile.h"
 
 #ifdef _WIN32
@@ -50,7 +50,7 @@ static int get_temp_dir(char *buf, size_t size)
 	return 0;
 }
 
-#elif defined(__OS2__)
+#elif defined(__OS2__) || defined(__EMX__)
 
 static int get_temp_dir(char *buf, size_t size)
 {
@@ -60,19 +60,19 @@ static int get_temp_dir(char *buf, size_t size)
 	return 0;
 }
 
-#elif defined(__MSDOS__)
+#elif defined(__MSDOS__) || defined(_DOS)
 
 static int get_temp_dir(char *buf, size_t size)
 {
-	strcpy(buf, "C:\\"); /* size-safe against PATH_MAX */
+	strcpy(buf, "C:\\"); /* size-safe against XMP_MAXPATH */
 	return 0;
 }
 
-#elif defined __AMIGA__
+#elif defined LIBXMP_AMIGA
 
 static int get_temp_dir(char *buf, size_t size)
 {
-	strcpy(buf, "T:"); /* size-safe against PATH_MAX */
+	strcpy(buf, "T:"); /* size-safe against XMP_MAXPATH */
 	return 0;
 }
 
@@ -117,16 +117,16 @@ static int get_temp_dir(char *buf, size_t size)
 
 
 FILE *make_temp_file(char **filename) {
-	char tmp[PATH_MAX];
+	char tmp[XMP_MAXPATH];
 	FILE *temp;
 	int fd;
 
-	if (get_temp_dir(tmp, PATH_MAX) < 0)
+	if (get_temp_dir(tmp, XMP_MAXPATH) < 0)
 		return NULL;
 
-	strncat(tmp, "xmp_XXXXXX", PATH_MAX - 10);
+	strncat(tmp, "xmp_XXXXXX", XMP_MAXPATH - 10);
 
-	if ((*filename = strdup(tmp)) == NULL)
+	if ((*filename = libxmp_strdup(tmp)) == NULL)
 		goto err;
 
 #ifdef HAVE_UMASK

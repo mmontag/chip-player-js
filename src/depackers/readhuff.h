@@ -8,7 +8,7 @@
 #define LIBXMP_READHUFF_H
 
 unsigned char	*libxmp_convert_huff(unsigned char *data_in,
-                             unsigned long in_len,
-                             unsigned long orig_len);
+                                     unsigned long in_len,
+                                     unsigned long orig_len);
 
 #endif

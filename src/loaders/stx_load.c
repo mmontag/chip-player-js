@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -36,7 +36,7 @@
 
 #include "loader.h"
 #include "s3m.h"
-#include "period.h"
+#include "../period.h"
 
 struct stx_file_header {
 	uint8 name[20];		/* Song name */
@@ -115,12 +115,17 @@ static int stx_test(HIO_HANDLE * f, char *t, const int start)
 
 #define FX_NONE 0xff
 
-static const uint8 fx[] = {
-	FX_NONE, FX_SPEED,
-	FX_JUMP, FX_BREAK,
-	FX_VOLSLIDE, FX_PORTA_DN,
-	FX_PORTA_UP, FX_TONEPORTA,
-	FX_VIBRATO, FX_TREMOR,
+static const uint8 fx[11] = {
+	FX_NONE,
+	FX_SPEED,
+	FX_JUMP,
+	FX_BREAK,
+	FX_VOLSLIDE,
+	FX_PORTA_DN,
+	FX_PORTA_UP,
+	FX_TONEPORTA,
+	FX_VIBRATO,
+	FX_TREMOR,
 	FX_ARPEGGIO
 };
 
@@ -139,8 +144,8 @@ static int stx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	LOAD_INIT();
 
-	hio_read(&sfh.name, 20, 1, f);
-	hio_read(&sfh.magic, 8, 1, f);
+	hio_read(sfh.name, 20, 1, f);
+	hio_read(sfh.magic, 8, 1, f);
 	sfh.psize = hio_read16l(f);
 	sfh.unknown1 = hio_read16l(f);
 	sfh.pp_pat = hio_read16l(f);
@@ -158,10 +163,10 @@ static int stx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	sfh.unknown6 = hio_read16l(f);
 	sfh.unknown7 = hio_read16l(f);
 	sfh.unknown8 = hio_read16l(f);
-	hio_read(&sfh.magic2, 4, 1, f);
+	hio_read(sfh.magic2, 4, 1, f);
 
 	/* Sanity check */
-	if (sfh.patnum > 254 || sfh.insnum > 256 || sfh.ordnum > 256)
+	if (sfh.patnum > 254 || sfh.insnum > MAX_INSTRUMENTS || sfh.ordnum > 256)
 		return -1;
 
 	/* BMOD2STM does not convert pitch */
@@ -201,11 +206,11 @@ static int stx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	MODULE_INFO();
 
-	pp_pat = calloc(2, mod->pat);
+	pp_pat = (uint16 *) calloc(mod->pat, sizeof(uint16));
 	if (pp_pat == NULL)
 		goto err;
 
-	pp_ins = calloc(2, mod->ins);
+	pp_ins = (uint16 *) calloc(mod->ins, sizeof(uint16));
 	if (pp_ins == NULL)
 		goto err2;
 
@@ -232,7 +237,6 @@ static int stx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		goto err3;
 
 	/* Read and convert instruments and samples */
-
 	for (i = 0; i < mod->ins; i++) {
 		if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 			goto err3;
@@ -240,7 +244,7 @@ static int stx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		hio_seek(f, start + (pp_ins[i] << 4), SEEK_SET);
 
 		sih.type = hio_read8(f);
-		hio_read(&sih.dosname, 13, 1, f);
+		hio_read(sih.dosname, 13, 1, f);
 		sih.memseg = hio_read16l(f);
 		sih.length = hio_read32l(f);
 		sih.loopbeg = hio_read32l(f);
@@ -251,12 +255,16 @@ static int stx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		sih.flags = hio_read8(f);
 		sih.c2spd = hio_read16l(f);
 		sih.rsvd2 = hio_read16l(f);
-		hio_read(&sih.rsvd3, 4, 1, f);
+		hio_read(sih.rsvd3, 4, 1, f);
 		sih.int_gp = hio_read16l(f);
 		sih.int_512 = hio_read16l(f);
 		sih.int_last = hio_read32l(f);
-		hio_read(&sih.name, 28, 1, f);
-		hio_read(&sih.magic, 4, 1, f);
+		hio_read(sih.name, 28, 1, f);
+		hio_read(sih.magic, 4, 1, f);
+		if (hio_error(f)) {
+			D_(D_CRIT "read error at instrument %d", i);
+			goto err3;
+		}
 
 		mod->xxs[i].len = sih.length;
 		mod->xxs[i].lps = sih.loopbeg;
@@ -300,6 +308,9 @@ static int stx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		for (r = 0; r < 64;) {
 			b = hio_read8(f);
+			if (hio_error(f)) {
+				goto err3;
+			}
 
 			if (b == S3M_EOR) {
 				r++;
@@ -334,7 +345,7 @@ static int stx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			if (b & S3M_FX_FOLLOWS) {
 				int t = hio_read8(f);
 				int p = hio_read8(f);
-				if (t <= 10) {
+				if (t < ARRAY_SIZE(fx)) {
 					event->fxt = fx[t];
 					event->fxp = p;
 					switch (event->fxt) {

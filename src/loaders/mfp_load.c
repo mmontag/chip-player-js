@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -27,14 +27,6 @@
  */
 
 #include "loader.h"
-#include <sys/types.h>
-#include <sys/stat.h>
-#ifdef __native_client__
-#include <sys/syslimits.h>
-#else
-#include <limits.h>
-#endif
-#include <unistd.h>
 
 static int mfp_test(HIO_HANDLE *, char *, const int);
 static int mfp_load(struct module_data *, HIO_HANDLE *, const int);
@@ -104,8 +96,7 @@ static int mfp_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	struct xmp_module *mod = &m->mod;
 	int i, j, k, x, y;
 	struct xmp_event *event;
-	struct stat st;
-	char smp_filename[PATH_MAX];
+	char smp_filename[XMP_MAXPATH];
 	HIO_HANDLE *s;
 	int size1 /*, size2*/;
 	int pat_addr, pat_table[128][4];
@@ -128,7 +119,7 @@ static int mfp_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 			return -1;
-		
+
 		mod->xxs[i].len = 2 * hio_read16b(f);
 		mod->xxi[i].sub[0].fin = (int8)(hio_read8(f) << 4);
 		mod->xxi[i].sub[0].vol = hio_read8(f);
@@ -144,11 +135,11 @@ static int mfp_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		if (mod->xxs[i].len > 0)
 			mod->xxi[i].nsm = 1;
 
-               	D_(D_INFO "[%2X] %04x %04x %04x %c V%02x %+d",
-                       	i, mod->xxs[i].len, mod->xxs[i].lps,
-                       	mod->xxs[i].lpe,
+		D_(D_INFO "[%2X] %04x %04x %04x %c V%02x %+d",
+			i, mod->xxs[i].len, mod->xxs[i].lps,
+			mod->xxs[i].lpe,
 			loop_size > 1 ? 'L' : ' ',
-                       	mod->xxi[i].sub[0].vol, mod->xxi[i].sub[0].fin >> 4);
+			mod->xxi[i].sub[0].vol, mod->xxi[i].sub[0].fin >> 4);
 	}
 
 	mod->len = mod->pat = hio_read8(f);
@@ -187,14 +178,23 @@ static int mfp_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			return -1;
 
 		for (j = 0; j < 4; j++) {
+			size_t len;
 			hio_seek(f, pat_addr + pat_table[i][j], SEEK_SET);
 
-			hio_read(buf, 1, 1024, f);
+			len = hio_read(buf, 1, 1024, f);
 
 			for (row = k = 0; k < 4; k++) {
 				for (x = 0; x < 4; x++) {
 					for (y = 0; y < 4; y++, row++) {
 						event = &EVENT(i, j, row);
+
+						if (k >= len ||
+						    buf[k] + x >= len ||
+						    buf[buf[k] + x] + y >= len ||
+						    buf[buf[buf[k] + x] + y] * 2 + 4 > len) {
+							D_(D_CRIT "read error at pat %d", i);
+							return -1;
+						}
 						memcpy(mod_event, &buf[buf[buf[buf[k] + x] + y] * 2], 4);
 						libxmp_decode_protracker_event(event, mod_event);
 					}
@@ -208,31 +208,25 @@ static int mfp_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	/* first check smp.filename */
 	if (strlen(m->basename) < 5 || m->basename[3] != '.') {
-		fprintf(stderr, "libxmp: invalid filename %s\n", m->basename);
+		D_(D_CRIT "invalid filename %s", m->basename);
 		goto err;
 	}
 
 	m->basename[0] = 's';
 	m->basename[1] = 'm';
 	m->basename[2] = 'p';
-	snprintf(smp_filename, PATH_MAX, "%s%s", m->dirname, m->basename);
-	if (stat(smp_filename, &st) < 0) {
+	snprintf(smp_filename, XMP_MAXPATH, "%s%s", m->dirname, m->basename);
+	if ((s = hio_open(smp_filename, "rb")) == NULL) {
 		/* handle .set filenames like in Kid Chaos*/
-		char *x;
 		if (strchr(m->basename, '-')) {
-			if ((x = strrchr(smp_filename, '-')))
-				strcpy(x, ".set");
+			char *p = strrchr(smp_filename, '-');
+			if (p != NULL)
+				strcpy(p, ".set");
 		}
-		if (stat(smp_filename, &st) < 0) {
-			fprintf(stderr, "libxmp: missing file %s\n",
-								smp_filename);
+		if ((s = hio_open(smp_filename, "rb")) == NULL) {
+			D_(D_CRIT "can't open sample file %s", smp_filename);
 			goto err;
 		}
-	}
-	if ((s = hio_open(smp_filename, "rb")) == NULL) {
-		fprintf(stderr, "libxmp: can't open sample file %s\n",
-								smp_filename);
-		goto err;
 	}
 
 	for (i = 0; i < mod->ins; i++) {

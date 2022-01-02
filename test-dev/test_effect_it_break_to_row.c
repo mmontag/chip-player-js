@@ -12,6 +12,7 @@ TEST(test_effect_it_break_to_row)
 	struct xmp_channel_info *ci;
 	int time, row, frame, chan, period, volume, ins, pan;
 	char line[200];
+	char *ret;
 	FILE *f;
 	int i;
 
@@ -29,7 +30,8 @@ TEST(test_effect_it_break_to_row)
 			break;
 
 		for (i = 0; i < minfo.mod->chn; i++) {
-			fgets(line, 200, f);
+			ret = fgets(line, 200, f);
+			fail_unless(ret == line, "read error");
 			sscanf(line, "%d %d %d %d %d %d %d %d", &time, &row,
 				&frame, &chan, &period, &volume, &ins, &pan);
 
@@ -44,8 +46,8 @@ TEST(test_effect_it_break_to_row)
 		}
 	}
 
-	fgets(line, 200, f);
-	fail_unless(feof(f), "not end of data file");
+	ret = fgets(line, 200, f);
+	fail_unless(ret == NULL && feof(f), "not end of data file");
 
 	xmp_end_player(opaque);
 	xmp_release_module(opaque);

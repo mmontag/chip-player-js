@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -25,7 +25,7 @@
  */
 
 #include "loader.h"
-#include "period.h"
+#include "../period.h"
 
 static int asylum_test(HIO_HANDLE *, char *, const int);
 static int asylum_load(struct module_data *, HIO_HANDLE *, const int);
@@ -55,6 +55,7 @@ static int asylum_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
+	uint8 buf[2048];
 	int i, j;
 
 	LOAD_INIT();
@@ -65,7 +66,13 @@ static int asylum_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->ins = hio_read8(f);			/* number of instruments */
 	mod->pat = hio_read8(f);			/* number of patterns */
 	mod->len = hio_read8(f);			/* module length */
-	hio_read8(f);
+	mod->rst = hio_read8(f);			/* restart byte */
+
+	/* Sanity check - this format only stores 64 sample structures. */
+	if (mod->ins > 64) {
+		D_(D_CRIT "invalid sample count %d", mod->ins);
+		return -1;
+	}
 
 	hio_read(mod->xxo, 1, mod->len, f);	/* read orders */
 	hio_seek(f, start + 294, SEEK_SET);
@@ -103,7 +110,13 @@ static int asylum_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		mod->xxs[i].len = readmem32l(insbuf + 25);
 		mod->xxs[i].lps = readmem32l(insbuf + 29);
 		mod->xxs[i].lpe = mod->xxs[i].lps + readmem32l(insbuf + 33);
-		
+
+		/* Sanity check - ASYLUM modules are converted from MODs. */
+		if ((uint32)mod->xxs[i].len >= 0x20000) {
+			D_(D_CRIT "invalid sample %d length %d", i, mod->xxs[i].len);
+			return -1;
+		}
+
 		mod->xxs[i].flg = mod->xxs[i].lpe > 2 ? XMP_SAMPLE_LOOP : 0;
 
 		D_(D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %d", i,
@@ -124,26 +137,36 @@ static int asylum_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
+		uint8 *pos;
 		if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
 			return -1;
 
-		for (j = 0; j < 64 * mod->chn; j++) {
+		if (hio_read(buf, 1, 2048, f) < 2048) {
+			D_(D_CRIT "read error at pattern %d", i);
+			return -1;
+		}
+
+		pos = buf;
+		for (j = 0; j < 64 * 8; j++) {
 			uint8 note;
 
-			event = &EVENT(i, j % mod->chn, j / mod->chn);
+			event = &EVENT(i, j % 8, j / 8);
 			memset(event, 0, sizeof(struct xmp_event));
-			note = hio_read8(f);
+			note = *pos++;
 
 			if (note != 0) {
 				event->note = note + 13;
 			}
 
-			event->ins = hio_read8(f);
-			event->fxt = hio_read8(f);
-			event->fxp = hio_read8(f);
-			if (hio_error(f)) {
-				return -1;
-			}
+			event->ins = *pos++;
+			event->fxt = *pos++;
+			event->fxp = *pos++;
+
+			/* TODO: m07.amf and m12.amf from Crusader: No Remorse
+			 * use 0x1b for what looks *plausibly* like retrigger.
+			 * No other ASYLUM modules use effects over 16. */
+			if (event->fxt >= 0x10 && event->fxt != FX_MULTI_RETRIG)
+				event->fxt = event->fxp = 0;
 		}
 	}
 

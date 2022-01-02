@@ -11,7 +11,6 @@ TEST(test_openmpt_it_swing1)
 	xmp_context opaque;
 	struct xmp_frame_info info;
 	struct xmp_channel_info *ci;
-	int i;
 
 	opaque = xmp_create_context();
 	xmp_load_module(opaque, "openmpt/it/swing1.it");

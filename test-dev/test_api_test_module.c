@@ -1,7 +1,4 @@
 #include "test.h"
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include <errno.h>
 
 TEST(test_api_test_module)
@@ -11,13 +8,13 @@ TEST(test_api_test_module)
 
 	/* directory */
 	ret = xmp_test_module("data", &tinfo);
-	err = errno;
+	err = xmp_syserrno();
 	fail_unless(ret == -XMP_ERROR_SYSTEM, "directory fail");
 	fail_unless(err == EISDIR, "errno test module fail");
 
 	/* nonexistent file */
 	ret = xmp_test_module("foo--bar", &tinfo);
-	err = errno;
+	err = xmp_syserrno();
 	fail_unless(ret == -XMP_ERROR_SYSTEM, "nonexistent file fail");
 	fail_unless(err == ENOENT, "errno test module fail");
 
@@ -26,7 +23,7 @@ TEST(test_api_test_module)
 	creat(".read_test", 0111);
 	ret = xmp_test_module(".read_test", &tinfo);
 	fail_unless(ret == -XMP_ERROR_SYSTEM, "no read permission");
-	fail_unless(errno == EACCES, "errno code");
+	fail_unless(xmp_syserrno() == EACCES, "errno code");
 	unlink(".read_test");
 #endif
 
@@ -69,6 +66,12 @@ TEST(test_api_test_module)
 	fail_unless(ret == 0, "S3M test module fail");
 	fail_unless(strcmp(tinfo.name, "Inspiration") == 0, "S3M module name fail");
 	fail_unless(strcmp(tinfo.type, "Scream Tracker 3") == 0, "S3M module type fail");
+
+	/* Small file (<256 bytes) */
+	ret = xmp_test_module("data/small.gdm", &tinfo);
+	fail_unless(ret == 0, "GDM (<256) test module fail");
+	fail_unless(strcmp(tinfo.name, "") == 0, "GDM (<256) module name fail");
+	fail_unless(strcmp(tinfo.type, "General Digital Music") == 0, "GDM (<256) module type fail");
 
 	/* Prowizard */
 	ret = xmp_test_module("data/PRU1.intro-electro", &tinfo);

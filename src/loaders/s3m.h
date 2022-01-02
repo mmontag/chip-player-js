@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -19,6 +19,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
+#ifndef LIBXMP_LOADERS_S3M_H
+#define LIBXMP_LOADERS_S3M_H
 
 /* S3M packed pattern macros */
 #define S3M_EOR		0	/* End of row */
@@ -79,7 +82,8 @@ struct s3m_file_header {
 };
 
 struct s3m_instrument_header {
-	uint8 dosname[13];	/* DOS file name */
+	uint8 dosname[12];	/* DOS file name */
+	uint8 memseg_hi;	/* High byte of sample pointer */
 	uint16 memseg;		/* Pointer to sample data */
 	uint32 length;		/* Length */
 	uint32 loopbeg;		/* Loop begin */
@@ -113,4 +117,4 @@ struct s3m_adlib_header {
 	uint32 magic;		/* 'SCRI' */
 };
 #endif
-
+#endif  /* LIBXMP_LOADERS_S3M_H */

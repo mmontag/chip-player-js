@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -30,7 +30,7 @@
  */
 
 #include "loader.h"
-#include "period.h"
+#include "../period.h"
 
 
 static int ult_test (HIO_HANDLE *, char *, const int);
@@ -49,10 +49,10 @@ static int ult_test(HIO_HANDLE *f, char *t, const int start)
     if (hio_read(buf, 1, 15, f) < 15)
 	return -1;
 
-    if (memcmp(buf, "MAS_UTrack_V000", 14))
+    if (memcmp(buf, "MAS_UTrack_V00", 14))
 	return -1;
 
-    if (buf[14] < '0' || buf[14] > '4')
+    if (buf[14] < '1' || buf[14] > '4')
 	return -1;
 
     libxmp_read_title(f, t, 32);
@@ -60,8 +60,6 @@ static int ult_test(HIO_HANDLE *f, char *t, const int start)
     return 0;
 }
 
-
-#define KEEP_TONEPORTA 32	/* Rows to keep portamento effect */
 
 struct ult_header {
     uint8 magic[15];		/* 'MAS_UTrack_V00x' */
@@ -84,7 +82,7 @@ struct ult_instrument {
     uint32 sizeend;
     uint8 volume;		/* Volume (log; ver >= 1.4 linear) */
     uint8 bidiloop;		/* Sample loop flags */
-    uint16 finetune;		/* Finetune */
+    int16 finetune;		/* Finetune */
     uint16 c2spd;		/* C2 frequency */
 };
 
@@ -108,20 +106,19 @@ static int ult_load(struct module_data *m, HIO_HANDLE *f, const int start)
     struct ult_event ue;
     const char *verstr[4] = { "< 1.4", "1.4", "1.5", "1.6" };
 
-    int keep_porta1 = 0, keep_porta2 = 0;
     uint8 x8;
 
     LOAD_INIT();
 
-    hio_read(&ufh.magic, 15, 1, f);
-    hio_read(&ufh.name, 32, 1, f);
+    hio_read(ufh.magic, 15, 1, f);
+    hio_read(ufh.name, 32, 1, f);
     ufh.msgsize = hio_read8(f);
 
     ver = ufh.magic[14] - '0';
 
     strncpy(mod->name, (char *)ufh.name, 32);
-    ufh.name[0] = 0;
-    libxmp_set_type(m, "Ultra Tracker %s ULT V%04d", verstr[ver - 1], ver);
+    mod->name[32] = '\0';
+    libxmp_set_type(m, "Ultra Tracker %s ULT V%03d", verstr[ver - 1], ver);
 
     m->c4rate = C4_NTSC_RATE;
 
@@ -143,22 +140,33 @@ static int ult_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 	    return -1;
 
-	hio_read(&uih.name, 32, 1, f);
-	hio_read(&uih.dosname, 12, 1, f);
+	hio_read(uih.name, 32, 1, f);
+	hio_read(uih.dosname, 12, 1, f);
 	uih.loop_start = hio_read32l(f);
 	uih.loopend = hio_read32l(f);
 	uih.sizestart = hio_read32l(f);
 	uih.sizeend = hio_read32l(f);
 	uih.volume = hio_read8(f);
 	uih.bidiloop = hio_read8(f);
+	uih.c2spd = (ver >= 4) ? hio_read16l(f) : 0; /* Incorrect in ult_form.txt */
 	uih.finetune = hio_read16l(f);
-	uih.c2spd = ver < 4 ? 0 : hio_read16l(f);
-
-	if (ver > 3) {			/* Incorrect in ult_form.txt */
-	    uih.c2spd ^= uih.finetune;
-	    uih.finetune ^= uih.c2spd;
-	    uih.c2spd ^= uih.finetune;
+	if (hio_error(f)) {
+	    D_(D_CRIT "read error at instrument %d", i);
+	    return -1;
 	}
+
+	/* Sanity check:
+	 * "[SizeStart] seems to tell UT how to load the sample into the GUS's
+	 * onboard memory." The maximum supported GUS RAM is 16 MB (PnP).
+	 * Samples also can't cross 256k boundaries. In practice it seems like
+	 * nothing ever goes over 1 MB, the maximum on most GUS cards.
+	 */
+	if (uih.sizestart > uih.sizeend || uih.sizeend > (16 << 20) ||
+	    uih.sizeend - uih.sizestart > (256 << 10)) {
+	    D_(D_CRIT "invalid sample %d sizestart/sizeend", i);
+	    return -1;
+	}
+
 	mod->xxs[i].len = uih.sizeend - uih.sizestart;
 	mod->xxs[i].lps = uih.loop_start;
 	mod->xxs[i].lpe = uih.loopend;
@@ -211,7 +219,7 @@ static int ult_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	libxmp_instrument_name(mod, i, uih.name, 24);
 
 	D_(D_INFO "[%2X] %-32.32s %05x%c%05x %05x %c V%02x F%04x %5d",
-		i, uih.name, mod->xxs[i].len,
+		i, mod->xxi[i].name, mod->xxs[i].len,
 		mod->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 		mod->xxs[i].lps, mod->xxs[i].lpe,
 		mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
@@ -221,9 +229,13 @@ static int ult_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    libxmp_c2spd_to_note(uih.c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
     }
 
-    hio_read(&ufh2.order, 256, 1, f);
+    hio_read(ufh2.order, 256, 1, f);
     ufh2.channels = hio_read8(f);
     ufh2.patterns = hio_read8(f);
+
+    if (hio_error(f)) {
+	return -1;
+    }
 
     for (i = 0; i < 256; i++) {
 	if (ufh2.order[i] == 0xff)
@@ -236,6 +248,11 @@ static int ult_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->spd = 6;
     mod->bpm = 125;
     mod->trk = mod->chn * mod->pat;
+
+    /* Sanity check */
+    if (mod->chn > XMP_MAX_CHANNELS) {
+	return -1;
+    }
 
     for (i = 0; i < mod->chn; i++) {
 	if (ver >= 3) {
@@ -267,10 +284,18 @@ static int ult_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		cnt = hio_read8(f);		/* Read repeat count */
 		x8 = hio_read8(f);		/* Read note */
 	    }
-	    hio_read(&ue, 4, 1, f);		/* Read rest of the event */
+	    if (hio_read(&ue, 1, 4, f) < 4) {	/* Read rest of the event */
+		D_(D_CRIT "read error at channel %d pos %d", i, j);
+		return -1;
+	    }
 
 	    if (cnt == 0)
 		cnt++;
+
+	    if (j + cnt > 64 * mod->pat) {
+		D_(D_WARN "invalid track data packing");
+		return -1;
+	    }
 
 	    for (k = 0; k < cnt; k++, j++) {
 		event = &EVENT (j >> 6, i , j & 0x3f);
@@ -284,16 +309,8 @@ static int ult_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		event->f2p = ue.f2p;
 
 		switch (event->fxt) {
-		case 0x00:		/* <mumble> */
-		    if (event->fxp)
-			keep_porta1 = 0;
-		    if (keep_porta1) {
-			event->fxt = 0x03;
-			keep_porta1--;
-		    }
-		    break;
-		case 0x03:		/* Portamento kludge */
-		    keep_porta1 = KEEP_TONEPORTA;
+		case 0x03:		/* Tone portamento */
+		    event->fxt = FX_ULT_TPORTA;
 		    break;
 		case 0x05:		/* 'Special' effect */
 		case 0x06:		/* Reserved */
@@ -310,16 +327,8 @@ static int ult_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		}
 
 		switch (event->f2t) {
-		case 0x00:		/* <mumble> */
-		    if (event->f2p)
-			keep_porta2 = 0;
-		    if (keep_porta2) {
-			event->f2t = 0x03;
-			keep_porta2--;
-		    }
-		    break;
-		case 0x03:		/* Portamento kludge */
-		    keep_porta2 = KEEP_TONEPORTA;
+		case 0x03:		/* Tone portamento */
+		    event->f2t = FX_ULT_TPORTA;
 		    break;
 		case 0x05:		/* 'Special' effect */
 		case 0x06:		/* Reserved */

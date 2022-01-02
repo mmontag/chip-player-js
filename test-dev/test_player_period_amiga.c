@@ -5,7 +5,7 @@ TEST(test_player_period_amiga)
 	xmp_context opaque;
 	struct context_data *ctx;
 	struct xmp_frame_info info;
-	int i, p0, p1;
+	int i, p0, p1, ret;
 	FILE *f;
 
 	f = fopen("data/periods.data", "r");
@@ -27,13 +27,16 @@ TEST(test_player_period_amiga)
 	for (i = 0; i < 60; i++) {
 		xmp_play_frame(opaque);
 		xmp_get_frame_info(opaque, &info);
-		fscanf(f, "%d %d", &p0, &p1);
+		ret = fscanf(f, "%d %d", &p0, &p1);
+		fail_unless(ret == 2, "read error");
 		fail_unless(info.channel_info[0].period == p0, "Bad period");
 		fail_unless(info.channel_info[1].period == p1, "Bad period");
 	}
 
-	fscanf(f, "%d %d", &p0, &p1);
-	//fail_unless(feof(f), "not end of data file");
+	ret = fscanf(f, "%d %d", &p0, &p1);
+	fail_unless(ret == 0, "not end of data file");
 
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

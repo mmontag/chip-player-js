@@ -2,7 +2,6 @@
 #include "../src/effects.h"
 #include "../src/mixer.h"
 #include "../src/virtual.h"
-#include <math.h>
 
 /*
 Periodtable for Tuning 0, Normal
@@ -12,8 +11,6 @@ Periodtable for Tuning 0, Normal
 
 Amiga limits: 907 to 108
 */
-
-#define PERIOD ((int)round(1.0 * info.channel_info[0].period / 4096))
 
 static int vals[] = {
 	856, 856, 856, 808, 808, 808, 763,
@@ -78,5 +75,8 @@ TEST(test_effect_note_slide)
 				fail_unless(vi->pos0 != 0, "sample position");
 		}
 	}
+
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

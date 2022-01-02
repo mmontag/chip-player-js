@@ -5,9 +5,9 @@ includedir=@includedir@
 
 Name: libxmp
 Description: Xmp module player library
-Version: 4.4.2
+Version: 4.5.0
 
 Requires:
 Libs: -L${libdir} -lxmp
 Cflags: -I${includedir}
-Libs.private: -lm
+Libs.private: @LIBM@

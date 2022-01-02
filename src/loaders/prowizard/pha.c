@@ -1,14 +1,34 @@
+/* ProWizard
+ * Copyright (C) 1996-1999 Asle / ReDoX
+ * Modified in 2006,2007,2014 by Claudio Matsuoka
+ * Modified in 2021 by Alice Rowan
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 /*
- * PhaPacker.c   Copyright (C) 1996-1999 Asle / ReDoX
+ * PhaPacker.c
  *
  * Converts PHA packed MODs back to PTK MODs
  * nth revision :(.
- *
- * Modified in 2006,2007,2014 by Claudio Matsuoka
  */
 
-#include <string.h>
-#include <stdlib.h>
 #include "prowiz.h"
 
 
@@ -34,13 +54,13 @@ static int depack_pha(HIO_HANDLE *in, FILE *out)
 	int smp_addr;
 	short ocpt[4];
 
-	memset(paddr, 0, 128 * 4);
-	memset(paddr1, 0, 128 * 4);
-	memset(paddr2, 0, 128 * 4);
-	memset(pnum, 0, 128);
-	memset(pnum1, 0, 128);
-	memset(onote, 0, 4 * 4);
-	memset(ocpt, 0, 4 * 2);
+	memset(paddr, 0, sizeof(paddr));
+	memset(paddr1, 0, sizeof(paddr1));
+	memset(paddr2, 0, sizeof(paddr2));
+	memset(pnum, 0, sizeof(pnum));
+	memset(pnum1, 0, sizeof(pnum1));
+	memset(onote, 0, sizeof(onote));
+	memset(ocpt, 0, sizeof(ocpt));
 
 	pw_write_zero(out, 20);				/* title */
 
@@ -51,7 +71,7 @@ static int depack_pha(HIO_HANDLE *in, FILE *out)
 		write16b(out, size = hio_read16b(in));	/* size */
 		ssize += size * 2;
 		hio_read8(in);				/* ??? */
-		
+
 		vol = hio_read8(in);			/* volume */
 		lps = hio_read16b(in);			/* loop start */
 		lsz = hio_read16b(in);			/* loop size */
@@ -127,16 +147,21 @@ restart:
 	}
 
 	/* try to take care of unused patterns ... HARRRRRRD */
-	memset(paddr1, 0, 128 * 4);
+	memset(paddr1, 0, sizeof(paddr1));
 	j = 0;
 	k = paddr[0];
 	/* 120 ... leaves 8 unused ptk_tableible patterns .. */
 	for (i = 0; i < 120; i++) {
 		paddr1[j] = paddr2[i];
 		j += 1;
+		if (j >= 128)
+			break;
+
 		if ((paddr2[i + 1] - paddr2[i]) > 1024) {
 			paddr1[j] = paddr2[i] + 1024;
 			j += 1;
+			if (j >= 128)
+				break;
 		}
 	}
 
@@ -148,7 +173,7 @@ restart:
 		}
 	}
 
-	memset(pnum, 0, 128);
+	memset(pnum, 0, sizeof(pnum));
 	pat_addr = 999999l;
 	for (i = 0; i < 128; i++) {
 		pnum[i] = pnum1[i];
@@ -169,6 +194,7 @@ restart:
 	for (i = 0; i < nop; i++)
 		if (pnum[i] > npat)
 			npat = pnum[i];
+	npat++;
 
 	write8(out, 0x7f);			/* ntk restart byte */
 
@@ -190,17 +216,28 @@ restart:
 	psize = ftell (in) - j;
 	fseek (in, j, 0);	/* SEEK_SET */
 #endif
+	/* This value should be larger than the actual size of the
+	 * pattern data and will probably set the error flag, so
+	 * clear it after reading.
+	 */
 	psize = npat * 1024;
-	pdata = (uint8 *) malloc (psize);
+	if ((pdata = (uint8 *)malloc(psize)) == NULL)
+		return -1;
+
 	psize = hio_read(pdata, 1, psize, in);
-	npat += 1;		/* coz first value is $00 */
-	pat = (uint8 *)malloc(npat * 1024);
-	memset(pat, 0, npat * 1024);
+	hio_error(in);
+
+	size = npat * 1024;
+	if ((pat = (uint8 *)calloc(1, size)) == NULL)
+		goto err;
 
 	j = 0;
-	for (i = 0; j < psize; i++) {
+	for (i = 0; i < psize && j < size; i++) {
 		if (pdata[i] == 0xff) {
 			i += 1;
+			if (i >= psize)
+				goto err;
+
 			ocpt[(k + 3) % 4] = 0xff - pdata[i];
 			continue;
 		}
@@ -212,8 +249,10 @@ restart:
 			ocpt[k % 4] -= 1;
 
 			pat[j] = ins & 0xf0;
-			pat[j] |= ptk_table[(note / 2)][0];
-			pat[j + 1] = ptk_table[(note / 2)][1];
+			if (PTK_IS_VALID_NOTE(note / 2)) {
+				pat[j] |= ptk_table[(note / 2)][0];
+				pat[j + 1] = ptk_table[(note / 2)][1];
+			}
 			pat[j + 2] = (ins << 4) & 0xf0;
 			pat[j + 2] |= fxt;
 			pat[j + 3] = fxp;
@@ -222,6 +261,10 @@ restart:
 			i -= 1;
 			continue;
 		}
+
+		if (i + 3 >= psize)
+			goto err;
+
 		ins = pdata[i];
 		note = pdata[i + 1];
 		fxt = pdata[i + 2];
@@ -232,8 +275,10 @@ restart:
 		onote[k % 4][3] = fxp;
 		i += 3;
 		pat[j] = ins & 0xf0;
-		pat[j] |= ptk_table[(note / 2)][0];
-		pat[j + 1] = ptk_table[(note / 2)][1];
+		if (PTK_IS_VALID_NOTE(note / 2)) {
+			pat[j] |= ptk_table[(note / 2)][0];
+			pat[j + 1] = ptk_table[(note / 2)][1];
+		}
 		pat[j + 2] = (ins << 4) & 0xf0;
 		pat[j + 2] |= fxt;
 		pat[j + 3] = fxp;
@@ -249,6 +294,11 @@ restart:
 	pw_move_data(out, in, ssize);
 
 	return 0;
+
+    err:
+	free(pdata);
+	free(pat);
+	return -1;
 }
 
 static int test_pha(const uint8 *data, char *t, int s)
@@ -291,7 +341,7 @@ static int test_pha(const uint8 *data, char *t, int s)
 	for (i = 0; i < 128; i++) {
 		ptr = readmem32b(data + 448 + i * 4);
 
-		if (ptr + 2 - 960 < ssize)
+		if (ptr < ssize + 960 - 2)
 			return -1;
 	}
 

@@ -1,10 +1,10 @@
 #include "test.h"
 #include "../src/loaders/loader.h"
 
-struct xmp_sample xxs;
-
 TEST(test_sample_load_signal)
 {
+	static struct xmp_sample xxs;
+
 	int8  buffer0[10] = { 0, 1, 2, 3,  4,  5,  6, -7,  8, -29 };
 	uint8 conv_r0[10] = {
 		128, 129, 130, 131, 132, 133, 134, 121, 136, 99
@@ -28,10 +28,12 @@ TEST(test_sample_load_signal)
 	libxmp_load_sample(&m, NULL, SAMPLE_FLAG_NOLOAD | SAMPLE_FLAG_UNS, &xxs, buffer0);
 	fail_unless(memcmp(xxs.data, conv_r0, 10) == 0,
 				"Invalid 8-bit conversion");
+	libxmp_free_sample(&xxs);
 
 	xxs.flg = XMP_SAMPLE_16BIT;
 	libxmp_load_sample(&m, NULL, SAMPLE_FLAG_NOLOAD | SAMPLE_FLAG_UNS, &xxs, buffer1);
 	fail_unless(memcmp(xxs.data, conv_r1, 20) == 0,
 				"Invalid 16-bit conversion");
+	libxmp_free_sample(&xxs);
 }
 END_TEST

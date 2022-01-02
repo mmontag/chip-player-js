@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -20,11 +20,8 @@
  * THE SOFTWARE.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "common.h"
-#include "list.h"
+#include "../common.h"
+#include "../list.h"
 #include "iff.h"
 
 #include "loader.h"
@@ -118,7 +115,9 @@ static int iff_chunk(iff_handle opaque, struct module_data *m, HIO_HANDLE *f, vo
 		size = (size + 3) & ~3;
 	}
 
-	if (data->flags & IFF_FULL_CHUNK_SIZE) {
+	/* PT 3.6 hack: this does not seem to ever apply to "PTDT".
+	 * This broke several modules (city lights.pt36, acid phase.pt36) */
+	if ((data->flags & IFF_FULL_CHUNK_SIZE) && memcmp(id, "PTDT", 4)) {
 		if (size < data->id_size + 4)
 			return -1;
 		size -= data->id_size + 4;
@@ -131,7 +130,7 @@ iff_handle libxmp_iff_new()
 {
 	struct iff_data *data;
 
-	data = malloc(sizeof(struct iff_data));
+	data = (struct iff_data *) malloc(sizeof(struct iff_data));
 	if (data == NULL) {
 		return NULL;
 	}
@@ -149,10 +148,8 @@ int libxmp_iff_load(iff_handle opaque, struct module_data *m, HIO_HANDLE *f, voi
 
 	while (!hio_eof(f)) {
 		ret = iff_chunk(opaque, m, f, parm);
-
 		if (ret > 0)
 			break;
-
 		if (ret < 0)
 			return -1;
 	}
@@ -165,12 +162,18 @@ int libxmp_iff_register(iff_handle opaque, const char *id,
 {
 	struct iff_data *data = (struct iff_data *)opaque;
 	struct iff_info *f;
+	int i = 0;
 
-	f = malloc(sizeof(struct iff_info));
+	f = (struct iff_info *) malloc(sizeof(struct iff_info));
 	if (f == NULL)
 		return -1;
 
-	strncpy(f->id, id, 4);
+	/* Note: previously was an strncpy */
+	for (; i < 4 && id && id[i]; i++)
+		f->id[i] = id[i];
+	for (; i < 4; i++)
+		f->id[i] = '\0';
+
 	f->loader = loader;
 
 	list_add_tail(&f->list, &data->iff_list);

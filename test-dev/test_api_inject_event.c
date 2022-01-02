@@ -8,7 +8,7 @@ TEST(test_api_inject_event)
 	struct context_data *ctx;
 	struct player_data *p;
 	struct mixer_voice *vi;
-	struct xmp_event event = { 60, 2, 40, 0xf, 3, 0, 0 };
+	struct xmp_event event = { 60, 2, 40, 0xf, 3, 0, 0, 0 };
 	int voc;
 
 	opaque = xmp_create_context();
@@ -31,5 +31,8 @@ TEST(test_api_inject_event)
 	fail_unless(vi->vol  == 39 * 16, "set volume");
 	fail_unless(p->speed == 3 , "set effect");
 	fail_unless(vi->pos0 == 0 , "sample position");
+
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

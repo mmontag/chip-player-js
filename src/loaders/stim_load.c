@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -90,7 +90,9 @@ static int stim_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	sh.nos = hio_read16b(f);
 	sh.len = hio_read16b(f);
 	sh.pat = hio_read16b(f);
-	hio_read(&sh.order, 128, 1, f);
+	if (hio_read(sh.order, 128, 1, f) == 0) {
+		return -1;
+	}
 
 	/* Sanity check */
 	if (sh.nos > 31 || sh.len > 128 || sh.pat > 64) {

@@ -10,7 +10,11 @@ TEST(test_mixer_mono_16bit_linear_filter)
 	FILE *f;
 	int i, j, val;
 
+#ifndef MIXER_GENERATE
 	f = fopen("data/mixer_16bit_linear_filter.data", "r");
+#else
+	f = fopen("mixer_16bit_linear_filter.data", "w");
+#endif
 
 	opaque = xmp_create_context();
 	ctx = (struct context_data *)opaque;
@@ -27,11 +31,19 @@ TEST(test_mixer_mono_16bit_linear_filter)
 		xmp_play_frame(opaque);
 		xmp_get_frame_info(opaque, &info);
 		for (j = 0; j < info.buffer_size / 2; j++) {
-			fscanf(f, "%d", &val);
+#ifndef MIXER_GENERATE
+			int ret = fscanf(f, "%d", &val);
+			fail_unless(ret == 1, "read error");
 			fail_unless(abs(s->buf32[j] - val) <= 1, "mixing error");
+#else
+			fprintf(f, "%d\n", s->buf32[j]);
+#endif
 		}
 	}
 
+#ifdef MIXER_GENERATE
+	fail_unless(0, "MIXER_GENERATE is enabled");
+#endif
 	xmp_end_player(opaque);
 	xmp_release_module(opaque);
 	xmp_free_context(opaque);

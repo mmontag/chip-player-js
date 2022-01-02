@@ -63,5 +63,8 @@ TEST(test_player_virtual_channel)
 		xmp_play_frame(opaque);
 		xmp_play_frame(opaque);
 	}
+
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

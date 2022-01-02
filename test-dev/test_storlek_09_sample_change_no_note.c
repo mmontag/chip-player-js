@@ -1,7 +1,4 @@
 #include "test.h"
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 
 /*
 09 - Sample change with no note

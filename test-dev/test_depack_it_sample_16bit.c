@@ -1,7 +1,6 @@
 #include "test.h"
 #include "../src/loaders/loader.h"
-
-int itsex_decompress16(HIO_HANDLE *module, void *dst, int len, char it215);
+#include "../src/loaders/it.h"
 
 
 TEST(test_depack_it_sample_16bit)
@@ -17,7 +16,7 @@ TEST(test_depack_it_sample_16bit)
 	fo = fopen(TMP_FILE, "wb");
 	fail_unless(fo != NULL, "can't open output file");
 
-	ret = itsex_decompress16(f, dest, 4646, 0);
+	ret = itsex_decompress16(f, (int16 *)dest, 4646, 0);
 	fail_unless(ret == 0, "decompression fail");
 
 	if (is_big_endian()) {
@@ -31,5 +30,6 @@ TEST(test_depack_it_sample_16bit)
 
 	ret = check_md5(TMP_FILE, "1e2395653f9bd7838006572d8fcdb646");
 	fail_unless(ret == 0, "MD5 error");
+	unlink(TMP_FILE);
 }
 END_TEST

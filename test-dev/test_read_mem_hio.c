@@ -1,5 +1,3 @@
-#include <sys/types.h>
-#include <sys/stat.h>
 #include "test.h"
 #include "../src/hio.h"
 
@@ -9,12 +7,11 @@ TEST(test_read_mem_hio)
 	int i;
 	int x;
 	HIO_HANDLE *h;
-	struct stat st;
 
 	for (i = 0; i < 100; i++)
 		mem[i] = i;
 
-	h = hio_open_mem(mem, 100);
+	h = hio_open_mem(mem, 100, 0);
 	fail_unless(h != NULL, "hio_open");
 
 	x = hio_size(h);
@@ -95,8 +92,12 @@ TEST(test_read_mem_hio)
 	x = hio_eof(h);
 	fail_unless(x != 0, "read32b eof");
 
+	/* seek past end: */
 	x = hio_seek(h, 20, SEEK_CUR);
-	fail_unless(x == -1, "hio_seek");
+	fail_unless(x == 0, "hio_seek");
+
+	x = hio_tell(h);
+	fail_unless(x == 100, "hio_seek");
 
 	x = hio_close(h);
 	fail_unless(x == 0, "hio_close");

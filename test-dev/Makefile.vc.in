@@ -1,0 +1,41 @@
+CC	= cl
+CFLAGS	= /O2 /W3 /MD /I..\include /I..\src /DWIN32 \
+	  /D_USE_MATH_DEFINES /D_CRT_SECURE_NO_WARNINGS
+LDFLAGS = /RELEASE /OUT:$(EXE)
+EXE	= libxmp-tests.exe
+
+TEST_SOURCES	= @MAINSRCS@
+XMP_SOURCES	= @XMPSRCS@
+ALL_SOURCES	= $(SOURCES) $(TEST_SOURCES) $(XMP_SOURCES)
+
+TEMP_MAKEFILE	= Makefile.vc.tmp
+
+all: $(TEMP_MAKEFILE)
+	$(MAKE) -f $(TEMP_MAKEFILE) $(EXE)
+	$(EXE)
+
+$(EXE): $(ALL_SOURCES) all_tests.c
+	copy ..\libxmp.lib .
+	copy ..\libxmp.dll .
+	$(CC) /MP /nologo $(CFLAGS) $(ALL_SOURCES) /link $(LDFLAGS) libxmp.lib
+
+#
+# To reduce the number of places the test names are duplicated to every time
+# a test is added, generate a Makefile with the SOURCES variable from all_tests.txt.
+#
+$(TEMP_MAKEFILE): Makefile.vc all_tests.txt
+	echo|set /p ignore="SOURCES = " > $@
+	for /F "tokens=*" %%I in (all_tests.txt) do @echo 	%%I.c \>> $@
+	echo.>> $@
+	type Makefile.vc >> $@
+
+all_tests.c: all_tests.txt
+	type nul > $@
+	for /F "tokens=*" %%I in ( $** ) do @echo declare_test(%%I); >> $@
+
+clean:
+	del $(TEMP_MAKEFILE)
+	del libxmp.lib
+	del libxmp.dll
+	del *.obj
+	del $(EXE)

@@ -19,5 +19,8 @@ TEST(test_player_invalid_mod_channels)
 
 	xmp_play_frame(opaque);
 	xmp_get_frame_info(opaque, &info);
+
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

@@ -64,5 +64,8 @@ TEST(test_api_channel_mute)
 			fail_unless(ret == 0, "unmute channel error");
 		}
 	}
+
+	xmp_release_module(ctx);
+	xmp_free_context(ctx);
 }
 END_TEST

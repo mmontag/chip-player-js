@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -39,11 +39,8 @@
  * tunes as a UNIC file.
  */
 
-#include <ctype.h>
-#include <sys/types.h>
-
 #include "loader.h"
-#include "period.h"
+#include "../period.h"
 
 struct ims_instrument {
     uint8 name[20];
@@ -82,10 +79,10 @@ static int ims_test(HIO_HANDLE *f, char *t, const int start)
 
     smp_size = 0;
 
-    hio_read(&ih.title, 20, 1, f);
+    hio_read(ih.title, 20, 1, f);
 
     for (i = 0; i < 31; i++) {
-	if (hio_read(&ih.ins[i].name, 1, 20, f) < 20)
+	if (hio_read(ih.ins[i].name, 1, 20, f) < 20)
 	    return -1;
 
 	ih.ins[i].finetune = (int16)hio_read16b(f);
@@ -118,9 +115,10 @@ static int ims_test(HIO_HANDLE *f, char *t, const int start)
 
     ih.len = hio_read8(f);
     ih.zero = hio_read8(f);
-    hio_read(&ih.orders, 128, 1, f);
-    hio_read(&ih.magic, 4, 1, f);
-  
+    hio_read(ih.orders, 128, 1, f);
+    if (hio_read(ih.magic, 4, 1, f) == 0)
+	return -1;
+
     if (ih.zero > 1)		/* not sure what this is */
 	return -1;
 
@@ -137,7 +135,7 @@ static int ims_test(HIO_HANDLE *f, char *t, const int start)
 
     if (pat > 0x7f || ih.len == 0 || ih.len > 0x7f)
 	return -1;
-   
+
     hio_seek(f, start + 0, SEEK_SET);
     libxmp_read_title(f, t, 20);
 
@@ -149,7 +147,6 @@ static int ims_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
     int i, j;
-    int smp_size;
     struct xmp_event *event;
     struct ims_header ih;
     uint8 ims_event[3];
@@ -160,20 +157,17 @@ static int ims_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->chn = 4;
     mod->ins = 31;
     mod->smp = mod->ins;
-    smp_size = 0;
 
-    hio_read (&ih.title, 20, 1, f);
+    hio_read (ih.title, 20, 1, f);
 
     for (i = 0; i < 31; i++) {
-	hio_read (&ih.ins[i].name, 20, 1, f);
+	hio_read (ih.ins[i].name, 20, 1, f);
 	ih.ins[i].finetune = (int16)hio_read16b(f);
 	ih.ins[i].size = hio_read16b(f);
 	ih.ins[i].unknown = hio_read8(f);
 	ih.ins[i].volume = hio_read8(f);
 	ih.ins[i].loop_start = hio_read16b(f);
 	ih.ins[i].loop_size = hio_read16b(f);
-
-	smp_size += ih.ins[i].size * 2;
     }
 
     ih.len = hio_read8(f);
@@ -181,9 +175,9 @@ static int ims_load(struct module_data *m, HIO_HANDLE *f, const int start)
         return -1;
     }
     ih.zero = hio_read8(f);
-    hio_read (&ih.orders, 128, 1, f);
-    hio_read (&ih.magic, 4, 1, f);
-  
+    hio_read (ih.orders, 128, 1, f);
+    hio_read (ih.magic, 4, 1, f);
+
     mod->len = ih.len;
     memcpy (mod->xxo, ih.orders, mod->len);
 

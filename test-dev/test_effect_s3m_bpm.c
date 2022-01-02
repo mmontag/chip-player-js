@@ -42,5 +42,8 @@ TEST(test_effect_s3m_bpm)
 		fail_unless(info.bpm == vals[i], "tempo setting error");
 	}
 	fail_unless(info.total_time == 4431, "total time error");
+
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

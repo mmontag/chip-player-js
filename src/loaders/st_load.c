@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -24,10 +24,9 @@
  * written by Michael Schwendt <sidplay@geocities.com>
  */
 
-#include <ctype.h>
 #include "loader.h"
 #include "mod.h"
-#include "period.h"
+#include "../period.h"
 
 static int st_test(HIO_HANDLE *, char *, const int);
 static int st_load(struct module_data *, HIO_HANDLE *, const int);
@@ -115,7 +114,7 @@ static int st_test(HIO_HANDLE *f, char *t, const int start)
 		if (mh.ins[i].loop_size > 0x8000)
 			return -1;
 
-		/* This test fails in atmosfer.mod, disable it 
+		/* This test fails in atmosfer.mod, disable it
 		 *
 		 * if (mh.ins[i].loop_size > 1 && mh.ins[i].loop_size > mh.ins[i].size)
 		 *    return -1;
@@ -142,7 +141,9 @@ static int st_test(HIO_HANDLE *f, char *t, const int start)
 		for (j = 0; j < (64 * 4); j++) {
 			int p, s;
 
-			hio_read(mod_event, 1, 4, f);
+			if (hio_read(mod_event, 1, 4, f) < 4) {
+				return -1;
+			}
 
 			s = (mod_event[0] & 0xf0) | MSN(mod_event[2]);
 
@@ -188,7 +189,7 @@ static int st_test(HIO_HANDLE *f, char *t, const int start)
 	/* Check if file was cut before any unused samples */
 	if (size < 600 + pat * 1024 + smp_size) {
 		int ss;
-		for (ss = i = 0; i < ins; i++) {
+		for (ss = i = 0; i < 15 && i < ins; i++) {
 			ss += 2 * mh.ins[i].size;
 		}
 
@@ -207,7 +208,6 @@ static int st_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	int i, j;
-	int smp_size;
 	struct xmp_event ev, *event;
 	struct st_header mh;
 	uint8 mod_event[4];
@@ -217,16 +217,12 @@ static int st_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	int fxused;
 	int pos;
 	int used_ins;		/* Number of samples actually used */
-	long size;
 
 	LOAD_INIT();
-
-	size = hio_size(f);
 
 	mod->chn = 4;
 	mod->ins = 15;
 	mod->smp = mod->ins;
-	smp_size = 0;
 
 	hio_read(mh.name, 1, 20, f);
 	for (i = 0; i < 15; i++) {
@@ -276,8 +272,6 @@ static int st_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		    || mh.ins[i].loop_size > 0x1387) {
 			ust = 0;
 		}
-
-		smp_size += 2 * mh.ins[i].size;
 	}
 
 	if (libxmp_init_instrument(m) < 0) {

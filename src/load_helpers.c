@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -20,23 +20,12 @@
  * THE SOFTWARE.
  */
 
-#include <stdio.h>
 #include <ctype.h>
-#include <string.h>
-#include <stdlib.h>
 #include "common.h"
 #include "loaders/loader.h"
 
 
 #ifndef LIBXMP_CORE_PLAYER
-
-#ifdef __ANDROID__
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#endif
-
-#include <fnmatch.h>
 
 /*
  * Handle special "module quirks" that can't be detected automatically
@@ -131,36 +120,6 @@ static void module_quirks(struct context_data *ctx)
 	}
 }
 
-/* 
- * Check whether the given string matches one of the blacklisted glob
- * patterns. Used to filter file names stored in archive files.
- */
-int libxmp_exclude_match(const char *name)
-{
-	int i;
-
-	static const char *const exclude[] = {
-		"README", "readme",
-		"*.DIZ", "*.diz",
-		"*.NFO", "*.nfo",
-		"*.DOC", "*.Doc", "*.doc",
-		"*.INFO", "*.info", "*.Info",
-		"*.TXT", "*.txt",
-		"*.EXE", "*.exe",
-		"*.COM", "*.com",
-		"*.README", "*.readme", "*.Readme", "*.ReadMe",
-		NULL
-	};
-
-	for (i = 0; exclude[i] != NULL; i++) {
-		if (fnmatch(exclude[i], name, 0) == 0) {
-			return 1;
-		}
-	}
-
-	return 0;
-}
-
 #endif /* LIBXMP_CORE_PLAYER */
 
 char *libxmp_adjust_string(char *s)
@@ -168,7 +127,7 @@ char *libxmp_adjust_string(char *s)
 	int i;
 
 	for (i = 0; i < strlen(s); i++) {
-		if (!isprint((int)s[i]) || ((uint8) s[i] > 127))
+		if (!isprint((unsigned char)s[i]) || ((uint8) s[i] > 127))
 			s[i] = ' ';
 	}
 
@@ -191,9 +150,9 @@ static void check_envelope(struct xmp_envelope *env)
 		env->flg &= ~XMP_ENVELOPE_LOOP;
 	}
 
-	/* Disable envelope loop if invalid sustain */
-	if (env->sus >= env->npt) {
-		env->flg &= ~XMP_ENVELOPE_ON;
+	/* Disable envelope sustain if invalid sustain */
+	if (env->sus >= env->npt || env->sue >= env->npt) {
+		env->flg &= ~XMP_ENVELOPE_SUS;
 	}
 }
 
@@ -216,21 +175,18 @@ void libxmp_load_prologue(struct context_data *ctx)
 	m->scan_cnt = NULL;
 
 	/* Set defaults */
-    	m->mod.pat = 0;
-    	m->mod.trk = 0;
-    	m->mod.chn = 4;
-    	m->mod.ins = 0;
-    	m->mod.smp = 0;
-    	m->mod.spd = 6;
-    	m->mod.bpm = 125;
-    	m->mod.len = 0;
-    	m->mod.rst = 0;
+	m->mod.pat = 0;
+	m->mod.trk = 0;
+	m->mod.chn = 4;
+	m->mod.ins = 0;
+	m->mod.smp = 0;
+	m->mod.spd = 6;
+	m->mod.bpm = 125;
+	m->mod.len = 0;
+	m->mod.rst = 0;
 
 #ifndef LIBXMP_CORE_PLAYER
 	m->extra = NULL;
-#endif
-#ifndef LIBXMP_CORE_DISABLE_IT
-	m->xsmp = NULL;
 #endif
 
 	m->time_factor = DEFAULT_TIME_FACTOR;
@@ -324,7 +280,7 @@ int libxmp_prepare_scan(struct context_data *ctx)
 		return 0;
 	}
 
-	m->scan_cnt = calloc(sizeof (char *), mod->len);
+	m->scan_cnt = (uint8 **) calloc(mod->len, sizeof(uint8 *));
 	if (m->scan_cnt == NULL)
 		return -XMP_ERROR_SYSTEM;
 
@@ -340,12 +296,31 @@ int libxmp_prepare_scan(struct context_data *ctx)
 		}
 
 		pat = pat_idx >= mod->pat ? NULL : mod->xxp[pat_idx];
-		m->scan_cnt[i] = calloc(1, pat && pat->rows ? pat->rows : 1);
+		m->scan_cnt[i] = (uint8 *) calloc(1, (pat && pat->rows)? pat->rows : 1);
 		if (m->scan_cnt[i] == NULL)
 			return -XMP_ERROR_SYSTEM;
 	}
- 
+
 	return 0;
+}
+
+void libxmp_free_scan(struct context_data *ctx)
+{
+	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
+	int i;
+
+	if (m->scan_cnt) {
+		for (i = 0; i < mod->len; i++)
+			free(m->scan_cnt[i]);
+
+		free(m->scan_cnt);
+		m->scan_cnt = NULL;
+	}
+
+	free(p->scan);
+	p->scan = NULL;
 }
 
 /* Process player personality flags */

@@ -74,5 +74,8 @@ TEST(test_new_note_no_ins_ft2)
 	fail_unless(vi->vol  == 43 * 16, "not current volume");
 	fail_unless(vi->pos0 ==  0, "sample didn't reset");
 	xmp_play_frame(opaque);
+
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

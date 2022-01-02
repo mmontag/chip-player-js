@@ -17,7 +17,8 @@ TEST(test_api_play_buffer)
 	ref_buffer = calloc(1, REFBUF_SIZE);
 	fail_unless(ref_buffer != NULL, "buffer allocation error");
 
-	fread(ref_buffer, 1, REFBUF_SIZE, f);
+	ret = fread(ref_buffer, 1, REFBUF_SIZE, f);
+	fail_unless(ret > 0, "read error");
 	if (is_big_endian()) {
 		convert_endian((unsigned char *)ref_buffer, REFBUF_SIZE / 2);
 	}
@@ -70,6 +71,7 @@ TEST(test_api_play_buffer)
 	xmp_end_player(opaque);
 	xmp_release_module(opaque);
 	xmp_free_context(opaque);
+	free(ref_buffer);
 	fclose(f);
 }
 END_TEST

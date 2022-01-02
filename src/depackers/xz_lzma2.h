@@ -2,7 +2,7 @@
  * LZMA2 definitions
  *
  * Authors: Lasse Collin <lasse.collin@tukaani.org>
- *          Igor Pavlov <http://7-zip.org/>
+ *          Igor Pavlov <https://7-zip.org/>
  *
  * This file has been put into the public domain.
  * You can do whatever you want with this file.
@@ -53,6 +53,11 @@ enum lzma_state {
 	STATE_NONLIT_MATCH,
 	STATE_NONLIT_REP
 };
+#ifndef __cplusplus
+typedef enum lzma_state lzma_state_t;
+#else
+typedef int lzma_state_t;
+#endif
 
 /* Total number of states */
 #define STATES 12
@@ -61,7 +66,7 @@ enum lzma_state {
 #define LIT_STATES 7
 
 /* Indicate that the latest symbol was a literal. */
-static inline void lzma_state_literal(enum lzma_state *state)
+static inline void lzma_state_literal(lzma_state_t *state)
 {
 	if (*state <= STATE_SHORTREP_LIT_LIT)
 		*state = STATE_LIT_LIT;
@@ -72,25 +77,25 @@ static inline void lzma_state_literal(enum lzma_state *state)
 }
 
 /* Indicate that the latest symbol was a match. */
-static inline void lzma_state_match(enum lzma_state *state)
+static inline void lzma_state_match(lzma_state_t *state)
 {
 	*state = *state < LIT_STATES ? STATE_LIT_MATCH : STATE_NONLIT_MATCH;
 }
 
 /* Indicate that the latest state was a long repeated match. */
-static inline void lzma_state_long_rep(enum lzma_state *state)
+static inline void lzma_state_long_rep(lzma_state_t *state)
 {
 	*state = *state < LIT_STATES ? STATE_LIT_LONGREP : STATE_NONLIT_REP;
 }
 
 /* Indicate that the latest symbol was a short match. */
-static inline void lzma_state_short_rep(enum lzma_state *state)
+static inline void lzma_state_short_rep(lzma_state_t *state)
 {
 	*state = *state < LIT_STATES ? STATE_LIT_SHORTREP : STATE_NONLIT_REP;
 }
 
 /* Test if the previous symbol was a literal. */
-static inline bool lzma_state_is_literal(enum lzma_state state)
+static inline xz_bool lzma_state_is_literal(lzma_state_t state)
 {
 	return state < LIT_STATES;
 }

@@ -14,6 +14,7 @@ TEST(test_prev_order_start_seq)
  	create_simple_module(ctx, 2, 2);
 	set_quirk(ctx, QUIRKS_ST3, READ_EVENT_ST3);
 
+	libxmp_free_scan(ctx);
 	set_order(ctx, 0, 0);
 	set_order(ctx, 1, 0xfe);
 	set_order(ctx, 2, 0);
@@ -39,5 +40,7 @@ TEST(test_prev_order_start_seq)
 	fail_unless(p->row == 0, "incorrect row");
 	fail_unless(p->frame == 0, "incorrect frame");
 
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

@@ -7,6 +7,7 @@ TEST(test_player_hmn_extras)
 	struct xmp_channel_info *ci;
 	int time, row, frame, chan, period, volume, ins, pan, smp;
 	char line[200];
+	char *ret;
 	FILE *f;
 	int i, j;
 
@@ -22,7 +23,9 @@ TEST(test_player_hmn_extras)
 
 		for (j = 0; j < 4; j++) {
 			ci = &info.channel_info[j];
-			fgets(line, 200, f);
+			ret = fgets(line, 200, f);
+			fail_unless(ret == line, "read error");
+
 			sscanf(line, "%d %d %d %d %d %d %d %d %d",
 					&time, &row, &frame, &chan, &period,
 					&volume, &ins, &pan, &smp);
@@ -34,8 +37,8 @@ TEST(test_player_hmn_extras)
 		}
 	}
 
-	fgets(line, 200, f);
-	fail_unless(feof(f), "not end of data file");
+	ret = fgets(line, 200, f);
+	fail_unless(ret == NULL && feof(f), "not end of data file");
 
 	xmp_end_player(opaque);
 	xmp_release_module(opaque);

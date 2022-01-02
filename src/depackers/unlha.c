@@ -23,9 +23,7 @@
     Modified for xmp by Claudio Matsuoka, 20120812
  */
 
-#include <stdlib.h>
-#include <string.h>
-#include "common.h"
+#include "../common.h"
 #include "depacker.h"
 
 #define LZHUFF0_METHOD          0x2D6C6830      /* -lh0- */
@@ -143,7 +141,7 @@ struct LhADecrLZ {
 
 struct LhADecrData {
   int        error;
-  FILE       *in;
+  HIO_HANDLE *in;
   char       *text;
   uint16     DicBit;
 
@@ -177,7 +175,7 @@ static inline void fillbuf(struct LhADecrData *dat, uint8 n)
   {
     n -= dat->bitcount;
     dat->bitbuf = (dat->bitbuf << dat->bitcount) + (dat->subbitbuf >> (CHAR_BIT - dat->bitcount));
-    dat->subbitbuf = fgetc(dat->in);
+    dat->subbitbuf = hio_read8(dat->in);
 
     dat->bitcount = CHAR_BIT;
   }
@@ -231,7 +229,11 @@ static int make_table(struct LhADecrData *dat, int16 nchar, uint8 bitlen[], int1
 
   /* count */
   for(i = 0; i < nchar; i++)
+  {
+    if(bitlen[i] >= ARRAY_SIZE(count))
+      return -1;
     count[bitlen[i]]++;
+  }
 
   /* calculate first code */
   total = 0;
@@ -325,7 +327,7 @@ static int make_table(struct LhADecrData *dat, int16 nchar, uint8 bitlen[], int1
     }
     start[k] = l;
   }
-  
+
   return 0;
 }
 
@@ -392,6 +394,10 @@ static int read_c_len(struct LhADecrData *dat)
   }
   else
   {
+    /* Sanity check */
+    if (n > NC)
+      return -1;
+
     i = 0;
     while(i < n)
     {
@@ -420,9 +426,9 @@ static int read_c_len(struct LhADecrData *dat)
         else
           c = getbits(dat, CBIT) + 20;
 
-	/* Sanity check */
-	if (i + c >= NC)
-	  return -1;
+        /* Sanity check */
+        if (i + c >= NC)
+          return -1;
 
         while(--c >= 0)
           dat->d.st.c_len[i++] = 0;
@@ -456,7 +462,13 @@ static int decode_c_st1(struct LhADecrData *dat)
   dat->d.st.blocksize--;
   j = dat->d.st.c_table[dat->bitbuf >> 4];
   if(j < NC)
+  {
+    /* Sanity check - 0-length character encoding on the Huffman tree is
+     * invalid and can cause hangs here. */
+    if(dat->d.st.c_len[j] == 0)
+      return -1;
     fillbuf(dat, dat->d.st.c_len[j]);
+  }
   else
   {
     fillbuf(dat, 12);
@@ -1390,12 +1402,13 @@ static void decode_start_lz5(struct LhADecrData *dat)
 
 #endif
 
-static int32 LhA_Decrunch(FILE *in, FILE *out, int size, uint32 Method)
+static int32 LhA_Decrunch(HIO_HANDLE *in, FILE *out, int size, uint32 Method)
 {
   struct LhADecrData *dd;
   int32 err = 0;
 
-  if((dd = calloc(sizeof(struct LhADecrData), 1))) {
+  dd = (struct LhADecrData *) calloc(1, sizeof(struct LhADecrData));
+  if(dd) {
     int (*DecodeStart)(struct LhADecrData *);
     int (*DecodeC)(struct LhADecrData *);
     uint16 (*DecodeP)(struct LhADecrData *);
@@ -1487,12 +1500,13 @@ static int32 LhA_Decrunch(FILE *in, FILE *out, int size, uint32 Method)
       offset = 0x100 - 3;
 #endif
 
-      if((text = dd->text = calloc(dicsiz, 1)))
+      text = dd->text = (char *) malloc(dicsiz);
+      if (text)
       {
 /*      if(Method == LZHUFF1_METHOD || Method == LZHUFF2_METHOD || Method == LZHUFF3_METHOD ||
         Method == LZHUFF6_METHOD || Method == LARC_METHOD || Method == LARC5_METHOD)
 */
-          memset(text, ' ', (size_t) dicsiz);
+        memset(text, ' ', dicsiz);
 
         if (DecodeStart(dd) < 0) {
           goto error;
@@ -1504,14 +1518,17 @@ static int32 LhA_Decrunch(FILE *in, FILE *out, int size, uint32 Method)
           if (dd->count >= size)
             break;
 
+          if(hio_eof(dd->in))
+            break;
+
           c = DecodeC(dd);
           if (c < 0) {
             goto error;
           }
 
-	  if (dd->error)
-	    break;
-	
+          if(dd->error)
+            break;
+
           if(c <= UCHAR_MAX)
           {
             int res = fputc(c, out);
@@ -1532,7 +1549,7 @@ static int32 LhA_Decrunch(FILE *in, FILE *out, int size, uint32 Method)
               int res = fputc(text[i++ & dicsiz], out);
               if (res < 0) {
                 goto error;
-              }        
+              }
               text[dd->loc++] = res;
               dd->loc &= dicsiz;
             }
@@ -1702,14 +1719,13 @@ struct lha_data {
  *
  */
 
-static int get_header(FILE *f, struct lha_data *data)
+static int get_header(HIO_HANDLE *f, struct lha_data *data)
 {
 	uint8 buf[21];
 	int size, level, namelen;
-	int error;
 
 	memset(data, 0, sizeof(struct lha_data));
-	if (fread(buf, 1, 21, f) != 21)
+	if (hio_read(buf, 1, 21, f) != 21)
 		return -1;
 	level = buf[20];
 
@@ -1719,18 +1735,18 @@ static int get_header(FILE *f, struct lha_data *data)
 		data->method = readmem32b(buf + 2);
 		data->packed_size = readmem32l(buf + 7);
 		data->original_size = readmem32l(buf + 11);
-		namelen = read8(f, &error);
-		if (error != 0) {
+		namelen = hio_read8(f);
+		if (hio_error(f) != 0) {
 			return -1;
 		}
-		if (fread(data->name, 1, namelen, f) != namelen) {
+		if (hio_read(data->name, 1, namelen, f) != namelen) {
 			return -1;
 		}
-		data->crc = read16l(f, &error);
-		if (error != 0) {
+		data->crc = hio_read16l(f);
+		if (hio_error(f) != 0) {
 			return -1;
 		}
-		if (fseek(f, size + 2 - 24 - namelen, SEEK_CUR) < 0) {
+		if (hio_seek(f, size + 2 - 24 - namelen, SEEK_CUR) < 0) {
 			return -1;
 		}
 		break;
@@ -1739,25 +1755,25 @@ static int get_header(FILE *f, struct lha_data *data)
 		data->method = readmem32b(buf + 2);
 		data->packed_size = readmem32l(buf + 7);
 		data->original_size = readmem32l(buf + 11);
-		namelen = read8(f, &error);
-		if (error != 0) {
+		namelen = hio_read8(f);
+		if (hio_error(f) != 0) {
 			return -1;
 		}
-		if (fread(data->name, 1, namelen, f) != namelen) {
+		if (hio_read(data->name, 1, namelen, f) != namelen) {
 			return -1;
 		}
-		data->crc = read16l(f, &error);
-		if (error != 0) {
+		data->crc = hio_read16l(f);
+		if (hio_error(f) != 0) {
 			return -1;
 		}
-		if (fseek(f, size - (22 + namelen) - 2, SEEK_CUR) < 0) {
+		if (hio_seek(f, size - (22 + namelen) - 2, SEEK_CUR) < 0) {
 			return -1;
 		}
-		while ((size = read16l(f, &error)) != 0) {
-			if (error != 0) {
+		while ((size = hio_read16l(f)) != 0) {
+			if (hio_error(f) != 0) {
 				return -1;
 			}
-			if (fseek(f, size - 2, SEEK_CUR) < 0) {
+			if (hio_seek(f, size - 2, SEEK_CUR) < 0) {
 				return -1;
 			}
 			data->packed_size -= size;
@@ -1770,22 +1786,22 @@ static int get_header(FILE *f, struct lha_data *data)
 		data->method = readmem32b(buf + 2);
 		data->packed_size = readmem32l(buf + 7);
 		data->original_size = readmem32l(buf + 11);
-		data->crc = read16l(f, &error);
-		if (error != 0) {
+		data->crc = hio_read16l(f);
+		if (hio_error(f) != 0) {
 			return -1;
 		}
-		read8(f, &error);		/* skip OS id */
-		if (error != 0) {
+		hio_read8(f);		/* skip OS id */
+		if (hio_error(f) != 0) {
 			return -1;
 		}
-		while ((size = read16l(f, &error)) != 0) {
+		while ((size = hio_read16l(f)) != 0) {
 			int type;
 			int s = size - 3;
-			if (error != 0) {
+			if (hio_error(f) != 0) {
 				return -1;
 			}
-			type = read8(f, &error);
-			if (error != 0) {
+			type = hio_read8(f);
+			if (hio_error(f) != 0) {
 				return -1;
 			}
 			if (type == 0x01) {
@@ -1793,11 +1809,11 @@ static int get_header(FILE *f, struct lha_data *data)
 				if (s < 0 || s > 256) {
 					return -1;
 				}
-				if (fread(data->name, 1, s, f) != s) {
+				if (hio_read(data->name, 1, s, f) != s) {
 					return -1;
 				}
 			} else {
-				if (fseek(f, s, SEEK_CUR) < 0) {
+				if (hio_seek(f, s, SEEK_CUR) < 0) {
 					return -1;
 				}
 			}
@@ -1815,7 +1831,7 @@ static int test_lha(unsigned char *b) {
 		b[20] <= 3;
 }
 
-static int decrunch_lha(FILE *in, FILE *out)
+static int decrunch_lha(HIO_HANDLE *in, FILE *out, long inlen)
 {
 	struct lha_data data;
 
@@ -1828,11 +1844,11 @@ static int decrunch_lha(FILE *in, FILE *out)
 		printf("name = %s\n", data.name);
 		printf("packed size = %d\n", data.packed_size);
 		printf("original size = %d\n", data.original_size);
-		printf("position = %lx\n", ftell(in));
+		printf("position = %lx\n", hio_tell(in));
 #endif
 
 		if (libxmp_exclude_match(data.name)) {
-			if (fseek(in, data.packed_size, SEEK_CUR) < 0) {
+			if (hio_seek(in, data.packed_size, SEEK_CUR) < 0) {
 				return -1;
 			}
 			continue;
@@ -1845,5 +1861,6 @@ static int decrunch_lha(FILE *in, FILE *out)
 
 struct depacker libxmp_depacker_lha = {
 	test_lha,
-	decrunch_lha
+	decrunch_lha,
+	NULL
 };

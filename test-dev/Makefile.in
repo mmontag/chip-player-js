@@ -15,7 +15,7 @@ GCLIB		= libxmp-gc.a
 #
 # Tests
 #
-
+#
 REPLAYERS	= mod ft2 st3 it
 
 QUIRKS		= 
@@ -23,7 +23,7 @@ QUIRKS		=
 SMPLOADERS	= 8bit 16bit delta signal endian skip
 
 DEPACKERS	= pp sqsh s404 mmcmp zip zip_filtered zip_store arcfs \
-		  gzip compress arc_method2 arc_method8 \
+		  gzip compress arc_method2 arc_method8 rar \
 		  spark j2b lzx bzip2 xz lha_l0_lzhuff1 lha_l0_lzhuff5 \
 		  lha_l1_lzhuff5 lha_l1_lzhuff6 lha_l1_lzhuff7 lha_l2_lzhuff7 \
 		  lha_l0_filtered lha_l1_filtered lha_l2_filtered \
@@ -41,18 +41,23 @@ EFFECTS		= 0_arpeggio 1_slide_up 2_slide_down \
 		  volslide track_volslide \
 		  okt_arpeggio per_slide per_toneporta \
 		  panbrello globalvol gvol_slide s3m_bpm it_bpm fine_vibrato \
-		  it_panslide it_vcol_g it_break_to_row \
+		  it_panslide it_vcol_g it_break_to_row it_multi_retrig \
 		  pastnote_cut pastnote_off pastnote_fade \
 		  set_nna_cut set_nna_cont set_nna_off set_nna_fade \
 		  note_slide note_slide_retrig \
 		  persistent_slide persistent_vslide persistent_vibrato \
-		  it_g00_nosuck it_l00_nosuck
+		  it_g00_nosuck it_l00_nosuck it_fine_vol_row_delay \
+		  far_slide far_toneporta far_retrig far_noteoffset \
+		  far_vibrato far_vibrato_per far_volslide far_tempo \
+		  ult_toneporta
 
 API		= get_format_list create_context free_context \
 		  test_module load_module load_module_from_memory \
-		  load_module_from_file \
+		  load_module_from_file load_module_from_callbacks \
+		  test_module_from_file test_module_from_memory \
+		  test_module_from_callbacks \
 		  start_player play_buffer \
-		  set_position prev_position \
+		  set_position prev_position set_position_midfx set_row \
 		  set_player stop_module restart_module seek_time \
 		  channel_mute channel_vol inject_event scan_module
 
@@ -209,7 +214,7 @@ OPENMPT_MOD	= amigalimitsfinetune \
 		  ptoffset \
 		  vibratoreset
 
-MIXER		= interpolation_default \
+MIXER		= interpolation_default interpolation_loop bidi_sync \
 		  mono_8bit_nearest mono_16bit_nearest \
 		  stereo_8bit_nearest stereo_16bit_nearest \
 		  mono_8bit_linear mono_16bit_linear \
@@ -228,35 +233,107 @@ READ		= file_32bit_little_endian file_32bit_big_endian \
 		  file_8bit \
 		  mem_32bit_little_endian mem_32bit_big_endian \
 		  mem_16bit_little_endian mem_16bit_big_endian \
-		  mem_hio mem_hio_nosize
+		  mem_hio mem_hio_nosize file_hio_pipe
 
 WRITE		= file_32bit_little_endian file_32bit_big_endian \
 		  file_16bit_little_endian file_16bit_big_endian \
-		  file_8bit file_move_data
+		  file_8bit
 
 PLAYER		= read_event scan period_amiga period_mod_range pan \
 		  med_hold med_synth med_synth_2 hmn_extras \
 		  note_off_ft2 note_off_it \
 		  virtual_channel nna_cut nna_cont nna_off nna_fade dct_note \
 		  s3m_sample_porta \
+		  it_fade_env_reset it_fade_env_reset_carry \
 		  it_keyoff it_note_after_cut it_sample_porta \
 		  it_portamento_after_keyoff it_portamento_after_keyoff_cg \
 		  it_portamento_after_cut_fade it_portamento_after_cut_fade_cg \
 		  it_portamento_envelope_reset it_portamento_envelope_reset_cg \
 		  xm_portamento_envelope_reset xm_portamento_target \
+		  xm_keyoff_with_instrument \
 		  ft2_note_noins_after_keyoff \
 		  ft2_note_noins_after_invalid_ins \
 		  invalid_period invalid_mod_length invalid_mod_channels \
-		  it_noteoff_nosuck mdl_period
+		  it_noteoff_nosuck mdl_period sample_sync
 
-LOADER		= ust ac1d unic unic2 nst flt flt8 wow mtm it it_oldins \
-		  xm102 j2b okt 669 s3m stm stx sfx masi imf ptm far asylum \
-		  dsmi stim pt36 psm rtm ice dbm mdl0 mdl mgt liq liq_no \
-		  emod chiptracker gdm dtm abk mfp np1 np2 np3 nru p60 crb \
-		  6chn mod_adpcm4 mod_noterange mod_noterange2 mod_scrm \
-		  mod_invalid xm_adpcm xm_xmlite xm_short med3 med4 mmd0 mmd3 \
-		  mmd_iff3oct m15 m15_invalid m15_invalid2 m15_short_rip fnk \
-		  ult pru1 pru2 ksm di pm10 pm18 xann tp3 titanics fuchs ims
+LOADER		= 6chn mod_adpcm4 mod_noterange mod_noterange2 mod_scrm mod_notawow \
+		  mod_invalid mod_tdz3 mod_dt \
+		  nst \
+		  ust \
+		  wow wow_extra \
+		  m15 m15_invalid m15_invalid2 m15_short_rip \
+		  s3m s3m_adpcm s3m_schism \
+		  xm102 xm_adpcm xm_xmlite xm_short xm_instsamples \
+		  it it_adpcm it_oldins it_schism it_invalid_fx \
+		  669 \
+		  abk \
+		  asylum \
+		  chiptracker \
+		  coco coco_patalign \
+		  dbm dbm_rows dbm_penv dbm_venv \
+		  digi \
+		  dsmi dsmi_08 dsmi_09 dsmi_10 dsmi_10_trunc \
+		  dsmi_track0 dsmi_note7f dsmi_pan dsmi_vol \
+		  dtm \
+		  emod \
+		  far far_fx \
+		  flt flt8 \
+		  fnk \
+		  gdm gdm_fx gdm_fx2 \
+		  hmn \
+		  ice \
+		  imf \
+		  ims \
+		  j2b \
+		  liq liq_no \
+		  masi \
+		  mdl0 mdl \
+		  med2 med3 med4 med4_decvol \
+		  mmd0 mmd0_compattempo mmd1_longpat \
+		  mmd3 mmd_iff3oct \
+		  mfp \
+		  mgt \
+		  mtm \
+		  okt \
+		  psm \
+		  ptm \
+		  pt36 \
+		  rtm \
+		  sfx \
+		  stim \
+		  stm stm_blankpat stm_v1 \
+		  stx \
+		  sym sym_lzwquirk sym_sigmadelta \
+		  ult \
+		  ac1d \
+		  crb crb2 \
+		  di \
+		  eureka \
+		  fc_m \
+		  fuchs \
+		  fuzzac \
+		  gmc \
+		  hrt \
+		  ksm \
+		  mp_noid \
+		  novotrade \
+		  np1 np2 np3 \
+		  nru \
+		  p40a p40b p41a p50a p60 p61 \
+		  pha pha_short \
+		  pm10 pm18 \
+		  pp10_1 pp10_2 pp10_3 pp10_4 \
+		  pp21_1 pp21_2 \
+		  pp30_1 pp30_2 \
+		  pru1 pru2 \
+		  skyt \
+		  starpack \
+		  tdd \
+		  titanics \
+		  tp1 tp2 tp3 \
+		  unic unic_id0 unic2 \
+		  wn \
+		  xann
 
 PROBLEMATIC	= length_data_jack \
 		  length_condom_corruption \
@@ -265,6 +342,226 @@ PROBLEMATIC	= length_data_jack \
 		  length_nebulos \
 		  length_roadblast \
 		  length_ode2ptk
+
+FUZZER		= misc \
+		  mod_no_null_terminator \
+		  mod_no_valid_orders \
+		  mod_scan_row_limit \
+		  st_invalid_sample_count \
+		  st_truncated \
+		  s3m_invalid_sample_size \
+		  s3m_invalid_sample_size2 \
+		  xm_negative_instsize \
+		  xm_orders_mismatch \
+		  xm_vorbis_crash \
+		  xm_vorbis_leak \
+		  xm_zero_samples \
+		  it_dca_3 \
+		  it_invalid_compressed \
+		  it_long_patterns \
+		  it_truncated_header \
+		  it_truncated_pattern \
+		  669_truncated \
+		  abk_0_instruments \
+		  abk_test_title \
+		  abk_truncated \
+		  amf_truncated \
+		  amf_truncated2 \
+		  arch_invalid_patterns \
+		  asy_invalid_samples \
+		  chip_truncated \
+		  coco_invalid_sequence \
+		  dbm_chunk_order \
+		  dbm_invalid_instruments \
+		  dbm_name_buffer_overflow \
+		  dbm_sample_count \
+		  dbm_truncated \
+		  dbm_truncated_inst \
+		  digi_truncated \
+		  dt_channels_bound \
+		  dt_duplicate_chunk \
+		  dt_instrument_count \
+		  dt_invalid_loop \
+		  dt_truncated \
+		  emod_duplicate_chunk \
+		  far_truncated \
+		  flt_umr \
+		  fnk_channels_bound \
+		  fnk_invalid_sample_size \
+		  fnk_patterns_bound \
+		  fnk_truncated \
+		  gal4_duplicate_instrument \
+		  gal4_env_point_bound \
+		  gal4_invalid_sample_num \
+		  gal4_truncated \
+		  gal5_channels_bound \
+		  gal5_duplicate_instrument \
+		  gal5_invalid_sample_num \
+		  gal5_truncated \
+		  gal5_truncated_info \
+		  gdm_invalid_sample_size \
+		  gdm_samples_bound \
+		  gdm_truncated \
+		  gdm_truncated_header \
+		  hmn_truncated \
+		  ice_truncated \
+		  imf_truncated \
+		  ims_scan_loop \
+		  ims_truncated_magic \
+		  liq_no_valid_orders \
+		  liq_truncated \
+		  masi_invalid_length \
+		  masi_seek_loop \
+		  masi_truncated \
+		  mdl_duplicate_chunk \
+		  mdl_duplicate_is_chunk \
+		  mdl_duplicate_pa_chunk \
+		  mdl_duplicate_sa_chunk \
+		  mdl_ii_after_is \
+		  mdl_invalid_chunk_order \
+		  mdl_invalid_run \
+		  mdl_invalid_sample \
+		  mdl_truncated \
+		  mdl_umr \
+		  med2_truncated \
+		  med3_invalid_pattern \
+		  med4_instrument_name \
+		  med4_invalid_iff \
+		  med4_invalid_sample \
+		  mfp_truncated \
+		  mgt_patterns_bound \
+		  mmd0_sample_count \
+		  mmd1_channel_count \
+		  mmd1_invalid \
+		  mmd3_invalid \
+		  mmd3_invalid_mmdinfo \
+		  mmd3_invalid_sample_size \
+		  mtm_channels_bound \
+		  okt_duplicate_chunk \
+		  okt_invalid_chunk_order \
+		  okt_sbod_leak \
+		  psm_samples_bound \
+		  pt3_ptdt_leak \
+		  pt3_truncated \
+		  ptm_truncated \
+		  rtm_truncated \
+		  rtm_zero_samples \
+		  sfx_truncated \
+		  stim_truncated \
+		  stm_patterns_bound \
+		  stx_instruments_bound \
+		  stx_truncated \
+		  sym_bad_sigmadelta \
+		  sym_truncated \
+		  sym_truncated_lzw \
+		  ult_channels_bound \
+		  ult_invalid_sample \
+		  ult_invalid_tracks \
+		  ult_truncated \
+		  ult_v000 \
+		  umx_invalid_names \
+		  prowizard_ac1d_invalid_note \
+		  prowizard_ac1d_invalid_paddr \
+		  prowizard_di_invalid_offsets \
+		  prowizard_di_patterns_bound \
+		  prowizard_di_patterns_test \
+		  prowizard_di_truncated \
+		  prowizard_eureka_truncated \
+		  prowizard_fuchs_pattern_length \
+		  prowizard_heatseek_truncated \
+		  prowizard_ksm_invalid_pattern \
+		  prowizard_noiserun_invalid_sample \
+		  prowizard_noiserun_truncated \
+		  prowizard_novotrade_invalid_order \
+		  prowizard_novotrade_orders_bound \
+		  prowizard_novotrade_patterns_bound \
+		  prowizard_np2_patterns_bound \
+		  prowizard_np3_invalid_note \
+		  prowizard_np3_patterns_bound \
+		  prowizard_p40_invalid_offsets \
+		  prowizard_p40_invalid_packing \
+		  prowizard_p40_invalid_sample \
+		  prowizard_p40_zero_length \
+		  prowizard_p61a_invalid_note \
+		  prowizard_p61a_invalid_sample_dup \
+		  prowizard_p61a_truncated \
+		  prowizard_pha_invalid_note \
+		  prowizard_pha_invalid_offset \
+		  prowizard_pha_invalid_paddr \
+		  prowizard_pha_patterns_bound \
+		  prowizard_pha_truncated \
+		  prowizard_pm10c_invalid_note \
+		  prowizard_pm10c_invalid_pattern \
+		  prowizard_pm10c_invalid_psize \
+		  prowizard_pm10c_zero_length \
+		  prowizard_pm18a_invalid_note \
+		  prowizard_pm18a_invalid_paddr \
+		  prowizard_pm18a_zero_length \
+		  prowizard_pp10_invalid_pattern \
+		  prowizard_pp21_truncated \
+		  prowizard_pp30_invalid \
+		  prowizard_starpack_junk_orders \
+		  prowizard_theplayer_invalid_note \
+		  prowizard_theplayer_invalid_sample_dup \
+		  prowizard_titanics_truncated \
+		  prowizard_tp1_invalid_length \
+		  prowizard_tp1_invalid_paddr \
+		  prowizard_tp3_patterns_bound \
+		  prowizard_tp3_samples_bound \
+		  prowizard_unic_truncated \
+		  prowizard_xann_invalid \
+		  prowizard_zen_invalid_note \
+		  depack_arc_large_output \
+		  depack_arc_lzw_invalid \
+		  depack_arc_slow_rle \
+		  depack_arcfs_invalid_bits \
+		  depack_arcfs_lzw_leak \
+		  depack_arcfs_negative_header_size \
+		  depack_arcfs_negative_size \
+		  depack_arcfs_no_files \
+		  depack_arcfs_zero_length \
+		  depack_bz2_invalid_selector \
+		  depack_compress_invalid_maxbits \
+		  depack_gzip_invalid_name \
+		  depack_gzip_truncated \
+		  depack_lha_invalid_clen \
+		  depack_lha_invalid_tree \
+		  depack_lha_truncated \
+		  depack_lzx_invalid \
+		  depack_muse_truncated \
+		  depack_muse_truncated2 \
+		  depack_oxm_invalid \
+		  depack_oxm_pcm_leak \
+		  depack_oxm_truncated \
+		  depack_pp20_invalid \
+		  depack_s404_invalid_length \
+		  depack_s404_invalid_shift \
+		  depack_sqsh_invalid_verbatim \
+		  depack_sqsh_misaligned \
+		  depack_sqsh_no_checksum \
+		  depack_sqsh_truncated \
+		  depack_sqsh_truncated2 \
+		  depack_zip_truncated \
+		  depack_zip_truncated2 \
+		  depack_zip_truncated3 \
+		  depack_zip_truncated4 \
+		  play_mod_bad_invloop \
+		  play_xm_bad_env_sustain \
+		  play_xm_bad_instrument \
+		  play_it_bad_env_sustain \
+		  play_it_bad_set_nna \
+		  play_it_row_0_loop_row_delay \
+		  play_it_sustain_bidi \
+		  play_669_low_freq \
+		  play_asylum_bad_effects \
+		  play_dbm_inst_no_samples \
+		  play_far_highbpm \
+		  play_gdm_bad_loop \
+		  play_hmn_bad_megaarp \
+		  play_mdl_zero_samples \
+		  play_med4_0_chn_invalid_ord \
+		  play_mmd1_synth_bad_tables \
+		  play_stm_bad_note_toneporta \
 
 SYNTH		= #adlib #spectrum
 
@@ -320,6 +617,8 @@ SYNTH_TESTS	= $(addprefix synth_,$(SYNTH))
 
 API_TESTS	= $(addprefix api_,$(API)) $(addprefix api_,$(API_SMIX))
 
+FUZZER_TESTS	= $(addprefix fuzzer_,$(FUZZER))
+
 PROBLEM_TESTS	= $(addprefix module_,$(PROBLEMATIC))
 
 TESTS		= $(READ_TESTS) \
@@ -345,20 +644,22 @@ TESTS		= $(READ_TESTS) \
 		  $(PLAYER_TESTS) \
 		  $(MIXER_TESTS) \
 		  $(SYNTH_TESTS) \
+		  $(FUZZER_TESTS) \
 		  $(PROBLEM_TESTS)
 
 TEST_NAMES	= $(addprefix test_,$(TESTS))
 
-TEST_OBJS	= util.o md5.o main.o simple_module.o compare_mixer_data.o \
-		  $(TEST_NAMES:=.o)
+MAIN_OBJS	= util.o main.o simple_module.o compare_mixer_data.o
+TEST_OBJS	= $(MAIN_OBJS) $(TEST_NAMES:=.o)
 
 TEST_DFILES	= Makefile $(TEST_OBJS:.o=.c) test.h md5.h data
 
 TEST_PATH	= .
 SRC_PATH	= ../src
 
-TEST_INTERNAL	= hio.o load_helpers.o loaders/itsex.o dataio.o scan.o \
-		  loaders/sample.o loaders/common.o period.o fnmatch.o memio.o
+TEST_INTERNAL	= md5.o win32.o hio.o load_helpers.o loaders/itsex.o dataio.o scan.o \
+		  loaders/sample.o loaders/common.o filetype.o period.o memio.o \
+		  depackers/xfnmatch.o far_extras.o lfo.o
 
 T_OBJS 		= $(addprefix $(TEST_PATH)/,$(TEST_OBJS)) \
 		  $(addprefix $(SRC_PATH)/,$(TEST_INTERNAL))
@@ -371,29 +672,43 @@ dist-test:
 	mkdir -p $(DIST)/$(TEST_PATH)
 	cp -RPp $(addprefix $(TEST_PATH)/,$(TEST_DFILES)) $(DIST)/$(TEST_PATH)
 
-clean:
+clean: fuzzerclean
 	rm -f *.o core *~ $(T_OBJS)
+
+distclean: clean
+	@rm -f config.log config.status Makefile all_tests.c libxmp-tests* .test .read_test write_test
+
+vc-prepare: $(TEST_PATH)/all_tests.txt
+	@echo Generate Makefile.vc
+	@sed -e 's!@MAINSRCS@!\\\r\n $(subst /,\\,$(MAIN_OBJS:.o=.c \\\r\n))!' \
+	     -e 's!@XMPSRCS@!\\\r\n $(subst .o,.c \\\r\n,$(subst /,\\,$(addprefix $(SRC_PATH)/,$(TEST_INTERNAL))))!' \
+	     Makefile.vc.in > Makefile.vc
 
 #
 # Utilities
 #
 
-utilities: gen_mixer_data
+utilities: gen_mixer_data gen_module_data
 
 gen_mixer_data: gen_mixer_data.o
-	@CMD='$(LD) -o $@ gen_mixer_data.o -L../lib -lxmp'; \
+	@CMD='$(LD) $(LDFLAGS) -o $@ gen_mixer_data.o -L../lib -lxmp'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
-	
+
+gen_module_data: gen_module_data.o util.o ${SRC_PATH}/hio.o ${SRC_PATH}/dataio.o ${SRC_PATH}/memio.o ${SRC_PATH}/md5.o
+	@CMD='$(LD) $(LDFLAGS) -o $@ $^ -L../lib -lxmp $(LIBS)'; \
+	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
+	eval $$CMD
+
 #
 # Run standard tests
 #
 
-check: $(TEST_PATH)/all_tests.c $(TEST_PATH)/libxmp-tests
+check: $(TEST_PATH)/all_tests.c $(TEST_PATH)/all_tests.txt $(TEST_PATH)/libxmp-tests
 	cd $(TEST_PATH); LD_LIBRARY_PATH=../lib DYLD_LIBRARY_PATH=../lib LIBRARY_PATH=../lib:$$LIBRARY_PATH PATH=$$PATH:../lib ./libxmp-tests
 
 $(TEST_PATH)/libxmp-tests: $(T_OBJS)
-	@CMD='$(LD) -o $@ $(T_OBJS) $(LIBS) -L../lib -lxmp'; \
+	@CMD='$(LD) $(LDFLAGS) -o $@ $(T_OBJS) $(LIBS) -L../lib -lxmp'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 
@@ -411,7 +726,7 @@ coverclean:
 	@rm -f $(GCOBJS) ../lib/$(GCLIB)
 
 $(TEST_PATH)/libxmp-covertest: $(GCT_OBJS) ../lib/$(GCLIB)
-	@CMD='$(LD) -o $@ $(LDFLAGS) $(GCT_OBJS) ../lib/$(GCLIB) -lgcov $(LIBS)'; \
+	@CMD='$(LD) $(LDFLAGS) -o $@ $(GCT_OBJS) ../lib/$(GCLIB) -lgcov $(LIBS)'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 
@@ -428,4 +743,72 @@ $(TEST_PATH)/all_tests.c: $(TEST_PATH)/Makefile
 		echo "declare_test($$i);" >> $@; \
 	done
 
+$(TEST_PATH)/all_tests.txt: $(TEST_PATH)/Makefile
+	@$(RM) $@; \
+	for i in $(TEST_NAMES); do \
+		echo "$$i" >> $@; \
+	done
+
 $(addprefix $(SRC_PATH)/,$(TEST_INTERNAL)): $(SRC_PATH)/player.h
+
+#
+# Fuzzers
+#
+
+FUZZLIB_PATH		= .fuzzer
+FUZZ_ASAN_FLAGS		= -O3 -fsanitize=fuzzer,address -fno-omit-frame-pointer -g
+FUZZ_MSAN_FLAGS		= -O3 -fsanitize=fuzzer,memory -fsanitize-memory-track-origins=2 -fno-omit-frame-pointer -g
+FUZZ_UBSAN_FLAGS	= -O3 -fsanitize=fuzzer,undefined -fno-sanitize-recover=all -fno-sanitize=shift-base -fno-omit-frame-pointer -g
+FUZZLIB_ASAN_FLAGS	= $(subst fuzzer,fuzzer-no-link,$(FUZZ_ASAN_FLAGS))
+FUZZLIB_MSAN_FLAGS	= $(subst fuzzer,fuzzer-no-link,$(FUZZ_MSAN_FLAGS))
+FUZZLIB_UBSAN_FLAGS	= $(subst fuzzer,fuzzer-no-link,$(FUZZ_UBSAN_FLAGS))
+
+.PHONY: fuzzers fuzzerclean $(FUZZLIB_PATH)
+
+fuzzers: libxmp_fuzz_asan libxmp_fuzz_msan libxmp_fuzz_ubsan
+
+fuzzerclean:
+	rm -rf $(FUZZLIB_PATH) libxmp_fuzz_asan libxmp_fuzz_msan libxmp_fuzz_ubsan
+
+$(FUZZLIB_PATH):
+	mkdir -p $(FUZZLIB_PATH)
+	cp -r ../configure.ac ../Makefile.in ../libxmp.pc.in ../cmake ../docs ../include ../m4 ../src ../test $(FUZZLIB_PATH)
+
+$(FUZZLIB_PATH)/libxmp-asan.a: $(FUZZLIB_PATH)
+	(cd $(FUZZLIB_PATH) && \
+		autoconf && \
+		CC="clang" CFLAGS="$(FUZZLIB_ASAN_FLAGS)" LDFLAGS="$(FUZZLIB_ASAN_FLAGS)" ./configure && \
+		$(MAKE) static && \
+		cp lib/libxmp.a libxmp-asan.a && \
+		$(MAKE) distclean)
+
+$(FUZZLIB_PATH)/libxmp-msan.a: $(FUZZLIB_PATH) | $(FUZZLIB_PATH)/libxmp-asan.a
+	(cd $(FUZZLIB_PATH) && \
+		autoconf && \
+		CC="clang" CFLAGS="$(FUZZLIB_MSAN_FLAGS)" LDFLAGS="$(FUZZLIB_MSAN_FLAGS)" ./configure && \
+		$(MAKE) static && \
+		cp lib/libxmp.a libxmp-msan.a && \
+		$(MAKE) distclean)
+
+$(FUZZLIB_PATH)/libxmp-ubsan.a: $(FUZZLIB_PATH) | $(FUZZLIB_PATH)/libxmp-msan.a
+	(cd $(FUZZLIB_PATH) && \
+		autoconf && \
+		CC="clang" CFLAGS="$(FUZZLIB_UBSAN_FLAGS)" LDFLAGS="$(FUZZLIB_UBSAN_FLAGS)" ./configure && \
+		$(MAKE) static && \
+		cp lib/libxmp.a libxmp-ubsan.a && \
+		$(MAKE) distclean)
+
+libxmp_fuzz_asan: libxmp_fuzz.c $(FUZZLIB_PATH)/libxmp-asan.a
+	@CMD='$(LD) $(FUZZ_ASAN_FLAGS) -o $@ $< -L$(FUZZLIB_PATH) -lxmp-asan'; \
+	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
+	eval $$CMD
+
+libxmp_fuzz_msan: libxmp_fuzz.c $(FUZZLIB_PATH)/libxmp-msan.a
+	@CMD='$(LD) $(FUZZ_MSAN_FLAGS) -o $@ $< -L$(FUZZLIB_PATH) -lxmp-msan'; \
+	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
+	eval $$CMD
+
+libxmp_fuzz_ubsan: libxmp_fuzz.c $(FUZZLIB_PATH)/libxmp-ubsan.a
+	@CMD='$(LD) $(FUZZ_UBSAN_FLAGS) -o $@ $< -L$(FUZZLIB_PATH) -lxmp-ubsan'; \
+	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
+	eval $$CMD

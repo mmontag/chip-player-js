@@ -1,6 +1,5 @@
 #include "test.h"
 #include "../src/effects.h"
-#include <math.h>
 
 /*
 Periodtable for Tuning 0, Normal
@@ -10,8 +9,6 @@ Periodtable for Tuning 0, Normal
 
 Amiga limits: 907 to 108
 */
-
-#define PERIOD ((int)round(1.0 * info.channel_info[0].period / 4096))
 
 TEST(test_effect_persistent_slide)
 {
@@ -33,10 +30,7 @@ TEST(test_effect_persistent_slide)
 
 	for (i = 0; i < 80; i++) {
 		k = 856 - i * 10;
-		xmp_play_frame(opaque);
-		xmp_get_frame_info(opaque, &info);
-		fail_unless(PERIOD == k, "slide error (frame 0)");
-		for (j = 0; j < 5; j++) {
+		for (j = 0; j < 6; j++) {
 			xmp_play_frame(opaque);
 			xmp_get_frame_info(opaque, &info);
 			fail_unless(PERIOD == k - j * 2, "slide up error");
@@ -49,14 +43,14 @@ TEST(test_effect_persistent_slide)
 
 	for (i = 0; i < 80; i++) {
 		k = 113 + i * 10;
-		xmp_play_frame(opaque);
-		xmp_get_frame_info(opaque, &info);
-		fail_unless(PERIOD == k, "slide error (frame 0)");
-		for (j = 0; j < 5; j++) {
+		for (j = 0; j < 6; j++) {
 			xmp_play_frame(opaque);
 			xmp_get_frame_info(opaque, &info);
 			fail_unless(PERIOD == k + j * 2, "slide down error");
 		}
 	}
+
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

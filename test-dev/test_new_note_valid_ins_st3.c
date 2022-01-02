@@ -74,5 +74,8 @@ TEST(test_new_note_valid_ins_st3)
 	fail_unless(vi->vol  == 33 * 16, "not new instrument volume");
 	fail_unless(vi->pos0 ==  0, "sample didn't reset");
 	xmp_play_frame(opaque);
+
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

@@ -1,6 +1,68 @@
 Stable versions
 ---------------
 
+4.5.0 (20210606):
+	- fix xmp_set_position et al. when used during loops, pattern delay
+	- make xmp_set_position() consistently clear pattern break/jump vars
+	- xmp_get_format_list() now returns const char* const*, not char**
+	  (no ABI change)
+	- xmp_test_module, xmp_load_module, xmp_set_instrument_path and
+	  xmp_smix_load_sample() now accept const char* path parameters
+	  (no ABI change)
+	- xmp_load_module_from_memory() now accepts a const void* memory
+	  param (no ABI change)
+	- xmp_load_module_from_memory no longer accepts sizes <= 0.
+	- explicitly document that callers of xmp_load_module_from_file()
+	  are responsible for closing their own file.
+	- remove nonportable use of fdopen in xmp_load_module_from_file()
+	- fix a seek issue with xmp_load_module_from_memory
+	- fix memory-io functions' error handling
+	- fix event out-of-bounds reads due to invalid key values
+	- fix multiple out-of-bounds reads/writes, memory corruptions,
+	  uninitialized reads and hangs in several loaders (thanks to
+	  Lionel Debroux for providing fuzz files)
+	- fix xmp_release_module double frees when invoked multiple times
+	- fix tempo assignment in module scan (fixes seek issues/crashes)
+	- fix volume, pitch and pan slides lagging behind one frame
+	- fix lite build mod loader symbols
+	- add new xmp_set_row() call to skip replay to the given row
+	- add new xmp_set_tempo_factor() call to set the replay tempo
+	  multiplier
+	- add xmp_test_module_from_memory and xmp_test_module_from_file
+	  calls to api
+	- add new xmp_syserrno call to the api
+	- xmp_load_module_from_callbacks and xmp_test_module_from_callbacks
+	  added to api
+	- fix IT pattern delay volume reset bug (read row events only
+	  once per row)
+	- IT: T00 now repeats previous slide
+	- prevent clobbering of muted channels' volumes in IT modules
+	- clamp number of IT envelope nodes at load time
+	- fix IT message (comment) length miscalculation
+	- fix IT volume panning effect
+	- fix IT bug where Cxx on same row as SBx would not be ignored
+	- fix IT bug where Qxy would ignore the volume parameter
+	- fix IT sample global volume and sample vibrato
+	- fix two IT bugs related to note off and volume handling
+	- fix mute status on player creation
+	- fix loading of XMLiTE XM modules
+	- fix XM keyoff with instrument
+	- handle XM 16-bit samples with odd in-file data
+	- fix loading xm instruments with more than 16 samples
+	- fix smix sample allocation
+	- force reset of buffer state on player start
+	- code refactoring and cleanup
+	- fix windows static library builds
+	- fix build with C89 compilers
+	- fix issues related to visibility attributes
+	- fix compatibility with old gcc, mingw, djgpp
+	- fix warnings in configure script
+	- fix Watcom C build on OS/2
+	- support compiling for Windows with OpenWatcom
+	- fix Amiga build
+	- fix Emscripten builds
+	- fix linkage errors with MSVC debug builds
+
 4.4.1 (20161012):
 	- fix MacOS Tiger build issues (reported by Misty De Meo)
 	- fix sample loop corner case (reported by knight-ryu12)
@@ -274,7 +336,7 @@ Stable versions
 	- minor Visual C++ port fixes
 	- add Visual C++ nmake Makefile
 	- fix double free in module loaded from memory (by Arnaud Troël)
-	- fix Win64 portability issues (reported by Ozkan Sezer)
+	- fix Win64 portability issues (reported by Özkan Sezer)
 	- fix IT tempo slide effect
 	- generate Android NDK static libraries
 

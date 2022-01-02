@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -31,12 +31,11 @@
  * - Mod's Grave M.K. w/ 8 channels (WOW)
  * - Atari Octalyser CD61 and CD81
  * - Digital Tracker FA04, FA06 and FA08
- * - TakeTracker TDZ4
- * - (unknown) NSMS
+ * - TakeTracker TDZ1, TDZ2, TDZ3, and TDZ4
+ * - (unknown) NSMS, LARD
  */
 
 #include <ctype.h>
-#include <limits.h>
 #include "loader.h"
 #include "mod.h"
 
@@ -76,12 +75,15 @@ const struct mod_magic mod_magic[] = {
 	{"8CHN", 0, TRACKER_FASTTRACKER, 8},
 	{"CD61", 1, TRACKER_OCTALYSER, 6},	/* Atari STe/Falcon */
 	{"CD81", 1, TRACKER_OCTALYSER, 8},	/* Atari STe/Falcon */
+	{"TDZ1", 1, TRACKER_TAKETRACKER, 1},	/* TakeTracker 1ch */
+	{"TDZ2", 1, TRACKER_TAKETRACKER, 2},	/* TakeTracker 2ch */
+	{"TDZ3", 1, TRACKER_TAKETRACKER, 3},	/* TakeTracker 3ch */
 	{"TDZ4", 1, TRACKER_TAKETRACKER, 4},	/* see XModule SaveTracker.c */
 	{"FA04", 1, TRACKER_DIGITALTRACKER, 4},	/* Atari Falcon */
 	{"FA06", 1, TRACKER_DIGITALTRACKER, 6},	/* Atari Falcon */
 	{"FA08", 1, TRACKER_DIGITALTRACKER, 8},	/* Atari Falcon */
+	{"LARD", 1, TRACKER_UNKNOWN, 4},	/* in judgement_day_gvine.mod */
 	{"NSMS", 1, TRACKER_UNKNOWN, 4},	/* in Kingdom.mod */
-	{"", 0}
 };
 
 static int mod_test(HIO_HANDLE *, char *, const int);
@@ -118,37 +120,40 @@ static int mod_test(HIO_HANDLE * f, char *t, const int start)
 	int smp_size, num_pat;
 	long size;
 	int count;
+	int detected;
 
 	hio_seek(f, start + 1080, SEEK_SET);
 	if (hio_read(buf, 1, 4, f) < 4) {
 		return -1;
 	}
 
-	if (!strncmp(buf + 2, "CH", 2) && isdigit((int)buf[0])
-	    && isdigit((int)buf[1])) {
+	if (!strncmp(buf + 2, "CH", 2) &&
+	    isdigit((unsigned char)buf[0]) && isdigit((unsigned char)buf[1])) {
 		i = (buf[0] - '0') * 10 + buf[1] - '0';
 		if (i > 0 && i <= 32) {
 			goto found;
 		}
 	}
 
-	if (!strncmp(buf + 1, "CHN", 3) && isdigit((int)*buf)) {
+	if (!strncmp(buf + 1, "CHN", 3) && isdigit((unsigned char)*buf)) {
 		if (*buf - '0') {
 			goto found;
 		}
 	}
 
-	for (i = 0; mod_magic[i].ch; i++) {
+	for (i = 0; i < ARRAY_SIZE(mod_magic); i++) {
 		if (!memcmp(buf, mod_magic[i].magic, 4))
 			break;
 	}
-	if (mod_magic[i].ch == 0) {
+	if (i >= ARRAY_SIZE(mod_magic)) {
 		return -1;
 	}
 
+	detected = mod_magic[i].flag;
+
 	/*
 	 * Sanity check to prevent loading NoiseRunner and other module
-	 * formats with valid magic at offset 1080
+	 * formats with valid magic at offset 1080 (e.g. His Master's Noise)
 	 */
 
 	hio_seek(f, start + 20, SEEK_SET);
@@ -169,6 +174,11 @@ static int mod_test(HIO_HANDLE * f, char *t, const int start)
 		hio_read16b(f);	/* loop start */
 		hio_read16b(f);	/* loop size */
 	}
+
+	/* The following checks are only relevant for filtering out atypical
+	 * M.K. variants. If the magic is from a recognizable source, skip them. */
+	if (detected)
+		goto found;
 
 	/* Test for UNIC tracker modules
 	 *
@@ -212,7 +222,10 @@ static int mod_test(HIO_HANDLE * f, char *t, const int start)
 	/* validate pattern data in an attempt to catch UNICs with MOD size */
 	for (count = i = 0; i < num_pat; i++) {
 		hio_seek(f, start + 1084 + 1024 * i, SEEK_SET);
-		hio_read(pat_buf, 1024, 1, f);
+		if (!hio_read(pat_buf, 1024, 1, f)) {
+			D_(D_WARN "pattern %d: failed to read pattern data", i);
+			return -1;
+		}
 		if (validate_pattern(pat_buf) < 0) {
 			D_(D_WARN "pattern %d: error in pattern data", i);
 			/* Allow a few errors, "lexstacy" has 0x52 */
@@ -239,7 +252,7 @@ static int is_st_ins(char *s)
 		return 0;
 	if (s[2] != '-' || s[5] != ':')
 		return 0;
-	if (!isdigit((int)s[3]) || !isdigit((int)s[4]))
+	if (!isdigit((unsigned char)s[3]) || !isdigit((unsigned char)s[4]))
 		return 0;
 
 	return 1;
@@ -357,8 +370,8 @@ static int get_tracker_id(struct module_data *m, struct mod_header *mh, int id)
 		}
 	} else { /* Has loops with size 0 */
 		for (i = 15; i < 31; i++) {
-			if (strlen((char *)mh->ins[i].name)
-			    || mh->ins[i].size > 0)
+			/* Is the name or size set? */
+			if (mh->ins[i].name[0] || mh->ins[i].size > 0)
 				break;
 		}
 		if (i == 31 && is_st_ins((char *)mh->ins[14].name)) {
@@ -387,18 +400,18 @@ static int get_tracker_id(struct module_data *m, struct mod_header *mh, int id)
 static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
-    int i, j;
+    int i, j, k;
     int smp_size, ptsong = 0;
     struct xmp_event *event;
     struct mod_header mh;
-    uint8 mod_event[4];
-    char pathname[PATH_MAX] = "";
-    const char *x, *tracker = "";
+    const char *tracker = "";
     int detected = 0;
     char magic[8], idbuffer[32];
     int ptkloop = 0;			/* Protracker loop */
     int tracker_id = TRACKER_PROTRACKER;
     int out_of_range = 0;
+    int maybe_wow = 1;
+    uint8 *patbuf;
 
     LOAD_INIT();
 
@@ -410,27 +423,39 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     m->period_type = PERIOD_MODRNG;
 
-    hio_read(&mh.name, 20, 1, f);
+    hio_read(mh.name, 20, 1, f);
     for (i = 0; i < 31; i++) {
-	hio_read(&mh.ins[i].name, 22, 1, f);	/* Instrument name */
+	hio_read(mh.ins[i].name, 22, 1, f);	/* Instrument name */
 	mh.ins[i].size = hio_read16b(f);	/* Length in 16-bit words */
 	mh.ins[i].finetune = hio_read8(f);	/* Finetune (signed nibble) */
 	mh.ins[i].volume = hio_read8(f);	/* Linear playback volume */
 	mh.ins[i].loop_start = hio_read16b(f);	/* Loop start in 16-bit words */
 	mh.ins[i].loop_size = hio_read16b(f);	/* Loop size in 16-bit words */
 
+	/* Mod's Grave WOW files are converted from 669s and have default
+	 * finetune and volume.
+	 */
+	if (mh.ins[i].size && (mh.ins[i].finetune != 0 || mh.ins[i].volume != 64))
+	    maybe_wow = 0;
+
 	smp_size += 2 * mh.ins[i].size;
     }
     mh.len = hio_read8(f);
     mh.restart = hio_read8(f);
-    hio_read(&mh.order, 128, 1, f);
-    memset(magic, 0, 8);
+    hio_read(mh.order, 128, 1, f);
+    memset(magic, 0, sizeof(magic));
     hio_read(magic, 1, 4, f);
     if (hio_error(f)) {
         return -1;
     }
 
-    for (i = 0; mod_magic[i].ch; i++) {
+    /* Mod's Grave WOW files always have a 0 restart byte; 6692WOW implements
+     * 669 repeating by inserting a pattern jump and ignores this byte.
+     */
+    if (mh.restart != 0)
+	maybe_wow = 0;
+
+    for (i = 0; i < ARRAY_SIZE(mod_magic); i++) {
 	if (!(strncmp (magic, mod_magic[i].magic, 4))) {
 	    mod->chn = mod_magic[i].ch;
 	    tracker_id = mod_magic[i].id;
@@ -441,9 +466,9 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     if (mod->chn == 0) {
 	if (!strncmp(magic + 2, "CH", 2) &&
-	    isdigit((int)magic[0]) && isdigit((int)magic[1])) {
+	    isdigit((unsigned char)magic[0]) && isdigit((unsigned char)magic[1])) {
 	    mod->chn = (*magic - '0') * 10 + magic[1] - '0';
-	} else if (!strncmp(magic + 1, "CHN", 3) && isdigit((int)*magic)) {
+	} else if (!strncmp(magic + 1, "CHN", 3) && isdigit((unsigned char)*magic)) {
 	    mod->chn = *magic - '0';
 	} else {
 	    return -1;
@@ -511,9 +536,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
     }
 
-    /*
-     * Experimental tracker-detection routine
-     */ 
+    /* Experimental tracker-detection routine */
 
     if (detected)
 	goto skip_test;
@@ -530,14 +553,15 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     if (0x43c + mod->pat * 4 * mod->chn * 0x40 + smp_size < m->size) {
 	int pos = hio_tell(f);
+	int num_read;
         if (pos < 0) {
            return -1;
         }
 	hio_seek(f, start + 0x43c + mod->pat * 4 * mod->chn * 0x40 + smp_size, SEEK_SET);
-	hio_read(idbuffer, 1, 4, f);
+	num_read = hio_read(idbuffer, 1, 4, f);
 	hio_seek(f, start + pos, SEEK_SET);
 
-	if (!memcmp(idbuffer, "FLEX", 4)) {
+	if (num_read == 4 && !memcmp(idbuffer, "FLEX", 4)) {
 	    tracker_id = TRACKER_FLEXTRAX;
 	    goto skip_test;
 	}
@@ -547,25 +571,34 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
      *
      * Stefan Danes <sdanes@marvels.hacktic.nl> said:
      * This weird format is identical to '8CHN' but still uses the 'M.K.' ID.
-     * You can only test for WOW by calculating the size of the module for 8 
-     * channels and comparing this to the actual module length. If it's equal, 
+     * You can only test for WOW by calculating the size of the module for 8
+     * channels and comparing this to the actual module length. If it's equal,
      * the module is an 8 channel WOW.
+     *
+     * Addendum: very rarely, WOWs will have an odd length due to an extra byte,
+     * so round the filesize down in this check. False positive WOWs can be ruled
+     * out by checking the restart byte and sample volume (see above).
+     *
+     * Worst case if there are still issues with this, OpenMPT validates later
+     * patterns in potential WOW files (where sample data would be located in a
+     * regular M.K. MOD) to rule out false positives.
      */
 
-    if ((!strncmp(magic, "M.K.", 4) &&
-		(0x43c + mod->pat * 32 * 0x40 + smp_size == m->size))) {
+    if (!strncmp(magic, "M.K.", 4) && maybe_wow &&
+		(0x43c + mod->pat * 32 * 0x40 + smp_size) == (m->size & ~1)) {
 	mod->chn = 8;
 	tracker_id = TRACKER_MODSGRAVE;
-    }
-    /* Test for Protracker song files */
-    else if ((ptsong = (!strncmp((char *)magic, "M.K.", 4) &&
-		(0x43c + mod->pat * 0x400 == m->size)))) {
-	tracker_id = TRACKER_PROTRACKER;
-	goto skip_test;
-    }
-    /* something else */
-    else {
-        tracker_id = get_tracker_id(m, &mh, tracker_id);
+    } else {
+	/* Test for Protracker song files */
+	ptsong = !strncmp((char *)magic, "M.K.", 4) &&
+		 (0x43c + mod->pat * 0x400 == m->size);
+	if (ptsong) {
+		tracker_id = TRACKER_PROTRACKER;
+		goto skip_test;
+	} else {
+	/* something else */
+		tracker_id = get_tracker_id(m, &mh, tracker_id);
+	}
     }
 
 skip_test:
@@ -575,6 +608,12 @@ skip_test:
     }
 
     mod->trk = mod->chn * mod->pat;
+
+    /* Digital Tracker MODs have an extra four bytes after the magic.
+     * These are always 00h 40h 00h 00h and can probably be ignored. */
+    if (tracker_id == TRACKER_DIGITALTRACKER) {
+	hio_read32b(f);
+    }
 
     for (i = 0; i < mod->ins; i++) {
 	D_(D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %+d %c",
@@ -593,69 +632,79 @@ skip_test:
     /* Load and convert patterns */
     D_(D_INFO "Stored patterns: %d", mod->pat);
 
+    if ((patbuf = (uint8 *) malloc(64 * 4 * mod->chn)) == NULL) {
+	return -1;
+    }
+
     for (i = 0; i < mod->pat; i++) {
-	long pos;
+	uint8 *mod_event;
 
-	if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
+	if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0) {
+	    free(patbuf);
 	    return -1;
-
-	pos = hio_tell(f);
-	if (pos < 0) {
-		return -1;
 	}
 
-	for (j = 0; j < (64 * mod->chn); j++) {
-            int period;
+	if (hio_read(patbuf, 64 * 4 * mod->chn, 1, f) < 1) {
+	    free(patbuf);
+	    return -1;
+	}
 
-	    event = &EVENT(i, j % mod->chn, j / mod->chn);
-	    hio_read(mod_event, 1, 4, f);
+	mod_event = patbuf;
+	for (j = 0; j < 64; j++) {
+	    for (k = 0; k < mod->chn; k++) {
+		int period;
 
-	    period = ((int)(LSN(mod_event[0])) << 8) | mod_event[1];
-	    if (period != 0 && (period < 108 || period > 907)) {
-		out_of_range = 1;
-	    }
-
-	    /* Filter noisetracker events */
-	    if (tracker_id == TRACKER_PROBABLY_NOISETRACKER) {
-		unsigned char fxt = LSN(mod_event[2]);
-		unsigned char fxp = LSN(mod_event[3]);
-
-        	if ((fxt > 0x06 && fxt < 0x0a) || (fxt == 0x0e && fxp > 1)) {
-		    tracker_id = TRACKER_UNKNOWN;
+		period = ((int)(LSN(mod_event[0])) << 8) | mod_event[1];
+		if (period != 0 && (period < 108 || period > 907)) {
+		    out_of_range = 1;
 		}
+
+		/* Filter noisetracker events */
+		if (tracker_id == TRACKER_PROBABLY_NOISETRACKER) {
+		    unsigned char fxt = LSN(mod_event[2]);
+		    unsigned char fxp = LSN(mod_event[3]);
+
+		    if ((fxt > 0x06 && fxt < 0x0a) || (fxt == 0x0e && fxp > 1)) {
+			tracker_id = TRACKER_UNKNOWN;
+		    }
+		}
+		mod_event += 4;
 	    }
 	}
 
-        if (out_of_range) {
-            if (tracker_id == TRACKER_UNKNOWN && mh.restart == 0x7f) {
-	        tracker_id = TRACKER_SCREAMTRACKER3;
-            }
+	if (out_of_range) {
+	    if (tracker_id == TRACKER_UNKNOWN && mh.restart == 0x7f) {
+		tracker_id = TRACKER_SCREAMTRACKER3;
+	    }
 
 	    /* Check out-of-range notes in Amiga trackers */
-            if (tracker_id == TRACKER_PROTRACKER ||
-                    tracker_id == TRACKER_NOISETRACKER ||
-                    tracker_id == TRACKER_PROBABLY_NOISETRACKER ||
-                    tracker_id == TRACKER_SOUNDTRACKER) {   /* note > B-3 */
-                tracker_id = TRACKER_UNKNOWN;
-            }
-        }
+	    if (tracker_id == TRACKER_PROTRACKER ||
+		tracker_id == TRACKER_NOISETRACKER ||
+		tracker_id == TRACKER_PROBABLY_NOISETRACKER ||
+		tracker_id == TRACKER_SOUNDTRACKER) {   /* note > B-3 */
 
-	hio_seek(f, pos, SEEK_SET);
+		tracker_id = TRACKER_UNKNOWN;
+	    }
+	}
 
-	for (j = 0; j < (64 * mod->chn); j++) {
-	    event = &EVENT(i, j % mod->chn, j / mod->chn);
-	    hio_read(mod_event, 1, 4, f);
+	mod_event = patbuf;
+	for (j = 0; j < 64; j++) {
+	    for (k = 0; k < mod->chn; k++) {
+		event = &EVENT(i, k, j);
 
-	    switch (tracker_id) {
-	    case TRACKER_PROBABLY_NOISETRACKER:
-	    case TRACKER_NOISETRACKER:
-	    	libxmp_decode_noisetracker_event(event, mod_event);
-		break;
-	    default:	
-	        libxmp_decode_protracker_event(event, mod_event);
+		switch (tracker_id) {
+		case TRACKER_PROBABLY_NOISETRACKER:
+		case TRACKER_NOISETRACKER:
+		    libxmp_decode_noisetracker_event(event, mod_event);
+		    break;
+		default:
+		    libxmp_decode_protracker_event(event, mod_event);
+		}
+		mod_event += 4;
 	    }
 	}
     }
+    free(patbuf);
 
     switch (tracker_id) {
     case TRACKER_PROTRACKER:
@@ -728,11 +777,7 @@ skip_test:
 
     MODULE_INFO();
 
-
     /* Load samples */
-
-    if (m->filename && (x = strrchr(m->filename, '/')))
-	strncpy(pathname, m->filename, x - m->filename);
 
     D_(D_INFO "Stored samples: %d", mod->smp);
 
@@ -746,10 +791,19 @@ skip_test:
 
 	if (ptsong) {
 	    HIO_HANDLE *s;
-	    char sn[256];
-	    snprintf(sn, XMP_NAME_SIZE, "%s%s", pathname, mod->xxi[i].name);
-	
-	    if ((s = hio_open(sn, "rb"))) {
+	    char sn[XMP_MAXPATH];
+	    char tmpname[32];
+	    const char *instname = mod->xxi[i].name;
+
+	    if (!instname[0] || !m->dirname)
+		continue;
+
+	    if (libxmp_copy_name_for_fopen(tmpname, instname, 32))
+		continue;
+
+	    snprintf(sn, XMP_MAXPATH, "%s%s", m->dirname, tmpname);
+
+	    if ((s = hio_open(sn, "rb")) != NULL) {
 	        if (libxmp_load_sample(m, s, flags, &mod->xxs[i], NULL) < 0) {
 		    hio_close(s);
 		    return -1;
@@ -758,13 +812,13 @@ skip_test:
 	    }
 	} else {
 	    uint8 buf[5];
-            long pos;
-            int num;
+	    long pos;
+	    int num;
 
 	    if ((pos = hio_tell(f)) < 0) {
-                return -1;
-            }
-            num = hio_read(buf, 1, 5, f);
+		return -1;
+	    }
+	    num = hio_read(buf, 1, 5, f);
 
 	    if (num == 5 && !memcmp(buf, "ADPCM", 5)) {
 		flags |= SAMPLE_FLAG_ADPCM;

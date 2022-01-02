@@ -3,10 +3,10 @@
 
 TEST(test_depack_vorbis)
 {
-	FILE *f;
-	struct stat st;
 	int i, ret;
-	int16 *buf, *pcm16;
+	void *buf;
+	int16 *pcm16;
+	long size;
 	xmp_context c;
 	struct xmp_module_info info;
 
@@ -19,22 +19,21 @@ TEST(test_depack_vorbis)
 	xmp_start_player(c, 44100, 0);
 	xmp_get_module_info(c, &info);
 
-	stat("data/beep.raw", &st);
-	f = fopen("data/beep.raw", "rb");
-	fail_unless(f != NULL, "can't open raw data file");
-
-	buf = malloc(st.st_size);
-	fail_unless(buf != NULL, "can't alloc raw buffer");
-	fread(buf, 1, st.st_size, f);
-	fclose(f);
+	read_file_to_memory("data/beep.raw", &buf, &size);
+	fail_unless(buf != NULL, "can't open raw data file");
 
 	pcm16 = (int16 *)info.mod->xxs[0].data;
-
-	for (i = 0; i < (9376 / 2); i++) {
-		if (pcm16[i] != buf[i])
-			fail_unless(abs(pcm16[i] - buf[i]) <= 1, "data error");
+	if (is_big_endian()) { /* convert little-endian to host-endian */
+		convert_endian((unsigned char *)buf, size / 2);
 	}
 
+	for (i = 0; i < (9376 / 2); i++) {
+		if (pcm16[i] != ((int16 *)buf)[i])
+			fail_unless(abs(pcm16[i] - ((int16 *)buf)[i]) <= 1, "data error");
+	}
 
+	xmp_release_module(c);
+	xmp_free_context(c);
+	free(buf);
 }
 END_TEST

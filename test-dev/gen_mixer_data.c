@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include "../include/xmp.h"
 #include "../src/common.h"
 #include "../src/mixer.h"

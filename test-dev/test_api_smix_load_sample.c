@@ -4,14 +4,9 @@
 TEST(test_api_smix_load_sample)
 {
 	xmp_context opaque;
-	struct context_data *ctx;
-	struct player_data *p;
-	struct mixer_voice *vi;
-	int voc, ret;
+	int ret;
 
 	opaque = xmp_create_context();
-	ctx = (struct context_data *)opaque;
-	p = &ctx->p;
 
 	ret = xmp_load_module(opaque, "data/mod.loving_is_easy.pp");
 	fail_unless(ret == 0, "load module");
@@ -29,7 +24,7 @@ TEST(test_api_smix_load_sample)
 	/* try to load non-existant file */
 	ret = xmp_smix_load_sample(opaque, 0, "doesnt.exist");
 	fail_unless(ret == -XMP_ERROR_SYSTEM, "sample doesn't exist");
-	fail_unless(errno == ENOENT, "errno");
+	fail_unless(xmp_syserrno() == ENOENT, "errno");
 
 	/* try to load sample with invalid format */
         ret = xmp_smix_load_sample(opaque, 1, "data/mod.loving_is_easy.pp");
@@ -45,5 +40,6 @@ TEST(test_api_smix_load_sample)
 	xmp_smix_release_sample(opaque, 0);
 
 	xmp_end_smix(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

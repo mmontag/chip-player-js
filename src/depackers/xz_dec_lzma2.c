@@ -2,7 +2,7 @@
  * LZMA2 decoder
  *
  * Authors: Lasse Collin <lasse.collin@tukaani.org>
- *          Igor Pavlov <http://7-zip.org/>
+ *          Igor Pavlov <https://7-zip.org/>
  *
  * This file has been put into the public domain.
  * You can do whatever you want with this file.
@@ -137,7 +137,7 @@ struct lzma_dec {
 	uint32 rep3;
 
 	/* Types of the most recently seen LZMA symbols */
-	enum lzma_state state;
+	lzma_state_t state;
 
 	/*
 	 * Length of a match. This is updated so that dict_repeat can
@@ -211,19 +211,21 @@ struct lzma_dec {
 	uint16 literal[LITERAL_CODERS_MAX][LITERAL_CODER_SIZE];
 };
 
+enum lzma2_seq {
+	SEQ_CONTROL,
+	SEQ_UNCOMPRESSED_1,
+	SEQ_UNCOMPRESSED_2,
+	SEQ_COMPRESSED_0,
+	SEQ_COMPRESSED_1,
+	SEQ_PROPERTIES,
+	SEQ_LZMA_PREPARE,
+	SEQ_LZMA_RUN,
+	SEQ_COPY
+};
+
 struct lzma2_dec {
 	/* Position in xz_dec_lzma2_run(). */
-	enum lzma2_seq {
-		SEQ_CONTROL,
-		SEQ_UNCOMPRESSED_1,
-		SEQ_UNCOMPRESSED_2,
-		SEQ_COMPRESSED_0,
-		SEQ_COMPRESSED_1,
-		SEQ_PROPERTIES,
-		SEQ_LZMA_PREPARE,
-		SEQ_LZMA_RUN,
-		SEQ_COPY
-	} sequence;
+	enum lzma2_seq sequence;
 
 	/* Next position after decoding the compressed size of the chunk. */
 	enum lzma2_seq next_sequence;
@@ -241,13 +243,13 @@ struct lzma2_dec {
 	 * True if dictionary reset is needed. This is false before
 	 * the first chunk (LZMA or uncompressed).
 	 */
-	bool need_dict_reset;
+	xz_bool need_dict_reset;
 
 	/*
 	 * True if new LZMA properties are needed. This is false
 	 * before the first LZMA chunk.
 	 */
-	bool need_props;
+	xz_bool need_props;
 };
 
 struct xz_dec_lzma2 {
@@ -306,7 +308,7 @@ static void dict_limit(struct dictionary *dict, size_t out_max)
 }
 
 /* Return true if at least one byte can be written into the dictionary. */
-static inline bool dict_has_space(const struct dictionary *dict)
+static inline xz_bool dict_has_space(const struct dictionary *dict)
 {
 	return dict->pos < dict->limit;
 }
@@ -343,13 +345,13 @@ static inline void dict_put(struct dictionary *dict, uint8 byte)
  * invalid, false is returned. On success, true is returned and *len is
  * updated to indicate how many bytes were left to be repeated.
  */
-static bool dict_repeat(struct dictionary *dict, uint32 *len, uint32 dist)
+static xz_bool dict_repeat(struct dictionary *dict, uint32 *len, uint32 dist)
 {
 	size_t back;
 	uint32 left;
 
 	if (dist >= dict->full || dist >= dict->size)
-		return false;
+		return xz_false;
 
 	left = min_t(size_t, dict->limit - dict->pos, *len);
 	*len -= left;
@@ -367,7 +369,7 @@ static bool dict_repeat(struct dictionary *dict, uint32 *len, uint32 dist)
 	if (dict->full < dict->pos)
 		dict->full = dict->pos;
 
-	return true;
+	return xz_true;
 }
 
 /* Copy uncompressed data as is from input to dictionary and output buffers. */
@@ -387,7 +389,14 @@ static void dict_uncompressed(struct dictionary *dict, struct xz_buf *b,
 
 		*left -= copy_size;
 
-		memcpy(dict->buf + dict->pos, b->in + b->in_pos, copy_size);
+		/*
+		 * If doing in-place decompression in single-call mode and the
+		 * uncompressed size of the file is larger than the caller
+		 * thought (i.e. it is invalid input!), the buffers below may
+		 * overlap and cause undefined behavior with memcpy().
+		 * With valid inputs memcpy() would be fine here.
+		 */
+		memmove(dict->buf + dict->pos, b->in + b->in_pos, copy_size);
 		dict->pos += copy_size;
 
 		if (dict->full < dict->pos)
@@ -397,7 +406,11 @@ static void dict_uncompressed(struct dictionary *dict, struct xz_buf *b,
 			if (dict->pos == dict->end)
 				dict->pos = 0;
 
-			memcpy(b->out + b->out_pos, b->in + b->in_pos,
+			/*
+			 * Like above but for multi-call mode: use memmove()
+			 * to avoid undefined behavior with invalid input.
+			 */
+			memmove(b->out + b->out_pos, b->in + b->in_pos,
 					copy_size);
 		}
 
@@ -421,6 +434,12 @@ static uint32 dict_flush(struct dictionary *dict, struct xz_buf *b)
 		if (dict->pos == dict->end)
 			dict->pos = 0;
 
+		/*
+		 * These buffers cannot overlap even if doing in-place
+		 * decompression because in multi-call mode dict->buf
+		 * has been allocated by us in this file; it's not
+		 * provided by the caller like in single-call mode.
+		 */
 		memcpy(b->out + b->out_pos, dict->buf + dict->start,
 				copy_size);
 	}
@@ -446,21 +465,21 @@ static void rc_reset(struct rc_dec *rc)
  * Read the first five initial bytes into rc->code if they haven't been
  * read already. (Yes, the first byte gets completely ignored.)
  */
-static bool rc_read_init(struct rc_dec *rc, struct xz_buf *b)
+static xz_bool rc_read_init(struct rc_dec *rc, struct xz_buf *b)
 {
 	while (rc->init_bytes_left > 0) {
 		if (b->in_pos == b->in_size)
-			return false;
+			return xz_false;
 
 		rc->code = (rc->code << 8) + b->in[b->in_pos++];
 		--rc->init_bytes_left;
 	}
 
-	return true;
+	return xz_true;
 }
 
 /* Return true if there may not be enough input for the next decoding loop. */
-static inline bool rc_limit_exceeded(const struct rc_dec *rc)
+static inline xz_bool rc_limit_exceeded(const struct rc_dec *rc)
 {
 	return rc->in_pos > rc->in_limit;
 }
@@ -469,7 +488,7 @@ static inline bool rc_limit_exceeded(const struct rc_dec *rc)
  * Return true if it is possible (from point of view of range decoder) that
  * we have reached the end of the LZMA chunk.
  */
-static inline bool rc_is_finished(const struct rc_dec *rc)
+static inline xz_bool rc_is_finished(const struct rc_dec *rc)
 {
 	return rc->code == 0;
 }
@@ -719,7 +738,7 @@ static void lzma_rep_match(struct xz_dec_lzma2 *s, uint32 pos_state)
 }
 
 /* LZMA decoder core */
-static bool lzma_main(struct xz_dec_lzma2 *s)
+static xz_bool lzma_main(struct xz_dec_lzma2 *s)
 {
 	uint32 pos_state;
 
@@ -747,7 +766,7 @@ static bool lzma_main(struct xz_dec_lzma2 *s)
 				lzma_match(s, pos_state);
 
 			if (!dict_repeat(&s->dict, &s->lzma.len, s->lzma.rep0))
-				return false;
+				return xz_false;
 		}
 	}
 
@@ -757,7 +776,7 @@ static bool lzma_main(struct xz_dec_lzma2 *s)
 	 */
 	rc_normalize(&s->rc);
 
-	return true;
+	return xz_true;
 }
 
 /*
@@ -796,10 +815,10 @@ static void lzma_reset(struct xz_dec_lzma2 *s)
  * from the decoded lp and pb values. On success, the LZMA decoder state is
  * reset and true is returned.
  */
-static bool lzma_props(struct xz_dec_lzma2 *s, uint8 props)
+static xz_bool lzma_props(struct xz_dec_lzma2 *s, uint8 props)
 {
 	if (props > (4 * 5 + 4) * 9 + 8)
-		return false;
+		return xz_false;
 
 	s->lzma.pos_mask = 0;
 	while (props >= 9 * 5) {
@@ -818,13 +837,13 @@ static bool lzma_props(struct xz_dec_lzma2 *s, uint8 props)
 	s->lzma.lc = props;
 
 	if (s->lzma.lc + s->lzma.literal_pos_mask > 4)
-		return false;
+		return xz_false;
 
 	s->lzma.literal_pos_mask = (1 << s->lzma.literal_pos_mask) - 1;
 
 	lzma_reset(s);
 
-	return true;
+	return xz_true;
 }
 
 /*********
@@ -843,7 +862,7 @@ static bool lzma_props(struct xz_dec_lzma2 *s, uint8 props)
  * function. We decode a few bytes from the temporary buffer so that we can
  * continue decoding from the caller-supplied input buffer again.
  */
-static bool lzma2_lzma(struct xz_dec_lzma2 *s, struct xz_buf *b)
+static xz_bool lzma2_lzma(struct xz_dec_lzma2 *s, struct xz_buf *b)
 {
 	size_t in_avail;
 	uint32 tmp;
@@ -866,7 +885,7 @@ static bool lzma2_lzma(struct xz_dec_lzma2 *s, struct xz_buf *b)
 		} else if (s->temp.size + tmp < LZMA_IN_REQUIRED) {
 			s->temp.size += tmp;
 			b->in_pos += tmp;
-			return true;
+			return xz_true;
 		} else {
 			s->rc.in_limit = s->temp.size + tmp - LZMA_IN_REQUIRED;
 		}
@@ -875,7 +894,7 @@ static bool lzma2_lzma(struct xz_dec_lzma2 *s, struct xz_buf *b)
 		s->rc.in_pos = 0;
 
 		if (!lzma_main(s) || s->rc.in_pos > s->temp.size + tmp)
-			return false;
+			return xz_false;
 
 		s->lzma2.compressed -= s->rc.in_pos;
 
@@ -883,7 +902,7 @@ static bool lzma2_lzma(struct xz_dec_lzma2 *s, struct xz_buf *b)
 			s->temp.size -= s->rc.in_pos;
 			memmove(s->temp.buf, s->temp.buf + s->rc.in_pos,
 					s->temp.size);
-			return true;
+			return xz_true;
 		}
 
 		b->in_pos += s->rc.in_pos - s->temp.size;
@@ -901,11 +920,11 @@ static bool lzma2_lzma(struct xz_dec_lzma2 *s, struct xz_buf *b)
 			s->rc.in_limit = b->in_size - LZMA_IN_REQUIRED;
 
 		if (!lzma_main(s))
-			return false;
+			return xz_false;
 
 		in_avail = s->rc.in_pos - b->in_pos;
 		if (in_avail > s->lzma2.compressed)
-			return false;
+			return xz_false;
 
 		s->lzma2.compressed -= in_avail;
 		b->in_pos = s->rc.in_pos;
@@ -921,7 +940,7 @@ static bool lzma2_lzma(struct xz_dec_lzma2 *s, struct xz_buf *b)
 		b->in_pos += in_avail;
 	}
 
-	return true;
+	return xz_true;
 }
 
 /*
@@ -973,8 +992,8 @@ XZ_EXTERN enum xz_ret xz_dec_lzma2_run(struct xz_dec_lzma2 *s,
 				return XZ_STREAM_END;
 
 			if (tmp >= 0xE0 || tmp == 0x01) {
-				s->lzma2.need_props = true;
-				s->lzma2.need_dict_reset = false;
+				s->lzma2.need_props = xz_true;
+				s->lzma2.need_dict_reset = xz_false;
 				dict_reset(&s->dict, b);
 			} else if (s->lzma2.need_dict_reset) {
 				return XZ_DATA_ERROR;
@@ -990,7 +1009,7 @@ XZ_EXTERN enum xz_ret xz_dec_lzma2_run(struct xz_dec_lzma2 *s,
 					 * state reset is done at
 					 * SEQ_PROPERTIES.
 					 */
-					s->lzma2.need_props = false;
+					s->lzma2.need_props = xz_false;
 					s->lzma2.next_sequence
 							= SEQ_PROPERTIES;
 
@@ -1043,6 +1062,8 @@ XZ_EXTERN enum xz_ret xz_dec_lzma2_run(struct xz_dec_lzma2 *s,
 
 			s->lzma2.sequence = SEQ_LZMA_PREPARE;
 
+		/* Fall through */
+
 		case SEQ_LZMA_PREPARE:
 			if (s->lzma2.compressed < RC_INIT_BYTES)
 				return XZ_DATA_ERROR;
@@ -1052,6 +1073,8 @@ XZ_EXTERN enum xz_ret xz_dec_lzma2_run(struct xz_dec_lzma2 *s,
 
 			s->lzma2.compressed -= RC_INIT_BYTES;
 			s->lzma2.sequence = SEQ_LZMA_RUN;
+
+		/* Fall through */
 
 		case SEQ_LZMA_RUN:
 			/*
@@ -1104,7 +1127,7 @@ XZ_EXTERN enum xz_ret xz_dec_lzma2_run(struct xz_dec_lzma2 *s,
 XZ_EXTERN struct xz_dec_lzma2 *xz_dec_lzma2_create(enum xz_mode mode,
 						   uint32 dict_max)
 {
-	struct xz_dec_lzma2 *s = kmalloc(sizeof(*s), GFP_KERNEL);
+	struct xz_dec_lzma2 *s = (struct xz_dec_lzma2 *) kmalloc(sizeof(*s), GFP_KERNEL);
 	if (s == NULL)
 		return NULL;
 
@@ -1112,7 +1135,7 @@ XZ_EXTERN struct xz_dec_lzma2 *xz_dec_lzma2_create(enum xz_mode mode,
 	s->dict.size_max = dict_max;
 
 	if (DEC_IS_PREALLOC(mode)) {
-		s->dict.buf = vmalloc(dict_max);
+		s->dict.buf = (uint8 *) vmalloc(dict_max);
 		if (s->dict.buf == NULL) {
 			kfree(s);
 			return NULL;
@@ -1142,8 +1165,9 @@ XZ_EXTERN enum xz_ret xz_dec_lzma2_reset(struct xz_dec_lzma2 *s, uint8 props)
 
 		if (DEC_IS_DYNALLOC(s->dict.mode)) {
 			if (s->dict.allocated < s->dict.size) {
+				s->dict.allocated = s->dict.size;
 				vfree(s->dict.buf);
-				s->dict.buf = vmalloc(s->dict.size);
+				s->dict.buf = (uint8 *) vmalloc(s->dict.size);
 				if (s->dict.buf == NULL) {
 					s->dict.allocated = 0;
 					return XZ_MEM_ERROR;
@@ -1155,7 +1179,7 @@ XZ_EXTERN enum xz_ret xz_dec_lzma2_reset(struct xz_dec_lzma2 *s, uint8 props)
 	s->lzma.len = 0;
 
 	s->lzma2.sequence = SEQ_CONTROL;
-	s->lzma2.need_dict_reset = true;
+	s->lzma2.need_dict_reset = xz_true;
 
 	s->temp.size = 0;
 

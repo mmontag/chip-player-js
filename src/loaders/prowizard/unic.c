@@ -1,14 +1,34 @@
-/*
- * Unic_Tracker.c   Copyright (C) 1997 Asle / ReDoX
- * 
- * Unic tracked MODs to Protracker
- * both with or without ID Unic files will be converted
- *
+/* ProWizard
+ * Copyright (C) 1997 Asle / ReDoX
  * Modified in 2006,2007,2014 by Claudio Matsuoka
+ * Modified in 2021 by Alice Rowan
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
-#include <string.h>
-#include <stdlib.h>
+/*
+ * Unic_Tracker.c
+ *
+ * Unic tracked MODs to Protracker
+ * both with or without ID Unic files will be converted
+ */
+
 #include "prowiz.h"
 
 #define MAGIC_UNIC	MAGIC4('U','N','I','C')
@@ -109,7 +129,7 @@ static int depack_unic(HIO_HANDLE *in, FILE *out)
 			note = c1 & 0x3f;
 
 			/* Sanity check */
-			if (note >= 37) {
+			if (!PTK_IS_VALID_NOTE(note)) {
 				return -1;
 			}
 
@@ -240,7 +260,7 @@ static int check_pattern(const uint8 *data, int s, int psize, int max_ins, int o
 		if ((d[1] & 0x0F) == 0x0D && d[2] > 0x40)
 			return -1;
 
-		ins = ((d[0] >> 2) & 0x30) | ((d[2] >> 4) & 0x0F);
+		ins = ((d[0] >> 2) & 0x30) | ((d[1] >> 4) & 0x0F);
 
 		if (ins > max_ins)
 			return -1;
@@ -290,6 +310,8 @@ static int test_unic_id(const uint8 *data, char *t, int s)
 	psize = check_pattern_list_size(data);
 	if (psize < 0)
 		return -1;
+
+	PW_REQUEST_DATA(s, psize * 3 + 1084);
 
 	/* test #5 pattern data ... */
 	for (i = 0; i < psize; i++) {

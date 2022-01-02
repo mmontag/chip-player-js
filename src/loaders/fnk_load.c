@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -42,10 +42,10 @@ static int fnk_test(HIO_HANDLE *f, char *t, const int start)
     if (hio_read32b(f) != MAGIC_Funk)
 	return -1;
 
-    hio_read8(f); 
+    hio_read8(f);
     a = hio_read8(f);
-    b = hio_read8(f); 
-    hio_read8(f); 
+    b = hio_read8(f);
+    hio_read8(f);
 
     if ((a >> 1) < 10)			/* creation year (-1980) */
 	return -1;
@@ -89,10 +89,88 @@ struct fnk_header {
 };
 
 
+static void fnk_translate_event(struct xmp_event *event, const uint8 ev[3],
+				const struct fnk_header *ffh)
+{
+    switch (ev[0] >> 2) {
+    case 0x3f:
+    case 0x3e:
+    case 0x3d:
+	break;
+    default:
+	event->note = 37 + (ev[0] >> 2);
+	event->ins = 1 + MSN(ev[1]) + ((ev[0] & 0x03) << 4);
+	event->vol = ffh->fih[event->ins - 1].volume;
+    }
+
+    switch (LSN(ev[1])) {
+    case 0x00:
+	event->fxt = FX_PER_PORTA_UP;
+	event->fxp = ev[2];
+	break;
+    case 0x01:
+	event->fxt = FX_PER_PORTA_DN;
+	event->fxp = ev[2];
+	break;
+    case 0x02:
+	event->fxt = FX_PER_TPORTA;
+	event->fxp = ev[2];
+	break;
+    case 0x03:
+	event->fxt = FX_PER_VIBRATO;
+	event->fxp = ev[2];
+	break;
+    case 0x06:
+	event->fxt = FX_PER_VSLD_UP;
+	event->fxp = ev[2] << 1;
+	break;
+    case 0x07:
+	event->fxt = FX_PER_VSLD_DN;
+	event->fxp = ev[2] << 1;
+	break;
+    case 0x0b:
+	event->fxt = FX_ARPEGGIO;
+	event->fxp = ev[2];
+	break;
+    case 0x0d:
+	event->fxt = FX_VOLSET;
+	event->fxp = ev[2];
+	break;
+    case 0x0e:
+	if (ev[2] == 0x0a || ev[2] == 0x0b || ev[2] == 0x0c) {
+	    event->fxt = FX_PER_CANCEL;
+	    break;
+	}
+
+	switch (MSN(ev[2])) {
+	case 0x1:
+	    event->fxt = FX_EXTENDED;
+	    event->fxp = (EX_CUT << 4) | LSN(ev[2]);
+	    break;
+	case 0x2:
+	    event->fxt = FX_EXTENDED;
+	    event->fxp = (EX_DELAY << 4) | LSN(ev[2]);
+	    break;
+	case 0xd:
+	    event->fxt = FX_EXTENDED;
+	    event->fxp = (EX_RETRIG << 4) | LSN(ev[2]);
+	    break;
+	case 0xe:
+	    event->fxt = FX_SETPAN;
+	    event->fxp = 8 + (LSN(ev[2]) << 4);
+	    break;
+	case 0xf:
+	    event->fxt = FX_SPEED;
+	    event->fxp = LSN(ev[2]);
+	    break;
+	}
+    }
+}
+
 static int fnk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
-    int i, j;
+    int i, j, k;
     /* int day, month, year; */
     struct xmp_event *event;
     struct fnk_header ffh;
@@ -100,13 +178,13 @@ static int fnk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     LOAD_INIT();
 
-    hio_read(&ffh.marker, 4, 1, f);
-    hio_read(&ffh.info, 4, 1, f);
+    hio_read(ffh.marker, 4, 1, f);
+    hio_read(ffh.info, 4, 1, f);
     ffh.filesize = hio_read32l(f);
-    hio_read(&ffh.fmt, 4, 1, f);
+    hio_read(ffh.fmt, 4, 1, f);
     ffh.loop = hio_read8(f);
-    hio_read(&ffh.order, 256, 1, f);
-    hio_read(&ffh.pbrk, 128, 1, f);
+    hio_read(ffh.order, 256, 1, f);
+    hio_read(ffh.pbrk, 128, 1, f);
 
     for (i = 0; i < 128; i++) {
         if (ffh.pbrk[i] >= 64) {
@@ -115,7 +193,7 @@ static int fnk_load(struct module_data *m, HIO_HANDLE *f, const int start)
     }
 
     for (i = 0; i < 64; i++) {
-	hio_read(&ffh.fih[i].name, 19, 1, f);
+	hio_read(ffh.fih[i].name, 19, 1, f);
 	ffh.fih[i].loop_start = hio_read32l(f);
 	ffh.fih[i].length = hio_read32l(f);
 	ffh.fih[i].volume = hio_read8(f);
@@ -123,6 +201,10 @@ static int fnk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	ffh.fih[i].shifter = hio_read8(f);
 	ffh.fih[i].waveform = hio_read8(f);
 	ffh.fih[i].retrig = hio_read8(f);
+	/* Sanity check */
+	if (ffh.fih[i].length >= ffh.filesize) {
+	    return -1;
+	}
     }
 
     /* day = ffh.info[0] & 0x1f;
@@ -136,6 +218,11 @@ static int fnk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    mod->pat = ffh.order[i];
     }
     mod->pat++;
+
+    /* Sanity check */
+    if (mod->pat > 128) {
+	return -1;
+    }
 
     mod->len = i;
     memcpy (mod->xxo, ffh.order, mod->len);
@@ -166,6 +253,10 @@ static int fnk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->chn = (ffh.fmt[2] < '0') || (ffh.fmt[2] > '9') ||
 		(ffh.fmt[3] < '0') || (ffh.fmt[3] > '9') ? 8 :
 		(ffh.fmt[2] - '0') * 10 + ffh.fmt[3] - '0';
+
+	/* Sanity check */
+	if (mod->chn <= 0 || mod->chn > XMP_MAX_CHANNELS)
+		return -1;
     }
 
     mod->bpm = 4 * mod->bpm / 5;
@@ -217,84 +308,15 @@ static int fnk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
 	    return -1;
 
-	EVENT(i, 1, ffh.pbrk[i]).f2t = FX_BREAK;
+	EVENT(i, 0, ffh.pbrk[i]).f2t = FX_BREAK;
 
-	for (j = 0; j < 64 * mod->chn; j++) {
-	    event = &EVENT(i, j % mod->chn, j / mod->chn);
-	    hio_read(&ev, 1, 3, f);
+	for (j = 0; j < 64; j++) {
+	    for(k = 0; k < mod->chn; k++) {
+		event = &EVENT(i, k, j);
+		if (hio_read(ev, 1, 3, f) < 3)
+		    return -1;
 
-	    switch (ev[0] >> 2) {
-	    case 0x3f:
-	    case 0x3e:
-	    case 0x3d:
-		break;
-	    default:
-		event->note = 37 + (ev[0] >> 2);
-		event->ins = 1 + MSN(ev[1]) + ((ev[0] & 0x03) << 4);
-		event->vol = ffh.fih[event->ins - 1].volume;
-	    }
-
-	    switch (LSN(ev[1])) {
-	    case 0x00:
-		event->fxt = FX_PER_PORTA_UP;
-		event->fxp = ev[2];
-		break;
-	    case 0x01:
-		event->fxt = FX_PER_PORTA_DN;
-		event->fxp = ev[2];
-		break;
-	    case 0x02:
-		event->fxt = FX_PER_TPORTA;
-		event->fxp = ev[2];
-		break;
-	    case 0x03:
-		event->fxt = FX_PER_VIBRATO;
-		event->fxp = ev[2];
-		break;
-	    case 0x06:
-		event->fxt = FX_PER_VSLD_UP;
-		event->fxp = ev[2] << 1;
-		break;
-	    case 0x07:
-		event->fxt = FX_PER_VSLD_DN;
-		event->fxp = ev[2] << 1;
-		break;
-	    case 0x0b:
-		event->fxt = FX_ARPEGGIO;
-		event->fxp = ev[2];
-		break;
-	    case 0x0d:
-		event->fxt = FX_VOLSET;
-		event->fxp = ev[2];
-		break;
-	    case 0x0e:
-		if (ev[2] == 0x0a || ev[2] == 0x0b || ev[2] == 0x0c) {
-		    event->fxt = FX_PER_CANCEL;
-		    break;
-		}
-
-		switch (MSN(ev[2])) {
-		case 0x1:
-		    event->fxt = FX_EXTENDED;
-		    event->fxp = (EX_CUT << 4) | LSN(ev[2]);
-		    break;
-		case 0x2:
-		    event->fxt = FX_EXTENDED;
-		    event->fxp = (EX_DELAY << 4) | LSN(ev[2]);
-		    break;
-		case 0xd:
-		    event->fxt = FX_EXTENDED;
-		    event->fxp = (EX_RETRIG << 4) | LSN(ev[2]);
-		    break;
-		case 0xe:
-		    event->fxt = FX_SETPAN;
-		    event->fxp = 8 + (LSN(ev[2]) << 4);	
-		    break;
-		case 0xf:
-		    event->fxt = FX_SPEED;
-		    event->fxp = LSN(ev[2]);	
-		    break;
-		}
+		fnk_translate_event(event, ev, &ffh);
 	    }
 	}
     }

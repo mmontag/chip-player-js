@@ -17,5 +17,8 @@ TEST(test_prowizard_zen)
 
 	ret = compare_md5(info.md5, "b774f2f8604f62efc63e1ac14ee01cce");
 	fail_unless(ret == 0, "MD5 error");
+
+	xmp_release_module(c);
+	xmp_free_context(c);
 }
 END_TEST

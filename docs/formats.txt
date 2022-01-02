@@ -9,7 +9,7 @@ MOD		Sound/Noise/Protracker	M.K., M!K!, M&K!, N.T., CD81
 MOD, M15	Soundtracker		2.2, UST
 MOD/NT		Startrekker/ADSC	FLT4/8/M, EXO4/8
 MOD		Digital Tracker		FA04, FA06, FA08
-MOD		Fast/Taketracker	xCHN, xxCH
+MOD		Fast/Taketracker	xCHN, xxCH, TDZx
 MOD		His Master's Noise	-
 FLX		Flextrax		M.K., xCHN (no dsp effects)
 WOW		Mod's Grave		M.K.
@@ -63,7 +63,8 @@ MGT		Megatracker		-
 Acorn tracker formats:
 
 -		Archimedes Tracker	V1.0+++
--		Digital Symphony	0
+-		Coconizer		-
+-		Digital Symphony	0, 1
 
 PC tracker formats:
 
@@ -79,13 +80,13 @@ PTM		Poly Tracker		2.03
 RTM		Real Tracker		1.00
 S3M		Scream Tracker 3	3.00, 3.01+
 STM		Scream Tracker 2	!Scream!, BMOD2STM
-ULT		Ultra Tracker		V0001, V0002, V0003, V0004
+ULT		Ultra Tracker		V001, V002, V003, V004
 XM		Fast Tracker II		1.02, 1.03, 1.04
 
 PC packed formats:
 
-AMF		DSMI (DMP)		0.9, 1.0, 1.1, 1.2, 1.3, 1.4
-GDM		Generic Digital Music	1.0
+AMF		DSMI (DMP)		0.1, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4
+GDM		General Digital Music	1.0
 STX		ST Music Interface Kit	1.0, 1.1
 
 Game formats:

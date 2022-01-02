@@ -1,6 +1,5 @@
 #include "test.h"
 #include "../src/effects.h"
-#include <math.h>
 
 /*
 Periodtable for Tuning 0, Normal
@@ -10,8 +9,6 @@ Periodtable for Tuning 0, Normal
 
 Amiga limits: 907 to 108
 */
-
-#define PERIOD ((int)round(1.0 * info.channel_info[0].period / 4096))
 
 static int vals[] = {
 	143, 143, 154, 158, 154, 143,
@@ -45,5 +42,8 @@ TEST(test_effect_persistent_vibrato)
 		xmp_get_frame_info(opaque, &info);
 		fail_unless(PERIOD == vals[i], "vibrato error");
 	}
+
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

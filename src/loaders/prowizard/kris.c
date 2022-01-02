@@ -1,12 +1,34 @@
-/*
- * Kris_tracker.c   Copyright (C) 1997 Asle / ReDoX
- *                  Copyright (C) 2006-2007 Claudio Matsuoka
+/* ProWizard
+ * Copyright (C) 1997 Asle / ReDoX
+ * Copyright (C) 2006-2007 Claudio Matsuoka
  *
- * Kris Tracker to Protracker.
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
-#include <string.h>
-#include <stdlib.h>
+/*
+ * Kris_tracker.c
+ *
+ * Kris Tracker to Protracker.
+ *
+ * Currently deadcode due to libxmp having a dedicated Chiptracker loader.
+ */
+
 #include "prowiz.h"
 
 
@@ -23,10 +45,10 @@ static int depack_kris(HIO_HANDLE *in, FILE *out)
 	int i, j, k;
 	int size, ssize = 0;
 
-	memset(tmp, 0, 1024);
-	memset(ptable, 0, 128);
-	memset(taddr, 0, 128 * 4 * 2);
-	memset(tdata, 0, 512 << 8);
+	memset(tmp, 0, sizeof(tmp));
+	memset(ptable, 0, sizeof(ptable));
+	memset(taddr, 0, sizeof(taddr));
+	memset(tdata, 0, sizeof(tdata));
 
 	pw_move_data(out, in, 20);			/* title */
 	hio_seek(in, 2, SEEK_CUR);
@@ -81,7 +103,7 @@ static int depack_kris(HIO_HANDLE *in, FILE *out)
 
 	/* Track data ... */
 	for (i = 0; i <= (maxtaddr / 256); i += 1) {
-		memset(tmp, 0, 1024);
+		memset(tmp, 0, sizeof(tmp));
 		hio_read(tmp, 256, 1, in);
 
 		for (j = 0; j < 64 * 4; j += 4) {
@@ -102,7 +124,7 @@ static int depack_kris(HIO_HANDLE *in, FILE *out)
 	}
 
 	for (i = 0; i <= max; i++) {
-		memset(tmp, 0, 1024);
+		memset(tmp, 0, sizeof(tmp));
 		for (j = 0; j < 64 * 4; j += 4) {
 			uint8 *p = &tmp[j * 4];
 

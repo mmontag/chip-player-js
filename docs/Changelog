@@ -1,8 +1,72 @@
 Stable versions
 ---------------
 
-4.4.2 ():
-	Changes by Ozkan Sezer:
+4.5.0 (20210606):
+	Changes by Alice Rowan:
+	- xmp_load_module_from_callbacks and xmp_test_module_from_callbacks
+	  added to api
+	- fix xmp_set_position et al. when used during loops, pattern delay
+	- make xmp_set_position() consistently clear pattern break/jump vars
+	- avoid shell command injection when calling external unmo3 or unrar
+	- fix volume event handling for FAR modules
+	- fix GDM loader to correctly handle empty notes
+	- fix GDM fine effects
+	- fix incorrect handling of GDM speed effect
+	- implement GDM surround effect
+	- add support for DSMI 0.8 and 0.9 AMF modules
+	- fix incorrect DSMI AMF volume and note 0x7f handling
+	- fix DSMI AMF track 0 remapping bug
+	- fix DSMI AMF speed effect and pan command conversions
+	- fix IMAGO Orpheus channel panning and status values
+	- fix S3M ADPCM4 samples
+	- fix OctaMED 'tracker compatibility' tempos, more accurate OctaMED
+	  8-channel mode BPM tables.
+	- ignore MED volume/slide effects with param of 0, fix speed bound.
+	- improve MOD loader checks for Mod's Grave WOW files
+	- fix Schism Tracker version date calculation
+	- fix MED2 BPM handling
+	- fix MED modules with pattern lengths > 256
+	- fix MED instrument corruption
+	- allow up to 512 rows in X-Tracker patterns
+	- add support for DigiBooster Pro pan envelopes
+	- fix DigiBooster Pro volume envelope number of points
+	- fix fine effects for DigiBooster Pro modules
+	- fix loading DigiBooster Pro modules with large sample chunks
+	- fix IT bug where Cxx on same row as SBx would not be ignored
+	- fix IT bug where Qxy would ignore the volume parameter
+	- fix IT sample global volume and sample vibrato
+	- fix two IT bugs related to note off and volume handling
+	- fix event out-of-bounds reads due to invalid key values
+	- fix multiple out-of-bounds reads/writes, memory corruptions,
+	  uninitialized reads and hangs in several loaders (thanks to
+	  Lionel Debroux for providing fuzz files)
+	- fix xmp_release_module double frees when invoked multiple times
+	- check external sample file names before opening them
+	- make it possible to disable module depacker functionality
+	- make it possible to disable prowizard module loaders
+	Changes by viiri:
+	- fix samples corruption in STM modules
+	- support more versions of STM modules
+	Changes by Ã–zkan Sezer:
+	- add new xmp_syserrno call to the api
+	- xmp_get_format_list() now returns const char* const*, not char**
+	  (no ABI change)
+	- xmp_test_module, xmp_load_module, xmp_set_instrument_path and
+	  xmp_smix_load_sample() now accept const char* path parameters
+	  (no ABI change)
+	- xmp_load_module_from_memory() now accepts a const void* memory
+	  param (no ABI change)
+	- xmp_load_module_from_memory() no longer accepts sizes <= 0.
+	- explicitly document that callers of xmp_load_module_from_file()
+	  are responsible for closing their own file.
+	- remove nonportable use of fdopen in xmp_load_module_from_file()
+	- fix a seek issue with xmp_load_module_from_memory
+	- fix memory-io functions' error handling
+	- fix number of envelope points sanity check in IMF loader
+	- rewrite the UMX loader
+	- revise sanity checks to prevent oob reads in s404 depacker
+	- fix vorbis depacker to function properly on big endian systems
+	- fix windows static library builds
 	- fix win64 compatibility in ptpopen
 	- fix build with C89 compilers
 	- fix issues related to visibility attributes
@@ -10,10 +74,24 @@ Stable versions
 	- fix warnings in configure script
 	- fix Watcom C build on OS/2
 	- fix Amiga build
+	- several code clean-ups
 	Changes by Carsten Teibes:
 	- fix lite build mod loader symbols
 	Changes by NoSuck:
-	- fix IT message length
+	- add new xmp_set_row() call to skip replay to the given row
+	- IT: T00 now repeats previous slide
+	- prevent clobbering of muted channels' volumes in IT modules
+	- clamp number of IT envelope nodes at load time
+	- fix IT message (comment) length miscalculation
+	- fix IT volume panning effect
+	- fix mute status on player creation
+	Changes by Cameron Cawley:
+	- fix sanity check in Digital Symphony loader
+	- fix and enable the Coconizer loader
+	- support compiling for Windows with OpenWatcom
+	Changes by Ghabry:
+	- add xmp_test_module_from_memory and xmp_test_module_from_file
+	  calls to api
 	Fix problems reported by Ralf Hoffmann:
 	- fix MMD3 instrument type sanity check
 	- fix strictness of MOD pattern data tester
@@ -23,10 +101,25 @@ Stable versions
 	- fix PTM loader issues
 	- fix MED4 invalid sample load error
 	- fix NNA and DCT/DCA issues
+	Fix problems reported by Dennis Mulleneers:
+	- handle XM 16-bit samples with odd in-file data
+	Fix problems reported by Jay Garcia:
+	- fix smix sample allocation
+	- force reset of buffer state on player start
+	Fix problems reported by Vitaly Novichkov:
+	- fix Emscripten builds
+	- fix linkage errors with MSVC debug builds
 	Other changes:
+	- fix IT pattern delay volume reset bug (read row events only
+	  once per row)
+	- fix volume, pitch and pan slides lagging behind one frame
+	- fix tempo assignment in module scan to fix seek issues/crashes
 	- fix double free in case of ADPCM sample load error
 	- code refactoring and cleanup
-	- accept WUZAMOD! Scream Tracker 2 modules
+	- add new xmp_set_tempo_factor() call to set the replay tempo
+	  multiplier
+	- fix XM keyoff with instrument
+	- fix loading xm instruments with more than 16 samples
 
 4.4.1 (20161012):
 	Fix issues reported by Saga Musix:
@@ -173,7 +266,7 @@ Stable versions
 	- prevent division by zero in memory I/O
 	- change IFF info ID from string to binary buffer
 	- better IFF error handling
-	Fix problems caused by fuzz files (reported by Jonathan Neuschäfer):
+	Fix problems caused by fuzz files (reported by Jonathan NeuschÃ¤fer):
 	- add sanity checks to LHA depacker
 	- add sanity checks to MED3 loader
 	- add sanity checks to ABK loader
@@ -203,7 +296,7 @@ Stable versions
 	- add sanity check to Oxm/vorbis depacker
 	- add sanity check to lha/MMCMP/s404 depacker
 	- fix memory leak in vorbis decoder
-	Fix problems caused by fuzz files (reported by Jonathan Neuschäfer):
+	Fix problems caused by fuzz files (reported by Jonathan NeuschÃ¤fer):
 	- add sanity check to IT instrument name loader
 	- add sanity check to IT loader instrument mapping
 	- add sanity check to AMF module parameters and event loading
@@ -330,7 +423,7 @@ Stable versions
 	- fix XM note delay volume with no note or instrument set
 	- fix XM out-of-range note delays with pattern delays
 	Other changes:
-	- fix XM envelope loop length (reported by Per Törner)
+	- fix XM envelope loop length (reported by Per TÃ¶rner)
 	- fix big-endian detection in configuration (by Andreas Schwab)
 
 4.3.2 (20141130):
@@ -351,7 +444,7 @@ Stable versions
 	- fix MOD/XM volume up+down priority (reported by Jason Gibson)
 	- fix MOD fine volume slide memory (reported by Dennis Lindroos)
 	- fix set sample offset effect (by Dennis Lindroos)
-	- fix Windows temp file (reported by Andreas Argirakis & Eric Lévesque)
+	- fix Windows temp file (reported by Andreas Argirakis & Eric LÃ©vesque)
 	- add emulation of the FT2 pattern loop bug (by Eugene Toder)
 	- allow loading of packed formats from memory
 	- allow loading of OpenMPT MOD files with large samples
@@ -461,9 +554,9 @@ Stable versions
 	- fix volume in MED synth instruments
 	- fix OctaMED V5 MMD2 sample transpose
 	Other changes:
-	- fix double free in module loaded from memory (by Arnaud Troël)
+	- fix double free in module loaded from memory (by Arnaud TroÃ«l)
 	- fix old Soundtracker sample loops (reported by Dennis Lindroos)
-	- fix Win64 portability issues (reported by Ozkan Sezer)
+	- fix Win64 portability issues (reported by Ã–zkan Sezer)
 	- fix OctaMED 3 octave limit for sampled instruments
 	- fix OctaMED hold/decay event support
 	- fix OctaMED vibrato effect depth
@@ -828,7 +921,7 @@ Stable versions
 	- implement IT volume column fine effects quirk (Storlek test #6)
 	- fix bmp plugin build
 	- fix FreeBSD build (by swell k)
-	- fix terminal handling in Cygwin (by daniel åkerud)
+	- fix terminal handling in Cygwin (by daniel Ã¥kerud)
 	- add OpenMPT id to S3M loader
 	- add Epic MegaGames MUSE data decompression
 	- add Galaxy Music System (Jazz Jackrabbit 2 J2B) module loader
@@ -849,18 +942,18 @@ Stable versions
 	- remove pause-related functions from player core
 	- fix build in Solaris 10 and Sun Studio 12 Update 1 C++ compiler
 	  (reported by Douglas Carmichael)
-	- fix plugin to work with Audacious 2.2 (reported by Götz Waschk)
+	- fix plugin to work with Audacious 2.2 (reported by GÃ¶tz Waschk)
 	- fix invalid and uninitialized data accesses reported by Valgrind
 	- fix memory leaks reported by Valgrind
 
 2.7.1 (20090718):
 	- fix -l option in manpage (debian bug #442147)
-	- fix endianism in MDL sample depacking (reported by Gürkan Sengün)
-	- fix loading of MOD2XM 1.0 modules (reported by Gürkan Sengün)
+	- fix endianism in MDL sample depacking (reported by GÃ¼rkan SengÃ¼n)
+	- fix loading of MOD2XM 1.0 modules (reported by GÃ¼rkan SengÃ¼n)
 	- add some sanity checks in XM module loading
 	- fix IT note cut and delay (Storlek test #22)
 	- increase period resolution for better tuning (reported by Mirko
-	  Buffoni and Gürkan Sengün)
+	  Buffoni and GÃ¼rkan SengÃ¼n)
 	- allow lower BPM settings (fixes Lemmings 2 circus music)
 
 2.7.0 (20090711):
@@ -886,7 +979,7 @@ Stable versions
 	- display checksum for platforms where cksum(1) not readily available
 	- add filter quirk for rn-alone.it
 	- reintroduce manual setting for vblank timing in Amiga modules
-	- add vblank quirk for mod.siedler ii (by Daniel Åkerud)
+	- add vblank quirk for mod.siedler ii (by Daniel Ã…kerud)
 	- don't crash if SoundSmith instruments not found
 
 2.6.2 (20090630):
@@ -895,7 +988,7 @@ Stable versions
 	- fix periods in instruments with finetune
 
 2.6.1 (20090627):
-	- fix XMMS plugin build (reported by Götz Waschk)
+	- fix XMMS plugin build (reported by GÃ¶tz Waschk)
 	- add Chibi Tracker fingerprint to IT loader (info by Storlek)
 	- add Schism Tracker fingerprint to S3M loader (info by Storlek)
 	- fix Modplug Tracker/OpenMPT identification in IT loader
@@ -932,7 +1025,7 @@ Stable versions
 	- fix buffer overflow in OXM/DTT loaders (reported by Luigi Auriemma)
 	- rename oss_mix driver to oss and alsa_mix to alsa
 	- restrict MMD0/MMD1 non-synth instrument note range to 3 octaves
-	  (reported by Daniel Åkerud and Mirko Buffoni)
+	  (reported by Daniel Ã…kerud and Mirko Buffoni)
 	- assume wav driver if output filename ends in .wav
 	- fix volume slides with 00 parameter (by Mirko Buffoni)
 	- fix crash when S3M C2spd is zero (by Mirko Buffoni)
@@ -1006,7 +1099,7 @@ Stable versions
 	- merged Amiga AHI driver written by Lorence Lombardo
 	- don't read commands from terminal in Windows and Amiga
 	- reset parameter in case of MDL "no effect" (saa.mdl pos 13 ch 9
-	  plays correctly, reported by Gürkan Sengün)
+	  plays correctly, reported by GÃ¼rkan SengÃ¼n)
 	- fixed wav and file drivers binary file creation for win32
 	- add support for Octamed V6 16bit samples (fixes instruments in
 	  LaEsperanza.mmd3, reported by Lorence Lombardo)
@@ -1357,9 +1450,9 @@ Stable versions
 	- Fixed STX memory leaks
 	- Added support for XM 1.03 modules in the XM loader
 	- Speed 0x20 correctly recognized
-	- STM loader accepts BMOD2STM stms (reported by Bernhard März)
+	- STM loader accepts BMOD2STM stms (reported by Bernhard MÃ¤rz)
 	- Fixed wrong number of patterns in FAR loader (reported by Bernhard
-	  März <maerz@rklnw1.ngate.uni-regensburg.de>)
+	  MÃ¤rz <maerz@rklnw1.ngate.uni-regensburg.de>)
 	- Fixed IFF chunk buffer allocation for MDL samples
 	- Fixed sample buffer size for MDL 16 bit samples
 	- SMIX_C4NOTE changed to from 6947 to 6864 in mixer.h (reported by

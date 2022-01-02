@@ -5,10 +5,13 @@ VERSION		= $(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_RELEASE)
 COMPAT_VERSION	= $(VERSION_MAJOR)
 
 CC		= @CC@
-CFLAGS		= -c @CFLAGS@ @DEFS@ -D_REENTRANT -DLIBXMP_CORE_PLAYER
+CFLAGS		= -c @CFLAGS@ @DEFS@ -D_REENTRANT -DLIBXMP_CORE_PLAYER -DLIBXMP_NO_PROWIZARD -DLIBXMP_NO_DEPACKERS
+CFLAGS_SHARED	= @CFLAGS_SHARED@
+CFLAGS_STATIC	= -DBUILDING_STATIC
 LD		= @CC@
 LDFLAGS		= @LDFLAGS@
 LIBS		= @LIBS@
+AR		= @AR@
 RANLIB		= @RANLIB@
 INSTALL		= @INSTALL@
 DESTDIR		=
@@ -23,10 +26,10 @@ LD_VERSCRIPT	= @LD_VERSCRIPT@
 SHELL		= /bin/sh
 
 DIST		= libxmp-lite-$(VERSION)
-DFILES		= README INSTALL Changelog install-sh configure configure.ac \
-		  config.sub config.guess Makefile.in libxmp-lite.pc.in \
-		  Makefile.vc Makefile.os2 libxmp.map
-DDIRS		= include src loaders os2 test
+DFILES		= README INSTALL install-sh configure configure.ac config.sub config.guess    \
+		  Makefile.in Makefile.vc Makefile.os2 Makefile.w32 watcom.mif CMakeLists.txt \
+		  aclocal.m4 libxmp.map libxmp-lite.pc.in Changelog
+DDIRS		= include src loaders test cmake m4
 V		= 0
 LIB		= libxmp-lite.a
 SOLIB		= libxmp-lite.so
@@ -50,31 +53,32 @@ endif
 all: @STATIC@ @SHARED@
 
 include include/libxmp-lite/Makefile
+include cmake/Makefile
+include m4/Makefile
 include src/Makefile
 include src/loaders/Makefile
-include src/os2/Makefile
 include test/Makefile
 
 LOBJS = $(OBJS:.o=.lo)
 
 GCOBJS = $(OBJS:.o=.gco)
 
-CFLAGS += -Iinclude/libxmp-lite -Isrc
+CFLAGS += -Iinclude/libxmp-lite
 
 .SUFFIXES: .c .o .lo .a .so .dll .in .gco .gcda .gcno
 
 .c.o:
-	@CMD='$(CC) $(CPPFLAGS) $(CFLAGS) -o $*.o $<'; \
+	@CMD='$(CC) $(CPPFLAGS) $(CFLAGS_STATIC) $(CFLAGS) -o $*.o $<'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo CC $*.o ; fi; \
 	eval $$CMD
 
 .c.lo:
-	@CMD='$(CC) $(CPPFLAGS) $(CFLAGS) -fPIC -o $*.lo $<'; \
+	@CMD='$(CC) $(CPPFLAGS) $(CFLAGS_SHARED) $(CFLAGS) -o $*.lo $<'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo CC $*.lo ; fi; \
 	eval $$CMD
 
 .c.gco:
-	@CMD='$(CC) $(CPPFLAGS) $(CFLAGS) -O0 -fno-inline -fprofile-arcs -ftest-coverage -o $*.gco $<'; \
+	@CMD='$(CC) $(CPPFLAGS) $(CFLAGS_STATIC) $(CFLAGS) -O0 -fno-inline -fprofile-arcs -ftest-coverage -o $*.gco $<'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo CC $*.gco ; fi; \
 	eval $$CMD
 
@@ -103,9 +107,9 @@ lib/$(SHLIB): $(LOBJS)
 	ln -sf $(SHLIB) lib/$(SONAME)
 	ln -sf $(SONAME) lib/$(SOLIB)
 
-lib/$(DLL): $(OBJS)
+lib/$(DLL): $(LOBJS)
 	@mkdir -p lib
-	@CMD='$(LD) $(LDFLAGS) -shared -Wl,--output-def,lib/libxmp-lite.def,--out-implib,lib/$(IMPLIB) -o $@ $(OBJS) $(LIBS)'; \
+	@CMD='$(LD) $(LDFLAGS) -shared -Wl,--output-def,lib/libxmp-lite.def,--out-implib,lib/$(IMPLIB) -o $@ $(LOBJS) $(LIBS)'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 
@@ -113,10 +117,10 @@ lib/$(DLL): $(OBJS)
 # The version number checks that dyld performs are limited to ensuring that
 # the compatibility version of the library being loaded is higher than the
 # compatibility version of the library that was used at build time.
-
+#
 lib/$(DYLIB): $(LOBJS)
 	@mkdir -p lib
-	@CMD='$(LD) $(LDFLAGS) -dynamiclib -Wl,-headerpad_max_install_names,-undefined,dynamic_lookup,$(DYLIB_COMPAT)-current_version,$(VERSION),-install_name,$(prefix)/lib/$(DYLIB) -o $@ $(LOBJS) $(LIBS)'; \
+	@CMD='$(LD) $(LDFLAGS) -dynamiclib -Wl,-headerpad_max_install_names,$(DYLIB_COMPAT)-current_version,$(VERSION),-install_name,$(prefix)/lib/$(DYLIB) -o $@ $(LOBJS) $(LIBS)'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 	ln -sf $(DYLIB) lib/libxmp-lite.dylib
@@ -129,8 +133,11 @@ lib/$(GCLIB): $(GCOBJS)
 	$(RANLIB) $@
 
 clean:
-	@rm -f $(OBJS) $(LOBJS) lib/lib*
+	@rm -f $(OBJS) $(LOBJS)
 	@rm -f $(GCOBJS) $(OBJS:.o=.gcno) $(OBJS:.o=.gcda)
+
+distclean: clean
+	@rm -f config.log config.cache config.status libxmp-lite.pc depend Makefile lib/*
 
 install: all
 	@mkdir -p $(DESTDIR)$(BINDIR) $(DESTDIR)$(LIBDIR) $(DESTDIR)$(INCLUDEDIR)
@@ -169,13 +176,13 @@ depend:
 		sed "s!^.*\.o:!$$i $$l:!" >> $@ ; \
 	done
 	    
-dist: version-prepare dist-prepare vc-prepare os2-prepare dist-jni dist-subdirs
+dist: version-prepare dist-prepare dist-jni dist-subdirs
 
 dist-jni:
 	mkdir $(DIST)/jni
 	cp jni/Android.mk jni/Application.mk $(DIST)/jni
 
-dist-prepare:
+dist-prepare: vc-prepare watcom-prepare
 	./config.status
 	rm -Rf $(DIST) $(DIST).tar.gz
 	mkdir -p $(DIST)
@@ -183,11 +190,11 @@ dist-prepare:
 
 vc-prepare:
 	@echo Generate Makefile.vc
-	@sed -e 's!@OBJS@!$(subst /,\\,$(OBJS:.o=.obj))!' Makefile.vc.in > Makefile.vc
+	@sed -e 's!@OBJS@!\\\r\n $(subst /,\\,$(OBJS:.o=.obj \\\r\n))!' Makefile.vc.in > Makefile.vc
 
-os2-prepare:
-	@echo Generate Makefile.os2
-	@sed -e 's!@OBJS@!$(OBJS:.o=.obj)!' Makefile.os2.in > Makefile.os2
+watcom-prepare:
+	@echo Generate watcom.mif
+	@sed -e 's!@OBJS@! \&\n $(OBJS:.o=.obj \&\n)!' watcom.mif.in > watcom.mif
 
 dist-subdirs: $(addprefix dist-,$(DDIRS))
 	chmod -R u+w $(DIST)/*
@@ -199,7 +206,6 @@ distcheck:
 	rm -Rf $(DIST)
 	tar xf $(DIST).tar.gz
 	(cd $(DIST); ./configure --enable-static --prefix=`pwd`/test-install; make; make check; make install; find test-install)
-
 
 devcheck:
 	$(MAKE) -C test-dev
@@ -222,4 +228,3 @@ version-prepare:
 	./config.status
 
 sinclude depend
-

@@ -1,13 +1,33 @@
-/*
- * Module_Protector.c   Copyright (C) 1997 Asle / ReDoX
- *
- * Converts MP packed MODs back to PTK MODs
- *
+/* ProWizard
+ * Copyright (C) 1997 Asle / ReDoX
  * Modified in 2006,2007,2014 by Claudio Matsuoka
+ * Modified in 2021 by Alice Rowan
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
-#include <stdlib.h>
-#include <string.h>
+/*
+ * Module_Protector.c
+ *
+ * Converts MP packed MODs back to PTK MODs
+ */
+
 #include "prowiz.h"
 
 #define MAGIC_TRK1	MAGIC4('T','R','K','1')
@@ -21,7 +41,7 @@ static int depack_mp(HIO_HANDLE *in, FILE *out)
 	int i;
 	int size, ssize = 0;
 
-	memset(ptable, 0, 128);
+	memset(ptable, 0, sizeof(ptable));
 
 	pw_write_zero(out, 20);				/* title */
 
@@ -64,11 +84,7 @@ static int test_mp_noid(const uint8 *data, char *t, int s)
 	int i;
 	int len, psize, hdr_ssize;
 
-#if 0
-	if (s < 378) {
-		return - 1;
-	}
-#endif
+	PW_REQUEST_DATA(s, 378);
 
 	/* test #2 */
 	hdr_ssize = 0;
@@ -130,15 +146,15 @@ static int test_mp_noid(const uint8 *data, char *t, int s)
 	/* test #5  ptk notes .. gosh ! (testing all patterns !) */
 	for (i = 0; i < psize; i++) {
 		const uint8 *d = data + 378 + i * 4;
-		uint16 data;
+		uint16 val;
 
 		/* MadeInCroatia has l == 74 */
 		if (*d > 19 && *d != 74)
 			return -1;
 
-		data = readmem16b(d) & 0x0fff;
+		val = readmem16b(d) & 0x0fff;
 
-		if (data > 0 && data < 0x71)
+		if (val > 0 && val < 0x71)
 			return -1;
 	}
 
@@ -162,6 +178,8 @@ static int test_mp_id(const uint8 *data, char *t, int s)
 {
 	int i;
 	int len, psize;
+
+	PW_REQUEST_DATA(s, 382);
 
 	/* "TRK1" Module Protector */
 	if (readmem32b(data) != MAGIC_TRK1)
@@ -189,6 +207,8 @@ static int test_mp_id(const uint8 *data, char *t, int s)
 	}
 	psize++;
 	psize <<= 8;
+
+	PW_REQUEST_DATA(s, 382 + psize * 4);
 
 	/* test #5  ptk notes .. gosh ! (testing all patterns !) */
 	/* k contains the number of pattern saved */

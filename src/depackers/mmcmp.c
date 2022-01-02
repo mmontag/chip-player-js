@@ -23,10 +23,7 @@
  * THE SOFTWARE.
  */
 
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include "common.h"
+#include "../common.h"
 #include "depacker.h"
 
 #define MMCMP_COMP	0x0001
@@ -83,7 +80,7 @@ struct bit_buffer {
 	uint32 buffer;
 };
 
-static uint32 get_bits(FILE *f, int n, struct bit_buffer *bb)
+static uint32 get_bits(HIO_HANDLE *f, int n, struct bit_buffer *bb)
 {
 	uint32 bits;
 
@@ -92,7 +89,7 @@ static uint32 get_bits(FILE *f, int n, struct bit_buffer *bb)
 	}
 
 	while (bb->count < 24) {
-		bb->buffer |= read8(f, NULL) << bb->count;
+		bb->buffer |= hio_read8(f) << bb->count;
 		bb->count += 8;
 	}
 
@@ -103,18 +100,60 @@ static uint32 get_bits(FILE *f, int n, struct bit_buffer *bb)
 	return bits;
 }
 
-static void block_copy(struct block *block, struct sub_block *sub,
-		       FILE *in, FILE *out)
+struct mem_buffer {
+	uint8 *buf;
+	size_t size;
+	size_t pos;
+};
+
+static int mem_seek(struct mem_buffer *out, int pos_set)
+{
+	if (pos_set >= out->size)
+		return -1;
+
+	out->pos = pos_set;
+	return 0;
+}
+
+static int mem_write8(uint8 value, struct mem_buffer *out)
+{
+	if (out->pos >= out->size)
+		return -1;
+
+	out->buf[out->pos++] = value;
+	return 0;
+}
+
+static int mem_write16l(uint16 value, struct mem_buffer *out)
+{
+	/* Some MMCMP blocks seem to rely on writing half words. This
+	 * theoretically could occur at the end of the file, so write each
+	 * byte separately. */
+	if (mem_write8(value & 0xff, out) ||
+	    mem_write8(value >> 8, out))
+		return -1;
+
+	return 0;
+}
+
+static int block_copy(struct block *block, struct sub_block *sub,
+		      HIO_HANDLE *in, struct mem_buffer *out)
 {
 	int i;
 
 	for (i = 0; i < block->sub_blk; i++, sub++) {
-		move_data(out, in, sub->unpk_size);
+		if (sub->unpk_pos >= out->size ||
+		    sub->unpk_size > out->size - sub->unpk_pos)
+			return -1;
+
+		if (hio_read(out->buf + sub->unpk_pos, 1, sub->unpk_size, in) < sub->unpk_size)
+			return -1;
 	}
+	return 0;
 }
 
 static int block_unpack_16bit(struct block *block, struct sub_block *sub,
-			       FILE *in, FILE *out)
+			      HIO_HANDLE *in, struct mem_buffer *out)
 {
 	struct bit_buffer bb;
 	uint32 pos = 0;
@@ -124,15 +163,15 @@ static int block_unpack_16bit(struct block *block, struct sub_block *sub,
 	bb.count = 0;
 	bb.buffer = 0;
 
-	if (fseek(out, sub->unpk_pos, SEEK_SET) < 0) {
+	if (mem_seek(out, sub->unpk_pos) < 0) {
 		return -1;
 	}
-	if (fseek(in, block->tt_entries, SEEK_SET) < 0) {
+	if (hio_seek(in, block->tt_entries, SEEK_CUR) < 0) {
 		return -1;
 	}
 
 	for (j = 0; j < block->sub_blk; ) {
-		uint32 size = sub[j].unpk_size >> 1;
+		uint32 size = sub[j].unpk_size;
 		uint32 newval = 0x10000;
 		uint32 d = get_bits(in, numbits + 1, &bb);
 
@@ -170,8 +209,8 @@ static int block_unpack_16bit(struct block *block, struct sub_block *sub,
 				newval ^= 0x8000;
 			}
 
-			pos++;
-			write16l(out, newval);
+			pos += 2;
+			mem_write16l((uint16)newval, out);
 		}
 
 		if (pos >= size) {
@@ -179,7 +218,7 @@ static int block_unpack_16bit(struct block *block, struct sub_block *sub,
 				break;
 
 			pos = 0;
-			if (fseek(out, sub[j].unpk_pos, SEEK_SET) < 0) {
+			if (mem_seek(out, sub[j].unpk_pos) < 0) {
 				return -1;
 			}
 		}
@@ -189,25 +228,30 @@ static int block_unpack_16bit(struct block *block, struct sub_block *sub,
 }
 
 static int block_unpack_8bit(struct block *block, struct sub_block *sub,
-			      FILE *in, FILE *out)
+			     HIO_HANDLE *in, struct mem_buffer *out)
 {
 	struct bit_buffer bb;
 	uint32 pos = 0;
 	uint32 numbits = block->num_bits;
 	uint32 j, oldval = 0;
 	uint8 ptable[0x100];
+	long seekpos = hio_tell(in) + block->tt_entries;
 
-	if (fread(ptable, 1, 0x100, in) != 0x100) {
+	/* The way the original libmodplug depacker is written allows values
+	 * to be read from the compressed data. It's impossible to tell if this
+	 * was intentional or yet another bug. Nothing seems to rely on it. */
+	memset(ptable, 0, sizeof(ptable));
+	if (hio_read(ptable, 1, 0x100, in) < block->tt_entries) {
 		return -1;
 	}
 
 	bb.count = 0;
 	bb.buffer = 0;
 
-	if (fseek(out, sub->unpk_pos, SEEK_SET) < 0) {
+	if (mem_seek(out, sub->unpk_pos) < 0) {
 		return -1;
 	}
-	if (fseek(in, block->tt_entries, SEEK_SET) < 0) {
+	if (hio_seek(in, seekpos, SEEK_SET) < 0) {
 		return -1;
 	}
 
@@ -244,7 +288,7 @@ static int block_unpack_8bit(struct block *block, struct sub_block *sub,
 			}
 
 			pos++;
-			write8(out, n);
+			mem_write8((uint8)n, out);
 		}
 
 		if (pos >= size) {
@@ -252,7 +296,7 @@ static int block_unpack_8bit(struct block *block, struct sub_block *sub,
 				break;
 
 			pos = 0;
-			if (fseek(out, sub[j].unpk_pos, SEEK_SET) < 0) {
+			if (mem_seek(out, sub[j].unpk_pos) < 0) {
 				return -1;
 			}
 		}
@@ -266,50 +310,57 @@ static int test_mmcmp(unsigned char *b)
 	return memcmp(b, "ziRCONia", 8) == 0;
 }
 
-static int decrunch_mmcmp(FILE *in, FILE *out)
+static int decrunch_mmcmp(HIO_HANDLE *in, void **out, long inlen, long *outlen)
 {
 	struct header h;
+	struct mem_buffer outbuf;
 	uint32 *table;
 	uint32 i, j;
-	int error;
 
 	/* Read file header */
-	if (read32l(in, NULL) != 0x4352697A)		/* ziRC */
+	if (hio_read32l(in) != 0x4352697A)		/* ziRC */
 		goto err;
-	if (read32l(in, NULL) != 0x61694e4f)		/* ONia */
+	if (hio_read32l(in) != 0x61694e4f)		/* ONia */
 		goto err;
-	if (read16l(in, NULL) < 14)			/* header size */
+	if (hio_read16l(in) != 14)			/* header size */
 		goto err;
 
 	/* Read header */
-	h.version = read16l(in, &error);
-	if (error != 0) goto err;
-	h.nblocks = read16l(in, &error);
-	if (error != 0) goto err;
-	h.filesize = read32l(in, &error);
-	if (error != 0) goto err;
-	h.blktable = read32l(in, &error);
-	if (error != 0) goto err;
-	h.glb_comp = read8(in, &error);
-	if (error != 0) goto err;
-	h.fmt_comp = read8(in, &error);
-	if (error != 0) goto err;
+	h.version = hio_read16l(in);
+	if (hio_error(in) != 0) goto err;
+	h.nblocks = hio_read16l(in);
+	if (hio_error(in) != 0) goto err;
+	h.filesize = hio_read32l(in);
+	if (hio_error(in) != 0) goto err;
+	h.blktable = hio_read32l(in);
+	if (hio_error(in) != 0) goto err;
+	h.glb_comp = hio_read8(in);
+	if (hio_error(in) != 0) goto err;
+	h.fmt_comp = hio_read8(in);
+	if (hio_error(in) != 0) goto err;
 
-	if (h.nblocks == 0)
+	if (h.nblocks == 0 || h.filesize < 16)
 		goto err;
 
 	/* Block table */
-	if (fseek(in, h.blktable, SEEK_SET) < 0) {
+	if (hio_seek(in, h.blktable, SEEK_SET) < 0) {
 		goto err;
 	}
 
-	if ((table = malloc(h.nblocks * 4)) == NULL) {
+	table = (uint32 *) malloc(h.nblocks * 4);
+	if (table == NULL) {
 		goto err;
 	}
+	outbuf.buf = (uint8 *) calloc(1, h.filesize);
+	if (outbuf.buf == NULL) {
+		goto err2;
+	}
+	outbuf.pos = 0;
+	outbuf.size = h.filesize;
 
 	for (i = 0; i < h.nblocks; i++) {
-		table[i] = read32l(in, &error);
-		if (error != 0) goto err2;
+		table[i] = hio_read32l(in);
+		if (hio_error(in) != 0) goto err2;
 	}
 
 	for (i = 0; i < h.nblocks; i++) {
@@ -317,11 +368,11 @@ static int decrunch_mmcmp(FILE *in, FILE *out)
 		struct sub_block *sub_block;
 		uint8 buf[20];
 
-		if (fseek(in, table[i], SEEK_SET) < 0) {
+		if (hio_seek(in, table[i], SEEK_SET) < 0) {
 			goto err2;
 		}
 
-		if (fread(buf, 1, 20, in) != 20) {
+		if (hio_read(buf, 1, 20, in) != 20) {
 			goto err2;
 		}
 
@@ -333,7 +384,7 @@ static int decrunch_mmcmp(FILE *in, FILE *out)
 		block.tt_entries = readmem16l(buf + 16);
 		block.num_bits   = readmem16l(buf + 18);
 
-                /* Sanity check */
+		/* Sanity check */
 		if (block.unpk_size <= 0 || block.pk_size <= 0)
 			goto err2;
 		if (block.tt_entries < 0 || block.pk_size <= block.tt_entries)
@@ -352,14 +403,12 @@ static int decrunch_mmcmp(FILE *in, FILE *out)
 			}
 		}
 
-		sub_block = malloc(block.sub_blk * sizeof (struct sub_block));
+		sub_block = (struct sub_block *) malloc(block.sub_blk * sizeof (struct sub_block));
 		if (sub_block == NULL)
 			goto err2;
 
 		for (j = 0; j < block.sub_blk; j++) {
-			uint8 buf[8];
-
-			if (fread(buf, 1, 8, in) != 8) {
+			if (hio_read(buf, 1, 8, in) != 8) {
 				free(sub_block);
 				goto err2;
 			}
@@ -367,7 +416,7 @@ static int decrunch_mmcmp(FILE *in, FILE *out)
 			sub_block[j].unpk_pos  = readmem32l(buf);
 			sub_block[j].unpk_size = readmem32l(buf + 4);
 
-	                /* Sanity check */
+			/* Sanity check */
 			if (sub_block[j].unpk_pos < 0 ||
 			    sub_block[j].unpk_size < 0) {
 				free(sub_block);
@@ -375,20 +424,21 @@ static int decrunch_mmcmp(FILE *in, FILE *out)
 			}
 		}
 
-		block.tt_entries += ftell(in);
-
 		if (~block.flags & MMCMP_COMP) {
 			/* Data is not packed */
-			block_copy(&block, sub_block, in, out);
+			if (block_copy(&block, sub_block, in, &outbuf) < 0) {
+				free(sub_block);
+				goto err2;
+			}
 		} else if (block.flags & MMCMP_16BIT) {
 			/* Data is 16-bit packed */
-			if (block_unpack_16bit(&block, sub_block, in, out) < 0) {
+			if (block_unpack_16bit(&block, sub_block, in, &outbuf) < 0) {
 				free(sub_block);
 				goto err2;
 			}
 		} else {
 			/* Data is 8-bit packed */
-			if (block_unpack_8bit(&block, sub_block, in, out) < 0) {
+			if (block_unpack_8bit(&block, sub_block, in, &outbuf) < 0) {
 				free(sub_block);
 				goto err2;
 			}
@@ -397,10 +447,14 @@ static int decrunch_mmcmp(FILE *in, FILE *out)
 		free(sub_block);
 	}
 
+	*out = outbuf.buf;
+	*outlen = h.filesize;
+
 	free(table);
 	return 0;
 
     err2:
+	free(outbuf.buf);
 	free(table);
     err:
 	return -1;
@@ -408,5 +462,6 @@ static int decrunch_mmcmp(FILE *in, FILE *out)
 
 struct depacker libxmp_depacker_mmcmp = {
 	test_mmcmp,
+	NULL,
 	decrunch_mmcmp
 };

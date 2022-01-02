@@ -1,12 +1,35 @@
-/*
- * QuadraComposer.c   Copyright (C) 1999 Asle / ReDoX
- *                    Modified by Claudio Matsuoka
+/* ProWizard
+ * Copyright (C) 1999 Asle / ReDoX
+ * Modified by Claudio Matsuoka
+ * Modified in 2020 by Alice Rowan
  *
- * Converts QC MODs back to PTK MODs
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
-#include <string.h>
-#include <stdlib.h>
+/*
+ * QuadraComposer.c
+ *
+ * Converts QC MODs back to PTK MODs
+ *
+ * Currently deadcode due to libxmp having a dedicated EMOD loader.
+ */
+
 #include "prowiz.h"
 
 static int test_emod (const uint8 *, int);
@@ -35,10 +58,10 @@ static int depack_emod (HIO_HANDLE *in, FILE *out)
 	long paddr[128];
 	long i = 0, j = 0, k = 0;
 
-	memset(iaddr, 0, 32 * 4);
-	memset(isize, 0, 32 * 4);
-	memset(paddr, 0, 128 * 4);
-	memset(nrow, 0, 128);
+	memset(iaddr, 0, sizeof(iaddr));
+	memset(isize, 0, sizeof(isize));
+	memset(paddr, 0, sizeof(paddr));
+	memset(nrow, 0, sizeof(nrow));
 
 	/* bypass ID's and chunk sizes */
 	fseek (in, 22, 0);
@@ -199,7 +222,7 @@ static int depack_emod (HIO_HANDLE *in, FILE *out)
 
 	/* pattern data */
 	for (i = 0; i <= Real_pat_max; i++) {
-		memset(Pattern, 0, 1024);
+		memset(Pattern, 0, sizeof(Pattern));
 		if (paddr[i] == 0l) {
 			fwrite (Pattern, 1024, 1, out);
 			printf ("-");
@@ -207,7 +230,7 @@ static int depack_emod (HIO_HANDLE *in, FILE *out)
 		}
 		fseek (in, paddr[i], 0);
 		for (j = 0; j <= nrow[i]; j++) {
-			memset(Row, 0, 16);
+			memset(Row, 0, sizeof(Row));
 			fread (Row, 16, 1, in);
 			for (k = 0; k < 4; k++) {
 				/* fxt */

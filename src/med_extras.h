@@ -6,7 +6,9 @@
 struct med_instrument_extras {
 	uint32 magic;
 	int vts;		/* Volume table speed */
-        int wts;		/* Waveform table speed */
+	int wts;		/* Waveform table speed */
+	int vtlen;		/* Volume table length */
+	int wtlen;		/* Waveform table length */
 	int hold;
 };
 

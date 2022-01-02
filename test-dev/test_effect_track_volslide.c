@@ -3,31 +3,31 @@
 
 
 static int vals[] = {
-	64, 64, 62, 60,		/* down 2 */
-	58, 58, 56, 54,		/* memory */
-	52, 52, 53, 54,		/* up 1 */
-	55, 55, 56, 57,		/* memory */
+	64, 62, 60, 58,		/* down 2 */
+	58, 56, 54, 52,		/* memory */
+	52, 53, 54, 55,		/* up 1 */
+	55, 56, 57, 58,		/* memory */
 	63, 63, 63, 63,		/* set 63 */
-	63, 63, 64, 64,		/* up 1 */
+	63, 64, 64, 64,		/* up 1 */
 	1, 1, 1, 1,		/* set 1 */
-	1, 1, 0, 0,		/* down 1 */
+	1, 0, 0, 0,		/* down 1 */
 	10, 10, 10, 10,		/* set 10 */
-	10, 10, 25, 40,		/* slide 0xf2 */
-	55, 55, 56, 57		/* slide 0x1f */
+	10, 25, 40, 55,		/* slide 0xf2 */
+	55, 56, 57, 58		/* slide 0x1f */
 };
 
 static int vals_fine[] = {
-	64, 64, 62, 60,		/* down 2 */
-	58, 58, 56, 54,		/* memory */
-	52, 52, 53, 54,		/* up 1 */
-	55, 55, 56, 57,		/* memory */
+	64, 62, 60, 58,		/* down 2 */
+	58, 56, 54, 52,		/* memory */
+	52, 53, 54, 55,		/* up 1 */
+	55, 56, 57, 58,		/* memory */
 	63, 63, 63, 63,		/* set 63 */
-	63, 63, 64, 64,		/* up 1 */
+	63, 64, 64, 64,		/* up 1 */
 	1, 1, 1, 1,		/* set 1 */
-	1, 1, 0, 0,		/* down 1 */
+	1, 0, 0, 0,		/* down 1 */
 	10, 10, 10, 10,		/* set 10 */
-	10, 8, 8, 8,		/* fine slide down 2 */
-	8, 9, 9, 9		/* fine slide up 1 */
+	8, 8, 8, 8,		/* fine slide down 2 */
+	9, 9, 9, 9		/* fine slide up 1 */
 };
 
 
@@ -79,5 +79,8 @@ TEST(test_effect_track_volslide)
 		xmp_get_frame_info(opaque, &info);
 		fail_unless(info.channel_info[0].volume == vals_fine[i], "volume slide error");
 	}
+
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

@@ -1,10 +1,9 @@
 /* _[v]snprintf() from msvcrt.dll might not nul terminate */
 /* OpenWatcom-provided versions seem to behave the same... */
 
-#if defined(_WIN32) || defined(__WATCOMC__)
+#include "common.h"
 
-#include <stdarg.h>
-#include <stdio.h>
+#if defined(USE_LIBXMP_SNPRINTF)
 
 #undef snprintf
 #undef vsnprintf
@@ -31,4 +30,18 @@ int libxmp_snprintf (char *str, size_t sz, const char *fmt, ...)
 	return rc;
 }
 
+#endif
+
+/* Win32 debug message helper by Mirko Buffoni */
+#if defined(_MSC_VER) && defined(DEBUG)
+void libxmp_msvc_dbgprint(const char *format, ...)
+{
+	va_list argptr;
+
+	/* do the output */
+	va_start(argptr, format);
+	vprintf(format, argptr);
+	printf("\n");
+	va_end(argptr);
+}
 #endif

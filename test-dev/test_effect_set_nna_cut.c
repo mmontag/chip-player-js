@@ -55,5 +55,8 @@ TEST(test_effect_set_nna_cut)
 	fail_unless(i == p->virt.maxvoc, "used virtual voice");
 
 	xmp_play_frame(opaque);
+
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

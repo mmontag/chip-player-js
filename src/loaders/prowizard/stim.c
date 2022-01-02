@@ -1,16 +1,39 @@
+/* ProWizard
+ * Copyright (C) 1998 Sylvain "Asle" Chipaux
+ * Modified by Claudio Matsuoka
+ * Modified in 2020 by Alice Rowan
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 /*
- * STIM_Packer.c   Copyright (C) 1998 Sylvain "Asle" Chipaux
- *                 Modified by Claudio Matsuoka
+ * STIM_Packer.c
  *
  * STIM Packer to Protracker.
  ********************************************************
  * 13 april 1999 : Update
  *   - no more open() of input file ... so no more hio_read() !.
  *     It speeds-up the process quite a bit :).
+ *
+ * Currently deadcode due to libxmp having a dedicated Slamtilt loader.
  */
 
-#include <string.h>
-#include <stdlib.h>
 #include "prowiz.h"
 
 static int test_stim (uint8 *, int);
@@ -41,12 +64,12 @@ static int depack_stim (uint8 *data, FILE * out)
 	int start = 0;
 	int w = start;	/* main pointer to prevent hio_read() */
 
-	memset(tmp, 0, 1025);
-	memset(ptable, 0, 128);
-	memset(pat, 0, 1025);
-	memset(paddr, 0, 64 * 4);
-	memset(idata_addr, 0, 31 * 4);
-	memset(isize, 0, 31 * 4);
+	memset(tmp, 0, sizeof(tmp));
+	memset(ptable, 0, sizeof(ptable));
+	memset(pat, 0, sizeof(pat));
+	memset(paddr, 0, sizeof(paddr));
+	memset(idata_addr, 0, sizeof(idata_addr));
+	memset(isize, 0, sizeof(isize));
 
 	/* write title */
 	for (i = 0; i < 20; i++)
@@ -144,7 +167,7 @@ static int depack_stim (uint8 *data, FILE * out)
 			taddr[k] = (c1 << 8) + c2;
 		}
 
-		memset(pat, 0, 1025);
+		memset(pat, 0, sizeof(pat));
 		for (k = 0; k < 4; k++) {
 			w = start + paddr[i] + taddr[k];
 			for (j = 0; j < 64; j++) {
@@ -165,7 +188,7 @@ static int depack_stim (uint8 *data, FILE * out)
 
 				pat[j * 16 + k * 4] = (ins & 0xf0);
 
-				if (note != 0) {
+				if (note != 0 && PTK_IS_VALID_NOTE(note - 1)) {
 					pat[j * 16 + k * 4] |=
 						ptk_table[note - 1][0];
 					pat[j * 16 + k * 4 + 1] =

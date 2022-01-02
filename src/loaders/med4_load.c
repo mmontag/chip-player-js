@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -26,10 +26,9 @@
  * HappySong MED4 is in ff401. MED 3.00 is in ff476.
  */
 
-#include <assert.h>
 #include "med.h"
 #include "loader.h"
-#include "med_extras.h"
+#include "../med_extras.h"
 
 #define MAGIC_MED4	MAGIC4('M','E','D',4)
 #undef MED4_DEBUG
@@ -53,9 +52,7 @@ static int med4_test(HIO_HANDLE *f, char *t, const int start)
 	return 0;
 }
 
-const unsigned MAX_CHANNELS = 16;
-
-static void fix_effect(struct xmp_event *event)
+static void fix_effect(struct xmp_event *event, int hexvol)
 {
 	switch (event->fxt) {
 	case 0x00:	/* arpeggio */
@@ -65,8 +62,9 @@ static void fix_effect(struct xmp_event *event)
 	case 0x04:	/* vibrato? */
 		break;
 	case 0x0c:	/* set volume (BCD) */
-		event->fxp = MSN(event->fxp) * 10 +
-					LSN(event->fxp);
+		if (!hexvol) {
+			event->fxp = MSN(event->fxp) * 10 + LSN(event->fxp);
+		}
 		break;
 	case 0x0d:	/* volume slides */
 		event->fxt = FX_VOLSLIDE;
@@ -149,13 +147,14 @@ static inline uint16 stream_read_aligned16(struct stream* s, int bits)
 {
 	if (bits <= 4) {
 		return stream_read4(s) << 12;
-	} else if (bits <= 8) {
-		return stream_read8(s) << 8;
-	} else if (bits <= 12) {
-		return stream_read12(s) << 4;
-	} else {
-		return stream_read16(s);
 	}
+	if (bits <= 8) {
+		return stream_read8(s) << 8;
+	}
+	if (bits <= 12) {
+		return stream_read12(s) << 4;
+	}
+	return stream_read16(s);
 }
 
 struct temp_inst {
@@ -173,7 +172,8 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	uint8 m0;
 	uint64 mask;
 	int transp, masksz;
-	int pos, vermaj, vermin;
+	int32 pos;
+	int vermaj, vermin;
 	uint8 trkvol[16], buf[1024];
 	struct xmp_event *event;
 	int flags, hexvol = 0;
@@ -181,7 +181,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	int smp_idx;
 	int tempo;
 	struct temp_inst temp_inst[64];
-	
+
 	LOAD_INIT();
 
 	hio_read32b(f);		/* Skip magic */
@@ -235,9 +235,9 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	/* read instrument names in temporary space */
 
 	num_ins = 0;
-	memset(&temp_inst, 0, sizeof(temp_inst));
+	memset(temp_inst, 0, sizeof(temp_inst));
 	for (i = 0; mask != 0 && i < 64; i++, mask <<= 1) {
-		uint8 c, size, buf[40];
+		uint8 c, size;
 		uint16 loop_len = 0;
 
 		if ((int64)mask > 0)
@@ -306,15 +306,14 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		mod->bpm = 125 * tempo / 33;
 	}
 	transp = hio_read8s(f);
-	hio_read8s(f);
 	flags = hio_read8s(f);
-	mod->spd = hio_read8(f);
+	mod->spd = hio_read16b(f);
 
 	if (~flags & 0x20)	/* sliding */
 		m->quirk |= QUIRK_VSALL | QUIRK_PBALL;
 
 	if (flags & 0x10)	/* dec/hex volumes */
-		hexvol = 1;	/* not implemented */
+		hexvol = 1;
 
 	/* This is just a guess... */
 	if (vermaj == 2)	/* Happy.med has tempo 5 but loads as 6 */
@@ -471,7 +470,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 						x = stream_read12(&stream);
 						event->fxt = x >> 8;
 						event->fxp = x & 0xff;
-						fix_effect(event);
+						fix_effect(event, hexvol);
 					}
 				}
 			}
@@ -529,25 +528,29 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		int _len, _type;
 		uint64 _mask = mask;
 		for (i = 0; _mask != 0 && i < 64; i++, _mask <<= 1) {
-			int _pos;
-
 			if ((int64)_mask > 0)
 				continue;
 
 			_len = hio_read32b(f);
 			_type = (int16)hio_read16b(f);
-			if ((_pos = hio_tell(f)) < 0) {
-				return -1;
-			}
 
 			if (_type == 0 || _type == -2) {
 				num_smp++;
 			} else if (_type == -1) {
+				if (_len < 22) {
+					D_(D_CRIT "invalid synth %d length", i);
+					return -1;
+				}
 				hio_seek(f, 20, SEEK_CUR);
 				num_smp += hio_read16b(f);
+				_len -= 22;
 			}
 
-			hio_seek(f, _pos + _len, SEEK_SET);
+			if (_len < 0) {
+				D_(D_CRIT "invalid sample %d length", i);
+				return -1;
+			}
+			hio_seek(f, _len, SEEK_CUR);
 		}
 	}
 	hio_seek(f, pos, SEEK_SET);
@@ -567,6 +570,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		struct xmp_instrument *xxi;
 		struct xmp_subinstrument *sub;
 		struct xmp_sample *xxs;
+		struct med_instrument_extras *ie;
 
 		if ((int64)mask > 0) {
 			continue;
@@ -578,6 +582,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		type = (int16)hio_read16b(f);	/* instrument type */
 
 		strncpy((char *)xxi->name, temp_inst[i].name, 32);
+		xxi->name[31] = '\0';
 
 		D_(D_INFO "\n[%2X] %-32.32s %d", i, xxi->name, type);
 
@@ -586,8 +591,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		 */
 
 		if (type == -2) {			/* Hybrid */
-			int length, type;
-			int pos = hio_tell(f);
+			pos = hio_tell(f);
 			if (pos < 0) {
 				return -1;
 			}
@@ -627,8 +631,12 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 			sub = &xxi->sub[0];
 
-			MED_INSTRUMENT_EXTRAS(*xxi)->vts = synth.volspeed;
-			MED_INSTRUMENT_EXTRAS(*xxi)->wts = synth.wfspeed;
+			ie = MED_INSTRUMENT_EXTRAS(*xxi);
+			ie->vts = synth.volspeed;
+			ie->wts = synth.wfspeed;
+			ie->vtlen = synth.voltbllen;
+			ie->wtlen = synth.wftbllen;
+
 			sub->pan = 0x80;
 			sub->vol = temp_inst[i].volume;
 			sub->xpo = temp_inst[i].transpose;
@@ -659,7 +667,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		}
 
 		if (type == -1) {		/* Synthetic */
-			int pos = hio_tell(f);
+			pos = hio_tell(f);
 			if (pos < 0) {
 				return -1;
 			}
@@ -685,7 +693,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 			hio_read(synth.voltbl, 1, synth.voltbllen, f);;
 			hio_read(synth.wftbl, 1, synth.wftbllen, f);;
-			if (synth.wforms == 0xffff)	
+			if (synth.wforms == 0xffff)
 				continue;
 			if (synth.wforms > 64)
 				return -1;
@@ -706,8 +714,11 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			if (libxmp_alloc_subinstrument(mod, i, synth.wforms) < 0)
 				return -1;
 
-			MED_INSTRUMENT_EXTRAS(*xxi)->vts = synth.volspeed;
-			MED_INSTRUMENT_EXTRAS(*xxi)->wts = synth.wfspeed;
+			ie = MED_INSTRUMENT_EXTRAS(*xxi);
+			ie->vts = synth.volspeed;
+			ie->wts = synth.wfspeed;
+			ie->vtlen = synth.voltbllen;
+			ie->wtlen = synth.wftbllen;
 
 			for (j = 0; j < synth.wforms; j++) {
 				/* Sanity check */
@@ -755,7 +766,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		xxi->nsm = 1;
 		if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 			return -1;
-		
+
 		sub = &xxi->sub[0];
 
 		sub->vol = temp_inst[i].volume;
@@ -786,12 +797,12 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		for (j = 0; j < 9; j++) {
 			for (k = 0; k < 12; k++) {
 				int xpo = 0;
-	
+
 				if (j < 4)
 					xpo = 12 * (4 - j);
 				else if (j > 6)
 					xpo = -12 * (j - 6);
-	
+
 				xxi->map[12 * j + k].xpo = xpo;
 			}
 		}
@@ -799,12 +810,14 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		smp_idx++;
 	}
 
-	hio_read16b(f);	/* unknown */
+	/* Not sure what this was supposed to be, but it isn't present in
+	 * Synth-a-sysmic.med or any other MED4 module on ModLand. */
+	/*hio_read16b(f);*/	/* unknown */
 
 	/* IFF-like section */
 parse_iff:
 	while (!hio_eof(f)) {
-		int32 id, size, s2, pos, ver;
+		int32 id, size, s2, ver;
 
 		if ((id = hio_read32b(f)) <= 0)
 			break;
@@ -812,29 +825,31 @@ parse_iff:
 		if ((size = hio_read32b(f)) <= 0)
 			break;
 
-		if ((pos = hio_tell(f)) < 0) {
-			return -1;
-		}
-
 		switch (id) {
 		case MAGIC4('M','E','D','V'):
 			ver = hio_read32b(f);
-			D_(D_INFO "MED Version: %d.%0d\n",
-					(ver & 0xff00) >> 8, ver & 0xff);
+			size -= 4;
+			vermaj = (ver & 0xff00) >> 8;
+			vermin = (ver & 0xff);
+			D_(D_INFO "MED Version: %d.%0d", vermaj, vermin);
 			break;
 		case MAGIC4('A','N','N','O'):
 			/* annotation */
 			s2 = size < 1023 ? size : 1023;
-			hio_read(buf, 1, s2, f);
-			buf[s2] = 0;
-			D_(D_INFO "Annotation: %s\n", buf);
+			if ((m->comment = (char *) malloc(s2 + 1)) != NULL) {
+				int read_len = hio_read(m->comment, 1, s2, f);
+				m->comment[read_len] = '\0';
+
+				D_(D_INFO "Annotation: %s", m->comment);
+				size -= s2;
+			}
 			break;
 		case MAGIC4('H','L','D','C'):
 			/* hold & decay */
 			break;
 		}
 
-		hio_seek(f, pos + size, SEEK_SET);
+		hio_seek(f, size, SEEK_CUR);
 	}
 
 	m->read_event_type = READ_EVENT_MED;

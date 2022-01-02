@@ -16,11 +16,16 @@ TEST(test_depack_zip)
 	ret = compare_md5(info.md5, "a0b5bedbe15e1053ba6bd5645898e6c5");
 	fail_unless(ret == 0, "MD5 error");
 
+	xmp_release_module(c);
+
 	/* This zip originally crashed our depacker */
 	ret = xmp_load_module(c, "data/feel it dance!.zip");
 	fail_unless(ret == 0, "can't load module");
 	xmp_get_module_info(c, &info);
 	ret = compare_md5(info.md5, "62a80c044abc2d1ecf4c26f2fa48a98b");
 	fail_unless(ret == 0, "MD5 error");
+
+	xmp_release_module(c);
+	xmp_free_context(c);
 }
 END_TEST

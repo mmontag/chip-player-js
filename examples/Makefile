@@ -27,9 +27,30 @@ player-openal: player-openal.o
 player-openal-buffer: player-openal-buffer.o
 	$(LD) -o $@ $(LDFLAGS) $+ -lopenal $(LIBS)
 
+
 player-sdl: player-sdl.o
-	$(LD) -o $@ $(LDFLAGS) $+ -lSDL $(LIBS)
+	$(LD) -o $@ $(LDFLAGS) $+ $$(pkg-config --libs sdl) $(LIBS)
+
+player-sdl.o: player-sdl.c
+	$(CC) $(CFLAGS) -c $+ -o $@ $$(pkg-config --cflags sdl)
+
+
+player-sdl2: player-sdl2.o
+	$(LD) -o $@ $(LDFLAGS) $+ $$(pkg-config --libs sdl2) $(LIBS)
+
+player-sdl2.o: player-sdl.c
+	$(CC) $(CFLAGS) -c $+ -o $@ $$(pkg-config --cflags sdl2)
+
 
 player-sdl-smix: player-sdl-smix.o
-	$(LD) -o $@ $(LDFLAGS) $+ -lSDL $(LIBS)
+	$(LD) -o $@ $(LDFLAGS) $+ $$(pkg-config --libs sdl) $(LIBS)
 
+player-sdl-smix.o: player-sdl-smix.c
+	$(CC) $(CFLAGS) -c $+ -o $@ $$(pkg-config --cflags sdl)
+
+
+player-sdl2-smix: player-sdl2-smix.o
+	$(LD) -o $@ $(LDFLAGS) $+ $$(pkg-config --libs sdl2) $(LIBS)
+
+player-sdl2-smix.o: player-sdl-smix.c
+	$(CC) $(CFLAGS) -c $+ -o $@ $$(pkg-config --cflags sdl2)

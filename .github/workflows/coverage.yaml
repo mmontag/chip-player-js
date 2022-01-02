@@ -1,0 +1,21 @@
+name: Code coverage
+
+on:
+  - pull_request
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Install dependencies
+        run: sudo apt install gcovr lcov unrar
+      - name: Create and run configure script
+        run: |
+          autoconf; ./configure
+          (cd test-dev; autoconf; ./configure)
+      - name: Build and test library
+        run: make covercheck
+      - name: Update coverage data
+        run: bash <(curl -s https://codecov.io/bash)

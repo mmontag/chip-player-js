@@ -1,0 +1,352 @@
+name: Regression tests
+
+on:
+  - pull_request
+  - push
+
+jobs:
+  linux:
+    strategy:
+       matrix:
+         distro: [ubuntu-latest, ubuntu-18.04]
+    runs-on: ${{ matrix.distro }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: CMake configure
+        run: |
+          mkdir build
+          cmake . -DCMAKE_BUILD_TYPE=Debug -DWITH_UNIT_TESTS=ON -B build
+      - name: CMake build
+        run: |
+          cmake --build build --target all -- -j 3
+      - name: CMake checks
+        run: |
+          cd build
+          ctest --output-on-failure
+      - name: Create and run Autotools configure script
+        run: |
+          autoconf
+          ./configure
+      - name: Autotools build
+        run: |
+          make -j 3
+      - name: Autotools check
+        run: |
+          make check
+      - name: Autotools devcheck
+        run: |
+          (cd test-dev && autoconf && ./configure)
+          (cd test-dev && make -j 3)
+
+  linux-clang:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Install dependencies
+        run: sudo apt update -qq && sudo apt install -y lld
+      - name: CMake configure
+        run: |
+          mkdir build
+          CC=clang cmake . -DCMAKE_BUILD_TYPE=Debug -DWITH_UNIT_TESTS=ON -B build
+      - name: CMake build
+        run: |
+          cmake --build build --target all -- -j 3
+      - name: CMake checks
+        run: |
+          cd build
+          ctest --output-on-failure
+      - name: Create and run configure script
+        run: |
+          autoconf
+          CC=clang ./configure
+      - name: Autotools build
+        run: |
+          make -j 3
+      - name: Autotools check
+        run: |
+          make check
+      - name: Autotools devcheck
+        run: |
+          (cd test-dev && autoconf && CC=clang CFLAGS="-fPIE" ./configure)
+          (cd test-dev && make -j 3)
+
+  # Simulate Fedora RPM builds, usage of __symver__.
+  linux-gcc-10-lto:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Install dependencies
+        run: sudo apt update && sudo apt install gcc-10
+      - name: CMake configure
+        run: |
+          export CC=gcc-10
+          export CFLAGS="-flto"
+          export LDFLAGS="-flto"
+          cmake . -DCMAKE_BUILD_TYPE=Debug -DWITH_UNIT_TESTS=ON -B build
+      - name: CMake build
+        run: |
+          cmake --build build --target all -- -j 3
+      - name: CMake checks
+        run: |
+          cd build
+          ctest --output-on-failure
+      - name: Create and run configure script
+        run: |
+          export CC=gcc-10
+          export CFLAGS="-flto"
+          export LDFLAGS="-flto"
+          autoconf
+          ./configure
+          (cd test-dev && autoconf && ./configure)
+      - name: Autotools build
+        run: |
+          make -j 3
+      - name: Autotools check
+        run: |
+          make check
+      - name: Autotools devcheck
+        run: |
+          (cd test-dev && make -j 3)
+
+  emscripten:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Install dependencies
+        run: sudo apt update && sudo apt install autoconf
+      - name: Install emscripten
+        run: |
+          cd ..
+          git clone https://github.com/emscripten-core/emsdk.git
+          cd emsdk
+          ./emsdk install latest
+          ./emsdk activate latest
+      - name: CMake configure
+        run: |
+          source ../emsdk/emsdk_env.sh
+          emcmake cmake . -DCMAKE_BUILD_TYPE=Debug -B build
+      - name: CMake build
+        run: |
+          source ../emsdk/emsdk_env.sh
+          cmake --build build --target all -- -j 3
+      - name: CMake check
+        run: |
+          source ../emsdk/emsdk_env.sh
+          cd test
+          emcc test.c ../src/md5.c -o test.js -O3 -Wall -I../include -I../src -L../build/ --embed-file test.itz -lxmp
+          node test.js
+          rm test.js
+      - name: Create and run Autotools configure script
+        run: |
+          source ../emsdk/emsdk_env.sh
+          autoconf
+          emconfigure ./configure --host=wasm32-unknown-emscripten --enable-static --disable-shared
+      - name: Autotools build
+        run: |
+          source ../emsdk/emsdk_env.sh
+          emmake make -j 3
+      - name: Autotools check
+        run: |
+          source ../emsdk/emsdk_env.sh
+          cd test
+          emcc test.c ../src/md5.c -o test.js -O3 -Wall -I../include -I../src -L../lib/ --embed-file test.itz -lxmp
+          node test.js
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: CMake configure for Intel
+        run: |
+          cmake . -DCMAKE_BUILD_TYPE=Debug -DWITH_UNIT_TESTS=ON -B build
+      - name: CMake build for Intel
+        run: |
+          cmake --build build --target all -- -j 4
+      - name: CMake checks
+        run: |
+          cd build
+          ctest --output-on-failure
+      - name: CMake configure for M1
+        run: |
+          cmake . -DCMAKE_OSX_ARCHITECTURES="arm64" -DCMAKE_BUILD_TYPE=Debug -DWITH_UNIT_TESTS=OFF -B build-m1
+      - name: CMake build for M1
+        run: |
+          cmake --build build-m1 --target all
+      - name: Create and run Autotools configure script
+        run: |
+          autoconf
+          ./configure
+      - name: Autotools build
+        run: |
+          make -j 4
+      - name: Autotools check
+        run: |
+          make check
+      # FIXME: parallel builds crash newer Clang versions?!
+      - name: Autotools devcheck
+        run: |
+          (cd test-dev && autoconf && ./configure)
+          (cd test-dev && make)
+
+  windows-vc:
+    strategy:
+       matrix:
+         targetplatform: [x86, amd64]
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: CMake configure
+        run: |
+          cmd.exe /C "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" ${{ matrix.targetplatform }} "&&" cmake . -DCMAKE_BUILD_TYPE=Debug -DWITH_UNIT_TESTS=ON -B build
+      - name: CMake build
+        run: |
+          cmake --build build --config Debug --target ALL_BUILD
+      - name: CMake checks
+        run: |
+          cd build
+          ctest -C Debug --output-on-failure
+      - name: NMake Build
+        run: |
+          cmd.exe /C "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" ${{ matrix.targetplatform }} "&&" nmake -f Makefile.vc
+      - name: NMake check
+        run: |
+          cmd.exe /C "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" ${{ matrix.targetplatform }} "&&" nmake -f Makefile.vc check
+      - name: NMake devcheck
+        run: |
+          cmd.exe /C "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" ${{ matrix.targetplatform }} "&&" cd test-dev "&&" nmake -f Makefile.vc
+
+  windows-msys2:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        include: [
+          {installs: "MINGW32", pkg: "mingw-w64-i686-gcc mingw-w64-i686-cmake mingw-w64-i686-ninja" },
+          {installs: "MINGW64", pkg: "mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-ninja" },
+        ]
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - name: Setup msys2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.installs }}
+          update: true
+          install: base-devel git autoconf ${{ matrix.pkg }}
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Create and run Autotools configure script
+        run: |
+          autoconf
+          ./configure
+      - name: Autotools build
+        run: |
+          make -j 3
+      - name: Autotools check
+        run: |
+          make check
+      - name: Autotools devcheck
+        run: |
+          (cd test-dev && autoconf && ./configure)
+          (cd test-dev && make -j 3)
+      - name: Distclean
+        run: (cd test-dev && make distclean) && make distclean
+      - name: CMake configure
+        run: |
+          cmake . -G "Ninja" -DCMAKE_BUILD_TYPE=Debug -DWITH_UNIT_TESTS=ON -B build
+      - name: CMake build
+        run: |
+          cmake --build build --target all -- -j 3
+      - name: CMake checks
+        run: |
+          cd build
+          ctest --output-on-failure
+
+  amiga:
+    strategy:
+       matrix:
+         include: [
+           {host: "ppc-amigaos"},
+           {host: "ppc-morphos", buildflags: "-noixemul"},
+         ]
+    runs-on: ubuntu-latest
+    container: amigadev/crosstools:${{ matrix.host }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Create and run Autotools configure script
+        run: |
+          autoconf
+          CC="${{ matrix.host }}-gcc ${{ matrix.buildflags }}" ./configure --host=${{ matrix.host }}
+      - name: Autotools build
+        run: |
+          make -j 3
+
+  AddressSanitizer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Install dependencies
+        run: sudo apt install unrar
+      - name: Create and run configure script
+        run: |
+          export CC=clang
+          export CFLAGS="-fsanitize=address -fno-omit-frame-pointer -g"
+          export LDFLAGS="$CFLAGS"
+          autoconf; ./configure
+          (cd test-dev; autoconf; ./configure)
+      - name: Build library
+        run: make -j 3
+      - name: Build and run test
+        run: make check
+      - name: Build and run regression tests
+        run: (cd test-dev && make -j 3)
+
+  MemorySanitizer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Install dependencies
+        run: sudo apt install unrar
+      - name: Create and run configure script
+        run: |
+          export CC=clang
+          export CFLAGS="-fsanitize=memory -fsanitize-memory-track-origins=2 -fno-omit-frame-pointer -g"
+          export LDFLAGS="$CFLAGS"
+          autoconf; ./configure
+          (cd test-dev; autoconf; ./configure)
+      - name: Build library
+        run: make -j 3
+      - name: Build and run test
+        run: make check
+      - name: Build and run regression tests
+        run: (cd test-dev && make -j 3)
+
+  UndefinedBehaviorSanitizer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Install dependencies
+        run: sudo apt install unrar
+      - name: Create and run configure script
+        run: |
+          export CC=clang
+          export CFLAGS="-fsanitize=undefined -fno-sanitize-recover=all -fno-sanitize=shift-base -fno-omit-frame-pointer -g"
+          export LDFLAGS="$CFLAGS"
+          autoconf; ./configure
+          (cd test-dev; autoconf; ./configure)
+      - name: Build library
+        run: make -j 3
+      - name: Build and run test
+        run: make check
+      - name: Build and run regression tests
+        run: (cd test-dev && make -j 3)

@@ -19,7 +19,6 @@
 #define XM_ENVELOPE_LOOP 0x04
 #define XM_LINEAR_PERIOD_MODE 0x01
 
-
 struct xm_file_header {
 	uint8 id[17];		/* ID text: "Extended module: " */
 	uint8 name[20];		/* Module name, padded with zeroes */
@@ -98,4 +97,4 @@ struct xm_event {
 	uint8 fx_parm;		/* Effect parameter */
 };
 
-#endif
+#endif  /* LIBXMP_LOADERS_XM_H */

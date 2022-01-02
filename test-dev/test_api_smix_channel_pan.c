@@ -53,5 +53,6 @@ TEST(test_api_smix_channel_pan)
 
 	xmp_release_module(opaque);
 	xmp_end_smix(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

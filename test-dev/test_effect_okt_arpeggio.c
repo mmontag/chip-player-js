@@ -1,5 +1,4 @@
 #include "test.h"
-#include <math.h>
 #include "../src/effects.h"
 
 
@@ -11,14 +10,6 @@ Periodtable for Tuning 0, Normal
 
 Amiga limits: 907 to 108
 */
-
-#define PERIOD ((int)round(1.0 * info.channel_info[0].period / 4096))
-
-/* Get period from note */
-static int note_to_period(int n)
-{
-        return round (13696.0 / pow(2, (double)n / 12));
-}
 
 static void check_arpeggio_okt3(xmp_context opaque, int note, int val, int spd)
 {
@@ -146,5 +137,8 @@ TEST(test_effect_okt_arpeggio)
 	check_arpeggio_okt5(opaque, 60, 0x05, 6);
 	check_arpeggio_okt5(opaque, 60, 0x50, 6);
 	check_arpeggio_okt5(opaque, 60, 0x35, 6);
+
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST
