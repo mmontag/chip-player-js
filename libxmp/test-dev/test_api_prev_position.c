@@ -5,7 +5,7 @@ TEST(test_api_prev_position)
 	xmp_context opaque;
 	struct context_data *ctx;
 	struct player_data *p;
-	int state, ret, i;
+	int state, ret;
 
 	opaque = xmp_create_context();
 	ctx = (struct context_data *)opaque;
@@ -18,6 +18,7 @@ TEST(test_api_prev_position)
 	fail_unless(ret == -XMP_ERROR_STATE, "state check error");
 
  	create_simple_module(ctx, 2, 2);
+	libxmp_free_scan(ctx);
 	set_order(ctx, 0, 0);
 	set_order(ctx, 1, 1);
 	set_order(ctx, 2, 0);
@@ -41,5 +42,8 @@ TEST(test_api_prev_position)
 	fail_unless(ret == 1, "prev position error");
 	xmp_play_frame(opaque);
 	fail_unless(p->ord == 1, "didn't change to prev position");
+
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

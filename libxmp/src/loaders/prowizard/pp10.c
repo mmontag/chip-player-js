@@ -1,13 +1,33 @@
-/*
- * ProPacker_v1.0 Copyright (C) 1997 Asle / ReDoX
- *
- * Converts back to ptk ProPacker v1 MODs
- *
+/* ProWizard
+ * Copyright (C) 1997 Asle / ReDoX
  * Modified in 2016 by Claudio Matsuoka
+ * Modified in 2021 by Alice Rowan
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
-#include <string.h>
-#include <stdlib.h>
+/*
+ * ProPacker_v1.0
+ *
+ * Converts back to ptk ProPacker v1 MODs
+ */
+
 #include "prowiz.h"
 
 static int depack_pp10(HIO_HANDLE *in, FILE *out)
@@ -20,7 +40,7 @@ static int depack_pp10(HIO_HANDLE *in, FILE *out)
 	int i, j, k;
 	int ntrk, size, ssize = 0;
 
-	memset(trk_num, 0, 128 * 4);
+	memset(trk_num, 0, sizeof(trk_num));
 
 	pw_write_zero(out, 20);				/* write title */
 
@@ -70,7 +90,7 @@ static int depack_pp10(HIO_HANDLE *in, FILE *out)
 
 	/* track/pattern data */
 	for (i = 0; i < len; i++) {
-		memset(pdata, 0, 1024);
+		memset(pdata, 0, sizeof(pdata));
 		for (j = 0; j < 4; j++) {
 			hio_seek(in, 762 + (trk_num[j][i] << 8), SEEK_SET);
 			for (k = 0; k < 64; k++) {
@@ -168,10 +188,9 @@ static int test_pp10(const uint8 *data, char *t, int s)
 			ntrk = data[250 + i];
 		}
 	}
-
-	PW_REQUEST_DATA(s, 762 + ntrk * 64);
-
 	ntrk++;
+
+	PW_REQUEST_DATA(s, 762 + ntrk * 256);
 
 	for (i = 0; i < ntrk * 64; i++) {
 		if (data[762 + i * 4] > 0x13) {

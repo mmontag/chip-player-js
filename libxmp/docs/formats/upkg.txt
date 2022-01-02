@@ -1,0 +1,333 @@
+[ Copied from:
+  http://wiki.beyondunreal.com/Legacy:Package_File_Format and
+  http://wiki.beyondunreal.com/Legacy:Package_File_Format/Data_Details
+  License: Attribution-Noncommercial-Share Alike 3.0 ]
+
+
+The Unreal Engine uses a single file format to store all its game
+content. You may have seen many different filetypes, like .utx
+(textures), .unr (maps), .umx (sound) and .u (code), but from a
+technical standpoint there is no difference between those files;
+the different file endings are only used to help organize the
+packages in the directory structure. The following article will
+describe the basic structure of his fileformat. It omits many
+details (such as tons of constants, for example).
+
+
+The Structure of the File
+
+Every package file can be roughly split into three logical parts.
+The header, the three index tables (name-table, import-table and
+export-table) and the data itself. But only the header has a fixed
+position (at offset 0), all other parts can be found anywhere
+within the file without irritating the engine.
+
+Most of the time, although, the layout looks like the following:
+
+ - Header
+ - Name-Table
+ - Import-Table
+ - Data
+ - Export-Table
+
+
+** Header:
+
+This global header can be found at the beginning of the file
+(offset 0). It is the starting point for every operation.
+
+offset  Type    Property        Description
+------  -----   --------------- ---------------------------------------
+0       DWORD   Signature       Always: 0x9E2A83C1; use this to verify
+                                that you indeed try to read an Unreal-
+                                Package
+
+4       WORD    PackageVersion  Version of the file-format; Unreal1
+                                uses mostly 61-63, UT 67-69; However
+                                note that quite a few packages are in
+                                use with UT that have Unreal1 versions.
+
+6       WORD    LicenseMode     This is the license number. Different
+                                for each game.
+
+8       DWORD   Package Flags   Global package flags, i.e. if a package
+                                may be downloaded from a game server
+
+12      DWORD   Name Count      No. Of entries in name-table
+
+16      DWORD   Name Offset     Offset of name-table within the file
+
+20      DWORD   Export Count    No. Of entries in export-table
+
+24      DWORD   Export Offset   Offset of export-table within the file
+
+28      DWORD   Import Count    No. Of entries in import-table
+
+32      DWORD   Import Offset   Offset of import-table within the file
+
+After the ImportOffset, the header differs between the versions. The
+only interesting fact, though, is that for fileformat versions => 68,
+a GUID has been introduced. It can be found right after ImportOffset:
+
+36      16 BYTE GUID            Unique identifier; used for package
+                                downloading from servers
+
+older package versions have a list of GUIDs (pointed to by the same
+form of count/offset pair as above) in a seperate section rather than
+just space for one, tests reveal that ut uses the last one in the
+list when there is more than one but such packages do not seem to be
+seen in the wild.
+
+
+** Index Tables:
+
+The Unreal-Engine introduces two new variable-types. The first one
+is a rather simple string type, called NAME from now on. The second
+one is a bit more tricky, these CompactIndices, or INDEX later on,
+compresses ordinary DWORDs downto one to five BYTEs. Both types, as
+well as the ObjectReference, are described down below under Data
+Details.
+
+
+** Name-Table
+
+The first and most simple one of the three tables is the name-table.
+The name-table can be considered an index of all unique names used
+for objects and references within the file. Later on, you'll often
+find indexes into this table instead of a string containing the
+object-name.
+
+Type    Property        Description
+-----   ------------    -----------------------------------------------
+NAME    Object Name     
+DWORD   Object Flags    Flags for the object
+
+
+** Export-Table
+
+The export-table is an index for all objects within the package.
+Every object in the body of the file has a corresponding entry in
+this table, with information like offset within the file etc.
+
+Type    Property        Description
+-----   --------        -----------------------------------------------
+INDEX   Class           Class of the object, i.e. Texture or Palette
+                        etc; stored as a ObjectReference
+
+INDEX   Super           Object Parent; again a ObjectReference
+
+DWORD   Group           Internal package/group of the object, i.e.
+                        Floor for floor-textures; ObjectReference
+
+INDEX   Object Name     The name of the object; an index into the name-
+                        table
+
+DWORD   Object Flags    Flags for the object
+
+INDEX   Serial Size     Total size of the object
+
+INDEX   Serial Offset   Offset of the object; this field only exists if
+                        the SerialSize is larger 0
+
+
+** Import-Table:
+
+The third table holds references to objects in external packages.
+For example, a texture might have a DetailTexture (which makes for
+the nice structure if have a very close look at a texture). Now,
+these DetailTextures are all stored in a single package (as they
+are used by many different textures in different package files).
+The property of the texture object only needs to store an index
+into the import-table then as the entry in the import-table already
+points to the DetailTexture in the other package.
+
+Type    Property        Description
+-----   -------------   -----------
+INDEX   Class Package   Package file in which the class of the object
+                        is defined; an index into the name-table
+
+INDEX   Class Name      Class of the object, i.e. Texture, Palette,
+                        Package, etc; an index into the name-table
+
+DWORD   Package         Reference where the object resides;
+                        ObjectReference
+
+INDEX   Object Name     The name of the object; an index into the
+                        name-table
+
+
+** Body/Object:
+
+Each object consists of a list of properties at the beginning and
+the actual object itself.
+
+- Object Properties:
+
+When jumping to the offset of an object, you'll first be confronted
+with the object properties before the actual object starts. The
+format is rather straightforward. The first byte is an INDEX-type
+reference into the Name-Table, giving you the property's name. The
+second byte does the magic of telling you what kind of data follows;
+for example 0x02 flags a DWORD sized integer type. Then comes the
+actual property-data. The procedure repeats itself until the
+reference into the Name-Table returns 'None' (case insensitive) as
+the name.
+
+That said, there are some bit-tricks to deal with arrays, booleans
+and such.
+
+- Sample Objects (Texture Class):
+
+After the properties are finished the object starts. It basically
+consists of a predefined set of properties. As an example, the
+texture class (for good old UT) will be explained below. The
+texture class is a native one, which means that it doesn't have a
+generic header in addition to its own data. The layout looks like
+this:
+
+Type    Property        Description
+------- -----------     -----------------------------------------------
+BYTE    MipMapCount     Count of MipMaps in object
+
+The next set of variables repeats itself for each MipMap.
+
+Type    Property        Description
+------- -----------     -----------------------------------------------
+DWORD   WidthOffset     Offset in file; should be the same as
+                        SerialOffset in the Export-Table. Only
+                        if PkgVer >= 63
+
+INDEX   MipMapSize      Size of the image data (in bytes)
+
+n BYTEs MipMapData      Image data; one byte per pixel; n = MipMapSize
+
+DWORD   Width           Texture-width
+
+DWORD   Height          Texture-height
+
+BYTE    BitsWidth       Number of bits of Width
+                        (e.g. 10 for 1024 pixels)
+
+BYTE    BitsHeight      Number of bits of Height
+                        (e.g. 10 for 1024 pixels)
+
+
+** Data Details:
+
+- Integer values:
+
+Integers are stored in low-endian byte order (that means, the
+least significant byte comes first; the standard byte order for
+Intel processors).
+
+- Index/CompactIndex values:
+
+Index values are signed integers stored in a compact format,
+occupying one to five bytes. In the first byte,
+
+  - the most significant bit (bit 7) specifies the sign of the
+    integer value;
+  - the second-most significant bit (bit 6) is set if the value
+    is continued in the next byte;
+  - and the six remaining bits (bits 5 to 0) are the six least
+    significant bits of the resultant integer value.
+
+Each of the three following bytes (if applicable according to bit 6
+of the first byte) contributes seven more bits to the final integer
+value (bits 6 to 0 of each byte), while its most significant bit
+(bit 7) is set if another byte must be read to continue the value.
+The fifth byte contributes full eight bits to the value. No more
+than five bytes are read for a compact index value.
+
+The following chart demonstrates how compact index values are stored.
+The Range column specifies the range of values that can be stored with
+the given representation. s is the signum bit, and x are data bits.
+
+           Byte  0         1         2         3         4
+   Range   Bit   76543210  76543210  76543210  76543210  76543210
+   
+    6 bit        s0xxxxxx
+   13 bit        s1xxxxxx  0xxxxxxx
+   20 bit        s1xxxxxx  1xxxxxxx  0xxxxxxx
+   27 bit        s1xxxxxx  1xxxxxxx  1xxxxxxx  0xxxxxxx
+   35 bit        s1xxxxxx  1xxxxxxx  1xxxxxxx  1xxxxxxx  xxxxxxxx
+
+// Sample C# code (can be easily ported to C/C++/VB/etc.)
+ 
+/// <summary>Reads a compact integer from the FileReader.
+/// Bytes read differs, so do not make assumptions about
+/// physical data being read from the stream. (If you have
+/// to, get the difference of FileReader.BaseStream.Position
+/// before and after this is executed.)</summary>
+/// <returns>An "uncompacted" signed integer.</returns>
+/// <remarks>FileReader is a System.IO.BinaryReader mapped
+/// to a file. Also, there may be better ways to implement
+/// this, but this is fast, and it works.</remarks>
+private int ReadCompactInteger()
+{
+	int output = 0;
+	bool signed = false;
+	for(int i = 0; i < 5; i++)
+	{
+		byte x = FileReader.ReadByte();
+		// First byte
+		if(i == 0)
+		{
+			// Bit: X0000000
+			if((x & 0x80) > 0)
+				signed = true;
+			// Bits: 00XXXXXX
+			output |= (x & 0x3F);
+			// Bit: 0X000000
+			if((x & 0x40) == 0)
+				break;
+		}
+		// Last byte
+		else if(i == 4)
+		{
+			// Bits: 000XXXXX -- the 0 bits are ignored
+			// (hits the 32 bit boundary)
+			output |= (x & 0x1F) << (6 + (3 * 7));
+		}
+		// Middle bytes
+		else
+		{
+			// Bits: 0XXXXXXX
+			output |= (x & 0x7F) << (6 + ((i - 1) * 7));
+			// Bit: X0000000
+			if((x & 0x80) == 0)
+				break;
+		}
+	}
+	// multiply by negative one here, since the first 6+ bits could be 0
+	if(signed)
+		output *= -1;
+	return(output);
+}
+
+
+- Name values:
+
+The Name type is a simple string type. The format does, although,
+differ between the package versions.
+
+Older package versions (<64, original Unreal engine) store the Name
+type as a zero-terminated ASCII string; "UT2k3", for example would
+be stored as: "U" "T" "2" "k" "3" 0x00
+
+Newer packages (>=64, UT engine) prepend the length of the string
+plus the trailing zero. Again, "UT2k3" would be now stored as:
+0x06 "U" "T" "2" "k" "3" 0x00
+
+- Object References:
+
+The last custom type which can be found within package files is the
+ObjectReference. ObjectReferences can be imagined as pointers.
+Technically, they are stored as CompactIndices. Depending on their
+value, however, they can point to different objects.
+
+Value   Type                                    Pointer-Value
+-----   --------------------------------------  -----------------------
+ < 0    pointer to an entry of the ImportTable  entry-id = -value - 1
+ = 0    pointer to NULL                         NULL
+ > 0    pointer to an entry in the ExportTable  entry-id = value - 1

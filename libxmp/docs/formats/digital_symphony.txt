@@ -14,6 +14,7 @@
      Pattern number: 0 to 4095 (&FFF)
     
      A pattern is composed of 64 notes. 
+
      Each note is stored as 4 bytes (A 32 bit-word), and of course all notes
      are stored after each other. 
 
@@ -24,30 +25,94 @@
         02      chan i
        etc.
 
+     Info for each note:
+     -------------------
+     bits 20-31: effect value (0-4095).
+          14-19: effect command number (0-63).
+          13-13: not used for now (should be 0).
+           6-12: sample number (0-63).
+           0- 5: note number (0-36).
 
-     Module/Song file format (Filetype &10B)
-     ---------------------------------------
+     Note numbers table:
+     -------------------
+       C-1 to B-1 : 01 to 12
+       C-2 to B-2 : 13 to 24
+       C-3 to B-3 : 25 to 36
 
+     Note: the use of [x,y] in the following specs refers to the revision
+           number x and file version y in which the feature first appeared
+           (see top of this file)
+     Note2: Any program that would like to read Symphony files should test
+            the version number and give an error if greater or equal to 10.
+            The difference between version 0 and 1 is that a version 1 file
+            MAYBE uses the new packing methods as standard. So read the file
+            and check if you know the packing methods used.
+     Note3: You may notice that the space taken by a soundtrack can be
+            computed without reading the whole file.
+
+     Sample file format (Filetype &10A: SySample)
+     --------------------------------------------
        Field length Contents
        ------------ --------
+          8 bytes   The string "BASSSAMP". Byte value= ASCII code - 64
+          1 byte    Version number (currently 1)
+          1 byte    Name length: xx
+         xx bytes   Name
+          3 bytes   Length DIV 2 (length= number of samples, not bytes)
+          3 bytes   Repeat offset DIV 2
+          3 bytes   Repeat length DIV 2
+          1 byte    Packing method
+         sy bytes   Data:
+                    Packing=0 : 8-bit logarithmic (sy=length)
+                    Packing=1 : 13-bit LZW applied to linear sample data
+                                differences (sy multiple of 4)
+                    Packing=2 : 8-bit linear signed (sy=length)       [1,0]
+                    Packing=3 : 16-bit linear signed (sy=length*2)    [2,1]
+                                (little endian)
+                    Packing=4 : SigmaDelta compression applied to     [2,1]
+                                linear sample differences
+                    Packing=5 : SigmaDelta compression applied to     [2,1]
+                                logarithmic sample differences
+        0-3 bytes   Zero's to fill last file word
 
-          8 bytes   The string "BASSTRAK". Byte value= ASCII code - 64
+     Pattern file format (Filetype &FFD: Data)
+     -----------------------------------------
+       Field length Contents
+       ------------ --------
+          8 bytes   The string "BASSPTRN". Byte value= ASCII code - 64
           1 byte    Version number (currently 0)
+          1 byte    Contents: 0 for a sequence, 1 for some patterns
+        0-1 byte    Number of sequence lines (only if Contents=0): z
+          2 bytes   Length: number of sequence positions
+                    or number of patterns: xx
+         yy bytes   Data:
+                    Contents=0 : For each line
+                                     For xx positions
+                                         Pattern number (2 bytes each)
+                                 (yy=2*xx*z)
+                    Contents=1 : patterns data (yy=256*xx)
+
+     Module/Song file format (Filetype &10B: Symphony)
+     -------------------------------------------------
+       Field length Contents
+       ------------ --------
+          8 bytes   The string "BASSTRAK". Byte value= ASCII code - 64
+          1 byte    Version number (currently 1)
           1 byte    Number of voices (1 to 8): z
           2 bytes   Track length in positions: y (0 to &1000)
           2 bytes   Number of defined patterns: p (0 to &1000)
-          3 bytes   Information text length: il 
+          3 bytes   Information text length: il
 
-          For the 63 samples, we have: 
+          For the 63 samples, we have:
 
        (  1 byte    Sample name length: sn
        (            (bit 7 set if all its data is blanked: lengths, vol, ft)
-       (            (bit 6 reserved)
-       (  3 bytes   Sample length DIV 2 
+       (            (bit 6 reserved => mask out to read / write 0)
+       (  3 bytes   Sample length DIV 2 (length= number of samples, not bytes)
+
           1 byte    Track name length: x
           x bytes   Track name
           8 bytes   Effects allowed table. 1 bit per effect (0=no, 1=allowed)
-
       If y>0 then
         ( 1 byte    Packing system for sequence (0= not packed, 1= packed)
         ( s bytes   Sequence data:
@@ -56,7 +121,7 @@
         (                               Pattern number (2 bytes)
         (                       (s= 2*y*z)
         (           Packing=1 : 13-bit LZW applied to overall sequence data
-        (                       (s multiple of 4) 
+        (                       (s multiple of 4)
 
       If p>0 then
         ( For each pk-pattern chunk (all 2000 patterns but the last):
@@ -67,21 +132,19 @@
         (                               Full note value (1 word)
         (                           (b= 4*64*pk)
         (               Packing=1 : 13-bit LZW applied to chunk data
-        (                           (b multiple of 4) 
+        (                           (b multiple of 4)
 
-          For the 63 samples, we have: 
+          For the 63 samples, we have:
 
        ( sn bytes   Sample name
        (  3 bytes   Sample repeat offset DIV 2
        (  3 bytes   Sample repeat length DIV 2
        (  1 byte    Sample volume (0 to 64)
        (  1 byte    Sample fine tune (-8 to 7)
-       (  1 byte    Packing system for sample (0= not packed, 1= packed)
+       (  1 byte    Packing system for sample (see sample file format)
+       (
        ( If sample length>0 then
-       (   ( sy bytes Data:
-       (   (          Packing=0 : logarithmic (sy= sample length)
-       (   (          Packing=1 : 13-bit LZW applied to sample data
-       (   (                      differences (yy multiple of 4)
+       (   ( sy bytes Data: see sample file format above
 
       If il>0 then
         ( 1 byte    Packing system for information text
@@ -89,26 +152,22 @@
         ( i bytes   Information text:
         (           Packing=0 : Text (i=il)
         (           Packing=1 : 13-bit LZW applied to information text
-        (                       (i multiple of 4) 
+        (                       (i multiple of 4)
 
-        0-3 bytes   Zero's to fill last file word 
- 
- 
-     Info for each note:
-     -------------------
+        0-3 bytes   Zero's to fill last file word
 
-     bits 20-31: effect value (0-4095).
-          14-19: effect command number (0-63).
-          13-13: not used for now (should be 0).
-           6-12: sample number (0-63).
-           0- 5: note number (0-36). 
 
-     Note numbers table:
-     -------------------
+    Notes about compression algorithms:
 
-       C-1 to B-1 : 01 to 12
-       C-2 to B-2 : 13 to 24
-       C-3 to B-3 : 25 to 36 
+    - Sample differences are computed like this:
+      Init: x=0; p=sample start
+      Loop: difference= value(p)-x; x= value(p); inc(p)
+    - The 13-bit LZW compression scheme uses 256/257 as restart/end code.
+      Applied on signed linear sample deltas.
+    - The SigmaDelta compression is rather too complex to explain here!
+      Applied on unsigned linear or unsigned logarithmic sample deltas.
+
+    Maybe next time we'll provide some algorithms...
 
 
    Archimedes Symphony V1.00 Effect Commands

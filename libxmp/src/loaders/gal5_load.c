@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -20,11 +20,9 @@
  * THE SOFTWARE.
  */
 
-#include <unistd.h>
-#include <limits.h>
 #include "loader.h"
 #include "iff.h"
-#include "period.h"
+#include "../period.h"
 
 /* Galaxy Music System 5.0 module file loader
  *
@@ -73,9 +71,11 @@ static int get_init(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	struct local_data *data = (struct local_data *)parm;
 	char buf[64];
 	int flags;
-	
-	hio_read(buf, 1, 64, f);
+
+	if (hio_read(buf, 1, 64, f) < 64)
+		return -1;
 	strncpy(mod->name, buf, 63);	/* ensure string terminator */
+	mod->name[63] = '\0';
 	libxmp_set_type(m, "Galaxy Music System 5.0");
 	flags = hio_read8(f);	/* bit 0: Amiga period */
 	if (~flags & 0x01)
@@ -86,7 +86,15 @@ static int get_init(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	hio_read16l(f);		/* unknown - 0x01c5 */
 	hio_read16l(f);		/* unknown - 0xff00 */
 	hio_read8(f);		/* unknown - 0x80 */
-	hio_read(data->chn_pan, 1, 64, f);
+
+	if (hio_read(data->chn_pan, 1, 64, f) != 64) {
+		D_(D_CRIT "error reading INIT");
+		return -1;
+	}
+
+	/* Sanity check */
+	if (mod->chn > XMP_MAX_CHANNELS)
+		return -1;
 
 	return 0;
 }
@@ -127,6 +135,10 @@ static int get_inst_cnt(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	hio_read8(f);		/* 00 */
 	i = hio_read8(f) + 1;	/* instrument number */
 
+	/* Sanity check */
+	if (i > MAX_INSTRUMENTS)
+		return -1;
+
 	if (i > mod->ins)
 		mod->ins = i;
 
@@ -140,11 +152,15 @@ static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	int i, len, chan;
 	int rows, r;
 	uint8 flag;
-	
+
 	i = hio_read8(f);	/* pattern number */
 	len = hio_read32l(f);
-	
+
 	rows = hio_read8(f) + 1;
+
+	/* Sanity check - don't allow duplicate patterns. */
+	if (len < 0 || mod->xxp[i] != NULL)
+		return -1;
 
 	if (libxmp_alloc_pattern_tracks(mod, i, rows) < 0)
 		return -1;
@@ -153,6 +169,9 @@ static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		if ((flag = hio_read8(f)) == 0) {
 			r++;
 			continue;
+		}
+		if (hio_error(f)) {
+			return -1;
 		}
 
 		chan = flag & 0x1f;
@@ -169,7 +188,7 @@ static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 				break;
 			default:
 				if (fxt > 0x0f) {
-					printf("unknown effect %02x %02x\n", fxt, fxp);
+					D_(D_CRIT "p%d r%d c%d unknown effect %02x %02x", i, r, chan, fxt, fxp);
 					fxt = fxp = 0;
 				}
 			}
@@ -204,8 +223,12 @@ static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	hio_read32b(f);		/* 42 01 00 00 */
 	hio_read8(f);		/* 00 */
 	i = hio_read8(f);		/* instrument number */
-	
-	hio_read(&mod->xxi[i].name, 1, 28, f);
+
+	/* Sanity check - don't allow duplicate instruments. */
+	if (mod->xxi[i].nsm != 0)
+		return -1;
+
+	hio_read(mod->xxi[i].name, 1, 28, f);
 	hio_seek(f, 290, SEEK_CUR);	/* Sample/note map, envelopes */
 	mod->xxi[i].nsm = hio_read16l(f);
 
@@ -226,7 +249,7 @@ static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	hio_read32b(f);	/* size */
 	hio_read32b(f);	/* unknown - usually 0x40000000 */
 
-	hio_read(&mod->xxs[i].name, 1, 28, f);
+	hio_read(mod->xxs[i].name, 1, 28, f);
 
 	hio_read32b(f);	/* unknown - 0x0000 */
 	hio_read8(f);	/* unknown - 0x00 */
@@ -265,7 +288,7 @@ static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		mod->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 		mod->xxs[i].lps,
 		mod->xxs[i].lpe,
-		mod->xxs[i].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' : 
+		mod->xxs[i].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' :
 			mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 		mod->xxi[i].sub[0].vol, flags, srate);
 

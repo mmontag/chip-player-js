@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -21,7 +21,7 @@
  */
 
 #include "loader.h"
-#include "depackers/readlzw.h"
+#include "lzw.h"
 
 
 static int sym_test(HIO_HANDLE *, char *, const int);
@@ -37,10 +37,6 @@ static int sym_test(HIO_HANDLE *f, char *t, const int start)
 {
 	uint32 a, b;
 	int i, ver;
-
-	/* Load from memory not supported until we handle sample depacking */
-	if (HIO_HANDLE_TYPE(f) != HIO_HANDLE_TYPE_FILE)
-		return -1;
 
 	a = hio_read32b(f);
 	b = hio_read32b(f);
@@ -71,7 +67,6 @@ static int sym_test(HIO_HANDLE *f, char *t, const int start)
 
 	return 0;
 }
-
 
 
 static void fix_effect(struct xmp_event *e, int parm)
@@ -253,6 +248,7 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	uint32 a, b;
 	uint8 *buf;
 	int size, ret;
+	int max_sample_size = 1;
 	uint8 allowed_effects[8];
 
 	LOAD_INIT();
@@ -266,11 +262,15 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->len = mod->pat = hio_read16l(f);
 
 	/* Sanity check */
-	if (mod->chn > 8 || mod->pat > 256)
+	if (mod->chn < 1 || mod->chn > 8 || mod->pat > XMP_MAX_MOD_LENGTH)
 		return -1;
 
 	mod->trk = hio_read16l(f);	/* Symphony patterns are actually tracks */
 	infolen = hio_read24l(f);
+
+	/* Sanity check - track 0x1000 is used to indicate the empty track. */
+	if (mod->trk > 0x1000)
+		return -1;
 
 	mod->ins = mod->smp = 63;
 
@@ -290,6 +290,9 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			/* Sanity check */
 			if (mod->xxs[i].len > 0x80000)
 				return -1;
+
+			if (max_sample_size < mod->xxs[i].len)
+				max_sample_size = mod->xxs[i].len;
 		}
 	}
 
@@ -301,7 +304,7 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		hio_read(mod->name, 1, a, f);
 	}
 
-	hio_read(&allowed_effects, 1, 8, f);
+	hio_read(allowed_effects, 1, 8, f);
 
 	MODULE_INFO();
 
@@ -318,13 +321,11 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	D_(D_INFO "Packed sequence: %s", a ? "yes" : "no");
 
 	size = mod->len * mod->chn * 2;
-	if ((buf = malloc(size)) == NULL)
+	if ((buf = (uint8 *)malloc(size)) == NULL)
 		return -1;
 
 	if (a) {
-		unsigned char *x = libxmp_read_lzw_dynamic(f->handle.file, buf,
-					13, 0, size, size, XMP_LZW_QUIRK_DSYM);
-		if (x == NULL) {
+		if (libxmp_read_lzw(buf, size, size, LZW_FLAGS_SYM, f) < 0) {
 			free(buf);
 			return -1;
 		}
@@ -346,14 +347,14 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			int idx = 2 * (i * mod->chn + j);
 			int t = readptr16l(&buf[idx]);
 
-			/* Sanity check */
-			if (t >= mod->trk - 1) {
+			if (t == 0x1000) {
+				/* empty trk */
+				t = mod->trk - 1;
+			} else if (t >= mod->trk - 1) {
+				/* Sanity check */
 				free(buf);
 				return -1;
 			}
-	
-			if (t == 0x1000) /* empty trk */
-				t = mod->trk - 1;
 
 			mod->xxp[i]->index[j] = t;
 		}
@@ -372,13 +373,11 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	D_(D_INFO "Stored tracks: %d", mod->trk - 1);
 
 	size = 64 * (mod->trk - 1) * 4;
-	if ((buf = malloc(size)) == NULL)
+	if ((buf = (uint8 *)malloc(size)) == NULL)
 		return -1;
 
 	if (a) {
-		unsigned char *x = libxmp_read_lzw_dynamic(f->handle.file, buf,
-					13, 0, size, size, XMP_LZW_QUIRK_DSYM);
-		if (x == NULL) {
+		if (libxmp_read_lzw(buf, size, size, LZW_FLAGS_SYM, f) < 0) {
 			free(buf);
 			return -1;
 		}
@@ -423,15 +422,17 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		return -1;
 
 	/* Load and convert instruments */
-
 	D_(D_INFO "Instruments: %d", mod->ins);
 
-	for (i = 0; i < mod->ins; i++) {
-		uint8 buf[128];
+	if ((buf = (uint8 *)malloc(max_sample_size)) == NULL)
+		return -1;
 
-		memset(buf, 0, 128);
-		hio_read(buf, 1, sn[i] & 0x7f, f);
-		libxmp_instrument_name(mod, i, buf, 32);
+	for (i = 0; i < mod->ins; i++) {
+		uint8 namebuf[128];
+
+		memset(namebuf, 0, sizeof(namebuf));
+		hio_read(namebuf, 1, sn[i] & 0x7f, f);
+		libxmp_instrument_name(mod, i, namebuf, 32);
 
 		if (~sn[i] & 0x80) {
 			int looplen;
@@ -460,30 +461,99 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		a = hio_read8(f);
 
-		if (a != 0 && a != 1) {
-			fprintf(stderr, "libxmp: unsupported sample type\n");
-			//return -1;
-		}
-
-		if (a == 1) {
-			uint8 *b = malloc(mod->xxs[i].len);
-			libxmp_read_lzw_dynamic(f->handle.file, b, 13, 0,
-					mod->xxs[i].len, mod->xxs[i].len,
-					XMP_LZW_QUIRK_DSYM);
-			ret = libxmp_load_sample(m, NULL,
-					SAMPLE_FLAG_NOLOAD | SAMPLE_FLAG_DIFF,
-					&mod->xxs[i], (char*)b);
-			free(b);
-		/*} else if (a == 4) {
-			ret = libxmp_load_sample(m, f, SAMPLE_FLAG_VIDC,
-					&mod->xxs[i], NULL);*/
-		} else {
+		switch (a) {
+		case 0: /* Signed 8-bit, logarithmic. */
+			D_(D_INFO "%27s VIDC", "");
 			ret = libxmp_load_sample(m, f, SAMPLE_FLAG_VIDC,
 					&mod->xxs[i], NULL);
+			break;
+
+		case 1: /* LZW compressed signed 8-bit delta, linear. */
+			D_(D_INFO "%27s LZW", "");
+			size = mod->xxs[i].len;
+
+			if (libxmp_read_lzw(buf, size, size, LZW_FLAGS_SYM, f) < 0) {
+				free(buf);
+				return -1;
+			}
+			ret = libxmp_load_sample(m, NULL,
+					SAMPLE_FLAG_NOLOAD | SAMPLE_FLAG_DIFF,
+					&mod->xxs[i], buf);
+			break;
+
+		case 2: /* Signed 8-bit, linear. */
+			D_(D_INFO "%27s 8-bit", "");
+			ret = libxmp_load_sample(m, f, 0, &mod->xxs[i], NULL);
+			break;
+
+		case 3: /* Signed 16-bit, linear. */
+			D_(D_INFO "%27s 16-bit", "");
+			mod->xxs[i].flg |= XMP_SAMPLE_16BIT;
+			ret = libxmp_load_sample(m, f, 0, &mod->xxs[i], NULL);
+			break;
+
+		case 4: /* Sigma-delta compressed unsigned 8-bit, linear. */
+			D_(D_INFO "%27s Sigma-delta", "");
+			size = mod->xxs[i].len;
+			if (libxmp_read_sigma_delta(buf, size, size, f) < 0) {
+				free(buf);
+				return -1;
+			}
+			ret = libxmp_load_sample(m, NULL,
+					SAMPLE_FLAG_NOLOAD | SAMPLE_FLAG_UNS,
+					&mod->xxs[i], buf);
+			break;
+
+		case 5: /* Sigma-delta compressed signed 8-bit, logarithmic. */
+			D_(D_INFO "%27s Sigma-delta VIDC", "");
+			size = mod->xxs[i].len;
+			if (libxmp_read_sigma_delta(buf, size, size, f) < 0) {
+				free(buf);
+				return -1;
+			} else {
+				/* This uses a bit packing that isn't either mu-law or
+				 * normal Archimedes VIDC. Convert to the latter... */
+				for (j = 0; j < size; j++) {
+					uint8 t = (buf[j] < 128) ? ~buf[j] : buf[j];
+					buf[j] = (buf[j] >> 7) | (t << 1);
+				}
+			}
+			ret = libxmp_load_sample(m, NULL,
+					SAMPLE_FLAG_NOLOAD | SAMPLE_FLAG_VIDC,
+					&mod->xxs[i], buf);
+			break;
+
+		default:
+			D_(D_CRIT "unknown sample type %d @ %ld\n", a, hio_tell(f));
+			ret = -1;
+			break;
 		}
 
-		if (ret < 0)
+		if (ret < 0) {
+			free(buf);
 			return -1;
+		}
+	}
+	free(buf);
+
+	/* Information text */
+	if (infolen > 0) {
+		a = hio_read8(f); /* Packing */
+
+		m->comment = (char *)malloc(infolen + 1);
+		if (m->comment) {
+			m->comment[infolen] = '\0';
+			if (a) {
+				ret = libxmp_read_lzw(m->comment, infolen, infolen, LZW_FLAGS_SYM, f);
+			} else {
+				size = hio_read(m->comment, 1, infolen, f);
+				ret = (size < infolen) ? -1 : 0;
+			}
+			if (ret < 0) {
+				free(m->comment);
+				m->comment = NULL;
+			}
+		}
 	}
 
 	for (i = 0; i < mod->chn; i++) {

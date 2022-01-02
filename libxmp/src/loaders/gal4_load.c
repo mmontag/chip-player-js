@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -20,11 +20,9 @@
  * THE SOFTWARE.
  */
 
-#include <unistd.h>
-#include <limits.h>
 #include "loader.h"
 #include "iff.h"
-#include "period.h"
+#include "../period.h"
 
 /* Galaxy Music System 4.0 module file loader
  *
@@ -68,9 +66,11 @@ static int get_main(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	struct xmp_module *mod = &m->mod;
 	char buf[64];
 	int flags;
-	
-	hio_read(buf, 1, 64, f);
+
+	if (hio_read(buf, 1, 64, f) < 64)
+		return -1;
 	strncpy(mod->name, buf, 63);	/* ensure string terminator */
+	mod->name[63] = '\0';
 	libxmp_set_type(m, "Galaxy Music System 4.0");
 
 	flags = hio_read8(f);
@@ -128,7 +128,11 @@ static int get_inst_cnt(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 
 	hio_read8(f);			/* 00 */
 	i = hio_read8(f) + 1;		/* instrument number */
-	
+
+	/* Sanity check */
+	if (i > MAX_INSTRUMENTS)
+		return -1;
+
 	if (i > mod->ins)
 		mod->ins = i;
 
@@ -146,12 +150,12 @@ static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	int i, len, chan;
 	int rows, r;
 	uint8 flag;
-	
+
 	i = hio_read8(f);	/* pattern number */
 	len = hio_read32l(f);
-	
+
 	/* Sanity check */
-	if (i >= mod->pat || len <= 0) {
+	if (i >= mod->pat || len <= 0 || mod->xxp[i]) {
 		return -1;
 	}
 
@@ -164,6 +168,9 @@ static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		if ((flag = hio_read8(f)) == 0) {
 			r++;
 			continue;
+		}
+		if (hio_error(f)) {
+			return -1;
 		}
 
 		chan = flag & 0x1f;
@@ -180,7 +187,7 @@ static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 				break;
 			default:
 				if (fxt > 0x0f) {
-					printf("unknown effect %02x %02x\n", fxt, fxp);
+					D_(D_CRIT "p%d r%d c%d unknown effect %02x %02x", i, r, chan, fxt, fxp);
 					fxt = fxp = 0;
 				}
 			}
@@ -212,13 +219,18 @@ static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	struct local_data *data = (struct local_data *)parm;
 	int i, j;
 	int srate, finetune, flags;
-	int val, vwf, vra, vde, vsw, fade;
+	int val, vwf, vra, vde, vsw /*, fade*/;
 	uint8 buf[30];
 
 	hio_read8(f);		/* 00 */
 	i = hio_read8(f);		/* instrument number */
 
-	hio_read(&mod->xxi[i].name, 1, 28, f);
+	/* Sanity check */
+	if (i >= mod->ins || mod->xxi[i].nsm) {
+		return -1;
+	}
+
+	hio_read(mod->xxi[i].name, 1, 28, f);
 	mod->xxi[i].nsm = hio_read8(f);
 
 	for (j = 0; j < 108; j++) {
@@ -264,25 +276,31 @@ static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	mod->xxi[i].aei.lpe = LSN(val);
 	mod->xxi[i].pei.lpe = MSN(val);
 
-	if (mod->xxi[i].aei.npt <= 0 || mod->xxi[i].aei.npt >= XMP_MAX_ENV_POINTS)
+	if (mod->xxi[i].aei.npt <= 0 || mod->xxi[i].aei.npt > MIN(10, XMP_MAX_ENV_POINTS))
 		mod->xxi[i].aei.flg &= ~XMP_ENVELOPE_ON;
 
-	if (mod->xxi[i].pei.npt <= 0 || mod->xxi[i].pei.npt >= XMP_MAX_ENV_POINTS)
+	if (mod->xxi[i].pei.npt <= 0 || mod->xxi[i].pei.npt > MIN(10, XMP_MAX_ENV_POINTS))
 		mod->xxi[i].pei.flg &= ~XMP_ENVELOPE_ON;
 
 	hio_read(buf, 1, 30, f);		/* volume envelope points */;
 	for (j = 0; j < mod->xxi[i].aei.npt; j++) {
+		if (j >= 10) {
+			break;
+		}
 		mod->xxi[i].aei.data[j * 2] = readmem16l(buf + j * 3) / 16;
 		mod->xxi[i].aei.data[j * 2 + 1] = buf[j * 3 + 2];
 	}
 
 	hio_read(buf, 1, 30, f);		/* pan envelope points */;
 	for (j = 0; j < mod->xxi[i].pei.npt; j++) {
+		if (j >= 10) {
+			break;
+		}
 		mod->xxi[i].pei.data[j * 2] = readmem16l(buf + j * 3) / 16;
 		mod->xxi[i].pei.data[j * 2 + 1] = buf[j * 3 + 2];
 	}
 
-	fade = hio_read8(f);		/* fadeout - 0x80->0x02 0x310->0x0c */
+	/*fade =*/ hio_read8(f);	/* fadeout - 0x80->0x02 0x310->0x0c */
 	hio_read8(f);			/* unknown */
 
 	D_(D_INFO "[%2X] %-28.28s  %2d ", i, mod->xxi[i].name, mod->xxi[i].nsm);
@@ -296,13 +314,13 @@ static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	for (j = 0; j < mod->xxi[i].nsm; j++, data->snum++) {
 		hio_read32b(f);	/* SAMP */
 		hio_read32b(f);	/* size */
-	
-		hio_read(&mod->xxs[data->snum].name, 1, 28, f);
-	
+
+		hio_read(mod->xxs[data->snum].name, 1, 28, f);
+
 		mod->xxi[i].sub[j].pan = hio_read8(f) * 4;
 		if (mod->xxi[i].sub[j].pan == 0)	/* not sure about this */
 			mod->xxi[i].sub[j].pan = 0x80;
-		
+
 		mod->xxi[i].sub[j].vol = hio_read8(f);
 		flags = hio_read8(f);
 		hio_read8(f);	/* unknown - 0x80 */
@@ -312,11 +330,11 @@ static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		mod->xxi[i].sub[j].vra = vra;
 		mod->xxi[i].sub[j].vsw = vsw;
 		mod->xxi[i].sub[j].sid = data->snum;
-	
+
 		mod->xxs[data->snum].len = hio_read32l(f);
 		mod->xxs[data->snum].lps = hio_read32l(f);
 		mod->xxs[data->snum].lpe = hio_read32l(f);
-	
+
 		mod->xxs[data->snum].flg = 0;
 		if (flags & 0x04)
 			mod->xxs[data->snum].flg |= XMP_SAMPLE_16BIT;
@@ -326,26 +344,26 @@ static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 			mod->xxs[data->snum].flg |= XMP_SAMPLE_LOOP_BIDIR;
 		/* if (flags & 0x80)
 			mod->xxs[data->snum].flg |= ? */
-	
+
 		srate = hio_read32l(f);
 		finetune = 0;
 		libxmp_c2spd_to_note(srate, &mod->xxi[i].sub[j].xpo, &mod->xxi[i].sub[j].fin);
 		mod->xxi[i].sub[j].fin += finetune;
-	
+
 		hio_read32l(f);			/* 0x00000000 */
 		hio_read32l(f);			/* unknown */
-	
+
 		D_(D_INFO "  %X: %05x%c%05x %05x %c V%02x P%02x %5d",
 			j, mod->xxs[data->snum].len,
 			mod->xxs[data->snum].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 			mod->xxs[data->snum].lps,
 			mod->xxs[data->snum].lpe,
-			mod->xxs[data->snum].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' : 
+			mod->xxs[data->snum].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' :
 			mod->xxs[data->snum].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 			mod->xxi[i].sub[j].vol,
 			mod->xxi[i].sub[j].pan,
 			srate);
-	
+
 		if (mod->xxs[data->snum].len > 1) {
 			int snum = data->snum;
 			if (libxmp_load_sample(m, f, 0, &mod->xxs[snum], NULL) < 0)

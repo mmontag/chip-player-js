@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -22,7 +22,7 @@
 
 #include "loader.h"
 #include "mod.h"
-#include "period.h"
+#include "../period.h"
 
 static int chip_test(HIO_HANDLE *, char *, const int);
 static int chip_load(struct module_data *, HIO_HANDLE *, const int);
@@ -60,15 +60,16 @@ static int chip_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	LOAD_INIT();
 
-	if ((tidx = calloc(1, 1024)) == NULL) {
+	tidx = (uint8 *) calloc(1, 1024);
+	if (tidx == NULL) {
 		goto err;
 	}
 
-	hio_read(&mh.name, 20, 1, f);
+	hio_read(mh.name, 20, 1, f);
 	hio_read16b(f);
 
 	for (i = 0; i < 31; i++) {
-		hio_read(&mh.ins[i].name, 22, 1, f);
+		hio_read(mh.ins[i].name, 22, 1, f);
 		mh.ins[i].size = hio_read16b(f);
 		mh.ins[i].finetune = hio_read8(f);
 		mh.ins[i].volume = hio_read8(f);
@@ -76,7 +77,7 @@ static int chip_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		mh.ins[i].loop_size = hio_read16b(f);
 	}
 
-	hio_read(&mh.magic, 4, 1, f);
+	hio_read(mh.magic, 4, 1, f);
 	mh.len = hio_read8(f);
 
 	/* Sanity check */
@@ -165,7 +166,10 @@ static int chip_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			struct xmp_event *event = &mod->xxt[i]->event[j];
 			uint8 e[4];
 
-			hio_read(e, 1, 4, f);
+			if (hio_read(e, 1, 4, f) < 4) {
+				D_(D_CRIT "read error in track %d", i);
+				goto err2;
+			}
 			if (e[0] && e[0] != 0xa8)
 				event->note = 13 + e[0] / 2;
 			event->ins = e[1];

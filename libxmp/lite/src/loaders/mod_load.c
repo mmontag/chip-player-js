@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -28,7 +28,6 @@
  */
 
 #include <ctype.h>
-#include <limits.h>
 #include "loader.h"
 #include "mod.h"
 
@@ -50,15 +49,15 @@ static int mod_test(HIO_HANDLE *f, char *t, const int start)
 	if (hio_read(buf, 1, 4, f) < 4)
 		return -1;
 
-	if (!strncmp(buf + 2, "CH", 2) && isdigit((int)buf[0])
-	    && isdigit((int)buf[1])) {
+	if (!strncmp(buf + 2, "CH", 2) &&
+	    isdigit((unsigned char)buf[0]) && isdigit((unsigned char)buf[1])) {
 		i = (buf[0] - '0') * 10 + buf[1] - '0';
 		if (i > 0 && i <= 32) {
 			goto found;
 		}
 	}
 
-	if (!strncmp(buf + 1, "CHN", 3) && isdigit((int)*buf)) {
+	if (!strncmp(buf + 1, "CHN", 3) && isdigit((unsigned char)*buf)) {
 		if (*buf >= '0' && *buf <= '9') {
 			goto found;
 		}
@@ -77,7 +76,7 @@ found:
 static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
-	int i, j;
+	int i, j, k;
 	struct xmp_event *event;
 	struct mod_header mh;
 	uint8 mod_event[4];
@@ -93,9 +92,9 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	m->quirk |= QUIRK_PROTRACK;
 	m->period_type = PERIOD_MODRNG;
 
-	hio_read(&mh.name, 20, 1, f);
+	hio_read(mh.name, 20, 1, f);
 	for (i = 0; i < 31; i++) {
-		hio_read(&mh.ins[i].name, 22, 1, f);	/* Instrument name */
+		hio_read(mh.ins[i].name, 22, 1, f);	/* Instrument name */
 		mh.ins[i].size = hio_read16b(f);	/* Length in 16-bit words */
 		mh.ins[i].finetune = hio_read8(f);	/* Finetune (signed nibble) */
 		mh.ins[i].volume = hio_read8(f);	/* Linear playback volume */
@@ -104,22 +103,22 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
 	mh.len = hio_read8(f);
 	mh.restart = hio_read8(f);
-	hio_read(&mh.order, 128, 1, f);
+	hio_read(mh.order, 128, 1, f);
 	memset(magic, 0, 8);
 	hio_read(magic, 4, 1, f);
 
 	if (!memcmp(magic, "M.K.", 4)) {
 		mod->chn = 4;
 	} else if (!strncmp(magic + 2, "CH", 2) &&
-		   isdigit((int)magic[0]) && isdigit((int)magic[1])) {
+		   isdigit((unsigned char)magic[0]) && isdigit((unsigned char)magic[1])) {
 		mod->chn = (*magic - '0') * 10 + magic[1] - '0';
-	} else if (!strncmp(magic + 1, "CHN", 3) && isdigit((int)*magic)) {
+	} else if (!strncmp(magic + 1, "CHN", 3) && isdigit((unsigned char)*magic)) {
 		mod->chn = *magic - '0';
 	} else {
 		return -1;
 	}
 
-	strncpy(mod->name, (char *)mh.name, 20);
+	strncpy(mod->name, (char *) mh.name, 20);
 
 	mod->len = mh.len;
 	/* mod->rst = mh.restart; */
@@ -173,7 +172,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	mod->trk = mod->chn * mod->pat;
 
-	libxmp_set_type(m, mod->chn == 4 ? "Protracker" : "Fasttracker");
+	libxmp_set_type(m, (mod->chn == 4) ? "Protracker" : "Fasttracker");
 
 	MODULE_INFO();
 
@@ -198,10 +197,14 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
 			return -1;
 
-		for (j = 0; j < (64 * mod->chn); j++) {
-			event = &EVENT(i, j % mod->chn, j / mod->chn);
-			hio_read(mod_event, 1, 4, f);
-			libxmp_decode_protracker_event(event, mod_event);
+		for (j = 0; j < 64; j++) {
+			for (k = 0; k < mod->chn; k++) {
+				event = &EVENT(i, k, j);
+				if (hio_read(mod_event, 1, 4, f) < 4) {
+					return -1;
+				}
+				libxmp_decode_protracker_event(event, mod_event);
+			}
 		}
 	}
 

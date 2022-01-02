@@ -16,5 +16,8 @@ TEST(test_depack_bzip2)
 
 	ret = compare_md5(info.md5, "0350baf25b96d6d125f537c63f03e3db");
 	fail_unless(ret == 0, "MD5 error");
+
+	xmp_release_module(c);
+	xmp_free_context(c);
 }
 END_TEST

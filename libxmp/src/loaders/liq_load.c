@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -25,7 +25,7 @@
  */
 
 #include "loader.h"
-#include "period.h"
+#include "../period.h"
 
 
 struct liq_header {
@@ -113,7 +113,7 @@ static int liq_test(HIO_HANDLE *f, char *t, const int start)
 #define NONE 0xff
 
 
-static const uint8 fx[] = {
+static const uint8 fx[25] = {
 	FX_ARPEGGIO,
 	FX_S3M_BPM,
 	FX_BREAK,
@@ -146,6 +146,12 @@ static const uint8 fx[] = {
 static void xlat_fx(int c, struct xmp_event *e)
 {
     uint8 h = MSN (e->fxp), l = LSN (e->fxp);
+
+    if (e->fxt >= ARRAY_SIZE(fx)) {
+	D_(D_WARN "invalid effect %#02x", e->fxt);
+	e->fxt = e->fxp = 0;
+	return;
+    }
 
     switch (e->fxt = fx[e->fxt]) {
     case FX_EXTENDED:			/* Extended effects */
@@ -243,11 +249,11 @@ static int liq_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     LOAD_INIT();
 
-    hio_read(&lh.magic, 14, 1, f);
-    hio_read(&lh.name, 30, 1, f);
-    hio_read(&lh.author, 20, 1, f);
+    hio_read(lh.magic, 14, 1, f);
+    hio_read(lh.name, 30, 1, f);
+    hio_read(lh.author, 20, 1, f);
     hio_read8(f);
-    hio_read(&lh.tracker, 20, 1, f);
+    hio_read(lh.tracker, 20, 1, f);
 
     lh.version = hio_read16l(f);
     lh.speed = hio_read16l(f);
@@ -361,7 +367,7 @@ static int liq_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (pmag != 0x4c500000)		/* LP\0\0 */
 	    return -1;
 	
-	hio_read(&lp.name, 30, 1, f);
+	hio_read(lp.name, 30, 1, f);
 	lp.rows = hio_read16l(f);
 	lp.size = hio_read32l(f);
 	lp.reserved = hio_read32l(f);
@@ -560,7 +566,8 @@ next_pattern:
 
 	sub = &xxi->sub[0];
 
-	hio_read (&b, 1, 4, f);
+	if (hio_read(b, 1, 4, f) < 4)
+	    return -1;
 
 	if (b[0] == '?' && b[1] == '?' && b[2] == '?' && b[3] == '?')
 	    continue;
@@ -568,9 +575,9 @@ next_pattern:
 	    return -1;
 
 	li.version = hio_read16l(f);
-	hio_read(&li.name, 30, 1, f);
-	hio_read(&li.editor, 20, 1, f);
-	hio_read(&li.author, 20, 1, f);
+	hio_read(li.name, 30, 1, f);
+	hio_read(li.editor, 20, 1, f);
+	hio_read(li.author, 20, 1, f);
 	li.hw_id = hio_read8(f);
 
 	li.length = hio_read32l(f);
@@ -590,8 +597,13 @@ next_pattern:
 	li.crc = hio_read32l(f);
 
 	li.midi_ch = hio_read8(f);
-	hio_read(&li.rsvd, 11, 1, f);
-	hio_read(&li.filename, 25, 1, f);
+	hio_read(li.rsvd, 11, 1, f);
+	hio_read(li.filename, 25, 1, f);
+
+	/* Sanity check */
+	if (hio_error(f)) {
+	    return -1;
+	}
 
 	xxi->nsm = !!(li.length);
 	xxi->vol = 0x40;
@@ -612,7 +624,7 @@ next_pattern:
 
 	/* FIXME: LDSS 1.0 have global vol == 0 ? */
 	/* if (li.gvl == 0) */
-	    li.gvl = 0x40;
+	li.gvl = 0x40;
 
 	sub->vol = li.vol;
 	sub->gvl = li.gvl;

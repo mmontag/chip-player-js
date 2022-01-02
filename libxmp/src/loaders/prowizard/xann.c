@@ -1,12 +1,33 @@
-/*
- * XANN_Packer.c   Copyright (C) 1997 Asle / ReDoX
- *
- * XANN Packer to Protracker.
- *
+/* ProWizard
+ * Copyright (C) 1997 Asle / ReDoX
  * Modified in 2006,2007,2014 by Claudio Matsuoka
+ * Modified in 2020 by Alice Rowan
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
-#include <string.h>
+/*
+ * XANN_Packer.c
+ *
+ * XANN Packer to Protracker.
+ */
+
 #include "prowiz.h"
 
 #define SMP_DESC_ADDRESS 0x206
@@ -21,12 +42,12 @@ static int depack_xann(HIO_HANDLE *in, FILE *out)
 	uint8 note, ins, fxt, fxp;
 	uint8 fine, vol;
 	uint8 pdata[1025];
-	int i, j, k;
+	uint32 i, j, k;
 	int size, ssize = 0;
 	int lsize;
 
-	memset(ptable, 0, 128);
-	memset(pdata, 0, 1025);
+	memset(ptable, 0, sizeof(ptable));
+	memset(pdata, 0, sizeof(pdata));
 
 	pw_write_zero(out, 20);			/* title */
 
@@ -84,7 +105,7 @@ static int depack_xann(HIO_HANDLE *in, FILE *out)
 			fxt = hio_read8(in);
 			fxp = hio_read8(in);
 
-			if (hio_error(in) || note >= 74) {
+			if (hio_error(in) || !PTK_IS_VALID_NOTE(note >> 1)) {
 				return -1;
 			}
 

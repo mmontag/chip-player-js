@@ -1,0 +1,74 @@
+CFLAGS += -DHAVE_ALLOCA_H -DHAVE_FNMATCH -DHAVE_MKSTEMP -DHAVE_UMASK -DLIBXMP_CORE_PLAYER -DLIBXMP_NO_PROWIZARD -DLIBXMP_NO_DEPACKERS
+#CFLAGS += -DDEBUG
+CFLAGS += -I"include/libxmp-lite"
+
+DLLFLAGS=-bd -DBUILDING_DLL
+STATICFLAGS=-DBUILDING_STATIC
+
+DLLNAME=libxmp.dll
+EXPNAME=libxmp.exp
+# Note: not libxmp.map...
+MAPNAME=xmp-lite.map
+LIBNAME=libxmp.lib
+LIBSTATIC=xmp_static.lib
+TESTNAME=libxmp-test.exe
+
+!ifeq target static
+CFLAGS += $(STATICFLAGS)
+LIBFLAGS=$(CFLAGS)
+BLD_TARGET=$(LIBSTATIC)
+BLD_LIB=$(LIBSTATIC)
+!else
+LIBFLAGS=$(CFLAGS) $(DLLFLAGS)
+BLD_TARGET=$(DLLNAME)
+BLD_LIB=$(LIBNAME)
+!endif
+
+OBJS=@OBJS@
+TEST_OBJS=test/md5.obj test/test.obj
+
+all: $(BLD_TARGET)
+
+#.SUFFIXES: .obj .c
+
+.c: src;src/loaders;test
+.c.obj:
+	$(CC) $(LIBFLAGS) -fo=$^@ $<
+
+test/md5.obj: src/md5.c
+	$(CC) $(CFLAGS) -fo=$^@ $<
+
+test/test.obj: test/test.c
+	$(CC) $(CFLAGS) -fo=$^@ $<
+
+# rely on symbol name, not ordinal: -irn switch of wlib is default, but -inn is not.
+$(DLLNAME) $(LIBNAME) $(EXPNAME): $(OBJS)
+	wlink NAM $(DLLNAME) SYSTEM $(SYSTEM_DLL) INITINSTANCE TERMINSTANCE OP QUIET FIL {$(OBJS)} OP IMPF=$(EXPNAME) OP MAP=$(MAPNAME)
+	wlib -q -b -n -c -pa -s -t -zld -ii -io -inn $(LIBNAME) +$(DLLNAME)
+
+$(LIBSTATIC): $(OBJS)
+	wlib -q -b -n -c -pa -s -t -zld -ii -io $@ $(OBJS)
+
+test/$(TESTNAME): $(BLD_LIB) $(TEST_OBJS)
+	wlink NAM test/$(TESTNAME) SYSTEM $(SYSTEM) OP QUIET LIBR {$(BLD_LIB)} FIL {$(TEST_OBJS)}
+
+check-build: test/$(TESTNAME) .symbolic
+!ifneq target static
+	$(CMD_CP) $(DLLNAME) test
+!endif
+
+check: check-build .symbolic
+	cd test & $(TESTNAME)
+
+clean: .symbolic
+	rm -f $(OBJS)
+	rm -f $(TEST_OBJS)
+
+distclean: clean .symbolic
+	rm -f $(DLLNAME) $(EXPNAME) $(MAPNAME) $(LIBNAME) $(LIBSTATIC) test/$(DLLNAME) test/$(TESTNAME)
+
+!ifdef __UNIX__
+CMD_CP=cp
+!else
+CMD_CP=copy
+!endif

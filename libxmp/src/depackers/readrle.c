@@ -7,11 +7,7 @@
  * to use.
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#include <stdlib.h>
-
+#include "../common.h"
 #include "readrle.h"
 
 
@@ -25,23 +21,29 @@ if(io->data_out_point<io->data_out_max)
 
 
 /* call with -1 before starting, to make sure state is initialised */
-void libxmp_outputrle(int chr,void (*outputfunc)(int, struct data_in_out *), struct rledata *rd, struct data_in_out *io)
+int libxmp_outputrle(int chr,int (*outputfunc)(int, struct data_in_out *), struct rledata *rd, struct data_in_out *io)
 {
 int f;
 
 if(chr==-1)
   {
   rd->lastchr=rd->repeating=0;
-  return;
+  return 0;
   }
 
 if(rd->repeating)
   {
   if(chr==0)
-    (*outputfunc)(0x90, io);
+  {
+    if ((*outputfunc)(0x90, io) != 0)
+      return -1;
+  }
   else
+  {
     for(f=1;f<chr;f++)
-      (*outputfunc)(rd->lastchr, io);
+      if ((*outputfunc)(rd->lastchr, io) != 0)
+        return -1;
+  }
   rd->repeating=0;
   }
 else
@@ -50,10 +52,12 @@ else
     rd->repeating=1;
   else
     {
-    (*outputfunc)(chr, io);
+    if ((*outputfunc)(chr, io) != 0)
+      return -1;
     rd->lastchr=chr;
     }
   }
+  return 0;
 }
 
 #if 0

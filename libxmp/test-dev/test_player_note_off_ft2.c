@@ -68,6 +68,8 @@ TEST(test_player_note_off_ft2)
 
 	xmp_play_frame(opaque);
 	fail_unless(vi->vol / 16 == 32, "didn't follow envelope");
+
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
-	
 END_TEST

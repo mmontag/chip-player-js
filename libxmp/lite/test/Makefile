@@ -1,9 +1,13 @@
 
-TEST_OBJS	= test.o md5.o
-TEST_DFILES	= Makefile $(TEST_OBJS:.o=.c) test.it md5.h
+TEST_OBJS	= test.o
+TEST_DFILES	= Makefile CMakeLists.txt $(TEST_OBJS:.o=.c) test.it
 TEST_PATH	= test
 
+MAIN_OBJS	= md5.o
+MAIN_PATH	= src
+
 T_OBJS = $(addprefix $(TEST_PATH)/,$(TEST_OBJS))
+T_OBJS += $(addprefix $(MAIN_PATH)/,$(MAIN_OBJS))
 
 default:
 	$(MAKE) -C .. check

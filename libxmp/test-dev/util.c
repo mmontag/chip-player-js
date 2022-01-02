@@ -1,9 +1,43 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include <math.h>
+#include "../src/hio.h"
 #include "test.h"
 
 #define BUFLEN 16384
+
+void read_file_to_memory(const char *filename, void **_buffer, long *_size)
+{
+	HIO_HANDLE *f = hio_open(filename, "rb");
+	void *buffer = NULL;
+	long size;
+
+	*_buffer = NULL;
+	*_size = 0;
+
+	if (f == NULL)
+		return;
+
+	size = hio_size(f);
+	if (size <= 0) {
+		hio_close(f);
+		return;
+	}
+
+	buffer = malloc(size);
+	if (buffer == NULL) {
+		hio_close(f);
+		return;
+	}
+
+	if (hio_read(buffer, 1, size, f) != size) {
+		hio_close(f);
+		free(buffer);
+		return;
+	}
+
+	hio_close(f);
+	*_buffer = buffer;
+	*_size = size;
+}
 
 int check_randomness(int *array, int size, double sdev)
 {
@@ -25,7 +59,7 @@ int check_randomness(int *array, int size, double sdev)
 	return dev > sdev;
 }
 
-int compare_md5(unsigned char *d, char *digest)
+int compare_md5(const unsigned char *d, const char *digest)
 {
 	int i;
 
@@ -46,7 +80,7 @@ int compare_md5(unsigned char *d, char *digest)
 	return 0;
 }
 
-int check_md5(char *path, char *digest)
+int check_md5(const char *path, const char *digest)
 {
 	unsigned char buf[BUFLEN];
 	unsigned char d[16];
@@ -102,7 +136,10 @@ static int read_line(char *line, int size, FILE *f)
 {
 	int pos;
 
-	fgets(line, size, f);
+	if (!fgets(line, size, f)) {
+		line[0] = '\0';
+		return 0;
+	}
 	pos = strlen(line);
 
 	if (pos > 0 && line[pos - 1] == '\n')
@@ -274,7 +311,7 @@ int compare_module(struct xmp_module *mod, FILE *f)
 			x = strtoul(s, &s, 0);
 			fail_unless(x == xxp->index[j], "pattern index");
 		}
-		
+
 	}
 
 	/* Check tracks */
@@ -302,9 +339,14 @@ int compare_module(struct xmp_module *mod, FILE *f)
 		MD5_CTX ctx;
 		int len = xxs->len;
 
-		if (xxs->flg & XMP_SAMPLE_16BIT)
+		if (xxs->flg & XMP_SAMPLE_16BIT) {
 			len *= 2;
-		
+			/* Normalize data to little endian for the hash. */
+			if (is_big_endian()) {
+				convert_endian(xxs->data, xxs->len);
+			}
+		}
+
 		read_line(line, 1024, f);
 		x = strtoul(line, &s, 0);
 		fail_unless(x == xxs->len, "sample length");
@@ -341,4 +383,220 @@ int compare_module(struct xmp_module *mod, FILE *f)
 	}
 
 	return 0;
+}
+
+static void dump_envelope(struct xmp_envelope *env, FILE *f)
+{
+	int i;
+
+	/* dump envelope parameters */
+	fprintf(f, "%d %d %d %d %d %d %d\n",
+		env->flg, /* envelope flags */
+		env->npt, /* envelope number of points */
+		env->scl, /* envelope scaling */
+		env->sus, /* envelope sustain start */
+		env->sue, /* envelope sustain end */
+		env->lps, /* envelope loop start */
+		env->lpe  /* envelope loop end */
+	);
+
+	if (env->npt > 0) {
+		for (i = 0; i < env->npt * 2; i++) {
+			fprintf(f, "%s%d", i ? " " : "", env->data[i]);
+		}
+		fprintf(f, "\n");
+	}
+}
+
+void dump_module(struct xmp_module *mod, FILE *f)
+{
+	int i, j;
+
+	/* Write title and format */
+	fprintf(f, "%s\n", mod->name);
+	fprintf(f, "%s\n", mod->type);
+
+	/* Write module attributes */
+	fprintf(f, "%u %u %u %u %u %u %u %u %u %u\n",
+		mod->pat, /* number of patterns */
+		mod->trk, /* number of tracks */
+		mod->chn, /* number of channels */
+		mod->ins, /* number of instruments */
+		mod->smp, /* number of samples */
+		mod->spd, /* initial speed */
+		mod->bpm, /* initial tempo */
+		mod->len, /* module length */
+		mod->rst, /* restart position */
+		mod->gvl  /* global volume */
+	);
+
+	/* Write orders */
+	for (i = 0; i < mod->len; i++) {
+		fprintf(f, "%s%u", i ? " " : "", mod->xxo[i]);
+	}
+	fprintf(f, "\n");
+
+	/* Write instruments */
+	for (i = 0; i < mod->ins; i++) {
+		struct xmp_instrument *xxi = &mod->xxi[i];
+		fprintf(f, "%u %u %u %s\n",
+			xxi->vol, /* instrument volume */
+			xxi->nsm, /* number of subinstruments */
+			xxi->rls, /* instrument release */
+			xxi->name /* instrument name */
+		);
+
+		/* Write envelopes */
+		dump_envelope(&xxi->aei, f);
+		dump_envelope(&xxi->fei, f);
+		dump_envelope(&xxi->pei, f);
+
+		/* Write mapping */
+		for (j = 0; j < XMP_MAX_KEYS; j++) {
+			fprintf(f, "%s%d", j ? " " : "", xxi->map[j].ins);
+		}
+		fprintf(f, "\n");
+		for (j = 0; j < XMP_MAX_KEYS; j++) {
+			fprintf(f, "%s%d", j ? " " : "", xxi->map[j].xpo);
+		}
+		fprintf(f, "\n");
+
+		/* Write subinstruments */
+		for (j = 0; j < xxi->nsm; j++) {
+			struct xmp_subinstrument *sub = &xxi->sub[j];
+
+			fprintf(f, "%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d\n",
+				sub->vol, /* subinst volume */
+				sub->gvl, /* subinst gl volume */
+				sub->pan, /* subinst pan */
+				sub->xpo, /* subinst transpose */
+				sub->fin, /* subinst finetune */
+				sub->vwf, /* subinst vibr wf */
+				sub->vde, /* subinst vibr depth */
+				sub->vra, /* subinst vibr rate */
+				sub->vsw, /* subinst vibr sweep */
+				sub->rvv, /* subinst vol var */
+				sub->sid, /* subinst sample nr */
+				sub->nna, /* subinst NNA */
+				sub->dct, /* subinst DCT */
+				sub->dca, /* subinst DCA */
+				sub->ifc, /* subinst cutoff */
+				sub->ifr  /* subinst resonance */
+			);
+		}
+	}
+
+	/* Write patterns */
+	for (i = 0; i < mod->pat; i++) {
+		struct xmp_pattern *xxp = mod->xxp[i];
+
+		fprintf(f, "%u", xxp->rows); /* pattern rows */
+		for (j = 0; j  < mod->chn; j++) {
+			fprintf(f, " %u", xxp->index[j]); /* pattern index */
+		}
+		fprintf(f, "\n");
+	}
+
+	/* Write tracks */
+	for (i = 0; i < mod->trk; i++) {
+		struct xmp_track *xxt = mod->xxt[i];
+		unsigned char d[MD5_DIGEST_LENGTH];
+		MD5_CTX ctx;
+
+		MD5Init(&ctx);
+		MD5Update(&ctx, (const unsigned char *)xxt->event,
+				xxt->rows * sizeof (struct xmp_event));
+		MD5Final(d, &ctx);
+
+		fprintf(f, "%u ", xxt->rows); /* track rows */
+
+		for (j = 0; j < MD5_DIGEST_LENGTH; j++) {
+			fprintf(f, "%02x", d[j]); /* track data */
+		}
+		fprintf(f, "\n");
+	}
+
+	/* Write samples */
+	for (i = 0; i < mod->smp; i++) {
+		struct xmp_sample *xxs = &mod->xxs[i];
+		unsigned char d[MD5_DIGEST_LENGTH];
+		MD5_CTX ctx;
+		int len = xxs->len;
+
+		if (xxs->flg & XMP_SAMPLE_16BIT) {
+			len *= 2;
+			/* Normalize data to little endian for the hash. */
+			if (is_big_endian()) {
+				convert_endian(xxs->data, xxs->len);
+			}
+		}
+
+		fprintf(f, "%d %d %d %d",
+			xxs->len, /* sample length */
+			xxs->lps, /* sample loop start */
+			xxs->lpe, /* sample loop end */
+			xxs->flg  /* sample flags */
+		);
+
+		MD5Init(&ctx);
+		if (len > 0 && xxs->data != NULL) {
+			MD5Update(&ctx, xxs->data, len);
+		} else if (len > 0) {
+			/* The data file for fracture.stm had this hash for empty samples... */
+			MD5Update(&ctx, (unsigned char *)"1", 1);
+		}
+		MD5Final(d, &ctx);
+		fprintf(f, " ");
+		for (j = 0; j < MD5_DIGEST_LENGTH; j++) {
+			fprintf(f, "%02x", d[j]); /* sample data */
+		}
+		fprintf(f, " %s\n", xxs->name); /* sample name */
+	}
+
+	/* Write channels */
+	for (i = 0; i < mod->chn; i++) {
+		struct xmp_channel *xxc = &mod->xxc[i];
+
+		fprintf(f, "%u %u %u\n",
+			xxc->pan, /* channel pan */
+			xxc->vol, /* channel volume */
+			xxc->flg  /* channel flags */
+		);
+	}
+}
+
+void compare_playback(const char *filename, const struct playback_sequence *sequence,
+		      int rate, int flags, int interp)
+{
+	xmp_context opaque;
+	int count, ret;
+
+	opaque = xmp_create_context();
+	fail_unless(opaque, "create context");
+
+	ret = xmp_load_module(opaque, filename);
+	fail_unless(ret == 0, "module load");
+
+	ret = xmp_start_player(opaque, rate, flags);
+	fail_unless(ret == 0, "start player");
+
+	ret = xmp_set_player(opaque, XMP_PLAYER_INTERP, interp);
+	fail_unless(ret == 0, "set interp");
+
+	while (sequence->action != PLAY_END) {
+		switch (sequence->action) {
+		case PLAY_END: /* silence warning */
+			break;
+
+		case PLAY_FRAMES:
+			for (count = sequence->value; count > 0; count--)
+				ret = xmp_play_frame(opaque);
+
+			fail_unless(ret == sequence->result, "play frames");
+			break;
+		}
+		sequence++;
+	}
+
+	xmp_free_context(opaque);
 }

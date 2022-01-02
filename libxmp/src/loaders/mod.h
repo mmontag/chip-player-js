@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -19,6 +19,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
+#ifndef LIBXMP_LOADERS_MOD_H
+#define LIBXMP_LOADERS_MOD_H
 
 struct mod_instrument {
 	uint8 name[22];		/* Instrument name */
@@ -41,7 +44,6 @@ struct mod_header {
 	uint8 magic[4];
 };
 
-
 #ifndef LIBXMP_CORE_PLAYER
 /* Soundtracker 15-instrument module header */
 
@@ -53,3 +55,5 @@ struct st_header {
 	uint8 order[128];
 };
 #endif
+
+#endif  /* LIBXMP_LOADERS_MOD_H */

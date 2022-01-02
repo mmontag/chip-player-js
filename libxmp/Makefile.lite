@@ -2,16 +2,19 @@
 DIST		= libxmp-lite-stagedir
 DFILES		= lite/README INSTALL install-sh configure configure.ac \
 		  config.sub config.guess Makefile.in lite/libxmp-lite.pc.in \
-		  libxmp.map lite/Makefile.vc.in lite/Makefile.os2.in
-DDIRS		= src loaders os2 test
+		  libxmp.map lite/Makefile.vc.in lite/Makefile.os2 lite/Makefile.w32 \
+		  lite/watcom.mif.in aclocal.m4
+DDIRS		= src loaders test cmake m4
 
 all: dist
 
 include lite/src/Makefile
 include lite/src/loaders/Makefile
+include cmake/Makefile
+include m4/Makefile
 include test/Makefile
 
-dist: dist-prepare vc-prepare os2-prepare dist-subdirs dist-dist check-no-it
+dist: dist-prepare dist-subdirs cmake-prepare vc-prepare watcom-prepare dist-dist check-no-it
 	mv $(DIST)/libxmp-lite-*.tar.gz .
 	ls -l libxmp-lite-*.tar.gz
 
@@ -20,13 +23,18 @@ dist-prepare:
 	mkdir -p $(DIST)
 	cp -RPp $(DFILES) $(DIST)/
 
+space = $(eval) $(eval)
+cmake-prepare:
+	@echo Generate cmake/libxmp-sources.cmake
+	@sed -e 's!@SRCS@!\n$(subst $(space),    , $(OBJS:.o=.c\n))!' $(DIST)/cmake/libxmp-sources.cmake.in > $(DIST)/cmake/libxmp-sources.cmake
+
 vc-prepare:
 	@echo Generate Makefile.vc
 	@sed -e 's!@OBJS@!$(subst /,\\,$(OBJS:.o=.obj))!' $(DIST)/Makefile.vc.in > $(DIST)/Makefile.vc
 
-os2-prepare:
-	@echo Generate Makefile.os2
-	@sed -e 's!@OBJS@!$(OBJS:.o=.obj)!' $(DIST)/Makefile.os2.in > $(DIST)/Makefile.os2
+watcom-prepare:
+	@echo Generate watcom.mif
+	@sed -e 's!@OBJS@!$(OBJS:.o=.obj)!' $(DIST)/watcom.mif.in > $(DIST)/watcom.mif
 
 dist-subdirs: dist-makefile $(addprefix dist-,$(DDIRS))
 	(cd lite; tar cf - .) | (cd $(DIST); tar xf -)
@@ -34,9 +42,7 @@ dist-subdirs: dist-makefile $(addprefix dist-,$(DDIRS))
 	cp include/xmp.h $(DIST)/include/libxmp-lite/
 	mkdir -p $(DIST)/jni
 	cp jni/Application.mk $(DIST)/jni/Application.mk
-
-dist-os2:
-	cp -pr src/os2 $(DIST)/src/
+	cp lite/CMakeLists.txt $(DIST)/CMakeLists.txt
 
 dist-makefile:
 	head -3 Makefile.in > lite/Makefile.in

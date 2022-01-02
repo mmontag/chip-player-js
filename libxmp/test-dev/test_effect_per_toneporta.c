@@ -1,6 +1,5 @@
 #include "test.h"
 #include "effects.h"
-#include <math.h>
 
 /*
 Periodtable for Tuning 0, Normal
@@ -10,8 +9,6 @@ Periodtable for Tuning 0, Normal
 
 Amiga limits: 907 to 108
 */
-
-#define PERIOD ((int)round(1.0 * info.channel_info[0].period / 4096))
 
 TEST(test_effect_per_toneporta)
 {
@@ -36,5 +33,8 @@ TEST(test_effect_per_toneporta)
 		xmp_get_frame_info(opaque, &info);
 	}
 	fail_unless(PERIOD == 586, "slide error");
+
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

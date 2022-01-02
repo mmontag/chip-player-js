@@ -1,9 +1,11 @@
 # Binaries
 *.o
 *.lo
-*.so
+*.so*
+*.dylib*
 *.a
 *.obj
+*.lib
 *.exe
 *.dll
 *.pyc
@@ -13,12 +15,20 @@
 *.cov
 a.out
 lib/
+test-dev/gen_mixer_data
+test-dev/gen_module_data
 test-dev/libxmp-covertest
-test-dev/libxmp-test
+test-dev/libxmp-tests
+test-dev/libxmp_fuzz_*
 
 # VC++ files
+/.vs
+/.vscode
+*.exp
+*.lib
 *.suo
 *.ncb
+Makefile.vc.tmp
 
 # Module formats
 *.mod
@@ -36,7 +46,6 @@ test-dev/libxmp-test
 *.gtk
 mod.*
 AS.*
-*.NT
 *.xz
 
 # Other media
@@ -52,6 +61,7 @@ AS.*
 *.bz2
 
 # Configuration
+config.cache
 config.log
 config.status
 configure
@@ -62,18 +72,25 @@ depend
 players/xmp/Makefile
 libxmp.pc
 Makefile
-test/all_tests.c
+!cmake/Makefile
 test/.test
 test/libxmp-covertest
-test/libxmp-tests
-test/test8.raw
-test/write_test
+test/libxmp-test
+test-dev/.fuzzer
+test-dev/.read_test
+test-dev/ARTIFACTS
+test-dev/CORPUS
+test-dev/NEW_CORPUS
+test-dev/all_tests.c
+test-dev/write_test
 coverage/
 docs/libxmp.3
 docs/libxmp.html
 docs/libxmp.man.rst
 docs/libxmp.pdf
 .test
+libxmp-lite-stagedir/
+lite/Makefile.in
 
 # Other stuff and leftovers
 xmp.out
@@ -85,3 +102,17 @@ tags
 commit-*
 *.swp
 *.patch
+*.exp
+
+# Qt Creator caches and settings
+build-*
+*.user*
+
+# Clion and other Idea-based IDEs
+.idea/
+
+# CMake build files
+build/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake

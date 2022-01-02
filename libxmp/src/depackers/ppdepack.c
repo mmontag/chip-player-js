@@ -16,24 +16,11 @@
  * Modified for xmp by Claudio Matsuoka, 05/2013
  * - decryption code removed
  */
- 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include "common.h"
+
+#include "../common.h"
 #include "depacker.h"
 
 /* #define val(p) ((p)[0]<<16 | (p)[1] << 8 | (p)[2]) */
-
-
-static int savefile(FILE *fo, void *mem, size_t length)
-{
-  int ok = fo && (fwrite(mem, 1, length, fo) == length);
-  return ok;
-}
 
 
 #define PP_READ_BITS(nbits, var) do {                          \
@@ -52,7 +39,7 @@ static int savefile(FILE *fo, void *mem, size_t length)
 } while(0)
 
 #define PP_BYTE_OUT(byte) do {                                 \
-  if (out <= dest) return 0; /* output overflow */              \
+  if (out <= dest) return 0; /* output overflow */             \
   *--out = (byte);                                             \
   written++;                                                   \
 } while (0)
@@ -64,6 +51,7 @@ static int ppDecrunch(uint8 *src, uint8 *dest, uint8 *offset_lens,
   uint32 bit_buffer = 0, x, todo, offbits, offset, written=0;
 
   if (src == NULL || dest == NULL || offset_lens == NULL) return 0;
+  if (skip_bits > 32) return 0;
 
   /* set up input and output pointers */
   buf_src = src + src_len;
@@ -104,9 +92,9 @@ static int ppDecrunch(uint8 *src, uint8 *dest, uint8 *offset_lens,
   /* all output bytes written without error */
   return 1;
   /* return (src == buf_src) ? 1 : 0; */
-}                     
+}
 
-static int ppdepack(uint8 *data, size_t len, FILE *fo)
+static int ppdepack(uint8 *data, size_t len, void **output, long *outlen)
 {
   /* PP FORMAT:
    *      1 longword identifier           'PP20' or 'PX20'
@@ -115,9 +103,7 @@ static int ppdepack(uint8 *data, size_t len, FILE *fo)
    *      X longwords crunched file       $cccccccc,$cccccccc,...
    *      1 longword decrunch info        'decrlen' << 8 | '8 bits other info'
    */
-  int success=0;
-  uint8 *output /*, crypted*/;
-  uint32 outlen;
+  /* uint8 *crypted; */
 
   if (len < 16) {
     /*fprintf(stderr, "File is too short to be a PP file (%u bytes)\n", len);*/
@@ -145,29 +131,28 @@ static int ppdepack(uint8 *data, size_t len, FILE *fo)
     return -1;
   }
 
-  outlen = readmem24b(data + len - 4);
+  *outlen = readmem24b(data + len - 4);
 
-  /* fprintf(stderr, "decrunched length = %u bytes\n", outlen); */
+  /* fprintf(stderr, "decrunched length = %u bytes\n", *outlen); */
 
-  output = (uint8 *) malloc(outlen);
-  if (output == NULL) {
+  *output = (uint8 *) malloc(*outlen);
+  if (*output == NULL) {
     /*fprintf(stderr, "out of memory!\n");*/
     return -1;
   }
 
   /* if (crypted == 0) { */
     /*fprintf(stderr, "not encrypted, decrunching anyway\n"); */
-    if (ppDecrunch(&data[8], output, &data[4], len-12, outlen, data[len-1])) {
+    if (ppDecrunch(&data[8], (uint8 *) *output, &data[4], len-12, *outlen, data[len-1])) {
       /* fprintf(stderr, "Decrunch successful! "); */
-      savefile(fo, (void *) output, outlen);
-    } else {
-      success=-1;
-    } 
-  /*} else {
-    success=-1;
-  }*/
-  free(output);
-  return success;
+      return 0;
+    }
+  /**/
+
+  free(*output);
+  *output = NULL;
+  *outlen = 0;
+  return -1;
 }
 
 static int test_pp(unsigned char *b)
@@ -175,20 +160,10 @@ static int test_pp(unsigned char *b)
 	return memcmp(b, "PP20", 4) == 0;
 }
 
-static int decrunch_pp(FILE *f, FILE *fo)
+static int decrunch_pp(HIO_HANDLE *f, void **out, long inlen, long *outlen)
 {
-    uint8 *packed /*, *unpacked */;
-    int plen, unplen;
-    struct stat st;
-
-    if (fo == NULL)
-        goto err;
-
-    if (fstat(fileno(f), &st) < 0)
-	goto err;
-
-    plen = st.st_size;
-    //counter = 0;
+    uint8 *packed;
+    int unplen;
 
     /* Amiga longwords are only on even addresses.
      * The pp20 data format has the length stored in a longword
@@ -197,18 +172,18 @@ static int decrunch_pp(FILE *f, FILE *fo)
      * reminding me on this! - mld
      */
 
-    if ((plen != (plen / 2) * 2)) {    
+    if ((inlen != (inlen / 2) * 2)) {
 	 /*fprintf(stderr, "filesize not even\n");*/
          goto err;
     }
 
-    packed = malloc(plen);
+    packed = (uint8 *) malloc(inlen);
     if (packed == NULL) {
 	 /*fprintf(stderr, "can't allocate memory for packed data\n");*/
 	 goto err;
     }
 
-    if (fread(packed, 1, plen, f) != plen) {
+    if (hio_read(packed, 1, inlen, f) != inlen) {
          goto err1;
     }
 
@@ -220,7 +195,7 @@ static int decrunch_pp(FILE *f, FILE *fo)
      * blo.b .Exit
      * and.l #$f0f0f0f0,d0
      * bne.s .Exit
-     */	 
+     */
 
     if (((packed[4] < 9) || (packed[5] < 9) || (packed[6] < 9) || (packed[7] < 9))) {
 	 /*fprintf(stderr, "invalid efficiency\n");*/
@@ -233,17 +208,17 @@ static int decrunch_pp(FILE *f, FILE *fo)
          goto err1;
     }
 
-    unplen = readmem24b(packed + plen - 4);
+    unplen = readmem24b(packed + inlen - 4);
     if (!unplen) {
 	 /*fprintf(stderr, "not a powerpacked file\n");*/
          goto err1;
     }
-    
-    if (ppdepack (packed, plen, fo) == -1) {
+
+    if (ppdepack (packed, inlen, out, outlen) == -1) {
 	 /*fprintf(stderr, "error while decrunching data...");*/
          goto err1;
     }
-     
+
     free (packed);
 
     return 0;
@@ -256,5 +231,6 @@ err:
 
 struct depacker libxmp_depacker_pp = {
 	test_pp,
+	NULL,
 	decrunch_pp
 };

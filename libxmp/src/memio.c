@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -20,22 +20,12 @@
  * THE SOFTWARE.
  */
 
-#include <stdlib.h>
-#include <stddef.h>
-#include <limits.h>
-#ifndef LIBXMP_CORE_PLAYER
-#include <sys/types.h>
-#include <sys/stat.h>
-#endif
 #include "common.h"
 #include "memio.h"
 
 static inline ptrdiff_t CAN_READ(MFILE *m)
 {
-	if (m->size >= 0)
-		return m->pos >= 0 ? m->size - m->pos : 0;
-
-	return INT_MAX;
+	return m->pos >= 0 ? m->size - m->pos : 0;
 }
 
 
@@ -43,50 +33,53 @@ int mgetc(MFILE *m)
 {
 	if (CAN_READ(m) >= 1)
 		return *(uint8 *)(m->start + m->pos++);
-	else
-		return EOF;
+	return EOF;
 }
 
 size_t mread(void *buf, size_t size, size_t num, MFILE *m)
 {
- 	size_t should_read = size * num;
- 	ptrdiff_t can_read = CAN_READ(m);
+	size_t should_read = size * num;
+	ptrdiff_t can_read = CAN_READ(m);
 
- 	if (!size || !num || can_read <= 0) {
- 		return 0;
+	if (!size || !num || can_read <= 0) {
+		return 0;
 	}
 
 	if (should_read > can_read) {
- 		should_read = can_read;
+		memcpy(buf, m->start + m->pos, can_read);
+		m->pos += can_read;
+
+		return can_read / size;
+	} else {
+		memcpy(buf, m->start + m->pos, should_read);
+		m->pos += should_read;
+
+		return num;
 	}
-
-	memcpy(buf, m->start + m->pos, should_read);
- 	m->pos += should_read;
-
-	return should_read / size;
 }
 
 
 int mseek(MFILE *m, long offset, int whence)
 {
+	ptrdiff_t ofs = offset;
+
 	switch (whence) {
-	default:
 	case SEEK_SET:
-		if (m->size >= 0 && (offset > m->size || offset < 0))
-			return -1;
-		m->pos = offset;
-		return 0;
+		break;
 	case SEEK_CUR:
-		if (m->size >= 0 && (offset > CAN_READ(m) || offset < -m->pos))
-			return -1;
-		m->pos += offset;
-		return 0;
+		ofs += m->pos;
+		break;
 	case SEEK_END:
-		if (m->size < 0)
-			return -1;
-		m->pos = m->size + offset;
-		return 0;
+		ofs += m->size;
+		break;
+	default:
+		return -1;
 	}
+	if (ofs < 0) return -1;
+	if (ofs > m->size)
+		ofs = m->size;
+	m->pos = ofs;
+	return 0;
 }
 
 long mtell(MFILE *m)
@@ -96,41 +89,30 @@ long mtell(MFILE *m)
 
 int meof(MFILE *m)
 {
-	if (m->size <= 0)
-		return 0;
-	else
-		return CAN_READ(m) <= 0;
+	return CAN_READ(m) <= 0;
 }
 
-MFILE *mopen(const void *ptr, long size)
+MFILE *mopen(const void *ptr, long size, int free_after_use)
 {
 	MFILE *m;
 
-	m = (MFILE *)malloc(sizeof (MFILE));
+	m = (MFILE *) malloc(sizeof(MFILE));
 	if (m == NULL)
 		return NULL;
-	
-	m->start = ptr;
+
+	m->start = (const unsigned char *)ptr;
 	m->pos = 0;
 	m->size = size;
+	m->free_after_use = free_after_use;
 
 	return m;
 }
 
 int mclose(MFILE *m)
 {
+	if (m->free_after_use)
+		free((void *)m->start);
 	free(m);
 	return 0;
 }
-
-#ifndef LIBXMP_CORE_PLAYER
-
-int mstat(MFILE *m, struct stat *st)
-{
-	memset(st, 0, sizeof (struct stat));
-	st->st_size = m->size;
-	return 0;
-}
-
-#endif
 

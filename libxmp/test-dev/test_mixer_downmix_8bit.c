@@ -26,7 +26,8 @@ TEST(test_mixer_downmix_8bit)
 		xmp_get_frame_info(opaque, &info);
 		b = info.buffer;
 		for (j = 0; j < info.buffer_size; j++) {
-			fscanf(f, "%d", &val);
+			int ret = fscanf(f, "%d", &val);
+			fail_unless(ret == 1, "read error");
 			val >>= 8;
 			fail_unless(b[j] == val, "downmix error");
 		}

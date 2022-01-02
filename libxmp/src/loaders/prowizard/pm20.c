@@ -1,12 +1,32 @@
+/* ProWizard
+ * Copyright (C) 1997 Asle / ReDoX
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 /*
- *   Promizer_20.c   1997 (c) Asle / ReDoX
+ * Promizer_20.c
  *
  * Converts PM20 packed MODs back to PTK MODs
- *
-*/
+ */
 
-#include <string.h>
-#include <stdlib.h>
+#include "prowiz.h"
 
 #define ON  0
 #define OFF 1
@@ -20,7 +40,7 @@ void Depack_PM20 (FILE * in, FILE * out)
 {
 	uint8 c1 = 0x00, c2 = 0x00, c3 = 0x00, c4 = 0x00;
 	short pat_max = 0;
-	long tmp_ptr, tmp1, tmp2;
+	long tmp1, tmp2;
 	short refmax = 0;
 	uint8 pnum[128];
 	uint8 pnum_tmp[128];
@@ -50,12 +70,12 @@ void Depack_PM20 (FILE * in, FILE * out)
 	// sprintf ( Depacked_OutName , "%ld.mod" , Cpt_Filename-1 );
 	// out = fdopen (fd_out, "w+b");
 
-	memset(pnum, 0, 128);
-	memset(pnum_tmp, 0, 128);
-	memset(pptr, 0, 64 << 8);
-	memset(Pattern, 0, 128 * 1024);
-	memset(paddr, 0, 128 * 4);
-	memset(paddr_tmp, 0, 128 * 4);
+	memset(pnum, 0, sizeof(pnum));
+	memset(pnum_tmp, 0, sizeof(pnum_tmp));
+	memset(pptr, 0, sizeof(pptr));
+	memset(Pattern, 0, sizeof(Pattern));
+	memset(paddr, 0, sizeof(paddr));
+	memset(paddr_tmp, 0, sizeof(paddr_tmp));
 	for (i = 0; i < 128; i++)
 		paddr_tmp2[i] = 9999l;
 
@@ -119,11 +139,10 @@ void Depack_PM20 (FILE * in, FILE * out)
 
 	/* ordering of patterns addresses */
 	/* c4 contains the size of the pattern list .. */
-	tmp_ptr = 0;
+	pat_max = 0;
 	for (i = 0; i < c4; i++) {
 		if (i == 0) {
 			pnum[0] = 0x00;
-			tmp_ptr++;
 			continue;
 		}
 
@@ -134,10 +153,8 @@ void Depack_PM20 (FILE * in, FILE * out)
 			}
 		}
 		if (j == i)
-			pnum[i] = tmp_ptr++;
+			pnum[i] = (++pat_max);
 	}
-
-	pat_max = tmp_ptr - 1;
 
 	/* correct re-order */
   /********************/

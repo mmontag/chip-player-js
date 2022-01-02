@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -21,7 +21,7 @@
  */
 
 #include "loader.h"
-#include "period.h"
+#include "../period.h"
 
 #define MAGIC_MGT	MAGIC4(0x00,'M','G','T')
 #define MAGIC_MCS	MAGIC4(0xbd,'M','C','S')
@@ -51,7 +51,7 @@ static int mgt_test(HIO_HANDLE *f, char *t, const int start)
 	hio_seek(f, start + sng_ptr, SEEK_SET);
 
 	libxmp_read_title(f, t, 32);
-	
+
 	return 0;
 }
 
@@ -61,7 +61,7 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	struct xmp_event *event;
 	int i, j;
 	int ver;
-	int sng_ptr, seq_ptr, ins_ptr, pat_ptr, trk_ptr, smp_ptr;
+	int sng_ptr, seq_ptr, ins_ptr, pat_ptr, trk_ptr;
 	int sdata[64];
 
 	LOAD_INIT();
@@ -82,7 +82,7 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_read32b(f);			/* reserved */
 
 	/* Sanity check */
-	if (mod->chn > XMP_MAX_CHANNELS || mod->ins > 64) {
+	if (mod->chn > XMP_MAX_CHANNELS || mod->pat > MAX_PATTERNS || mod->ins > 64) {
 		return -1;
 	}
 
@@ -91,7 +91,7 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	ins_ptr = hio_read32b(f);
 	pat_ptr = hio_read32b(f);
 	trk_ptr = hio_read32b(f);
-	smp_ptr = hio_read32b(f);
+	hio_read32b(f);			/* sample offset */
 	hio_read32b(f);			/* total smp len */
 	hio_read32b(f);			/* unpacked trk size */
 
@@ -108,7 +108,7 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_read8(f);			/* master R */
 
 	/* Sanity check */
-	if (mod->len > 256 || mod->rst > 255) {
+	if (mod->len > XMP_MAX_MOD_LENGTH || mod->rst > 255) {
 		return -1;
 	}
 
@@ -117,19 +117,20 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
 
 	m->c4rate = C4_NTSC_RATE;
-	
+
 	MODULE_INFO();
 
 	/* Sequence */
 
 	hio_seek(f, start + seq_ptr, SEEK_SET);
 	for (i = 0; i < mod->len; i++) {
-		mod->xxo[i] = hio_read16b(f);
+		int pos = hio_read16b(f);
 
 		/* Sanity check */
-		if (mod->xxo[i] >= mod->pat) {
+		if (pos >= mod->pat) {
 			return -1;
 		}
+		mod->xxo[i] = pos;
 	}
 
 	/* Instruments */
@@ -178,7 +179,7 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		mod->xxi[i].nsm = !!mod->xxs[i].len;
 		mod->xxi[i].sub[0].sid = i;
-		
+
 		D_(D_INFO "[%2X] %-32.32s %04x %04x %04x %c V%02x %5d\n",
 				i, mod->xxi[i].name,
 				mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,
@@ -214,7 +215,11 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		//printf("\n=== Track %d ===\n\n", i);
 		for (j = 0; j < rows; j++) {
-			uint8 note, f2p;
+			uint8 note;
+			/* TODO libxmp can't really support the wide effect
+			 * params Megatracker uses right now, but less bad
+			 * conversions of certain effects could be attempted. */
+			/* uint8 f2p ;*/
 
 			b = hio_read8(f);
 			j += b & 0x03;
@@ -236,7 +241,7 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			if (b & 0x40)
 				event->fxp = hio_read8(f);
 			if (b & 0x80)
-				f2p = hio_read8(f);
+				/*f2p =*/ hio_read8(f);
 
 			if (note == 1)
 				event->note = XMP_KEY_OFF;
@@ -247,13 +252,13 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			if (event->fxt < 0x10)
 				/* like amiga */ ;
 			else switch (event->fxt) {
-			case 0x13: 
-			case 0x14: 
-			case 0x15: 
-			case 0x17: 
-			case 0x1c: 
-			case 0x1d: 
-			case 0x1e: 
+			case 0x13:
+			case 0x14:
+			case 0x15:
+			case 0x17:
+			case 0x1c:
+			case 0x1d:
+			case 0x1e:
 				event->fxt = FX_EXTENDED;
 				event->fxp = ((event->fxt & 0x0f) << 4) |
 							(event->fxp & 0x0f);
@@ -312,7 +317,7 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				event->f2p = (event->vol - 0xf0) << 4;
 				break;
 			}
-	
+
 			event->vol = 0;
 
 			/*printf("%02x  %02x %02x %02x %02x %02x\n",
@@ -323,8 +328,8 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	/* Extra track */
 	if (mod->trk > 0) {
-		mod->xxt[0] = calloc(sizeof(struct xmp_track) +
-			sizeof(struct xmp_event) * 64 - 1, 1);
+		mod->xxt[0] = (struct xmp_track *) calloc(1, sizeof(struct xmp_track) +
+							     sizeof(struct xmp_event) * 64 - 1);
 		mod->xxt[0]->rows = 64;
 	}
 

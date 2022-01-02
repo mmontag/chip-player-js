@@ -90,5 +90,8 @@ TEST(test_no_note_same_ins_ft2)
 	fail_unless(vi->vol  == 22 * 16, "not instrument volume");
 	fail_unless(vi->pos0 !=  0, "sample reset");
 	xmp_play_frame(opaque);
+
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

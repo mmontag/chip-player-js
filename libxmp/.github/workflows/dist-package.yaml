@@ -1,0 +1,30 @@
+name: Distribution packages
+
+on:
+  - pull_request
+  - push
+
+jobs:
+  dist-package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Install dependencies
+        run: sudo apt update && sudo apt install docutils-common rst2pdf
+      - name: Create and run configure script
+        run: |
+          autoconf
+          ./configure
+      - name: Create distribution package
+        run: make dist DIST="libxmp-$(git rev-parse --short HEAD)"
+      - name: Test distribution package
+        run: make distcheck DIST="libxmp-$(git rev-parse --short HEAD)"
+      - name: Create lite package
+        run: make -f Makefile.lite DIST="libxmp-lite-$(git rev-parse --short HEAD)"
+      - name: Archive dist packages
+        uses: actions/upload-artifact@v2
+        with:
+          name: dist-packages
+          path: |
+            libxmp-*.tar.gz

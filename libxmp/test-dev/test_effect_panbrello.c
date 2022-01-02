@@ -55,5 +55,8 @@ TEST(test_effect_panbrello)
 
 		fail_unless(info.channel_info[0].pan == vals[i], "pan error");
 	}
+
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -20,17 +20,13 @@
  * THE SOFTWARE.
  */
 
-#include <unistd.h>
-#ifdef __native_client__
-#include <sys/syslimits.h>
-#else
-#include <limits.h>
-#endif
 #include "loader.h"
 #include "mod.h"
-#include "period.h"
+#include "../period.h"
 #include "prowizard/prowiz.h"
-#include "tempfile.h"
+#include "../tempfile.h"
+
+#ifndef LIBXMP_NO_PROWIZARD
 
 extern struct list_head *checked_format;
 
@@ -43,40 +39,14 @@ const struct format_loader libxmp_loader_pw = {
 	pw_load
 };
 
-#define BUF_SIZE 0x10000
-
 int pw_test_format(HIO_HANDLE *f, char *t, const int start,
 		   struct xmp_test_info *info)
 {
-	unsigned char *b;
-	int extra;
-	int s = BUF_SIZE;
+	const struct pw_format *format;
 
-	b = calloc(1, BUF_SIZE);
-	if (b == NULL)
-		return -1;
+	format = pw_check(f, info);
 
-	s = hio_read(b, 1, s, f);
-
-	while ((extra = pw_check(b, s, info)) > 0) {
-		unsigned char *buf = realloc(b, s + extra);
-		if (buf == NULL) {
-			free(b);
-			return -1;
-		}
-		b = buf;
-
-		if (hio_read(b + s, extra, 1, f) == 0) {
-			free(b);
-			return -1;
-		}
-
-		s += extra;
-	}
-
-	free(b);
-
-	return extra == 0 ? 0 : -1;
+	return format ? 0 : -1;
 }
 
 static int pw_test(HIO_HANDLE *f, char *t, const int start)
@@ -106,10 +76,11 @@ static int pw_load(struct module_data *m, HIO_HANDLE *h, const int start)
 		fclose(temp);
 		goto err2;
 	}
-	
+
 	/* Module loading */
 
-	if ((f = hio_open_file(temp)) == NULL) {
+	D_(D_INFO "loading generated module");
+	if ((f = hio_open_file2(temp)) == NULL) {
 		goto err2;
 	}
 
@@ -117,9 +88,9 @@ static int pw_load(struct module_data *m, HIO_HANDLE *h, const int start)
 		goto err3;
 	}
 
-	hio_read(&mh.name, 20, 1, f);
+	hio_read(mh.name, 20, 1, f);
 	for (i = 0; i < 31; i++) {
-		hio_read(&mh.ins[i].name, 22, 1, f);
+		hio_read(mh.ins[i].name, 22, 1, f);
 		mh.ins[i].size = hio_read16b(f);
 		mh.ins[i].finetune = hio_read8(f);
 		mh.ins[i].volume = hio_read8(f);
@@ -128,13 +99,13 @@ static int pw_load(struct module_data *m, HIO_HANDLE *h, const int start)
 	}
 	mh.len = hio_read8(f);
 	mh.restart = hio_read8(f);
-	hio_read(&mh.order, 128, 1, f);
-	hio_read(&mh.magic, 4, 1, f);
+	hio_read(mh.order, 128, 1, f);
+	hio_read(mh.magic, 4, 1, f);
 
 	if (memcmp(mh.magic, "M.K.", 4)) {
 		goto err3;
 	}
-		
+
 	mod->ins = 31;
 	mod->smp = mod->ins;
 	mod->chn = 4;
@@ -199,7 +170,8 @@ static int pw_load(struct module_data *m, HIO_HANDLE *h, const int start)
 
 		for (j = 0; j < (64 * 4); j++) {
 			event = &EVENT(i, j % 4, j / 4);
-			hio_read(mod_event, 1, 4, f);
+			if (hio_read(mod_event, 1, 4, f) < 4)
+				goto err3;
 			libxmp_decode_protracker_event(event, mod_event);
 		}
 	}
@@ -225,3 +197,5 @@ static int pw_load(struct module_data *m, HIO_HANDLE *h, const int start)
     err:
 	return -1;
 }
+
+#endif /* LIBXMP_NO_PROWIZARD */

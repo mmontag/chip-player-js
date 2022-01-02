@@ -28,7 +28,8 @@ TEST(test_mixer_stereo_8bit_spline)
 		xmp_play_frame(opaque);
 		xmp_get_frame_info(opaque, &info);
 		for (k = j = 0; j < info.buffer_size / 4; j++) {
-			fscanf(f, "%d", &val);
+			int ret = fscanf(f, "%d", &val);
+			fail_unless(ret == 1, "read error");
 			fail_unless(s->buf32[k++] == val, "mixing error L");
 			fail_unless(s->buf32[k++] == val, "mixing error R");
 		}

@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -26,7 +26,7 @@
  */
 
 #include "loader.h"
-#include "period.h"
+#include "../period.h"
 
 #define MAGIC_GDM	MAGIC4('G','D','M',0xfe)
 #define MAGIC_GMFS	MAGIC4('G','M','F','S')
@@ -36,7 +36,7 @@ static int gdm_test(HIO_HANDLE *, char *, const int);
 static int gdm_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader libxmp_loader_gdm = {
-	"Generic Digital Music",
+	"General Digital Music",
 	gdm_test,
 	gdm_load
 };
@@ -60,6 +60,7 @@ static int gdm_test(HIO_HANDLE *f, char *t, const int start)
 
 void fix_effect(uint8 *fxt, uint8 *fxp)
 {
+	int h, l;
 	switch (*fxt) {
 	case 0x00:			/* no effect */
 		*fxp = 0;
@@ -79,9 +80,51 @@ void fix_effect(uint8 *fxt, uint8 *fxp)
 	case 0x0a:
 	case 0x0b:
 	case 0x0c:
-	case 0x0d:
+	case 0x0d:			/* same as protracker */
+		break;
 	case 0x0e:
-	case 0x0f:			/* same as protracker */
+		/* Convert some extended effects to their S3M equivalents. This is
+		 * necessary because the continue effects were left as the original
+		 * effect (e.g. FX_VOLSLIDE for the fine volume slides) by 2GDM!
+		 * Otherwise, these should be the same as protracker.
+		 */
+		h = MSN(*fxp);
+		l = LSN(*fxp);
+		switch(h) {
+			case EX_F_PORTA_UP:
+				*fxt = FX_PORTA_UP;
+				*fxp = l | 0xF0;
+				break;
+			case EX_F_PORTA_DN:
+				*fxt = FX_PORTA_DN;
+				*fxp = l | 0xF0;
+				break;
+			case 0x8:	/* extra fine portamento up */
+				*fxt = FX_PORTA_UP;
+				*fxp = l | 0xE0;
+				break;
+			case 0x9:	/* extra fine portamento down */
+				*fxt = FX_PORTA_DN;
+				*fxp = l | 0xE0;
+				break;
+			case EX_F_VSLIDE_UP:
+				/* Don't convert 0 as it would turn into volume slide down... */
+				if (l) {
+					*fxt = FX_VOLSLIDE;
+					*fxp = (l << 4) | 0xF;
+				}
+				break;
+			case EX_F_VSLIDE_DN:
+				/* Don't convert 0 as it would turn into volume slide up... */
+				if (l) {
+					*fxt = FX_VOLSLIDE;
+					*fxp = l | 0xF0;
+				}
+				break;
+		}
+		break;
+	case 0x0f:			/* set speed */
+		*fxt = FX_S3M_SPEED;
 		break;
 	case 0x10:			/* arpeggio */
 		*fxt = FX_S3M_ARPEGGIO;
@@ -99,7 +142,25 @@ void fix_effect(uint8 *fxt, uint8 *fxp)
 		*fxt = FX_FINE_VIBRATO;
 		break;
 	case 0x1e:			/* special misc */
-		*fxt = *fxp = 0;
+		switch (MSN(*fxp)) {
+		case 0x0:		/* sample control */
+			if (LSN(*fxp) == 1) { /* enable surround */
+				/* This is the only sample control effect
+				 * that 2GDM emits. BWSB ignores it,
+				 * but supporting it is harmless. */
+				*fxt = FX_SURROUND;
+				*fxp = 1;
+			} else {
+				*fxt = *fxp = 0;
+			}
+			break;
+		case 0x8:		/* set pan position */
+			*fxt = FX_EXTENDED;
+			break;
+		default:
+			*fxt = *fxp = 0;
+			break;
+		}
 		break;
 	case 0x1f:
 		*fxt = FX_S3M_BPM;
@@ -141,7 +202,10 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 					vermaj, vermin, tvmaj, tvmin);
 	}
 
-	hio_read(panmap, 32, 1, f);
+	if (hio_read(panmap, 32, 1, f) == 0) {
+		D_(D_CRIT "error reading header");
+		return -1;
+	}
 	for (i = 0; i < 32; i++) {
 		if (panmap[i] == 255) {
 			panmap[i] = 8;
@@ -164,7 +228,11 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	ins_ofs = hio_read32l(f);
 	smp_ofs = hio_read32l(f);
 	mod->ins = mod->smp = hio_read8(f) + 1;
-	
+
+	/* Sanity check */
+	if (mod->ins > MAX_INSTRUMENTS)
+		return -1;
+
 	m->c4rate = C4_NTSC_RATE;
 
 	MODULE_INFO();
@@ -200,7 +268,7 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		c4spd = hio_read16l(f);
 		vol = hio_read8(f);
 		pan = hio_read8(f);
-		
+
 		mod->xxi[i].sub[0].vol = vol > 0x40 ? 0x40 : vol;
 		mod->xxi[i].sub[0].pan = pan > 15 ? 0x80 : 0x80 + (pan - 8) * 16;
 		libxmp_c2spd_to_note(c4spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
@@ -250,6 +318,8 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		for (r = 0; len > 0; ) {
 			c = hio_read8(f);
+			if (hio_error(f))
+				return -1;
 			len--;
 
 			if (c == 0) {
@@ -267,7 +337,7 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				continue;
 			}
 
-			if (mod->chn <= (c & 0x1f)) 
+			if (mod->chn <= (c & 0x1f))
 				mod->chn = (c & 0x1f) + 1;
 
 			if (c & 0x20) {		/* note and sample follows */
@@ -279,6 +349,8 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			if (c & 0x40) {		/* effect(s) follow */
 				do {
 					k = hio_read8(f);
+					if (hio_error(f))
+						return -1;
 					len--;
 					if ((k & 0xc0) != 0xc0) {
 						hio_read8(f);
@@ -288,7 +360,7 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			}
 		}
 	}
- 
+
 	mod->trk = mod->pat * mod->chn;
 
 	if (libxmp_init_pattern(mod) < 0)
@@ -308,6 +380,8 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		for (r = 0; len > 0; ) {
 			c = hio_read8(f);
+			if (hio_error(f))
+				return -1;
 			len--;
 
 			if (c == 0) {
@@ -324,7 +398,8 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 			if (c & 0x20) {		/* note and sample follows */
 				k = hio_read8(f);
-				event->note = 12 + 12 * MSN(k & 0x7f) + LSN(k);
+				/* 0 is empty note */
+				event->note = k ? 12 + 12 * MSN(k & 0x7f) + LSN(k) : 0;
 				event->ins = hio_read8(f);
 				len -= 2;
 			}
@@ -332,6 +407,8 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			if (c & 0x40) {		/* effect(s) follow */
 				do {
 					k = hio_read8(f);
+					if (hio_error(f))
+						return -1;
 					len--;
 					switch ((k & 0xc0) >> 6) {
 					case 0:
@@ -366,7 +443,7 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			return -1;
 	}
 
-	m->quirk |= QUIRK_ARPMEM;
+	m->quirk |= QUIRK_ARPMEM | QUIRK_FINEFX;
 
 	return 0;
 }

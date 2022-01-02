@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -24,11 +24,9 @@
  * Public domain DMF sample decompressor by Olivier Lapicque
  */
 
-#include <assert.h>
-
 #include "loader.h"
 #include "iff.h"
-#include "period.h"
+#include "../period.h"
 
 #define MAGIC_DDMF	MAGIC4('D','D','M','F')
 
@@ -194,6 +192,7 @@ static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i, j, r, chn;
+	int patrows;
 	int patsize;
 	int info, counter, data;
 	int track_counter[32];
@@ -211,8 +210,13 @@ static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	for (i = 0; i < mod->pat; i++) {
 		chn = hio_read8(f);
 		hio_read8(f);		/* beat */
+		patrows = hio_read16l(f);
 
-		if (libxmp_alloc_pattern_tracks(mod, i, hio_read16l(f)) < 0)
+		/* Sanity check */
+		if (patrows > 512)
+			return -1;
+
+		if (libxmp_alloc_pattern_tracks_long(mod, i, patrows) < 0)
 			return -1;
 
 		patsize = hio_read32l(f);

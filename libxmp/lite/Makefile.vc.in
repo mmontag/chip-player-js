@@ -1,16 +1,19 @@
+# Visual Studio makefile for Windows:
+#	nmake -f Makefile.vc
+#
 CC	= cl
-CFLAGS	= /O2 /Iinclude\libxmp-lite /Isrc /DBUILDING_DLL /DWIN32 \
-          /Dinline=__inline /D_USE_MATH_DEFINES /DLIBXMP_CORE_PLAYER
+CFLAGS	= /O2 /W3 /MD /Iinclude\libxmp-lite /DBUILDING_DLL /DWIN32 \
+	  /D_USE_MATH_DEFINES /D_CRT_SECURE_NO_WARNINGS /DLIBXMP_CORE_PLAYER /DLIBXMP_NO_PROWIZARD /DLIBXMP_NO_DEPACKERS
 LD	= link
 LDFLAGS	= /DLL /RELEASE /OUT:$(DLL)
 DLL	= libxmp-lite.dll
 
 OBJS	= @OBJS@
 
-TEST	= test\md5.obj test\test.obj
+TEST	= src\md5.obj test\test.obj
 
 .c.obj:
-	$(CC) /c $(CFLAGS) /Fo$*.obj $<
+	$(CC) /c /nologo $(CFLAGS) /Fo$*.obj $<
 
 all: $(DLL)
 
@@ -19,6 +22,8 @@ $(DLL): $(OBJS)
 
 clean:
 	del $(OBJS) $(DLL) *.lib *.exp
+	del $(TEST)
+	del test\*.dll test\*.exe
 
 check: $(TEST)
 	$(LD) /RELEASE /OUT:test\libxmp-lite-test.exe $(TEST) libxmp-lite.lib

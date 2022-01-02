@@ -10,6 +10,9 @@
 #ifndef XZ_CONFIG_H
 #define XZ_CONFIG_H
 
+/* Uncomment to enable CRC64 support. */
+/* #define XZ_USE_CRC64 */
+
 /* Uncomment as needed to enable BCJ filter decoders. */
 /* #define XZ_DEC_X86 */
 /* #define XZ_DEC_POWERPC */
@@ -20,11 +23,9 @@
 
 #define XZ_DEC_ANY_CHECK 1
 
-#include <stdlib.h>
-#include <string.h>
-
 #include "xz.h"
 
+#define GFP_KERNEL (0)
 #define kmalloc(size, flags) malloc(size)
 #define kfree(ptr) free(ptr)
 #define vmalloc(size) malloc(size)
@@ -100,7 +101,7 @@ static inline void put_unaligned_be32(uint32 val, uint8 *buf)
 
 /*
  * Use get_unaligned_le32() also for aligned access for simplicity. On
- * little endian systems, #define get_le32(ptr) (*(const uint32 *)(ptr))
+ * little endian systems, #define get_le32(ptr) (*(const uint32_t *)(ptr))
  * could save a few bytes in code size.
  */
 #ifndef get_le32

@@ -49,5 +49,8 @@ TEST(test_effect_gvol_slide)
 		xmp_get_frame_info(opaque, &info);
 		fail_unless(info.volume == vals[i], "global volume error");
 	}
+
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

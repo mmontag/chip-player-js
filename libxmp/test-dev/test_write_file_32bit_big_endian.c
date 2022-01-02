@@ -13,6 +13,9 @@ TEST(test_write_file_32bit_big_endian)
 
 	f = fopen("write_test", "rb");
 	x = read32b(f, NULL);
+	fclose(f);
+
 	fail_unless(x == 0x12345678, "read error");
+	unlink("write_test");
 }
 END_TEST

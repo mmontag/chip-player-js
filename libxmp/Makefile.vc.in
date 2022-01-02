@@ -1,24 +1,58 @@
+# Visual Studio makefile for Windows:
+#	nmake -f Makefile.vc
+#
+# To disable module depacker functionality:
+#	nmake -f Makefile.vc USE_DEPACKERS=0
+#
+# To disable ProWizard:
+#	nmake -f Makefile.vc USE_PROWIZARD=0
+#
+USE_DEPACKERS	= 1
+USE_PROWIZARD	= 1
+
 CC	= cl
-CFLAGS	= /O2 /Iinclude /Isrc /Isrc\win32 /DBUILDING_DLL /DWIN32 \
-	  /Dinline=__inline /DPATH_MAX=1024 /D_USE_MATH_DEFINES
+CFLAGS	= /O2 /W3 /MD /Iinclude /DBUILDING_DLL /DWIN32 \
+	  /D_USE_MATH_DEFINES /D_CRT_SECURE_NO_WARNINGS
 LD	= link
 LDFLAGS	= /DLL /RELEASE /OUT:$(DLL)
 DLL	= libxmp.dll
 
-OBJS	= @OBJS@ src\win32\ptpopen.obj
+!if $(USE_PROWIZARD)==0
+CFLAGS	= $(CFLAGS) /DLIBXMP_NO_PROWIZARD
+!endif
 
-TEST	= test\md5.obj test\test.obj
+!if $(USE_DEPACKERS)==0
+CFLAGS  = $(CFLAGS) /DLIBXMP_NO_DEPACKERS
+!endif
+
+OBJS	= @OBJS@
+PROWIZ_OBJS	= @POBJS@
+DEPACKER_OBJS	= @DOBJS@
+ALL_OBJS	= $(OBJS)
+!if $(USE_PROWIZARD)==1
+ALL_OBJS	= $(ALL_OBJS) $(PROWIZ_OBJS)
+!endif
+!if $(USE_DEPACKERS)==1
+ALL_OBJS	= $(ALL_OBJS) $(DEPACKER_OBJS)
+!endif
+
+TEST	= src\md5.obj test\test.obj
 
 .c.obj:
-	$(CC) /c $(CFLAGS) /Fo$*.obj $<
+	@$(CC) /c /nologo $(CFLAGS) /Fo$*.obj $<
 
 all: $(DLL)
 
-$(DLL): $(OBJS)
-	$(LD) $(LDFLAGS) $(OBJS)
+$(DLL): $(ALL_OBJS)
+	$(LD) $(LDFLAGS) $(ALL_OBJS)
 
 clean:
-	del $(OBJS) $(DLL) *.lib *.exp
+	del $(OBJS)
+	del $(DEPACKER_OBJS)
+	del $(PROWIZ_OBJS)
+	del $(TEST)
+	del test\*.dll test\*.exe
+	del $(DLL) *.lib *.exp
 
 check: $(TEST)
 	$(LD) /RELEASE /OUT:test\libxmp-test.exe $(TEST) libxmp.lib

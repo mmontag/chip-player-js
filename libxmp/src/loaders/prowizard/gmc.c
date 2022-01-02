@@ -1,13 +1,33 @@
-/*
- * gmc.c    Copyright (C) 1997 Sylvain "Asle" Chipaux
- *
- * Depacks musics in the Game Music Creator format and saves in ptk.
- *
+/* ProWizard
+ * Copyright (C) 1997 Sylvain "Asle" Chipaux
  * Modified in 2006,2007,2014 by Claudio Matsuoka
+ * Modified in 2020 by Alice Rowan
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
-#include <string.h>
-#include <stdlib.h>
+/*
+ * gmc.c
+ *
+ * Depacks musics in the Game Music Creator format and saves in ptk.
+ */
+
 #include "prowiz.h"
 
 
@@ -21,7 +41,7 @@ static int depack_GMC(HIO_HANDLE *in, FILE *out)
 	long ssize = 0;
 	long i = 0, j = 0;
 
-	memset(ptable, 0, 128);
+	memset(ptable, 0, sizeof(ptable));
 
 	pw_write_zero(out, 20);			/* title */
 
@@ -69,7 +89,7 @@ static int depack_GMC(HIO_HANDLE *in, FILE *out)
 	/* pattern data */
 	hio_seek(in, 444, SEEK_SET);
 	for (i = 0; i <= max; i++) {
-		memset(tmp, 0, 1024);
+		memset(tmp, 0, sizeof(tmp));
 		hio_read(tmp, 1024, 1, in);
 		for (j = 0; j < 256; j++) {
 			switch (tmp[(j * 4) + 2] & 0x0f) {
@@ -176,7 +196,7 @@ static int test_GMC(const uint8 *data, char *t, int s)
 
 			if (offset > (PW_TEST_CHUNK - 4))
 				return -1;
-				
+
 #if 0
 			/* First test fails with Jumping Jackson */
 			/* Second test never succeeds! */

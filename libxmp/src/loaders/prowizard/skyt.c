@@ -1,11 +1,31 @@
-/*
- *   Skyt_Packer.c   Copyright (C) 1997 Asle / ReDoX
+/* ProWizard
+ * Copyright (C) 1997 Asle / ReDoX
+ * Modified in 2009,2014 by Claudio Matsuoka
+ * Modified in 2021 by Alice Rowan
  *
- *   Modified in 2009,2014 by Claudio Matsuoka
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
-#include <string.h>
-#include <stdlib.h>
+/*
+ * Skyt_Packer.c
+ */
+
 #include "prowiz.h"
 
 
@@ -18,10 +38,11 @@ static int depack_skyt(HIO_HANDLE *in, FILE *out)
 	int i = 0, j = 0, k = 0;
 	int trkval[128][4];
 	int trk_addr;
+	int max_trk;
 	int size, ssize = 0;
 
-	memset(ptable, 0, 128);
-	memset(trkval, 0, 128 * 4);
+	memset(ptable, 0, sizeof(ptable));
+	memset(trkval, 0, sizeof(trkval));
 
 	pw_write_zero(out, 20);			/* write title */
 
@@ -48,9 +69,13 @@ static int depack_skyt(HIO_HANDLE *in, FILE *out)
 	write8(out, 0x7f);			/* write NoiseTracker byte */
 
 	/* read track numbers ... and deduce pattern list */
+	max_trk = 0;
 	for (i = 0; i < pat_pos; i++) {
 		for (j = 0; j < 4; j++) {
 			trkval[i][j] = hio_read16b(in);
+			if (trkval[i][j] > max_trk) {
+					max_trk = trkval[i][j];
+			}
 		}
 	}
 
@@ -68,8 +93,12 @@ static int depack_skyt(HIO_HANDLE *in, FILE *out)
 
 	/* track data */
 	for (i = 0; i < pat_pos; i++) {
-		memset(pat, 0, 1024);
+		memset(pat, 0, sizeof(pat));
 		for (j = 0; j < 4; j++) {
+			/* track 0 is blank and doesn't exist in the file. */
+			if (trkval[i][j] == 0) {
+				continue;
+			}
 			hio_seek(in, trk_addr + ((trkval[i][j] - 1)<<8), SEEK_SET);
 			for (k = 0; k < 64; k++) {
 				int x = k * 16 + j * 4;
@@ -79,6 +108,10 @@ static int depack_skyt(HIO_HANDLE *in, FILE *out)
 				c3 = hio_read8(in);
 				c4 = hio_read8(in);
 
+				if (hio_error(in) || !PTK_IS_VALID_NOTE(c1)) {
+					return -1;
+				}
+
 				pat[x] = (c2 & 0xf0) | ptk_table[c1][0];
 				pat[x + 1] = ptk_table[c1][1];
 				pat[x + 2] = ((c2 << 4) & 0xf0) | c3;
@@ -86,6 +119,11 @@ static int depack_skyt(HIO_HANDLE *in, FILE *out)
 			}
 		}
 		fwrite(pat, 1024, 1, out);
+	}
+
+	/* skip to the end of the tracks/the start of the sample data. */
+	if (hio_seek(in, trk_addr + (max_trk << 8), SEEK_SET) < 0) {
+		return -1;
 	}
 
 	/* sample data */

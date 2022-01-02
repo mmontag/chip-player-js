@@ -1,13 +1,32 @@
-/*
- * Kefrens_Sound_Machine.c   Copyright (C) 1997 Sylvain "Asle" Chipaux
- *
- * Depacks musics in the Kefrens Sound Machine format and saves in ptk.
- *
+/* ProWizard
+ * Copyright (C) 1997 Sylvain "Asle" Chipaux
  * Modified in 2006,2007,2014 by Claudio Matsuoka
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
-#include <string.h>
-#include <stdlib.h>
+/*
+ * Kefrens_Sound_Machine.c
+ *
+ * Depacks musics in the Kefrens Sound Machine format and saves in ptk.
+ */
+
 #include "prowiz.h"
 
 
@@ -25,9 +44,9 @@ static int depack_ksm(HIO_HANDLE *in, FILE *out)
 	int ssize = 0;
 	int i, j, k;
 
-	memset(plist, 0, 128);
-	memset(trknum, 0, 128 * 4);
-	memset(real_tnum, 0, 128 * 4);
+	memset(plist, 0, sizeof(plist));
+	memset(trknum, 0, sizeof(trknum));
+	memset(real_tnum, 0, sizeof(real_tnum));
 
 	/* title */
 	hio_seek(in, 2, SEEK_SET);
@@ -141,8 +160,8 @@ static int depack_ksm(HIO_HANDLE *in, FILE *out)
 
 	/* pattern data */
 	for (i = 0; i < c5; i++) {
-		memset(tmp, 0, 1024);
-		memset(tdata, 0, 192 * 4);
+		memset(tmp, 0, sizeof(tmp));
+		memset(tdata, 0, sizeof(tdata));
 
 		for (k = 0; k < 4; k++) {
 			hio_seek(in, 1536 + 192 * real_tnum[i][k], SEEK_SET);
@@ -156,7 +175,7 @@ static int depack_ksm(HIO_HANDLE *in, FILE *out)
 				uint8 *t = &tdata[k][j * 3];
 
 				/* Sanity check */
-				if (t[0] >= 37) {
+				if (!PTK_IS_VALID_NOTE(t[0])) {
 					return -1;
 				}
 
@@ -215,7 +234,7 @@ static int test_ksm (const uint8 *data, char *t, int s)
 	if (max_trk == 0)
 		return -1;
 
-	PW_REQUEST_DATA(s, 1536 + max_trk * 192 + 63 * 3);
+	PW_REQUEST_DATA(s, 1536 + max_trk * 192 + 64 * 3);
 
 	/* real test on tracks data starts now */
 	for (i = 0; i <= max_trk; i++) {

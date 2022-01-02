@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -20,7 +20,6 @@
  * THE SOFTWARE.
  */
 
-#include <stdlib.h>
 #include "common.h"
 #include "player.h"
 #include "virtual.h"
@@ -57,7 +56,7 @@ void libxmp_hmn_play_extras(struct context_data *ctx, struct channel_data *xc, i
 {
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
-	struct hmn_channel_extras *ce = xc->extra;
+	struct hmn_channel_extras *ce = (struct hmn_channel_extras *)xc->extra;
 	struct xmp_instrument *xxi;
 	int pos, waveform, volume;
 
@@ -89,7 +88,6 @@ int libxmp_hmn_new_instrument_extras(struct xmp_instrument *xxi)
 	if (xxi->extra == NULL)
 		return -1;
 	HMN_INSTRUMENT_EXTRAS((*xxi))->magic = HMN_EXTRAS_MAGIC;
-
 	return 0;
 }
 
@@ -99,7 +97,6 @@ int libxmp_hmn_new_channel_extras(struct channel_data *xc)
 	if (xc->extra == NULL)
 		return -1;
 	HMN_CHANNEL_EXTRAS((*xc))->magic = HMN_EXTRAS_MAGIC;
-
 	return 0;
 }
 
@@ -111,6 +108,7 @@ void libxmp_hmn_reset_channel_extras(struct channel_data *xc)
 void libxmp_hmn_release_channel_extras(struct channel_data *xc)
 {
 	free(xc->extra);
+	xc->extra = NULL;
 }
 
 int libxmp_hmn_new_module_extras(struct module_data *m)
@@ -119,13 +117,13 @@ int libxmp_hmn_new_module_extras(struct module_data *m)
 	if (m->extra == NULL)
 		return -1;
 	HMN_MODULE_EXTRAS((*m))->magic = HMN_EXTRAS_MAGIC;
-
 	return 0;
 }
 
 void libxmp_hmn_release_module_extras(struct module_data *m)
 {
 	free(m->extra);
+	m->extra = NULL;
 }
 
 void libxmp_hmn_extras_process_fx(struct context_data *ctx, struct channel_data *xc,
@@ -133,6 +131,9 @@ void libxmp_hmn_extras_process_fx(struct context_data *ctx, struct channel_data 
 {
 	switch (fxt) {
 	case FX_MEGAARP:
+		/* Not sure if this is correct... */
+		fxp = LSN(fxp);
+
 		memcpy(xc->arpeggio.val, megaarp[fxp], 16);
 		xc->arpeggio.size = 16;
 		break;

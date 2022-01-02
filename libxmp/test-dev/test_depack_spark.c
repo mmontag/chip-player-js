@@ -16,5 +16,8 @@ TEST(test_depack_spark)
 
 	ret = compare_md5(info.md5, "1aecc3cbfdae12a76000cd048ba8fcb3");
 	fail_unless(ret == 0, "MD5 error");
+
+	xmp_release_module(c);
+	xmp_free_context(c);
 }
 END_TEST

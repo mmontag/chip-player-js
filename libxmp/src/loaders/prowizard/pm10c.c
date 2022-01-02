@@ -1,13 +1,33 @@
-/*
- * Promizer_10c.c   Copyright (C) 1997 Asle / ReDoX
- *
- * Converts PM10c packed MODs back to PTK MODs
- *
+/* ProWizard
+ * Copyright (C) 1997 Asle / ReDoX
  * Modified in 2006,2007,2014 by Claudio Matsuoka
+ * Modified in 2021 by Alice Rowan
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
-#include <string.h>
-#include <stdlib.h>
+/*
+ * Promizer_10c.c
+ *
+ * Converts PM10c packed MODs back to PTK MODs
+ */
+
 #include "prowiz.h"
 
 
@@ -15,8 +35,9 @@ static int depack_p10c(HIO_HANDLE *in, FILE *out)
 {
 	uint8 c1, c2;
 	int pat_max;
-	int tmp_ptr, tmp1, tmp2;
+	int tmp1, tmp2;
 	int refmax;
+	int refsize;
 	uint8 pnum[128];
 	uint8 pnum1[128];
 	int paddr[128];
@@ -33,14 +54,14 @@ static int depack_p10c(HIO_HANDLE *in, FILE *out)
 	uint8 fin[31];
 	uint8 oldins[4];
 
-	memset(pnum, 0, 128);
-	memset(pnum1, 0, 128);
-	memset(pptr, 0, 64 << 8);
-	memset(pat, 0, 128 * 1024);
-	memset(fin, 0, 31);
-	memset(oldins, 0, 4);
-	memset(paddr, 0, 128 * 4);
-	memset(paddr1, 0, 128 * 4);
+	memset(pnum, 0, sizeof(pnum));
+	memset(pnum1, 0, sizeof(pnum1));
+	memset(pptr, 0, sizeof(pptr));
+	memset(pat, 0, sizeof(pat));
+	memset(fin, 0, sizeof(fin));
+	memset(oldins, 0, sizeof(oldins));
+	memset(paddr, 0, sizeof(paddr));
+	memset(paddr1, 0, sizeof(paddr1));
 
 	for (i = 0; i < 128; i++)
 		paddr2[i] = 9999L;
@@ -76,11 +97,10 @@ static int depack_p10c(HIO_HANDLE *in, FILE *out)
 
 	/* ordering of patterns addresses */
 
-	tmp_ptr = 0;
+	pat_max = 0;
 	for (i = 0; i < num_pat; i++) {
 		if (i == 0) {
 			pnum[0] = 0;
-			tmp_ptr++;
 			continue;
 		}
 
@@ -91,10 +111,8 @@ static int depack_p10c(HIO_HANDLE *in, FILE *out)
 			}
 		}
 		if (j == i)
-			pnum[i] = tmp_ptr++;
+			pnum[i] = (++pat_max);
 	}
-
-	pat_max = tmp_ptr - 1;
 
 	/* correct re-order */
 	for (i = 0; i < num_pat; i++)
@@ -156,13 +174,20 @@ restart:
 		int x = hio_read16b(in);
 		if (x > refmax)
 			refmax = x;
+		if (hio_error(in))
+			return -1;
 	}
 
 	/* read "reference Table" */
 	refmax++;		/* coz 1st value is 0 ! */
-	i = refmax * 4;		/* coz each block is 4 bytes long */
-	reftab = (uint8 *) malloc(i);
-	hio_read(reftab, i, 1, in);
+	refsize = refmax * 4;	/* coz each block is 4 bytes long */
+	if ((reftab = (uint8 *)malloc(refsize)) == NULL) {
+		return -1;
+	}
+
+	if (hio_read(reftab, refsize, 1, in) < 1) {
+		goto err;
+	}
 
 	/* go back to pattern data starting address */
 	hio_seek(in, 5222, SEEK_SET);
@@ -175,6 +200,11 @@ restart:
 				int x = hio_read16b(in) << 2;
 				int fine, ins, per, fxt;
 
+				/* Sanity check */
+				if (x >= refsize || hio_error(in)) {
+					goto err;
+				}
+
 				memcpy(p, &reftab[x], 4);
 
 				ins = ((p[2] >> 4) & 0x0f) | (p[0] & 0xf0);
@@ -184,7 +214,16 @@ restart:
 
 				per = ((p[0] & 0x0f) << 8) | p[1];
 				fxt = p[2] & 0x0f;
-				fine = fin[oldins[k] - 1];
+				if (oldins[k] > 0 && oldins[k] < 32) {
+					fine = fin[oldins[k] - 1];
+				} else {
+					fine = 0;
+				}
+
+				/* Sanity check */
+				if (fine >= 16) {
+					goto err;
+				}
 
 				if (per != 0 && oldins[k] > 0 && fine != 0) {
 					for (l = 0; l < 36; l++) {
@@ -220,6 +259,10 @@ restart:
 	pw_move_data(out, in, ssize);
 
 	return 0;
+
+    err:
+	free(reftab);
+	return -1;
 }
 
 static int test_p10c(const uint8 *data, char *t, int s)

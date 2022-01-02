@@ -1,16 +1,14 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU Lesser General Public License. See COPYING.LIB
  * for more information.
  */
 
-#include <stdio.h>
-#include "common.h"
-#include "inflate.h"
+#include "../common.h"
 #include "depacker.h"
-#include "crc32.h"
+#include "miniz.h"
 
 /* See RFC1952 for further information */
 
@@ -40,6 +38,9 @@ struct member {
 	uint32 mtime;
 	uint8 xfl;
 	uint8 os;
+
+	uint32 crc32;
+	uint32 size;
 };
 
 static int test_gzip(unsigned char *b)
@@ -47,70 +48,106 @@ static int test_gzip(unsigned char *b)
 	return b[0] == 31 && b[1] == 139;
 }
 
-static int decrunch_gzip(FILE *in, FILE *out)
+static int decrunch_gzip(HIO_HANDLE *in, void **out, long inlen, long *outlen)
 {
 	struct member member;
 	int val, c;
-	uint32 crc;
+	size_t in_buf_size;
+	void *pCmp_data, *pOut_buf;
+	size_t pOut_len;
+	long start, end;
 
-	libxmp_crc32_init_A();
-
-	member.id1 = read8(in, NULL);
-	member.id2 = read8(in, NULL);
-	member.cm  = read8(in, NULL);
-	member.flg = read8(in, NULL);
-	member.mtime = read32l(in, NULL);
-	member.xfl = read8(in, NULL);
-	member.os  = read8(in, NULL);
+	member.id1 = hio_read8(in);
+	member.id2 = hio_read8(in);
+	member.cm  = hio_read8(in);
+	member.flg = hio_read8(in);
+	member.mtime = hio_read32l(in);
+	member.xfl = hio_read8(in);
+	member.os  = hio_read8(in);
 
 	if (member.cm != 0x08) {
+		D_(D_CRIT "Unsuported compression method: %x", member.cm);
 		return -1;
 	}
 
 	if (member.flg & FLAG_FEXTRA) {
-		int xlen = read16l(in, NULL);
-		if (fseek(in, xlen, SEEK_CUR) < 0) {
+		int xlen = hio_read16l(in);
+		if (hio_seek(in, xlen, SEEK_CUR) < 0) {
+			D_(D_CRIT "hio_seek() failed");
 			return -1;
 		}
 	}
 
 	if (member.flg & FLAG_FNAME) {
 		do {
-			c = read8(in, NULL);
+			c = hio_read8(in);
+			if (hio_error(in)) {
+				D_(D_CRIT "hio_read8() failed");
+				return -1;
+			}
 		} while (c != 0);
 	}
 
 	if (member.flg & FLAG_FCOMMENT) {
 		do {
-			c = read8(in, NULL);
+			c = hio_read8(in);
+			if (hio_error(in)) {
+				D_(D_CRIT "hio_read8() failed");
+				return -1;
+			}
 		} while (c != 0);
 	}
 
 	if (member.flg & FLAG_FHCRC) {
-		read16l(in, NULL);
+		hio_read16l(in);
 	}
-	
-	val = libxmp_inflate(in, out, &crc, 1);
-	if (val != 0) {
+
+	start = hio_tell(in);
+	end = inlen - 8;
+	in_buf_size = end - start;
+
+	pCmp_data = (uint8 *)malloc(in_buf_size);
+	if (!pCmp_data)
+	{
+		D_(D_CRIT "Out of memory");
 		return -1;
 	}
 
-	/* Check CRC32 */
-	val = read32l(in, NULL);
-	if (val != crc) {
+	if (hio_read(pCmp_data, 1, in_buf_size, in) != in_buf_size)
+	{
+		D_(D_CRIT "Failed reading input file");
+		free(pCmp_data);
 		return -1;
 	}
+
+	pOut_buf = tinfl_decompress_mem_to_heap(pCmp_data, in_buf_size, &pOut_len, 0);
+	if (!pOut_buf) {
+		D_(D_CRIT "tinfl_decompress_mem_to_heap() failed");
+		free(pCmp_data);
+		return -1;
+	}
+
+	free(pCmp_data);
+
+	/* TODO: Check CRC32 */
+	val = hio_read32l(in);
 
 	/* Check file size */
-	val = read32l(in, NULL);
-	if (val != ftell(out)) {
+	val = hio_read32l(in);
+	if (val != pOut_len) {
+		D_(D_CRIT "Invalid file size");
+		free(pOut_buf);
 		return -1;
 	}
+
+	*out = pOut_buf;
+	*outlen = pOut_len;
 
 	return 0;
 }
 
 struct depacker libxmp_depacker_gzip = {
 	test_gzip,
+	NULL,
 	decrunch_gzip
 };

@@ -23,10 +23,7 @@
     Modified for xmp by Claudio Matsuoka, 2014-01-04
 */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "common.h"
+#include "../common.h"
 #include "depacker.h"
 #include "crc32.h"
 
@@ -663,7 +660,7 @@ static int read_literal_table(struct LZXDecrData *decr)
                     x = decr->literal_len[pos] + 17 - symbol;
 
                     /* Sanity check */
-                    if (x >= 34)
+                    if (x < 0 || x >= 34)
                         return -1;
 
 		    symbol = table_four[x];
@@ -809,7 +806,7 @@ static void decrunch(struct LZXDecrData *decr)
 
 /* Trying to understand this function is hazardous. */
 
-static int extract_normal(FILE * in_file, struct LZXDecrData *decr)
+static int extract_normal(HIO_HANDLE * in_file, struct LZXDecrData *decr)
 {
     struct filename_node *node;
     FILE *out_file = 0;
@@ -850,7 +847,8 @@ static int extract_normal(FILE * in_file, struct LZXDecrData *decr)
 /* check if we have enough data and read some if not */
 		if (decr->src >= decr->src_end) {	/* have we exhausted the current read buffer? */
 		    temp = decr->read_buffer;
-		    if ((count = temp - decr->src + 16384)) {
+		    count = temp - decr->src + 16384;
+		    if (count) {
 			do {	/* copy the remaining overrun to the start of the buffer */
 			    *temp++ = *decr->src++;
 			} while (--count);
@@ -861,9 +859,9 @@ static int extract_normal(FILE * in_file, struct LZXDecrData *decr)
 		    if (decr->pack_size < count)
 			count = decr->pack_size;	/* make sure we don't read too much */
 
-		    if (fread(temp, 1, count, in_file) != count) {
+		    if (hio_read(temp, 1, count, in_file) != count) {
 			/* printf("\n");
-			if (ferror(in_file))
+			if (hio_error(in_file))
 			    perror("FRead(Data)");
 			else
 			    fprintf(stderr, "EOF: Data\n"); */
@@ -886,8 +884,8 @@ static int extract_normal(FILE * in_file, struct LZXDecrData *decr)
 
                 /* unpack some data */
 		if (decr->dest >= decr->buffer + 258 + 65536) {
-		    if ((count =
-			 decr->dest - decr->buffer - 65536)) {
+		    count = decr->dest - decr->buffer - 65536;
+		    if (count) {
 			temp = (decr->dest =
 				decr->buffer) + 65536;
 			do {	/* copy the overrun to the start of the buffer */
@@ -936,14 +934,14 @@ static int extract_normal(FILE * in_file, struct LZXDecrData *decr)
 		printf(" crc %s\n", (node->crc == sum) ? "good" : "bad");
 	}
 #endif
-    }				/* for */
+    } /* for */
 
     return (abort);
 }
 
 /* ---------------------------------------------------------------------- */
 
-static int extract_archive(FILE * in_file, struct LZXDecrData *decr)
+static int extract_archive(HIO_HANDLE * in_file, struct LZXDecrData *decr)
 {
     uint32 temp;
     struct filename_node **filename_next;
@@ -958,8 +956,8 @@ static int extract_archive(FILE * in_file, struct LZXDecrData *decr)
 
     do {
 	abort = 1;		/* assume an error */
-	actual = fread(decr->archive_header, 1, 31, in_file);
-	if (ferror(in_file)) {
+	actual = hio_read(decr->archive_header, 1, 31, in_file);
+	if (hio_error(in_file)) {
 	    /* perror("FRead(Archive_Header)"); */
 	    continue;
 	}
@@ -981,9 +979,9 @@ static int extract_archive(FILE * in_file, struct LZXDecrData *decr)
 	memset(decr->archive_header + 26, 0, 4);
 	decr->sum = libxmp_crc32_A1(decr->archive_header, 31, decr->sum);
 	temp = decr->archive_header[30];	/* filename length */
-	actual = fread(decr->header_filename, 1, temp, in_file);
+	actual = hio_read(decr->header_filename, 1, temp, in_file);
 
-	if (ferror(in_file)) {
+	if (hio_error(in_file)) {
 	    /* perror("FRead(Header_Filename)"); */
 	    continue;
 	}
@@ -996,9 +994,9 @@ static int extract_archive(FILE * in_file, struct LZXDecrData *decr)
 	decr->header_filename[temp] = 0;
 	decr->sum = libxmp_crc32_A1(decr->header_filename, temp, decr->sum);
 	temp = decr->archive_header[14];	/* comment length */
-	actual = fread(decr->header_comment, 1, temp, in_file);
+	actual = hio_read(decr->header_comment, 1, temp, in_file);
 
-	if (ferror(in_file)) {
+	if (hio_error(in_file)) {
 	    /* perror("FRead(Header_Comment)"); */
 	    continue;
 	}
@@ -1022,7 +1020,7 @@ static int extract_archive(FILE * in_file, struct LZXDecrData *decr)
 	decr->crc = readmem32l(decr->archive_header + 22);
 
 	/* allocate a filename node */
-	node = malloc(sizeof(struct filename_node));
+	node = (struct filename_node *) malloc(sizeof(struct filename_node));
 	if (node == NULL) {
 	    /* fprintf(stderr, "MAlloc(Filename_node)\n"); */
 	    continue;
@@ -1033,8 +1031,10 @@ static int extract_archive(FILE * in_file, struct LZXDecrData *decr)
 	node->next = 0;
 	node->length = decr->unpack_size;
 	node->crc = decr->crc;
-	for (temp = 0; (node->filename[temp] = decr->header_filename[temp]);
-	     temp++) ;
+	for (temp = 0; ; temp++) {
+	    if (!(node->filename[temp] = decr->header_filename[temp]))
+		break;
+	}
 
 #if 0
 	if (decr->pack_size == 0) {
@@ -1083,7 +1083,7 @@ static int extract_archive(FILE * in_file, struct LZXDecrData *decr)
 
     /* free the filename list in case an error occured */
     temp_node = decr->filename_list;
-    while ((node = temp_node)) {
+    while ((node = temp_node) != NULL) {
 	temp_node = node->next;
 	free(node);
     }
@@ -1096,18 +1096,18 @@ static int test_lzx(unsigned char *b)
 	return memcmp(b, "LZX", 3) == 0;
 }
 
-static int decrunch_lzx(FILE *f, FILE *fo)
+static int decrunch_lzx(HIO_HANDLE *f, FILE *fo, long inlen)
 {
 	struct LZXDecrData *decr;
 
 	if (fo == NULL)
 		goto err;
 
-	decr = calloc(1, sizeof(struct LZXDecrData));
+	decr = (struct LZXDecrData *) calloc(1, sizeof(struct LZXDecrData));
 	if (decr == NULL)
 		goto err;
 
-	if (fseek(f, 10, SEEK_CUR) < 0)		/* skip header */
+	if (hio_seek(f, 10, SEEK_CUR) < 0)		/* skip header */
 		goto err2;
 
 	libxmp_crc32_init_A();
@@ -1126,5 +1126,6 @@ static int decrunch_lzx(FILE *f, FILE *fo)
 
 struct depacker libxmp_depacker_lzx = {
 	test_lzx,
-	decrunch_lzx
+	decrunch_lzx,
+	NULL
 };

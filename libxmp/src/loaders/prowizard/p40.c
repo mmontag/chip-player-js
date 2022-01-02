@@ -1,17 +1,69 @@
+/* ProWizard
+ * Copyright (C) 1997 Asle / ReDoX
+ * Copyright (C) 2007 Claudio Matsuoka
+ * Modified in 2021 by Alice Rowan.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 /*
- * The_Player_4.0.c   Copyright (C) 1997 Asle / ReDoX
- *                    Copyright (C) 2007 Claudio Matsuoka
+ * The_Player_4.0.c
  *
  * The Player 4.0a and 4.0b to Protracker.
  */
 
-#include <string.h>
-#include <stdlib.h>
 #include "prowiz.h"
 
 #define MAGIC_P40A	MAGIC4('P','4','0','A')
 #define MAGIC_P40B	MAGIC4('P','4','0','B')
 #define MAGIC_P41A	MAGIC4('P','4','1','A')
+
+
+static int set_event(uint8 *x, uint8 c1, uint8 c2, uint8 c3)
+{
+	uint8 mynote;
+	uint8 b;
+
+	mynote = c1 & 0x7f;
+
+	if (PTK_IS_VALID_NOTE(mynote / 2)) {
+		*x++ = ((c1 << 4) & 0x10) | ptk_table[mynote / 2][0];
+		*x++ = ptk_table[mynote / 2][1];
+	} else {
+		return -1;
+	}
+
+	b = c2 & 0x0f;
+	if (b == 0x08)
+		c2 -= 0x08;
+
+	*x++ = c2;
+
+	if (b == 0x05 || b == 0x06 || b == 0x0a)
+		c3 = c3 > 0x7f ? (c3 << 4) & 0xf0 : c3;
+
+	*x++ = c3;
+
+	return 0;
+}
+
+#define track(p,c,r) tdata[((int)(p) * 4 + (c)) * 256 + (r) * 4]
 
 
 struct smp {
@@ -28,22 +80,21 @@ static int depack_p4x(HIO_HANDLE *in, FILE *out)
 {
 	uint8 c1, c2, c3, c4, c5;
 	uint8 tmp[1024];
-	uint8 len, npat, nsmp;
-	uint8 sample, mynote, note[2];
-	uint8 tr[512][256];
+	uint8 len, nsmp;
+	uint8 *tdata;
 	uint16 track_addr[128][4];
+	long in_size;
 	int trkdat_ofs, trktab_ofs, smp_ofs;
-	int ssize = 0;
+	/* int ssize = 0; */
 	int SampleAddress[31];
 	int SampleSize[31];
 	int i, j, k, l, a, b, c;
 	struct smp ins;
 	uint32 id;
 
-	memset(track_addr, 0, 128 * 4 * 2);
-	memset(tr, 0, 512 << 8);
-	memset(SampleAddress, 0, 31 * 4);
-	memset(SampleSize, 0, 31 * 4);
+	memset(track_addr, 0, sizeof(track_addr));
+	memset(SampleAddress, 0, sizeof(SampleAddress));
+	memset(SampleSize, 0, sizeof(SampleSize));
 
 	id = hio_read32b(in);
 #if 0
@@ -59,7 +110,7 @@ static int depack_p4x(HIO_HANDLE *in, FILE *out)
 	}
 #endif
 
-	npat = hio_read8(in);		/* read Real number of pattern */
+	hio_read8(in);			/* read Real number of pattern */
 	len = hio_read8(in);		/* read number of patterns in list */
 
 	/* Sanity check */
@@ -79,7 +130,12 @@ static int depack_p4x(HIO_HANDLE *in, FILE *out)
 	trktab_ofs = hio_read32b(in);	/* read track table address */
 	smp_ofs = hio_read32b(in);	/* read sample data address */
 
-	if (hio_error(in)) {
+	if (hio_error(in) || trkdat_ofs < 0 || trktab_ofs < 0 || smp_ofs < 0) {
+		return -1;
+	}
+
+	in_size = hio_size(in);
+	if (trkdat_ofs >= in_size || trktab_ofs >= in_size || smp_ofs >= in_size) {
 		return -1;
 	}
 
@@ -91,7 +147,7 @@ static int depack_p4x(HIO_HANDLE *in, FILE *out)
 		SampleAddress[i] = ins.addr;
 		ins.size = hio_read16b(in);		/* sample size */
 		SampleSize[i] = ins.size * 2;
-		ssize += SampleSize[i];
+		/* ssize += SampleSize[i]; */
 		ins.loop_addr = hio_read32b(in);	/* loop start */
 		ins.loop_size = hio_read16b(in);	/* loop size */
 		ins.fine = 0;
@@ -101,6 +157,12 @@ static int depack_p4x(HIO_HANDLE *in, FILE *out)
 		ins.vol = hio_read8(in);		/* read vol */
 		if (id == MAGIC_P41A)
 			ins.fine = hio_read16b(in);	/* finetune */
+
+		/* Sanity check */
+		if (ins.addr < 0 || ins.loop_addr < 0 || ins.loop_addr < ins.addr ||
+		    ins.addr > in_size - smp_ofs) {
+			return -1;
+		}
 
 		/* writing now */
 		pw_write_zero(out, 22);			/* sample name */
@@ -136,10 +198,12 @@ static int depack_p4x(HIO_HANDLE *in, FILE *out)
 
 	hio_seek(in, trkdat_ofs + 4, SEEK_SET);
 
+	if ((tdata = (uint8 *)calloc(512, 256)) == NULL) {
+		return -1;
+	}
+
 	for (i = 0; i < len; i++) {	/* rewrite the track data */
 		for (j = 0; j < 4; j++) {
-			int y, x = i * 4 + j;
-
 			hio_seek(in, track_addr[i][j], SEEK_SET);
 
 			for (k = 0; k < 64; k++) {
@@ -149,44 +213,20 @@ static int depack_p4x(HIO_HANDLE *in, FILE *out)
 				c4 = hio_read8(in);
 
 				if (c1 != 0x80) {
-					sample = ((c1 << 4) & 0x10) |
-							((c2 >> 4) & 0x0f);
-					memset(note, 0, 2);
-					mynote = c1 & 0x7f;
-					note[0] = ptk_table[mynote / 2][0];
-					note[1] = ptk_table[mynote / 2][1];
-					switch (c2 & 0x0f) {
-					case 0x08:
-						c2 -= 0x08;
-						break;
-					case 0x05:
-					case 0x06:
-					case 0x0A:
-						if (c3 >= 0x80)
-							c3 = (c3 << 4) & 0xf0;
-						break;
-					default:
-						break;
-					}
-					y = k * 4;
-					tr[x][y] = (sample & 0xf0) |
-							(note[0] & 0x0f);
-					tr[x][y + 1] = note[1];
-					tr[x][y + 2] = c2;
-					tr[x][y + 3] = c3;
+					uint8 *tr = &track(i, j, k);
+					if (hio_error(in) || set_event(tr, c1, c2, c3) < 0)
+						goto err;
 
 					if ((c4 > 0x00) && (c4 < 0x80))
 						k += c4;
 					if (c4 > 0x7f) {
 						k++;
 						for (l = 256; l > c4; l--) {
-							y = k * 4;
-							tr[x][y] =
-							  (sample & 0xf0) |
-							  (note[0] & 0x0f);
-							tr[x][y + 1] = note[1];
-							tr[x][y + 2] = c2;
-							tr[x][y + 3] = c3;
+							tr = &track(i, j, k);
+							if (k >= 64)
+								goto err;
+
+							set_event(tr, c1, c2, c3);
 							k++;
 						}
 						k--;
@@ -195,7 +235,7 @@ static int depack_p4x(HIO_HANDLE *in, FILE *out)
 				}
 
 				if ((a = hio_tell(in)) < 0) {
-					return -1;
+					goto err;
 				}
 
 				c5 = c2;
@@ -204,48 +244,25 @@ static int depack_p4x(HIO_HANDLE *in, FILE *out)
 				hio_seek(in, b, SEEK_SET);
 
 				for (c = 0; c <= c5; c++) {
+					uint8 *tr = &track(i, j, k);
 					c1 = hio_read8(in);
 					c2 = hio_read8(in);
 					c3 = hio_read8(in);
 					c4 = hio_read8(in);
 
-					sample = ((c1 << 4) & 0x10) |
-						((c2 >> 4) & 0x0f);
-					memset(note, 0, 2);
-					mynote = c1 & 0x7f;
-					note[0] = ptk_table[mynote / 2][0];
-					note[1] = ptk_table[mynote / 2][1];
-					switch (c2 & 0x0f) {
-					case 0x08:
-						c2 -= 0x08;
-						break;
-					case 0x05:
-					case 0x06:
-					case 0x0A:
-						if (c3 >= 0x80)
-							c3 = (c3 << 4) & 0xf0;
-						break;
-					default:
-						break;
-					}
-					tr[x][k * 4] = (sample & 0xf0) |
-							(note[0] & 0x0f);
-					tr[x][k * 4 + 1] = note[1];
-					tr[x][k * 4 + 2] = c2;
-					tr[x][k * 4 + 3] = c3;
+					if (hio_error(in) || k >= 64 || set_event(tr, c1, c2, c3) < 0)
+						goto err;
 
 					if ((c4 > 0x00) && (c4 < 0x80))
 						k += c4;
 					if (c4 > 0x7f) {
 						k++;
 						for (l = 256; l > c4; l--) {
-							y = k * 4;
-							tr[x][y] =
-							  (sample & 0xf0) |
-							  (note [0] & 0x0f);
-							tr[x][y + 1] = note[1];
-							tr[x][y + 2] = c2;
-							tr[x][y + 3] = c3;
+							tr = &track(i, j, k);
+							if (k >= 64)
+								goto err;
+
+							set_event(tr, c1, c2, c3);
 							k++;
 						}
 						k--;
@@ -260,16 +277,16 @@ static int depack_p4x(HIO_HANDLE *in, FILE *out)
 
 	/* write pattern data */
 	for (i = 0; i < len; i++) {
-		memset(tmp, 0, 1024);
+		memset(tmp, 0, sizeof(tmp));
 		for (j = 0; j < 64; j++) {
 			for (k = 0; k < 4; k++) {
+				uint8 *tr = &track(i, k, j);
 				int x = j * 16 + k * 4;
-				int y = k + i * 4;
 
-				tmp[x + 0] = tr[y][j * 4];
-				tmp[x + 1] = tr[y][j * 4 + 1];
-				tmp[x + 2] = tr[y][j * 4 + 2];
-				tmp[x + 3] = tr[y][j * 4 + 3];
+				tmp[x + 0] = tr[0];
+				tmp[x + 1] = tr[1];
+				tmp[x + 2] = tr[2];
+				tmp[x + 3] = tr[3];
 			}
 		}
 		fwrite(tmp, 1024, 1, out);
@@ -281,7 +298,11 @@ static int depack_p4x(HIO_HANDLE *in, FILE *out)
 		pw_move_data(out, in, SampleSize[i]);
 	}
 
+	free(tdata);
 	return 0;
+    err:
+	free(tdata);
+	return -1;
 }
 
 static int test_p4x(const uint8 *data, char *t, int s)
@@ -289,6 +310,8 @@ static int test_p4x(const uint8 *data, char *t, int s)
 	//int j, k, l, o, n;
 	//int start = 0, ssize;
 	uint32 id;
+
+	PW_REQUEST_DATA(s, 8);
 
 	id = readmem32b(data);
 

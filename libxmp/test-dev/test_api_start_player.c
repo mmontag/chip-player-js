@@ -66,5 +66,6 @@ TEST(test_api_start_player)
 
 	/* TODO: Should test internal and system errors too */
 
+	xmp_free_context(ctx);
 }
 END_TEST

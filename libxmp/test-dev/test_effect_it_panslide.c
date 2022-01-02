@@ -4,10 +4,10 @@
 static int vals[] = {
 	0, 0, 0,
 	0, 0, 0,
-	0, 0, 5,
-	10, 10, 8,
-	6, 7, 7,
-	7, 5, 5,
+	0, 5, 10,
+	10, 8, 6,
+	7, 7, 7,
+	5, 5, 5,
 	255, 255, 255,
 	255, 255, 255
 };
@@ -50,5 +50,8 @@ TEST(test_effect_it_panslide)
 		xmp_get_frame_info(opaque, &info);
 		fail_unless(info.channel_info[0].pan == vals[i], "pan error");
 	}
+
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

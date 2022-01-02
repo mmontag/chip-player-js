@@ -22,6 +22,29 @@ run:
 
 Use ./configure --help to see more options.
 
+For emscripten, remember to pass the correct host os to configure, e.g.:
+
+  $ emconfigure ./configure --host=wasm32-unknown-emscripten
+
+
+You can also use the CMake build system to build libxmp, which requires
+cmake versions 3.2 or newer ( https://cmake.org )
+
+
+To build for Windows using Visual Studio, use Makefile.vc:
+
+  nmake -f Makefile.vc   (read/edit Makefile.vc as necessary.)
+
+
+To build for Windows using OpenWatcom, use Makefile.w32:
+
+  wmake -f Makefile.w32  (read/edit Makefile.w32 as necessary.)
+
+
+To build for OS/2 using OpenWatcom, use Makefile.os2:
+
+  wmake -f Makefile.os2  (read/edit Makefile.os2 as necessary.)
+
 
 Installation
 ------------

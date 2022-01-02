@@ -1,15 +1,35 @@
+/* ProWizard
+ * Copyright (C) 1997 Asle / ReDoX
+ * Modified in 2006,2007,2014 by Claudio Matsuoka
+ * Modified in 2021 by Alice Rowan
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 /*
- * Heatseeker_mc1.0.c   Copyright (C) 1997 Asle / ReDoX
+ * Heatseeker_mc1.0.c
  *
  * Converts back to ptk Heatseeker packed MODs
  *
  * Asle's note: There's a good job ! .. gosh !.
- *
- * Modified in 2006,2007,2014 by Claudio Matsuoka
  */
 
-#include <string.h>
-#include <stdlib.h>
 #include "prowiz.h"
 
 
@@ -23,8 +43,8 @@ static int depack_crb(HIO_HANDLE *in, FILE *out)
 	int i, j, k, l, m;
 	int size, ssize = 0;
 
-	memset(ptable, 0, 128);
-	memset(taddr, 0, 512 * 4);
+	memset(ptable, 0, sizeof(ptable));
+	memset(taddr, 0, sizeof(taddr));
 
 	pw_write_zero(out, 20);				/* write title */
 
@@ -56,7 +76,7 @@ static int depack_crb(HIO_HANDLE *in, FILE *out)
 
 	/* pattern data */
 	for (i = 0; i < pat_max; i++) {
-		memset(pat, 0, 1024);
+		memset(pat, 0, sizeof(pat));
 		for (j = 0; j < 4; j++) {
 			int x = hio_tell(in);
 			if (x < 0) {
@@ -76,12 +96,12 @@ static int depack_crb(HIO_HANDLE *in, FILE *out)
 					l = hio_tell(in);
 
 					/* Sanity check */
-					if (l < 0 || m >= 2048)
+					if (l < 0 || (unsigned int)m >= 2048U)
 						return -1;
 
 					hio_seek(in, taddr[m >> 2], SEEK_SET);
 					for (m = 0; m < 64; m++) {
-						int x = m * 16 + j * 4;
+						x = m * 16 + j * 4;
 
 						c1 = hio_read8(in);
 						if (c1 == 0x80) {
@@ -115,7 +135,7 @@ static int depack_crb(HIO_HANDLE *in, FILE *out)
 static int test_crb(const uint8 *data, char *t, int s)
 {
 	int i, j, k;
-	int ssize, max, idx;
+	int ssize, max, idx, init_data;
 
 	PW_REQUEST_DATA (s, 378);
 
@@ -161,26 +181,30 @@ static int test_crb(const uint8 *data, char *t, int s)
 		return -1;
 
 	/* test pattern table */
-	{
-		const uint8 *d = data + 250;
-		max = 0;
-		for (i = 0; i < 128; i++) {
-			if (d[i] > 0x7f)
-				return -1;
-			if (d[i] > max)
-				max = data[250 + i];
-		}
-
-		/* FIXME */
-		PW_REQUEST_DATA(s, 379 + 4 * max * 4 * 64);
+	max = 0;
+	for (i = 0; i < 128; i++) {
+		if (data[250 + i] > 0x7f)
+			return -1;
+		if (data[250 + i] > max)
+			max = data[250 + i];
 	}
+	max++;
+
+	/* Request either the upper bound of the packed pattern data size
+	 * or the sample data size, which is "known" to be valid. */
+	init_data = MIN(4 * max * 4 * 64, ssize);
+	PW_REQUEST_DATA(s, 378 + init_data);
 
 	/* test notes */
 	idx = 0;
-	for (i = 0; i <= max; i++) {
+	for (i = 0; i < max; i++) {
 		for (j = 0; j < 4; j++) {
 			for (k = 0; k < 64; k++) {
 				const uint8 *d = data + 378 + idx;
+				/* Slow... */
+				if (idx >= init_data) {
+					PW_REQUEST_DATA(s, 378 + idx + 4);
+				}
 				switch (d[0] & 0xC0) {
 				case 0x00:
 					if ((d[0] & 0x0F) > 0x03)

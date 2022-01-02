@@ -16,7 +16,7 @@ struct data_in_out {
 	unsigned char *data_out_point,*data_out_max;
 };
 
-void	libxmp_outputrle(int chr,void (*outputfunc)(int, struct data_in_out *),
+int	libxmp_outputrle(int chr,int (*outputfunc)(int, struct data_in_out *),
 			struct rledata *, struct data_in_out *);
 
 unsigned char	*libxmp_convert_rle(unsigned char *data_in,

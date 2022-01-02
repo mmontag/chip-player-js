@@ -1,0 +1,34 @@
+# Makefile for Win32 using Watcom compiler.
+#
+# wmake -f Makefile.w32
+# - builds libxmp.dll and its import lib (libxmp.lib)
+#
+# wmake -f Makefile.w32 target=static
+# - builds the static library xmp_static.lib
+#
+# To disable module depacker functionality:
+#	wmake -f Makefile.w32 USE_DEPACKERS=0
+#
+# To disable ProWizard functionality:
+#	wmake -f Makefile.w32 USE_PROWIZARD=0
+#
+!ifndef target
+target = dll
+!endif
+
+USE_PROWIZARD	= 1
+USE_DEPACKERS	= 1
+
+CC = wcc386
+SYSTEM = nt
+SYSTEM_DLL = nt_dll
+
+CFLAGS = -zq -bt=nt -bm -fp5 -fpi87 -mf -oeatxh -w4 -ei -zp8
+# newer OpenWatcom versions enable W303 by default.
+CFLAGS += -wcd=303
+# -5s  :  Pentium stack calling conventions.
+# -5r  :  Pentium register calling conventions.
+CFLAGS += -5s
+CFLAGS += -I"$(%WATCOM)/h/nt"
+
+!include watcom.mif

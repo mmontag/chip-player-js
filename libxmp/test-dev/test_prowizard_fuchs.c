@@ -17,5 +17,8 @@ TEST(test_prowizard_fuchs)
 
 	ret = compare_md5(info.md5, "f84629f27737bb62b56ee6f252149c90");
 	fail_unless(ret == 0, "MD5 error");
+
+	xmp_release_module(c);
+	xmp_free_context(c);
 }
 END_TEST

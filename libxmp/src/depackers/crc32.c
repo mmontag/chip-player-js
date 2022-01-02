@@ -21,7 +21,7 @@
  * THE SOFTWARE.
  */
 
-#include "common.h"
+#include "../common.h"
 #include "crc32.h"
 
 uint32 libxmp_crc32_table_A[256];

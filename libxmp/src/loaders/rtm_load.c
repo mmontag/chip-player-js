@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -21,7 +21,7 @@
  */
 
 #include "loader.h"
-#include "period.h"
+#include "../period.h"
 
 #ifndef __amigaos4__
 typedef uint8 BYTE;
@@ -157,7 +157,7 @@ static int rtm_test(HIO_HANDLE *f, char *t, const int start)
 
 static int read_object_header(HIO_HANDLE *f, struct ObjectHeader *h, const char *id)
 {
-	hio_read(&h->id, 4, 1, f);
+	hio_read(h->id, 4, 1, f);
 	D_(D_WARN "object id: %02x %02x %02x %02x", h->id[0],
 					h->id[1], h->id[2], h->id[3]);
 
@@ -167,13 +167,13 @@ static int read_object_header(HIO_HANDLE *f, struct ObjectHeader *h, const char 
 	h->rc = hio_read8(f);
 	if (h->rc != 0x20)
 		return -1;
-	if (hio_read(&h->name, 1, 32, f) != 32)
+	if (hio_read(h->name, 1, 32, f) != 32)
 		return -1;
 	h->eof = hio_read8(f);
 	h->version = hio_read16l(f);
 	h->headerSize = hio_read16l(f);
 	D_(D_INFO "object %-4.4s (%d)", h->id, h->headerSize);
-	
+
 	return 0;
 }
 
@@ -209,11 +209,11 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	rh.npattern = hio_read16l(f);
 	rh.speed = hio_read8(f);
 	rh.tempo = hio_read8(f);
-	hio_read(&rh.panning, 32, 1, f);
+	hio_read(rh.panning, 32, 1, f);
 	rh.extraDataSize = hio_read32l(f);
 
 	/* Sanity check */
-	if (rh.nposition > 255 || rh.ntrack > 32 || rh.npattern > 255) {
+	if (hio_error(f) || rh.nposition > 255 || rh.ntrack > 32 || rh.npattern > 255) {
 		return -1;
 	}
 
@@ -226,8 +226,9 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			return -1;
 		}
 	}
-	
-	strncpy(mod->name, oh.name, 20);
+
+	strncpy(mod->name, oh.name, 32);
+	mod->name[32] = '\0';
 	snprintf(mod->type, XMP_NAME_SIZE, "%s RTM %x.%02x",
 				tracker_name, version >> 8, version & 0xff);
 	/* strncpy(m->author, composer, XMP_NAME_SIZE); */
@@ -264,7 +265,7 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			D_(D_CRIT "Error reading pattern %d", i);
 			return -1;
 		}
-	
+
 		rp.flags = hio_read16l(f);
 		rp.ntrack = hio_read8(f);
 		rp.nrows = hio_read16l(f);
@@ -349,7 +350,7 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			return -1;
 		}
 
-		libxmp_instrument_name(mod, i, (uint8 *)&oh.name, 32);
+		libxmp_instrument_name(mod, i, (uint8 *)oh.name, 32);
 
 		if (oh.headerSize == 0) {
 			D_(D_INFO "[%2X] %-26.26s %2d ", i,
@@ -360,7 +361,7 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		ri.nsample = hio_read8(f);
 		ri.flags = hio_read16l(f);	/* bit 0 : default panning enabled */
-		if (hio_read(&ri.table, 1, 120, f) != 120)
+		if (hio_read(ri.table, 1, 120, f) != 120)
 			return -1;
 
 		ri.volumeEnv.npoint = hio_read8(f);
@@ -377,7 +378,7 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		ri.volumeEnv.loopstart = hio_read8(f);
 		ri.volumeEnv.loopend = hio_read8(f);
 		ri.volumeEnv.flags = hio_read16l(f); /* bit 0:enable 1:sus 2:loop */
-		
+
 		ri.panningEnv.npoint = hio_read8(f);
 
 		/* Sanity check */
@@ -479,9 +480,7 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			sub->sid = smpnum;
 
 			if (smpnum >= mod->smp) {
-				 mod->xxs = libxmp_realloc_samples(mod->xxs,
-						&mod->smp, mod->smp * 3 / 2);
-				if (mod->xxs == NULL)
+				if (libxmp_realloc_samples(m, mod->smp * 3 / 2) < 0)
 					return -1;
 			}
  			xxs = &mod->xxs[smpnum];
@@ -518,8 +517,7 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
 
 	/* Final sample number adjustment */
-	mod->xxs = libxmp_realloc_samples(mod->xxs, &mod->smp, smpnum);
-	if (mod->xxs == NULL)
+	if (libxmp_realloc_samples(m, smpnum) < 0)
 		return -1;
 
 	m->quirk |= QUIRKS_FT2;

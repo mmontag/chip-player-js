@@ -13,8 +13,7 @@ PROWIZ_SOURCES	:= $(addprefix src/loaders/prowizard/,$(PROWIZ_OBJS))
 DEPACKERS_SOURCES := $(addprefix src/depackers/,$(DEPACKERS_OBJS))
 
 LOCAL_MODULE    := xmp
-LOCAL_CFLAGS	:= -O3 -DHAVE_MKSTEMP -DHAVE_FNMATCH -I$(LOCAL_PATH)/include \
-		   -I$(LOCAL_PATH)/src
+LOCAL_CFLAGS	:= -O3 -DHAVE_MKSTEMP -DHAVE_FNMATCH -DHAVE_POWF -I$(LOCAL_PATH)/include
 LOCAL_SRC_FILES := $(SRC_SOURCES:.o=.c) \
 		   $(LOADERS_SOURCES:.o=.c) \
 		   $(PROWIZ_SOURCES:.o=.c) \

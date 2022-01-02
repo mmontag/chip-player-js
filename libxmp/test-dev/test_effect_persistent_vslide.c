@@ -23,10 +23,7 @@ TEST(test_effect_persistent_vslide)
 	for (i = 0; i < 80; i++) {
 		k = i * 5;
 		CLAMP(k, 0, 64);
-		xmp_play_frame(opaque);
-		xmp_get_frame_info(opaque, &info);
-		fail_unless(info.channel_info[0].volume == k, "volume slide error (frame 0)");
-		for (j = 0; j < 5; j++) {
+		for (j = 0; j < 6; j++) {
 			xmp_play_frame(opaque);
 			xmp_get_frame_info(opaque, &info);
 			if (k + j > 64)
@@ -46,10 +43,7 @@ TEST(test_effect_persistent_vslide)
 	for (i = 0; i < 80; i++) {
 		k = 64 - i * 5;
 		CLAMP(k, 0, 64);
-		xmp_play_frame(opaque);
-		xmp_get_frame_info(opaque, &info);
-		fail_unless(info.channel_info[0].volume == k, "volume slide error (frame 0)");
-		for (j = 0; j < 5; j++) {
+		for (j = 0; j < 6; j++) {
 			xmp_play_frame(opaque);
 			xmp_get_frame_info(opaque, &info);
 			if (k - j < 0)
@@ -70,10 +64,7 @@ TEST(test_effect_persistent_vslide)
 	for (i = 0; i < 80; i++) {
 		k = i * 5;
 		CLAMP(k, 0, 10);
-		xmp_play_frame(opaque);
-		xmp_get_frame_info(opaque, &info);
-		fail_unless(info.channel_info[0].volume == k, "volume slide error (frame 0)");
-		for (j = 0; j < 5; j++) {
+		for (j = 0; j < 6; j++) {
 			xmp_play_frame(opaque);
 			xmp_get_frame_info(opaque, &info);
 			if (k + j > 10)
@@ -94,10 +85,7 @@ TEST(test_effect_persistent_vslide)
 	for (i = 0; i < 80; i++) {
 		k = 64 - i * 5;
 		CLAMP(k, 54, 64);
-		xmp_play_frame(opaque);
-		xmp_get_frame_info(opaque, &info);
-		fail_unless(info.channel_info[0].volume == k, "volume slide error (frame 0)");
-		for (j = 0; j < 5; j++) {
+		for (j = 0; j < 6; j++) {
 			xmp_play_frame(opaque);
 			xmp_get_frame_info(opaque, &info);
 			if (k - j < 54)
@@ -107,5 +95,8 @@ TEST(test_effect_persistent_vslide)
 			}
 		}
 	}
+
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

@@ -1,12 +1,7 @@
 #ifndef LIBXMP_LIST_H
 #define LIBXMP_LIST_H
 
-#ifdef _MSC_VER
-#define __inline__ __inline
-#endif
-#ifdef __WATCOMC__
-#define __inline__   inline
-#endif
+#include <stddef.h> /* offsetof */
 
 /*
  * Simple doubly linked list implementation.
@@ -32,12 +27,12 @@ struct list_head {
 } while (0)
 
 /*
- * Insert a new entry between two known consecutive entries. 
+ * Insert a new entry between two known consecutive entries.
  *
  * This is only for internal list manipulation where we know
  * the prev/next entries already!
  */
-static __inline__ void __list_add(struct list_head *_new,
+static inline void __list_add(struct list_head *_new,
 	struct list_head * prev,
 	struct list_head * next)
 {
@@ -55,7 +50,7 @@ static __inline__ void __list_add(struct list_head *_new,
  * Insert a new entry after the specified head.
  * This is good for implementing stacks.
  */
-static __inline__ void list_add(struct list_head *_new, struct list_head *head)
+static inline void list_add(struct list_head *_new, struct list_head *head)
 {
 	__list_add(_new, head, head->next);
 }
@@ -68,7 +63,7 @@ static __inline__ void list_add(struct list_head *_new, struct list_head *head)
  * Insert a new entry before the specified head.
  * This is useful for implementing queues.
  */
-static __inline__ void list_add_tail(struct list_head *_new, struct list_head *head)
+static inline void list_add_tail(struct list_head *_new, struct list_head *head)
 {
 	__list_add(_new, head->prev, head);
 }
@@ -80,7 +75,7 @@ static __inline__ void list_add_tail(struct list_head *_new, struct list_head *h
  * This is only for internal list manipulation where we know
  * the prev/next entries already!
  */
-static __inline__ void __list_del(struct list_head * prev,
+static inline void __list_del(struct list_head * prev,
 				  struct list_head * next)
 {
 	next->prev = prev;
@@ -91,7 +86,7 @@ static __inline__ void __list_del(struct list_head * prev,
  * list_del - deletes entry from list.
  * @entry: the element to delete from the list.
  */
-static __inline__ void list_del(struct list_head *entry)
+static inline void list_del(struct list_head *entry)
 {
 	__list_del(entry->prev, entry->next);
 }
@@ -100,7 +95,7 @@ static __inline__ void list_del(struct list_head *entry)
  * list_empty - tests whether a list is empty
  * @head: the list to test.
  */
-static __inline__ int list_empty(struct list_head *head)
+static inline int list_empty(struct list_head *head)
 {
 	return head->next == head;
 }
@@ -110,7 +105,7 @@ static __inline__ int list_empty(struct list_head *head)
  * @list: the new list to add.
  * @head: the place to add it in the first list.
  */
-static __inline__ void list_splice(struct list_head *list, struct list_head *head)
+static inline void list_splice(struct list_head *list, struct list_head *head)
 {
 	struct list_head *first = list->next;
 
@@ -133,7 +128,7 @@ static __inline__ void list_splice(struct list_head *list, struct list_head *hea
  * @member:	the name of the list_struct within the struct.
  */
 #define list_entry(ptr, type, member) \
-	((type *)((char *)(ptr)-(size_t)(&((type *)0)->member)))
+	((type *)((char *)(ptr) - offsetof(type, member)))
 
 /**
  * list_for_each	-	iterate over a list
@@ -143,4 +138,4 @@ static __inline__ void list_splice(struct list_head *list, struct list_head *hea
 #define list_for_each(pos, head) \
 	for (pos = (head)->next; pos != (head); pos = pos->next)
 
-#endif
+#endif  /* LIBXMP_LIST_H */

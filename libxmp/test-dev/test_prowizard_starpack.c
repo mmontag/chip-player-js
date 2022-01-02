@@ -17,5 +17,8 @@ TEST(test_prowizard_starpack)
 
 	ret = compare_md5(info.md5, "f8a1bc8a19e7dfc446664494cd22788a");
 	fail_unless(ret == 0, "MD5 error");
+
+	xmp_release_module(c);
+	xmp_free_context(c);
 }
 END_TEST

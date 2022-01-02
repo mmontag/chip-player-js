@@ -130,5 +130,8 @@ TEST(test_effect_ed_delay)
 	fail_unless(vi->note ==  0, "row 9 frame 1");
 	fail_unless(vi->pos0 ==  0, "sample position");
 	fail_unless(vi->vol  ==  0, "voice volume");
+
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

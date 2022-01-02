@@ -69,5 +69,8 @@ TEST(test_effect_pastnote_cut)
 	fail_unless(vi2->note == 49, "not new note");
 	fail_unless(vi2->vol  == 33 * 16, "not new instrument volume");
 	fail_unless(vi2->pos0 ==  0, "sample didn't reset");
+
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

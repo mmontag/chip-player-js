@@ -16,5 +16,8 @@ TEST(test_depack_arcfs)
 
 	ret = compare_md5(info.md5, "1c41df267ebb8febe5e3d8a7e45bad61");
 	fail_unless(ret == 0, "MD5 error");
+
+	xmp_release_module(c);
+	xmp_free_context(c);
 }
 END_TEST

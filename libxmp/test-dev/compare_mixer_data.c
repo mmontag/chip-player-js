@@ -1,13 +1,10 @@
 #include "test.h"
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #undef TEST
 #include "../src/player.h"
 #include "../src/mixer.h"
 #include "../src/virtual.h"
 
-static void _compare_mixer_data(char *mod, char *data, int loops, int ignore_rv)
+static void _compare_mixer_data(const char *mod, const char *data, int loops, int ignore_rv)
 {
 	xmp_context opaque;
 	struct context_data *ctx;
@@ -54,12 +51,13 @@ static void _compare_mixer_data(char *mod, char *data, int loops, int ignore_rv)
 			vi = &p->virt.voice_array[voc];
 
 #if 1
-			fgets(line, 200, f);
+			fail_unless(fgets(line, 200, f) != NULL, "early EOF");
 			num = sscanf(line, "%d %d %d %d %d %d %d %d %d %d %d",
 				&time, &row, &frame, &chan, &period,
 				&note, &ins, &vol, &pan, &pos0, &cutoff);
 
-			fail_unless(fi.time    == time,   "time mismatch");
+			/* Allow some error in values derived from floating point math. */
+			fail_unless(abs(fi.time - time) <= 1, "time mismatch");
 			fail_unless(fi.row     == row,    "row mismatch");
 			fail_unless(fi.frame   == frame,  "frame mismatch");
 			fail_unless(i          == chan,   "channel mismatch");
@@ -70,7 +68,7 @@ static void _compare_mixer_data(char *mod, char *data, int loops, int ignore_rv)
 				fail_unless(vi->vol == vol, "volume mismatch");
 				fail_unless(vi->pan == pan, "pan mismatch");
 			}
-			fail_unless(vi->pos0   == pos0,   "position mismatch");
+			fail_unless(abs(vi->pos0 - pos0) <= 1, "position mismatch");
 			if (num >= 11) {
 				fail_unless(vi->filter.cutoff == cutoff,
 							  "cutoff mismatch");
@@ -84,7 +82,8 @@ static void _compare_mixer_data(char *mod, char *data, int loops, int ignore_rv)
 		
 	}
 
-	fgets(line, 200, f);
+	if (fgets(line, 200, f) != NULL)
+		fail_unless(line[0] == '\0', "not end of data file");
 	//fail_unless(feof(f), "not end of data file");
 
 	xmp_end_player(opaque);
@@ -92,17 +91,17 @@ static void _compare_mixer_data(char *mod, char *data, int loops, int ignore_rv)
 	xmp_free_context(opaque);
 }
 
-void compare_mixer_data(char *mod, char *data)
+void compare_mixer_data(const char *mod, const char *data)
 {
 	_compare_mixer_data(mod, data, 1, 0);
 }
 
-void compare_mixer_data_loops(char *mod, char *data, int loops)
+void compare_mixer_data_loops(const char *mod, const char *data, int loops)
 {
 	_compare_mixer_data(mod, data, loops, 0);
 }
 
-void compare_mixer_data_no_rv(char *mod, char *data)
+void compare_mixer_data_no_rv(const char *mod, const char *data)
 {
 	_compare_mixer_data(mod, data, 1, 1);
 }

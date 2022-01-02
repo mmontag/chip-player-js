@@ -63,3 +63,13 @@ XMP_4.4 {
     xmp_get_player;
 } XMP_4.3;
 
+XMP_4.5 {
+  global:
+    xmp_set_row;
+    xmp_set_tempo_factor;
+    xmp_load_module_from_callbacks;
+    xmp_test_module_from_file;
+    xmp_test_module_from_memory;
+    xmp_test_module_from_callbacks;
+    xmp_syserrno;
+} XMP_4.4;

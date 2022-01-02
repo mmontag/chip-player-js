@@ -30,9 +30,8 @@ code.  The contents of this file are hereby released to the public domain.
                                  -- Rahul Dhesi 1986/11/14
 */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include "common.h"
+#include "../common.h"
+#include "depacker.h"
 
 #define  STACKSIZE	4000
 #define  INBUFSIZ 	(IN_BUF_SIZE - 10)	/* avoid obo errors */
@@ -62,8 +61,6 @@ avoid off-by-one errors. */
 #define MEM_BLOCK_SIZE	(8192 + 8192 + 256 + 8)
 
 
-typedef FILE *BLOCKFILE;
-
 struct tabentry {
    unsigned next;
    char z_ch;
@@ -75,7 +72,8 @@ struct lzd_data {
 
    char *out_buf_adr;		/* output buffer */
    char *in_buf_adr;		/* input buffer */
-   BLOCKFILE in_f, out_f; 
+   HIO_HANDLE *in_f;
+   FILE *out_f;
 
    char memflag;			/* memory allocated? flag */
    struct tabentry *table;		/* hash table from lzc.c */
@@ -106,7 +104,7 @@ static unsigned masks[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0,
 static unsigned bit_offset;
 static unsigned output_offset;
 
-#define		BLOCKREAD(f,b,c) fread((b),1,(c),(f))
+#define		BLOCKREAD(f,b,c) hio_read((b),1,(c),(f))
 #define		BLOCKWRITE(f,b,c) fwrite((b),1,(c),(f))
 
 
@@ -217,7 +215,7 @@ static void ad_dcode(struct lzd_data *data)
    }
 }
 
-static int lzd(BLOCKFILE input_f, BLOCKFILE output_f, uint32 *crc_table)
+static int lzd(HIO_HANDLE *input_f, FILE *output_f, uint32 *crc_table)
 {
    struct lzd_data *data;
 
@@ -338,10 +336,7 @@ static int lzd(BLOCKFILE input_f, BLOCKFILE output_f, uint32 *crc_table)
 **
 *****************************************************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "common.h"
+#include "../common.h"
 
 struct description {
 	char text[20];	/* "ZOO 2.10 Archive.<ctr>Z"       */
@@ -404,7 +399,7 @@ struct entry {
 #define BITS_PRE	5	/* 2^BITS_PRE > MAX_PRE (+1?)      */
 
 struct local_data {
-	FILE *in;
+	HIO_HANDLE *in;
 	FILE *out;
 	struct description desc;
 	struct entry entry;
@@ -449,7 +444,8 @@ static uint32 read_block(char *blk, uint32 len, struct local_data *data)
 	int i, ch;
 
 	for (i = 0; i < len; i++) {
-		if ((ch = read8(data->in)) == EOF)
+		ch = hio_read8(data->in);
+		if (hio_eof(data->in))
 			return i;
 		else
 			*blk++ = ch;
@@ -466,20 +462,20 @@ static int read_description(struct local_data *data)
 	data->desc.text[19] = '\0';
 
 	/* try to read the magic words */
-	if ((data->desc.magic = read32l(data->in)) != (uint32)0xfdc4a7dcL)
+	if ((data->desc.magic = hio_read32l(data->in)) != (uint32)0xfdc4a7dcL)
 		return 0;
 
 	/* read the old part of the description */
-	data->desc.posent = read32l(data->in);
-	data->desc.klhvmh = read32l(data->in);
-	data->desc.majver = read8(data->in);
-	data->desc.minver = read8(data->in);
+	data->desc.posent = hio_read32l(data->in);
+	data->desc.klhvmh = hio_read32l(data->in);
+	data->desc.majver = hio_read8(data->in);
+	data->desc.minver = hio_read8(data->in);
 
 	/* read the new part of the description if present */
-	data->desc.type = (34 < data->desc.posent ? read8(data->in) : 0);
-	data->desc.poscmt = (34 < data->desc.posent ? read32l(data->in) : 0);
-	data->desc.sizcmt = (34 < data->desc.posent ? read16l(data->in) : 0);
-	data->desc.modgen = (34 < data->desc.posent ? read8(data->in) : 0);
+	data->desc.type = (34 < data->desc.posent ? hio_read8(data->in) : 0);
+	data->desc.poscmt = (34 < data->desc.posent ? hio_read32l(data->in) : 0);
+	data->desc.sizcmt = (34 < data->desc.posent ? hio_read16l(data->in) : 0);
+	data->desc.modgen = (34 < data->desc.posent ? hio_read8(data->in) : 0);
 
 	/* initialize the fake entries */
 	data->desc.sizorg = 0;
@@ -496,43 +492,43 @@ static int read_entry(struct local_data *data)
 	uint32 l;	/* 'data->entry.lnamu+data->entry.ldiru' */
 
 	/* try to read the magic words */
-	if ((data->entry.magic = read32l(data->in)) != (uint32)0xfdc4a7dcL)
+	if ((data->entry.magic = hio_read32l(data->in)) != (uint32)0xfdc4a7dcL)
 		return 0;
 
 	/* read the fixed part of the directory entry */
-	data->entry.type = read8(data->in);
-	data->entry.method = read8(data->in);
-	data->entry.posnxt = read32l(data->in);
-	data->entry.posdat = read32l(data->in);
-	data->entry.datdos = read16l(data->in);
-	data->entry.timdos = read16l(data->in);
-	data->entry.crcdat = read16l(data->in);
-	data->entry.sizorg = read32l(data->in);
-	data->entry.siznow = read32l(data->in);
-	data->entry.majver = read8(data->in);
-	data->entry.minver = read8(data->in);
-	data->entry.delete = read8(data->in);
-	data->entry.spared = read8(data->in);
-	data->entry.poscmt = read32l(data->in);
-	data->entry.sizcmt = read16l(data->in);
+	data->entry.type = hio_read8(data->in);
+	data->entry.method = hio_read8(data->in);
+	data->entry.posnxt = hio_read32l(data->in);
+	data->entry.posdat = hio_read32l(data->in);
+	data->entry.datdos = hio_read16l(data->in);
+	data->entry.timdos = hio_read16l(data->in);
+	data->entry.crcdat = hio_read16l(data->in);
+	data->entry.sizorg = hio_read32l(data->in);
+	data->entry.siznow = hio_read32l(data->in);
+	data->entry.majver = hio_read8(data->in);
+	data->entry.minver = hio_read8(data->in);
+	data->entry.delete = hio_read8(data->in);
+	data->entry.spared = hio_read8(data->in);
+	data->entry.poscmt = hio_read32l(data->in);
+	data->entry.sizcmt = hio_read16l(data->in);
 	read_block(data->entry.nams, 13L, data);
 	data->entry.nams[13] = '\0';
 
 	/* handle the long name and the directory in the variable part */
-	data->entry.lvar = (data->entry.type == 2 ? read16l(data->in) : 0);
-	data->entry.timzon = (data->entry.type == 2 ? read8(data->in) : 127);
-	data->entry.crcent = (data->entry.type == 2 ? read16l(data->in) : 0);
-	data->entry.lnamu = (0 < data->entry.lvar ? read8(data->in) : 0);
-	data->entry.ldiru = (1 < data->entry.lvar ? read8(data->in) : 0);
+	data->entry.lvar = (data->entry.type == 2 ? hio_read16l(data->in) : 0);
+	data->entry.timzon = (data->entry.type == 2 ? hio_read8(data->in) : 127);
+	data->entry.crcent = (data->entry.type == 2 ? hio_read16l(data->in) : 0);
+	data->entry.lnamu = (0 < data->entry.lvar ? hio_read8(data->in) : 0);
+	data->entry.ldiru = (1 < data->entry.lvar ? hio_read8(data->in) : 0);
 	read_block(data->entry.namu, (uint32)data->entry.lnamu, data);
 	data->entry.namu[data->entry.lnamu] = '\0';
 	read_block(data->entry.diru, (uint32)data->entry.ldiru, data);
 	data->entry.diru[data->entry.ldiru] = '\0';
 	l = data->entry.lnamu + data->entry.ldiru;
-	data->entry.system = (l + 2 < data->entry.lvar ? read16l(data->in) : 0);
-	data->entry.permis = (l + 4 < data->entry.lvar ? read24l(data->in) : 0);
-	data->entry.modgen = (l + 7 < data->entry.lvar ? read8(data->in) : 0);
-	data->entry.ver = (l + 7 < data->entry.lvar ? read16l(data->in) : 0);
+	data->entry.system = (l + 2 < data->entry.lvar ? hio_read16l(data->in) : 0);
+	data->entry.permis = (l + 4 < data->entry.lvar ? hio_read24l(data->in) : 0);
+	data->entry.modgen = (l + 7 < data->entry.lvar ? hio_read8(data->in) : 0);
+	data->entry.ver = (l + 7 < data->entry.lvar ? hio_read16l(data->in) : 0);
 
 	/* indicate success */
 	return 1;
@@ -840,7 +836,7 @@ static int decode_lzh(struct local_data *data)
 	uint32 bitc;	/* number of bits that are valid   */
 
 #define PEEK_BITS(N)            ((bits >> (bitc-(N))) & ((1L<<(N))-1))
-#define FLSH_BITS(N)            if ( (bitc -= (N)) < 16 ) { bits  = (bits<<16) + read16b(data->in); bitc += 16; }
+#define FLSH_BITS(N)            if ( (bitc -= (N)) < 16 ) { bits  = (bits<<16) + hio_read16b(data->in); bitc += 16; }
 
 	/* initialize bit source, output pointer, and crc */
 	bits = 0;
@@ -1101,7 +1097,7 @@ static int decode_lzh(struct local_data *data)
 **  will.  <pre> is a prefix that is prepended to all path names.
 */
 
-int decrunch_zoo(FILE *in, FILE *out)
+int decrunch_zoo(HIO_HANDLE *in, FILE *out)
 {
 	struct local_data *data;
 	int res;
@@ -1120,7 +1116,7 @@ int decrunch_zoo(FILE *in, FILE *out)
 	/* loop over the members of the archive */
 	data->entry.posnxt = data->desc.posent;
 	while (1) {
-		if (fseek(data->in, data->entry.posnxt, SEEK_SET) || !read_entry(data))
+		if (hio_seek(data->in, data->entry.posnxt, SEEK_SET) || !read_entry(data))
 			goto err1;
 		if (!data->entry.posnxt)
 			break;
@@ -1135,7 +1131,7 @@ int decrunch_zoo(FILE *in, FILE *out)
 			continue;
 
 	        /* decode the file */
-		if (fseek(data->in, data->entry.posdat, SEEK_SET))
+		if (hio_seek(data->in, data->entry.posdat, SEEK_SET))
 			continue;
 
 		data->out = out;

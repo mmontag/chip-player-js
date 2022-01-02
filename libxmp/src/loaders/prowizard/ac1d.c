@@ -1,15 +1,35 @@
+/* ProWizard
+ * Copyright (C) 1996-1997 Asle / ReDoX
+ * Modified in 2006,2007,2014 by Claudio Matsuoka
+ * Modified in 2020 by Alice Rowan
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 /*
- * ac1d.c   Copyright (C) 1996-1997 Asle / ReDoX
+ * ac1d.c
  *
  * Converts ac1d packed MODs back to PTK MODs
  * thanks to Gryzor and his ProWizard tool ! ... without it, this prog
  * would not exist !!!
- *
- * Modified in 2006,2007,2014 by Claudio Matsuoka
  */
 
-#include <stdlib.h>
-#include <string.h>
 #include "prowiz.h"
 
 #define NO_NOTE 0xff
@@ -26,12 +46,12 @@ static int depack_ac1d(HIO_HANDLE *in, FILE *out)
 	int saddr;
 	int ssize = 0;
 	int paddr[128];
-	int psize[128];
+	/*int psize[128];*/
 	/*int tsize1, tsize2, tsize3;*/
 	int i, j, k;
 
-	memset(paddr, 0, 128 * 4);
-	memset(psize, 0, 128 * 4);
+	memset(paddr, 0, sizeof(paddr));
+	/*memset(psize, 0, sizeof(psize));*/
 
 	npos = hio_read8(in);
 	ntk_byte = hio_read8(in);
@@ -62,15 +82,15 @@ static int depack_ac1d(HIO_HANDLE *in, FILE *out)
 
 	npat--;
 
-	for (i = 0; i < (npat - 1); i++)
-		psize[i] = paddr[i + 1] - paddr[i];
+	/*for (i = 0; i < (npat - 1); i++)
+		psize[i] = paddr[i + 1] - paddr[i];*/
 
 	write8(out, npos);		/* write number of pattern pos */
 	write8(out, ntk_byte);		/* write "noisetracker" byte */
 
 	hio_seek(in, 0x300, SEEK_SET);	/* go to pattern table .. */
 	pw_move_data(out, in, 128);	/* pattern table */
-	
+
 	write32b(out, PW_MOD_MAGIC);	/* M.K. */
 
 	/* pattern data */
@@ -80,8 +100,11 @@ static int depack_ac1d(HIO_HANDLE *in, FILE *out)
 		/*tsize2 =*/ hio_read32b(in);
 		/*tsize3 =*/ hio_read32b(in);
 
-		memset(tmp, 0, 1024);
+		memset(tmp, 0, sizeof(tmp));
 		for (k = 0; k < 4; k++) {
+			if (hio_error(in))
+				break;
+
 			for (j = 0; j < 64; j++) {
 				int x = j * 16 + k * 4;
 
@@ -106,7 +129,7 @@ static int depack_ac1d(HIO_HANDLE *in, FILE *out)
 
 				tmp[x] = ins & 0xf0;
 
-				if (note != NO_NOTE) {
+				if (note != NO_NOTE && PTK_IS_VALID_NOTE(note)) {
 					tmp[x] |= ptk_table[note][0];
 					tmp[x + 1] = ptk_table[note][1];
 				}

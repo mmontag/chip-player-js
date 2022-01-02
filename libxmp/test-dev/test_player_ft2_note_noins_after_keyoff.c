@@ -55,5 +55,8 @@ TEST(test_player_ft2_note_noins_after_keyoff)
 	fail_unless(fi.channel_info[0].note == 49, "set note");
 	fail_unless(fi.channel_info[0].volume == 19, "set volume");
 	xmp_play_frame(opaque);
+
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

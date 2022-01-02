@@ -1,13 +1,13 @@
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 libdir=@libdir@
-includedir=@includedir@/libxmp-lite
+includedir=@includedir@
 
 Name: libxmp-lite
 Description: Xmp lite module player library
-Version: 4.4.2
+Version: 4.5.0
 
 Requires:
 Libs: -L${libdir} -lxmp-lite
-Cflags: -I${includedir}
-Libs.private: -lm
+Cflags: -I${includedir}/libxmp-lite
+Libs.private: @LIBM@

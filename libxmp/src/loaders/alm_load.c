@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -30,9 +30,6 @@
  */
 
 #include "loader.h"
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
 
 
 static int alm_test (HIO_HANDLE *, char *, const int);
@@ -62,8 +59,6 @@ static int alm_test(HIO_HANDLE *f, char *t, const int start)
     return 0;
 }
 
-
-
 struct alm_file_header {
     uint8 id[7];		/* "ALEY MO" or "ALEYMOD" */
     uint8 speed;		/* Only in versions 1.1 and 1.2 */
@@ -80,7 +75,6 @@ static int alm_load(struct module_data *m, HIO_HANDLE *f, const int start)
     int i, j;
     struct alm_file_header afh;
     struct xmp_event *event;
-    struct stat stat;
     uint8 b;
     char *basename;
     char filename[NAME_SIZE];
@@ -153,16 +147,15 @@ static int alm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	snprintf(filename, NAME_SIZE, "%s.%d", basename, i + 1);
-	s = hio_open_file(filename, "rb");
+	s = hio_open(filename, "rb");
 
 	if (s == NULL)
 	    continue;
 
 	mod->xxi[i].nsm = 1;
 
-	hio_stat(s, &stat);
 	b = hio_read8(s);		/* Get first octet */
-	mod->xxs[i].len = stat.st_size - 5 * !b;
+	mod->xxs[i].len = hio_size(s) - 5 * !b;
 
 	if (!b) {		/* Instrument with header */
 	    mod->xxs[i].lps = hio_read16l(f);
