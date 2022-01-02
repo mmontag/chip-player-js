@@ -455,12 +455,12 @@ const flags = [
   '-s', 'ASSERTIONS=0',      // assertions increase runtime size about 100K
   '-s', 'MODULARIZE=1',
   '-s', 'EXPORT_NAME=CHIP_CORE',
-  '-s', 'ENVIRONMENT=web',
+  '-s', 'ENVIRONMENT=worker',
   '-s', 'USE_ZLIB=1',
   '-s', 'EXPORT_ES6=1',
   '-s', 'USE_ES6_IMPORT_META=0',
   '-lidbfs.js',
-  '-Os',                     // set to O0 for fast compile during development
+  '-O0',                     // set to O0 for fast compile during development
   '-o', jsOutFile,
 
   /*

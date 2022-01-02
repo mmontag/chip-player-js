@@ -23,7 +23,7 @@ export default class Player extends EventEmitter {
   constructor(chipCore, sampleRate, bufferSize=2048, debug=false) {
     super();
 
-    this.process = this.process.bind(this);
+    // this.process = this.process.bind(this);
 
     this.paused = true;
     this.fileExtensions = [];
@@ -35,6 +35,12 @@ export default class Player extends EventEmitter {
     this.timeCount = 0;
     this.renderTime = 0;
     this.perfLoggingInterval = 100;
+
+    // EventEmitter + Comlink workaround: drop .on() return value
+    const _on = this.on;
+    this.on = (...args) => {
+      _on.apply(this, args);
+    };
   }
 
   togglePause() {
@@ -130,6 +136,17 @@ export default class Player extends EventEmitter {
     return [];
   }
 
+  getBasePlayerState() {
+    return {
+      metadata: this.getMetadata(),
+      durationMs: this.getDurationMs(),
+      positionMs: this.getPositionMs(),
+      numVoices: this.getNumVoices(),
+      voiceMask: this.getVoiceMask(),
+      isStopped: false,
+    };
+  }
+
   suspend() {
     this.stopped = true;
     this.paused = true;
@@ -139,14 +156,16 @@ export default class Player extends EventEmitter {
     if (typeof fn !== 'function') {
       throw Error('AudioProcess must be a function.');
     }
+    console.log('setAudioProcess this:', this);
     this._innerAudioProcess = fn;
   }
 
   process(output) {
     // TODO: AudioWorkletGlobalScope's currentTime doesn't work for performance measurement
-    const start = global.currentTime || performance.now();
+    // TODO: replace all refs to "global" or "window" with "globalThis"
+    const start = global.performance ? performance.now() : 0;
     this._innerAudioProcess(output);
-    const end = global.currentTime || performance.now();
+    const end = global.performance ? performance.now() : 0;
 
     if (this.debug) {
       this.renderTime += end - start;
@@ -168,19 +187,46 @@ export default class Player extends EventEmitter {
     }
   }
 
-  muteAudioDuringCall(audioNode, fn) {
-    if (audioNode && audioNode.context.state === 'running' && this.paused === false) {
-      const audioprocess = audioNode.onaudioprocess;
+  // muteAudioDuringCall(audioNode, fn) {
+  //   if (audioNode && audioNode.context.state === 'running' && this.paused === false) {
+  //     const audioprocess = audioNode.onaudioprocess;
+  //     // Workaround to eliminate stuttering:
+  //     // Temporarily swap the audio process callback, and do the
+  //     // expensive operation only after buffer is filled with silence
+  //     audioNode.onaudioprocess = function (e) {
+  //       for (let i = 0; i < e.outputBuffer.numberOfChannels; i++) {
+  //         e.outputBuffer.getChannelData(i).fill(0);
+  //       }
+  //       fn();
+  //       audioNode.onaudioprocess = audioprocess;
+  //     };
+  //   } else {
+  //     fn();
+  //   }
+  // }
+
+  muteAudioDuringCall(fn) {
+    if (typeof setTimeout != 'undefined') {
       // Workaround to eliminate stuttering:
       // Temporarily swap the audio process callback, and do the
       // expensive operation only after buffer is filled with silence
-      audioNode.onaudioprocess = function (e) {
-        for (let i = 0; i < e.outputBuffer.numberOfChannels; i++) {
-          e.outputBuffer.getChannelData(i).fill(0);
+      console.log('stashing the audio process. this:', this);
+      const audioprocess = this._innerAudioProcess;
+      this.setAudioProcess((channels) => {
+        console.log('filling buffer with silence');
+        for (let ch = 0; ch < channels.length; ch++) {
+          for (let i = 0; i < ch.length; i++) ch[i] = Math.random() - 0.5;
+          // channels[ch].fill(Math.random() - 0.5);
         }
+      });
+
+      setTimeout(() => {
+        console.log('running the expensive function');
         fn();
-        audioNode.onaudioprocess = audioprocess;
-      };
+        console.log('restoring the audio process');
+        this.setAudioProcess(audioprocess);
+      }, 100); // Enough time to fill the buffer twice. Determined empirically.
+
     } else {
       fn();
     }

@@ -8,6 +8,9 @@ import 'firebase/auth';
 import 'firebase/firestore';
 import { NavLink, Route, Switch, withRouter } from 'react-router-dom';
 import Dropzone from 'react-dropzone';
+/* eslint import/no-webpack-loader-syntax: off */
+import workletUrl from 'worklet-loader!../players/ChipWorkletProcessor';
+import * as Comlink from 'comlink';
 
 import ChipCore from '../chip-core';
 import firebaseConfig from '../config/firebaseConfig';
@@ -32,6 +35,26 @@ import Search from './Search';
 import Visualizer from './Visualizer';
 
 const NUMERIC_COLLATOR = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+
+// Here we have the first of many gross hacks for AudioWorklets. I'm abandoning the whole idea.
+// After all this work, there were still audio glitches because the emulation cores are running
+// on the AudioWorklet thread. Thus in order to do a seek, the code blocks for 2 seconds and freezes out the
+// audio buffer, and nothing was solved.
+//
+// The only way to avoid it is to fill a ring buffer on a *worker* thread that is also readable from
+// AudioWorklet thread. And then getting into the world of shared array buffers which are still poorly
+// supported, compounding the browser issues.
+//
+// So, no thanks. Maybe next year.
+const portableFetch = (url) => {
+  return fetch(url).then(response => {
+    if (typeof registerProcessor === 'function') {
+      return Comlink.transfer(response.arrayBuffer());
+    } else {
+      return response.arrayBuffer();
+    }
+  });
+}
 
 class App extends React.Component {
   constructor(props) {
@@ -109,6 +132,8 @@ class App extends React.Component {
     const gainNode = audioCtx.createGain();
     gainNode.gain.value = 1;
     gainNode.connect(audioCtx.destination);
+    const audioNode = audioCtx.createScriptProcessor(bufferSize, 2, 2);
+    audioNode.connect(gainNode);
     const playerNode = this.playerNode = gainNode;
 
     unlockAudioContext(audioCtx);
@@ -140,8 +165,84 @@ class App extends React.Component {
       volume: 100,
       repeat: REPEAT_OFF,
       directories: {},
+      hasPlayer: false,
+      paramDefs: [],
     };
 
+    const urlParams = queryString.parse(window.location.search.substr(1));
+    if (urlParams.worker) {
+      // const workletUrl = '../players/ChipWorkletProcessor';
+      audioCtx.audioWorklet.addModule(workletUrl).then(() => {
+        const chipWorkletNode = new AudioWorkletNode(audioCtx, 'chip-worklet-processor', {
+          numberOfInputs: 0,
+          numberOfOutputs: 1,
+          outputChannelCount: [2],
+        });
+        WebAssembly.compileStreaming(fetch(`${process.env.PUBLIC_URL}/chip-core.wasm`))
+          .then(wasmData => chipWorkletNode.port.postMessage({ type: 'WASM_DATA', payload: wasmData }));
+        chipWorkletNode.connect(playerNode);
+
+        Comlink.expose({
+          fetch: portableFetch,
+        }, chipWorkletNode.port);
+
+        // const sequencer = Comlink.wrap(chipWorkletNode.port).sequencer;
+        // setTimeout(() => {
+        //   console.log('Playing song on AudioWorklet...');
+        //   sequencer.on('sequencerStateUpdate', Comlink.proxy((e) => {
+        //     console.log('Got sequencerStateUpdate', e);
+        //     const newState = App.mapSequencerStateToAppState(e);
+        //     console.log('New State', newState);
+        //     this.setState({...newState, loading: false, ejected: false });
+        //   }));
+        //   sequencer.playSong("https://gifx.co/music/Nintendo%20SNES/Last%20Bible%20III/31%20Boss%20Battle%202.spc");
+        //   this.sequencer = sequencer;
+        // }, 2000);
+        const chipWorkletRPC = Comlink.wrap(chipWorkletNode.port);
+        const players = [
+          chipWorkletRPC.gmePlayer,
+          chipWorkletRPC.xmpPlayer,
+          chipWorkletRPC.mdxPlayer,
+          chipWorkletRPC.v2mPlayer,
+          chipWorkletRPC.midiPlayer,
+          chipWorkletRPC.n64Player,
+        ];
+        const sequencer = new Sequencer(players, portableFetch);
+        sequencer.on('sequencerStateUpdate', (e) => {
+          console.log('Got sequencerStateUpdate', e);
+          const newState = App.mapSequencerStateToAppState(e);
+          console.log('New State', newState);
+          this.setState({...newState, loading: false, ejected: false });
+        });
+        setTimeout(() => {
+          console.log('Playing song on AudioWorklet...');
+          sequencer.playSong("https://gifx.co/music/Nintendo%20SNES/Last%20Bible%20III/31%20Boss%20Battle%202.spc");
+          this.sequencer = sequencer;
+        }, 2000);
+
+        // const loadSong = (url) => {
+        //   this.songRequest = promisify(new XMLHttpRequest());
+        //   this.songRequest.responseType = 'arraybuffer';
+        //   this.songRequest.open('GET', url);
+        //   this.songRequest.send()
+        //     .then(xhr => xhr.response)
+        //     .then(buffer => {
+        //       this.currUrl = url;
+        //       const filepath = url.replace(CATALOG_PREFIX, '');
+        //       chipWorkletNode.port.postMessage({ type: 'SEQUENCER_RPC', payload: ['playSongFile', filepath, buffer] });
+        //     })
+        //     .catch(e => console.error(e));
+        // }
+        // loadSong("https://gifx.co/music/VGM%20Rips/Snatcher_(Sega_CD_WIP)/03%20Junker%20HQ.vgm");
+        // setTimeout(() => loadSong("https://gifx.co/music/VGM%20Rips/Snatcher_(Sega_CD_WIP)/02%20Evil%20Ripple.vgm"),        5000);
+        // setTimeout(() => loadSong("https://gifx.co/music/Nintendo%20SNES/Last%20Bible%20III/31%20Boss%20Battle%202.spc"),   10000);
+        // setTimeout(() => loadSong("https://gifx.co/music/VGM%20Rips/Snatcher_(Sega_CD_WIP)/25%20Blow%20Up%20Tricycle.vgm"), 15000);
+        //
+        // // Dummy sequencer
+        this.sequencer = new Sequencer([]);
+      });
+      return;
+    }
     // Load the chip-core Emscripten runtime
     try {
       const chipCore = this.chipCore = new ChipCore({
@@ -152,14 +253,29 @@ class App extends React.Component {
           return prefix + path;
         },
         onRuntimeInitialized: () => {
-          this.sequencer = new Sequencer([
-            new GMEPlayer(audioCtx, playerNode, chipCore, bufferSize),
-            new XMPPlayer(audioCtx, playerNode, chipCore, bufferSize),
-            new MIDIPlayer(audioCtx, playerNode, chipCore, bufferSize),
-            new V2MPlayer(audioCtx, playerNode, chipCore, bufferSize),
-            new N64Player(audioCtx, playerNode, chipCore, bufferSize),
-            new MDXPlayer(audioCtx, playerNode, chipCore, bufferSize),
-          ], this.handleSequencerStateUpdate, this.handlePlayerError);
+          const players = [
+            new GMEPlayer(chipCore, audioCtx.sampleRate),
+            new XMPPlayer(chipCore, audioCtx.sampleRate),
+            new MIDIPlayer(chipCore, audioCtx.sampleRate),
+            new V2MPlayer(chipCore, audioCtx.sampleRate),
+            new N64Player(chipCore, audioCtx.sampleRate),
+            new MDXPlayer(chipCore, audioCtx.sampleRate),
+          ];
+          this.sequencer = new Sequencer(players, portableFetch);
+          this.sequencer.on('sequencerStateUpdate', this.handleSequencerStateUpdate);
+          this.sequencer.on('playerError', this.handlePlayerError);
+
+          audioNode.onaudioprocess = (e) => {
+            const channels = [];
+            for (let channel = 0; channel < e.outputBuffer.numberOfChannels; channel++) {
+              channels[channel] = e.outputBuffer.getChannelData(channel);
+            }
+            for (let player of players) {
+              // if (player.isPaused()) continue;
+              player.process(channels);
+            }
+            // players[4].process(channels);
+          }
 
           this.setState({ loading: false });
 
@@ -174,7 +290,6 @@ class App extends React.Component {
           //     return this.sequencer.setPlayers([new XMPPlayer(audioCtx, playerNode, chipCore)]);
           //   });
 
-          const urlParams = queryString.parse(window.location.search.substr(1));
           if (urlParams.play) {
             const play = urlParams.play;
             const dirname = path.dirname(urlParams.play);
@@ -191,8 +306,8 @@ class App extends React.Component {
 
               if (urlParams.t) {
                 setTimeout(() => {
-                  if (this.sequencer.getPlayer()) {
-                    this.sequencer.getPlayer().seekMs(parseInt(urlParams.t, 10));
+                  if (this.state.hasPlayer) {
+                    this.sequencer.seekMs(parseInt(urlParams.t, 10));
                   }
                 }, 100);
               }
@@ -207,6 +322,34 @@ class App extends React.Component {
         loading: false
       });
     }
+  }
+
+  static mapSequencerStateToAppState(sequencerState) {
+    const map = {
+      ejected: 'isEjected',
+      paused: 'isPaused',
+      currentSongSubtune: 'subtune',
+      currentSongMetadata: 'metadata',
+      currentSongNumVoices: 'numVoices',
+      currentSongPositionMs: 'positionMs',
+      currentSongDurationMs: 'durationMs',
+      currentSongNumSubtunes: 'numSubtunes',
+      tempo: 'tempo',
+      voiceNames: 'voiceNames',
+      voiceMask: 'voiceMask',
+      songUrl: 'url',
+      hasPlayer: 'hasPlayer',
+      // TODO: add param values? move to paramStateUpdate?
+      paramDefs: 'paramDefs',
+    };
+    const appState = {};
+    for (let prop in map) {
+      const seqProp = map[prop];
+      if (seqProp in sequencerState) {
+        appState[prop] = sequencerState[seqProp];
+      }
+    }
+    return appState;
   }
 
   handleLogin() {
@@ -340,7 +483,8 @@ class App extends React.Component {
     this.sequencer.nextSubtune();
   }
 
-  handleSequencerStateUpdate(isEjected) {
+  handleSequencerStateUpdate(sequencerState) {
+    const { isEjected } = sequencerState;
     console.debug('handleSequencerStateUpdate(isEjected=%s)', isEjected);
 
     if (isEjected) {
@@ -367,7 +511,6 @@ class App extends React.Component {
         }
       }
     } else {
-      const player = this.sequencer.getPlayer();
       const url = this.sequencer.getCurrUrl();
       if (url) {
         const path = url.replace(CATALOG_PREFIX, '/');
@@ -398,7 +541,7 @@ class App extends React.Component {
         this.setState({ imageUrl: null, infoTexts: [], showInfo: false });
       }
 
-      const metadata = player.getMetadata();
+      const metadata = this.sequencer.getMetadata();
 
       if ('mediaSession' in navigator) {
         this.mediaSessionAudio.play();
@@ -414,21 +557,7 @@ class App extends React.Component {
         }
       }
 
-      // Wrap in blob player state?
-      this.setState({
-        ejected: false,
-        paused: player.isPaused(),
-        currentSongSubtune: player.getSubtune(),
-        currentSongMetadata: player.getMetadata(),
-        currentSongNumVoices: player.getNumVoices(),
-        currentSongPositionMs: player.getPositionMs(),
-        currentSongDurationMs: player.getDurationMs(),
-        currentSongNumSubtunes: player.getNumSubtunes(),
-        tempo: player.getTempo(),
-        voiceNames: [...Array(player.getNumVoices())].map((_, i) => player.getVoiceName(i)),
-        voiceMask: player.getVoiceMask(),
-        songUrl: url,
-      });
+      this.setState(App.mapSequencerStateToAppState(sequencerState));
     }
   }
 
@@ -437,9 +566,9 @@ class App extends React.Component {
   }
 
   togglePause() {
-    if (this.state.ejected || !this.sequencer.getPlayer()) return;
+    if (this.state.ejected || !this.state.hasPlayer) return;
 
-    const paused = this.sequencer.getPlayer().togglePause();
+    const paused = this.sequencer.togglePause();
     if ('mediaSession' in navigator) {
       if (paused) {
         this.mediaSessionAudio.pause();
@@ -467,7 +596,7 @@ class App extends React.Component {
   }
 
   handleTimeSliderChange(event) {
-    if (!this.sequencer.getPlayer()) return;
+    if (!this.state.hasPlayer) return;
 
     const pos = event.target ? event.target.value : event;
     const seekMs = Math.floor(pos * this.state.currentSongDurationMs);
@@ -487,50 +616,50 @@ class App extends React.Component {
   }
 
   seekRelative(ms) {
-    if (!this.sequencer.getPlayer()) return;
+    if (!this.state.hasPlayer) return;
 
     const durationMs = this.state.currentSongDurationMs;
-    const seekMs = clamp(this.sequencer.getPlayer().getPositionMs() + ms, 0, durationMs);
+    const seekMs = clamp(this.sequencer.getPositionMs() + ms, 0, durationMs);
 
     this.seekRelativeInner(seekMs);
   }
 
   seekRelativeInner(seekMs) {
-    this.sequencer.getPlayer().seekMs(seekMs);
+    this.sequencer.seekMs(seekMs);
     this.setState({
       currentSongPositionMs: seekMs, // Smooth
     });
     setTimeout(() => {
-      if (this.sequencer.getPlayer().isPlaying()) {
+      if (this.sequencer.isPlaying()) {
         this.setState({
-          currentSongPositionMs: this.sequencer.getPlayer().getPositionMs(), // Accurate
+          currentSongPositionMs: this.sequencer.getPositionMs(), // Accurate
         });
       }
     }, 100);
   }
 
   handleSetVoiceMask(voiceMask) {
-    if (!this.sequencer.getPlayer()) return;
+    if (!this.state.hasPlayer) return;
 
-    this.sequencer.getPlayer().setVoiceMask(voiceMask);
+    this.sequencer.setVoiceMask(voiceMask);
     this.setState({ voiceMask: [...voiceMask] });
   }
 
   handleTempoChange(event) {
-    if (!this.sequencer.getPlayer()) return;
+    if (!this.state.hasPlayer) return;
 
     const tempo = parseFloat((event.target ? event.target.value : event)) || 1.0;
-    this.sequencer.getPlayer().setTempo(tempo);
+    this.sequencer.setTempo(tempo);
     this.setState({
       tempo: tempo
     });
   }
 
   setSpeedRelative(delta) {
-    if (!this.sequencer.getPlayer()) return;
+    if (!this.state.hasPlayer) return;
 
     const tempo = clamp(this.state.tempo + delta, 0.1, 2);
-    this.sequencer.getPlayer().setTempo(tempo);
+    this.sequencer.setTempo(tempo);
     this.setState({
       tempo: tempo
     });
@@ -622,7 +751,7 @@ class App extends React.Component {
   }
 
   getCurrentSongLink() {
-    const url = this.sequencer.getCurrUrl();
+    const url = this.state.songUrl;
     return url ? process.env.PUBLIC_URL + '/?play=' + encodeURIComponent(url.replace(CATALOG_PREFIX, '')) : '#';
   }
 
@@ -638,8 +767,8 @@ class App extends React.Component {
 
   render() {
     const {title, subtitle} = titlesFromMetadata(this.state.currentSongMetadata);
-    const currContext = this.sequencer?.getCurrContext();
-    const currIdx = this.sequencer?.getCurrIdx();
+    const currContext = this.sequencer ? this.sequencer.getCurrContext() : null;
+    const currIdx = this.sequencer ? this.sequencer.getCurrIdx() : 0;
     const search = { search: window.location.search };
     return (
         <Dropzone
@@ -742,10 +871,12 @@ class App extends React.Component {
               handleTimeSliderChange={this.handleTimeSliderChange}
               handleToggleFavorite={this.handleToggleFavorite}
               handleVolumeChange={this.handleVolumeChange}
+              hasPlayer={this.state.hasPlayer}
               imageUrl={this.state.imageUrl}
               infoTexts={this.state.infoTexts}
               nextSong={this.nextSong}
               nextSubtune={this.nextSubtune}
+              paramDefs={this.state.paramDefs}
               paused={this.state.paused}
               playerError={this.state.playerError}
               prevSong={this.prevSong}

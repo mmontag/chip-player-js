@@ -92,7 +92,7 @@ export default class PlayerParams extends PureComponent {
           })}
         </div>
 
-        {this.props.paramDefs.map(param => {
+        {false && this.props.paramDefs.map(param => {
           const value = this.props.getParameter(param.id);
           const dependsOn = param.dependsOn;
           if (dependsOn && this.props.getParameter(dependsOn.param) !== dependsOn.value) {
