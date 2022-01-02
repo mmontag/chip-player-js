@@ -10,13 +10,13 @@ const MOUNTPOINT = '/mdx';
 const INT16_MAX = Math.pow(2, 16) - 1;
 
 export default class MDXPlayer extends Player {
-  constructor(audioCtx, destNode, chipCore, bufferSize) {
-    super(audioCtx, destNode, chipCore, bufferSize);
+  constructor(chipCore, sampleRate) {
+    super(chipCore, sampleRate);
     this.loadData = this.loadData.bind(this);
 
     // Initialize MDX filesystem
     chipCore.FS.mkdirTree(MOUNTPOINT);
-    chipCore.FS.mount(chipCore.FS.filesystems.IDBFS, {}, MOUNTPOINT);
+    chipCore.FS.mount(chipCore.FS.filesystems.MEMFS, {}, MOUNTPOINT);
     chipCore.FS.syncfs(true, (err) => {
       if (err) {
         console.log('Error populating FS from indexeddb.', err);
@@ -26,7 +26,7 @@ export default class MDXPlayer extends Player {
     this.speed = 1;
     this.lib = chipCore;
     this.mdxCtx = chipCore._mdx_create_context();
-    chipCore._mdx_set_rate(audioCtx.sampleRate);
+    chipCore._mdx_set_rate(sampleRate);
     chipCore._mdx_set_dir(this.mdxCtx, MOUNTPOINT);
     this.fileExtensions = fileExtensions;
     this.buffer = chipCore._malloc(this.bufferSize * 4); // 2 ch, 16-bit
@@ -56,7 +56,7 @@ export default class MDXPlayer extends Player {
         }
       })
       .then(() => {
-        this.muteAudioDuringCall(this.audioNode, () => {
+        this.muteAudioDuringCall(() => {
           err = this.lib.ccall(
             'mdx_open', 'number',
             ['number', 'string', 'string'],
@@ -77,19 +77,18 @@ export default class MDXPlayer extends Player {
           const title = new TextDecoder("shift-jis").decode(buf.subarray(0, len));
           this.metadata = { title: title || path.basename(filename) };
 
-          this.connect();
           this.resume();
-          this.emit('playerStateUpdate', false);
+          this.emit('playerStateUpdate', {
+            ...this.getBasePlayerState(),
+            isStopped: false,
+          });
         });
       });
   }
 
-  mdxAudioProcess(e) {
+  mdxAudioProcess(channels) {
     let i, channel;
-    const channels = [];
-    for (channel = 0; channel < e.outputBuffer.numberOfChannels; channel++) {
-      channels[channel] = e.outputBuffer.getChannelData(channel);
-    }
+    const bufferSize = channels[0].length;
 
     if (this.paused) {
       for (channel = 0; channel < channels.length; channel++) {
@@ -99,13 +98,13 @@ export default class MDXPlayer extends Player {
     }
 
     const next = this.lib._mdx_calc_sample(
-      this.mdxCtx, this.buffer, this.bufferSize);
+      this.mdxCtx, this.buffer, bufferSize);
     if (next === 0) {
       this.stop();
     }
 
     for (channel = 0; channel < channels.length; channel++) {
-      for (i = 0; i < this.bufferSize; i++) {
+      for (i = 0; i < bufferSize; i++) {
         channels[channel][i] = this.lib.getValue(
           this.buffer +           // Interleaved channel format
           i * 2 * 2 +             // frame offset   * bytes per sample * num channels +
@@ -169,7 +168,7 @@ export default class MDXPlayer extends Player {
   }
 
   seekMs(seekMs) {
-    this.muteAudioDuringCall(this.audioNode, () =>
+    this.muteAudioDuringCall(() =>
       this.lib._mdx_set_position_ms(this.mdxCtx, seekMs)
     );
   }
@@ -178,6 +177,6 @@ export default class MDXPlayer extends Player {
     this.suspend();
     this.lib._mdx_close(this.mdxCtx);
     console.debug('MDXPlayer.stop()');
-    this.emit('playerStateUpdate', true);
+    this.emit('playerStateUpdate', { isStopped: true });
   }
 }
