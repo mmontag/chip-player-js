@@ -75,7 +75,7 @@ function MIDIPlayer(options) {
   this.setSpeed = this.setSpeed.bind(this);
   this.togglePause = this.togglePause.bind(this);
 
-  window.addEventListener('unload', this.stop);
+  if (typeof window != 'undefined') window.addEventListener('unload', this.stop);
 }
 
 // Parsing all tracks and add their events in a single event queue
@@ -149,7 +149,7 @@ MIDIPlayer.prototype.play = function(endCallback) {
     this.endCallback = endCallback;
     this.reset();
 
-    this.lastProcessPlayTimestamp = performance.now();
+    this.lastProcessPlayTimestamp = this.getCurrentTime();
     if (this.skipSilence) {
       this.doSkipSilence();
     }
@@ -161,7 +161,7 @@ MIDIPlayer.prototype.play = function(endCallback) {
 };
 
 MIDIPlayer.prototype.processPlaySynth = function(buffer, bufferSize) {
-  this.lastProcessPlayTimestamp = performance.now();
+  this.lastProcessPlayTimestamp = this.getCurrentTime();
 
   let bytesWritten = 0;
   let batchSize = 64;
@@ -245,7 +245,7 @@ MIDIPlayer.prototype.processPlaySynth = function(buffer, bufferSize) {
 
 MIDIPlayer.prototype.processPlay = function() {
 
-  const now = performance.now();
+  const now = this.getCurrentTime();
   const deltaTime = (now - this.lastProcessPlayTimestamp) * this.speed;
   this.lastProcessPlayTimestamp = now;
 
@@ -439,7 +439,7 @@ MIDIPlayer.prototype.setPositionWebMidi = function(ms, eventList) {
 MIDIPlayer.prototype.setPosition = function(ms) {
   if (ms < 0 || ms > this.getDuration()) return;
 
-  this.lastProcessPlayTimestamp = performance.now();
+  this.lastProcessPlayTimestamp = this.getCurrentTime();
   this.panic(this.lastSendTimestamp + 10);
   let eventMap = {};
   let eventList = [];
@@ -524,5 +524,13 @@ MIDIPlayer.prototype.setUseWebMIDI = function(useWebMIDI) {
   // Trigger replay of all program change events
   this.setPosition(this.getPosition() - 10);
 };
+
+MIDIPlayer.prototype.getCurrentTime = function () {
+  if (typeof performance != 'undefined') {
+    return performance.now();
+  } else {
+    return global.currentTime;
+  }
+}
 
 export default MIDIPlayer;
