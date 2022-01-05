@@ -332,10 +332,20 @@ UINT8 VGMPlayer::ParseHeader(void)
 	}
 	
 	_p2612Fix = 0x00;
+	_v101Fix = 0x00;
 	if (_fileHdr.fileVer <= 0x150)
 	{
 		if (GetChipCount(0x02) == 1)	// there must be exactly 1x YM2612 present
 			_p2612Fix = 0x80;	// enable fix for Project2612 VGMs
+	}
+
+	if (_fileHdr.fileVer < 0x110)
+	{
+		if (GetChipCount(0x01))        // There must be an FM clock
+		{
+			ParseFileForFMClocks();
+			_v101Fix = 0x80;
+		}
 	}
 	
 	return 0x00;
@@ -957,6 +967,22 @@ UINT32 VGMPlayer::GetHeaderChipClock(UINT8 chipType) const
 {
 	if (chipType >= _CHIP_COUNT)
 		return 0;
+
+	// Fix for 1.00/1.01 "FM" clock
+	if (_v101Fix)
+	{
+		switch (chipType)
+		{
+		case 1:
+			return _v101ym2413clock;
+		case 2:
+			return _v101ym2612clock;
+		case 3:
+			return _v101ym2151clock;
+		default:
+			break;
+		}
+	}
 	
 	return ReadLE32(&_hdrBuffer[_CHIPCLK_OFS[chipType]]);
 }
@@ -1774,4 +1800,55 @@ void VGMPlayer::ParseFile(UINT32 ticks)
 	}
 	
 	return;
+}
+
+void VGMPlayer::ParseFileForFMClocks()
+{
+	UINT32 filePos = _fileHdr.dataOfs;
+
+	_v101ym2413clock = GetHeaderChipClock(0x01);
+	_v101ym2612clock = 0;
+	_v101ym2151clock = 0;
+
+	while(filePos < _fileHdr.dataEnd)
+	{
+		UINT8 curCmd = _fileData[filePos];
+
+		switch (curCmd)
+		{
+		case 0x66: // end
+			return;
+
+		case 0x50: // PSG
+		case 0x63: // byte delay
+			filePos += 2;
+			break;
+
+		case 0x61: // delay
+			filePos += 3;
+			break;
+
+		case 0x67: // data block
+			filePos += 7 + ReadLE32(&_fileData[filePos + 3]);
+			break;
+
+		case 0x51: // YM2413
+			return;
+
+		case 0x52: // YM2612 port 0
+		case 0x53: // YM2612 port 1
+			_v101ym2612clock = _v101ym2413clock;
+			_v101ym2413clock = 0;
+			return;
+
+		case 0x54: // YM2151
+			_v101ym2151clock = _v101ym2413clock;
+			_v101ym2413clock = 0;
+			return;
+
+		default:
+			filePos += _CMD_INFO[curCmd].cmdLen;
+			break;
+		}
+	}
 }
