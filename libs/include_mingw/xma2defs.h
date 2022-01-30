@@ -10,7 +10,7 @@
 #ifndef __XMA2DEFS_INCLUDED__
 #define __XMA2DEFS_INCLUDED__
 
-#include <sal.h>        // Markers for documenting API semantics
+#include "sal_stub.h"   // Markers for documenting API semantics
 #include <winerror.h>   // For S_OK, E_FAIL
 #include <audiodefs.h>  // Basic data types and constants for audio work
 

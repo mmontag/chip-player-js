@@ -62,7 +62,7 @@ DEFINE_IID(IXAudio2, 8bcf1f58, 9fe7, 4583, 8a, c6, e2, ad, c4, 65, c8, bb);
     #include <objbase.h>    // Windows COM declarations
 #endif
 
-#include <sal.h>            // Markers for documenting API semantics
+#include "sal_stub.h"       // Markers for documenting API semantics
 #include <audiodefs.h>      // Basic audio data types and constants
 #include <xma2defs.h>       // Data types and constants for XMA2 audio
 
