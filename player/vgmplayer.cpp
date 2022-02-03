@@ -154,6 +154,10 @@ VGMPlayer::VGMPlayer() :
 	
 	_playOpts.playbackHz = 0;
 	_playOpts.hardStopOld = 0;
+	_playOpts.playbackSpeedScale = 0x10000;
+
+	_lastTsMult = 0;
+	_lastTsDiv = 0;
 	
 	for (optChip = 0x00; optChip < 0x100; optChip ++)
 	{
@@ -704,8 +708,7 @@ UINT8 VGMPlayer::GetDeviceMuting(UINT32 id, PLR_MUTE_OPTS& muteOpts) const
 UINT8 VGMPlayer::SetPlayerOptions(const VGM_PLAY_OPTIONS& playOpts)
 {
 	_playOpts = playOpts;
-	// TODO: allow for mid-playback change of playbackHz (currently breaks playback)
-	//RefreshTSRates();	// refresh, in case _playOpts.playbackHz changed
+	RefreshTSRates();	// refresh, in case _playOpts.playbackHz changed
 	return 0x00;
 }
 
@@ -724,10 +727,12 @@ UINT8 VGMPlayer::SetSampleRate(UINT32 sampleRate)
 	return 0x00;
 }
 
-/*UINT8 VGMPlayer::SetPlaybackSpeed(double speed)
+UINT8 VGMPlayer::SetPlaybackSpeed(double speed)
 {
-	return 0xFF;	// not yet supported
-}*/
+	_playOpts.playbackSpeedScale = (double)(0x10000) * speed;
+	RefreshTSRates();
+	return 0x00;
+}
 
 
 void VGMPlayer::RefreshTSRates(void)
@@ -741,7 +746,20 @@ void VGMPlayer::RefreshTSRates(void)
 		_ttMult *= _fileHdr.recordHz;
 		_tsDiv *= _playOpts.playbackHz;
 	}
-	
+	if (_playOpts.playbackSpeedScale != 0x10000)
+	{
+		_tsMult *= 0x10000;
+		_ttMult *= 0x10000;
+		_tsDiv *= _playOpts.playbackSpeedScale;
+	}
+	if (_tsMult != _lastTsMult ||
+	    _tsDiv != _lastTsDiv)
+	{
+		if (_lastTsMult && _lastTsDiv)
+			_playSmpl = (UINT32)(_playSmpl * _lastTsDiv * _tsMult / (_lastTsMult * _tsDiv));
+		_lastTsMult = _tsMult;
+		_lastTsDiv = _tsDiv;
+	}
 	return;
 }
 

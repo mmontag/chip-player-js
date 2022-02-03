@@ -46,6 +46,11 @@ GYMPlayer::GYMPlayer() :
 	UINT8 retVal;
 	
 	dev_logger_set(&_logger, this, GYMPlayer::PlayerLogCB, NULL);
+
+	_playOpts.playbackSpeedScale = 0x10000;
+
+	_lastTsMult = 0;
+	_lastTsDiv = 0;
 	
 	for (curDev = 0; curDev < 2; curDev ++)
 		InitDeviceOptions(_devOpts[curDev]);
@@ -459,6 +464,18 @@ UINT8 GYMPlayer::GetDeviceMuting(UINT32 id, PLR_MUTE_OPTS& muteOpts) const
 	return 0x00;
 }
 
+UINT8 GYMPlayer::SetPlayerOptions(const GYM_PLAY_OPTIONS& playOpts)
+{
+	_playOpts = playOpts;
+	return 0x00;
+}
+
+UINT8 GYMPlayer::GetPlayerOptions(GYM_PLAY_OPTIONS& playOpts) const
+{
+	playOpts = _playOpts;
+	return 0x00;
+}
+
 UINT8 GYMPlayer::SetSampleRate(UINT32 sampleRate)
 {
 	if (_playState & PLAYSTATE_PLAY)
@@ -468,11 +485,32 @@ UINT8 GYMPlayer::SetSampleRate(UINT32 sampleRate)
 	return 0x00;
 }
 
-/*UINT8 GYMPlayer::SetPlaybackSpeed(double speed)
+UINT8 GYMPlayer::SetPlaybackSpeed(double speed)
 {
-	return 0xFF;	// not yet supported
-}*/
+	_playOpts.playbackSpeedScale = (double)(0x10000) * speed;
+	RefreshTSRates();
+	return 0x00;
+}
 
+
+void GYMPlayer::RefreshTSRates(void)
+{
+	_tsMult = _outSmplRate;
+	_tsDiv = _tickFreq;
+	if (_playOpts.playbackSpeedScale != 0x10000)
+	{
+		_tsMult *= 0x10000;
+		_tsDiv *= _playOpts.playbackSpeedScale;
+	}
+	if (_tsMult != _lastTsMult ||
+	    _tsDiv != _lastTsDiv)
+	{
+		if (_lastTsMult && _lastTsDiv)
+			_playSmpl = (UINT32)(_playSmpl * _lastTsDiv * _tsMult / (_lastTsMult * _tsDiv));
+		_lastTsMult = _tsMult;
+		_lastTsDiv = _tsDiv;
+	}
+}
 
 UINT32 GYMPlayer::Tick2Sample(UINT32 ticks) const
 {
@@ -692,10 +730,9 @@ UINT8 GYMPlayer::Reset(void)
 	_pcmBaseTick = (UINT32)-1;
 	_pcmInPos = 0x00;
 	_pcmOutPos = (UINT32)-1;
-	
-	_tsMult = _outSmplRate;
-	_tsDiv = _tickFreq;
-	
+
+	RefreshTSRates();	
+
 	for (curDev = 0; curDev < _devices.size(); curDev ++)
 	{
 		GYM_CHIPDEV* cDev = &_devices[curDev];
