@@ -26,7 +26,7 @@ const chipModules = [
   },
   {
     // TODO: decouple from libADLMIDI and fluidlite,
-    //       see also MIDIPlayer.js:207.
+    //       see also ../src/players/MIDIPlayer.js:207.
     name: 'player',
     enabled: true,
     sourceFiles: [

@@ -155,6 +155,7 @@ export default class MIDIPlayer extends Player {
         //       C object ("context") pointers could also be hidden at the JS layer, if those are annoying.
         //       The original benefit was to tie in tml.h (MIDI file reader) which is not used any more.
         //       Besides, MIDIPlayer.js already calls directly into libADLMIDI functions.
+        //       see also ../../scripts/build-chip-core.js:29
         noteOn: lib._tp_note_on,
         noteOff: lib._tp_note_off,
         pitchBend: lib._tp_pitch_bend,
