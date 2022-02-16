@@ -1,10 +1,18 @@
 import Player from "./Player.js";
 import SubBass from "../effects/SubBass";
 import {allOrNone} from '../util';
+import path from 'path';
 
 let emu = null;
 let libgme = null;
 const INT16_MAX = 65535;
+// "timesliced" seek in increments to prevent blocking UI/audio callback.
+const TIMESLICED_SEEK_MS_MAP = {
+  '.spc': 5000,
+  '.gym': 10000,
+  '.vgm': 10000,
+  '.vgz': 10000,
+};
 const fileExtensions = [
   'nsf',
   'nsfe',
@@ -17,6 +25,27 @@ const fileExtensions = [
   'kss',
   'gbs',
 ];
+
+/* TODO: move this elsewhere
+ * @see https://developers.google.com/web/updates/2015/08/using-requestidlecallback
+ */
+window.requestIdleCallback = window.requestIdleCallback ||
+  function (cb) {
+    return setTimeout(function () {
+      var start = Date.now();
+      cb({
+        didTimeout: false,
+        timeRemaining: function () {
+          return Math.max(0, 50 - (Date.now() - start));
+        }
+      });
+    }, 1);
+  };
+
+window.cancelIdleCallback = window.cancelIdleCallback ||
+  function (id) {
+    clearTimeout(id);
+  };
 
 export default class GMEPlayer extends Player {
   constructor(audioCtx, destNode, chipCore, bufferSize) {
@@ -32,6 +61,11 @@ export default class GMEPlayer extends Player {
     this.tempo = 1.0;
     this.params = { subbass: 1 };
     this.voiceMask = []; // GME does not expose a method to get the current voice mask
+
+    // Seek timeslicing TODO: move to base Player
+    this.seekRequestId = null;
+    this.seekTargetMs = null;
+    this.currentFileExt = null;
 
     this.buffer = libgme.allocate(this.bufferSize * 16, 'i16', libgme.ALLOC_NORMAL);
     this.emuPtr = libgme.allocate(1, 'i32', libgme.ALLOC_NORMAL);
@@ -74,6 +108,23 @@ export default class GMEPlayer extends Player {
         }
       }
 
+      // A hacky fade to prevent pops during timeslice seeking
+      if (this.seekTargetMs) {
+        const fadeLength = Math.min(256, this.bufferSize / 2);
+        for (i = 0; i < fadeLength; i++) {
+          const fade = i/fadeLength;
+          channels[0][i] *= fade;
+          channels[1][i] *= fade;
+          channels[0][this.bufferSize - (i + 1)] *= fade;
+          channels[1][this.bufferSize - (i + 1)] *= fade;
+        }
+        const attenuate = 0.2; // attenuate during seeking
+        for (i = 0; i < this.bufferSize; i++) {
+          channels[0][i] *= attenuate;
+          channels[1][i] *= attenuate;
+        }
+      }
+
       if (this.params.subbass > 0) {
         for (i = 0; i < this.bufferSize; i++) {
           const sub = this.subBass.process(channels[0][i]) * this.params.subbass;
@@ -110,6 +161,9 @@ export default class GMEPlayer extends Player {
   loadData(data, filepath) {
     this.subtune = 0;
     this.fadingOut = false;
+    this.seekTargetMs = null;
+    this.seekRequestId = null;
+    this.currentFileExt = path.extname(filepath);
     this.filepathMeta = Player.metadataFromFilepath(filepath);
     const formatNeedsBass = filepath.match(
       /(\.sgc$|\.kss$|\.nsfe?$|\.ay$|Master System|Game Gear)/i
@@ -292,10 +346,38 @@ export default class GMEPlayer extends Player {
     }
   }
 
+  doIncrementalSeek(seekMsIncrement) {
+    // console.log('Scheduling incremental seek of %s ms...', seekMsIncrement);
+    this.seekRequestId = requestIdleCallback(() => {
+      const seekIntermediateMs = Math.min(this.getPositionMs() + seekMsIncrement, this.seekTargetMs);
+      libgme._gme_seek_scaled(emu, seekIntermediateMs);
+      if (seekIntermediateMs < this.seekTargetMs) {
+        this.doIncrementalSeek(seekMsIncrement);
+      } else {
+        // console.log('Done Seeking');
+        libgme._gme_set_tempo(emu, this.tempo);
+        this.seekTargetMs = null;
+        this.seekRequestId = null;
+      }
+    });
+  }
+
   seekMs(positionMs) {
     if (emu) {
-      this.muteAudioDuringCall(this.audioNode, () =>
-        libgme._gme_seek_scaled(emu, positionMs));
+      if (TIMESLICED_SEEK_MS_MAP[this.currentFileExt]) {
+        cancelIdleCallback(this.seekRequestId);
+        this.seekTargetMs = positionMs;
+        const seekMsIncrement = TIMESLICED_SEEK_MS_MAP[this.currentFileExt];
+        if (positionMs < this.getPositionMs()) {
+          // reset to position 0 if seeking backward
+          libgme._gme_seek_scaled(emu, 0);
+        }
+        libgme._gme_set_tempo(emu, 2);
+        this.doIncrementalSeek(seekMsIncrement);
+      } else {
+        this.muteAudioDuringCall(this.audioNode, () =>
+          libgme._gme_seek_scaled(emu, positionMs));
+      }
     }
   }
 
