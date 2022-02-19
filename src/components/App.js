@@ -1,6 +1,7 @@
 import React from 'react';
 import isMobile from 'ismobilejs';
 import clamp from 'lodash/clamp';
+import shuffle from 'lodash/shuffle';
 import path from 'path';
 import queryString from 'querystring';
 import * as firebase from 'firebase/app';
@@ -543,9 +544,15 @@ class App extends React.Component {
   }
 
   handleShufflePlay(path) {
-    fetch(`${API_BASE}/shuffle?path=${encodeURI(path)}&limit=100`)
-      .then(response => response.json())
-      .then(json => this.sequencer.playContext(json.items));
+    //TODO: allow shuffle to be toggled, like repeat mode (instead of one-shot).
+    //      emulate Winamp behavior closely, if possible.
+    if (path === 'favorites') {
+      this.sequencer.playContext(shuffle(this.state.faves));
+    } else {
+      fetch(`${API_BASE}/shuffle?path=${encodeURI(path)}&limit=100`)
+        .then(response => response.json())
+        .then(json => this.sequencer.playContext(json.items));
+    }
   }
 
   handleSongClick(url, context, index) {
@@ -691,6 +698,7 @@ class App extends React.Component {
                         user={this.state.user}
                         loadingUser={this.state.loadingUser}
                         handleLogin={this.handleLogin}
+                        handleShufflePlay={this.handleShufflePlay}
                         onSongClick={this.handleSongClick}
                         currContext={currContext}
                         currIdx={currIdx}

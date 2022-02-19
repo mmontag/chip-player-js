@@ -1,7 +1,10 @@
-import React, {PureComponent} from "react";
+import React, { PureComponent } from "react";
 import FavoriteButton from "./FavoriteButton";
 
 export default class Favorites extends PureComponent {
+  handleShufflePlay = () => {
+    this.props.handleShufflePlay('favorites');
+  }
 
   render() {
     const {
@@ -20,8 +23,15 @@ export default class Favorites extends PureComponent {
         <p>Loading user data...</p>
         :
         <div>
-          <h3>
-            Favorite Songs <span>({favorites.length})</span>
+          <h3 className="Browse-topRow">
+            Favorite Songs ({favorites.length})
+            {favorites.length > 1 &&
+              <button
+                className="box-button"
+                title={`Shuffle all ${favorites.length} favorites`}
+                onClick={this.handleShufflePlay}>
+                Shuffle Play
+              </button>}
           </h3>
           {user ?
             favorites.length > 0 ?
