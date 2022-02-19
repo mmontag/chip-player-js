@@ -402,7 +402,7 @@ body,#root {
 
 .Song-now-playing .Favorite-button { color: var(--background); }
 .Favorite-button:active { color: var(--clickable); }
-.Favorite-button.added { color: var(--clickable); }
+.Favorite-button.isFavorite { color: var(--clickable); }
 .Favorite-button {
     white-space: pre;
     cursor: pointer;
@@ -547,4 +547,4 @@ img { -ms-interpolation-mode: nearest-neighbor; image-rendering: -webkit-optimiz
 .message-box-button        { background: var(--background); padding: 0 var(--charW2); -webkit-box-shadow: none; box-shadow: none; }
 
 
-/*# sourceMappingURL=main.60ecb739.css.map*/
+/*# sourceMappingURL=main.c218838b.css.map*/
