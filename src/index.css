@@ -376,7 +376,7 @@ body,#root {
 
 .Song-now-playing .Favorite-button { color: var(--background); }
 .Favorite-button:active { color: var(--clickable); }
-.Favorite-button.added { color: var(--clickable); }
+.Favorite-button.isFavorite { color: var(--clickable); }
 .Favorite-button {
     white-space: pre;
     cursor: pointer;

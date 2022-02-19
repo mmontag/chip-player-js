@@ -2,6 +2,7 @@ import React, {PureComponent} from "react";
 import FavoriteButton from "./FavoriteButton";
 
 export default class Favorites extends PureComponent {
+
   render() {
     const {
       favorites,
@@ -31,7 +32,7 @@ export default class Favorites extends PureComponent {
                     const isPlaying = currContext === favorites && currIdx === i;
                     return (
                       <div className={isPlaying ? 'Song-now-playing' : ''} key={i}>
-                        <FavoriteButton favorites={favorites}
+                        <FavoriteButton isFavorite={true}
                                         toggleFavorite={toggleFavorite}
                                         href={href}/>
                         <a onClick={onSongClick(href, favorites, i)} href={href}>{title}</a>

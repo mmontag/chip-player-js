@@ -1,4 +1,4 @@
-import React, {PureComponent} from "react";
+import React, { PureComponent } from "react";
 
 export default class FavoriteButton extends PureComponent {
   constructor(props) {
@@ -11,10 +11,10 @@ export default class FavoriteButton extends PureComponent {
   }
 
   render() {
-    const added = this.props.favorites.includes(this.props.href);
+    const { isFavorite } = this.props;
     return (
       <button onClick={this.handleClick}
-              className={'Favorite-button' + (added ? ' added' : '')}>
+              className={'Favorite-button' + (isFavorite ? ' isFavorite' : '')}>
         &nbsp;♥︎&nbsp;
       </button>
     );

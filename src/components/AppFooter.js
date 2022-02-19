@@ -141,7 +141,7 @@ export default class AppFooter extends React.PureComponent {
             <div className="SongDetails">
               {faves && songUrl &&
               <div style={{ float: 'left', marginBottom: '58px' }}>
-                <FavoriteButton favorites={faves}
+                <FavoriteButton isFavorite={faves.includes(songUrl)}
                                 toggleFavorite={handleToggleFavorite}
                                 href={songUrl}/>
               </div>}

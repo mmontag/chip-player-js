@@ -48,7 +48,7 @@ export default function BrowseList({ virtual, ...props }) {
               <div key={name} className={isPlaying ? 'Song-now-playing BrowseList-row' : 'BrowseList-row'}>
                 <div className="BrowseList-colName">
                   {favorites &&
-                  <FavoriteButton favorites={favorites}
+                  <FavoriteButton isFavorite={favorites.includes(href)}
                                   href={href}
                                   toggleFavorite={toggleFavorite}/>}
                   <a onClick={(e) => handleSongClick(href, playContext, item.idx)(e)}
