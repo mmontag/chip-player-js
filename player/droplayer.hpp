@@ -68,8 +68,8 @@ struct DRO_HEADER
 #define DRO_V2OPL3_ENFORCE	0x02	// always enforce OPL3 mode when the DRO says DualOPL2
 struct DRO_PLAY_OPTIONS
 {
+	PLR_GEN_OPTS genOpts;
 	UINT8 v2opl3Mode;	// DRO v2 DualOPL2 -> OPL3 fixes
-	UINT32 playbackSpeedScale; // Set to 0x10000 for 1.0 speed, or 16.16 fixed point
 };
 
 

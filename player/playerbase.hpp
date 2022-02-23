@@ -92,6 +92,11 @@ struct PLR_DEV_OPTS
 	PLR_PAN_OPTS panOpts;
 };
 
+struct PLR_GEN_OPTS
+{
+	UINT32 pbSpeed; // playback speed (16.16 fixed point scale, 0x10000 = 100%)
+};
+
 
 //	--- concept ---
 //	- Player class does file rendering at fixed volume (but changeable speed)
@@ -120,8 +125,8 @@ public:
 	virtual UINT8 SetDeviceMuting(UINT32 id, const PLR_MUTE_OPTS& muteOpts) = 0;
 	virtual UINT8 GetDeviceMuting(UINT32 id, PLR_MUTE_OPTS& muteOpts) const = 0;
 	// player-specific options
-	//virtual UINT8 SetPlayerOptions(const ###_PLAY_OPTIONS& playOpts) = 0;
-	//virtual UINT8 GetPlayerOptions(###_PLAY_OPTIONS& playOpts) const = 0;
+	//virtual UINT8 SetPlayerOptions(const PLR_GEN_OPTS& playOpts) = 0;
+	//virtual UINT8 GetPlayerOptions(PLR_GEN_OPTS& playOpts) const = 0;
 	
 	virtual UINT32 GetSampleRate(void) const;
 	virtual UINT8 SetSampleRate(UINT32 sampleRate);

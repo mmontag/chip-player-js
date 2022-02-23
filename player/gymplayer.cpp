@@ -47,7 +47,7 @@ GYMPlayer::GYMPlayer() :
 	
 	dev_logger_set(&_logger, this, GYMPlayer::PlayerLogCB, NULL);
 
-	_playOpts.playbackSpeedScale = 0x10000;
+	_playOpts.genOpts.pbSpeed = 0x10000;
 
 	_lastTsMult = 0;
 	_lastTsDiv = 0;
@@ -487,7 +487,7 @@ UINT8 GYMPlayer::SetSampleRate(UINT32 sampleRate)
 
 UINT8 GYMPlayer::SetPlaybackSpeed(double speed)
 {
-	_playOpts.playbackSpeedScale = (double)(0x10000) * speed;
+	_playOpts.genOpts.pbSpeed = (double)(0x10000) * speed;
 	RefreshTSRates();
 	return 0x00;
 }
@@ -497,10 +497,10 @@ void GYMPlayer::RefreshTSRates(void)
 {
 	_tsMult = _outSmplRate;
 	_tsDiv = _tickFreq;
-	if (_playOpts.playbackSpeedScale != 0x10000)
+	if (_playOpts.genOpts.pbSpeed != 0 && _playOpts.genOpts.pbSpeed != 0x10000)
 	{
 		_tsMult *= 0x10000;
-		_tsDiv *= _playOpts.playbackSpeedScale;
+		_tsDiv *= _playOpts.genOpts.pbSpeed;
 	}
 	if (_tsMult != _lastTsMult ||
 	    _tsDiv != _lastTsDiv)

@@ -53,8 +53,8 @@ DROPlayer::DROPlayer() :
 	
 	dev_logger_set(&_logger, this, DROPlayer::PlayerLogCB, NULL);
 	
+	_playOpts.genOpts.pbSpeed = 0x10000;
 	_playOpts.v2opl3Mode = DRO_V2OPL3_DETECT;
-	_playOpts.playbackSpeedScale = 0x10000;
 	
 	_lastTsMult = 0;
 	_lastTsDiv = 0;
@@ -543,7 +543,7 @@ UINT8 DROPlayer::SetSampleRate(UINT32 sampleRate)
 
 UINT8 DROPlayer::SetPlaybackSpeed(double speed)
 {
-	_playOpts.playbackSpeedScale = (double)(0x10000) * speed;
+	_playOpts.genOpts.pbSpeed = (UINT32)(0x10000 * speed);
 	RefreshTSRates();
 	return 0x00;
 }
@@ -554,10 +554,10 @@ void DROPlayer::RefreshTSRates(void)
 	_tsMult = _outSmplRate;
 	_tsDiv = _tickFreq;
 	
-	if (_playOpts.playbackSpeedScale != 0x10000)
+	if (_playOpts.genOpts.pbSpeed != 0 && _playOpts.genOpts.pbSpeed != 0x10000)
 	{
 		_tsMult *= 0x10000;
-		_tsDiv *= _playOpts.playbackSpeedScale;
+		_tsDiv *= _playOpts.genOpts.pbSpeed;
 	}
 	if (_tsMult != _lastTsMult ||
 	    _tsDiv != _lastTsDiv)

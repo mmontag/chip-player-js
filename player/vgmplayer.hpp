@@ -42,10 +42,10 @@ struct VGM_HEADER
 
 struct VGM_PLAY_OPTIONS
 {
+	PLR_GEN_OPTS genOpts;
 	UINT32 playbackHz;	// set to 60 (NTSC) or 50 (PAL) for region-specific song speed adjustment
 						// Note: requires VGM_HEADER.recordHz to be non-zero to work.
 	UINT8 hardStopOld;	// enforce silence at end of old VGMs (<1.50), fixes Key Off events being trimmed off
-	UINT32 playbackSpeedScale; // Set to 0x10000 for 1.0 speed, or 16.16 fixed point
 };
 
 

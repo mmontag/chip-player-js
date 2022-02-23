@@ -104,7 +104,7 @@ S98Player::S98Player() :
 	UINT16 optChip;
 	UINT8 chipID;
 
-	_playOpts.playbackSpeedScale = 0x10000;
+	_playOpts.genOpts.pbSpeed = 0x10000;
 
 	_lastTsMult = 0;
 	_lastTsDiv = 0;
@@ -740,7 +740,7 @@ UINT8 S98Player::SetSampleRate(UINT32 sampleRate)
 
 UINT8 S98Player::SetPlaybackSpeed(double speed)
 {
-	_playOpts.playbackSpeedScale = (double)(0x10000) * speed;
+	_playOpts.genOpts.pbSpeed = (UINT32)(0x10000 * speed);
 	RefreshTSRates();
 	return 0x00;
 }
@@ -750,10 +750,10 @@ void S98Player::RefreshTSRates(void)
 {
 	_tsMult = _outSmplRate * _fileHdr.tickMult;
 	_tsDiv = _fileHdr.tickDiv;
-	if (_playOpts.playbackSpeedScale != 0x10000)
+	if (_playOpts.genOpts.pbSpeed != 0 && _playOpts.genOpts.pbSpeed != 0x10000)
 	{
 		_tsMult *= 0x10000;
-		_tsDiv *= _playOpts.playbackSpeedScale;
+		_tsDiv *= _playOpts.genOpts.pbSpeed;
 	}
 	if (_tsMult != _lastTsMult ||
 	    _tsDiv != _lastTsDiv)

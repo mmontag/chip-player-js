@@ -39,7 +39,7 @@ struct GYM_HEADER
 
 struct GYM_PLAY_OPTIONS
 {
-	UINT32 playbackSpeedScale; // Set to 0x10000 for 1.0 speed, or 16.16 fixed point
+	PLR_GEN_OPTS genOpts;
 };
 
 
