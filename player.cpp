@@ -456,7 +456,13 @@ int main(int argc, char* argv[])
 			}
 			else if (letter == 'C')	// chip control
 			{
+#ifndef _WIN32
+				changemode(0);	// make sure entered charactered are echoed
+#endif
 				DoChipControlMode(mainPlr.GetPlayer());
+#ifndef _WIN32
+				changemode(1);
+#endif
 			}
 			needRefresh = true;
 		}
@@ -505,6 +511,7 @@ Sound Chip ID:
 		LL param - set log level (0..5 = off/error/warn/info/debug/trace, see emu/EmuStructs.h)
 		Q - quit
 	P - player configuration
+		SPD param - set playback speed (1.0 = 100%)
 		[DRO]
 			OPL3 param - DualOPL2 -> OPL3 patch, (0/1/2, see DRO_V2OPL3_*)
 		[VGM]
@@ -589,7 +596,8 @@ static void DoChipControlMode(PlayerBase* player)
 						DROPlayer* droplay = dynamic_cast<DROPlayer*>(player);
 						DRO_PLAY_OPTIONS playOpts;
 						droplay->GetPlayerOptions(playOpts);
-						printf("Opts: OPL3Mode %u\n", playOpts.v2opl3Mode);
+						double spd = playOpts.genOpts.pbSpeed / (double)0x10000;
+						printf("Opts: Speed %.3f, OPL3Mode %u\n", spd, playOpts.v2opl3Mode);
 						mode = 2;
 					}
 						break;
@@ -598,8 +606,29 @@ static void DoChipControlMode(PlayerBase* player)
 						VGMPlayer* vgmplay = dynamic_cast<VGMPlayer*>(player);
 						VGM_PLAY_OPTIONS playOpts;
 						vgmplay->GetPlayerOptions(playOpts);
-						printf("Opts: PlaybkHz %u, HardStopOld %u\n",
-							playOpts.playbackHz, playOpts.hardStopOld);
+						double spd = playOpts.genOpts.pbSpeed / (double)0x10000;
+						printf("Opts: Speed %.3f, PlaybkHz %u, HardStopOld %u\n",
+							spd, playOpts.playbackHz, playOpts.hardStopOld);
+						mode = 2;
+					}
+						break;
+					case FCC_S98:
+					{
+						S98Player* s98play = dynamic_cast<S98Player*>(player);
+						S98_PLAY_OPTIONS playOpts;
+						s98play->GetPlayerOptions(playOpts);
+						double spd = playOpts.genOpts.pbSpeed / (double)0x10000;
+						printf("Opts: Speed %.3f\n", spd);
+						mode = 2;
+					}
+						break;
+					case FCC_GYM:
+					{
+						GYMPlayer* gymplay = dynamic_cast<GYMPlayer*>(player);
+						GYM_PLAY_OPTIONS playOpts;
+						gymplay->GetPlayerOptions(playOpts);
+						double spd = playOpts.genOpts.pbSpeed / (double)0x10000;
+						printf("Opts: Speed %.3f\n", spd);
 						mode = 2;
 					}
 						break;
@@ -722,17 +751,52 @@ static void DoChipControlMode(PlayerBase* player)
 				printf("Command [OPL3 data]: ");
 				fgets(line, 0x80, stdin);
 				StripNewline(line);
-			
+				
 				tokenStr = strtok(line, " ");
 				for (endPtr = line; *endPtr != '\0'; endPtr ++)
 					*endPtr = (char)toupper((unsigned char)*endPtr);
 				tokenStr = endPtr + 1;
-			
-				if (! strcmp(line, "OPL3"))
+				
+				if (! strcmp(line, "SPD"))
+				{
+					double spd = strtod(tokenStr, &endPtr);
+					if (endPtr > tokenStr)
+						droplay->SetPlaybackSpeed(spd);
+				}
+				else if (! strcmp(line, "OPL3"))
 				{
 					playOpts.v2opl3Mode = (UINT8)strtoul(tokenStr, &endPtr, 0);
 					if (endPtr > tokenStr)
 						droplay->SetPlayerOptions(playOpts);
+				}
+				else if (! strcmp(line, "Q"))
+					mode = -1;
+				else
+					mode = 0;
+			}
+				break;
+			case FCC_S98:
+			{
+				S98Player* s98play = dynamic_cast<S98Player*>(player);
+				S98_PLAY_OPTIONS playOpts;
+				char* tokenStr;
+				
+				s98play->GetPlayerOptions(playOpts);
+				
+				printf("Command [SPD data]: ");
+				fgets(line, 0x80, stdin);
+				StripNewline(line);
+				
+				tokenStr = strtok(line, " ");
+				for (endPtr = line; *endPtr != '\0'; endPtr ++)
+					*endPtr = (char)toupper((unsigned char)*endPtr);
+				tokenStr = endPtr + 1;
+				
+				if (! strcmp(line, "SPD"))
+				{
+					double spd = strtod(tokenStr, &endPtr);
+					if (endPtr > tokenStr)
+						s98play->SetPlaybackSpeed(spd);
 				}
 				else if (! strcmp(line, "Q"))
 					mode = -1;
@@ -748,16 +812,22 @@ static void DoChipControlMode(PlayerBase* player)
 				
 				vgmplay->GetPlayerOptions(playOpts);
 				
-				printf("Command [PHZ/HSO data]: ");
+				printf("Command [SPD/PHZ/HSO data]: ");
 				fgets(line, 0x80, stdin);
 				StripNewline(line);
-			
+				
 				tokenStr = strtok(line, " ");
 				for (endPtr = line; *endPtr != '\0'; endPtr ++)
 					*endPtr = (char)toupper((unsigned char)*endPtr);
 				tokenStr = endPtr + 1;
-			
-				if (! strcmp(line, "PHZ"))
+				
+				if (! strcmp(line, "SPD"))
+				{
+					double spd = strtod(tokenStr, &endPtr);
+					if (endPtr > tokenStr)
+						vgmplay->SetPlaybackSpeed(spd);
+				}
+				else if (! strcmp(line, "PHZ"))
 				{
 					playOpts.playbackHz = (UINT32)strtoul(tokenStr, &endPtr, 0);
 					if (endPtr > tokenStr)
@@ -768,6 +838,35 @@ static void DoChipControlMode(PlayerBase* player)
 					playOpts.hardStopOld = (UINT8)strtoul(tokenStr, &endPtr, 0);
 					if (endPtr > tokenStr)
 						vgmplay->SetPlayerOptions(playOpts);
+				}
+				else if (! strcmp(line, "Q"))
+					mode = -1;
+				else
+					mode = 0;
+			}
+				break;
+			case FCC_GYM:
+			{
+				GYMPlayer* gymplay = dynamic_cast<GYMPlayer*>(player);
+				GYM_PLAY_OPTIONS playOpts;
+				char* tokenStr;
+				
+				gymplay->GetPlayerOptions(playOpts);
+				
+				printf("Command [SPD data]: ");
+				fgets(line, 0x80, stdin);
+				StripNewline(line);
+				
+				tokenStr = strtok(line, " ");
+				for (endPtr = line; *endPtr != '\0'; endPtr ++)
+					*endPtr = (char)toupper((unsigned char)*endPtr);
+				tokenStr = endPtr + 1;
+				
+				if (! strcmp(line, "SPD"))
+				{
+					double spd = strtod(tokenStr, &endPtr);
+					if (endPtr > tokenStr)
+						gymplay->SetPlaybackSpeed(spd);
 				}
 				else if (! strcmp(line, "Q"))
 					mode = -1;
