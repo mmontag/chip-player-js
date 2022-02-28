@@ -51,6 +51,12 @@ In building the subprojects, we ultimately invoke `emmake make` instead of `make
 * The build script in [package.json](package.json) looks for the emsdk in `~/src/emsdk`. Modify this line to match your emsdk install location if necessary:
 
   ```"build-chip-core": "source ~/src/emsdk/emsdk_env.sh; node scripts/build-chip-core.js",```
+  
+#### Tight coupling to Github Pages
+
+The project is currently set up to deploy to Github Pages. The `deploy` and `deploy-lite` NPM scripts invoke the gh-pages NPM module. 
+
+If you wish to deploy to your own Github Pages account, change the `"homepage"` field in package.json.
 
 #### User Accounts and Saved Favorites Functionality
 
