@@ -27,6 +27,7 @@ const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';
 const publicUrl = publicPath.slice(0, -1);
 // Get environment variables to inject into our app.
 const env = getClientEnvironment(publicUrl);
+console.log('Environment variables:\n', env.raw);
 
 // Assert this just to be safe.
 // Development builds of React are slow and not intended for production.
@@ -220,7 +221,7 @@ module.exports = {
       template: paths.appHtml,
       minify: {
         removeComments: true,
-        collapseWhitespace: true,
+        collapseWhitespace: false,
         removeRedundantAttributes: true,
         useShortDoctype: true,
         removeEmptyAttributes: true,
