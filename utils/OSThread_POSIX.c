@@ -85,7 +85,13 @@ void OSThread_Cancel(OS_THREAD* thr)
 
 UINT64 OSThread_GetID(const OS_THREAD* thr)
 {
+#ifdef __APPLE__
+	UINT64 idNum;
+	pthread_threadid_np (thr->id, &idNum);
+	return idNum;
+#else
 	return thr->id;
+#endif
 }
 
 void* OSThread_GetHandle(OS_THREAD* thr)
