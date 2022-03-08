@@ -317,7 +317,7 @@ int main(int argc, char* argv[])
 		
 		player->GetSongInfo(sInf);
 		player->GetSongDeviceInfo(diList);
-		printf("SongInfo: %s v%X.%X, Rate %u/%u, Len %u, Loop at %d, devices: %u\n",
+		printf("SongInfo: %s v%X.%02X, Rate %u/%u, Len %u, Loop at %d, devices: %u\n",
 			FCC2Str(sInf.format).c_str(), sInf.fileVerMaj, sInf.fileVerMin,
 			sInf.tickRateMul, sInf.tickRateDiv, sInf.songLen, sInf.loopTick, sInf.deviceCnt);
 		for (curDev = 0; curDev < diList.size(); curDev ++)

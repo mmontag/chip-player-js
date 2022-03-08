@@ -228,6 +228,7 @@
     <ClCompile Include="emu\cores\ymf278b.c" />
     <ClCompile Include="emu\cores\ymz280b.c" />
     <ClCompile Include="emu\dac_control.c" />
+    <ClCompile Include="emu\logging.c" />
     <ClCompile Include="emu\panning.c" />
     <ClCompile Include="emu\cores\okim6295.c" />
     <ClCompile Include="emu\Resampler.c" />
@@ -318,6 +319,7 @@
     <ClInclude Include="emu\cores\ymf278b.h" />
     <ClInclude Include="emu\cores\ymz280b.h" />
     <ClInclude Include="emu\EmuHelper.h" />
+    <ClInclude Include="emu\logging.h" />
     <ClInclude Include="emu\panning.h" />
     <ClInclude Include="emu\EmuCores.h" />
     <ClInclude Include="emu\EmuStructs.h" />

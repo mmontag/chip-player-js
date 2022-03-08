@@ -79,7 +79,7 @@ struct PLR_PAN_OPTS
 	INT16 chnPan[2][32];	// channel panning [TODO: rethink how this should be really configured]
 };
 
-#define PLR_DEV_ID(chip, instance)	(0x80000000 | (instance << 16) | (chip << 0))
+#define PLR_DEV_ID(chip, instance)	(0x80000000U | (instance << 16) | (chip << 0))
 
 struct PLR_DEV_OPTS
 {

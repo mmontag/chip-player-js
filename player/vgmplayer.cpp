@@ -93,6 +93,9 @@
 	"COMMENT",
 };
 
+#define P2612FIX_ACTIVE	0x01	// set when YM2612 "legacy mode" is active (should be only at sample 0)
+#define P2612FIX_ENABLE	0x80	// the VGM needs a special workaround due to VGMTool2 YM2612 trimming
+
 
 INLINE UINT16 ReadLE16(const UINT8* data)
 {
@@ -340,7 +343,7 @@ UINT8 VGMPlayer::ParseHeader(void)
 	if (_fileHdr.fileVer <= 0x150)
 	{
 		if (GetChipCount(0x02) == 1)	// there must be exactly 1x YM2612 present
-			_p2612Fix = 0x80;	// enable fix for Project2612 VGMs
+			_p2612Fix = P2612FIX_ENABLE;	// enable fix for Project2612 VGMs
 	}
 
 	if (_fileHdr.fileVer < 0x110)
@@ -348,7 +351,7 @@ UINT8 VGMPlayer::ParseHeader(void)
 		if (GetChipCount(0x01))        // There must be an FM clock
 		{
 			ParseFileForFMClocks();
-			_v101Fix = 0x80;
+			_v101Fix = 1;
 		}
 	}
 	
@@ -607,7 +610,7 @@ void VGMPlayer::RefreshDevOptions(CHIP_DEVICE& chipDev, const PLR_DEV_OPTS& devO
 		return;
 	
 	UINT32 coreOpts = devOpts.coreOpts;
-	if (chipType == DEVID_YM2612 && (_p2612Fix & 0x01))
+	if (chipType == DEVID_YM2612 && (_p2612Fix & P2612FIX_ACTIVE))
 		coreOpts |= OPT_YM2612_LEGACY_MODE;	// enable legacy mode
 	else if (chipType == DEVID_GB_DMG)
 		coreOpts |= OPT_GB_DMG_LEGACY_MODE;	// enable legacy mode (fix playback of old VGMs)
@@ -967,9 +970,9 @@ UINT8 VGMPlayer::Reset(void)
 		}
 	}
 	
-	if ((_p2612Fix & 0x80) && ! (_p2612Fix & 0x01))
+	if ((_p2612Fix & P2612FIX_ENABLE) && ! (_p2612Fix & P2612FIX_ACTIVE))
 	{
-		_p2612Fix |= 0x01;	// enable Project2612 fix (YM2612 "legacy" mode)
+		_p2612Fix |= P2612FIX_ACTIVE;	// enable Project2612 fix (YM2612 "legacy" mode)
 		
 		size_t optID = _devOptMap[DEVID_YM2612][0];
 		size_t devID = (optID == (size_t)-1) ? (size_t)-1 : _optDevMap[optID];
@@ -1317,10 +1320,10 @@ void VGMPlayer::InitDevices(void)
 		_optDevMap[curChip] = (size_t)-1;
 	
 	// When the Project2612 fix is enabled [bit 7], enable it during chip init [bit 0].
-	if (_p2612Fix & 0x80)
-		_p2612Fix |= 0x01;
+	if (_p2612Fix & P2612FIX_ENABLE)
+		_p2612Fix |= P2612FIX_ACTIVE;
 	else
-		_p2612Fix &= ~0x01;
+		_p2612Fix &= ~P2612FIX_ACTIVE;
 	
 	for (curChip = 0; curChip < _devCfgs.size(); curChip ++)
 	{
@@ -1792,9 +1795,9 @@ void VGMPlayer::ParseFile(UINT32 ticks)
 		_filePos += _CMD_INFO[curCmd].cmdLen;
 	}
 	
-	if (_p2612Fix & 0x01)
+	if (_p2612Fix & P2612FIX_ACTIVE)
 	{
-		_p2612Fix &= ~0x01;	// disable Project2612 fix
+		_p2612Fix &= ~P2612FIX_ACTIVE;	// disable Project2612 fix
 		// Note: Due to the way the Legacy Mode is implemented in YM2612 GPGX right now,
 		//       it should be no problem to keep it enabled during the whole song.
 		//       But let's just turn it off for safety.

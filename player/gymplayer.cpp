@@ -341,7 +341,7 @@ UINT8 GYMPlayer::GetSongDeviceInfo(std::vector<PLR_DEV_INFO>& devInfList) const
 		
 		devInf.id = (UINT32)curDev;
 		devInf.type = _devCfgs[curDev].type;
-		devInf.instance = (UINT8)curDev;
+		devInf.instance = 0;
 		devInf.devCfg = devCfg;
 		if (! _devices.empty())
 		{
@@ -487,7 +487,7 @@ UINT8 GYMPlayer::SetSampleRate(UINT32 sampleRate)
 
 UINT8 GYMPlayer::SetPlaybackSpeed(double speed)
 {
-	_playOpts.genOpts.pbSpeed = (double)(0x10000) * speed;
+	_playOpts.genOpts.pbSpeed = (UINT32)(0x10000 * speed);
 	RefreshTSRates();
 	return 0x00;
 }
