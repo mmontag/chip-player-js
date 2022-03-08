@@ -553,7 +553,6 @@ void DROPlayer::RefreshTSRates(void)
 {
 	_tsMult = _outSmplRate;
 	_tsDiv = _tickFreq;
-	
 	if (_playOpts.genOpts.pbSpeed != 0 && _playOpts.genOpts.pbSpeed != 0x10000)
 	{
 		_tsMult *= 0x10000;
@@ -562,11 +561,12 @@ void DROPlayer::RefreshTSRates(void)
 	if (_tsMult != _lastTsMult ||
 	    _tsDiv != _lastTsDiv)
 	{
-		if (_lastTsMult && _lastTsDiv)
-			_playSmpl = (UINT32)(_playSmpl * _lastTsDiv * _tsMult / (_lastTsMult * _tsDiv));
+		if (_lastTsMult && _lastTsDiv)	// the order * / * / is required to avoid overflow
+			_playSmpl = (UINT32)(_playSmpl * _lastTsDiv / _lastTsMult * _tsMult / _tsDiv);
 		_lastTsMult = _tsMult;
 		_lastTsDiv = _tsDiv;
 	}
+	return;
 }
 
 UINT32 DROPlayer::Tick2Sample(UINT32 ticks) const
