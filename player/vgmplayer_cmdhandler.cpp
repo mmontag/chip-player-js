@@ -8,6 +8,7 @@
 #include "../common_def.h"
 #include "vgmplayer.hpp"
 #include "../emu/EmuStructs.h"
+#include "../emu/SoundEmu.h"	// for SndEmu_GetDeviceFunc()
 #include "../emu/dac_control.h"
 #include "../emu/cores/sn764intf.h"	// for SN76496_W constants
 
@@ -1347,10 +1348,21 @@ void VGMPlayer::Cmd_AY_Stereo(void)
 	UINT8 chipType = (fData[0x01] & 0x40) ? 0x06 : 0x12;	// YM2203 SSG or AY8910
 	UINT8 chipID = (fData[0x01] & 0x80) >> 7;
 	CHIP_DEVICE* cDev = GetDevicePtr(chipType, chipID);
-	if (cDev == NULL || cDev->write8 == NULL)
+	VGM_BASEDEV* clDev;
+	DEVFUNC_OPTMASK writeStMask = NULL;
+	UINT8 retVal;
+	
+	if (cDev == NULL)
+		return;
+	if (chipType == 0x12)	// AY8910
+		clDev = &cDev->base;
+	else if (chipType == 0x06)	// YM2203 SSG
+		clDev = cDev->base.linkDev;
+	if (clDev == NULL)
 		return;
 	
-	// TODO: assign a register or do a special function call
-	//cDev->write8(cDev->base.defInf.dataPtr, 0xFF, fData[0x01] & 0x3F);
+	retVal = SndEmu_GetDeviceFunc(clDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_ALL, 0x5354, (void**)&writeStMask);
+	if (writeStMask != NULL)
+		writeStMask(cDev->base.defInf.dataPtr, fData[0x01] & 0x3F);
 	return;
 }

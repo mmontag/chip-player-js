@@ -551,6 +551,7 @@ static DEVDEF_RWFUNC devFunc[] =
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, ay8910_write},
 	{RWF_REGISTER | RWF_QUICKWRITE, DEVRW_A8D8, 0, ay8910_write_reg},
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, ay8910_read},
+	{RWF_REGISTER | RWF_WRITE, DEVRW_ALL, 0x5354, ay8910_set_stereo_mask},	// 0x5354 = 'ST' (stereo)
 	{RWF_CLOCK | RWF_WRITE, DEVRW_VALUE, 0, ay8910_set_clock},
 	{RWF_SRATE | RWF_READ, DEVRW_VALUE, 0, ay8910_get_sample_rate},
 	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, ay8910_set_mute_mask},
