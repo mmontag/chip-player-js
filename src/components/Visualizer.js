@@ -15,6 +15,12 @@ const FFT_SIZES = [
 const FFT_LABELS = [
   '512', '1K', '2K', '4K', '8K', '16K'
 ];
+const SPEEDS = [
+  1, 2, 4
+];
+const SPEED_LABELS = [
+  'Lo', 'Med', 'Hi'
+];
 const VIS_WIDTH = 448;
 
 export default class Visualizer extends PureComponent {
@@ -25,6 +31,7 @@ export default class Visualizer extends PureComponent {
       vizMode: 2,
       weightingMode: 1,
       fftSize: 2048,
+      speed: 2,
       enabled: false,
     };
 
@@ -44,6 +51,7 @@ export default class Visualizer extends PureComponent {
     );
     this.spectrogram.setMode(this.state.vizMode);
     this.spectrogram.setWeighting(this.state.weightingMode);
+    this.spectrogram.setSpeed(this.state.speed);
   }
 
   componentDidUpdate(prevProps) {
@@ -67,6 +75,12 @@ export default class Visualizer extends PureComponent {
     this.setState({fftSize: size});
     this.spectrogram.setFFTSize(size);
   };
+
+  handleSpeedClick = (e) => {
+    const speed = parseInt(e.target.value, 10);
+    this.setState({ speed: speed });
+    this.spectrogram.setSpeed(speed);
+  }
 
   handleToggleVisualizer = (e) => {
     const enabled = e.target.value === 'true';
@@ -135,6 +149,18 @@ export default class Visualizer extends PureComponent {
               }
             </div>
           }
+          <div title="Vertical scrolling speed (pixels per frame)">
+            Speed:{' '}
+            {
+              SPEEDS.map((speed, i) =>
+                <label key={'s_'+i} className='inline'><input onClick={this.handleSpeedClick}
+                                                              type='radio'
+                                                              name='speed'
+                                                              defaultChecked={this.state.speed === speed}
+                                                              value={speed}/>{SPEED_LABELS[i]}</label>
+              )
+            }
+          </div>
         </div>
         <canvas style={enabledStyle} className='Visualizer-analyzer' width={VIS_WIDTH} height={60}
                 ref={this.freqCanvasRef}/>

@@ -33,6 +33,7 @@ export default class Spectrogram {
   constructor(chipCore, audioCtx, sourceNode, freqCanvas, specCanvas, pianoKeysImage, minDb = -90, maxDb = -30) {
     this.updateFrame = this.updateFrame.bind(this);
     this.setPaused = this.setPaused.bind(this);
+    this.setSpeed = this.setSpeed.bind(this);
 
     // Constant Q setup
     this.lib = chipCore;
@@ -109,6 +110,10 @@ export default class Spectrogram {
     this.weighting = mode;
   }
 
+  setSpeed(speed) {
+    this.specSpeed = speed;
+  }
+
   updateFrame() {
     if (this.paused) return;
     requestAnimationFrame(this.updateFrame);
@@ -116,7 +121,7 @@ export default class Spectrogram {
     const fqHeight = this.freqCanvas.height;
     const canvasWidth = this.freqCanvas.width;
     const hCoeff = fqHeight / 256.0;
-    const specSpeed = 2;
+    const specSpeed = this.specSpeed;
     const data = this.byteFrequencyData;
     const analyserNode = this.analyserNode;
     const freqCtx = this.freqCtx;
