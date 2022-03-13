@@ -116,6 +116,7 @@ export default class AppFooter extends React.PureComponent {
             }
             <div style={{ display: 'flex', flexDirection: 'row' }}>
               <TimeSlider
+                paused={paused}
                 currentSongDurationMs={currentSongDurationMs}
                 getCurrentPositionMs={() => {
                   // TODO: reevaluate this approach

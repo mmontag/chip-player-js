@@ -21,13 +21,17 @@ export default class TimeSlider extends Component {
     this.timer = null;
   }
 
-  componentDidMount() {
-    this.timer = setInterval(() => {
-      const {getCurrentPositionMs, currentSongDurationMs} = this.props;
-      this.setState({
-        currentSongPositionMs: Math.min(getCurrentPositionMs(), currentSongDurationMs),
-      });
-    }, UPDATE_INTERVAL_MS);
+  componentWillReceiveProps(nextProps) {
+    if (this.props.paused && !nextProps.paused) {
+      this.timer = setInterval(() => {
+        const {getCurrentPositionMs, currentSongDurationMs} = this.props;
+        this.setState({
+          currentSongPositionMs: Math.min(getCurrentPositionMs(), currentSongDurationMs),
+        });
+      }, UPDATE_INTERVAL_MS);
+    } else if (!this.props.paused && nextProps.paused) {
+      clearInterval(this.timer);
+    }
   }
 
   componentWillUnmount() {
