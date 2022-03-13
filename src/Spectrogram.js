@@ -81,6 +81,7 @@ export default class Spectrogram {
     this.tempCtx = this.tempCanvas.getContext('2d', {alpha: false});
 
     this.pianoKeysImage = pianoKeysImage;
+    this.lastData = [];
 
     this.updateFrame();
   }
@@ -104,6 +105,18 @@ export default class Spectrogram {
   setFFTSize(size) {
     this.fftSize = size;
     this.analyserNode.fftSize = size;
+  }
+
+  isRepeatedFrequencyData(data) {
+    // Jitter correction: ignore repeated frequency data in spectrogram
+    let isRepeated = true;
+    for (let bin = 0; bin < 40; bin += 2) {
+      if (data[bin] !== this.lastData[bin]) {
+        isRepeated = false;
+      }
+      this.lastData[bin] = data[bin];
+    }
+    return isRepeated;
   }
 
   setWeighting(mode) {
@@ -134,9 +147,11 @@ export default class Spectrogram {
     const _start = performance.now();
     const dataHeap = new Float32Array(this.lib.HEAPF32.buffer, this.dataPtr, this.cqtSize);
     const bins = this.fftSize / 2;
+    let isRepeated = false;
 
     if (this.mode === MODE_LINEAR) {
       analyserNode.getByteFrequencyData(data);
+      isRepeated = this.isRepeatedFrequencyData(data);
       for (let x = 0; x < bins && x < canvasWidth; ++x) {
         const style = colorMap(data[x]).hex();
         const h =     data[x] * hCoeff | 0;
@@ -147,6 +162,7 @@ export default class Spectrogram {
       }
     } else if (this.mode === MODE_LOG) {
       analyserNode.getByteFrequencyData(data);
+      isRepeated = this.isRepeatedFrequencyData(data);
       const logmax = Math.log(bins);
       for (let i = 0; i < bins; i++) {
         const x =        (Math.log(i + 1) / logmax) * canvasWidth | 0;
@@ -179,19 +195,21 @@ export default class Spectrogram {
 
     const _middle = performance.now();
 
-    // tempCtx.drawImage(this.specCanvas, 0, 0);
-    // translate the transformation matrix. subsequent draws happen in this frame
-    tempCtx.translate(0, specSpeed);
-    // draw the copied image
-    tempCtx.drawImage(this.tempCanvas, 0, 0);
-    // reset the transformation matrix
-    tempCtx.setTransform(1, 0, 0, 1, 0, 0);
+    if (!isRepeated) {
+      // tempCtx.drawImage(this.specCanvas, 0, 0);
+      // translate the transformation matrix. subsequent draws happen in this frame
+      tempCtx.translate(0, specSpeed);
+      // draw the copied image
+      tempCtx.drawImage(this.tempCanvas, 0, 0);
+      // reset the transformation matrix
+      tempCtx.setTransform(1, 0, 0, 1, 0, 0);
 
-    this.specCtx.drawImage(this.tempCanvas, 0, 0);
-    // Disabled because this is rendered as plain HTML IMG element
-    // if (this.mode === MODE_CONSTANT_Q) {
-    //   this.specCtx.drawImage(this.pianoKeysImage, 0, 0);
-    // }
+      this.specCtx.drawImage(this.tempCanvas, 0, 0);
+      // Disabled because this is rendered as plain HTML IMG element
+      // if (this.mode === MODE_CONSTANT_Q) {
+      //   this.specCtx.drawImage(this.pianoKeysImage, 0, 0);
+      // }
+    }
 
     const _end = performance.now();
 
