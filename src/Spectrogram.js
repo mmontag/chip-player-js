@@ -85,6 +85,9 @@ export default class Spectrogram {
   }
 
   setPaused(paused) {
+    if (this.paused && !paused) {
+      requestAnimationFrame(this.updateFrame);
+    }
     this.paused = paused;
   }
 
@@ -107,8 +110,8 @@ export default class Spectrogram {
   }
 
   updateFrame() {
-    requestAnimationFrame(this.updateFrame);
     if (this.paused) return;
+    requestAnimationFrame(this.updateFrame);
 
     const fqHeight = this.freqCanvas.height;
     const canvasWidth = this.freqCanvas.width;
