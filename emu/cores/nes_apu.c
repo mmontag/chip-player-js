@@ -54,6 +54,7 @@
 #include "../../stdbool.h"
 #include "../../common_def.h"
 #include "../snddef.h"
+#include "../panning.h"
 #include "nes_apu.h"
 
 /* AN EXPLANATION
@@ -632,28 +633,32 @@ logerror("invalid apu write: $%02X at $%04X\n", value, address);
 void nes_apu_update(void* chip, UINT32 samples, DEV_SMPL **outputs)
 {
 	nesapu_state *info = (nesapu_state*)chip;
-	DEV_SMPL accum;
+	apu_t *apu = &info->APU;
 	DEV_SMPL* bufL = outputs[0];
 	DEV_SMPL* bufR = outputs[1];
 	UINT32 i;
 
 	for (i = 0; i < samples; i++)
 	{
-		/*accum = apu_square(info, &info->APU.squ[0]);
-		accum += apu_square(info, &info->APU.squ[1]);
-		accum += apu_triangle(info, &info->APU.tri);
-		accum += apu_noise(info, &info->APU.noi);
-		accum += apu_dpcm(info, &info->APU.dpcm);*/
+		INT16 squ1, squ2, tri, noi, dpcm;
 
 		// These volumes should match NSFPlay's NES core better
-		accum  = apu_square(info, &info->APU.squ[0]) << 8;	// << 8 * 1.0
-		accum += apu_square(info, &info->APU.squ[1]) << 8;	// << 8 * 1.0
-		accum += apu_triangle(info, &info->APU.tri) * 0xC0;	// << 8 * 0.75
-		accum += apu_noise(info, &info->APU.noi) * 0xC0;	// << 8 * 0.75
-		accum += apu_dpcm(info, &info->APU.dpcm) * 0xC0;	// << 8 * 0.75
+		squ1 = apu_square(info, &apu->squ[0]) * 0x100;	// << 8 * 1.0
+		squ2 = apu_square(info, &apu->squ[1]) * 0x100;	// << 8 * 1.0
+		tri  = apu_triangle(info, &apu->tri) * 0xC0;	// << 8 * 0.75
+		noi  = apu_noise(info, &apu->noi) * 0xC0;	// << 8 * 0.75
+		dpcm = apu_dpcm(info, &apu->dpcm) * 0xC0;	// << 8 * 0.75
 
-		bufL[i]=accum;
-		bufR[i]=accum;
+		bufL[i]  = APPLY_PANNING_S(squ1, apu->squ[0].Pan[0]);
+		bufR[i]  = APPLY_PANNING_S(squ1, apu->squ[0].Pan[1]);
+		bufL[i] += APPLY_PANNING_S(squ2, apu->squ[1].Pan[0]);
+		bufR[i] += APPLY_PANNING_S(squ2, apu->squ[1].Pan[1]);
+		bufL[i] += APPLY_PANNING_S(tri, apu->tri.Pan[0]);
+		bufR[i] += APPLY_PANNING_S(tri, apu->tri.Pan[1]);
+		bufL[i] += APPLY_PANNING_S(noi, apu->noi.Pan[0]);
+		bufR[i] += APPLY_PANNING_S(noi, apu->noi.Pan[1]);
+		bufL[i] += APPLY_PANNING_L(dpcm, apu->dpcm.Pan[0]);	// could be 0..24384, thus use _L macro
+		bufR[i] += APPLY_PANNING_L(dpcm, apu->dpcm.Pan[1]);
 	}
 }
 
@@ -727,6 +732,12 @@ void* device_start_nesapu(UINT32 clock, UINT32 rate)
 
 	nesapu_set_mute_mask(info, 0x00);
 
+	Panning_Centre(info->APU.squ[0].Pan);
+	Panning_Centre(info->APU.squ[1].Pan);
+	Panning_Centre(info->APU.tri.Pan);
+	Panning_Centre(info->APU.noi.Pan);
+	Panning_Centre(info->APU.dpcm.Pan);
+
 	return info;
 }
 
@@ -744,15 +755,28 @@ void device_reset_nesapu(void* chip)
 	nesapu_state *info = (nesapu_state*)chip;
 	const UINT8* MemPtr;
 	UINT32 MuteMask;
+	INT32* PanPtrs[5] = {info->APU.squ[0].Pan, info->APU.squ[1].Pan, info->APU.tri.Pan, info->APU.noi.Pan, info->APU.dpcm.Pan};
+	INT32 PanBak[5][2];
+	UINT8 CurChn;
 	UINT8 CurReg;
 	
 	MemPtr = info->APU.dpcm.memory;
 	MuteMask = nesapu_get_mute_mask(info);
+	for (CurChn = 0; CurChn < 5; CurChn ++)
+	{
+		PanBak[CurChn][0] = PanPtrs[CurChn][0];
+		PanBak[CurChn][1] = PanPtrs[CurChn][1];
+	}
 	memset(&info->APU, 0x00, sizeof(apu_t));
 	info->APU.dpcm.memory = MemPtr;
 	apu_dpcmreset(&info->APU.dpcm);
 	nesapu_set_mute_mask(info, MuteMask);
-	
+	for (CurChn = 0; CurChn < 5; CurChn ++)
+	{
+		PanPtrs[CurChn][0] = PanBak[CurChn][0];
+		PanPtrs[CurChn][1] = PanBak[CurChn][1];
+	}
+
 	info->APU.noi.seed = 1;
 	for (CurReg = 0x00; CurReg < 0x18; CurReg ++)
 		nes_apu_write(info, CurReg, 0x00);
@@ -796,4 +820,17 @@ UINT32 nesapu_get_mute_mask(void* chip)
 				(info->APU.dpcm.Muted << 4);
 	
 	return muteMask;
+}
+
+void nesapu_set_panning(void* chip, INT16 square1, INT16 square2, INT16 triangle, INT16 noise, INT16 dpcm)
+{
+	nesapu_state *info = (nesapu_state*)chip;
+	
+	Panning_Calculate(info->APU.squ[0].Pan, square1);
+	Panning_Calculate(info->APU.squ[1].Pan, square2);
+	Panning_Calculate(info->APU.tri.Pan, triangle);
+	Panning_Calculate(info->APU.noi.Pan, noise);
+	Panning_Calculate(info->APU.dpcm.Pan, dpcm);
+	
+	return;
 }

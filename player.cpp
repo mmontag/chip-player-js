@@ -533,6 +533,9 @@ Sound Chip ID:
 				D - disable sound chip
 				O - all channels on
 				X - mute all channels
+		P param,param,... - set channel panning
+			This is a list of stereo positions, one for each channel.
+			-1.0 (left) .. 0.0 (centre) .. +1.0 (right)
 		Q - quit
 */
 static void DoChipControlMode(PlayerBase* player)
@@ -730,6 +733,31 @@ static void DoChipControlMode(PlayerBase* player)
 				player->SetDeviceMuting((UINT32)chipID, muteOpts);
 				printf("-> Chip %s [0x%02X], Channel Mask: 0x%02X\n",
 					(muteOpts.disable & 0x01) ? "Off" : "On", muteOpts.disable, muteOpts.chnMute[0]);
+			}
+			else if (! strcmp(line, "P"))
+			{
+				PLR_PAN_OPTS& panOpts = devOpts.panOpts;
+				UINT32 chnID;
+				UINT32 curChn;
+				
+				letter = '\0';
+				tokenStr = strtok(NULL, ",");
+				chnID = 0;
+				while(tokenStr != NULL && chnID < 32)
+				{
+					double panPos = strtod(tokenStr, &endPtr);
+					if (endPtr > tokenStr)
+						panOpts.chnPan[0][chnID] = (INT16)(panPos * 0x100);
+					
+					tokenStr = strtok(NULL, ",");
+					chnID ++;
+				}
+				
+				player->SetDeviceOptions((UINT32)chipID, devOpts);
+				printf("-> Panning: ");
+				for (curChn = 0; curChn < chnID; curChn ++)
+					printf("%.2f,", panOpts.chnPan[0][chnID] / (float)0x100);
+				printf("\b \n");
 			}
 			else if (! strcmp(line, "Q"))
 				mode = -1;

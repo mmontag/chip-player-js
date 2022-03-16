@@ -9,6 +9,7 @@
 #include "../EmuHelper.h"
 
 #include "nesintf.h"
+#include "../panning.h"
 
 #ifdef EC_NES_MAME
 #include "nes_apu.h"
@@ -48,7 +49,9 @@ static void nes_set_chip_option_mame(void* chip, UINT32 NesOptions);
 static void nes_set_chip_option_nsfplay(void* chip, UINT32 NesOptions);
 static void nes_set_chip_option_fds(NESAPU_INF* info, UINT32 NesOptions);
 static void nes_set_mute_mask_mame(void* chip, UINT32 MuteMask);
+static void nes_set_pan_mame(void* chipptr, const INT16* PanVals);
 static void nes_set_mute_mask_nsfplay(void* chip, UINT32 MuteMask);
+static void nes_set_pan_nsfplay(void* chip, const INT16* PanVals);
 
 
 #ifdef EC_NES_MAME
@@ -58,6 +61,7 @@ static DEVDEF_RWFUNC devFunc_MAME[] =
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, nes_r_mame},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, nes_write_ram},
 	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, nes_set_mute_mask_mame},
+	{RWF_CHN_PAN | RWF_WRITE, DEVRW_ALL, 0, nes_set_pan_mame},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef_MAME =
@@ -71,7 +75,7 @@ static DEV_DEF devDef_MAME =
 	
 	nes_set_chip_option_mame,	// SetOptionBits
 	nes_set_mute_mask_mame,
-	NULL,	// SetPanning
+	nes_set_pan_mame,
 	NULL,	// SetSampleRateChangeCallback
 	NULL,	// SetLoggingCallback
 	NULL,	// LinkDevice
@@ -86,6 +90,7 @@ static DEVDEF_RWFUNC devFunc_NSFPlay[] =
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, nes_r_nsfplay},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, nes_write_ram},
 	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, nes_set_mute_mask_nsfplay},
+	{RWF_CHN_PAN | RWF_WRITE, DEVRW_ALL, 0, nes_set_pan_nsfplay},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef_NSFPlay =
@@ -99,7 +104,7 @@ static DEV_DEF devDef_NSFPlay =
 	
 	nes_set_chip_option_nsfplay,	// SetOptionBits
 	nes_set_mute_mask_nsfplay,
-	NULL,	// SetPanning
+	nes_set_pan_nsfplay,
 	NULL,	// SetSampleRateChangeCallback
 	NULL,	// SetLoggingCallback
 	NULL,	// LinkDevice
@@ -130,6 +135,11 @@ struct nesapu_info
 	UINT8* memory;
 	UINT8 fds_disable;
 };
+
+// bit shift for transforming the "usual" panning values (factor 1<<16) into
+// NSFPlay's scale, which uses a factor of 1<<7
+#define PAN_NSFSHIFT	(PANNING_BITS - 7)
+#define PAN_EMU2NSF(x)	(INT16)((x + (1 << PAN_NSFSHIFT >> 1)) >> PAN_NSFSHIFT)	// (x >> PAN_NSFSHIFT) with additional rounding
 
 
 #ifdef EC_NES_MAME
@@ -572,6 +582,24 @@ static void nes_set_mute_mask_mame(void* chip, UINT32 MuteMask)
 	
 	return;
 }
+
+static void nes_set_pan_mame(void* chip, const INT16* PanVals)
+{
+	NESAPU_INF* info = (NESAPU_INF*)chip;
+	
+	nesapu_set_panning(info->chip_apu, PanVals[0], PanVals[1], PanVals[2], PanVals[3], PanVals[4]);
+	
+#ifdef EC_NES_NSFP_FDS
+	if (info->chip_fds != NULL)
+	{
+		INT32 fdsPan[2];
+		Panning_Calculate(fdsPan, PanVals[5]);
+		NES_FDS_SetStereoMix(info->chip_fds, 0, PAN_EMU2NSF(fdsPan[0]), PAN_EMU2NSF(fdsPan[1]));
+	}
+#endif
+	
+	return;
+}
 #endif
 
 #ifdef EC_NES_NSFPLAY
@@ -584,6 +612,28 @@ static void nes_set_mute_mask_nsfplay(void* chip, UINT32 MuteMask)
 #ifdef EC_NES_NSFP_FDS
 	if (info->chip_fds != NULL)
 		NES_FDS_SetMask(info->chip_fds, (MuteMask & 0x20) >> 5);
+#endif
+	
+	return;
+}
+
+static void nes_set_pan_nsfplay(void* chip, const INT16* PanVals)
+{
+	NESAPU_INF* info = (NESAPU_INF*)chip;
+	UINT8 curChn;
+	INT32 pan[6][2];
+	
+	for (curChn = 0; curChn < 6; curChn++)
+		Panning_Calculate(pan[curChn], PanVals[curChn]);
+	
+	NES_APU_np_SetStereoMix(info->chip_apu, 0, PAN_EMU2NSF(pan[0][0]), PAN_EMU2NSF(pan[0][1]));
+	NES_APU_np_SetStereoMix(info->chip_apu, 1, PAN_EMU2NSF(pan[1][0]), PAN_EMU2NSF(pan[1][1]));
+	NES_DMC_np_SetStereoMix(info->chip_dmc, 0, PAN_EMU2NSF(pan[2][0]), PAN_EMU2NSF(pan[2][1]));
+	NES_DMC_np_SetStereoMix(info->chip_dmc, 1, PAN_EMU2NSF(pan[3][0]), PAN_EMU2NSF(pan[3][1]));
+	NES_DMC_np_SetStereoMix(info->chip_dmc, 2, PAN_EMU2NSF(pan[4][0]), PAN_EMU2NSF(pan[4][1]));
+#ifdef EC_NES_NSFP_FDS
+	if (info->chip_fds != NULL)
+		NES_FDS_SetStereoMix(info->chip_fds, 0, PAN_EMU2NSF(pan[5][0]), PAN_EMU2NSF(pan[5][1]));
 #endif
 	
 	return;

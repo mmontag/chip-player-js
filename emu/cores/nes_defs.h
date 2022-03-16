@@ -91,6 +91,7 @@ typedef struct square_s
 	uint8 env_vol;
 	bool enabled;
 	bool Muted;
+	INT32 Pan[2];
 } square_t;
 
 /* Triangle Wave */
@@ -106,6 +107,7 @@ typedef struct triangle_s
 	bool counter_started;
 	bool enabled;
 	bool Muted;
+	INT32 Pan[2];
 } triangle_t;
 
 /* Noise Wave */
@@ -120,6 +122,7 @@ typedef struct noise_s
 	uint8 env_vol;
 	bool enabled;
 	bool Muted;
+	INT32 Pan[2];
 } noise_t;
 
 /* DPCM Wave */
@@ -139,6 +142,7 @@ typedef struct dpcm_s
 	//signed char vol;
 	signed short vol;
 	bool Muted;
+	INT32 Pan[2];
 } dpcm_t;
 
 /* APU type */

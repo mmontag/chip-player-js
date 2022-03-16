@@ -15,5 +15,6 @@ void nesapu_set_rom(void* chip, const UINT8* ROMData);
 
 void nesapu_set_mute_mask(void* chip, UINT32 MuteMask);
 UINT32 nesapu_get_mute_mask(void* chip);
+void nesapu_set_panning(void* chip, INT16 square1, INT16 square2, INT16 triangle, INT16 noise, INT16 dpcm);
 
 #endif	// __NES_APU_H__
