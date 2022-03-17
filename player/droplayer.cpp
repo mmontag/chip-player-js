@@ -641,6 +641,8 @@ UINT32 DROPlayer::GetLoopTicks(void) const
 	DROPlayer* player = cbData->player;
 	if (player->_logCbFunc == NULL)
 		return;
+	if ((player->_playState & PLAYSTATE_SEEK) && level > PLRLOG_ERROR)
+		return;	// prevent message spam while seeking
 	player->_logCbFunc(player->_logCbParam, player, level, PLRLOGSRC_EMU,
 		player->_devNames[cbData->chipDevID].c_str(), message);
 	return;
