@@ -643,11 +643,11 @@ void nes_apu_update(void* chip, UINT32 samples, DEV_SMPL **outputs)
 		INT16 squ1, squ2, tri, noi, dpcm;
 
 		// These volumes should match NSFPlay's NES core better
-		squ1 = apu_square(info, &apu->squ[0]) * 0x100;	// << 8 * 1.0
-		squ2 = apu_square(info, &apu->squ[1]) * 0x100;	// << 8 * 1.0
-		tri  = apu_triangle(info, &apu->tri) * 0xC0;	// << 8 * 0.75
-		noi  = apu_noise(info, &apu->noi) * 0xC0;	// << 8 * 0.75
-		dpcm = apu_dpcm(info, &apu->dpcm) * 0xC0;	// << 8 * 0.75
+		squ1 = apu_square(info, &apu->squ[0]) * 0x100;	// [-15..+15] << 8 * 1.0
+		squ2 = apu_square(info, &apu->squ[1]) * 0x100;	// [-15..+15] << 8 * 1.0
+		tri  = apu_triangle(info, &apu->tri) * 0xC0;	// [-16..+16] << 8 * 0.75
+		noi  = apu_noise(info, &apu->noi) * 0xC0;	// [-15..+15] << 8 * 0.75
+		dpcm = apu_dpcm(info, &apu->dpcm) * 0xC0;	// [0..+127] << 8 * 0.75
 
 		bufL[i]  = APPLY_PANNING_S(squ1, apu->squ[0].Pan[0]);
 		bufR[i]  = APPLY_PANNING_S(squ1, apu->squ[0].Pan[1]);

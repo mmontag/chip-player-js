@@ -52,7 +52,7 @@ static DEVDEF_RWFUNC devFunc[] =
 	{RWF_CLOCK | RWF_WRITE, DEVRW_VALUE, 0, EPSG_set_clock},
 	{RWF_SRATE | RWF_WRITE, DEVRW_VALUE, 0, EPSG_set_rate},
 	{RWF_CHN_MUTE | RWF_WRITE, DEVRW_ALL, 0, EPSG_setMuteMask},
-	{RWF_CHN_PAN | RWF_WRITE, DEVRW_ALL, 0, ay8910_pan_emu},
+	{RWF_CHN_PAN | RWF_WRITE, DEVRW_ALL, 0, ay8910_emu_pan},
 	{0x00, 0x00, 0, NULL}
 };
 DEV_DEF devDef_YM2149_Emu =
@@ -64,9 +64,9 @@ DEV_DEF devDef_YM2149_Emu =
 	(DEVFUNC_CTRL)EPSG_reset,
 	(DEVFUNC_UPDATE)EPSG_calc_stereo,
 	
-	NULL,	// SetOptionBits
+	ay8910_emu_set_options,
 	(DEVFUNC_OPTMASK)EPSG_setMuteMask,
-	ay8910_pan_emu,
+	ay8910_emu_pan,
 	NULL,	// SetSampleRateChangeCallback
 	NULL,	// SetLoggingCallback
 	NULL,	// LinkDevice
@@ -189,6 +189,8 @@ EPSG_new (UINT32 c, UINT32 r)
     psg->stereo_mask[i] = 0x03;
     Panning_Centre(psg->pan[i]);
   }
+  psg->pcm3ch = 0;
+  psg->pcm3ch_detect = 0;
 
   EPSG_setMask(psg, 0x00);
 
@@ -468,7 +470,7 @@ mix_output_stereo(EPSG *psg, int32_t out[2])
   out[0] = out[1] = 0;
   for (i = 0; i < 3; i++)
   {
-    if (! (~psg->stereo_mask[i] & 0x03))
+    if (! (~psg->stereo_mask[i] & 0x03) && ! psg->pcm3ch)
     {
       // mono channel
       out[0] += APPLY_PANNING_S(psg->ch_out[i], psg->pan[i][0]);
@@ -527,6 +529,24 @@ EPSG_calc_stereo (EPSG * psg, UINT32 samples, DEV_SMPL **out)
   }
 }
 
+static void EPSG_Is3ChPcm(EPSG* psg)
+{
+  uint8_t tone_mask = psg->tmask[0] | psg->tmask[1] | psg->tmask[2];	// 1 = disabled, 0 = enabled
+  uint8_t noise_mask = psg->nmask[0] | psg->nmask[1] | psg->nmask[2];	// 1 = disabled, 0 = enabled
+
+  psg->pcm3ch = 0x00;
+  if (!psg->pcm3ch_detect)
+    return; // 3-channel PCM detection disabled
+  if (~noise_mask & 0x38)
+    return; // at least one noise channel is enabled - no 3-channel PCM possible
+
+  // bit 0 - tone channels disabled
+  psg->pcm3ch |= !(~tone_mask & 0x07) << 0;
+  // bit 1 - all channels have frequency <= 1
+  psg->pcm3ch |= (psg->freq[0] <= 1 && psg->freq[1] <= 1 && psg->freq[2] <= 1) << 1;
+  return;
+}
+
 void
 EPSG_writeReg (EPSG * psg, UINT8 reg, UINT8 val)
 {
@@ -547,6 +567,7 @@ EPSG_writeReg (EPSG * psg, UINT8 reg, UINT8 val)
   case 5:
     c = reg >> 1;
     psg->freq[c] = ((psg->reg[c * 2 + 1] & 15) << 8) + psg->reg[c * 2];
+    EPSG_Is3ChPcm(psg);
     break;
 
   case 6:
@@ -560,6 +581,7 @@ EPSG_writeReg (EPSG * psg, UINT8 reg, UINT8 val)
     psg->nmask[0] = (val & 8);
     psg->nmask[1] = (val & 16);
     psg->nmask[2] = (val & 32);
+    EPSG_Is3ChPcm(psg);
     break;
 
   case 8:
@@ -602,12 +624,21 @@ void EPSG_set_pan (EPSG * psg, uint8_t ch, int16_t pan)
   Panning_Calculate( psg->pan[ch], pan );
 }
 
-static void ay8910_pan_emu(void* chipptr, const INT16* PanVals)
+static void ay8910_emu_set_options(void *chip, UINT32 Flags)
+{
+  EPSG* psg = (EPSG*)chip;
+
+  psg->pcm3ch_detect = (Flags >> 0) & 0x01;
+
+  return;
+}
+
+static void ay8910_emu_pan(void* chip, const INT16* PanVals)
 {
   UINT8 curChn;
   
   for (curChn = 0; curChn < 3; curChn ++)
-    EPSG_set_pan((EPSG*)chipptr, curChn, PanVals[curChn]);
+    EPSG_set_pan((EPSG*)chip, curChn, PanVals[curChn]);
   
   return;
 }

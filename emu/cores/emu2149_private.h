@@ -37,6 +37,7 @@ extern "C"
     uint8_t nmask[3];
     uint32_t mask;
     uint8_t stereo_mask[3];
+    uint8_t pcm3ch;
 
     uint32_t base_count;
 
@@ -74,6 +75,7 @@ extern "C"
 
     uint8_t chp_type;
     uint8_t chp_flags;
+    uint8_t pcm3ch_detect;
   } EPSG;
 
   void EPSG_set_quality (EPSG * psg, uint32_t q);
@@ -96,7 +98,8 @@ extern "C"
   void EPSG_setMuteMask (EPSG *, UINT32 mask);
   void EPSG_setStereoMask (EPSG *psg, UINT32 mask);
   void EPSG_set_pan (EPSG * psg, uint8_t ch, int16_t pan);
-  static void ay8910_pan_emu(void* chipptr, const INT16* PanVals);
+  static void ay8910_emu_set_options(void *chip, UINT32 Flags);
+  static void ay8910_emu_pan(void* chip, const INT16* PanVals);
     
 #ifdef __cplusplus
 }

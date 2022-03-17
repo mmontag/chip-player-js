@@ -25,7 +25,7 @@
 #include "../emu/cores/c140.h"
 #include "../emu/cores/qsoundintf.h"
 #include "../emu/cores/es5503.h"
-#include "../emu/cores/es5506.h"
+#include "../emu/cores/scsp.h"
 
 #include "dblk_compr.h"
 #include "../utils/StrUtils.h"
@@ -176,10 +176,12 @@ VGMPlayer::VGMPlayer() :
 			PLR_DEV_OPTS& devOpts = _devOpts[optID];
 			
 			InitDeviceOptions(devOpts);
-			if (devID == DEVID_NES_APU)
+			if (devID == DEVID_AY8910)
+				devOpts.coreOpts = OPT_AY8910_PCM3CH_DETECT;
+			else if (devID == DEVID_NES_APU)
 				devOpts.coreOpts = 0x01B7;
 			else if (devID == DEVID_SCSP)
-				devOpts.coreOpts = 0x01;
+				devOpts.coreOpts = OPT_SCSP_BYPASS_DSP;
 			_devOptMap[devID][chipID] = optID;
 		}
 	}
@@ -1537,7 +1539,14 @@ void VGMPlayer::InitDevices(void)
 			RefreshMuting(chipDev, devOpts->muteOpts);
 			RefreshPanning(chipDev, devOpts->panOpts);
 		}
-		
+		if (devInf->linkDevCount > 0 && devInf->linkDevs[0].devID == DEVID_AY8910)
+		{
+			VGM_BASEDEV* clDev = chipDev.base.linkDev;
+			size_t optID = DeviceID2OptionID(PLR_DEV_ID(DEVID_AY8910, chipID));
+			if (optID != (size_t)-1 && clDev != NULL && clDev->defInf.devDef->SetOptionBits != NULL)
+				clDev->defInf.devDef->SetOptionBits(devInf->dataPtr, _devOpts[optID].coreOpts);
+		}
+
 		_vdDevMap[sdCfg.vgmChipType][chipID] = _devices.size();
 		if (chipDev.optID != (size_t)-1)
 			_optDevMap[chipDev.optID] = _devices.size();

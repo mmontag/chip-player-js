@@ -41,6 +41,10 @@ typedef struct ay8910_config
 	UINT8 chipFlags;
 } AY8910_CFG;
 
+
+#define OPT_AY8910_PCM3CH_DETECT	0x01	// enable 3-channel PCM detection and disable per-channel panning in that case
+
+
 extern const DEV_DEF* devDefList_AY8910[];
 
 #endif	// __AYINTF_H__

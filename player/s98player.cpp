@@ -1015,6 +1015,13 @@ UINT8 S98Player::Start(void)
 			
 			_optDevMap[cDev->optID] = curDev;
 		}
+		if (cDev->base.defInf.linkDevCount > 0 && cDev->base.defInf.linkDevs[0].devID == DEVID_AY8910)
+		{
+			VGM_BASEDEV* clDev = cDev->base.linkDev;
+			size_t optID = DeviceID2OptionID(PLR_DEV_ID(DEVID_AY8910, instance));
+			if (optID != (size_t)-1 && clDev != NULL && clDev->defInf.devDef->SetOptionBits != NULL)
+				clDev->defInf.devDef->SetOptionBits(cDev->base.defInf.dataPtr, _devOpts[optID].coreOpts);
+		}
 		
 		for (clDev = &cDev->base; clDev != NULL; clDev = clDev->linkDev)
 		{
