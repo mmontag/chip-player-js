@@ -34,7 +34,7 @@ export default class N64Player extends Player {
     this.filepathMeta = Player.metadataFromFilepath(filename);
 
     const miniusfStr = String.fromCharCode.apply(null, data);
-    const usflibs = miniusfStr.match(/_lib=([^\s]+)/).slice(1);
+    const usflibs = miniusfStr.match(/_lib=([^\n]+)/).slice(1);
     if (usflibs.length === 0) {
       throw new Error(`No .usflib references found in ${filename}`);
     }
