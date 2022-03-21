@@ -6,6 +6,7 @@ const SOUNDFONT_URL_PATH = 'https://gifx.co/soundfonts/';
 // const SOUNDFONT_URL_PATH = 'http://localhost:3000/soundfonts/'; // Webpack dev server
 const MAX_VOICES = 64;
 const REPLACE_STATE_ON_SEEK = false;
+const ERROR_FLASH_DURATION_MS = 6000;
 const FORMATS =  [
   'ay',
   'gbs',
@@ -86,6 +87,7 @@ const SOUNDFONTS = [
 module.exports = {
   API_BASE,
   CATALOG_PREFIX,
+  ERROR_FLASH_DURATION_MS,
   FORMATS,
   MAX_VOICES,
   REPLACE_STATE_ON_SEEK,

@@ -12,7 +12,7 @@ import Dropzone from 'react-dropzone';
 
 import ChipCore from '../chip-core';
 import firebaseConfig from '../config/firebaseConfig';
-import { API_BASE, CATALOG_PREFIX, MAX_VOICES, REPLACE_STATE_ON_SEEK } from '../config';
+import { API_BASE, CATALOG_PREFIX, ERROR_FLASH_DURATION_MS, MAX_VOICES, REPLACE_STATE_ON_SEEK } from '../config';
 import { replaceRomanWithArabic, titlesFromMetadata, unlockAudioContext } from '../util';
 import requestCache from '../RequestCache';
 import Sequencer, { NUM_REPEAT_MODES, REPEAT_OFF } from '../Sequencer';
@@ -31,6 +31,7 @@ import DropMessage from './DropMessage';
 import Favorites from './Favorites';
 import Search from './Search';
 import Visualizer from './Visualizer';
+import Alert from './Alert';
 
 const NUMERIC_COLLATOR = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
 
@@ -67,6 +68,7 @@ class App extends React.Component {
     this.attachMediaKeyHandlers();
     this.contentAreaRef = React.createRef();
     this.playContexts = {};
+    this.errorTimer = null;
     window.ChipPlayer = this;
 
     // Initialize Firebase
@@ -134,6 +136,7 @@ class App extends React.Component {
       imageUrl: null,
       infoTexts: [],
       showInfo: false,
+      showPlayerError: false,
       showPlayerSettings: false,
       user: null,
       faves: [],
@@ -433,8 +436,11 @@ class App extends React.Component {
     }
   }
 
-  handlePlayerError(error) {
-    this.setState({ playerError: error });
+  handlePlayerError(message) {
+    if (message) this.setState({ playerError: message });
+    this.setState({ showPlayerError: !!message });
+    clearTimeout(this.errorTimer);
+    this.errorTimer = setTimeout(() => this.setState({ showPlayerError: false }), ERROR_FLASH_DURATION_MS);
   }
 
   togglePause() {
@@ -667,6 +673,9 @@ class App extends React.Component {
                 </div>
               </div>
             </div>
+            <Alert handlePlayerError={this.handlePlayerError}
+                   playerError={this.state.playerError}
+                   showPlayerError={this.state.showPlayerError}/>
             <AppHeader user={this.state.user}
                        handleLogout={this.handleLogout}
                        handleLogin={this.handleLogin}
@@ -743,7 +752,6 @@ class App extends React.Component {
               faves={this.state.faves}
               getCurrentSongLink={this.getCurrentSongLink}
               handleCycleRepeat={this.handleCycleRepeat}
-              handlePlayerError={this.handlePlayerError}
               handlePlayRandom={this.handlePlayRandom}
               handleSetVoiceMask={this.handleSetVoiceMask}
               handleTempoChange={this.handleTempoChange}
@@ -755,7 +763,6 @@ class App extends React.Component {
               nextSong={this.nextSong}
               nextSubtune={this.nextSubtune}
               paused={this.state.paused}
-              playerError={this.state.playerError}
               prevSong={this.prevSong}
               prevSubtune={this.prevSubtune}
               repeat={this.state.repeat}

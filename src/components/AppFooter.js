@@ -22,7 +22,6 @@ export default class AppFooter extends React.PureComponent {
       imageUrl,
       infoTexts,
       paused,
-      playerError,
       repeat,
       showPlayerSettings,
       songUrl,
@@ -36,7 +35,6 @@ export default class AppFooter extends React.PureComponent {
       // this.
       getCurrentSongLink,
       handleCycleRepeat,
-      handlePlayerError,
       handlePlayRandom,
       handleSetVoiceMask,
       handleTempoChange,
@@ -108,12 +106,6 @@ export default class AppFooter extends React.PureComponent {
                 Settings &gt;
               </button>}
             </span>
-            {playerError &&
-            <div className="App-error">ERROR: {playerError}
-              {' '}
-              <button  onClick={() => handlePlayerError(null)}>[x]</button>
-            </div>
-            }
             <div style={{ display: 'flex', flexDirection: 'row' }}>
               <TimeSlider
                 paused={paused}
