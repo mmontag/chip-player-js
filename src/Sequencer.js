@@ -14,6 +14,7 @@ export default class Sequencer {
     this.playSongFile = this.playSongFile.bind(this);
     this.getPlayer = this.getPlayer.bind(this);
     this.onPlayerStateUpdate = this.onPlayerStateUpdate.bind(this);
+    this._onPlayerError = this._onPlayerError.bind(this);
     this.playContext = this.playContext.bind(this);
     this.advanceSong = this.advanceSong.bind(this);
     this.nextSong = this.nextSong.bind(this);
@@ -40,7 +41,18 @@ export default class Sequencer {
 
     this.players.forEach(player => {
       player.on('playerStateUpdate', this.onPlayerStateUpdate);
+      player.on('playerError', this._onPlayerError);
     });
+  }
+
+  _onPlayerError(e) {
+    // TODO: extend EventEmitter instead of using callbacks (see worklet branch)
+    this.onPlayerError(e);
+    if (this.context) {
+      this.nextSong();
+    } else {
+      this.onSequencerStateUpdate(true);
+    }
   }
 
   onPlayerStateUpdate(isStopped) {
@@ -176,12 +188,7 @@ export default class Sequencer {
         this.playSongBuffer(filepath, buffer)
       })
       .catch(e => {
-        // TODO: recover from this error
-        this.onSequencerStateUpdate(true);
-        this.player = null;
-        const message = e.message || `${e.status} ${e.statusText}`;
-        console.error(e);
-        this.onPlayerError(message);
+        this._onPlayerError(e.message || `HTTP ${e.status} ${e.statusText} ${url}`);
       });
   }
 
@@ -193,15 +200,12 @@ export default class Sequencer {
     const ext = filepath.split('.').pop().toLowerCase();
 
     // Find a player that can play this filetype
-    for (let i = 0; i < this.players.length; i++) {
-      if (this.players[i].canPlay(ext)) {
-        this.player = this.players[i];
-        break;
-      }
-    }
-    if (this.player === null) {
+    const player = this.players.find(player => player.canPlay(ext));
+    if (player == null) {
       this.onPlayerError(`The file format ".${ext}" was not recognized.`);
       return;
+    } else {
+      this.player = player;
     }
 
     this.context = [];
@@ -209,12 +213,16 @@ export default class Sequencer {
     this.playSongBuffer(filepath, songData);
   }
 
-  playSongBuffer(filepath, buffer) {
+  async playSongBuffer(filepath, buffer) {
     let uint8Array;
     uint8Array = new Uint8Array(buffer);
     this.player.setTempo(1);
-    this.player.loadData(uint8Array, filepath);
-    const numVoices = this.player.getNumVoices();
+    try {
+      await this.player.loadData(uint8Array, filepath);
+    } catch (e) {
+      this._onPlayerError(`Unable to play ${filepath} (${e.message}).`);
+    }
+     const numVoices = this.player.getNumVoices();
     this.player.setVoiceMask([...Array(numVoices)].fill(true));
 
     console.debug('Sequencer.playSong(...) song request completed');
