@@ -297,14 +297,6 @@ body,#root {
     overflow-x: hidden;
 }
 
-.App-error {
-    display: inline-block;
-    background-color: var(--active);
-    color: var(--neutral4);
-    margin: 0 var(--charW1);
-    padding: 0 var(--charW1);
-}
-
 .AppFooter-more-buttons {
     float: right;
 }
@@ -425,6 +417,51 @@ img { image-rendering: pixelated; }
     border-bottom: 1px solid var(--background);
     background: var(--background);
     margin-bottom: -1px;
+}
+
+.error-box-outer {
+    position: absolute;
+    z-index: 100;
+    display: flex;
+    align-items: start;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    pointer-events: none;
+    top: 0;
+    left: 0;
+    transition: all 150ms steps(4);
+    padding: 0 var(--charW2);
+    box-sizing: border-box;
+}
+.error-box {
+    background-color: var(--active);
+    color: var(--neutral4);
+    padding: var(--charH) var(--charW2);
+    box-shadow: var(--charW1) var(--charW1) var(--shadow);
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    overflow: hidden;
+    max-height: 100%;
+    pointer-events: all;
+    width: 100%;
+    height: calc(4 * var(--charH));
+}
+.error-box-outer[hidden] {
+    top: calc(-4 * var(--charH));
+    visibility: hidden;
+}
+.error-box .message {
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    display: -webkit-box;
+    max-height: 100%;
+    overflow: hidden;
+    padding-right: var(--charW1);
+    text-overflow: ellipsis;
+    white-space: initial;
 }
 
 /* message-box is used by Info box and DropMessage component. */
