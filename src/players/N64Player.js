@@ -36,7 +36,7 @@ export default class N64Player extends Player {
     const miniusfStr = String.fromCharCode.apply(null, data);
     const usflibs = miniusfStr.match(/_lib=([^\n]+)/).slice(1);
     if (usflibs.length === 0) {
-      throw new Error(`No .usflib references found in ${filename}`);
+      throw new Error(`No .usflib references found`);
     }
 
     const dir = path.dirname(filename);
@@ -50,7 +50,7 @@ export default class N64Player extends Player {
       }),
     ];
 
-    Promise.all(promises)
+    return Promise.all(promises)
       .then(([fsFilename]) => {
         this.muteAudioDuringCall(this.audioNode, () => {
           err = this.lib.ccall(
@@ -61,7 +61,7 @@ export default class N64Player extends Player {
 
           if (err !== 0) {
             console.error("n64_load_file failed. error code: %d", err);
-            throw Error('Unable to load this file!');
+            throw Error('n64_load_file failed');
           }
 
           this.metadata = { title: filename };

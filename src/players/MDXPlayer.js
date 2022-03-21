@@ -39,7 +39,7 @@ export default class MDXPlayer extends Player {
     const dir = path.dirname(filename);
     const mdxFilename = path.join(MOUNTPOINT, filename);
     // Preload PDX sample files into Emscripten filesystem.
-    ensureEmscFileWithData(this.lib, mdxFilename, data)
+    return ensureEmscFileWithData(this.lib, mdxFilename, data)
       .then(() => {
         const pdx = this.lib.ccall(
           'mdx_get_pdx_filename', 'string',
@@ -65,7 +65,7 @@ export default class MDXPlayer extends Player {
 
           if (err !== 0) {
             console.error("mdx_load_file failed. error code: %d", err);
-            throw Error('Unable to load this file!');
+            throw Error('mdx_load_file failed');
           }
           this.lib._mdx_set_speed(this.mdxCtx, this.speed);
 

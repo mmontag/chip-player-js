@@ -1,6 +1,6 @@
 import Player from "./Player.js";
 import SubBass from "../effects/SubBass";
-import {allOrNone} from '../util';
+import { allOrNone } from '../util';
 import path from 'path';
 
 let emu = null;
@@ -176,9 +176,8 @@ export default class GMEPlayer extends Player {
       ["array", "number", "number", "number"],
       [data, data.length, this.emuPtr, this.audioCtx.sampleRate]
     ) !== 0) {
-      console.error("gme_open_data failed.");
       this.stop();
-      throw Error('Unable to load this file!');
+      throw Error('gme_open_data failed');
     }
     emu = libgme.getValue(this.emuPtr, "i32");
     this.voiceMask = Array(libgme._gme_voice_count(emu)).fill(true);
@@ -186,8 +185,8 @@ export default class GMEPlayer extends Player {
     this.connect();
     this.resume();
     if (this.playSubtune(this.subtune) !== 0) {
-      console.error("gme_start_track failed.");
-      throw Error('Unable to play this subtune!');
+      this.stop();
+      throw Error('gme_start_track failed');
     }
   }
 

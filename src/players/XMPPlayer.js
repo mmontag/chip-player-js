@@ -50,7 +50,7 @@ export default class XMPPlayer extends Player {
     } else if (err !== 0) {
       this.suspend();
       console.error("xmp_play_buffer failed. error code: %d", err);
-      throw Error('Unable to play this file!');
+      throw Error('xmp_play_buffer failed');
     }
 
     // Get current module BPM
@@ -120,12 +120,13 @@ export default class XMPPlayer extends Player {
     );
     if (err !== 0) {
       console.error("xmp_load_module_from_memory failed. error code: %d", err);
-      throw Error('Unable to load this file!');
+      throw Error('xmp_load_module_from_memory failed');
     }
 
     err = this.lib._xmp_start_player(this.xmpCtx, this.audioCtx.sampleRate, 0);
     if (err !== 0) {
       console.error('xmp_start_player failed. error code: %d', err);
+      throw Error('xmp_start_player failed');
     }
 
     this.metadata = this._parseMetadata(filename);
