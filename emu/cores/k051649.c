@@ -93,7 +93,7 @@ const DEV_DEF* devDefList_K051649[] =
 
 
 #define FREQ_BITS   16
-#define DEF_GAIN    8
+#define DEF_GAIN    16 / 5
 
 // Parameters for a channel
 typedef struct
@@ -116,40 +116,11 @@ struct _k051649_state
 	UINT32 mclock;
 	UINT32 rate;
 
-	/* mixer tables and internal buffers */
-	DEV_SMPL *mixer_table;
-	DEV_SMPL *mixer_lookup;
-
 	/* chip registers */
 	UINT8 test;
 	UINT8 cur_reg;
 	UINT8 mode_plus;
 };
-
-
-//-------------------------------------------------
-// build a table to divide by the number of voices
-//-------------------------------------------------
-
-static void make_mixer_table(k051649_state *info, int voices)
-{
-	int i;
-
-	// allocate memory
-	info->mixer_table = (DEV_SMPL*)malloc(sizeof(DEV_SMPL) * 512 * voices);
-
-	// find the middle of the table
-	info->mixer_lookup = info->mixer_table + (256 * voices);
-
-	// fill in the table - 16 bit case
-	for (i = 0; i < (voices * 256); i++)
-	{
-		int val = i * DEF_GAIN * 16 / voices;
-		//if (val > 32767) val = 32767;
-		info->mixer_lookup[ i] = val;
-		info->mixer_lookup[-i] = -val;
-	}
-}
 
 
 /* generate sound to the mix buffer */
@@ -163,37 +134,28 @@ static void k051649_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 
 	// zap the contents of the mixer buffer
 	memset(buffer, 0, samples * sizeof(DEV_SMPL));
+	memset(buffer2, 0, samples * sizeof(DEV_SMPL));
 
 	for (j = 0; j < 5; j++)
 	{
 		// channel is halted for freq < 9
 		if (voice[j].frequency > 8 && ! voice[j].Muted)
 		{
-			const INT8 *w = voice[j].waveram;
-			INT16 v=voice[j].volume * voice[j].key;
-			UINT32 c=voice[j].counter;
-			//UINT32 step = (UINT32)(((INT64)info->mclock * (1 << FREQ_BITS)) / (float)((voice[j].frequency + 1) * 16 * (info->rate / 32)) + 0.5);
 			UINT32 step = (UINT32)(((INT64)info->mclock * (1 << FREQ_BITS)) / (float)((voice[j].frequency + 1) * info->rate / 2.0f) + 0.5f);
 
 			// add our contribution
 			for (i = 0; i < samples; i++)
 			{
-				UINT32 offs;
-
-				c += step;
-				offs = (c >> FREQ_BITS) & 0x1f;
-				buffer[i] += (w[offs] * v)>>3;
+				voice[j].counter += step;
+				if (voice[j].key)
+				{
+					UINT32 offs = (voice[j].counter >> FREQ_BITS) & 0x1f;
+					DEV_SMPL smpl = voice[j].waveram[offs] * voice[j].volume * DEF_GAIN;
+					buffer[i] += smpl;
+					buffer2[i] += smpl;
+				}
 			}
-
-			// update the counter for this voice
-			voice[j].counter = c;
 		}
-	}
-
-	// mix it down
-	for (i = 0; i < samples; i++)
-	{
-		buffer[i] = buffer2[i] = info->mixer_lookup[buffer[i]];
 	}
 }
 
@@ -210,9 +172,6 @@ static UINT8 device_start_k051649(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	info->mclock = cfg->clock;
 	info->rate = info->mclock / 16;
 
-	// build the mixer table
-	make_mixer_table(info, 5);
-	
 	k051649_set_mute_mask(info, 0x00);
 	
 	info->_devData.chipInf = info;
@@ -224,7 +183,6 @@ static void device_stop_k051649(void *chip)
 {
 	k051649_state *info = (k051649_state *)chip;
 	
-	free(info->mixer_table);
 	free(info);
 	
 	return;

@@ -70,6 +70,8 @@
 /* GLOBAL CONSTANTS */
 #define  SYNCS_MAX1     0x20
 #define  SYNCS_MAX2     0x80
+#define  NTSC_APU_CLOCK (21477272 / 12)
+#define  PAL_APU_CLOCK  (26601712 / 16)
 
 /* GLOBAL VARIABLES */
 struct _nesapu_state
@@ -77,6 +79,8 @@ struct _nesapu_state
 	DEV_DATA _devData;
 
 	apu_t   APU;                   /* Actual APUs */
+	uint8   is_pal;
+	uint8   nonlinear_mixing;
 	float   apu_incsize;           /* Adjustment increment */
 	uint32  samps_per_sync;        /* Number of samples per vsync */
 	uint32  buffer_size;           /* Actual buffer size in bytes */
@@ -85,6 +89,10 @@ struct _nesapu_state
 	uint32  sync_times1[SYNCS_MAX1]; /* Samples per sync table */
 	uint32  sync_times2[SYNCS_MAX2]; /* Samples per sync table */
 };
+
+static DEV_SMPL square_lut[31];       // Non-linear Square wave output LUT
+static DEV_SMPL tnd_lut[16][16][128]; // Non-linear Triangle, Noise, DMC output LUT
+static UINT8 tablesInit = 0;
 
 static UINT8 DPCMBase0 = 0x01;
 
@@ -106,28 +114,72 @@ static void create_syncs(nesapu_state *info, unsigned long sps)
 	unsigned long val = sps;
 
 	for (i = 0; i < SYNCS_MAX1; i++)
+		info->sync_times1[i] = sps * (i + 1);
+
+	for (i = 0; i < SYNCS_MAX2; i++)
+		info->sync_times2[i] = (sps * i) >> 2;
+}
+
+static void create_mixer_lut(void)
+{
+	int i, t;
+
+	if (tablesInit)
+		return;
+	tablesInit = 0;
+
+	// calculate mixer output
+	/*
+	pulse channel output:
+
+	         95.88
+	-----------------------
+	      8128
+	----------------- + 100
+	pulse 1 + pulse 2
+
+	*/
+	for (i = 0; i < 31; i++)
 	{
-		info->sync_times1[i] = val;
-		val += sps;
+		double pulse_out = (i == 0) ? 0.0 : 95.88 / ((8128.0 / i) + 100.0);
+		square_lut[i] = (DEV_SMPL)(pulse_out * 0x8000);
 	}
 
-	val = 0;
-	for (i = 0; i < SYNCS_MAX2; i++)
+	/*
+	triangle, noise, DMC channel output:
+
+	             159.79
+	-------------------------------
+	            1
+	------------------------- + 100
+	triangle   noise    dmc
+	-------- + ----- + -----
+	  8227     12241   22638
+
+	*/
+	for (t = 0; t < 16; t++)
 	{
-		info->sync_times2[i] = val;
-		info->sync_times2[i] >>= 2;
-		val += sps;
+		int n;
+		for (n = 0; n < 16; n++)
+		{
+			int d;
+			for (d = 0; d < 128; d++)
+			{
+				double tnd_out = (t / 8227.0) + (n / 12241.0) + (d / 22638.0);
+				tnd_out = (tnd_out == 0.0) ? 0.0 : 159.79 / ((1.0 / tnd_out) + 100.0);
+				tnd_lut[t][n][d] = (DEV_SMPL)(tnd_out * 0x8000);
+			}
+		}
 	}
 }
 
 /* TODO: sound channels should *ALL* have DC volume decay */
 
 /* OUTPUT SQUARE WAVE SAMPLE (VALUES FROM -16 to +15) */
-static int8 apu_square(nesapu_state *info, square_t *chan)
+static void apu_square(nesapu_state *info, square_t *chan)
 {
 	int env_delay;
 	int sweep_delay;
-	int8 output;
 	uint8 freq_index;
 
 	/* reg0: 0-3=volume, 4=envelope, 5=hold, 6-7=duty cycle
@@ -136,11 +188,14 @@ static int8 apu_square(nesapu_state *info, square_t *chan)
 	** reg3: 0-2=high freq, 7-4=vbl length counter
 	*/
 
-	if (false == chan->enabled || chan->Muted)
-		return 0;
+	if (!chan->enabled || chan->Muted)
+	{
+		chan->output = 0;
+		return;
+	}
 
 	/* enveloping */
-	env_delay = info->sync_times1[chan->regs[0] & 0x0F];
+	env_delay = info->sync_times1[chan->regs[0] & 0x0f];
 
 	/* decay is at a rate of (env_regs + 1) / 240 secs */
 	chan->env_phase -= 4;
@@ -154,11 +209,14 @@ static int8 apu_square(nesapu_state *info, square_t *chan)
 	}
 
 	/* vbl length counter */
-	if (chan->vbl_length > 0 && 0 == (chan->regs [0] & 0x20))
+	if (chan->vbl_length > 0 && !(chan->regs [0] & 0x20))
 		chan->vbl_length--;
 
-	if (0 == chan->vbl_length)
-		return 0;
+	if (!chan->vbl_length)
+	{
+		chan->output = 0;
+		return;
+	}
 
 	/* freqsweeps */
 	if ((chan->regs[1] & 0x80) && (chan->regs[1] & 7))
@@ -175,57 +233,57 @@ static int8 apu_square(nesapu_state *info, square_t *chan)
 		}
 	}
 
-//	if ((0 == (chan->regs[1] & 8) && (chan->freq >> 16) > freq_limit[chan->regs[1] & 7])
-//		 || (chan->freq >> 16) < 4)
-//		return 0;
-	
 	// Thanks to Delek for the fix
 	if (chan->regs[1] & 0x80)
 		freq_index = chan->regs[1] & 7;	//If sweeping is enabled, I choose it as normal.
 	else
 		freq_index = 7;	//If sweeping is disabled, I choose the lower limit.
-	
-	if ((0 == (chan->regs[1] & 8) && (chan->freq >> 16) > freq_limit[freq_index])
+	//if ((!(chan->regs[1] & 8) && (chan->freq >> 16) > freq_limit[chan->regs[1] & 7])	// original
+	if ((!(chan->regs[1] & 8) && (chan->freq >> 16) > freq_limit[freq_index])	// fixed
 		 || (chan->freq >> 16) < 4)
-		return 0;
+	{
+		chan->output = 0;
+		return;
+	}
 
 	chan->phaseacc -= (float) info->apu_incsize; /* # of cycles per sample */
 
 	while (chan->phaseacc < 0)
 	{
 		chan->phaseacc += (chan->freq >> 16);
-		chan->adder = (chan->adder + 1) & 0x0F;
+		chan->adder = (chan->adder + 1) & 0x0f;
 	}
 
 	if (chan->regs[0] & 0x10) /* fixed volume */
-		output = chan->regs[0] & 0x0F;
+		chan->output = chan->regs[0] & 0x0F;
 	else
-		output = 0x0F - chan->env_vol;
+		chan->output = 0x0f - chan->env_vol;
 
-	if (chan->adder < (duty_lut[chan->regs[0] >> 6]))
-		output = -output;
-
-	return (int8) output;
+	//BIT( duty_lut[chan->regs[0] >> 6],  7 - BIT(chan->adder, 1, 3) );
+	if (duty_lut[chan->regs[0] >> 6] & (1 << (7 - (chan->adder >> 1))))
+		chan->output = -chan->output;
 }
 
 /* OUTPUT TRIANGLE WAVE SAMPLE (VALUES FROM -16 to +15) */
-static int8 apu_triangle(nesapu_state *info, triangle_t *chan)
+static void apu_triangle(nesapu_state *info, triangle_t *chan)
 {
 	int freq;
-	int8 output;
 	/* reg0: 7=holdnote, 6-0=linear length counter
 	** reg2: low 8 bits of frequency
 	** reg3: 7-3=length counter, 2-0=high 3 bits of frequency
 	*/
 
-	if (false == chan->enabled || chan->Muted)
-		return 0;
+	if (! chan->enabled || chan->Muted)
+	{
+		chan->output = 0;
+		return;
+	}
 
-	if (false == chan->counter_started && 0 == (chan->regs[0] & 0x80))
+	if (!chan->counter_started && !(chan->regs[0] & 0x80))
 	{
 		if (chan->write_latency)
 			chan->write_latency--;
-		if (0 == chan->write_latency)
+		if (!chan->write_latency)
 			chan->counter_started = true;
 	}
 
@@ -233,56 +291,66 @@ static int8 apu_triangle(nesapu_state *info, triangle_t *chan)
 	{
 		if (chan->linear_length > 0)
 			chan->linear_length--;
-		if (chan->vbl_length && 0 == (chan->regs[0] & 0x80))
-				chan->vbl_length--;
+		if (chan->vbl_length && !(chan->regs[0] & 0x80))
+			chan->vbl_length--;
 
-		if (0 == chan->vbl_length)
-			return 0;
+		if (!chan->vbl_length)
+		{
+			chan->output = 0;
+			return;
+		}
 	}
 
-	if (0 == chan->linear_length)
-		return 0;
+	if (!chan->linear_length)
+	{
+		chan->output = 0;
+		return;
+	}
 
 	freq = (((chan->regs[3] & 7) << 8) + chan->regs[2]) + 1;
 
 	if (freq < 4) /* inaudible */
-		return 0;
+	{
+		chan->output = 0;
+		return;
+	}
 
 	chan->phaseacc -= (float) info->apu_incsize; /* # of cycles per sample */
 	while (chan->phaseacc < 0)
 	{
 		chan->phaseacc += freq;
-		chan->adder = (chan->adder + 1) & 0x1F;
+		chan->adder = (chan->adder + 1) & 0x1f;
 
-		output = (chan->adder & 7) << 1;
+		chan->output = chan->adder & 0x0f;
 		if (chan->adder & 8)
-			output = 0x10 - output;
+			chan->output ^= 0x07;
+		else
+			chan->output ^= 0x08;
 		if (chan->adder & 0x10)
-			output = -output;
-
-		chan->output_vol = output;
+			chan->output ^= 0x0F;
+		chan->output = (chan->output << 1) - 0x10;
 	}
-
-	return (int8) chan->output_vol;
 }
 
 /* OUTPUT NOISE WAVE SAMPLE (VALUES FROM -16 to +15) */
-static int8 apu_noise(nesapu_state *info, noise_t *chan)
+static void apu_noise(nesapu_state *info, noise_t *chan)
 {
 	int freq, env_delay;
 	uint8 outvol;
-	uint8 output;
 
 	/* reg0: 0-3=volume, 4=envelope, 5=hold
 	** reg2: 7=small(93 byte) sample,3-0=freq lookup
 	** reg3: 7-4=vbl length counter
 	*/
 
-	if (false == chan->enabled || chan->Muted)
-		return 0;
+	if (!chan->enabled || chan->Muted)
+	{
+		chan->output = 0;
+		return;
+	}
 
 	/* enveloping */
-	env_delay = info->sync_times1[chan->regs[0] & 0x0F];
+	env_delay = info->sync_times1[chan->regs[0] & 0x0f];
 
 	/* decay is at a rate of (env_regs + 1) / 240 secs */
 	chan->env_phase -= 4;
@@ -296,16 +364,19 @@ static int8 apu_noise(nesapu_state *info, noise_t *chan)
 	}
 
 	/* length counter */
-	if (0 == (chan->regs[0] & 0x20))
+	if (!(chan->regs[0] & 0x20))
 	{
 		if (chan->vbl_length > 0)
 			chan->vbl_length--;
 	}
 
-	if (0 == chan->vbl_length)
-		return 0;
+	if (!chan->vbl_length)
+	{
+		chan->output = 0;
+		return;
+	}
 
-	freq = noise_freq[chan->regs[2] & 0x0F];
+	freq = noise_freq[info->is_pal][chan->regs[2] & 0x0f];
 	chan->phaseacc -= (float) info->apu_incsize; /* # of cycles per sample */
 	while (chan->phaseacc < 0)
 	{
@@ -317,20 +388,17 @@ static int8 apu_noise(nesapu_state *info, noise_t *chan)
 	}
 
 	if (chan->regs[0] & 0x10) /* fixed volume */
-		outvol = chan->regs[0] & 0x0F;
+		outvol = chan->regs[0] & 0x0f;
 	else
 		outvol = 0x0F - chan->env_vol;
 
-	// more sane output noise signal -VB
-	output = (chan->seed & 1) ? outvol : -outvol;
-
-	return (int8) output;
+	chan->output = (chan->seed & 1) ? outvol : -outvol;
 }
 
 /* RESET DPCM PARAMETERS */
 INLINE void apu_dpcmreset(dpcm_t *chan)
 {
-	chan->address = 0xC000 + (uint16) (chan->regs[2] << 6);
+	chan->address = 0xc000 + (uint16) (chan->regs[2] << 6);
 	chan->length = (uint16) (chan->regs[3] << 4) + 1;
 	chan->bits_left = chan->length << 3;
 	chan->irq_occurred = false;
@@ -341,7 +409,7 @@ INLINE void apu_dpcmreset(dpcm_t *chan)
 
 /* OUTPUT DPCM WAVE SAMPLE (VALUES FROM -64 to +63) */
 /* TODO: centerline naughtiness */
-static int8 apu_dpcm(nesapu_state *info, dpcm_t *chan)
+static void apu_dpcm(nesapu_state *info, dpcm_t *chan)
 {
 	int freq, bit_pos;
 
@@ -351,21 +419,24 @@ static int8 apu_dpcm(nesapu_state *info, dpcm_t *chan)
 	** reg3: length, (value * 16) + 1
 	*/
 	if (chan->Muted)
-		return 0;
+	{
+		chan->output = 0;
+		return;
+	}
 
 	if (chan->enabled)
 	{
-		freq = dpcm_clocks[chan->regs[0] & 0x0F];
+		freq = dpcm_clocks[info->is_pal][chan->regs[0] & 0x0f];
 		chan->phaseacc -= (float) info->apu_incsize; /* # of cycles per sample */
 
 		while (chan->phaseacc < 0)
 		{
 			chan->phaseacc += freq;
 
-			if (0 == chan->length)
+			if (!chan->length)
 			{
 				chan->enabled = false; /* Fixed * Proper DPCM channel ENABLE/DISABLE flag behaviour*/
-				chan->vol=0; /* Fixed * DPCM DAC resets itself when restarted */
+				chan->vol = 0; /* Fixed * DPCM DAC resets itself when restarted */
 				if (chan->regs[0] & 0x40)
 					apu_dpcmreset(chan);
 				else
@@ -394,11 +465,11 @@ static int8 apu_dpcm(nesapu_state *info, dpcm_t *chan)
 			}
 
 			if (chan->cur_byte & (1 << bit_pos))
-//				chan->regs[1]++;
-				chan->vol+=2; /* FIXED * DPCM channel only uses the upper 6 bits of the DAC */
+//				chan->regs[1] += 2;
+				chan->vol += 2; /* FIXED * DPCM channel only uses the upper 6 bits of the DAC */
 			else
-//				chan->regs[1]--;
-				chan->vol-=2;
+//				chan->regs[1] -= 2;
+				chan->vol -= 2;
 		}
 	}
 
@@ -416,8 +487,7 @@ static int8 apu_dpcm(nesapu_state *info, dpcm_t *chan)
 		else if (chan->vol < 0)
 			chan->vol = 0;
 	}
-
-	return (int8) (chan->vol);
+	chan->output = (int8)chan->vol;
 }
 
 /* WRITE REGISTER VALUE */
@@ -467,7 +537,7 @@ INLINE void apu_regwrite(nesapu_state *info, int address, uint8 value)
 		if (info->APU.tri.enabled)
 		{                                          /* ??? */
 			if (false == info->APU.tri.counter_started)
-				info->APU.tri.linear_length = info->sync_times2[value & 0x7F];
+				info->APU.tri.linear_length = info->sync_times2[value & 0x7f];
 		}
 
 		break;
@@ -507,7 +577,7 @@ INLINE void apu_regwrite(nesapu_state *info, int address, uint8 value)
 		{
 			info->APU.tri.counter_started = false;
 			info->APU.tri.vbl_length = info->vbl_times[value >> 3];
-			info->APU.tri.linear_length = info->sync_times2[info->APU.tri.regs[0] & 0x7F];
+			info->APU.tri.linear_length = info->sync_times2[info->APU.tri.regs[0] & 0x7f];
 		}
 
 		break;
@@ -539,16 +609,15 @@ INLINE void apu_regwrite(nesapu_state *info, int address, uint8 value)
 	/* DMC */
 	case APU_WRE0:
 		info->APU.dpcm.regs[0] = value;
-		if (0 == (value & 0x80)) {
+		if (!(value & 0x80)) {
 			//downcast<n2a03_device &>(m_APU.dpcm.memory->device()).set_input_line(N2A03_APU_IRQ_LINE, CLEAR_LINE);
 			info->APU.dpcm.irq_occurred = false;
 		}
 		break;
 
 	case APU_WRE1: /* 7-bit DAC */
-		//m_APU.dpcm.regs[1] = value - 0x40;
-		info->APU.dpcm.regs[1] = value & 0x7F;
-		if (! DPCMBase0)
+		info->APU.dpcm.regs[1] = value & 0x7f;
+		if (!DPCMBase0)
 			info->APU.dpcm.vol = (info->APU.dpcm.regs[1]-64);
 		else
 			info->APU.dpcm.vol = info->APU.dpcm.regs[1];
@@ -609,7 +678,7 @@ INLINE void apu_regwrite(nesapu_state *info, int address, uint8 value)
 		if (value & 0x10)
 		{
 			/* only reset dpcm values if DMA is finished */
-			if (false == info->APU.dpcm.enabled)
+			if (!info->APU.dpcm.enabled)
 			{
 				info->APU.dpcm.enabled = true;
 				apu_dpcmreset(&info->APU.dpcm);
@@ -642,23 +711,43 @@ void nes_apu_update(void* chip, UINT32 samples, DEV_SMPL **outputs)
 	{
 		INT16 squ1, squ2, tri, noi, dpcm;
 
-		// These volumes should match NSFPlay's NES core better
-		squ1 = apu_square(info, &apu->squ[0]) * 0x100;	// [-15..+15] << 8 * 1.0
-		squ2 = apu_square(info, &apu->squ[1]) * 0x100;	// [-15..+15] << 8 * 1.0
-		tri  = apu_triangle(info, &apu->tri) * 0xC0;	// [-16..+16] << 8 * 0.75
-		noi  = apu_noise(info, &apu->noi) * 0xC0;	// [-15..+15] << 8 * 0.75
-		dpcm = apu_dpcm(info, &apu->dpcm) * 0xC0;	// [0..+127] << 8 * 0.75
+		apu_square(info, &apu->squ[0]);
+		apu_square(info, &apu->squ[1]);
+		apu_triangle(info, &apu->tri);
+		apu_noise(info, &apu->noi);
+		apu_dpcm(info, &apu->dpcm);
 
-		bufL[i]  = APPLY_PANNING_S(squ1, apu->squ[0].Pan[0]);
-		bufR[i]  = APPLY_PANNING_S(squ1, apu->squ[0].Pan[1]);
-		bufL[i] += APPLY_PANNING_S(squ2, apu->squ[1].Pan[0]);
-		bufR[i] += APPLY_PANNING_S(squ2, apu->squ[1].Pan[1]);
-		bufL[i] += APPLY_PANNING_S(tri, apu->tri.Pan[0]);
-		bufR[i] += APPLY_PANNING_S(tri, apu->tri.Pan[1]);
-		bufL[i] += APPLY_PANNING_S(noi, apu->noi.Pan[0]);
-		bufR[i] += APPLY_PANNING_S(noi, apu->noi.Pan[1]);
-		bufL[i] += APPLY_PANNING_L(dpcm, apu->dpcm.Pan[0]);	// could be 0..24384, thus use _L macro
-		bufR[i] += APPLY_PANNING_L(dpcm, apu->dpcm.Pan[1]);
+		if (info->nonlinear_mixing)
+		{
+			squ1 = (apu->squ[0].output >= 0) ? apu->squ[0].output : 0;
+			squ2 = (apu->squ[1].output >= 0) ? apu->squ[1].output : 0;
+			tri  = (apu->tri.output + 0x10) / 2;
+			noi  = (apu->noi.output >= 0) ? apu->noi.output : 0;
+			dpcm = apu->dpcm.output;
+			bufL[i] = square_lut[squ1 + squ2];
+			bufL[i] += tnd_lut[tri][noi][dpcm];
+			bufR[i] = bufL[i];
+		}
+		else
+		{
+			// These volumes should match NSFPlay's NES core better
+			squ1 = apu->squ[0].output * 0x100;	// [-15..+15] << 8 * 1.0
+			squ2 = apu->squ[1].output * 0x100;	// [-15..+15] << 8 * 1.0
+			tri  = apu->tri.output * 0xC0;	// [-16..+16] << 8 * 0.75
+			noi  = apu->noi.output * 0xC0;	// [-15..+15] << 8 * 0.75
+			dpcm = apu->dpcm.output * 0xC0;	// [0..+127] << 8 * 0.75
+
+			bufL[i]  = APPLY_PANNING_S(squ1, apu->squ[0].Pan[0]);
+			bufR[i]  = APPLY_PANNING_S(squ1, apu->squ[0].Pan[1]);
+			bufL[i] += APPLY_PANNING_S(squ2, apu->squ[1].Pan[0]);
+			bufR[i] += APPLY_PANNING_S(squ2, apu->squ[1].Pan[1]);
+			bufL[i] += APPLY_PANNING_S(tri, apu->tri.Pan[0]);
+			bufR[i] += APPLY_PANNING_S(tri, apu->tri.Pan[1]);
+			bufL[i] += APPLY_PANNING_S(noi, apu->noi.Pan[0]);
+			bufR[i] += APPLY_PANNING_S(noi, apu->noi.Pan[1]);
+			bufL[i] += APPLY_PANNING_L(dpcm, apu->dpcm.Pan[0]);	// could be 0..24384, thus use _L macro
+			bufR[i] += APPLY_PANNING_L(dpcm, apu->dpcm.Pan[1]);
+		}
 	}
 }
 
@@ -720,8 +809,11 @@ void* device_start_nesapu(UINT32 clock, UINT32 rate)
 	info->buffer_size = info->samps_per_sync;
 	info->real_rate = info->samps_per_sync * SCREEN_HZ;
 	info->apu_incsize = (float) (clock / (float) info->real_rate);
+	info->is_pal = (clock >= PAL_APU_CLOCK - 10 && clock <= PAL_APU_CLOCK + 10);
+	info->nonlinear_mixing = 0;
 
 	/* Use initializer calls */
+	create_mixer_lut();
 	create_vbltimes(info->vbl_times,vbl_length,info->samps_per_sync);
 	create_syncs(info, info->samps_per_sync);
 
@@ -820,6 +912,13 @@ UINT32 nesapu_get_mute_mask(void* chip)
 				(info->APU.dpcm.Muted << 4);
 	
 	return muteMask;
+}
+
+void nesapu_set_options(void *chip, UINT32 Flags)
+{
+	nesapu_state *info = (nesapu_state*)chip;
+	
+	info->nonlinear_mixing = (Flags >> 1) & 0x01;
 }
 
 void nesapu_set_panning(void* chip, INT16 square1, INT16 square2, INT16 triangle, INT16 noise, INT16 dpcm)

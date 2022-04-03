@@ -515,7 +515,7 @@ static void nes_set_chip_option_mame(void* chip, UINT32 NesOptions)
 {
 	NESAPU_INF* info = (NESAPU_INF*)chip;
 	
-	// no options for MAME's NES core
+	nesapu_set_options(info->chip_apu, NesOptions);
 	
 #ifdef EC_NES_NSFP_FDS
 	if (info->chip_fds != NULL)

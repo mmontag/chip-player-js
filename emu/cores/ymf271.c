@@ -12,7 +12,6 @@
     - EN and EXT Out bits
     - Src B and Src NOTE bits
     - statusreg Busy flag
-    - timer register 0x11
     - ch2/ch3 (4 speakers)
     - PFM (FM using external PCM waveform)
     - detune (should be same as on other Yamaha chips)
@@ -20,6 +19,7 @@
       "determines if slot output is accumulated(1), or output directly(0)"
     - Is memory handling 100% correct? At the moment, seibuspi.c is the only
       hardware currently emulated that uses external handlers.
+    - *16 multiplier for timer B is free-running like other yamaha FM chips?
 */
 
 #include <stdlib.h>
@@ -1541,14 +1541,13 @@ static void ymf271_write_timer(YMF271Chip *chip, UINT8 address, UINT8 data)
 		switch (address)
 		{
 			case 0x10:
-				chip->timerA = data;
+				chip->timerA = (chip->timerA & 0x003) | (data << 2); // High 8 bit of Timer A period
 				break;
 
 			case 0x11:
-				// According to Yamaha's documentation, this sets timer A upper 2 bits
-				// (it says timer A is 10 bits). But, PCB audio recordings proves
-				// otherwise: it doesn't affect timer A frequency. (see ms32.c tetrisp)
-				// Does this register have another function regarding timer A/B?
+				// Timer A is 10 bit, split high 8 bit and low 2 bit like other Yamaha FM chips
+				// unlike Yamaha's documentation; it says 0x11 writes timer A upper 2 bits.
+				chip->timerA = (chip->timerA & 0x3fc) | (data & 0x03); // Low 2 bit of Timer A period
 				break;
 
 			case 0x12:
@@ -1559,7 +1558,7 @@ static void ymf271_write_timer(YMF271Chip *chip, UINT8 address, UINT8 data)
 				// timer A load
 				if (~chip->enable & data & 1)
 				{
-					//attotime period = attotime::from_hz(chip->clock) * (384 * 4 * (256 - chip->timerA));
+					//attotime period = attotime::from_hz(chip->clock) * (384 * (1024 - chip->timerA));
 					//chip->timA->adjust((data & 1) ? period : attotime::never, 0);
 				}
 

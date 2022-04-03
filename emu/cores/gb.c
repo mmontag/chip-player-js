@@ -186,7 +186,7 @@ struct SOUND
 	bool   length_counting;
 	bool   length_enabled;
 	/* Mode 1, 2, 3 */
-	UINT32 cycles_left;
+	INT32  cycles_left;
 	INT8   duty;
 	/* Mode 1, 2, 4 */
 	bool   envelope_enabled;
@@ -582,12 +582,8 @@ static void gb_sound_w_internal(gb_sound_t *gb, UINT8 offset, UINT8 data)
 				gb->snd_3.length_counting = true;
 				gb->snd_3.frequency = ((gb->snd_3.reg[4] & 0x7) << 8) | gb->snd_3.reg[3];
 				gb->snd_3.frequency_counter = gb->snd_3.frequency;
-				// There is a tiny bit of delay in starting up the wave channel(?)
-				//
-				// Results from older code where corruption of wave ram was triggered when sample_reading == true:
-				// 4 breaks test 09 (read wram), fixes test 10 (write trigger), breaks test 12 (write wram)
-				// 6 fixes test 09 (read wram), breaks test 10 (write trigger), fixes test 12 (write wram)
-				gb->snd_3.cycles_left = 0 + 6;
+				// There is a tiny bit of delay in starting up the wave channel
+				gb->snd_3.cycles_left = -6;
 				gb->snd_3.sample_reading = false;
 
 				if (!gb_dac_enabled(&gb->snd_3))
@@ -935,23 +931,30 @@ static void gb_update_square_channel(struct SOUND *snd, UINT32 cycles)
 {
 	if (snd->on)
 	{
+		UINT16 distance;
 		// compensate for leftover cycles
-		cycles += snd->cycles_left;
+		snd->cycles_left += cycles;
+		if (snd->cycles_left <= 0)
+			return;
 
-		snd->cycles_left = cycles & 3;
-		cycles >>= 2;	// one step every 4 cycles
-		while (cycles > 0)
+		cycles = snd->cycles_left >> 2;
+		snd->cycles_left &= 3;
+		distance = 0x800 - snd->frequency_counter;
+		if (cycles >= distance)
 		{
-			cycles --;
-			snd->frequency_counter = (snd->frequency_counter + 1) & 0x7FF;
-			if (snd->frequency_counter == 0)
-			{
-				snd->duty_count = (snd->duty_count + 1) & 0x07;
-				snd->signal = wave_duty_table[snd->duty][snd->duty_count];
+			UINT32 counter;
+			cycles -= distance;
+			distance = 0x800 - snd->frequency;
+			counter = 1 + cycles / distance;
 
-				// Reload frequency counter
-				snd->frequency_counter = snd->frequency;
-			}
+			snd->duty_count = (snd->duty_count + counter) & 0x07;
+			snd->signal = wave_duty_table[snd->duty][snd->duty_count];
+
+			snd->frequency_counter = snd->frequency + cycles % distance;
+		}
+		else
+		{
+			snd->frequency_counter += cycles;
 		}
 	}
 }
@@ -962,16 +965,14 @@ static void gb_update_wave_channel(gb_sound_t *gb, struct SOUND *snd, UINT32 cyc
 	if (snd->on)
 	{
 		// compensate for leftover cycles
-		cycles += snd->cycles_left;
+		snd->cycles_left += cycles;
 
-		snd->cycles_left = cycles & 1;
-		cycles >>= 1;	// one step every 2 cycles
-		while (cycles > 0)
+		while (snd->cycles_left >= 2)
 		{
-			cycles --;
+			snd->cycles_left -= 2;
 
 			// Calculate next state
-			snd->frequency_counter = (snd->frequency_counter + 1) & 0x7FF;
+			snd->frequency_counter = (snd->frequency_counter + 1) & 0x7ff;
 			snd->sample_reading = false;
 			if (gb->gbMode == GBMODE_DMG && snd->frequency_counter == 0x7ff)
 				snd->offset = (snd->offset + 1) & 0x1F;
@@ -980,13 +981,13 @@ static void gb_update_wave_channel(gb_sound_t *gb, struct SOUND *snd, UINT32 cyc
 				// Read next sample
 				snd->sample_reading = true;
 				if (gb->gbMode == GBMODE_CGB04)
-					snd->offset = (snd->offset + 1) & 0x1F;
+					snd->offset = (snd->offset + 1) & 0x1f;
 				snd->current_sample = gb->snd_regs[AUD3W0 + (snd->offset/2)];
 				if (!(snd->offset & 0x01))
 				{
 					snd->current_sample >>= 4;
 				}
-				snd->current_sample = (snd->current_sample & 0x0F) - 8;
+				snd->current_sample = (snd->current_sample & 0x0f) - 8;
 				if (gb->BoostWaveChn)
 					snd->current_sample <<= 1;
 
@@ -1002,16 +1003,15 @@ static void gb_update_wave_channel(gb_sound_t *gb, struct SOUND *snd, UINT32 cyc
 
 static void gb_update_noise_channel(gb_sound_t *gb, struct SOUND *snd, UINT32 cycles)
 {
-	while (cycles >= snd->cycles_left)
+	UINT32 period = gb_noise_period_cycles(gb);
+	snd->cycles_left += cycles;
+	while (snd->cycles_left >= period)
 	{
 		UINT16 feedback;
+		snd->cycles_left -= period;
 
-		cycles -= snd->cycles_left;
-		snd->cycles_left = gb_noise_period_cycles(gb);
-
-		/* Using a Polynomial Counter (aka Linear Feedback Shift Register)
-		 Mode 4 has a 15 bit counter so we need to shift the
-		 bits around accordingly */
+		// Using a Polynomial Counter (aka Linear Feedback Shift Register)
+		// Mode 4 has a 15 bit counter so we need to shift the bits around accordingly.
 		feedback = ((snd->noise_lfsr >> 1) ^ snd->noise_lfsr) & 1;
 		snd->noise_lfsr = (snd->noise_lfsr >> 1) | (feedback << 14);
 		if (snd->noise_short)
@@ -1020,7 +1020,6 @@ static void gb_update_noise_channel(gb_sound_t *gb, struct SOUND *snd, UINT32 cy
 		}
 		snd->signal = (snd->noise_lfsr & 1) ? -1 : 1;
 	}
-	snd->cycles_left -= cycles;
 }
 
 
@@ -1099,7 +1098,7 @@ static void gb_update_state(gb_sound_t *gb, UINT32 cycles)
 
 INLINE UINT32 gb_noise_period_cycles(gb_sound_t *gb)
 {
-	static const int divisor[8] = { 8, 16,32, 48, 64, 80, 96, 112 };
+	static const UINT32 divisor[8] = { 8, 16,32, 48, 64, 80, 96, 112 };
 	return divisor[gb->snd_4.reg[3] & 7] << (gb->snd_4.reg[3] >> 4);
 }
 

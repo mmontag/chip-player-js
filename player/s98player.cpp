@@ -359,7 +359,7 @@ UINT8 S98Player::LoadTags(void)
 			{
 				tagIsUTF8 = true;
 				startPtr += 3;
-				emu_logf(&_logger, PLRLOG_DEBUG, "Note: Tags are UTF-8 encoded.");
+				emu_logf(&_logger, PLRLOG_DEBUG, "Note: Tags are UTF-8 encoded.\n");
 			}
 		}
 		
