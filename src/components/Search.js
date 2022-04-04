@@ -149,9 +149,9 @@ export default class Search extends PureComponent {
       <Fragment key={i}>
         {headingFragment}
         <div className={isPlaying ? 'Song-now-playing' : '' }>
-          {this.props.favorites &&
-          <FavoriteButton favorites={this.props.favorites}
-                          toggleFavorite={this.props.toggleFavorite}
+          {favorites &&
+          <FavoriteButton isFavorite={favorites.includes(href)}
+                          toggleFavorite={toggleFavorite}
                           href={href}/>}
           <a onClick={onSongClick(href, this.state.results, i)}
              href={href}>
