@@ -182,8 +182,8 @@ class App extends React.Component {
           if (urlParams.play) {
             const play = urlParams.play;
             const dirname = path.dirname(urlParams.play);
-            // We treat play param as a "transient command" and strip it away after starting playback.
-            // See comment in Browse.js for more about why a stateful play param is not a good idea.
+            // Treat play param as a "transient command" and strip it away after starting playback.
+            // See comment in Browse.js for more about why a sticky play param is not a good idea.
             delete urlParams.play;
             const qs = queryString.stringify(urlParams);
             const search = qs ? `?${qs}` : '';
