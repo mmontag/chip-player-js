@@ -9,6 +9,7 @@ import DirectoryLink from './DirectoryLink';
 import FavoriteButton from './FavoriteButton';
 
 const MAX_RESULTS = 100;
+const searchResultsCache = {};
 
 function getTotal() {
   return fetch(`${API_BASE}/total`)
@@ -23,7 +24,6 @@ export default class Search extends PureComponent {
     this.debouncedDoSearch = debounce(this.doSearch, 150);
     this.onChange = this.onChange.bind(this);
     this.onSearchInputChange = this.onSearchInputChange.bind(this);
-    this.handleSearchResults = this.handleSearchResults.bind(this);
     this.handleClear = this.handleClear.bind(this);
     this.renderResultItem = this.renderResultItem.bind(this);
 
@@ -69,32 +69,39 @@ export default class Search extends PureComponent {
   }
 
   doSearch(val) {
-    const q = encodeURIComponent(val);
-    const url = `${API_BASE}/search?query=${q}&limit=${MAX_RESULTS}`;
-    if (this.searchRequest) this.searchRequest.abort();
-    this.searchRequest = promisify(new XMLHttpRequest());
-    this.searchRequest.open('GET', url);
-    // this.searchRequest.responseType = 'json';
-    this.searchRequest.send()
-      .then(response => {
-        this.searchRequest = null;
-        return JSON.parse(response.responseText);
-      })
-      .then(json => this.handleSearchResults(json));
-  }
-
-  handleSearchResults(payload) {
-    const { items, total } = payload;
-    const results = items
-      .map(item => item.file)
-      .map(result => result.replace('%', '%25').replace('#', '%23'))
-      .sort();
-    this.setState({
-      searching: true,
-      resultsCount: total,
-      results: results,
-      resultsHeadings: this.extractHeadings(results),
-    });
+    if (searchResultsCache[val]) {
+      this.setState({
+        searching: true,
+        ...searchResultsCache[val],
+      });
+    } else {
+      const q = encodeURIComponent(val);
+      const url = `${API_BASE}/search?query=${q}&limit=${MAX_RESULTS}`;
+      if (this.searchRequest) this.searchRequest.abort();
+      this.searchRequest = promisify(new XMLHttpRequest());
+      this.searchRequest.open('GET', url);
+      this.searchRequest.send()
+        .then(response => {
+          this.searchRequest = null;
+          return JSON.parse(response.responseText);
+        })
+        .then((payload) => {
+          const { items, total } = payload;
+          const results = items
+            .map(item => item.file)
+            .map(result => result.replace('%', '%25').replace('#', '%23'))
+            .sort();
+          searchResultsCache[val] = {
+            resultsCount: total,
+            resultsHeadings: this.extractHeadings(results),
+            results: results,
+          };
+          this.setState({
+            searching: true,
+            ...searchResultsCache[val],
+          });
+        });
+    }
   }
 
   handleClear() {
@@ -144,7 +151,7 @@ export default class Search extends PureComponent {
     const { favorites, toggleFavorite, currContext, currIdx, onSongClick } = this.props;
     const href = CATALOG_PREFIX + result;
     const resultTitle = decodeURI(result.substring(result.lastIndexOf('/') + 1));
-    const isPlaying = currContext?.[i] === this.state.results?.[i] && currIdx === i;
+    const isPlaying = currContext === this.state.results && currIdx === i;
     return (
       <Fragment key={i}>
         {headingFragment}
