@@ -4,6 +4,8 @@ class RequestCache {
   constructor() {
     this.data = {};
     this.request = null;
+
+    this.fetchCached = this.fetchCached.bind(this);
   }
 
   fetchCached(url) {
