@@ -126,7 +126,7 @@ const DEV_DEF* devDefList_X1_010[] =
 #define SETA_NUM_CHANNELS 16
 
 //#define FREQ_BASE_BITS          8                 // Frequency fixed decimal shift bits
-#define FREQ_BASE_BITS        14                // Frequency fixed decimal shift bits
+#define FREQ_BASE_BITS        11                // using UINT32, 20 bits (1 MB) of address space -> 32-20=12 bits left, -1 for position overflow checking
 #define ENV_BASE_BITS        16                 // wave form envelope fixed decimal shift bits
 #define VOL_BASE    (2*32*256/30)               // Volume base
 

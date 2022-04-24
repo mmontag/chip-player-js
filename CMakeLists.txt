@@ -54,7 +54,8 @@ if(MSVC)
 	set(Iconv_LIBRARY "${PROJECT_SOURCE_DIR}/libs/iconv/lib/libiconv.lib" CACHE FILEPATH "iconv library")
 	
 	if(NOT MSVC_VERSION LESS 1400)
-		add_compile_definitions("_CRT_SECURE_NO_WARNINGS")
+		# Note: CMake 3.12 and up have add_compile_options()
+		add_definitions("-D _CRT_SECURE_NO_WARNINGS")
 	endif()
 endif()
 
