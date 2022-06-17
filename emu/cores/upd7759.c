@@ -237,7 +237,12 @@ enum
 	STATE_NIBBLE_MSN,
 	STATE_NIBBLE_LSN
 };
-
+// chip modes
+enum
+{
+	MODE_STAND_ALONE,
+	MODE_SLAVE
+};
 
 
 /************************************************************
@@ -281,6 +286,7 @@ struct _upd7759_state
 	UINT8       first_valid_header;         /* did we get our first valid header yet? */
 	UINT32      offset;                     /* current ROM offset */
 	UINT32      repeat_offset;              /* current ROM repeat offset */
+	int         mode;                       /* current mode of the sound chip */
 
 	/* ADPCM processing */
 	INT8        adpcm_state;                /* ADPCM state index */
@@ -293,7 +299,6 @@ struct _upd7759_state
 	UINT8 *     rombase;                    /* pointer to ROM data or NULL for slave mode */
 	UINT32      romoffset;                  /* ROM offset to make save/restore easier */
 	UINT32      rommask;                    /* maximum address offset */
-	UINT8       ChipMode;                   /* 0 - Master, 1 - Slave */
 
 	UINT8       Muted;
 
@@ -392,7 +397,7 @@ static void advance_state(upd7759_state *chip)
 
 		/* drop DRQ state: update to the intended state */
 		case STATE_DROP_DRQ:
-			if (chip->ChipMode) // Slave Mode only
+			if (chip->mode == MODE_SLAVE) // Slave Mode only
 			{
 				UINT8 fail = get_fifo_data(chip);
 				if (fail)
@@ -609,10 +614,6 @@ static void upd7759_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 {
 	upd7759_state *chip = (upd7759_state *)param;
 	UINT32 i;
-	INT32 clocks_left = chip->clocks_left;
-	INT16 sample = chip->Muted ? 0 : chip->sample;
-	UINT32 step = chip->step;
-	UINT32 pos = chip->pos;
 	DEV_SMPL *buffer = outputs[0];
 	DEV_SMPL *buffer2 = outputs[1];
 
@@ -622,52 +623,46 @@ static void upd7759_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 		for (; i < samples; i++)
 		{
 			/* store the current sample */
+			INT16 sample = chip->Muted ? 0 : chip->sample;
 			buffer[i] = sample << 7;
 			buffer2[i] = sample << 7;
 
 			/* advance by the number of clocks/output sample */
-			pos += step;
+			chip->pos += chip->step;
 
-			/* handle clocks, but only in standalone mode */
-			if (! chip->ChipMode)
+			if (chip->mode == MODE_STAND_ALONE)
 			{
-				while (chip->rom && pos >= FRAC_ONE)
+				/* handle clocks, but only in standalone mode */
+				while (chip->rom != NULL && chip->pos >= FRAC_ONE)
 				{
-					int clocks_this_time = pos >> FRAC_BITS;
-					if (clocks_this_time > clocks_left)
-						clocks_this_time = clocks_left;
+					int clocks_this_time = chip->pos >> FRAC_BITS;
+					if (clocks_this_time > chip->clocks_left)
+						clocks_this_time = chip->clocks_left;
 
 					/* clock once */
-					pos -= clocks_this_time * FRAC_ONE;
-					clocks_left -= clocks_this_time;
+					chip->pos -= clocks_this_time * FRAC_ONE;
+					chip->clocks_left -= clocks_this_time;
 
 					/* if we're out of clocks, time to handle the next state */
-					if (clocks_left == 0)
+					if (chip->clocks_left == 0)
 					{
 						/* advance one state; if we hit idle, bail */
 						advance_state(chip);
 						if (chip->state == STATE_IDLE)
 							break;
-
-						/* reimport the variables that we cached */
-						clocks_left = chip->clocks_left;
-						sample = chip->Muted ? 0 : chip->sample;
 					}
 				}
 			}
 			else
 			{
-				// advance the state (4x because of Clock Divider /4)
-				INT32 rem_clocks = 4;
-				
-				while(rem_clocks && clocks_left <= rem_clocks)
+				while(chip->clocks_left <= (INT32)(chip->pos >> FRAC_BITS))
 				{
-					rem_clocks -= clocks_left;
+					chip->pos -= chip->clocks_left << FRAC_BITS;
+					chip->clocks_left = 0;
 					upd7759_slave_update(chip);
-					clocks_left = chip->clocks_left;
-					sample = chip->Muted ? 0 : chip->sample;
 				}
-				clocks_left -= rem_clocks;
+				chip->clocks_left -= (chip->pos >> FRAC_BITS);
+				chip->pos &= FRAC_MASK;
 			}
 		}
 
@@ -678,10 +673,6 @@ static void upd7759_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 		memset(&buffer[i], 0, samples * sizeof(DEV_SMPL));
 		memset(&buffer2[i], 0, samples * sizeof(DEV_SMPL));
 	}
-
-	/* flush the state back */
-	chip->clocks_left = clocks_left;
-	chip->pos = pos;
 }
 
 /************************************************************
@@ -746,7 +737,7 @@ static void upd7759_reset(void *info)
 	/* turn off any timer */
 	//if (chip->timer)
 	//	chip->timer->adjust(attotime::never);
-	if (chip->ChipMode)
+	if (chip->mode == MODE_SLAVE)
 		chip->clocks_left = -1;
 }
 
@@ -759,7 +750,7 @@ static UINT8 device_start_upd7759(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	if (chip == NULL)
 		return 0xFF;
 
-	chip->ChipMode = cfg->flags;
+	chip->mode = (cfg->flags & 1) ? MODE_SLAVE : MODE_STAND_ALONE;
 
 	/* chip configuration */
 	//chip->sample_offset_shift = (type() == UPD7759) ? 1 : 0;
@@ -778,7 +769,7 @@ static UINT8 device_start_upd7759(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	chip->romoffset = 0x00;
 	chip->romsize = 0x00;
 	chip->rom = chip->rombase = NULL;
-	if (chip->ChipMode)
+	if (chip->mode == MODE_SLAVE)
 	{
 		//assert(type() == UPD7759); // other chips do not support slave mode
 		//chip->timer = timer_alloc(TIMER_SLAVE_UPDATE);
@@ -859,7 +850,7 @@ static void upd7759_port_w(void *info, UINT8 data)
 	/* update the FIFO value */
 	upd7759_state *chip = (upd7759_state *)info;
 	
-	if (! chip->ChipMode)
+	if (chip->mode == MODE_STAND_ALONE)
 	{
 		chip->fifo_in = data;
 	}
