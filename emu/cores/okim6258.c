@@ -485,7 +485,7 @@ static void okim6258_data_w(void *chip, UINT8 data)
 	info->data_buf_pos &= 0xF7;
 	if ((info->data_buf_pos >> 4) == (info->data_buf_pos & 0x0F))
 	{
-		emu_logf(&info->logger, DEVLOG_WARN, "FIFO full!\n");
+		emu_logf(&info->logger, DEVLOG_DEBUG, "FIFO full!\n");
 		info->data_buf_pos = (info->data_buf_pos & 0xF0) | ((info->data_buf_pos-1) & 0x07);
 	}
 	info->data_empty = 0x00;

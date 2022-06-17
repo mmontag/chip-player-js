@@ -366,19 +366,19 @@ INLINE void update_adpcm(upd7759_state *chip, int data)
 
 *************************************************************/
 
-static void get_fifo_data(upd7759_state *chip)
+static UINT8 get_fifo_data(upd7759_state *chip)
 {
 	if (chip->dbuf_pos_read == chip->dbuf_pos_write)
 	{
-		emu_logf(&chip->logger, DEVLOG_WARN, "reading empty FIFO!\n");
-		return;
+		emu_logf(&chip->logger, DEVLOG_DEBUG, "reading empty FIFO!\n");
+		return 1;
 	}
 	
 	chip->fifo_in = chip->data_buf[chip->dbuf_pos_read];
 	chip->dbuf_pos_read ++;
 	chip->dbuf_pos_read &= 0x3F;
 	
-	return;
+	return 0;
 }
 
 static void advance_state(upd7759_state *chip)
@@ -392,10 +392,22 @@ static void advance_state(upd7759_state *chip)
 
 		/* drop DRQ state: update to the intended state */
 		case STATE_DROP_DRQ:
+			if (chip->ChipMode) // Slave Mode only
+			{
+				UINT8 fail = get_fifo_data(chip);
+				if (fail)
+				{
+					if (chip->drq < 2)	// up to 2 attempts at waiting for the data
+					{
+						chip->drq ++;
+						chip->clocks_left = 21;
+						return;
+					}
+				}
+			}
+
 			chip->drq = 0;
 
-			if (chip->ChipMode)
-				get_fifo_data(chip);    // Slave Mode only
 			chip->clocks_left = chip->post_drq_clocks;
 			chip->state = chip->post_drq_state;
 			break;
@@ -653,6 +665,7 @@ static void upd7759_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 					rem_clocks -= clocks_left;
 					upd7759_slave_update(chip);
 					clocks_left = chip->clocks_left;
+					sample = chip->Muted ? 0 : chip->sample;
 				}
 				clocks_left -= rem_clocks;
 			}
@@ -852,6 +865,11 @@ static void upd7759_port_w(void *info, UINT8 data)
 	}
 	else
 	{
+		if (((chip->dbuf_pos_write + 1) & 0x3F) == chip->dbuf_pos_read)
+		{
+			emu_logf(&chip->logger, DEVLOG_DEBUG, "trying to write to full FIFO!\n");
+			return;
+		}
 		// Valley Bell: added FIFO buffer for Slave mode
 		chip->data_buf[chip->dbuf_pos_write] = data;
 		chip->dbuf_pos_write ++;
