@@ -93,7 +93,6 @@ const DEV_DEF* devDefList_K051649[] =
 
 
 #define FREQ_BITS   16
-#define DEF_GAIN    16 / 5
 
 // Parameters for a channel
 typedef struct
@@ -143,19 +142,27 @@ static void k051649_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 		{
 			UINT32 step = (UINT32)(((INT64)info->mclock * (1 << FREQ_BITS)) / (float)((voice[j].frequency + 1) * info->rate / 2.0f) + 0.5f);
 
-			// add our contribution
 			for (i = 0; i < samples; i++)
 			{
 				voice[j].counter += step;
 				if (voice[j].key)
 				{
 					UINT32 offs = (voice[j].counter >> FREQ_BITS) & 0x1f;
-					DEV_SMPL smpl = voice[j].waveram[offs] * voice[j].volume * DEF_GAIN;
+					// 0x80 [wave] * 0x0F [volume] -> range +-0x780 per channel, 0x2580 total
+					DEV_SMPL smpl = voice[j].waveram[offs] * voice[j].volume;
+					// scale to 11 bit digital output on chip
+					smpl >>= 4;	// results in [-600 .. +600]
 					buffer[i] += smpl;
-					buffer2[i] += smpl;
 				}
 			}
 		}
+	}
+	for (i = 0; i < samples; i++)
+	{
+		// scale to +-0x7800 (fallback solution to keep volume intact)
+		// TODO: scale by *32 instead of 256/5=51, then adjust VGM default volume from 0xA0->0x100
+		buffer[i] = buffer[i] * 256 / 8;
+		buffer2[i] = buffer[i];
 	}
 }
 

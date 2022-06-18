@@ -83,9 +83,8 @@ struct _nesapu_state
 	uint8   nonlinear_mixing;
 	float   apu_incsize;           /* Adjustment increment */
 	uint32  samps_per_sync;        /* Number of samples per vsync */
-	uint32  buffer_size;           /* Actual buffer size in bytes */
 	uint32  real_rate;             /* Actual playback rate */
-	uint32  vbl_times[0x20];       /* VBL durations in samples */
+	uint32  vbl_times[SYNCS_MAX1]; /* VBL durations in samples */
 	uint32  sync_times1[SYNCS_MAX1]; /* Samples per sync table */
 	uint32  sync_times2[SYNCS_MAX2]; /* Samples per sync table */
 };
@@ -101,23 +100,11 @@ static UINT8 DPCMBase0 = 0x01;
 /* INITIALIZE WAVE TIMES RELATIVE TO SAMPLE RATE */
 static void create_vbltimes(uint32 * table,const uint8 *vbl,unsigned int rate)
 {
-	int i;
-
-	for (i = 0; i < 0x20; i++)
-		table[i] = vbl[i] * rate;
 }
 
 /* INITIALIZE SAMPLE TIMES IN TERMS OF VSYNCS */
 static void create_syncs(nesapu_state *info, unsigned long sps)
 {
-	int i;
-	unsigned long val = sps;
-
-	for (i = 0; i < SYNCS_MAX1; i++)
-		info->sync_times1[i] = sps * (i + 1);
-
-	for (i = 0; i < SYNCS_MAX2; i++)
-		info->sync_times2[i] = (sps * i) >> 2;
 }
 
 static void create_mixer_lut(void)
@@ -403,8 +390,6 @@ INLINE void apu_dpcmreset(dpcm_t *chan)
 	chan->bits_left = chan->length << 3;
 	chan->irq_occurred = false;
 	chan->enabled = true; /* Fixed * Proper DPCM channel ENABLE/DISABLE flag behaviour*/
-	// Note: according to NSFPlay, it does NOT do that
-	chan->vol = 0; /* Fixed * DPCM DAC resets itself when restarted */
 }
 
 /* OUTPUT DPCM WAVE SAMPLE (VALUES FROM -64 to +63) */
@@ -436,7 +421,6 @@ static void apu_dpcm(nesapu_state *info, dpcm_t *chan)
 			if (!chan->length)
 			{
 				chan->enabled = false; /* Fixed * Proper DPCM channel ENABLE/DISABLE flag behaviour*/
-				chan->vol = 0; /* Fixed * DPCM DAC resets itself when restarted */
 				if (chan->regs[0] & 0x40)
 					apu_dpcmreset(chan);
 				else
@@ -491,11 +475,11 @@ static void apu_dpcm(nesapu_state *info, dpcm_t *chan)
 }
 
 /* WRITE REGISTER VALUE */
-INLINE void apu_regwrite(nesapu_state *info, int address, uint8 value)
+INLINE void apu_regwrite(nesapu_state *info, uint8 offset, uint8 value)
 {
-	int chan = (address & 4) ? 1 : 0;
+	int chan = (offset & 4) ? 1 : 0;
 
-	switch (address)
+	switch (offset)
 	{
 	/* squares */
 	case APU_WRA0:
@@ -692,7 +676,7 @@ INLINE void apu_regwrite(nesapu_state *info, int address, uint8 value)
 		break;
 	default:
 #ifdef MAME_DEBUG
-logerror("invalid apu write: $%02X at $%04X\n", value, address);
+logerror("invalid apu write: $%02X at $%04X\n", value, offset);
 #endif
 		break;
 	}
@@ -752,11 +736,11 @@ void nes_apu_update(void* chip, UINT32 samples, DEV_SMPL **outputs)
 }
 
 /* READ VALUES FROM REGISTERS */
-uint8 nes_apu_read(void* chip, uint8 address)
+uint8 nes_apu_read(void* chip, uint8 offset)
 {
 	nesapu_state *info = (nesapu_state*)chip;
 	
-	if (address == 0x15) /*FIXED* Address $4015 has different behaviour*/
+	if (offset == 0x15) /*FIXED* Address $4015 has different behaviour*/
 	{
 		uint8 readval = 0;
 		if (info->APU.squ[0].vbl_length > 0)
@@ -771,16 +755,16 @@ uint8 nes_apu_read(void* chip, uint8 address)
 		if (info->APU.noi.vbl_length > 0)
 			readval |= 0x08;
 
-		if (info->APU.dpcm.enabled == true)
+		if (info->APU.dpcm.enabled)
 			readval |= 0x10;
 
-		if (info->APU.dpcm.irq_occurred == true)
+		if (info->APU.dpcm.irq_occurred)
 			readval |= 0x80;
 
 		return readval;
 	}
 	else
-		return info->APU.regs[address];
+		return info->APU.regs[offset];
 }
 
 /* WRITE VALUE TO TEMP REGISTRY AND QUEUE EVENT */
@@ -799,6 +783,7 @@ void nes_apu_write(void *chip,uint8 address, uint8 value)
 void* device_start_nesapu(UINT32 clock, UINT32 rate)
 {
 	nesapu_state *info;
+	int i;
 
 	info = (nesapu_state*)calloc(1, sizeof(nesapu_state));
 	if (info == NULL)
@@ -806,7 +791,6 @@ void* device_start_nesapu(UINT32 clock, UINT32 rate)
 	
 	/* Initialize global variables */
 	info->samps_per_sync = rate / SCREEN_HZ;
-	info->buffer_size = info->samps_per_sync;
 	info->real_rate = info->samps_per_sync * SCREEN_HZ;
 	info->apu_incsize = (float) (clock / (float) info->real_rate);
 	info->is_pal = (clock >= PAL_APU_CLOCK - 10 && clock <= PAL_APU_CLOCK + 10);
@@ -814,11 +798,15 @@ void* device_start_nesapu(UINT32 clock, UINT32 rate)
 
 	/* Use initializer calls */
 	create_mixer_lut();
-	create_vbltimes(info->vbl_times,vbl_length,info->samps_per_sync);
-	create_syncs(info, info->samps_per_sync);
 
-	/* Adjust buffer size if 16 bits */
-	info->buffer_size+=info->samps_per_sync;
+	for (i = 0; i < SYNCS_MAX1; i++)
+	{
+		info->vbl_times[i] = vbl_length[i] * info->samps_per_sync / 2;
+		info->sync_times1[i] = info->samps_per_sync * (i + 1);
+	}
+
+	for (i = 0; i < SYNCS_MAX2; i++)
+		info->sync_times2[i] = (info->samps_per_sync * i) >> 2;
 
 	info->APU.dpcm.memory = NULL;
 
