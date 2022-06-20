@@ -132,7 +132,8 @@ struct _c140_state
 	float pbase;
 	UINT8 banking_type;
 
-	UINT32 pRomSize;
+	UINT32 romSize;
+	UINT32 romMask;
 	UINT8 *pRom;
 	UINT8 REG[0x200];
 
@@ -173,6 +174,9 @@ static UINT32 find_sample(c140_state *info, UINT32 adrs, UINT8 bank, int voice)
 			// System 21 banking.
 			// similar to System 2's.
 			return ((adrs&0x300000)>>1)+(adrs&0x7ffff);
+
+		case C140_TYPE_LINEAR:
+			return adrs;
 	}
 
 	return 0;
@@ -267,7 +271,7 @@ static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 	INT32   dt;
 	INT32   sz;
 
-	UINT8   *pSampleData;
+	UINT32  sampleAdr;
 	INT32   frequency,delta;
 	UINT32  cnt;
 
@@ -303,7 +307,7 @@ static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 			sz=v->sample_end-v->sample_start;
 
 			/* Retrieve base pointer to the sample data */
-			pSampleData = info->pRom + find_sample(info, v->sample_start, vreg->bank, i);
+			sampleAdr = find_sample(info, v->sample_start, vreg->bank, i);
 
 			/* Switch on data type - compressed PCM is only for C140 */
 			if (vreg->mode&C140_MODE_MULAW)
@@ -334,7 +338,7 @@ static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 						}
 
 						v->prevdt=v->lastdt;
-						v->lastdt=info->mulaw_table[pSampleData[v->pos]];
+						v->lastdt=info->mulaw_table[info->pRom[(sampleAdr + v->pos) & info->romMask]];
 						v->dltdt=(v->lastdt - v->prevdt);
 					}
 
@@ -373,7 +377,7 @@ static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 					if( cnt )
 					{
 						v->prevdt=v->lastdt;
-						v->lastdt=(INT8)pSampleData[v->pos]<<8;
+						v->lastdt=(INT8)info->pRom[(sampleAdr + v->pos) & info->romMask]<<8;
 						v->dltdt = (v->lastdt - v->prevdt);
 					}
 
@@ -405,7 +409,7 @@ static UINT8 device_start_c140(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 
 	info->banking_type = cfg->flags;
 
-	info->pRomSize = 0x00;
+	info->romSize = 0x00;
 	info->pRom = NULL;
 
 	for(i = 0; i < 256; i++)
@@ -454,11 +458,12 @@ static void c140_alloc_rom(void* chip, UINT32 memsize)
 {
 	c140_state *info = (c140_state *)chip;
 	
-	if (info->pRomSize == memsize)
+	if (info->romSize == memsize)
 		return;
 	
 	info->pRom = (UINT8*)realloc(info->pRom, memsize);
-	info->pRomSize = memsize;
+	info->romSize = memsize;
+	info->romMask = pow2_mask(memsize);
 	memset(info->pRom, 0xFF, memsize);
 	
 	return;
@@ -468,10 +473,10 @@ static void c140_write_rom(void *chip, UINT32 offset, UINT32 length, const UINT8
 {
 	c140_state *info = (c140_state *)chip;
 	
-	if (offset > info->pRomSize)
+	if (offset > info->romSize)
 		return;
-	if (offset + length > info->pRomSize)
-		length = info->pRomSize - offset;
+	if (offset + length > info->romSize)
+		length = info->romSize - offset;
 	
 	memcpy(info->pRom + offset, data, length);
 	
