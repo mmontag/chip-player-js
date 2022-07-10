@@ -258,7 +258,9 @@ class App extends React.Component {
     if ('mediaSession' in navigator) {
       console.log('Attaching Media Key event handlers.');
 
-      // Limitations of MediaSession: there must always be an active audio element :(
+      // Limitations of MediaSession: there must always be an active audio element.
+      // See https://bugs.chromium.org/p/chromium/issues/detail?id=944538
+      //     https://github.com/GoogleChrome/samples/issues/637
       this.mediaSessionAudio = document.createElement('audio');
       this.mediaSessionAudio.src = process.env.PUBLIC_URL + '/5-seconds-of-silence.mp3';
       this.mediaSessionAudio.loop = true;
