@@ -5,6 +5,9 @@
 #include <stddef.h>
 
 #include <pthread.h>
+#ifdef __HAIKU__
+#include <kernel/OS.h>
+#endif
 
 #include "../stdtype.h"
 #include "OSThread.h"
@@ -89,6 +92,8 @@ UINT64 OSThread_GetID(const OS_THREAD* thr)
 	UINT64 idNum;
 	pthread_threadid_np (thr->id, &idNum);
 	return idNum;
+#elif defined (__HAIKU__)
+	return get_pthread_thread_id (thr->id);
 #else
 	return thr->id;
 #endif
