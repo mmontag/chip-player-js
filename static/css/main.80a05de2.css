@@ -24,13 +24,13 @@
 @font-face {
     font-family: VGA_SquarePx;
     /*src: url(fonts/pxplus_vga_squarepx.ttf) format('truetype');*/
-    src: url(/chip-player-js/static/media/pxplus-chipplayer.d006d85e.ttf) format('truetype');
+    src: url(/chip-player-js/static/media/pxplus_chipplayer.e2bfd43f.ttf) format('truetype');
     font-weight: 400;
     font-style: normal
 }
 
 * {
-    font-size: 19px !important;
+    font-size: 24px !important;
     font-family: VGA_SquarePx, monospace !important;
     -webkit-font-smoothing: antialiased; /* supports Japanese characters better than 'none' */
     -webkit-tap-highlight-color: rgba(0,0,0,0);
@@ -594,4 +594,4 @@ img { -ms-interpolation-mode: nearest-neighbor; image-rendering: -webkit-optimiz
 .message-box-button        { background: var(--background); padding: 0 var(--charW2); -webkit-box-shadow: none; box-shadow: none; }
 
 
-/*# sourceMappingURL=main.20630ba6.css.map*/
+/*# sourceMappingURL=main.80a05de2.css.map*/
