@@ -1,9 +1,9 @@
 import React, {Component} from 'react';
 import Slider from "./Slider";
 
-//  46 ms = 2048/44100 sec or 21.5 fps
+//  46 ms = 2048/44100 sec or 21.7 fps
 // 400 ms = 2.5 fps
-const UPDATE_INTERVAL_MS = 46;
+const UPDATE_INTERVAL_MS = 100;
 
 export default class TimeSlider extends Component {
   constructor(props) {
