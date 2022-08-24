@@ -23,13 +23,14 @@
 
 @font-face {
     font-family: VGA_SquarePx;
-    src: url(fonts/pxplus_vga_squarepx.ttf) format('truetype');
+    /*src: url(fonts/pxplus_vga_squarepx.ttf) format('truetype');*/
+    src: url(fonts/pxplus-chipplayer.ttf) format('truetype');
     font-weight: 400;
     font-style: normal
 }
 
 * {
-    font-size: 24px !important;
+    font-size: 19px !important;
     font-family: VGA_SquarePx, monospace !important;
     -webkit-font-smoothing: antialiased; /* supports Japanese characters better than 'none' */
     -webkit-tap-highlight-color: rgba(0,0,0,0);
