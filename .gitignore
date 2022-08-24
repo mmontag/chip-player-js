@@ -21,3 +21,4 @@ public/music
 src/config/firebaseConfig.js
 libxmp/a.out.js
 libxmp/lite/Makefile.in
+*.backup/
