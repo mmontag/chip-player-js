@@ -58,21 +58,24 @@ export default class AppFooter extends React.PureComponent {
         <div className="AppFooter-main">
           <div className="AppFooter-main-inner">
             <button onClick={prevSong}
+                    title="Previous"
                     className="box-button"
                     disabled={ejected}>
-              &lt;
+              ⏮
             </button>
             {' '}
             <button onClick={togglePause}
+                    title={paused ? 'Resume' : 'Pause'}
                     className="box-button"
                     disabled={ejected}>
-              {paused ? 'Resume' : 'Pause'}
+              {paused ? ' ► ' : ' ⏸ '}
             </button>
             {' '}
             <button onClick={nextSong}
+                    title="Next"
                     className="box-button"
                     disabled={ejected}>
-              &gt;
+              ⏭
             </button>
             {' '}
             {currentSongNumSubtunes > 1 &&
