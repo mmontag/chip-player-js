@@ -217,6 +217,7 @@ The best modern option for playing MIDI is probably using a well-designed GM Sou
 Diverse and usable GM SoundFonts.
 
 - GeneralUser SF2 sound bank: http://schristiancollins.com/generaluser.php
+- Many excellent piano SoundFonts: https://sites.google.com/site/soundfonts4u
 - The Ultimate Megadrive SoundFont: https://musical-artifacts.com/artifacts/24
 - NTONYX SoundFont: http://ntonyx.com/sf_f.htm
 

@@ -77,6 +77,7 @@ const SOUNDFONTS = [
     label: 'Piano Soundfonts',
     items: [
       {label: 'Yamaha Grand Lite v1.1 (21.8 MB)', value: 'Yamaha-Grand-Lite-v1.1.sf2'},
+      {label: 'Abbey Steinway D v1.9 (40.2 MB)', value: 'Abbey-Steinway-D-v1.9.sf2'},
       {label: 'Chateau Grand Lite v1.0 (49.1 MB)', value: 'Chateau Grand Lite-v1.0.sf2'},
       {label: 'Steinway Grand v1.0 (145 MB)', value: 'Steinway Grand-SF4U-v1.sf2'},
     ],
