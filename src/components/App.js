@@ -15,7 +15,7 @@ import firebaseConfig from '../config/firebaseConfig';
 import { API_BASE, CATALOG_PREFIX, ERROR_FLASH_DURATION_MS, MAX_VOICES, REPLACE_STATE_ON_SEEK } from '../config';
 import { replaceRomanWithArabic, titlesFromMetadata, unlockAudioContext } from '../util';
 import requestCache from '../RequestCache';
-import Sequencer, { NUM_REPEAT_MODES, REPEAT_OFF } from '../Sequencer';
+import Sequencer, { NUM_REPEAT_MODES, NUM_SHUFFLE_MODES, REPEAT_OFF, SHUFFLE_OFF } from '../Sequencer';
 
 import GMEPlayer from '../players/GMEPlayer';
 import MIDIPlayer from '../players/MIDIPlayer';
@@ -32,8 +32,6 @@ import Favorites from './Favorites';
 import Search from './Search';
 import Visualizer from './Visualizer';
 import Alert from './Alert';
-
-const NUMERIC_COLLATOR = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
 
 class App extends React.Component {
   constructor(props) {
@@ -594,40 +592,12 @@ class App extends React.Component {
   fetchDirectory(path) {
     return fetch(`${API_BASE}/browse?path=%2F${encodeURIComponent(path)}`)
       .then(response => response.json())
-      .then(json => {
-        const arabicMap = {};
-        const needsRomanNumeralSort = json.some(item => {
-          // Only convert Roman numerals if the list sort could benefit from it.
-          // Roman numerals less than 9 would be sorted incidentally.
-          // This assumes that
-          // - Roman numerals are formatted with a period.
-          // - Roman numeral ranges don't have gaps.
-          return item.path.toLowerCase().indexOf('ix') > -1;
-        });
-        if (needsRomanNumeralSort) {
-          console.log("Roman numeral sort is active for this directory");
-          // Movement IV. Wow => Movement 0004. Wow
-          json.forEach(item => arabicMap[item.path] = replaceRomanWithArabic(item.path));
-        }
-        const items = json
-          .sort((a, b) => {
-            const [strA, strB] = needsRomanNumeralSort ?
-              [arabicMap[a.path], arabicMap[b.path]] :
-              [a.path, b.path];
-            return NUMERIC_COLLATOR.compare(strA, strB);
-          })
-          .sort((a, b) => {
-            if (a.type < b.type) return -1;
-            if (a.type > b.type) return 1;
-            return 0;
-          })
-          .map((item, i) => {
-            item.idx = i;
-            return item;
-          });
-        this.playContexts[path] = items.map(item =>
-          item.path.replace('%', '%25').replace('#', '%23').replace(/^\//, '')
-        );
+      .then(items => {
+        this.playContexts[path] = items
+          .filter(item => item.type === 'file')
+          .map(item =>
+            item.path.replace('%', '%25').replace('#', '%23').replace(/^\//, '')
+          );
         const directories = {
           ...this.state.directories,
           [path]: items,

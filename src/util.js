@@ -1,11 +1,9 @@
 import queryString from 'querystring';
 import React from 'react';
-import { toArabic } from 'roman-numerals';
 import path from 'path';
 
 import DirectoryLink from './components/DirectoryLink';
 
-const ROMAN_NUMERAL_REGEX = /\b([IVXLC]+|[ivxlc]+)[-.,)]/; // All upper case or all lower case
 const CATALOG_PREFIX_REGEX = /^https?:\/\/[a-z0-9\-.:]+\/(music|catalog)\//;
 
 export function updateQueryString(newParams) {
@@ -20,16 +18,6 @@ export function updateQueryString(newParams) {
   const stateUrl = '?' + queryString.stringify(params).replace(/%20/g, '+');
   // Update address bar URL
   window.history.replaceState(null, '', stateUrl);
-}
-
-export function replaceRomanWithArabic(str) {
-  // Works up to 399 (CCCXCIX)
-  try {
-    return str.replace(ROMAN_NUMERAL_REGEX, (_, match) => String(toArabic(match)).padStart(4, '0'));
-  } catch (e) {
-    // Ignore false positives like 'mill.', 'did-', or 'mix,'
-    return str;
-  }
 }
 
 export function unlockAudioContext(context) {
