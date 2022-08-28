@@ -7,7 +7,7 @@ import { VolumeSlider } from './VolumeSlider';
 import FavoriteButton from './FavoriteButton';
 import PlayerParams from './PlayerParams';
 import { pathToLinks } from '../util';
-import { REPEAT_LABELS } from '../Sequencer';
+import { REPEAT_LABELS, SHUFFLE_LABELS } from '../Sequencer';
 
 export default class AppFooter extends React.PureComponent {
   render() {
@@ -23,6 +23,7 @@ export default class AppFooter extends React.PureComponent {
       infoTexts,
       paused,
       repeat,
+      shuffle,
       showPlayerSettings,
       songUrl,
       subtitle,
@@ -35,7 +36,7 @@ export default class AppFooter extends React.PureComponent {
       // this.
       getCurrentSongLink,
       handleCycleRepeat,
-      handlePlayRandom,
+      handleCycleShuffle,
       handleSetVoiceMask,
       handleTempoChange,
       handleTimeSliderChange,
@@ -99,9 +100,9 @@ export default class AppFooter extends React.PureComponent {
                 {REPEAT_LABELS[repeat]}
               </button>
               {' '}
-              <button title="Jump to a random song in the entire collection" className="box-button" onClick={handlePlayRandom}>
+              <button title="Toggle shuffle mode" className="box-button" onClick={handleCycleShuffle}>
                 <img alt="Roll the dice" src={diceImage} style={{ verticalAlign: 'bottom' }}/>
-                Random
+                {SHUFFLE_LABELS[shuffle]}
               </button>
               {' '}
               {!showPlayerSettings &&

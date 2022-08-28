@@ -13,7 +13,7 @@ import Dropzone from 'react-dropzone';
 import ChipCore from '../chip-core';
 import firebaseConfig from '../config/firebaseConfig';
 import { API_BASE, CATALOG_PREFIX, ERROR_FLASH_DURATION_MS, MAX_VOICES, REPLACE_STATE_ON_SEEK } from '../config';
-import { replaceRomanWithArabic, titlesFromMetadata, unlockAudioContext } from '../util';
+import { titlesFromMetadata, unlockAudioContext } from '../util';
 import requestCache from '../RequestCache';
 import Sequencer, { NUM_REPEAT_MODES, NUM_SHUFFLE_MODES, REPEAT_OFF, SHUFFLE_OFF } from '../Sequencer';
 
@@ -46,13 +46,13 @@ class App extends React.Component {
     this.prevSubtune = this.prevSubtune.bind(this);
     this.nextSubtune = this.nextSubtune.bind(this);
     this.handleCycleRepeat = this.handleCycleRepeat.bind(this);
+    this.handleCycleShuffle = this.handleCycleShuffle.bind(this);
     this.handleVolumeChange = this.handleVolumeChange.bind(this);
     this.handleTimeSliderChange = this.handleTimeSliderChange.bind(this);
     this.handleTempoChange = this.handleTempoChange.bind(this);
     this.handleSetVoiceMask = this.handleSetVoiceMask.bind(this);
     this.handleSequencerStateUpdate = this.handleSequencerStateUpdate.bind(this);
     this.handlePlayerError = this.handlePlayerError.bind(this);
-    this.handlePlayRandom = this.handlePlayRandom.bind(this);
     this.handleShufflePlay = this.handleShufflePlay.bind(this);
     this.handleSongClick = this.handleSongClick.bind(this);
     this.handleLogin = this.handleLogin.bind(this);
@@ -141,6 +141,7 @@ class App extends React.Component {
       songUrl: null,
       volume: 100,
       repeat: REPEAT_OFF,
+      shuffle: SHUFFLE_OFF,
       directories: {},
     };
 
@@ -543,22 +544,26 @@ class App extends React.Component {
     });
   }
 
-  handlePlayRandom() {
-    fetch(`${API_BASE}/random?limit=100`)
-      .then(response => response.json())
-      .then(json => this.sequencer.playContext(json.items.map(item => item.file), 10));
-  }
-
   handleShufflePlay(path) {
     //TODO: allow shuffle to be toggled, like repeat mode (instead of one-shot).
     //      emulate Winamp behavior closely, if possible.
     if (path === 'favorites') {
       this.sequencer.playContext(shuffle(this.state.faves));
     } else {
+      // This is more like a synthetic recursive shuffle.
       fetch(`${API_BASE}/shuffle?path=${encodeURI(path)}&limit=100`)
         .then(response => response.json())
-        .then(json => this.sequencer.playContext(json.items));
+        .then(json => json.items.map(item =>
+          item.replace('%', '%25').replace('#', '%23').replace(/^\//, '')
+        ))
+        .then(items => this.sequencer.playContext(items));
     }
+  }
+
+  handleCycleShuffle() {
+    const shuffle = (this.state.shuffle + 1) % NUM_SHUFFLE_MODES;
+    this.setState({ shuffle });
+    this.sequencer.setShuffle(shuffle);
   }
 
   handleSongClick(url, context, index) {
@@ -622,137 +627,138 @@ class App extends React.Component {
   };
 
   render() {
-    const {title, subtitle} = titlesFromMetadata(this.state.currentSongMetadata);
+    const { title, subtitle } = titlesFromMetadata(this.state.currentSongMetadata);
     const currContext = this.sequencer?.getCurrContext();
     const currIdx = this.sequencer?.getCurrIdx();
     const search = { search: window.location.search };
     return (
-        <Dropzone
-          disableClick
-          style={{}}
-          onDrop={this.onDrop}>{dropzoneProps => (
-          <div className="App">
-            <DropMessage dropzoneProps={dropzoneProps}/>
-            <div hidden={!this.state.showInfo} className="message-box-outer">
-              <div hidden={!this.state.showInfo} className="message-box">
-                <div className="message-box-inner">
+      <Dropzone
+        disableClick
+        style={{}}
+        onDrop={this.onDrop}>{dropzoneProps => (
+        <div className="App">
+          <DropMessage dropzoneProps={dropzoneProps}/>
+          <div hidden={!this.state.showInfo} className="message-box-outer">
+            <div hidden={!this.state.showInfo} className="message-box">
+              <div className="message-box-inner">
               <pre style={{ maxHeight: '100%', margin: 0 }}>
                 {this.state.infoTexts[0]}
               </pre>
-                </div>
-                <div className="message-box-footer">
-                  <button className="box-button message-box-button" onClick={this.toggleInfo}>Close</button>
-                </div>
+              </div>
+              <div className="message-box-footer">
+                <button className="box-button message-box-button" onClick={this.toggleInfo}>Close</button>
               </div>
             </div>
-            <Alert handlePlayerError={this.handlePlayerError}
-                   playerError={this.state.playerError}
-                   showPlayerError={this.state.showPlayerError}/>
-            <AppHeader user={this.state.user}
-                       handleLogout={this.handleLogout}
-                       handleLogin={this.handleLogin}
-                       isPhone={isMobile.phone}/>
-            <div className="App-main">
-              <div className="App-main-inner">
-                <div className="tab-container">
-                  <NavLink className="tab" activeClassName="tab-selected" to={{ pathname: "/", ...search }}
-                           exact>Search</NavLink>
-                  <NavLink className="tab" activeClassName="tab-selected"
-                           to={{ pathname: "/browse", ...search }}>Browse</NavLink>
-                  <NavLink className="tab" activeClassName="tab-selected"
-                           to={{ pathname: "/favorites", ...search }}>Favorites</NavLink>
-                </div>
-                <div className="App-main-content-area" ref={this.contentAreaRef}>
-                  <Switch>
-                    <Route path="/" exact render={() => (
-                      <Search
-                        currContext={currContext}
-                        currIdx={currIdx}
-                        toggleFavorite={this.handleToggleFavorite}
-                        favorites={this.state.faves}
-                        onSongClick={this.handleSongClick}>
-                        {this.state.loading && <p>Loading player engine...</p>}
-                      </Search>
-                    )}/>
-                    <Route path="/favorites" render={() => (
-                      <Favorites
-                        user={this.state.user}
-                        loadingUser={this.state.loadingUser}
-                        handleLogin={this.handleLogin}
-                        handleShufflePlay={this.handleShufflePlay}
-                        onSongClick={this.handleSongClick}
-                        currContext={currContext}
-                        currIdx={currIdx}
-                        toggleFavorite={this.handleToggleFavorite}
-                        favorites={this.state.faves}/>
-                    )}/>
-                    <Route path="/browse/:browsePath*" render={({ history, match, location }) => {
-                      // Undo the react-router-dom double-encoded % workaround - see DirectoryLink.js
-                      const browsePath = match.params?.browsePath?.replace('%25', '%') || '';
-                      return (
-                        this.contentAreaRef.current &&
-                        <Browse currContext={currContext}
-                                currIdx={currIdx}
-                                historyAction={history.action}
-                                locationKey={location.key}
-                                browsePath={browsePath}
-                                listing={this.state.directories[browsePath]}
-                                playContext={this.playContexts[browsePath]}
-                                fetchDirectory={this.fetchDirectory}
-                                handleSongClick={this.handleSongClick}
-                                handleShufflePlay={this.handleShufflePlay}
-                                scrollContainerRef={this.contentAreaRef}
-                                favorites={this.state.faves}
-                                toggleFavorite={this.handleToggleFavorite}/>
-                      );
-                    }}/>
-                  </Switch>
-                </div>
+          </div>
+          <Alert handlePlayerError={this.handlePlayerError}
+                 playerError={this.state.playerError}
+                 showPlayerError={this.state.showPlayerError}/>
+          <AppHeader user={this.state.user}
+                     handleLogout={this.handleLogout}
+                     handleLogin={this.handleLogin}
+                     isPhone={isMobile.phone}/>
+          <div className="App-main">
+            <div className="App-main-inner">
+              <div className="tab-container">
+                <NavLink className="tab" activeClassName="tab-selected" to={{ pathname: "/", ...search }}
+                         exact>Search</NavLink>
+                <NavLink className="tab" activeClassName="tab-selected"
+                         to={{ pathname: "/browse", ...search }}>Browse</NavLink>
+                <NavLink className="tab" activeClassName="tab-selected"
+                         to={{ pathname: "/favorites", ...search }}>Favorites</NavLink>
               </div>
-              {!isMobile.phone && !this.state.loading &&
+              <div className="App-main-content-area" ref={this.contentAreaRef}>
+                <Switch>
+                  <Route path="/" exact render={() => (
+                    <Search
+                      currContext={currContext}
+                      currIdx={currIdx}
+                      toggleFavorite={this.handleToggleFavorite}
+                      favorites={this.state.faves}
+                      onSongClick={this.handleSongClick}>
+                      {this.state.loading && <p>Loading player engine...</p>}
+                    </Search>
+                  )}/>
+                  <Route path="/favorites" render={() => (
+                    <Favorites
+                      user={this.state.user}
+                      loadingUser={this.state.loadingUser}
+                      handleLogin={this.handleLogin}
+                      handleShufflePlay={this.handleShufflePlay}
+                      onSongClick={this.handleSongClick}
+                      currContext={currContext}
+                      currIdx={currIdx}
+                      toggleFavorite={this.handleToggleFavorite}
+                      favorites={this.state.faves}/>
+                  )}/>
+                  <Route path="/browse/:browsePath*" render={({ history, match, location }) => {
+                    // Undo the react-router-dom double-encoded % workaround - see DirectoryLink.js
+                    const browsePath = match.params?.browsePath?.replace('%25', '%') || '';
+                    return (
+                      this.contentAreaRef.current &&
+                      <Browse currContext={currContext}
+                              currIdx={currIdx}
+                              historyAction={history.action}
+                              locationKey={location.key}
+                              browsePath={browsePath}
+                              listing={this.state.directories[browsePath]}
+                              playContext={this.playContexts[browsePath]}
+                              fetchDirectory={this.fetchDirectory}
+                              handleSongClick={this.handleSongClick}
+                              handleShufflePlay={this.handleShufflePlay}
+                              scrollContainerRef={this.contentAreaRef}
+                              favorites={this.state.faves}
+                              toggleFavorite={this.handleToggleFavorite}/>
+                    );
+                  }}/>
+                </Switch>
+              </div>
+            </div>
+            {!isMobile.phone && !this.state.loading &&
               <Visualizer audioCtx={this.audioCtx}
                           sourceNode={this.playerNode}
                           chipCore={this.chipCore}
                           paused={this.state.ejected || this.state.paused}/>}
-            </div>
-            <AppFooter
-              currentSongDurationMs={this.state.currentSongDurationMs}
-              currentSongNumSubtunes={this.state.currentSongNumSubtunes}
-              currentSongNumVoices={this.state.currentSongNumVoices}
-              currentSongSubtune={this.state.currentSongSubtune}
-              ejected={this.state.ejected}
-              faves={this.state.faves}
-              getCurrentSongLink={this.getCurrentSongLink}
-              handleCycleRepeat={this.handleCycleRepeat}
-              handlePlayRandom={this.handlePlayRandom}
-              handleSetVoiceMask={this.handleSetVoiceMask}
-              handleTempoChange={this.handleTempoChange}
-              handleTimeSliderChange={this.handleTimeSliderChange}
-              handleToggleFavorite={this.handleToggleFavorite}
-              handleVolumeChange={this.handleVolumeChange}
-              imageUrl={this.state.imageUrl}
-              infoTexts={this.state.infoTexts}
-              nextSong={this.nextSong}
-              nextSubtune={this.nextSubtune}
-              paused={this.state.paused}
-              prevSong={this.prevSong}
-              prevSubtune={this.prevSubtune}
-              repeat={this.state.repeat}
-              sequencer={this.sequencer}
-              showPlayerSettings={this.state.showPlayerSettings}
-              songUrl={this.state.songUrl}
-              subtitle={subtitle}
-              tempo={this.state.tempo}
-              title={title}
-              toggleInfo={this.toggleInfo}
-              togglePause={this.togglePause}
-              toggleSettings={this.toggleSettings}
-              voiceNames={this.state.voiceNames}
-              voiceMask={this.state.voiceMask}
-              volume={this.state.volume}
-            />
           </div>
-        )}</Dropzone>
+          <AppFooter
+            currentSongDurationMs={this.state.currentSongDurationMs}
+            currentSongNumSubtunes={this.state.currentSongNumSubtunes}
+            currentSongNumVoices={this.state.currentSongNumVoices}
+            currentSongSubtune={this.state.currentSongSubtune}
+            ejected={this.state.ejected}
+            faves={this.state.faves}
+            getCurrentSongLink={this.getCurrentSongLink}
+            handleCycleRepeat={this.handleCycleRepeat}
+            handleCycleShuffle={this.handleCycleShuffle}
+            handleSetVoiceMask={this.handleSetVoiceMask}
+            handleTempoChange={this.handleTempoChange}
+            handleTimeSliderChange={this.handleTimeSliderChange}
+            handleToggleFavorite={this.handleToggleFavorite}
+            handleVolumeChange={this.handleVolumeChange}
+            imageUrl={this.state.imageUrl}
+            infoTexts={this.state.infoTexts}
+            nextSong={this.nextSong}
+            nextSubtune={this.nextSubtune}
+            paused={this.state.paused}
+            prevSong={this.prevSong}
+            prevSubtune={this.prevSubtune}
+            repeat={this.state.repeat}
+            shuffle={this.state.shuffle}
+            sequencer={this.sequencer}
+            showPlayerSettings={this.state.showPlayerSettings}
+            songUrl={this.state.songUrl}
+            subtitle={subtitle}
+            tempo={this.state.tempo}
+            title={title}
+            toggleInfo={this.toggleInfo}
+            togglePause={this.togglePause}
+            toggleSettings={this.toggleSettings}
+            voiceNames={this.state.voiceNames}
+            voiceMask={this.state.voiceMask}
+            volume={this.state.volume}
+          />
+        </div>
+      )}</Dropzone>
     );
   }
 }

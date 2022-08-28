@@ -1,5 +1,6 @@
 import promisify from "./promisify-xhr";
 import {CATALOG_PREFIX} from "./config";
+import shuffle from 'lodash/shuffle';
 
 export const REPEAT_OFF = 0;
 export const REPEAT_ALL = 1;
@@ -7,8 +8,14 @@ export const REPEAT_ONE = 2;
 export const NUM_REPEAT_MODES = 3;
 export const REPEAT_LABELS = ['Off', 'All', 'One'];
 
+export const SHUFFLE_OFF = 0;
+export const SHUFFLE_ON = 1;
+export const NUM_SHUFFLE_MODES = 2;
+export const SHUFFLE_LABELS = ['Off', 'On'];
+
 export default class Sequencer {
   constructor(players, onSequencerStateUpdate, onError) {
+    this.playCurrentSong = this.playCurrentSong.bind(this);
     this.playSong = this.playSong.bind(this);
     this.playSongBuffer = this.playSongBuffer.bind(this);
     this.playSongFile = this.playSongFile.bind(this);
@@ -35,7 +42,8 @@ export default class Sequencer {
     this.currIdx = 0;
     this.context = null;
     this.currUrl = null;
-    this.shuffle = false;
+    this.shuffle = SHUFFLE_OFF;
+    this.shuffleOrder = [];
     this.songRequest = null;
     this.repeat = REPEAT_OFF;
 
@@ -70,7 +78,19 @@ export default class Sequencer {
   playContext(context, index = 0) {
     this.currIdx = index;
     this.context = context;
-    this.playSong(context[index]);
+    if (this.shuffle === SHUFFLE_ON) {
+      this.setShuffle(this.shuffle);
+    }
+    this.playCurrentSong();
+  }
+
+  playCurrentSong() {
+    let idx = this.currIdx;
+    if (this.shuffle === SHUFFLE_ON) {
+      idx = this.shuffleOrder[idx];
+      console.log('Shuffle (%s): %s', this.currIdx, idx);
+    }
+    this.playSong(this.context[idx]);
   }
 
   playSonglist(urls) {
@@ -81,8 +101,19 @@ export default class Sequencer {
     this.setShuffle(!this.shuffle);
   }
 
-  setShuffle(shuffle) {
-    this.shuffle = !!shuffle;
+  setShuffle(shuff) {
+    this.shuffle = shuff;
+    if (this.shuffle === SHUFFLE_ON && this.context) {
+      // Generate a new shuffle order.
+      // Insert current play index at the beginning.
+      this.shuffleOrder = [this.currIdx, ...shuffle(this.context.map((_, i) => i).filter(i => i !== this.currIdx))];
+      this.currIdx = 0;
+    } else if (this.shuffleOrder) {
+      // Restore linear play sequence at current shuffle position.
+      if (this.shuffleOrder[this.currIdx] !== null) {
+        this.currIdx = this.shuffleOrder[this.currIdx];
+      }
+    }
   }
 
   setRepeat(repeat) {
@@ -99,7 +130,7 @@ export default class Sequencer {
     if (this.currIdx < 0 || this.currIdx >= this.context.length) {
       if (this.repeat === REPEAT_ALL) {
         this.currIdx = (this.currIdx + this.context.length) % this.context.length;
-        this.playSong(this.context[this.currIdx]);
+        this.playCurrentSong();
       } else {
         console.debug('Sequencer.advanceSong(direction=%s) %s passed end of context length %s',
           direction, this.currIdx, this.context.length);
@@ -109,7 +140,7 @@ export default class Sequencer {
         this.onSequencerStateUpdate(true);
       }
     } else {
-      this.playSong(this.context[this.currIdx]);
+      this.playCurrentSong();
     }
   }
 
@@ -146,7 +177,7 @@ export default class Sequencer {
   }
 
   getCurrIdx() {
-    return this.currIdx;
+    return this.shuffle ? this.shuffleOrder[this.currIdx] : this.currIdx;
   }
 
   getCurrUrl() {
