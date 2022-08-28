@@ -57,7 +57,7 @@ export default function BrowseList({ virtual, ...props }) {
                                     href={href}
                                     toggleFavorite={toggleFavorite}/>}
                   <a onClick={(e) => handleSongClick(href, playContext, item.idx)(e)}
-                     href='#'>
+                     href={href}>
                     {name}
                   </a>
                 </div>
