@@ -565,10 +565,12 @@ img { -ms-interpolation-mode: nearest-neighbor; image-rendering: -webkit-optimiz
 .message-box-footer {
     display: -ms-flexbox;
     display: flex;
-    -ms-flex-direction: row;
-        flex-direction: row;
-    -ms-flex-pack: end;
-        justify-content: flex-end;
+    -ms-flex-direction: row-reverse;
+        flex-direction: row-reverse;
+    -ms-flex-line-pack: end;
+        align-content: end;
+    -ms-flex-pack: justify;
+        justify-content: space-between;
     padding-top: var(--charH);
 }
 
@@ -594,4 +596,4 @@ img { -ms-interpolation-mode: nearest-neighbor; image-rendering: -webkit-optimiz
 .message-box-button        { background: var(--background); padding: 0 var(--charW2); -webkit-box-shadow: none; box-shadow: none; }
 
 
-/*# sourceMappingURL=main.7d804916.css.map*/
+/*# sourceMappingURL=main.b4d4f6d2.css.map*/
