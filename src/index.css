@@ -520,8 +520,9 @@ img { image-rendering: pixelated; }
 
 .message-box-footer {
     display: flex;
-    flex-direction: row;
-    justify-content: flex-end;
+    flex-direction: row-reverse;
+    align-content: end;
+    justify-content: space-between;
     padding-top: var(--charH);
 }
 

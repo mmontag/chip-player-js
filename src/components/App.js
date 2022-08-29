@@ -32,6 +32,7 @@ import Favorites from './Favorites';
 import Search from './Search';
 import Visualizer from './Visualizer';
 import Alert from './Alert';
+import { MessageBox } from './MessageBox';
 
 class App extends React.Component {
   constructor(props) {
@@ -382,7 +383,8 @@ class App extends React.Component {
         // updateQueryString({ play: filepath, t: undefined });
         requestCache.fetchCached(metadataUrl).then(response => {
           const { imageUrl, infoTexts } = response;
-          this.setState({ imageUrl: imageUrl, infoTexts: infoTexts });
+          const newInfoTexts = [ ...infoTexts, ...this.state.infoTexts ];
+          this.setState({ imageUrl, infoTexts: newInfoTexts });
 
           if ('mediaSession' in navigator) {
             // Clear artwork if imageUrl is null.
@@ -391,16 +393,9 @@ class App extends React.Component {
               sizes: '512x512',
             }];
           }
-
-          if (infoTexts.length === 0) {
-            this.setState({ showInfo: false });
-          }
         }).catch(e => {
-          this.setState({ imageUrl: null, infoTexts: [], showInfo: false });
+          this.setState({ imageUrl: null });
         });
-      } else {
-        // Drag & dropped files reach this branch
-        this.setState({ imageUrl: null, infoTexts: [], showInfo: false });
       }
 
       const metadata = player.getMetadata();
@@ -432,6 +427,8 @@ class App extends React.Component {
         tempo: player.getTempo(),
         voiceNames: [...Array(player.getNumVoices())].map((_, i) => player.getVoiceName(i)),
         voiceMask: player.getVoiceMask(),
+        infoTexts: metadata.infoTexts || [],
+        showInfo: false,
         songUrl: url,
       });
     }
@@ -638,18 +635,9 @@ class App extends React.Component {
         onDrop={this.onDrop}>{dropzoneProps => (
         <div className="App">
           <DropMessage dropzoneProps={dropzoneProps}/>
-          <div hidden={!this.state.showInfo} className="message-box-outer">
-            <div hidden={!this.state.showInfo} className="message-box">
-              <div className="message-box-inner">
-              <pre style={{ maxHeight: '100%', margin: 0 }}>
-                {this.state.infoTexts[0]}
-              </pre>
-              </div>
-              <div className="message-box-footer">
-                <button className="box-button message-box-button" onClick={this.toggleInfo}>Close</button>
-              </div>
-            </div>
-          </div>
+          <MessageBox showInfo={this.state.showInfo}
+                      infoTexts={this.state.infoTexts}
+                      toggleInfo={this.toggleInfo}/>
           <Alert handlePlayerError={this.handlePlayerError}
                  playerError={this.state.playerError}
                  showPlayerError={this.state.showPlayerError}/>

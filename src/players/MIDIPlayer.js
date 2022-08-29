@@ -228,6 +228,7 @@ export default class MIDIPlayer extends Player {
   }
 
   metadataFromFilepath(filepath) {
+    filepath = decodeURIComponent(filepath); // unescape, %25 -> %
     const parts = filepath.split('/');
     const len = parts.length;
     const meta = {};
@@ -404,7 +405,10 @@ export default class MIDIPlayer extends Player {
   }
 
   getMetadata() {
-    return this.filepathMeta;
+    return {
+      ...this.filepathMeta,
+      infoTexts: [this.midiFilePlayer.textInfo.join('\n')].filter(text => text !== ''),
+    };
   }
 
   getParameter(id) {
