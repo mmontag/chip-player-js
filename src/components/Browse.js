@@ -93,6 +93,7 @@ export default class Browse extends PureComponent {
       if (sessionStorage.getItem(locationKey)) {
         const scrollToPosY = sessionStorage.getItem(locationKey);
         this.props.scrollContainerRef.current.scrollTo(0, scrollToPosY);
+        sessionStorage.removeItem(locationKey); // Stop scroll restoration until next navigation
         console.debug("%s (%s) scroll position restored to %s", browsePath, locationKey, scrollToPosY);
       }
     }
