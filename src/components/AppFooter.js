@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import diceImage from '../images/dice.png';
 import linkImage from '../images/link.png';
 import repeatImage from '../images/repeat.png';
@@ -9,77 +9,80 @@ import PlayerParams from './PlayerParams';
 import { pathToLinks } from '../util';
 import { REPEAT_LABELS, SHUFFLE_LABELS } from '../Sequencer';
 
-export default class AppFooter extends React.PureComponent {
-  render() {
-    const {
-      // this.state.
-      currentSongDurationMs,
-      currentSongNumSubtunes,
-      currentSongNumVoices,
-      currentSongSubtune,
-      ejected,
-      faves,
-      imageUrl,
-      infoTexts,
-      paused,
-      repeat,
-      shuffle,
-      showPlayerSettings,
-      songUrl,
-      subtitle,
-      tempo,
-      title,
-      voiceNames,
-      voiceMask,
-      volume,
+export default function AppFooter(props) {
+  const {
+    // this.state.
+    currentSongDurationMs,
+    currentSongNumSubtunes,
+    currentSongNumVoices,
+    currentSongSubtune,
+    ejected,
+    faves,
+    imageUrl,
+    infoTexts,
+    paused,
+    repeat,
+    shuffle,
+    showPlayerSettings,
+    songUrl,
+    subtitle,
+    tempo,
+    title,
+    voiceNames,
+    voiceMask,
+    volume,
 
-      // this.
-      getCurrentSongLink,
-      handleCycleRepeat,
-      handleCycleShuffle,
-      handleSetVoiceMask,
-      handleTempoChange,
-      handleTimeSliderChange,
-      handleToggleFavorite,
-      handleVolumeChange,
-      nextSong,
-      nextSubtune,
-      prevSong,
-      prevSubtune,
-      sequencer,
-      toggleInfo,
-      togglePause,
-      toggleSettings,
-    } = this.props;
+    // this.
+    getCurrentSongLink,
+    handleCycleRepeat,
+    handleCycleShuffle,
+    handleSetVoiceMask,
+    handleTempoChange,
+    handleTimeSliderChange,
+    handleToggleFavorite,
+    handleVolumeChange,
+    nextSong,
+    nextSubtune,
+    prevSong,
+    prevSubtune,
+    sequencer,
+    toggleInfo,
+    togglePause,
+    toggleSettings,
+  } = props;
 
-    const pathLinks = pathToLinks(songUrl);
+  const pathLinks = pathToLinks(songUrl);
+  const handleToggleInfo = useCallback((e) => {
+    e.preventDefault();
+    toggleInfo();
+  }, [toggleInfo]);
 
-    return (
-      <div className="AppFooter">
-        <div className="AppFooter-main">
-          <div className="AppFooter-main-inner">
-            <button onClick={prevSong}
-                    title="Previous"
-                    className="box-button"
-                    disabled={ejected}>
-              ⏮
-            </button>
-            {' '}
-            <button onClick={togglePause}
-                    title={paused ? 'Resume' : 'Pause'}
-                    className="box-button"
-                    disabled={ejected}>
-              {paused ? ' ► ' : ' ⏸ '}
-            </button>
-            {' '}
-            <button onClick={nextSong}
-                    title="Next"
-                    className="box-button"
-                    disabled={ejected}>
-              ⏭
-            </button>
-            {' '}
-            {currentSongNumSubtunes > 1 &&
+  return (
+    <div className="AppFooter">
+      <div className="AppFooter-main">
+        <div className="AppFooter-main-inner">
+          <button onClick={prevSong}
+                  title="Previous"
+                  className="box-button"
+                  disabled={ejected}>
+            ⏮
+          </button>
+          {' '}
+          <button onClick={togglePause}
+                  title={paused ? 'Resume' : 'Pause'}
+                  className="box-button"
+                  disabled={ejected}>
+            {paused ? ' ► ' : ' ⏸ '}
+          </button>
+          {' '}
+          <button onClick={nextSong}
+                  title="Next"
+                  className="box-button"
+                  disabled={ejected}>
+            ⏭
+          </button>
+          {' '}
+          {currentSongNumSubtunes > 1 &&
             <span style={{ whiteSpace: 'nowrap' }}>
               Tune {currentSongSubtune + 1} of {currentSongNumSubtunes}{' '}
               <button
@@ -94,54 +97,55 @@ export default class AppFooter extends React.PureComponent {
                 onClick={nextSubtune}>&gt;
               </button>
             </span>}
-            <span className="AppFooter-more-buttons">
-              <button title="Cycle Repeat (repeat off, repeat all songs in the context, or repeat one song)" className="box-button" onClick={handleCycleRepeat}>
+          <span className="AppFooter-more-buttons">
+              <button title="Cycle Repeat (repeat off, repeat all songs in the context, or repeat one song)"
+                      className="box-button" onClick={handleCycleRepeat}>
                 <img alt="Repeat" src={repeatImage} style={{ verticalAlign: 'bottom' }}/>
                 {REPEAT_LABELS[repeat]}
               </button>
-              {' '}
-              <button title="Toggle shuffle mode" className="box-button" onClick={handleCycleShuffle}>
+            {' '}
+            <button title="Toggle shuffle mode" className="box-button" onClick={handleCycleShuffle}>
                 <img alt="Roll the dice" src={diceImage} style={{ verticalAlign: 'bottom' }}/>
-                {SHUFFLE_LABELS[shuffle]}
+              {SHUFFLE_LABELS[shuffle]}
               </button>
-              {' '}
-              {!showPlayerSettings &&
+            {' '}
+            {!showPlayerSettings &&
               <button className="box-button" onClick={toggleSettings}>
                 Settings &gt;
               </button>}
             </span>
-            <div style={{ display: 'flex', flexDirection: 'row' }}>
-              <TimeSlider
-                paused={paused}
-                currentSongDurationMs={currentSongDurationMs}
-                getCurrentPositionMs={() => {
-                  // TODO: reevaluate this approach
-                  if (sequencer && sequencer.getPlayer()) {
-                    return sequencer.getPlayer().getPositionMs();
-                  }
-                  return 0;
-                }}
-                onChange={handleTimeSliderChange}/>
-              <VolumeSlider
-                onChange={(e) => {
-                  handleVolumeChange(e.target.value);
-                }}
-                handleReset={(e) => {
-                  handleVolumeChange(100);
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-                title="Double-click or right-click to reset to 100%."
-                value={volume}/>
-            </div>
-            {!ejected &&
+          <div style={{ display: 'flex', flexDirection: 'row' }}>
+            <TimeSlider
+              paused={paused}
+              currentSongDurationMs={currentSongDurationMs}
+              getCurrentPositionMs={() => {
+                // TODO: reevaluate this approach
+                if (sequencer && sequencer.getPlayer()) {
+                  return sequencer.getPlayer().getPositionMs();
+                }
+                return 0;
+              }}
+              onChange={handleTimeSliderChange}/>
+            <VolumeSlider
+              onChange={(e) => {
+                handleVolumeChange(e.target.value);
+              }}
+              handleReset={(e) => {
+                handleVolumeChange(100);
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              title="Double-click or right-click to reset to 100%."
+              value={volume}/>
+          </div>
+          {!ejected &&
             <div className="SongDetails">
               {faves && songUrl &&
-              <div style={{ float: 'left', marginBottom: '58px' }}>
-                <FavoriteButton isFavorite={faves.includes(songUrl)}
-                                toggleFavorite={handleToggleFavorite}
-                                href={songUrl}/>
-              </div>}
+                <div style={{ float: 'left', marginBottom: '58px' }}>
+                  <FavoriteButton isFavorite={faves.includes(songUrl)}
+                                  toggleFavorite={handleToggleFavorite}
+                                  href={songUrl}/>
+                </div>}
               <div className="SongDetails-title">
                 <a style={{ color: 'var(--neutral4)' }} href={getCurrentSongLink()}>
                   {title}{' '}
@@ -149,17 +153,17 @@ export default class AppFooter extends React.PureComponent {
                 </a>
                 {' '}
                 {infoTexts.length > 0 &&
-                <a onClick={(e) => toggleInfo(e)} href='#'>
-                  тхт
-                </a>
+                  <a onClick={handleToggleInfo} href='#'>
+                    тхт
+                  </a>
                 }
               </div>
               <div className="SongDetails-subtitle">{subtitle}</div>
               <div className="SongDetails-filepath">{pathLinks}</div>
             </div>}
-          </div>
         </div>
-        {showPlayerSettings &&
+      </div>
+      {showPlayerSettings &&
         <div className="AppFooter-settings">
           <div style={{
             display: 'flex',
@@ -187,9 +191,8 @@ export default class AppFooter extends React.PureComponent {
             :
             <div>(No active player)</div>}
         </div>}
-        {imageUrl &&
+      {imageUrl &&
         <img alt="Cover art" className="AppFooter-art" src={imageUrl}/>}
-      </div>
-    );
-  }
+    </div>
+  );
 }
