@@ -19,7 +19,8 @@ const MIDIEvents = require('midievents');
 // Constants
 const BUFFER_AHEAD = 33;
 const DELAY_MS_PER_CC_EVENT = 2;
-const DELAY_MS_PER_SYSEX_EVENT = 15;
+// const DELAY_MS_PER_SYSEX_EVENT = 15;
+const DELAY_MS_PER_SYSEX_BYTE = 0.5;
 const DELAY_MS_PER_XG_SYSTEM_EVENT = 500;
 
 const CC_SUSTAIN_PEDAL = 64;
@@ -119,8 +120,9 @@ MIDIPlayer.prototype.doSkipSilence = function () {
             firstNoteDelay += DELAY_MS_PER_XG_SYSTEM_EVENT;
             messageDelay += DELAY_MS_PER_XG_SYSTEM_EVENT;
           } else {
-            firstNoteDelay += DELAY_MS_PER_SYSEX_EVENT;
-            messageDelay += DELAY_MS_PER_SYSEX_EVENT;
+            const delay = DELAY_MS_PER_SYSEX_BYTE * event.length;
+            firstNoteDelay += delay;
+            messageDelay += delay;
           }
           numSysexEvents++;
           message = [event.type, ...event.data];
