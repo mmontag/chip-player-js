@@ -165,6 +165,7 @@ export default class MIDIPlayer extends Player {
         panicChannel: lib._tp_panic_channel,
         render: lib._tp_render,
         reset: lib._tp_reset,
+        getValue: lib.getValue,
       },
     });
 

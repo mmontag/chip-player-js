@@ -174,7 +174,7 @@ MIDIPlayer.prototype.play = function (endCallback) {
 
 MIDIPlayer.prototype.processPlaySynth = function (buffer, bufferSize) {
   this.lastProcessPlayTimestamp = performance.now();
-
+  const bufferStart = buffer;
   let bytesWritten = 0;
   let batchSize = 64;
   let event = null;
@@ -238,9 +238,9 @@ MIDIPlayer.prototype.processPlaySynth = function (buffer, bufferSize) {
     // This allows voices with a long release tail to complete.
     // Fast method: when entire buffer is below threshold, consider it silence.
     let synthStillActive = 0;
-    const threshold = 0.05;
-    for (let i = 0; i < bufferSize; i++) {
-      if (buffer[i * 2] > threshold) { // Check left channel only
+    const threshold = 0.001;
+    for (let i = 0; i < bufferSize; i+=8) {
+      if (synth.getValue(bufferStart + i, 'float') > threshold) { // Check left channel only
         synthStillActive = 1;          // Exit early
         break;
       }
