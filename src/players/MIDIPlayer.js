@@ -151,7 +151,7 @@ export default class MIDIPlayer extends Player {
     this.filepathMeta = {};
     this.midiFilePlayer = new MIDIFilePlayer({
       // playerStateUpdate is debounced to prevent flooding program change events
-      programChangeCb: () => debounce(() => this.emit('playerStateUpdate', false), 200),
+      programChangeCb: () => debounce(() => this.emit('playerStateUpdate', { isStopped: false }), 200),
       output: dummyMidiOutput,
       skipSilence: true,
       sampleRate: this.sampleRate,
@@ -299,7 +299,7 @@ export default class MIDIPlayer extends Player {
 
     const midiFile = new MIDIFile(data);
     this.midiFilePlayer.load(midiFile);
-    this.midiFilePlayer.play(() => this.emit('playerStateUpdate', true));
+    this.midiFilePlayer.play(() => this.emit('playerStateUpdate', { isStopped: true }));
 
     this.activeChannels = [];
     for (let i = 0; i < 16; i++) {
@@ -308,7 +308,10 @@ export default class MIDIPlayer extends Player {
 
     this.connect();
     this.resume();
-    this.emit('playerStateUpdate', false);
+    this.emit('playerStateUpdate', {
+      ...this.getBasePlayerState(),
+      isStopped: false,
+    });
   }
 
   switchSynthBasedOnFilename(filepath) {
@@ -363,7 +366,7 @@ export default class MIDIPlayer extends Player {
   stop() {
     this.suspend();
     console.debug('MIDIPlayer.stop()');
-    this.emit('playerStateUpdate', true);
+    this.emit('playerStateUpdate', { isStopped: true });
   }
 
   togglePause() {

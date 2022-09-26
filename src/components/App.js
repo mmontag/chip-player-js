@@ -152,6 +152,8 @@ class App extends React.Component {
       repeat: REPEAT_OFF,
       shuffle: SHUFFLE_OFF,
       directories: {},
+      hasPlayer: false,
+      paramDefs: [],
     };
 
     // Load the chip-core Emscripten runtime
@@ -172,7 +174,9 @@ class App extends React.Component {
             new V2MPlayer(audioCtx, playerNode, chipCore, bufferSize),
             new N64Player(audioCtx, playerNode, chipCore, bufferSize),
             new MDXPlayer(audioCtx, playerNode, chipCore, bufferSize),
-          ], this.handleSequencerStateUpdate, this.handlePlayerError);
+          ]);
+          this.sequencer.on('sequencerStateUpdate', this.handleSequencerStateUpdate);
+          this.sequencer.on('playerError', this.handlePlayerError);
 
           this.setState({ loading: false });
 
@@ -221,6 +225,35 @@ class App extends React.Component {
         loading: false
       });
     }
+  }
+
+  static mapSequencerStateToAppState(sequencerState) {
+    const map = {
+      ejected: 'isEjected',
+      paused: 'isPaused',
+      currentSongSubtune: 'subtune',
+      currentSongMetadata: 'metadata',
+      currentSongNumVoices: 'numVoices',
+      currentSongPositionMs: 'positionMs',
+      currentSongDurationMs: 'durationMs',
+      currentSongNumSubtunes: 'numSubtunes',
+      tempo: 'tempo',
+      voiceNames: 'voiceNames',
+      voiceMask: 'voiceMask',
+      songUrl: 'url',
+      hasPlayer: 'hasPlayer',
+      // TODO: add param values? move to paramStateUpdate?
+      paramDefs: 'paramDefs',
+      infoTexts: 'infoTexts',
+    };
+    const appState = {};
+    for (let prop in map) {
+      const seqProp = map[prop];
+      if (seqProp in sequencerState) {
+        appState[prop] = sequencerState[seqProp];
+      }
+    }
+    return appState;
   }
 
   handleLogin() {
@@ -356,8 +389,10 @@ class App extends React.Component {
     this.sequencer.nextSubtune();
   }
 
-  handleSequencerStateUpdate(isEjected) {
-    console.debug('handleSequencerStateUpdate(isEjected=%s)', isEjected);
+  handleSequencerStateUpdate(sequencerState) {
+    const { isEjected } = sequencerState;
+
+    console.debug('App.handleSequencerStateUpdate(isEjected=%s)', isEjected);
 
     if (isEjected) {
       this.setState({
@@ -391,6 +426,7 @@ class App extends React.Component {
         // TODO: Disabled to support scroll restoration.
         // const filepath = url.replace(CATALOG_PREFIX, '');
         // updateQueryString({ play: filepath, t: undefined });
+        // TODO: move fetch metadata to Player when it becomes event emitter
         requestCache.fetchCached(metadataUrl).then(response => {
           const { imageUrl, infoTexts } = response;
           const newInfoTexts = [ ...infoTexts, ...this.state.infoTexts ];
@@ -424,22 +460,9 @@ class App extends React.Component {
         }
       }
 
-      // Wrap in blob player state?
       this.setState({
-        ejected: false,
-        paused: player.isPaused(),
-        currentSongSubtune: player.getSubtune(),
-        currentSongMetadata: player.getMetadata(),
-        currentSongNumVoices: player.getNumVoices(),
-        currentSongPositionMs: player.getPositionMs(),
-        currentSongDurationMs: player.getDurationMs(),
-        currentSongNumSubtunes: player.getNumSubtunes(),
-        tempo: player.getTempo(),
-        voiceNames: [...Array(player.getNumVoices())].map((_, i) => player.getVoiceName(i)),
-        voiceMask: player.getVoiceMask(),
-        infoTexts: metadata.infoTexts || [],
+        ...App.mapSequencerStateToAppState(sequencerState),
         showInfo: false,
-        songUrl: url,
       });
     }
   }
@@ -552,8 +575,6 @@ class App extends React.Component {
   }
 
   handleShufflePlay(path) {
-    //TODO: allow shuffle to be toggled, like repeat mode (instead of one-shot).
-    //      emulate Winamp behavior closely, if possible.
     if (path === 'favorites') {
       this.sequencer.playContext(shuffle(this.state.faves));
     } else {
@@ -590,6 +611,7 @@ class App extends React.Component {
   }
 
   handleCycleRepeat() {
+    // TODO: Handle dropped file repeat
     const repeat = (this.state.repeat + 1) % NUM_REPEAT_MODES;
     this.setState({ repeat });
     this.sequencer.setRepeat(repeat);

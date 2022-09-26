@@ -132,6 +132,23 @@ export default class Player extends EventEmitter {
     return [];
   }
 
+  getBasePlayerState() {
+    return {
+      metadata: this.getMetadata(),
+      durationMs: this.getDurationMs(),
+      positionMs: this.getPositionMs(),
+      numVoices: this.getNumVoices(),
+      numSubtunes: this.getNumSubtunes(),
+      subtune: this.getSubtune(),
+      paramDefs: this.getParamDefs(),
+      tempo: this.getTempo(),
+      voiceMask: this.getVoiceMask(),
+      voiceNames: [...Array(this.getNumVoices())].map((_, i) => this.getVoiceName(i)),
+      infoTexts: [],
+      isStopped: false,
+    };
+  }
+
   connect() {
     if (!this._innerAudioProcess) {
       throw Error('Player.setAudioProcess has not been called.');

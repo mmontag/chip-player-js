@@ -144,7 +144,7 @@ export default class GMEPlayer extends Player {
           this.subtune,
           libgme._gme_track_count(emu)
         );
-        this.emit('playerStateUpdate', true);
+        this.emit('playerStateUpdate', { isStopped: true });
       }
     }
   }
@@ -154,7 +154,10 @@ export default class GMEPlayer extends Player {
     this.subtune = subtune;
     this.metadata = this._parseMetadata(subtune);
     console.debug('GMEPlayer.playSubtune(subtune=%s)', subtune);
-    this.emit('playerStateUpdate', false);
+    this.emit('playerStateUpdate', {
+      ...this.getBasePlayerState(),
+      isStopped: false,
+    });
     return libgme._gme_start_track(emu, subtune);
   }
 
@@ -385,6 +388,6 @@ export default class GMEPlayer extends Player {
     if (emu) libgme._gme_delete(emu);
     emu = null;
     console.debug('GMEPlayer.stop()');
-    this.emit('playerStateUpdate', true);
+    this.emit('playerStateUpdate', { isStopped: true });
   }
 }

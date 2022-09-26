@@ -35,7 +35,10 @@ export default class V2MPlayer extends Player {
 
     this.connect();
     this.resume();
-    this.emit('playerStateUpdate', false);
+    this.emit('playerStateUpdate', {
+      ...this.getBasePlayerState(),
+      isStopped: false
+    });
   }
 
   v2mAudioProcess(e) {
@@ -102,6 +105,6 @@ export default class V2MPlayer extends Player {
     this.suspend();
     this.lib._v2m_close();
     console.debug('V2MPlayer.stop()');
-    this.emit('playerStateUpdate', true);
+    this.emit('playerStateUpdate', { isStopped: true });
   }
 }

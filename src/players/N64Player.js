@@ -68,7 +68,10 @@ export default class N64Player extends Player {
 
           this.connect();
           this.resume();
-          this.emit('playerStateUpdate', false);
+          this.emit('playerStateUpdate', {
+            ...this.getBasePlayerState(),
+            isStopped: false,
+          });
         });
       });
   }
@@ -135,6 +138,6 @@ export default class N64Player extends Player {
     this.suspend();
     this.lib._n64_shutdown();
     console.debug('N64Player.stop()');
-    this.emit('playerStateUpdate', true);
+    this.emit('playerStateUpdate', { isStopped: true });
   }
 }

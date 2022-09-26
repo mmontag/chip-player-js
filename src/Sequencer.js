@@ -1,6 +1,7 @@
 import promisify from "./promisify-xhr";
 import {CATALOG_PREFIX} from "./config";
 import shuffle from 'lodash/shuffle';
+import EventEmitter from 'events';
 
 export const REPEAT_OFF = 0;
 export const REPEAT_ALL = 1;
@@ -13,15 +14,17 @@ export const SHUFFLE_ON = 1;
 export const NUM_SHUFFLE_MODES = 2;
 export const SHUFFLE_LABELS = ['Off', 'On'];
 
-export default class Sequencer {
-  constructor(players, onSequencerStateUpdate, onError) {
+export default class Sequencer extends EventEmitter {
+  constructor(players) {
+    super();
+
     this.playCurrentSong = this.playCurrentSong.bind(this);
     this.playSong = this.playSong.bind(this);
     this.playSongBuffer = this.playSongBuffer.bind(this);
     this.playSongFile = this.playSongFile.bind(this);
     this.getPlayer = this.getPlayer.bind(this);
-    this.onPlayerStateUpdate = this.onPlayerStateUpdate.bind(this);
-    this._onPlayerError = this._onPlayerError.bind(this);
+    this.handlePlayerStateUpdate = this.handlePlayerStateUpdate.bind(this);
+    this.handlePlayerError = this.handlePlayerError.bind(this);
     this.playContext = this.playContext.bind(this);
     this.advanceSong = this.advanceSong.bind(this);
     this.nextSong = this.nextSong.bind(this);
@@ -36,8 +39,8 @@ export default class Sequencer {
 
     this.player = null;
     this.players = players;
-    this.onSequencerStateUpdate = onSequencerStateUpdate;
-    this.onPlayerError = onError;
+    // this.onSequencerStateUpdate = onSequencerStateUpdate;
+    // this.onPlayerError = onError;
 
     this.currIdx = 0;
     this.context = null;
@@ -48,30 +51,37 @@ export default class Sequencer {
     this.repeat = REPEAT_OFF;
 
     this.players.forEach(player => {
-      player.on('playerStateUpdate', this.onPlayerStateUpdate);
-      player.on('playerError', this._onPlayerError);
+      player.on('playerStateUpdate', this.handlePlayerStateUpdate);
+      player.on('playerError', this.handlePlayerError);
     });
   }
 
-  _onPlayerError(e) {
-    // TODO: extend EventEmitter instead of using callbacks (see worklet branch)
-    this.onPlayerError(e);
+  handlePlayerError(e) {
+    this.emit('playerError', e);
     if (this.context) {
       this.nextSong();
     } else {
-      this.onSequencerStateUpdate(true);
+      this.emit('sequencerStateUpdate', { isEjected: true });
     }
   }
 
-  onPlayerStateUpdate(isStopped) {
-    console.debug('Sequencer.onPlayerStateUpdate(isStopped=%s)', isStopped);
+  handlePlayerStateUpdate(playerState) {
+    const { isStopped } = playerState;
+    console.debug('Sequencer.handlePlayerStateUpdate(isStopped=%s)', isStopped);
     if (isStopped) {
       this.currUrl = null;
       if (this.context) {
         this.nextSong();
       }
     } else {
-      this.onSequencerStateUpdate(false);
+      this.emit('sequencerStateUpdate', {
+        ...playerState,
+        url: this.currUrl,
+        isPaused: false,
+        hasPlayer: true,
+        // TODO: combine isEjected and hasPlayer
+        isEjected: false,
+      });
     }
   }
 
@@ -137,7 +147,7 @@ export default class Sequencer {
         this.currIdx = 0;
         this.context = null;
         this.player.stop();
-        this.onSequencerStateUpdate(true);
+        this.emit('sequencerStateUpdate', { isEjected: true });
       }
     } else {
       this.playCurrentSong();
@@ -201,7 +211,7 @@ export default class Sequencer {
       }
     }
     if (this.player === null) {
-      this.onPlayerError(`The file format ".${ext}" was not recognized.`);
+      this.emit('playerError', `The file format ".${ext}" was not recognized.`);
       return;
     }
 
@@ -219,7 +229,7 @@ export default class Sequencer {
         this.playSongBuffer(filepath, buffer)
       })
       .catch(e => {
-        this._onPlayerError(e.message || `HTTP ${e.status} ${e.statusText} ${url}`);
+        this.handlePlayerError(e.message || `HTTP ${e.status} ${e.statusText} ${url}`);
       });
   }
 
@@ -233,7 +243,7 @@ export default class Sequencer {
     // Find a player that can play this filetype
     const player = this.players.find(player => player.canPlay(ext));
     if (player == null) {
-      this.onPlayerError(`The file format ".${ext}" was not recognized.`);
+      this.emit('playerError', `The file format ".${ext}" was not recognized.`);
       return;
     } else {
       this.player = player;
@@ -251,7 +261,7 @@ export default class Sequencer {
     try {
       await this.player.loadData(uint8Array, filepath);
     } catch (e) {
-      this._onPlayerError(`Unable to play ${filepath} (${e.message}).`);
+      this.handlePlayerError(`Unable to play ${filepath} (${e.message}).`);
     }
      const numVoices = this.player.getNumVoices();
     this.player.setVoiceMask([...Array(numVoices)].fill(true));
