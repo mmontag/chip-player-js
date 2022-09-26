@@ -436,7 +436,7 @@ export default class MIDIPlayer extends Player {
         const userSoundfonts = paramDef.options[0];
         const userSoundfontPath = `${SOUNDFONT_MOUNTPOINT}/user/`;
         if (lib.FS.analyzePath(userSoundfontPath).exists) {
-          userSoundfonts.items = lib.FS.readdir(userSoundfontPath).filter(f => f.match(/\.sf2$/)).map(f => ({
+          userSoundfonts.items = lib.FS.readdir(userSoundfontPath).filter(f => f.match(/\.sf2$/i)).map(f => ({
             label: f,
             value: `user/${f}`,
           }));

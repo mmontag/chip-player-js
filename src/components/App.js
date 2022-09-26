@@ -648,7 +648,7 @@ class App extends React.Component {
   onDrop = (droppedFiles) => {
     const reader = new FileReader();
     const file = droppedFiles[0];
-    const ext = path.extname(file.name);
+    const ext = path.extname(file.name).toLowerCase();
     if (ext === '.sf2' && !this.midiPlayer) {
       this.handlePlayerError('MIDIPlayer has not been created - unable to load SoundFont.');
       return;
