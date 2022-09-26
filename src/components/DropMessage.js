@@ -13,7 +13,8 @@ export default class DropMessage extends React.PureComponent {
         <div className="message-box-inner">
           Drop files to play!<br/>
           {formatsLine1}<br/>
-          {formatsLine2}
+          {formatsLine2}<br/><br/>
+          Drop a SoundFont (.sf2) to customize MIDI playback.
         </div>
       </div>
     </div>;

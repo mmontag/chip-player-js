@@ -9,7 +9,10 @@ import debounce from 'lodash/debounce';
 
 let lib = null;
 
-const dummyMidiOutput = { send: () => {} };
+const dummyMidiOutput = {
+  send: () => {
+  }
+};
 
 const midiDevices = [
   dummyMidiOutput,
@@ -34,9 +37,9 @@ export default class MIDIPlayer extends Player {
       options: [{
         label: 'MIDI Synthesis Engine',
         items: [
-          {label: 'SoundFont (libFluidLite)', value: MIDI_ENGINE_LIBFLUIDLITE},
-          {label: 'Adlib/OPL3 FM (libADLMIDI)', value: MIDI_ENGINE_LIBADLMIDI},
-          {label: 'MIDI Device (Web MIDI)', value: MIDI_ENGINE_WEBMIDI},
+          { label: 'SoundFont (libFluidLite)', value: MIDI_ENGINE_LIBFLUIDLITE },
+          { label: 'Adlib/OPL3 FM (libADLMIDI)', value: MIDI_ENGINE_LIBADLMIDI },
+          { label: 'MIDI Device (Web MIDI)', value: MIDI_ENGINE_WEBMIDI },
         ],
       }],
       defaultValue: 0,
@@ -46,7 +49,8 @@ export default class MIDIPlayer extends Player {
       label: 'Soundfont',
       type: 'enum',
       options: SOUNDFONTS,
-      defaultValue: SOUNDFONTS[0].items[0].value,
+      // Small Soundfonts - GMGSx Plus
+      defaultValue: SOUNDFONTS[1].items[0].value,
       dependsOn: {
         param: 'synthengine',
         value: MIDI_ENGINE_LIBFLUIDLITE,
@@ -125,6 +129,7 @@ export default class MIDIPlayer extends Player {
     this.getParamDefs = this.getParamDefs.bind(this);
     this.switchSynthBasedOnFilename = this.switchSynthBasedOnFilename.bind(this);
     this.ensureWebMidiInitialized = this.ensureWebMidiInitialized.bind(this);
+    this.updateSoundfontParamDefs = this.updateSoundfontParamDefs.bind(this);
 
     lib = chipCore;
     lib._tp_init(audioCtx.sampleRate);
@@ -138,6 +143,7 @@ export default class MIDIPlayer extends Player {
         console.log('Error populating FS from indexeddb.', err);
       }
     });
+    this.updateSoundfontParamDefs();
 
     this.fileExtensions = fileExtensions;
     this.activeChannels = [];
@@ -419,6 +425,22 @@ export default class MIDIPlayer extends Player {
 
   getParamDefs() {
     return this.paramDefs;
+  }
+
+  updateSoundfontParamDefs() {
+    this.paramDefs = this.paramDefs.map(paramDef => {
+      if (paramDef.id === 'soundfont') {
+        const userSoundfonts = paramDef.options[0];
+        const userSoundfontPath = `${SOUNDFONT_MOUNTPOINT}/user/`;
+        if (lib.FS.analyzePath(userSoundfontPath).exists) {
+          userSoundfonts.items = lib.FS.readdir(userSoundfontPath).filter(f => f.match(/\.sf2$/)).map(f => ({
+            label: f,
+            value: `user/${f}`,
+          }));
+        }
+      }
+      return paramDef;
+    });
   }
 
   setParameter(id, value) {

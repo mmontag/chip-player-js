@@ -12,8 +12,15 @@ import Dropzone from 'react-dropzone';
 
 import ChipCore from '../chip-core';
 import firebaseConfig from '../config/firebaseConfig';
-import { API_BASE, CATALOG_PREFIX, ERROR_FLASH_DURATION_MS, MAX_VOICES, REPLACE_STATE_ON_SEEK } from '../config';
-import { titlesFromMetadata, unlockAudioContext } from '../util';
+import {
+  API_BASE,
+  CATALOG_PREFIX,
+  ERROR_FLASH_DURATION_MS,
+  MAX_VOICES,
+  REPLACE_STATE_ON_SEEK,
+  SOUNDFONT_MOUNTPOINT
+} from '../config';
+import { ensureEmscFileWithData, titlesFromMetadata, unlockAudioContext } from '../util';
 import requestCache from '../RequestCache';
 import Sequencer, { NUM_REPEAT_MODES, NUM_SHUFFLE_MODES, REPEAT_OFF, SHUFFLE_OFF } from '../Sequencer';
 
@@ -68,6 +75,7 @@ class App extends React.Component {
     this.contentAreaRef = React.createRef();
     this.playContexts = {};
     this.errorTimer = null;
+    this.midiPlayer = null; // Need a reference to MIDIPlayer to handle SoundFont loading.
     window.ChipPlayer = this;
 
     // Initialize Firebase
@@ -156,10 +164,11 @@ class App extends React.Component {
           return prefix + path;
         },
         onRuntimeInitialized: () => {
+          this.midiPlayer = new MIDIPlayer(audioCtx, playerNode, chipCore, bufferSize);
           this.sequencer = new Sequencer([
+            this.midiPlayer,
             new GMEPlayer(audioCtx, playerNode, chipCore, bufferSize),
             new XMPPlayer(audioCtx, playerNode, chipCore, bufferSize),
-            new MIDIPlayer(audioCtx, playerNode, chipCore, bufferSize),
             new V2MPlayer(audioCtx, playerNode, chipCore, bufferSize),
             new N64Player(audioCtx, playerNode, chipCore, bufferSize),
             new MDXPlayer(audioCtx, playerNode, chipCore, bufferSize),
@@ -178,6 +187,7 @@ class App extends React.Component {
           //     return this.sequencer.setPlayers([new XMPPlayer(audioCtx, playerNode, chipCore)]);
           //   });
 
+          // TODO: Move to separate processUrlParams method.
           const urlParams = queryString.parse(window.location.search.substr(1));
           if (urlParams.play) {
             const play = urlParams.play;
@@ -616,9 +626,24 @@ class App extends React.Component {
   onDrop = (droppedFiles) => {
     const reader = new FileReader();
     const file = droppedFiles[0];
-    reader.onload = () => {
-      const songData = reader.result;
-      this.sequencer.playSongFile(file.name, songData);
+    const ext = path.extname(file.name);
+    if (ext === '.sf2' && !this.midiPlayer) {
+      this.handlePlayerError('MIDIPlayer has not been created - unable to load SoundFont.');
+      return;
+    }
+    reader.onload = async () => {
+      if (ext === '.sf2' && this.midiPlayer) {
+        const sf2Path = `user/${file.name}`;
+        await ensureEmscFileWithData(this.chipCore, `${SOUNDFONT_MOUNTPOINT}/${sf2Path}`, new Uint8Array(reader.result));
+        this.midiPlayer.updateSoundfontParamDefs();
+        this.midiPlayer.setParameter('soundfont', sf2Path);
+        // TODO: emit "paramDefsChanged" from player.
+        // See https://reactjs.org/docs/integrating-with-other-libraries.html#integrating-with-model-layers
+        this.forceUpdate();
+      } else {
+        const songData = reader.result;
+        this.sequencer.playSongFile(file.name, songData);
+      }
     };
     reader.readAsArrayBuffer(file);
   };

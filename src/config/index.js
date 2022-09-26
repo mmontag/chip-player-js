@@ -30,6 +30,10 @@ const FORMATS =  [
 const SOUNDFONT_MOUNTPOINT = '/soundfonts';
 const SOUNDFONTS = [
   {
+    label: 'User SoundFonts (Drop .sf2 to add)',
+    items: [],
+  },
+  {
     label: 'Small Soundfonts',
     items: [
       {label: 'GMGSx Plus (6.2 MB)', value: 'gmgsx-plus.sf2'},

@@ -527,7 +527,7 @@ img { image-rendering: pixelated; }
 }
 
 .drop-message {
-    height: calc(7 * var(--charH) + 1px);
+    height: calc(9 * var(--charH) + 1px);
     width: calc(60 * var(--charW1));
     text-align: center;
 }
