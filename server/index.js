@@ -107,6 +107,7 @@ const routes = {
 
   'metadata': async (params) => {
     let imageUrl = null;
+    let soundfont = null;
     let infoTexts = [];
     if (params.path) {
       const { dir, name } = path.parse(params.path);
@@ -115,6 +116,21 @@ const routes = {
       const infoFiles = glob.sync(`${LOCAL_CATALOG_ROOT}/${dir}/${name}.{text,txt,doc}`, {nocase: true});
       if (infoFiles.length > 0) {
         infoTexts.push(fs.readFileSync(infoFiles[0], 'utf8'));
+      }
+
+      // Don't search for SoundFonts in parent directories
+      const soundfonts = glob.sync(`${LOCAL_CATALOG_ROOT}/${dir}/${name}.sf2`, {nocase: true});
+      if (soundfonts.length > 0) {
+        soundfont = soundfonts[0];
+      } else {
+        const soundfonts = glob.sync(`${LOCAL_CATALOG_ROOT}/${dir}/*.sf2`, {nocase: true});
+        console.log(`glob ${LOCAL_CATALOG_ROOT}/${dir}/*.sf2:`, soundfonts);
+        if (soundfonts.length > 0) {
+          soundfont = soundfonts[0];
+        }
+      }
+      if (soundfont !== null) {
+        soundfont = `${PUBLIC_CATALOG_URL}${dir}/${path.basename(soundfont)}`;
       }
 
       const segments = dir.split('/');
@@ -141,6 +157,7 @@ const routes = {
     return {
       imageUrl: imageUrl,
       infoTexts: infoTexts,
+      soundfont: soundfont,
     };
   },
 };
@@ -160,7 +177,7 @@ http.createServer(async function (req, res) {
         }
         if (json) {
           res.writeHead(200, headers);
-          res.end(JSON.stringify(json));
+          res.end(JSON.stringify(json) + '\n');
           return;
         } else {
           res.writeHead(404, headers);
