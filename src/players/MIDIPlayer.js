@@ -138,12 +138,6 @@ export default class MIDIPlayer extends Player {
     // Initialize Soundfont filesystem
     lib.FS.mkdir(SOUNDFONT_MOUNTPOINT);
     lib.FS.mount(lib.FS.filesystems.IDBFS, {}, SOUNDFONT_MOUNTPOINT);
-    lib.FS.syncfs(true, (err) => {
-      if (err) {
-        console.log('Error populating FS from indexeddb.', err);
-      }
-    });
-    this.updateSoundfontParamDefs();
 
     this.fileExtensions = fileExtensions;
     this.activeChannels = [];
@@ -193,9 +187,15 @@ export default class MIDIPlayer extends Player {
 
     // Initialize parameters
     this.params = {};
-    this.paramDefs.forEach(param => this.setParameter(param.id, param.defaultValue));
+    this.paramDefs.filter(p => p.id !== 'soundfont').forEach(p => this.setParameter(p.id, p.defaultValue));
 
     this.setAudioProcess(this.midiAudioProcess);
+  }
+
+  handleFileSystemReady() {
+    const soundfontParam = this.paramDefs.find(paramDef => paramDef.id === 'soundfont');
+    this.setParameter(soundfontParam.id, soundfontParam.defaultValue);
+    this.updateSoundfontParamDefs();
   }
 
   midiAudioProcess(e) {

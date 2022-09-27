@@ -17,11 +17,6 @@ export default class MDXPlayer extends Player {
     // Initialize MDX filesystem
     chipCore.FS.mkdirTree(MOUNTPOINT);
     chipCore.FS.mount(chipCore.FS.filesystems.IDBFS, {}, MOUNTPOINT);
-    chipCore.FS.syncfs(true, (err) => {
-      if (err) {
-        console.log('Error populating FS from indexeddb.', err);
-      }
-    });
 
     this.speed = 1;
     this.lib = chipCore;

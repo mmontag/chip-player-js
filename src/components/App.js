@@ -166,15 +166,26 @@ class App extends React.Component {
           return prefix + path;
         },
         onRuntimeInitialized: () => {
+          // Create all the players. Players will set up IDBFS mount points.
           this.midiPlayer = new MIDIPlayer(audioCtx, playerNode, chipCore, bufferSize);
-          this.sequencer = new Sequencer([
+          const players =[
             this.midiPlayer,
             new GMEPlayer(audioCtx, playerNode, chipCore, bufferSize),
             new XMPPlayer(audioCtx, playerNode, chipCore, bufferSize),
             new V2MPlayer(audioCtx, playerNode, chipCore, bufferSize),
             new N64Player(audioCtx, playerNode, chipCore, bufferSize),
             new MDXPlayer(audioCtx, playerNode, chipCore, bufferSize),
-          ]);
+          ];
+
+          // Populate all mounted IDBFS file systems from IndexedDB.
+          chipCore.FS.syncfs(true, (err) => {
+            if (err) {
+              console.log('Error populating FS from indexeddb.', err);
+            }
+            players.map(player => player.handleFileSystemReady());
+          });
+
+          this.sequencer = new Sequencer(players);
           this.sequencer.on('sequencerStateUpdate', this.handleSequencerStateUpdate);
           this.sequencer.on('playerError', this.handlePlayerError);
 

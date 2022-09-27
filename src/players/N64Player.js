@@ -17,11 +17,6 @@ export default class N64Player extends Player {
     // Initialize N64 filesystem
     chipCore.FS.mkdirTree(MOUNTPOINT);
     chipCore.FS.mount(chipCore.FS.filesystems.IDBFS, {}, MOUNTPOINT);
-    chipCore.FS.syncfs(true, (err) => {
-      if (err) {
-        console.log('Error populating FS from indexeddb.', err);
-      }
-    });
 
     this.lib = chipCore;
     this.fileExtensions = fileExtensions;
