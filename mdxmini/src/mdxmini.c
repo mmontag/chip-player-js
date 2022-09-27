@@ -193,12 +193,6 @@ int mdx_open( t_mdxmini *data, char *filename , char *pcmdir )
 	data->samples = 0;
 	data->channels = pcm8_get_output_channels(data->songdata);
 
-
-  EM_ASM_({ console.log('MDX channels: %d.', $0); }, data->channels);
-  EM_ASM_({ console.log('MDX dsp_speed: %d.', $0); }, mdx->dsp_speed);
-//  printf("MDX channels: %d", data->channels);
-//	printf("MDX dsp_speed: %d", mdx->dsp_speed);
-
 	return 0;
 }
 
