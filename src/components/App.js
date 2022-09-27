@@ -402,7 +402,6 @@ class App extends React.Component {
 
   handleSequencerStateUpdate(sequencerState) {
     const { isEjected } = sequencerState;
-
     console.debug('App.handleSequencerStateUpdate(isEjected=%s)', isEjected);
 
     if (isEjected) {
@@ -461,7 +460,6 @@ class App extends React.Component {
         this.mediaSessionAudio.play();
 
         if ('MediaMetadata' in window) {
-          console.log('metadata', metadata);
           navigator.mediaSession.metadata = new window.MediaMetadata({
             title: metadata.title || metadata.formatted?.title,
             artist: metadata.artist || metadata.formatted?.subtitle,

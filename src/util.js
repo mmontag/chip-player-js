@@ -62,7 +62,7 @@ export function pathToLinks(path) {
 
 export function ensureEmscFileWithUrl(emscRuntime, filename, url) {
   if (emscRuntime.FS.analyzePath(filename).exists) {
-    console.log(`${filename} exists in Emscripten file system.`);
+    console.debug(`${filename} exists in Emscripten file system.`);
     return Promise.resolve(filename);
   } else {
     console.log(`Downloading ${filename}...`);
@@ -82,20 +82,20 @@ export function ensureEmscFileWithUrl(emscRuntime, filename, url) {
 
 export function ensureEmscFileWithData(emscRuntime, filename, uint8Array, forceWrite=false) {
   if (!forceWrite && emscRuntime.FS.analyzePath(filename).exists) {
-    console.log(`${filename} exists in Emscripten file system.`);
+    console.debug(`${filename} exists in Emscripten file system.`);
     return Promise.resolve(filename);
   } else {
-    console.log(`Writing ${filename} to Emscripten file system...`);
+    console.debug(`Writing ${filename} to Emscripten file system...`);
     const dir = path.dirname(filename);
     emscRuntime.FS.mkdirTree(dir);
     emscRuntime.FS.writeFile(filename, uint8Array);
     return new Promise((resolve, reject) => {
       emscRuntime.FS.syncfs(false, (err) => {
         if (err) {
-          console.log('Error synchronizing to indexeddb.', err);
+          console.error('Error synchronizing to indexeddb.', err);
           reject(err);
         } else {
-          console.log(`Synchronized ${filename} to indexeddb.`);
+          console.debug(`Synchronized ${filename} to indexeddb.`);
           resolve(filename);
         }
       });

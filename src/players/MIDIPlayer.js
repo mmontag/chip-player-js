@@ -266,13 +266,14 @@ export default class MIDIPlayer extends Player {
     this.webMidiIsInitialized = true;
 
     // Initialize MIDI output devices
+    console.debug('Requesting MIDI output devices.');
     if (typeof navigator.requestMIDIAccess === 'function') {
       navigator.requestMIDIAccess({ sysex: true }).then((access) => {
         if (access.outputs.length === 0) {
           console.warn('No MIDI output devices found.');
         } else {
           [...access.outputs.values()].forEach(midiOutput => {
-            console.log('MIDI Output:', midiOutput);
+            console.debug('MIDI Output:', midiOutput);
             midiDevices.push(midiOutput);
             this.paramDefs.find(def => def.id === 'mididevice').options[0].items.push({
               label: midiOutput.name,

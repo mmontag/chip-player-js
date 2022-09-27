@@ -68,6 +68,7 @@ export default class Sequencer extends EventEmitter {
   handlePlayerStateUpdate(playerState) {
     const { isStopped } = playerState;
     console.debug('Sequencer.handlePlayerStateUpdate(isStopped=%s)', isStopped);
+
     if (isStopped) {
       this.currUrl = null;
       if (this.context) {
@@ -263,9 +264,7 @@ export default class Sequencer extends EventEmitter {
     } catch (e) {
       this.handlePlayerError(`Unable to play ${filepath} (${e.message}).`);
     }
-     const numVoices = this.player.getNumVoices();
+    const numVoices = this.player.getNumVoices();
     this.player.setVoiceMask([...Array(numVoices)].fill(true));
-
-    console.debug('Sequencer.playSong(...) song request completed');
   }
 }
