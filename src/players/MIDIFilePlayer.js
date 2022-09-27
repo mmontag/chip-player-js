@@ -151,7 +151,7 @@ MIDIPlayer.prototype.doSkipSilence = function () {
         Math.round(firstNote.playTime), firstNoteDelay, numSysexEvents);
       this.lastProcessPlayTimestamp += (firstNoteDelay - firstNote.playTime);
     } else {
-      this.setPosition(firstNote.playTime - 10);
+      this.setPosition(firstNote.playTime - 50);
     }
   }
 };
