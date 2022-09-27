@@ -158,8 +158,8 @@ export default class XMPPlayer extends Player {
   }
 
   setTempo(val) {
-    if (!this.metadata.initialSpeed) {
-      console.error('Unable to set speed for this file format.');
+    if (this.metadata && !this.metadata.initialSpeed) {
+      console.log('Unable to set speed for %s.', this.filepathMeta.title);
       return;
     }
     this.tempoScale = val;

@@ -27,7 +27,7 @@ export default class Player extends EventEmitter {
 
     this.paused = true;
     this.fileExtensions = [];
-    this.metadata = {};
+    this.metadata = null;
     this.audioCtx = audioCtx;
     this.destinationNode = destNode;
     this.bufferSize = bufferSize;
