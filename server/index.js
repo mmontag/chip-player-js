@@ -124,13 +124,13 @@ const routes = {
         soundfont = soundfonts[0];
       } else {
         const soundfonts = glob.sync(`${LOCAL_CATALOG_ROOT}/${dir}/*.sf2`, {nocase: true});
-        console.log(`glob ${LOCAL_CATALOG_ROOT}/${dir}/*.sf2:`, soundfonts);
+        // console.log(`glob ${LOCAL_CATALOG_ROOT}/${dir}/*.sf2:`, soundfonts);
         if (soundfonts.length > 0) {
           soundfont = soundfonts[0];
         }
       }
       if (soundfont !== null) {
-        soundfont = `${PUBLIC_CATALOG_URL}${dir}/${path.basename(soundfont)}`;
+        soundfont = `${PUBLIC_CATALOG_URL}/${dir}/${path.basename(soundfont)}`;
       }
 
       const segments = dir.split('/');
