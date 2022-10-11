@@ -20,7 +20,7 @@ import {
   REPLACE_STATE_ON_SEEK,
   SOUNDFONT_MOUNTPOINT
 } from '../config';
-import { ensureEmscFileWithData, titlesFromMetadata, unlockAudioContext } from '../util';
+import { ensureEmscFileWithData, getMetadataUrlForCatalogUrl, titlesFromMetadata, unlockAudioContext } from '../util';
 import requestCache from '../RequestCache';
 import Sequencer, { NUM_REPEAT_MODES, NUM_SHUFFLE_MODES, REPEAT_OFF, SHUFFLE_OFF } from '../Sequencer';
 
@@ -431,8 +431,7 @@ class App extends React.Component {
       const player = this.sequencer.getPlayer();
       const url = this.sequencer.getCurrUrl();
       if (url) {
-        const path = url.replace(CATALOG_PREFIX, '/');
-        const metadataUrl = `${API_BASE}/metadata?path=${encodeURIComponent(path)}`;
+        const metadataUrl = getMetadataUrlForCatalogUrl(url);
         // TODO: Disabled to support scroll restoration.
         // const filepath = url.replace(CATALOG_PREFIX, '');
         // updateQueryString({ play: filepath, t: undefined });

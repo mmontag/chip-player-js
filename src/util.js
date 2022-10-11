@@ -3,6 +3,7 @@ import React from 'react';
 import path from 'path';
 
 import DirectoryLink from './components/DirectoryLink';
+import { API_BASE, CATALOG_PREFIX } from './config';
 
 const CATALOG_PREFIX_REGEX = /^https?:\/\/[a-z0-9\-.:]+\/(music|catalog)\//;
 
@@ -58,6 +59,19 @@ export function pathToLinks(path) {
     .replace(CATALOG_PREFIX_REGEX, '/')
     .split('/').slice(0, -1).join('/') + '/';
   return <DirectoryLink dim to={'/browse' + path}>{decodeURI(path)}</DirectoryLink>;
+}
+
+export function getFilepathFromUrl(url) {
+  return url.replace(CATALOG_PREFIX, '/');
+}
+
+export function getMetadataUrlForFilepath(filepath) {
+  return `${API_BASE}/metadata?path=${encodeURIComponent(filepath)}`;
+}
+
+export function getMetadataUrlForCatalogUrl(url) {
+  const filepath = getFilepathFromUrl(url);
+  return getMetadataUrlForFilepath(filepath);
 }
 
 export function ensureEmscFileWithUrl(emscRuntime, filename, url) {
