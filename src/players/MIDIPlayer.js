@@ -1,11 +1,13 @@
+import debounce from 'lodash/debounce';
+import path from 'path';
 import MIDIFile from 'midifile';
-import MIDIFilePlayer from './MIDIFilePlayer';
 
+import MIDIFilePlayer from './MIDIFilePlayer';
 import Player from './Player';
 import { SOUNDFONTS, SOUNDFONT_MOUNTPOINT, SOUNDFONT_URL_PATH } from '../config';
-import { ensureEmscFileWithUrl } from '../util';
 import { GM_DRUM_KITS, GM_INSTRUMENTS } from '../gm-patch-map';
-import debounce from 'lodash/debounce';
+import { ensureEmscFileWithUrl, getFilepathFromUrl, getMetadataUrlForFilepath } from '../util';
+import requestCache from '../RequestCache';
 
 let lib = null;
 
@@ -301,6 +303,26 @@ export default class MIDIPlayer extends Player {
     if (this.getParameter('autoengine')) {
       newTransientParams['synthengine'] = this.getSynthengineBasedOnFilename(filepath);
       newTransientParams['opl3bank'] = this.getOpl3bankBasedOnFilename(filepath);
+    }
+
+    // Load custom Soundfont if present in the metadata response.
+    if (this.getParameter('synthengine') === MIDI_ENGINE_LIBFLUIDLITE) {
+      const metadataUrl = getMetadataUrlForFilepath(filepath);
+      // This will most certainly be cached by a preceding fetch in App.js.
+      const { soundfont: soundfontUrl } = await requestCache.fetchCached(metadataUrl);
+      if (soundfontUrl) {
+        const sf2Path = `user/${path.basename(getFilepathFromUrl(soundfontUrl))}`;
+        newTransientParams['soundfont'] = sf2Path;
+        if (this.getParameter('soundfont') !== sf2Path) {
+          await ensureEmscFileWithUrl(lib, `${SOUNDFONT_MOUNTPOINT}/${sf2Path}`, soundfontUrl);
+          this.updateSoundfontParamDefs();
+        }
+        // lib._fluid_settings_setstr(settings, "synth.drums-channel.active", "no");
+        // lib._fluid_synth_bank_select(this->synth, 9, 0); // try to force drum channel to bank 0
+        lib._tp_set_ch10_melodic(1);
+      } else {
+        lib._tp_set_ch10_melodic(0);
+      }
     }
 
     // Apply transient params. Avoid thrashing of params that haven't changed.
