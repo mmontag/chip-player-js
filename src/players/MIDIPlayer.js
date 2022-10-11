@@ -127,7 +127,6 @@ export default class MIDIPlayer extends Player {
     this.setParameter = this.setParameter.bind(this);
     this.getParameter = this.getParameter.bind(this);
     this.getParamDefs = this.getParamDefs.bind(this);
-    this.switchSynthBasedOnFilename = this.switchSynthBasedOnFilename.bind(this);
     this.ensureWebMidiInitialized = this.ensureWebMidiInitialized.bind(this);
     this.updateSoundfontParamDefs = this.updateSoundfontParamDefs.bind(this);
 
@@ -187,6 +186,8 @@ export default class MIDIPlayer extends Player {
 
     // Initialize parameters
     this.params = {};
+    // Transient parameters hold a parameter that is valid only for the current song. They are reset when another song is loaded.
+    this.transientParams = {};
     this.paramDefs.filter(p => p.id !== 'soundfont').forEach(p => this.setParameter(p.id, p.defaultValue));
 
     this.setAudioProcess(this.midiAudioProcess);
@@ -290,13 +291,25 @@ export default class MIDIPlayer extends Player {
     }
   }
 
-  loadData(data, filepath) {
+  async loadData(data, filepath) {
     this.ensureWebMidiInitialized();
     this.filepathMeta = this.metadataFromFilepath(filepath);
 
+    const newTransientParams = {};
+
+    // Transient params: synthengine, opl3bank, soundfont.
     if (this.getParameter('autoengine')) {
-      this.switchSynthBasedOnFilename(filepath);
+      newTransientParams['synthengine'] = this.getSynthengineBasedOnFilename(filepath);
+      newTransientParams['opl3bank'] = this.getOpl3bankBasedOnFilename(filepath);
     }
+
+    // Apply transient params. Avoid thrashing of params that haven't changed.
+    Object.keys(this.params)
+      .forEach(key => {
+        if (newTransientParams[key] !== this.transientParams[key]) {
+          this.setTransientParameter(key, newTransientParams[key]);
+        }
+      });
 
     const midiFile = new MIDIFile(data);
     this.midiFilePlayer.load(midiFile);
@@ -315,16 +328,18 @@ export default class MIDIPlayer extends Player {
     });
   }
 
-  switchSynthBasedOnFilename(filepath) {
+  getSynthengineBasedOnFilename(filepath) {
     // Switch to OPL3 engine if filepath contains 'FM'
     const fp = filepath.toLowerCase().replace('_', ' ');
     if (fp.match(/(\bfm|fm\b)/i)) {
-      this.setParameter('synthengine', MIDI_ENGINE_LIBADLMIDI);
-    } else {
-      // this.setParameter('synthengine', MIDI_ENGINE_LIBFLUIDLITE);
+      return MIDI_ENGINE_LIBADLMIDI;
     }
+    return null;
+  }
 
+  getOpl3bankBasedOnFilename(filepath) {
     // Crude bank matching for a few specific games. :D
+    const fp = filepath.toLowerCase().replace('_', ' ');
     const opl3def = this.paramDefs.find(def => def.id === 'opl3bank');
     if (opl3def) {
       const opl3banks = opl3def.options[0].items;
@@ -350,9 +365,10 @@ export default class MIDIPlayer extends Player {
         bankId = findBank('System Shock');
       }
       if (bankId > -1) {
-        this.setParameter('opl3bank', bankId);
+        return bankId;
       }
     }
+    return null;
   }
 
   isPlaying() {
@@ -424,6 +440,7 @@ export default class MIDIPlayer extends Player {
 
   getParameter(id) {
     if (id === 'fluidpoly') return lib._tp_get_polyphony();
+    if (this.transientParams[id] != null) return this.transientParams[id];
     return this.params[id];
   }
 
@@ -447,7 +464,16 @@ export default class MIDIPlayer extends Player {
     });
   }
 
-  setParameter(id, value) {
+  setTransientParameter(id, value) {
+    if (value == null) {
+      // Unset the transient parameter.
+      this.setParameter(id, this.params[id]);
+    } else {
+      this.setParameter(id, value, true);
+    }
+  }
+
+  setParameter(id, value, isTransient=false) {
     switch (id) {
       case 'synthengine':
         value = parseInt(value, 10);
@@ -488,7 +514,13 @@ export default class MIDIPlayer extends Player {
       default:
         console.warn('MIDIPlayer has no parameter with id "%s".', id);
     }
-    this.params[id] = value;
+    // This should be the only place we modify transientParams.
+    if (isTransient) {
+      this.transientParams[id] = value;
+    } else {
+      delete this.transientParams[id];
+      this.params[id] = value;
+    }
   }
 
   _loadSoundfont(filename) {
