@@ -231,21 +231,25 @@ fluid_channel_cc(fluid_channel_t* chan, int num, int value)
 
   switch (num) {
 
-  case SUSTAIN_SWITCH:
+    case SUSTAIN_SWITCH:
     {
       if (value < 64) {
-/*  	printf("** sustain off\n"); */
-	fluid_synth_damp_voices(chan->synth, chan->channum);
+        /*  	printf("** sustain off\n"); */
+        fluid_synth_damp_voices(chan->synth, chan->channum);
       } else {
-/*  	printf("** sustain on\n"); */
+        /*  	printf("** sustain on\n"); */
       }
     }
-    break;
+      break;
 
-  case BANK_SELECT_MSB:
+    case BANK_SELECT_MSB:
     {
+      if (chan->channum == 9 && fluid_settings_str_equal(chan->synth->settings, "synth.drums-channel.active", "yes")) {
+        return FLUID_OK; /* ignored */
+      }
+
       chan->bank_msb = (unsigned char) (value & 0x7f);
-/*      printf("** bank select msb recieved: %d\n", value); */
+      /*      printf("** bank select msb recieved: %d\n", value); */
 
       /* I fixed the handling of a MIDI bank select controller 0,
 	 e.g., bank select MSB (or "coarse" bank select according to
@@ -253,111 +257,113 @@ fluid_channel_cc(fluid_channel_t* chan, int num, int value)
 	 changed upon reception of MIDI bank select controller 32,
 	 e.g, bank select LSB (or "fine" bank-select according to my
 	 spec). [KLE]
-
 	 FIXME: is this correct? [PH] */
       fluid_channel_set_banknum(chan, (unsigned int)(value & 0x7f));  /* KLE */
     }
-    break;
+      break;
 
-  case BANK_SELECT_LSB:
+    case BANK_SELECT_LSB:
     {
+      if (chan->channum == 9 && fluid_settings_str_equal(chan->synth->settings, "synth.drums-channel.active", "yes")) {
+        return FLUID_OK; /* ignored */
+      }
       /* FIXME: according to the Downloadable Sounds II specification,
          bit 31 should be set when we receive the message on channel
          10 (drum channel) */
-	fluid_channel_set_banknum(chan, (((unsigned int) value & 0x7f)
-					+ ((unsigned int) chan->bank_msb << 7)));
+      fluid_channel_set_banknum(chan, (((unsigned int) value & 0x7f)
+                                       + ((unsigned int) chan->bank_msb << 7)));
     }
-    break;
+      break;
 
-  case ALL_NOTES_OFF:
-    fluid_synth_all_notes_off(chan->synth, chan->channum);
-    break;
+    case ALL_NOTES_OFF:
+      fluid_synth_all_notes_off(chan->synth, chan->channum);
+      break;
 
-  case ALL_SOUND_OFF:
-    fluid_synth_all_sounds_off(chan->synth, chan->channum);
-    break;
+    case ALL_SOUND_OFF:
+      fluid_synth_all_sounds_off(chan->synth, chan->channum);
+      break;
 
-  case ALL_CTRL_OFF:
-    fluid_channel_init_ctrl(chan,1);
-    fluid_synth_modulate_voices_all(chan->synth, chan->channum);
-    break;
+    case ALL_CTRL_OFF:
+      fluid_channel_init_ctrl(chan,1);
+      fluid_synth_modulate_voices_all(chan->synth, chan->channum);
+      break;
 
-  case DATA_ENTRY_MSB:
+    case DATA_ENTRY_MSB:
     {
       int data = (value << 7) + chan->cc[DATA_ENTRY_LSB];
 
       if (chan->nrpn_active)  /* NRPN is active? */
       {
-	/* SontFont 2.01 NRPN Message (Sect. 9.6, p. 74)  */
-	if ((chan->cc[NRPN_MSB] == 120) && (chan->cc[NRPN_LSB] < 100))
-	{
-	  if (chan->nrpn_select < GEN_LAST)
-	  {
-	    float val = fluid_gen_scale_nrpn(chan->nrpn_select, data);
-	    fluid_synth_set_gen(chan->synth, chan->channum, chan->nrpn_select, val);
-	  }
+        /* SontFont 2.01 NRPN Message (Sect. 9.6, p. 74)  */
+        if ((chan->cc[NRPN_MSB] == 120) && (chan->cc[NRPN_LSB] < 100))
+        {
+          if (chan->nrpn_select < GEN_LAST)
+          {
+            float val = fluid_gen_scale_nrpn(chan->nrpn_select, data);
+            fluid_synth_set_gen(chan->synth, chan->channum, chan->nrpn_select, val);
+          }
 
-	  chan->nrpn_select = 0;  /* Reset to 0 */
-	}
+          chan->nrpn_select = 0;  /* Reset to 0 */
+        }
       }
       else if (chan->cc[RPN_MSB] == 0)    /* RPN is active: MSB = 0? */
       {
-	switch (chan->cc[RPN_LSB])
-	{
-	  case RPN_PITCH_BEND_RANGE:
-	    fluid_channel_pitch_wheel_sens (chan, value);   /* Set bend range in semitones */
-	    /* FIXME - Handle LSB? (Fine bend range in cents) */
-	    break;
+        switch (chan->cc[RPN_LSB])
+        {
+          case RPN_PITCH_BEND_RANGE:
+            fluid_channel_pitch_wheel_sens (chan, value);   /* Set bend range in semitones */
+            /* FIXME - Handle LSB? (Fine bend range in cents) */
+            break;
           case RPN_CHANNEL_FINE_TUNE:   /* Fine tune is 14 bit over +/-1 semitone (+/- 100 cents, 8192 = center) */
-	    fluid_synth_set_gen(chan->synth, chan->channum, GEN_FINETUNE,
+            fluid_synth_set_gen(chan->synth, chan->channum, GEN_FINETUNE,
                                 (data - 8192) / 8192.0 * 100.0);
-	    break;
-	  case RPN_CHANNEL_COARSE_TUNE: /* Coarse tune is 7 bit and in semitones (64 is center) */
-	    fluid_synth_set_gen(chan->synth, chan->channum, GEN_COARSETUNE,
-				value - 64);
-	    break;
-	  case RPN_TUNING_PROGRAM_CHANGE:
-	    break;
-	  case RPN_TUNING_BANK_SELECT:
-	    break;
-	  case RPN_MODULATION_DEPTH_RANGE:
-	    break;
-	}
+            break;
+          case RPN_CHANNEL_COARSE_TUNE: /* Coarse tune is 7 bit and in semitones (64 is center) */
+            fluid_synth_set_gen(chan->synth, chan->channum, GEN_COARSETUNE,
+                                value - 64);
+            break;
+          case RPN_TUNING_PROGRAM_CHANGE:
+            break;
+          case RPN_TUNING_BANK_SELECT:
+            break;
+          case RPN_MODULATION_DEPTH_RANGE:
+            break;
+        }
       }
 
       break;
     }
 
-  case NRPN_MSB:
-    chan->cc[NRPN_LSB] = 0;
-    chan->nrpn_select = 0;
-    chan->nrpn_active = 1;
-    break;
+    case NRPN_MSB:
+      chan->cc[NRPN_LSB] = 0;
+      chan->nrpn_select = 0;
+      chan->nrpn_active = 1;
+      break;
 
-  case NRPN_LSB:
-    /* SontFont 2.01 NRPN Message (Sect. 9.6, p. 74)  */
-    if (chan->cc[NRPN_MSB] == 120) {
-      if (value == 100) {
-	chan->nrpn_select += 100;
-      } else if (value == 101) {
-	chan->nrpn_select += 1000;
-      } else if (value == 102) {
-	chan->nrpn_select += 10000;
-      } else if (value < 100) {
-	chan->nrpn_select += value;
+    case NRPN_LSB:
+      /* SontFont 2.01 NRPN Message (Sect. 9.6, p. 74)  */
+      if (chan->cc[NRPN_MSB] == 120) {
+        if (value == 100) {
+          chan->nrpn_select += 100;
+        } else if (value == 101) {
+          chan->nrpn_select += 1000;
+        } else if (value == 102) {
+          chan->nrpn_select += 10000;
+        } else if (value < 100) {
+          chan->nrpn_select += value;
+        }
       }
-    }
 
-    chan->nrpn_active = 1;
-    break;
+      chan->nrpn_active = 1;
+      break;
 
-  case RPN_MSB:
-  case RPN_LSB:
-    chan->nrpn_active = 0;
-    break;
+    case RPN_MSB:
+    case RPN_LSB:
+      chan->nrpn_active = 0;
+      break;
 
-  default:
-    fluid_synth_modulate_voices(chan->synth, chan->channum, 1, num);
+    default:
+      fluid_synth_modulate_voices(chan->synth, chan->channum, 1, num);
   }
 
   return FLUID_OK;
