@@ -53,6 +53,8 @@ const chipModules = [
       '_tp_set_channel_mute',
       '_tp_set_bank',
       '_tp_set_synth_engine',
+      '_tp_set_ch10_melodic',
+      '_tp_get_fluid_synth',
       // ---- MIDI synth functions: ----
       '_tp_note_on',
       '_tp_note_off',
@@ -282,6 +284,7 @@ const chipModules = [
       '_fluid_synth_set_reverb',
       '_fluid_synth_get_polyphony',
       '_fluid_synth_set_polyphony',
+      '_fluid_synth_bank_select',
     ],
     flags: [],
   },

@@ -260,6 +260,21 @@ extern int tp_set_synth_engine(int synthId) {
   return 0;
 }
 
+extern void tp_set_ch10_melodic(int isMelodic) {
+  fluid_settings_t* settings = fluid_synth_get_settings(g_FluidSynth);
+  if (isMelodic) {
+    fluid_settings_setstr(settings, "synth.drums-channel.active", "no");
+    fluid_synth_bank_select(g_FluidSynth, 9, 0);
+  } else {
+    fluid_settings_setstr(settings, "synth.drums-channel.active", "yes");
+    fluid_synth_bank_select(g_FluidSynth, 9, 127);
+  }
+}
+
+extern fluid_synth_t* tp_get_fluid_synth() {
+  return g_FluidSynth;
+}
+
 #ifdef __cplusplus
 }
 #endif
