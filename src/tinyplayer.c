@@ -6,6 +6,7 @@
 //
 #include <math.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <emscripten.h>
 
 #include "../fluidlite/include/fluidlite.h"
@@ -33,7 +34,7 @@ char g_ChannelsMuted[16];
 int g_ChannelProgramNums[16];
 short g_shortBuffer[4096];
 int tp_set_synth_engine(int);
-char g_currentSoundfontFilename[256];
+char g_currentSoundfontFileHash[512];
 
 typedef struct Synth {
   void (*noteOn)(int channel, int key, int velocity);
@@ -197,7 +198,7 @@ extern void tp_init(int sampleRate) {
 
 extern void tp_unload_soundfont() {
   if (fluid_synth_sfcount(g_FluidSynth) > 0) {
-    strcpy(g_currentSoundfontFilename, "");
+    strcpy(g_currentSoundfontFileHash, "");
     fluid_sfont_t *sfont = fluid_synth_get_sfont(g_FluidSynth, 0);
     fluid_synth_remove_sfont(g_FluidSynth, sfont);
     // Causes a crash related to pthreads in Emscripten.
@@ -207,9 +208,14 @@ extern void tp_unload_soundfont() {
 
 extern int tp_load_soundfont(const char *filename) {
   // Avoid loading the same soundfont again (quick hack)
-  if (strcmp(filename, g_currentSoundfontFilename) != 0) {
+  char newFileHash[512];
+  struct stat filestat;
+  stat(filename, &filestat);
+  sprintf(newFileHash, "%s-%ld", filename, filestat.st_ctime);
+
+  if (strcmp(newFileHash, g_currentSoundfontFileHash) != 0) {
+    strcpy(g_currentSoundfontFileHash, newFileHash);
     tp_unload_soundfont();
-    strcpy(g_currentSoundfontFilename, filename);
     return fluid_synth_sfload(g_FluidSynth, filename, 1);
   } else {
     return fluid_synth_get_sfont(g_FluidSynth, 0)->id;
