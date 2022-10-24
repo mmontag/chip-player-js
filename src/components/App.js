@@ -664,9 +664,11 @@ class App extends React.Component {
     reader.onload = async () => {
       if (ext === '.sf2' && this.midiPlayer) {
         const sf2Path = `user/${file.name}`;
-        await ensureEmscFileWithData(this.chipCore, `${SOUNDFONT_MOUNTPOINT}/${sf2Path}`, new Uint8Array(reader.result));
+        const forceWrite = true;
+        const isTransient = false;
+        await ensureEmscFileWithData(this.chipCore, `${SOUNDFONT_MOUNTPOINT}/${sf2Path}`, new Uint8Array(reader.result), forceWrite);
         this.midiPlayer.updateSoundfontParamDefs();
-        this.midiPlayer.setParameter('soundfont', sf2Path);
+        this.midiPlayer.setParameter('soundfont', sf2Path, isTransient);
         // TODO: emit "paramDefsChanged" from player.
         // See https://reactjs.org/docs/integrating-with-other-libraries.html#integrating-with-model-layers
         this.forceUpdate();
