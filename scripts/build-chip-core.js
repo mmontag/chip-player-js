@@ -275,6 +275,7 @@ const chipModules = [
       '_fluid_settings_setint',
       '_fluid_settings_setnum',
       '_fluid_settings_setstr',
+      '_fluid_synth_set_interp_method',
       '_fluid_synth_sfload',
       '_fluid_synth_noteon',
       '_fluid_synth_noteoff',
