@@ -3094,34 +3094,35 @@ fixup_sample (SFData * sf)
       /* if sample is not a ROM sample and end is over the sample data chunk
          or sam start is greater than 4 less than the end (at least 4 samples) */
       if ((!(sam->sampletype & FLUID_SAMPLETYPE_ROM)
-	  && sam->end > sdtachunk_size) || sam->start > (sam->end - 4))
-	{
-	  FLUID_LOG (FLUID_WARN, _("Sample '%s' start/end file positions are invalid,"
-	      " disabling and will not be saved"), sam->name);
+          && sam->end > sdtachunk_size) || sam->start > (sam->end - 4))
+      {
+        FLUID_LOG (FLUID_WARN, _("Sample '%s' start/end file positions are invalid,"
+            " disabling and will not be saved"), sam->name);
 
-	  /* disable sample by setting all sample markers to 0 */
-	  sam->start = sam->end = sam->loopstart = sam->loopend = 0;
+        /* disable sample by setting all sample markers to 0 */
+        sam->start = sam->end = sam->loopstart = sam->loopend = 0;
 
-	  return (OK);
-	}
+        return (OK);
+      }
       /* compressed samples get fixed up after decompression */
-      else if (sam->sampletype & FLUID_SAMPLETYPE_OGG_VORBIS)
-    {}
+      else if (sam->sampletype & FLUID_SAMPLETYPE_OGG_VORBIS) {}
       else if (sam->loopend > sam->end || sam->loopstart >= sam->loopend
     || sam->loopstart <= sam->start)
     {			/* loop is fowled?? (cluck cluck :) */
-      /* can pad loop by 8 samples and ensure at least 4 for loop (2*8+4) */
-      if ((sam->end - sam->start) >= 20)
-        {
-          sam->loopstart = sam->start + 8;
-          sam->loopend = sam->end - 8;
-        }
-      else
-        {			/* loop is fowled, sample is tiny (can't pad 8 samples) */
-          sam->loopstart = sam->start + 1;
-          sam->loopend = sam->end - 1;
-        }
-    }
+          /* can pad loop by 8 samples and ensure at least 4 for loop (2*8+4) */
+      FLUID_LOG (FLUID_WARN, _("Loop point fixup disabled: %s"), sam->name);
+// Disabled - see https://github.com/divideconcept/FluidLite/issues/45
+//      if ((sam->end - sam->start) >= 20)
+//        {
+//          sam->loopstart = sam->start + 8;
+//          sam->loopend = sam->end - 8;
+//        }
+//      else
+//        {			/* loop is fowled, sample is tiny (can't pad 8 samples) */
+//          sam->loopstart = sam->start + 1;
+//          sam->loopend = sam->end - 1;
+//        }
+      }
 
       /* convert sample end, loopstart, loopend to offsets from sam->start */
       sam->end -= sam->start + 1;	/* marks last sample, contrary to SF spec. */
