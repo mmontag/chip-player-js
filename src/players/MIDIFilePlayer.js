@@ -1,4 +1,5 @@
 const MIDIEvents = require('midievents');
+require('./midi/midi-helpers');
 
 /**
  * The MIDIFilePlayer is the engine that parses MIDI file data, and fires
@@ -90,11 +91,17 @@ function MIDIPlayer(options) {
 }
 
 // Parsing all tracks and add their events in a single event queue
-MIDIPlayer.prototype.load = function (midiFile) {
+MIDIPlayer.prototype.load = function (midiFile, useTrackLoops = false) {
   this.stop();
   this.position = 0;
   this.elapsedTime = 0;
-  this.events = midiFile.getEvents();
+  const tracks = midiFile.tracks.map((_, i) => midiFile.getTrackEvents(i));
+  if (useTrackLoops) {
+    console.debug('Processing MIDI track loops...');
+    this.events = midiFile.getLoopedEvents(tracks, 2);
+  } else {
+    this.events = midiFile.getEvents();
+  }
   this.summarizeMidiEvents();
 };
 

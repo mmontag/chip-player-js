@@ -37,7 +37,7 @@ class EventIterator {
       //   param1: CC_123_ALL_NOTES_OFF,
       //   delta: 0,
       // });
-      console.log('channel %d looped at %d (loop %d completed)', this.curEvent.channel, this.curTick, this.elapsedLoops);
+      console.debug('Channel %d looped at tick %d (loop %d completed)', this.curEvent.channel, this.curTick, this.elapsedLoops);
       this.elapsedLoops++;
     }
   }
@@ -206,7 +206,7 @@ MIDIFile.prototype.getLoopedEvents = function (tracks, loopCount = 1) {
     //   // }
     // }
   }
-  console.log(combinedEvents);
+  console.debug(combinedEvents);
   return combinedEvents;
 };
 
@@ -251,5 +251,5 @@ function printTrack(t, events) {
   for (let k = 0; k < charArr.length; k++) {
     viz[k] = charArr[k] || ' ';
   }
-  console.log(`Track ${t} |${viz.join('')}|`);
+  console.debug(`Track ${t} |${viz.join('')}|`);
 }

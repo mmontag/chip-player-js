@@ -334,7 +334,8 @@ export default class MIDIPlayer extends Player {
       });
 
     const midiFile = new MIDIFile(data);
-    this.midiFilePlayer.load(midiFile);
+    const useTrackLoops = filepath.includes('SoundFont MIDI');
+    this.midiFilePlayer.load(midiFile, useTrackLoops);
     this.midiFilePlayer.play(() => this.emit('playerStateUpdate', { isStopped: true }));
 
     this.activeChannels = [];
