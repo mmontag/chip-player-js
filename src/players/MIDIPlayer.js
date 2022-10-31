@@ -6,7 +6,7 @@ import MIDIFilePlayer from './MIDIFilePlayer';
 import Player from './Player';
 import { SOUNDFONTS, SOUNDFONT_MOUNTPOINT, SOUNDFONT_URL_PATH } from '../config';
 import { GM_DRUM_KITS, GM_INSTRUMENTS } from '../gm-patch-map';
-import { ensureEmscFileWithUrl, getFilepathFromUrl, getMetadataUrlForFilepath } from '../util';
+import { ensureEmscFileWithUrl, getFilepathFromUrl, getMetadataUrlForFilepath, remap01 } from '../util';
 import requestCache from '../RequestCache';
 
 let lib = null;
@@ -66,6 +66,19 @@ export default class MIDIPlayer extends Player {
       max: 1.0,
       step: 0.01,
       defaultValue: 0.33,
+      dependsOn: {
+        param: 'synthengine',
+        value: MIDI_ENGINE_LIBFLUIDLITE,
+      },
+    },
+    {
+      id: 'chorus',
+      label: 'Chorus',
+      type: 'number',
+      min: 0.0,
+      max: 1.0,
+      step: 0.01,
+      defaultValue: 0.5,
       dependsOn: {
         param: 'synthengine',
         value: MIDI_ENGINE_LIBFLUIDLITE,
@@ -496,6 +509,29 @@ export default class MIDIPlayer extends Player {
     }
   }
 
+  setFluidChorus(value) {
+    const fluidSynth = lib._tp_get_fluid_synth();
+    if (value === 0) {
+      lib._fluid_synth_set_chorus_on(fluidSynth, false);
+    } else {
+      lib._fluid_synth_set_chorus_on(fluidSynth, true);
+      // FLUID_CHORUS_DEFAULT_N 3 (0 to 99)
+      const nr = 3;
+      // FLUID_CHORUS_DEFAULT_LEVEL 2.0f (0 to 10)
+      const level = Math.round(remap01(value, 0, 4));
+      // FLUID_CHORUS_DEFAULT_SPEED 0.3f (0.29 to 5)
+      const speed = 0.3;
+      // FLUID_CHORUS_DEFAULT_DEPTH 8.0f (0 to ~100)
+      const depthMs = Math.round(remap01(value, 2, 14));
+      // FLUID_CHORUS_DEFAULT_TYPE FLUID_CHORUS_MOD_SINE
+      //   FLUID_CHORUS_MOD_SINE = 0,
+      //   FLUID_CHORUS_MOD_TRIANGLE = 1
+      const type = 0;
+      // (fluid_synth_t* synth, int nr, double level, double speed, double depth_ms, int type)
+      lib._fluid_synth_set_chorus(fluidSynth, nr, level, speed, depthMs, type);
+    }
+  }
+
   setParameter(id, value, isTransient=false) {
     switch (id) {
       case 'synthengine':
@@ -514,10 +550,16 @@ export default class MIDIPlayer extends Player {
           .then(filename => this._loadSoundfont(filename));
         break;
       case 'reverb':
+        // TODO: call fluidsynth directly from JS, similar to chorus
         value = parseFloat(value);
         lib._tp_set_reverb(value);
         break;
+      case 'chorus':
+        value = parseFloat(value);
+        this.setFluidChorus(value);
+        break;
       case 'fluidpoly':
+        // TODO: call fluidsynth directly from JS, similar to chorus
         value = parseInt(value, 10);
         lib._tp_set_polyphony(value);
         break;
@@ -547,7 +589,7 @@ export default class MIDIPlayer extends Player {
   }
 
   _loadSoundfont(filename) {
-    console.log('Loading soundfont...');
+    console.log('Loading soundfont %s...', filename);
     this.muteAudioDuringCall(this.audioNode, () => {
       const err = lib.ccall('tp_load_soundfont', 'number', ['string'], [filename]);
       if (err !== -1) console.log('Loaded soundfont.');

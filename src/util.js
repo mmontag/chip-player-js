@@ -116,3 +116,11 @@ export function ensureEmscFileWithData(emscRuntime, filename, uint8Array, forceW
     });
   }
 }
+
+export function remap(number, fromLeft, fromRight, toLeft, toRight) {
+  return toLeft + (number - fromLeft) / (fromRight - fromLeft) * (toRight - toLeft)
+}
+
+export function remap01(number, toLeft, toRight) {
+  return remap(number, 0, 1, toLeft, toRight);
+}
