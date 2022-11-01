@@ -4,9 +4,17 @@ import clamp from 'lodash/clamp';
 import shuffle from 'lodash/shuffle';
 import path from 'path';
 import queryString from 'querystring';
-import * as firebase from 'firebase/app';
-import 'firebase/auth';
-import 'firebase/firestore';
+import { initializeApp as firebaseInitializeApp } from 'firebase/app';
+import { getAuth, onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider } from 'firebase/auth';
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  updateDoc,
+  setDoc,
+  arrayRemove,
+  arrayUnion
+} from 'firebase/firestore/lite';
 import { NavLink, Route, Switch, withRouter } from 'react-router-dom';
 import Dropzone from 'react-dropzone';
 
@@ -79,19 +87,19 @@ class App extends React.Component {
     window.ChipPlayer = this;
 
     // Initialize Firebase
-    if (firebase.apps.length === 0) firebase.initializeApp(firebaseConfig);
-    this.db = firebase.firestore();
-    firebase.auth().onAuthStateChanged(user => {
+    const firebaseApp = firebaseInitializeApp(firebaseConfig);
+    const auth = getAuth(firebaseApp);
+    this.db = getFirestore(firebaseApp);
+    onAuthStateChanged(auth, user => {
       this.setState({ user: user, loadingUser: !!user });
       if (user) {
-        this.db
-          .collection('users')
-          .doc(user.uid)
-          .get()
+        const docRef = doc(this.db, 'users', user.uid);
+        getDoc(docRef)
           .then(userSnapshot => {
-            if (!userSnapshot.exists) {
+            if (!userSnapshot.exists()) {
               // Create user
-              this.db.collection('users').doc(user.uid).set({
+              console.debug('Creating user document', user.uid);
+              setDoc(docRef, {
                 faves: [],
                 settings: {},
               });
@@ -168,7 +176,7 @@ class App extends React.Component {
         onRuntimeInitialized: () => {
           // Create all the players. Players will set up IDBFS mount points.
           this.midiPlayer = new MIDIPlayer(audioCtx, playerNode, chipCore, bufferSize);
-          const players =[
+          const players = [
             this.midiPlayer,
             new GMEPlayer(audioCtx, playerNode, chipCore, bufferSize),
             new XMPPlayer(audioCtx, playerNode, chipCore, bufferSize),
@@ -268,8 +276,9 @@ class App extends React.Component {
   }
 
   handleLogin() {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    firebase.auth().signInWithPopup(provider).then(result => {
+    const auth = getAuth();
+    const provider = new GoogleAuthProvider();
+    signInWithPopup(auth, provider).then(result => {
       console.log('Firebase auth result:', result);
     }).catch(error => {
       console.log('Firebase auth error:', error);
@@ -277,7 +286,8 @@ class App extends React.Component {
   }
 
   handleLogout() {
-    firebase.auth().signOut().then(() => {
+    const auth = getAuth();
+    signOut(auth).then(() => {
       this.setState({
         user: null,
         faves: [],
@@ -288,20 +298,20 @@ class App extends React.Component {
   handleToggleFavorite(path) {
     const user = this.state.user;
     if (user) {
-      const userRef = this.db.collection('users').doc(user.uid);
+      const userRef = doc(this.db, 'users', user.uid);
       let newFaves, favesOp;
       const oldFaves = this.state.faves;
       const exists = oldFaves.includes(path);
       if (exists) {
         newFaves = oldFaves.filter(fave => fave !== path);
-        favesOp = firebase.firestore.FieldValue.arrayRemove(path);
+        favesOp = arrayRemove(path);
       } else {
         newFaves = [...oldFaves, path];
-        favesOp = firebase.firestore.FieldValue.arrayUnion(path);
+        favesOp = arrayUnion(path);
       }
       // Optimistic update
       this.setState({ faves: newFaves });
-      userRef.update({ faves: favesOp }).catch((e) => {
+      updateDoc(userRef, { faves: favesOp }).catch((e) => {
         this.setState({ faves: oldFaves });
         console.log('Couldn\'t update favorites in Firebase.', e);
       });
@@ -503,9 +513,8 @@ class App extends React.Component {
 
     const user = this.state.user;
     if (user) {
-      const userRef = this.db.collection('users').doc(user.uid);
-      userRef
-        .update({ settings: { showPlayerSettings: showPlayerSettings } })
+      const userRef = doc(this.db, 'users', user.uid);
+      updateDoc(userRef, { settings: { showPlayerSettings: showPlayerSettings } })
         .catch((e) => {
           console.log('Couldn\'t update settings in Firebase.', e);
         });
