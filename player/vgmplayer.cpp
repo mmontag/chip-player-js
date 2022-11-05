@@ -612,8 +612,13 @@ void VGMPlayer::RefreshDevOptions(CHIP_DEVICE& chipDev, const PLR_DEV_OPTS& devO
 		return;
 	
 	UINT32 coreOpts = devOpts.coreOpts;
-	if (chipType == DEVID_YM2612 && (_p2612Fix & P2612FIX_ACTIVE))
-		coreOpts |= OPT_YM2612_LEGACY_MODE;	// enable legacy mode
+	if (chipType == DEVID_YM2612)
+	{
+		if (chipDev.flags)
+			coreOpts = (coreOpts & ~0x30) | OPT_YM2612_TYPE_OPN2C_DISC;	// enforce YM3438 mode
+		if (_p2612Fix & P2612FIX_ACTIVE)
+			coreOpts |= OPT_YM2612_LEGACY_MODE;	// enable legacy mode
+	}
 	else if (chipType == DEVID_GB_DMG)
 		coreOpts |= OPT_GB_DMG_LEGACY_MODE;	// enable legacy mode (fix playback of old VGMs)
 	else if (chipType == DEVID_QSOUND)
@@ -1492,7 +1497,9 @@ void VGMPlayer::InitDevices(void)
 			SndEmu_GetDeviceFunc(devInf->devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&chipDev.romWrite);
 			break;
 		default:
-			if (chipType == DEVID_C219)
+			if (chipType == DEVID_YM2612)
+				chipDev.flags |= devCfg->flags;
+			else if (chipType == DEVID_C219)
 				chipDev.flags |= 0x01;	// enable 16-bit byteswap patch on all ROM data
 			
 			retVal = SndEmu_Start(chipType, devCfg, devInf);
