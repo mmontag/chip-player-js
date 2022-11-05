@@ -273,20 +273,18 @@ static void okim6258_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 			//sample = clock_adpcm(chip, nibble);
 			if (chip->data_empty < 0x02)
 			{
-				sample = clock_adpcm(chip, nibble);
-				chip->last_smpl = sample;
+				chip->last_smpl = clock_adpcm(chip, nibble);
 			}
 			else
 			{
 				// Valley Bell: data_empty behaviour (loosely) ported from XM6
-				if (chip->data_empty >= 0x02 + 0x01)
+				if (chip->data_empty & 0x01)
 				{
-					chip->data_empty -= 0x01;
 					chip->signal = chip->signal * 15 / 16;
 					chip->last_smpl = chip->signal;
 				}
-				sample = chip->last_smpl;
 			}
+			sample = chip->last_smpl;
 
 			nibble_shift ^= 4;
 
@@ -477,7 +475,7 @@ static void okim6258_data_w(void *chip, UINT8 data)
 	//info->data_in = data;
 	//info->nibble_shift = 0;
 	
-	if (info->data_empty >= 0x02)
+	if (info->data_empty >= 0x04)
 		info->data_buf_pos = 0x00;
 	info->data_in_last = data;
 	info->data_buf[info->data_buf_pos & 0x0F] = data;
