@@ -287,7 +287,7 @@ static void c219_fetch_sample(c219_state *chip, UINT32 vid)
 			}
 			else
 			{
-				v->key=0;
+				v->key = 0;
 				v->sample = 0;
 			}
 		}

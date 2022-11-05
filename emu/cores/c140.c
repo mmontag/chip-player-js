@@ -291,103 +291,62 @@ static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 	for( i=0;i<MAX_VOICE;i++ )
 	{
 		C140_VOICE *v = &info->voi[i];
-		const struct voice_registers *vreg = (struct voice_registers *)&info->REG[i*16];
+		const struct voice_registers *vreg = (struct voice_registers *)&info->REG[i * 16];
 
-		if( v->key && ! v->Muted)
+		if (v->key && ! v->Muted)
 		{
-			frequency = (vreg->frequency_msb<<8) | vreg->frequency_lsb;
+			frequency = (vreg->frequency_msb << 8) | vreg->frequency_lsb;
 
 			/* Abort voice if no frequency value set */
-			if(frequency==0) continue;
+			if (frequency==0) continue;
 
 			/* Delta =  frequency * ((8MHz/374)*2 / sample rate) */
-			delta=(INT32)((float)frequency * info->pbase);
+			delta = (INT32)((float)frequency * info->pbase);
 
 			/* calculate sample size */
-			sz=v->sample_end-v->sample_start;
+			sz = v->sample_end - v->sample_start;
 
 			/* Retrieve base pointer to the sample data */
 			sampleAdr = find_sample(info, v->sample_start, vreg->bank, i);
 
-			/* Switch on data type - compressed PCM is only for C140 */
-			if (vreg->mode&C140_MODE_MULAW)
+			/* linear or compressed PCM */
+			for (j = 0; j < samples; j++)
 			{
-				//compressed PCM (maybe correct...)
-				/* Loop for enough to fill sample buffer as requested */
-				for(j=0;j<samples;j++)
+				v->ptoffset += delta;
+				cnt = (v->ptoffset >> 16) & 0x7fff;
+				v->ptoffset &= 0xffff;
+				v->pos += cnt;
+				/* Check for the end of the sample */
+				if (v->pos >= sz)
 				{
-					v->ptoffset += delta;
-					cnt = (v->ptoffset>>16)&0x7fff;
-					v->ptoffset &= 0xffff;
-					v->pos+=cnt;
-					//for(;cnt>0;cnt--)
+					/* Check if its a looping sample, either stop or loop */
+					if (vreg->mode & C140_MODE_LOOP)
 					{
-						/* Check for the end of the sample */
-						if(v->pos >= sz)
-						{
-							/* Check if its a looping sample, either stop or loop */
-							if(vreg->mode&C140_MODE_LOOP)
-							{
-								v->pos = v->sample_loop - v->sample_start;
-							}
-							else
-							{
-								v->key=0;
-								break;
-							}
-						}
-
-						v->prevdt=v->lastdt;
-						v->lastdt=info->mulaw_table[info->pRom[(sampleAdr + v->pos) & info->romMask]];
-						v->dltdt=(v->lastdt - v->prevdt);
+						v->pos = (v->sample_loop - v->sample_start);
 					}
-
-					/* Caclulate the sample value */
-					dt=(INT32)(((INT64)v->dltdt*v->ptoffset)>>16)+v->prevdt;
-
-					/* Write the data to the sample buffers */
-					lmix[j]+=(dt*vreg->volume_left)>>9;
-					rmix[j]+=(dt*vreg->volume_right)>>9;
+					else
+					{
+						v->key = 0;
+						break;
+					}
 				}
-			}
-			else
-			{
-				/* linear 8bit signed PCM */
-				for(j=0;j<samples;j++)
+
+				if (cnt)
 				{
-					v->ptoffset += delta;
-					cnt = (v->ptoffset>>16)&0x7fff;
-					v->ptoffset &= 0xffff;
-					v->pos += cnt;
-					/* Check for the end of the sample */
-					if(v->pos >= sz)
-					{
-						/* Check if its a looping sample, either stop or loop */
-						if( vreg->mode&C140_MODE_LOOP )
-						{
-							v->pos = v->sample_loop - v->sample_start;
-						}
-						else
-						{
-							v->key=0;
-							break;
-						}
-					}
-
-					if( cnt )
-					{
-						v->prevdt=v->lastdt;
-						v->lastdt=(INT8)info->pRom[(sampleAdr + v->pos) & info->romMask]<<8;
-						v->dltdt = (v->lastdt - v->prevdt);
-					}
-
-					/* Caclulate the sample value */
-					dt=(INT32)(((INT64)v->dltdt*v->ptoffset)>>16)+v->prevdt;
-
-					/* Write the data to the sample buffers */
-					lmix[j]+=(dt*vreg->volume_left)>>9;
-					rmix[j]+=(dt*vreg->volume_right)>>9;
+					v->prevdt = v->lastdt;
+					if (vreg->mode & C140_MODE_MULAW)
+						v->lastdt = info->mulaw_table[info->pRom[(sampleAdr + v->pos) & info->romMask]];
+					else
+						v->lastdt = (INT8)info->pRom[(sampleAdr + v->pos) & info->romMask] << 8;
+					v->dltdt = (v->lastdt - v->prevdt);
 				}
+
+				/* Caclulate the sample value */
+				dt = (INT32)(((INT64)v->dltdt * v->ptoffset) >> 16) + v->prevdt;
+
+				/* Write the data to the sample buffers */
+				lmix[j] += (dt * vreg->volume_left) >> (5 + 4);
+				rmix[j] += (dt * vreg->volume_right) >> (5 + 4);
 			}
 		}
 	}
