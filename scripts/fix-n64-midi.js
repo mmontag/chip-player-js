@@ -12,7 +12,6 @@ const fs = require('fs');
 const glob = require('glob');
 const path = require('path');
 
-// const DIR = '/Users/montag/Music/goldeneye';
 const CC_102_TRACK_LOOP_START = 102;
 const CC_103_TRACK_LOOP_END = 103;
 const CC_123_ALL_NOTES_OFF = 123;
@@ -24,27 +23,58 @@ const DUMMY_EVENT = {
   channel: 0,
 }
 
-const DIR = '/Users/montag/Music/kirbky';
-const OUT_DIR = path.join(DIR, 'out');
+const DIR = '/Users/montag/Music/goldeneye';
 
-// const midiFiles = glob.sync(path.join(DIR, '*00C 00*.mid'));
-const debugFiles = glob.sync(path.join(DIR, '*TrackParseDebug.txt'));
-// const debugFiles = glob.sync(path.join(DIR, '*TrackParseDebug.txt'));
-const midiFiles = debugFiles.map(f => f.replace(' TrackParseDebug.txt', '.mid'));
-const bundles = midiFiles.map((_, i) => {
-  // const parts = midiFiles[i].match(/^(.+? ([0-9A-F]{8}) [0-9A-F]{8} )?(.+?)\.mid$/);
-  // const outFile = `${parts[2]} ${parts[3]}.mid`;
-  const outFile = path.basename(midiFiles[i]);
-  return {
-    debugFile: debugFiles[i],
-    inFile: midiFiles[i],
-    outFile,
-  };
-});
+
+const OUT_DIR = path.join(DIR, 'out');
 // Offset: 00000195 - Event Delta Time: 96 -Abs 22848 (00000060)  -   !2573 Duration (B8) - Midi Channel 0 NoteNumber 37 Velocity 115 Duration 184
 const genRegex = /^Offset: ([0-9A-F]+) - Event Delta Time: ([0-9]+) -Abs ([0-9]+)/;
 // Offset: 000001DC - Event Delta Time: 4608 -Abs 23040 (0000A400) -   FF2DFFFF00000025 Count 255 LoopCount 255 OffsetBeginning 37 (01C1)
 const loopRegex = /^Offset: ([0-9A-F]+) - Event Delta Time: ([0-9]+) -Abs ([0-9]+) \([0-9A-F]+\) - {3}[0-9A-F]+ Count 255 LoopCount 255 OffsetBeginning [0-9]+ \(([0-9A-F]+)\)/;
+let dryRun = true;
+dryRun = false;
+
+
+/**
+ * Input (expected files from N64SoundTool):
+ *
+ *   Foo 00000001 00A1B2C3.mid
+ *   Foo 00000002 00A1B2C4.mid
+ *   ...
+ *   Foo 00000001 00A1B2C3.mid TrackParseDebug.txt
+ *   Foo 00000002 00A1B2C4.mid TrackParseDebug.txt
+ *   ...
+ *   NS4FooFiles.inl (optional - from NintendoSynthy4 project)
+ *     (https://github.com/L-Spiro/Nintendo-Synthy-4/blob/main/NS4/Src/Games/NS4Pilotwings64Files.inl)
+ *
+ * Output:
+ *
+ *   out/
+ *     01 - First Track Name.mid
+ *     02 - Second Track Name.mid
+ *     ...
+ */
+
+const debugFiles = glob.sync(path.join(DIR, '*TrackParseDebug.txt'));
+const midiFiles = debugFiles.map(f => f.replace(' TrackParseDebug.txt', ''));
+const inlFile = glob.sync(path.join(DIR, '*.inl'))[0];
+const niceTitleList = getNiceTitleListFromInlFile(inlFile);
+
+const bundles = midiFiles.map((_, i) => {
+  const parts = midiFiles[i].match(/^(.+? ([0-9A-F]{8} [0-9A-F]{8}))?.*\.mid$/);
+  const hexId = parts[2];
+  if (!hexId) throw Error('Could not get hex ID from MIDI filename ' + midiFiles[i]);
+  const fallbackTitle = path.basename(midiFiles[i]);
+  const niceTitle = getNiceTitleFromHexId(niceTitleList, hexId) + '.mid';
+  return {
+    debugFile: debugFiles[i],
+    inFile: midiFiles[i],
+    outFile: niceTitle || fallbackTitle,
+  };
+});
+bundles.forEach(bundle => {
+  repairN64Midi(bundle.inFile, bundle.outFile, bundle.debugFile);
+});
 
 function parseDebugLine(line) {
   let match = line.match(loopRegex);
@@ -63,6 +93,45 @@ function parseDebugLine(line) {
       line: line,
     };
   }
+}
+
+function getNiceTitleListFromInlFile(inlFile) {
+  if (!inlFile) return [];
+
+  const inlText = fs.readFileSync(inlFile).toString();
+  const trackNameRegEx = /([0-9A-F]{8} [0-9A-F]{8}?).+TrackParseDebug\.txt", u8"(.+?)",/;
+  return inlText
+    .split('\n')
+    .map((line, i) => {
+      const match = line.match(trackNameRegEx);
+      if (!match) {
+        return null;
+      } else {
+        return {
+          inlIdx: i,
+          hex: match[1],
+          name: match[2],
+        };
+      }
+    })
+    .filter(info => info != null)
+    .map((info, i) => {
+      const trackNum = (i + 1).toString().padStart(2, '0');
+      return {
+        ...info,
+        numberedName: `${trackNum} - ${info.name}`,
+      };
+    })
+    // This assumes the midiFiles will be in hex sorted order and match 1:1 with inl titles.
+    .sort((a, b) => a.hex.localeCompare(b.hex))
+    .map((info, i) => ({
+      ...info, midiFile: midiFiles[i],
+    }));
+}
+
+function getNiceTitleFromHexId(niceTitleList, hexId) {
+  // { u8"foo 0000002A 00293EF4.mid", u8"foo 0000002A 00293EF4.mid TrackParseDebug.txt", u8"Nice Title", 0 }
+  return niceTitleList.find(info => info.hex === hexId)?.numberedName;
 }
 
 function repairN64Midi(midiFilename, outFilename, debugFilename) {
@@ -94,10 +163,12 @@ function repairN64Midi(midiFilename, outFilename, debugFilename) {
 
   const newMidiData = midi.getContent();
 
-  if (!fs.existsSync(OUT_DIR)) {
-    fs.mkdirSync(OUT_DIR);
+  if (!dryRun) {
+    if (!fs.existsSync(OUT_DIR)) {
+      fs.mkdirSync(OUT_DIR);
+    }
+    fs.writeFileSync(path.join(OUT_DIR, outFilename), Buffer.from(newMidiData));
   }
-  fs.writeFileSync(path.join(OUT_DIR, outFilename), Buffer.from(newMidiData));
   console.log('Wrote %s.', outFilename);
 }
 
@@ -238,7 +309,7 @@ function fixMissingLoopEnd(trackIdx, events, songLength) {
     const endLoop = {
       type: EVENT_MIDI,
       subtype: EVENT_MIDI_CONTROLLER,
-      channel: lastEvent.channel,
+      channel: endTrack.channel || 0,
       param1: CC_103_TRACK_LOOP_END,
       delta: diff,
       tick: songLength,
@@ -378,7 +449,3 @@ function isEndOfTrack(event) {
     event.type === EVENT_META
   );
 }
-
-bundles.forEach(bundle => {
-  repairN64Midi(bundle.inFile, bundle.outFile, bundle.debugFile);
-});
