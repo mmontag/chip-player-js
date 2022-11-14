@@ -23,7 +23,7 @@ const DUMMY_EVENT = {
   channel: 0,
 }
 
-const DIR = '/Users/montag/Music/goldeneye';
+const DIR = '/Users/montag/Music/perfectdark';
 
 
 const OUT_DIR = path.join(DIR, 'out');
@@ -31,9 +31,8 @@ const OUT_DIR = path.join(DIR, 'out');
 const genRegex = /^Offset: ([0-9A-F]+) - Event Delta Time: ([0-9]+) -Abs ([0-9]+)/;
 // Offset: 000001DC - Event Delta Time: 4608 -Abs 23040 (0000A400) -   FF2DFFFF00000025 Count 255 LoopCount 255 OffsetBeginning 37 (01C1)
 const loopRegex = /^Offset: ([0-9A-F]+) - Event Delta Time: ([0-9]+) -Abs ([0-9]+) \([0-9A-F]+\) - {3}[0-9A-F]+ Count 255 LoopCount 255 OffsetBeginning [0-9]+ \(([0-9A-F]+)\)/;
-let dryRun = true;
-dryRun = false;
-
+let dryRun = false;
+let debugOutputFilenames = false;
 
 /**
  * Input (expected files from N64SoundTool):
@@ -60,18 +59,31 @@ const midiFiles = debugFiles.map(f => f.replace(' TrackParseDebug.txt', ''));
 const inlFile = glob.sync(path.join(DIR, '*.inl'))[0];
 const niceTitleList = getNiceTitleListFromInlFile(inlFile);
 
-const bundles = midiFiles.map((_, i) => {
-  const parts = midiFiles[i].match(/^(.+? ([0-9A-F]{8} [0-9A-F]{8}))?.*\.mid$/);
-  const hexId = parts[2];
-  if (!hexId) throw Error('Could not get hex ID from MIDI filename ' + midiFiles[i]);
-  const fallbackTitle = path.basename(midiFiles[i]);
-  const niceTitle = getNiceTitleFromHexId(niceTitleList, hexId) + '.mid';
-  return {
-    debugFile: debugFiles[i],
-    inFile: midiFiles[i],
-    outFile: niceTitle || fallbackTitle,
-  };
-});
+const bundles = midiFiles
+  .map((_, i) => {
+    const parts = midiFiles[i].match(/^(.+? ([0-9A-F]{8} [0-9A-F]{8}))?.*\.mid$/);
+    const hexId = parts[2];
+    if (!hexId) throw Error('Could not get hex ID from MIDI filename ' + midiFiles[i]);
+    const fallbackTitle = path.basename(midiFiles[i]);
+    const niceTitle = niceTitleList ? getNiceTitleFromHexId(niceTitleList, hexId) : fallbackTitle;
+    const outFile = `${debugOutputFilenames ? (hexId + ' ') : ''}${niceTitle}.mid`;
+    if (debugOutputFilenames) {
+      return {
+        debugFile: debugFiles[i],
+        inFile: midiFiles[i],
+        outFile: outFile,
+      };
+    } else if (niceTitle) {
+      // This will ignore input files that are missing from INL file.
+      return {
+        debugFile: debugFiles[i],
+        inFile: midiFiles[i],
+        outFile: outFile,
+      };
+    }
+    return null;
+  })
+  .filter(o => o != null);
 bundles.forEach(bundle => {
   repairN64Midi(bundle.inFile, bundle.outFile, bundle.debugFile);
 });
@@ -96,7 +108,7 @@ function parseDebugLine(line) {
 }
 
 function getNiceTitleListFromInlFile(inlFile) {
-  if (!inlFile) return [];
+  if (!inlFile) return null;
 
   const inlText = fs.readFileSync(inlFile).toString();
   const trackNameRegEx = /([0-9A-F]{8} [0-9A-F]{8}?).+TrackParseDebug\.txt", u8"(.+?)",/;
@@ -110,13 +122,14 @@ function getNiceTitleListFromInlFile(inlFile) {
         return {
           inlIdx: i,
           hex: match[1],
-          name: match[2],
+          name: match[2].replaceAll(':', ' –'), // Space + En-dash
         };
       }
     })
     .filter(info => info != null)
-    .map((info, i) => {
-      const trackNum = (i + 1).toString().padStart(2, '0');
+    .map((info, i, arr) => {
+      const digits = Math.floor(Math.log10(arr.length)) + 1;
+      const trackNum = (i + 1).toString().padStart(digits, '0');
       return {
         ...info,
         numberedName: `${trackNum} - ${info.name}`,
@@ -302,9 +315,12 @@ function fixMissingLoopEnd(trackIdx, events, songLength) {
     const endTrack = events.pop();
     if (!isEndOfTrack(endTrack)) throw Error('Last event in track %s not End of Track!', trackIdx);
     const lastEvent = events.pop();
-    const diff = songLength - lastEvent.tick;
+    let diff = songLength - lastEvent.tick;
     console.log('diff', diff);
-    if (diff < 0) console.warn('Track was too long!');
+    if (diff < 0) {
+      console.warn('Track was too long!');
+      diff = 0;
+    }
 
     const endLoop = {
       type: EVENT_MIDI,
