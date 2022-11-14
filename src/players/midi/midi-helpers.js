@@ -176,35 +176,13 @@ MIDIFile.prototype.getLoopedEvents = function (tracks, loopCount = 1) {
         trackIterators[smallestDelta].curEvent = trackIterators[smallestDelta].next();
 
         // check elapsed loops
-        // const allTracksHaveLooped = trackIterators.filter(it => it.elapsedLoops === 0).length === 0;
-        // const longestLoopCount = trackIterators.every((acc, cur) => Math.min(acc, cur.elapsedLoops), Infinity);
-        // loopCountReached = allTracksHaveLooped && longestLoopCount >= loopCount;
         loopCountReached = trackIterators.every(it => it.curEvent == null || it.elapsedLoops >= loopCount);
       }
     } while (-1 !== smallestDelta && loopCountReached === false);
 
-    // const allNotesOff = function(track, channel, playTime) {
-    //   return {
-    //     channel: channel,
-    //     track: track,
-    //     playTime: playTime,
-    //     type: EVENT_MIDI,
-    //     subtype: EVENT_MIDI_CONTROLLER,
-    //     param1: CC_123_ALL_NOTES_OFF,
-    //     delta: 0,
-    //   };
-    // }
-    // // Drain synthetic events (prevent hanging notes from the final loop).
-    // for (let i = 0; i < trackIterators.length; i++) {
-    //   combinedEvents.push(allNotesOff(i, trackIterators[i].curEvent.channel), playTime);
-    //   // while (trackIterators[i].syntheticEvents.length > 0) {
-    //   //   const event = trackIterators[i].syntheticEvents.pop();
-    //   //   event.playTime = playTime;
-    //   //   event.track = i;
-    //   //   console.log("Found a synthetic event in the queue", event);
-    //   //   combinedEvents.push(event);
-    //   // }
-    // }
+    for (let i = 0; i < trackIterators.length; i++) {
+      combinedEvents.push(allNotesOff(i, trackIterators[i].curEvent.channel, playTime));
+    }
   }
   console.debug(combinedEvents);
   return combinedEvents;
@@ -226,6 +204,26 @@ function isLoopEnd(event) {
   );
 }
 
+function isAllNotesOff(event) {
+  return (
+    event.param1 === CC_123_ALL_NOTES_OFF &&
+    event.subtype === EVENT_MIDI_CONTROLLER &&
+    event.type === EVENT_MIDI
+  );
+}
+
+function allNotesOff(track, channel, playTime) {
+  return {
+    channel: channel,
+    track: track,
+    playTime: playTime,
+    type: EVENT_MIDI,
+    subtype: EVENT_MIDI_CONTROLLER,
+    param1: CC_123_ALL_NOTES_OFF,
+    delta: 0,
+  };
+}
+
 function printTrack(t, events) {
   const ticksPerChar = 1000;
   let charArr = [];
@@ -234,7 +232,10 @@ function printTrack(t, events) {
     const event = events[i];
     tick += event.delta;
     const j = Math.floor(tick / ticksPerChar);
-    if (isLoopStart(event)) {
+    if (isAllNotesOff(event)) {
+      charArr[j] = 'X';
+      tick += ticksPerChar; // force next char so this doesn't get overwritten
+    } else if (isLoopStart(event)) {
       charArr[j] = '>';
     } else if (isLoopEnd(event)) {
       charArr[j] = '<';
