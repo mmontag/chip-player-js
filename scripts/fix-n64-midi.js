@@ -31,8 +31,8 @@ const OUT_DIR = path.join(DIR, 'out');
 const genRegex = /^Offset: ([0-9A-F]+) - Event Delta Time: ([0-9]+) -Abs ([0-9]+)/;
 // Offset: 000001DC - Event Delta Time: 4608 -Abs 23040 (0000A400) -   FF2DFFFF00000025 Count 255 LoopCount 255 OffsetBeginning 37 (01C1)
 const loopRegex = /^Offset: ([0-9A-F]+) - Event Delta Time: ([0-9]+) -Abs ([0-9]+) \([0-9A-F]+\) - {3}[0-9A-F]+ Count 255 LoopCount 255 OffsetBeginning [0-9]+ \(([0-9A-F]+)\)/;
-let dryRun = false;
-let debugOutputFilenames = false;
+let dryRun = true;
+let debugOutputFilenames = true;
 
 /**
  * Input (expected files from N64SoundTool):
@@ -112,13 +112,16 @@ function getNiceTitleListFromInlFile(inlFile) {
 
   const inlText = fs.readFileSync(inlFile).toString();
   const trackNameRegEx = /([0-9A-F]{8} [0-9A-F]{8}?).+TrackParseDebug\.txt", u8"(.+?)",/;
+  const hexSet = new Set();
   return inlText
     .split('\n')
     .map((line, i) => {
       const match = line.match(trackNameRegEx);
-      if (!match) {
+      // Some songs have duplicate entries in the INL, such as "Sans SFX" versions in Perfect Dark
+      if (!match || hexSet.has(match[1])) {
         return null;
       } else {
+        hexSet.add(match[1]);
         return {
           inlIdx: i,
           hex: match[1],
