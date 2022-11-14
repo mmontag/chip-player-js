@@ -23,7 +23,7 @@ const DUMMY_EVENT = {
   channel: 0,
 }
 
-const DIR = '/Users/montag/Music/perfectdark';
+const DIR = '/Users/montag/Music/diddykong1.0';
 
 
 const OUT_DIR = path.join(DIR, 'out');
@@ -31,8 +31,8 @@ const OUT_DIR = path.join(DIR, 'out');
 const genRegex = /^Offset: ([0-9A-F]+) - Event Delta Time: ([0-9]+) -Abs ([0-9]+)/;
 // Offset: 000001DC - Event Delta Time: 4608 -Abs 23040 (0000A400) -   FF2DFFFF00000025 Count 255 LoopCount 255 OffsetBeginning 37 (01C1)
 const loopRegex = /^Offset: ([0-9A-F]+) - Event Delta Time: ([0-9]+) -Abs ([0-9]+) \([0-9A-F]+\) - {3}[0-9A-F]+ Count 255 LoopCount 255 OffsetBeginning [0-9]+ \(([0-9A-F]+)\)/;
-let dryRun = true;
-let debugOutputFilenames = true;
+let dryRun = false;
+let debugOutputFilenames = false;
 
 /**
  * Input (expected files from N64SoundTool):
@@ -84,6 +84,14 @@ const bundles = midiFiles
     return null;
   })
   .filter(o => o != null);
+
+if (niceTitleList && bundles.length === 0) {
+  console.log(
+    'MIDI filenames did not match hex addresses in %s. Different ROM version?',
+    path.basename(inlFile)
+  );
+}
+
 bundles.forEach(bundle => {
   repairN64Midi(bundle.inFile, bundle.outFile, bundle.debugFile);
 });
