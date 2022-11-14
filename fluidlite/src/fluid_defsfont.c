@@ -3110,7 +3110,7 @@ fixup_sample (SFData * sf)
     || sam->loopstart <= sam->start)
     {			/* loop is fowled?? (cluck cluck :) */
           /* can pad loop by 8 samples and ensure at least 4 for loop (2*8+4) */
-      FLUID_LOG (FLUID_WARN, _("Loop point fixup disabled: %s"), sam->name);
+//      FLUID_LOG (FLUID_WARN, _("Loop point fixup disabled: %s"), sam->name);
 // Disabled - see https://github.com/divideconcept/FluidLite/issues/45
 //      if ((sam->end - sam->start) >= 20)
 //        {
