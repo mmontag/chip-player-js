@@ -76,13 +76,13 @@ dryRun = false;
 const debugFiles = glob.sync(path.join(DIR, '*TrackParseDebug.txt')).sort((a, b) => a.localeCompare(b));
 // const debugFiles = glob.sync(path.join(DIR, '*TrackParseDebug.txt'));
 const midiFiles = debugFiles.map(f => f.replace(' TrackParseDebug.txt', ''));
-const re = /([0-9A-F]{8} [0-9A-F]{8}?).+TrackParseDebug\.txt", u8"(.+?)",/;
+const trackNameRegEx = /([0-9A-F]{8} [0-9A-F]{8}?).+TrackParseDebug\.txt", u8"(.+?)",/;
 
 const fileMap = {};
 
 const lines = tracks.split('\n')
   .map((t, i) => {
-    const match = t.match(re);
+    const match = t.match(trackNameRegEx);
     fileMap[match[1]] = match[2];
     return {
       origIdx: i,
