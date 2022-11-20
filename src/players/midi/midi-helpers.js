@@ -181,7 +181,9 @@ MIDIFile.prototype.getLoopedEvents = function (tracks, loopCount = 1) {
     } while (-1 !== smallestDelta && loopCountReached === false);
 
     for (let i = 0; i < trackIterators.length; i++) {
-      combinedEvents.push(allNotesOff(i, trackIterators[i].curEvent.channel, playTime));
+      if (trackIterators[i]?.curEvent) {
+        combinedEvents.push(allNotesOff(i, trackIterators[i].curEvent.channel, playTime));
+      }
     }
   }
   console.debug(combinedEvents);
