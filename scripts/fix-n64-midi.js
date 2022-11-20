@@ -6,6 +6,7 @@ const {
   EVENT_META_END_OF_TRACK,
   EVENT_META,
   EVENT_META_MARKER,
+  EVENT_META_TEXT,
 } = require('midievents');
 const MIDIFile = require('midifile');
 const fs = require('fs');
@@ -23,7 +24,7 @@ const DUMMY_EVENT = {
   channel: 0,
 }
 
-const DIR = '/Users/montag/Music/diddykong1.0';
+const DIR = '/Users/montag/Music/mariokart';
 
 
 const OUT_DIR = path.join(DIR, 'out');
@@ -57,21 +58,26 @@ let debugOutputFilenames = false;
 const debugFiles = glob.sync(path.join(DIR, '*TrackParseDebug.txt'));
 const midiFiles = debugFiles.map(f => f.replace(' TrackParseDebug.txt', ''));
 const inlFile = glob.sync(path.join(DIR, '*.inl'))[0];
-const niceTitleList = getNiceTitleListFromInlFile(inlFile);
+const inlInfoList = getInlInfoListFromInlFile(inlFile);
+const hasMultipleBanks = inlInfoList.some(o => o.bank !== 0);
 
 const bundles = midiFiles
   .map((_, i) => {
-    const parts = midiFiles[i].match(/^(.+? ([0-9A-F]{8} [0-9A-F]{8}))?.*\.mid$/);
-    const hexId = parts[2];
+    const parts = midiFiles[i].match(/^((.+?) \(.+? ([0-9A-F]{8} [0-9A-F]{8}))?.*\.mid$/);
+    const gameName = path.basename(parts[2]);
+    const hexId = parts[3];
     if (!hexId) throw Error('Could not get hex ID from MIDI filename ' + midiFiles[i]);
     const fallbackTitle = path.basename(midiFiles[i]);
-    const niceTitle = niceTitleList ? getNiceTitleFromHexId(niceTitleList, hexId) : fallbackTitle;
+    const inlInfo = getInlInfoFromHexId(inlInfoList, hexId);
+    const niceTitle = inlInfo ? inlInfo.numberedName : fallbackTitle;
     const outFile = `${debugOutputFilenames ? (hexId + ' ') : ''}${niceTitle}.mid`;
+    const soundfont = (inlInfo && hasMultipleBanks) ? `${gameName} ${inlInfo.bank}.sf2` : `${gameName}.sf2`;
     if (debugOutputFilenames) {
       return {
         debugFile: debugFiles[i],
         inFile: midiFiles[i],
         outFile: outFile,
+        soundfont: soundfont,
       };
     } else if (niceTitle) {
       // This will ignore input files that are missing from INL file.
@@ -79,13 +85,14 @@ const bundles = midiFiles
         debugFile: debugFiles[i],
         inFile: midiFiles[i],
         outFile: outFile,
+        soundfont: soundfont,
       };
     }
     return null;
   })
   .filter(o => o != null);
 
-if (niceTitleList && bundles.length === 0) {
+if (inlInfoList && bundles.length === 0) {
   console.log(
     'MIDI filenames did not match hex addresses in %s. Different ROM version?',
     path.basename(inlFile)
@@ -93,7 +100,7 @@ if (niceTitleList && bundles.length === 0) {
 }
 
 bundles.forEach(bundle => {
-  repairN64Midi(bundle.inFile, bundle.outFile, bundle.debugFile);
+  repairN64Midi(bundle.inFile, bundle.outFile, bundle.debugFile, bundle.soundfont);
 });
 
 function parseDebugLine(line) {
@@ -115,11 +122,13 @@ function parseDebugLine(line) {
   }
 }
 
-function getNiceTitleListFromInlFile(inlFile) {
+function getInlInfoListFromInlFile(inlFile) {
   if (!inlFile) return null;
 
   const inlText = fs.readFileSync(inlFile).toString();
-  const trackNameRegEx = /([0-9A-F]{8} [0-9A-F]{8}?).+TrackParseDebug\.txt", u8"(.+?)",/;
+  // Greedy initial match - find last hex numbers
+  // { u8"1 Mario Kart 64 (U) 00000001 00000001 Main Theme.mid", u8"Mario Kart 64 (U) 00000001 00BC5F60 Mario Kart 64 Theme.mid TrackParseDebug.txt", u8"Main Theme", 0x01 },
+  const trackNameRegEx = /^.*([0-9A-F]{8} [0-9A-F]{8}?).+TrackParseDebug\.txt", u8"(.+?)", ([0-9A-Fx]+)/;
   const hexSet = new Set();
   return inlText
     .split('\n')
@@ -129,11 +138,16 @@ function getNiceTitleListFromInlFile(inlFile) {
       if (!match || hexSet.has(match[1])) {
         return null;
       } else {
-        hexSet.add(match[1]);
+        const hex = match[1];  // Hex IDs output by N64 SoundTool
+        const name = match[2]; // Title of song
+        // Some games have multiple soundbanks, like Mario Kart 64 and Star Fox 64
+        const bank = Number(match[3]).toString(16).toUpperCase().padStart(2, '0'); // Soundfont bank hex number
+        hexSet.add(hex);
         return {
           inlIdx: i,
-          hex: match[1],
-          name: match[2].replaceAll(':', ' –'), // Space + En-dash
+          hex: hex,
+          bank: bank,
+          name: name.replaceAll(':', ' –'), // Space + En-dash (Colon not legal in filenames)
         };
       }
     })
@@ -153,12 +167,12 @@ function getNiceTitleListFromInlFile(inlFile) {
     }));
 }
 
-function getNiceTitleFromHexId(niceTitleList, hexId) {
+function getInlInfoFromHexId(inlInfoList, hexId) {
   // { u8"foo 0000002A 00293EF4.mid", u8"foo 0000002A 00293EF4.mid TrackParseDebug.txt", u8"Nice Title", 0 }
-  return niceTitleList.find(info => info.hex === hexId)?.numberedName;
+  return inlInfoList?.find(info => info.hex === hexId);
 }
 
-function repairN64Midi(midiFilename, outFilename, debugFilename) {
+function repairN64Midi(midiFilename, outFilename, debugFilename, soundfontFilename) {
   console.log('Processing %s...', midiFilename);
 
   const midiData = fs.readFileSync(midiFilename);
@@ -175,12 +189,17 @@ function repairN64Midi(midiFilename, outFilename, debugFilename) {
     console.log('---- Track %s: %s events', i, fixedEvents.length, loopRanges[i]);
     const loopRange = loopRanges[i];
 
-    if (loopRange) {
-      fixedEvents = removeExtraLoopEvents(i, fixedEvents, loopRange);
+    if (i === 0 && hasMultipleBanks) {
+      fixedEvents = addSoundfontMetaText(fixedEvents, soundfontFilename);
     }
-    fixedEvents = fixOverlappingNotes(i, fixedEvents);
-    fixedEvents = fixMissingLoopEnd(i, fixedEvents, songLength);
-    fixedEvents = insertAllNotesOff(i, fixedEvents, songLength);
+    if (fixedEvents.length > 2) {
+      if (loopRange) {
+        fixedEvents = removeExtraLoopEvents(i, fixedEvents, loopRange);
+      }
+      fixedEvents = fixOverlappingNotes(i, fixedEvents);
+      fixedEvents = fixMissingLoopEnd(i, fixedEvents, songLength);
+      fixedEvents = insertAllNotesOff(i, fixedEvents, songLength);
+    }
 
     midi.setTrackEvents(i, fixedEvents);
   }
@@ -194,6 +213,21 @@ function repairN64Midi(midiFilename, outFilename, debugFilename) {
     fs.writeFileSync(path.join(OUT_DIR, outFilename), Buffer.from(newMidiData));
   }
   console.log('Wrote %s.', outFilename);
+}
+
+function addSoundfontMetaText(events, soundfontFilename) {
+  // filename had better be lower ASCII
+  const data = 'SF2=' + soundfontFilename;
+  console.log('Added EVENT_META_TEXT (%s) event to track 0.', data);
+  events.unshift({
+    type: EVENT_META,
+    subtype: EVENT_META_TEXT,
+    data: data.split('').map(c => c.charCodeAt(0)),
+    channel: 1,
+    length: data.length,
+    delta: 0,
+  });
+  return events;
 }
 
 function parseLoopRanges(debugLines) {
