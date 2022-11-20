@@ -17,6 +17,7 @@ const http = require('http');
 const TrieSearch = require('trie-search');
 const { performance } = require('perf_hooks');
 const { sampleSize } = require('lodash');
+const { FORMATS } = require('../src/config');
 
 const CATALOG_PATH = './catalog.json';
 const catalog = require(CATALOG_PATH);
@@ -104,7 +105,39 @@ const routes = {
   },
 
   'browse': async (params) => {
-    return directories[params.path];
+    /*
+      [
+        {
+          "path": "/Classical MIDI/Balakirev/Islamey – Fantaisie Orientale (G. Giulimondi).mid",
+          "size": 54602,
+          "type": "file",
+          "idx": 0
+        },
+        {
+          "path": "/Classical MIDI/Balakirev/Islamey – Fantaisie Orientale (W. Pepperdine).mid",
+          "size": 213866,
+          "type": "file",
+          "idx": 1
+        }
+      ]
+    */
+    if (process.env.DEV) {
+      const files = fs.readdirSync(path.join(LOCAL_CATALOG_ROOT, params.path), { withFileTypes: true });
+      return files
+        .filter(file => {
+          return (file.isDirectory() || (file.isFile() && FORMATS.includes(path.extname(file.name).slice(1))));
+        })
+        .map((file, i) => {
+          return {
+            path: path.join(params.path, file.name),
+            size: 999,
+            type: file.isDirectory() ? 'directory' : 'file',
+            idx: i,
+          }
+        });
+    } else {
+      return directories[params.path];
+    }
   },
 
   'metadata': async (params) => {
