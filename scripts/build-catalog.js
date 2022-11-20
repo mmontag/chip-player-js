@@ -18,6 +18,36 @@ const romanNumeralNineRegex = /\bix\b/i;
 const romanNumeralRegex = /\b([IVXLC]+|[ivxlc]+)[-.,)]/; // All upper case or all lower case
 const NUMERIC_COLLATOR = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
 
+/*
+
+Sample catalog.json output:
+
+[
+  "Classical MIDI/Balakirev/Islamey – Fantaisie Orientale (G. Giulimondi).mid",
+  "Classical MIDI/Balakirev/Islamey – Fantaisie Orientale (W. Pepperdine).mid"
+]
+
+Sample directories.json output:
+
+{
+  "/Classical MIDI/Balakirev": [
+    {
+      "path": "/Classical MIDI/Balakirev/Islamey – Fantaisie Orientale (G. Giulimondi).mid",
+      "size": 54602,
+      "type": "file",
+      "idx": 0
+    },
+    {
+      "path": "/Classical MIDI/Balakirev/Islamey – Fantaisie Orientale (W. Pepperdine).mid",
+      "size": 213866,
+      "type": "file",
+      "idx": 1
+    }
+  ]
+}
+
+*/
+
 function replaceRomanWithArabic(str) {
   // Works up to 399 (CCCXCIX)
   try {
