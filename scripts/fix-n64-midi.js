@@ -7,12 +7,15 @@ const {
   EVENT_META,
   EVENT_META_MARKER,
   EVENT_META_TEXT,
+  EVENT_MIDI_PROGRAM_CHANGE,
 } = require('midievents');
 const MIDIFile = require('midifile');
 const fs = require('fs');
 const glob = require('glob');
 const path = require('path');
 
+const CC_0_BANK_SELECT_MSB = 0;
+const CC_32_BANK_SELECT_LSB = 32;
 const CC_102_TRACK_LOOP_START = 102;
 const CC_103_TRACK_LOOP_END = 103;
 const CC_123_ALL_NOTES_OFF = 123;
@@ -196,6 +199,9 @@ function repairN64Midi(midiFilename, outFilename, debugFilename, soundfontFilena
       if (loopRange) {
         fixedEvents = removeExtraLoopEvents(i, fixedEvents, loopRange);
       }
+      if (fixedEvents[0]?.channel === 9) {
+        fixedEvents = fixDrumBankProgramChange(i, fixedEvents);
+      }
       fixedEvents = fixOverlappingNotes(i, fixedEvents);
       fixedEvents = fixMissingLoopEnd(i, fixedEvents, songLength);
       fixedEvents = insertAllNotesOff(i, fixedEvents, songLength);
@@ -323,6 +329,29 @@ function removeExtraLoopEvents(trackIdx, events, loopRange) {
   // });
   console.log('Filtered %d extra loop events in track %d.', numRepairedEvents, trackIdx);
   return newEvents;
+}
+
+/**
+ * Changes Bank 0, Program 127 to Bank 128, Program 0.
+ */
+function fixDrumBankProgramChange(trackIdx, events) {
+  for (let i = 0; i < events.length; i++) {
+    const e1 = events[i];
+    if (isBankSelectMSB(e1) && e1.param2 === 0) {
+      const e2 = events[i+1];
+      if (isBankSelectLSB(e2) && e2.param2 === 0) {
+        const e3 = events[i+2];
+        if (isProgramChange(e3) && e3.param1 === 127) {
+          e1.param2 = 1;
+          e2.param2 = 0;
+          e3.param1 = 0;
+          console.log('Repaired drum bank/program select on track %s.', trackIdx);
+        }
+      }
+    }
+  }
+
+  return events;
 }
 
 function addTickToEvents(events) {
@@ -470,6 +499,29 @@ function fixOverlappingNotes(trackIdx, events) {
   }
   console.log('Fixed %d overlapping notes on track %d.', numRepairedNotes, trackIdx);
   return newEvents;
+}
+
+function isProgramChange(event) {
+  return (
+    event.subtype === EVENT_MIDI_PROGRAM_CHANGE &&
+    event.type === EVENT_MIDI
+  );
+}
+
+function isBankSelectMSB(event) {
+  return (
+    event.subtype === EVENT_MIDI_CONTROLLER &&
+    event.type === EVENT_MIDI &&
+    event.param1 === CC_0_BANK_SELECT_MSB
+  );
+}
+
+function isBankSelectLSB(event) {
+  return (
+    event.subtype === EVENT_MIDI_CONTROLLER &&
+    event.type === EVENT_MIDI &&
+    event.param1 === CC_32_BANK_SELECT_LSB
+  );
 }
 
 function isNoteOn(event) {
