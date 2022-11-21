@@ -9,41 +9,24 @@ const CC_123_ALL_NOTES_OFF = 123;
 class EventIterator {
   constructor(events) {
     this.events = events;
-    this.syntheticEvents = [];
     this.curEvent = events[0];
     this.pos = 0;
     this.loopStartPos = null;
     this.elapsedLoops = 0;
     this.curTick = 0;
-    // An experiment to filter out all but first and last loop markers
-    // const firstLoopStart = events.find(ev => this.isLoopStart(ev));
-    // const lastLoopEnd = events.findLast(ev => this.isLoopEnd(ev));
-    // this.events = events.filter(ev => {
-    //   if (this.isLoopStart(ev)) return ev === firstLoopStart;
-    //   if (this.isLoopEnd(ev)) return ev === lastLoopEnd;
-    //   return true;
-    // });
   }
 
   loop() {
     // Sanity check
     if (this.curTick < 1000000 && this.elapsedLoops < 1000) {
       this.pos = this.loopStartPos;
-      // Prevent stuck notes when restarting loop.
-      // this.syntheticEvents.push({
-      //   channel: this.curEvent.channel,
-      //   type: EVENT_MIDI,
-      //   subtype: EVENT_MIDI_CONTROLLER,
-      //   param1: CC_123_ALL_NOTES_OFF,
-      //   delta: 0,
-      // });
       console.debug('Channel %d looped at tick %d (loop %d completed)', this.curEvent.channel, this.curTick, this.elapsedLoops);
       this.elapsedLoops++;
     }
   }
 
   next() {
-    const event = this.syntheticEvents.pop() || this.events[this.pos++];
+    const event = this.events[this.pos++];
     if (!event) return null;
 
     this.curTick += event.delta;
@@ -58,10 +41,6 @@ class EventIterator {
         this.loop();
       }
     }
-    // if (this.loopStartPos != null && event.type === EVENT_META && event.subtype === EVENT_META_END_OF_TRACK) {
-    //   this.loop();
-    // }
-
 
     // Return a copy because track consolidation will mutate the events.
     return { ...event };
