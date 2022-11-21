@@ -29,7 +29,7 @@ const DUMMY_EVENT = {
   channel: 0,
 }
 
-const DIR = '/Users/montag/Music/mariokart';
+const DIR = '/Users/montag/Music/bomberman-hero';
 
 
 const OUT_DIR = path.join(DIR, 'out');
@@ -132,7 +132,7 @@ function getInlInfoListFromInlFile(inlFile) {
   const inlText = fs.readFileSync(inlFile).toString();
   // Greedy initial match - find last hex numbers
   // { u8"1 Mario Kart 64 (U) 00000001 00000001 Main Theme.mid", u8"Mario Kart 64 (U) 00000001 00BC5F60 Mario Kart 64 Theme.mid TrackParseDebug.txt", u8"Main Theme", 0x01 },
-  const trackNameRegEx = /^.*([0-9A-F]{8} [0-9A-F]{8}?).+TrackParseDebug\.txt", u8"(.+?)", ([0-9A-Fx]+)/;
+  const trackNameRegEx = /^.*([0-9A-F]{8} [0-9A-F]{8}?).+TrackParseDebug\.txt", u8"(.+?)"(, ([0-9A-Fx]+))?/;
   const hexSet = new Set();
   return inlText
     .split('\n')
@@ -145,7 +145,7 @@ function getInlInfoListFromInlFile(inlFile) {
         const hex = match[1];  // Hex IDs output by N64 SoundTool
         const name = match[2]; // Title of song
         // Some games have multiple soundbanks, like Mario Kart 64 and Star Fox 64
-        const bank = Number(match[3]).toString(16).toUpperCase().padStart(2, '0'); // Soundfont bank hex number
+        const bank = Number(match[4] || '0').toString(16).toUpperCase().padStart(2, '0'); // Soundfont bank hex number
         hexSet.add(hex);
         return {
           inlIdx: i,
@@ -203,6 +203,9 @@ function repairN64Midi(midiFilename, outFilename, debugFilename, soundfontFilena
       if (fixedEvents[0]?.channel === 9) {
         fixedEvents = fixDrumBankProgramChange(i, fixedEvents);
       }
+      if (outFilename === '03 - Redial.mid' && i === 2) {
+        fixedEvents = insertOctavePitchBendRange(i, fixedEvents);
+      }
       fixedEvents = fixOverlappingNotes(i, fixedEvents);
       fixedEvents = fixMissingLoopEnd(i, fixedEvents, songLength);
       fixedEvents = insertAllNotesOff(i, fixedEvents, songLength);
@@ -220,6 +223,42 @@ function repairN64Midi(midiFilename, outFilename, debugFilename, soundfontFilena
     fs.writeFileSync(path.join(OUT_DIR, outFilename), Buffer.from(newMidiData));
   }
   console.log('Wrote %s.', outFilename);
+}
+
+function insertOctavePitchBendRange(trackIdx, events) {
+  for (let i = 1; i < events.length; i++) {
+    const event = events[i];
+    if (isLoopStart(event)) {
+      // insert pitch bend range adjust immediately before loop start
+      // https://www.polyphone-soundfonts.com/forum/soundfonts-help/346-how-to-set-pitch-bend-range-to-12-semitones
+      const [e1, e2, e3] = [{
+        type: EVENT_MIDI,
+        subtype: EVENT_MIDI_CONTROLLER,
+        channel: event.channel,
+        param1: 100,
+        param2: 0,
+        delta: 1,
+      }, {
+        type: EVENT_MIDI,
+        subtype: EVENT_MIDI_CONTROLLER,
+        channel: event.channel,
+        param1: 101,
+        param2: 0,
+        delta: 1,
+      }, {
+        type: EVENT_MIDI,
+        subtype: EVENT_MIDI_CONTROLLER,
+        channel: event.channel,
+        param1: 6,
+        param2: 12,
+        delta: 1,
+      }];
+      events.splice(i - 1, 0, e1, e2, e3);
+      event.delta -= 3;
+      return events;
+    }
+  }
+  return events;
 }
 
 function addSoundfontMetaText(events, soundfontFilename) {
