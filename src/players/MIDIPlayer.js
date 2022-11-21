@@ -330,12 +330,13 @@ export default class MIDIPlayer extends Player {
           await ensureEmscFileWithUrl(lib, `${SOUNDFONT_MOUNTPOINT}/${sf2Path}`, soundfontUrl);
           this.updateSoundfontParamDefs();
         }
-        // lib._fluid_settings_setstr(settings, "synth.drums-channel.active", "no");
-        // lib._fluid_synth_bank_select(this->synth, 9, 0); // try to force drum channel to bank 0
-        lib._tp_set_ch10_melodic(1);
-      } else {
-        lib._tp_set_ch10_melodic(0);
+        // Disabled due to Kirby 64 tracks. CH 10 needs to be a drum channel.
+        // TODO: Maybe this is no longer needed at all. Delete after 2022-12-25.
+        //   lib._tp_set_ch10_melodic(1);
+        // } else {
+        //   lib._tp_set_ch10_melodic(0);
       }
+      lib._tp_set_ch10_melodic(0);
     }
 
     // Apply transient params. Avoid thrashing of params that haven't changed.
@@ -347,7 +348,9 @@ export default class MIDIPlayer extends Player {
       });
 
     const midiFile = new MIDIFile(data);
-    const useTrackLoops = filepath.includes('SoundFont MIDI');
+    // TODO: Forced true for testing - make permanent after 2022-12-25.
+    //   checking filepath doesn't work for dragged files.
+    const useTrackLoops = true; // filepath.includes('SoundFont MIDI');
     this.midiFilePlayer.load(midiFile, useTrackLoops);
     this.midiFilePlayer.play(() => this.emit('playerStateUpdate', { isStopped: true }));
 
