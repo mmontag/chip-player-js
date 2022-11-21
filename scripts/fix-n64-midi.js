@@ -27,7 +27,7 @@ const DUMMY_EVENT = {
   channel: 0,
 }
 
-const DIR = '/Users/montag/Music/mariokart';
+const DIR = '/Users/montag/Music/kirby64';
 
 
 const OUT_DIR = path.join(DIR, 'out');
@@ -59,39 +59,38 @@ let debugOutputFilenames = false;
  */
 
 const debugFiles = glob.sync(path.join(DIR, '*TrackParseDebug.txt'));
-const midiFiles = debugFiles.map(f => f.replace(' TrackParseDebug.txt', ''));
+const midiFiles = debugFiles.map(f => f.replace(/(\.mid)? TrackParseDebug.txt$/, '.mid'));
 const inlFile = glob.sync(path.join(DIR, '*.inl'))[0];
 const inlInfoList = getInlInfoListFromInlFile(inlFile);
-const hasMultipleBanks = inlInfoList.some(o => o.bank !== 0);
+const hasMultipleBanks = inlInfoList?.some(o => o.bank !== 0) || false;
 
 const bundles = midiFiles
   .map((_, i) => {
     const parts = midiFiles[i].match(/^((.+?) \(.+? ([0-9A-F]{8} [0-9A-F]{8}))?.*\.mid$/);
-    const gameName = path.basename(parts[2]);
-    const hexId = parts[3];
-    if (!hexId) throw Error('Could not get hex ID from MIDI filename ' + midiFiles[i]);
-    const fallbackTitle = path.basename(midiFiles[i]);
-    const inlInfo = getInlInfoFromHexId(inlInfoList, hexId);
-    const niceTitle = inlInfo ? inlInfo.numberedName : fallbackTitle;
-    const outFile = `${debugOutputFilenames ? (hexId + ' ') : ''}${niceTitle}.mid`;
-    const soundfont = (inlInfo && hasMultipleBanks) ? `${gameName} ${inlInfo.bank}.sf2` : `${gameName}.sf2`;
-    if (debugOutputFilenames) {
-      return {
-        debugFile: debugFiles[i],
-        inFile: midiFiles[i],
-        outFile: outFile,
-        soundfont: soundfont,
-      };
-    } else if (niceTitle) {
-      // This will ignore input files that are missing from INL file.
-      return {
-        debugFile: debugFiles[i],
-        inFile: midiFiles[i],
-        outFile: outFile,
-        soundfont: soundfont,
-      };
+    let outFile;
+    let soundfont;
+    if (parts && parts[2] && parts[3]) {
+      // The file name has to include the hex identifiers in order to match lines in the INL file.
+      const gameName = path.basename(parts[2]);
+      const hexId = parts[3];
+      if (!hexId) throw Error('Could not get hex ID from MIDI filename ' + midiFiles[i]);
+      const fallbackTitle = path.basename(midiFiles[i]);
+      const inlInfo = getInlInfoFromHexId(inlInfoList, hexId);
+      const niceTitle = inlInfo ? inlInfo.numberedName : fallbackTitle;
+      outFile = `${debugOutputFilenames ? (hexId + ' ') : ''}${niceTitle}.mid`;
+      soundfont = (inlInfo && hasMultipleBanks) ? `${gameName} ${inlInfo.bank}.sf2` : `${gameName}.sf2`;
+    } else {
+      // Otherwise, just use the input file name.
+      outFile = path.basename(midiFiles[i]);
+      soundfont = null;
     }
-    return null;
+
+    return {
+      debugFile: debugFiles[i],
+      inFile: midiFiles[i],
+      outFile: outFile,
+      soundfont: soundfont,
+    };
   })
   .filter(o => o != null);
 
@@ -409,7 +408,7 @@ function fixMissingLoopEnd(trackIdx, events, songLength) {
     events.push(endLoop);
     events.push(endTrack);
 
-    console.log('Added LOOP_END event to track %s.', trackIdx, endLoop);
+    console.log('Added LOOP_END event to track %s.', trackIdx);
   }
 
   // if (endTrack.tick !== songLength) {
