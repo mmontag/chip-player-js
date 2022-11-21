@@ -8,6 +8,7 @@ const {
   EVENT_META_MARKER,
   EVENT_META_TEXT,
   EVENT_MIDI_PROGRAM_CHANGE,
+  EVENT_MIDI_PITCH_BEND,
 } = require('midievents');
 const MIDIFile = require('midifile');
 const fs = require('fs');
@@ -18,6 +19,7 @@ const CC_0_BANK_SELECT_MSB = 0;
 const CC_32_BANK_SELECT_LSB = 32;
 const CC_102_TRACK_LOOP_START = 102;
 const CC_103_TRACK_LOOP_END = 103;
+const CC_121_ALL_CONTROLLERS_OFF = 121;
 const CC_123_ALL_NOTES_OFF = 123;
 const DUMMY_EVENT = {
   type: EVENT_META,
@@ -27,7 +29,7 @@ const DUMMY_EVENT = {
   channel: 0,
 }
 
-const DIR = '/Users/montag/Music/kirby64';
+const DIR = '/Users/montag/Music/mariokart';
 
 
 const OUT_DIR = path.join(DIR, 'out');
@@ -62,7 +64,7 @@ const debugFiles = glob.sync(path.join(DIR, '*TrackParseDebug.txt'));
 const midiFiles = debugFiles.map(f => f.replace(/(\.mid)? TrackParseDebug.txt$/, '.mid'));
 const inlFile = glob.sync(path.join(DIR, '*.inl'))[0];
 const inlInfoList = getInlInfoListFromInlFile(inlFile);
-const hasMultipleBanks = inlInfoList?.some(o => o.bank !== 0) || false;
+const hasMultipleBanks = inlInfoList?.some(o => parseInt(o.bank) !== 0) || false;
 
 const bundles = midiFiles
   .map((_, i) => {
@@ -426,6 +428,16 @@ function insertAllNotesOff(trackIdx, events, songLength) {
 
   if (endLoopIdx) {
     const endLoop = events[endLoopIdx];
+    // Fixes Toad's Turnpike (Mario Kart 64)
+    const resetPitchBend = {
+      type: EVENT_MIDI,
+      subtype: EVENT_MIDI_PITCH_BEND,
+      param1: 0,
+      param2: 64,
+      channel: endLoop.channel,
+      delta: 0,
+      tick: endLoop.tick,
+    }
     const allNotesOff = {
       type: EVENT_MIDI,
       subtype: EVENT_MIDI_CONTROLLER,
@@ -435,7 +447,7 @@ function insertAllNotesOff(trackIdx, events, songLength) {
       tick: endLoop.tick,
     };
     endLoop.delta = 0;
-    events.splice(endLoopIdx, 0, allNotesOff);
+    events.splice(endLoopIdx, 0, resetPitchBend, allNotesOff);
     console.log('Added ALL_NOTES_OFF event to track %s.', trackIdx);
   }
 
