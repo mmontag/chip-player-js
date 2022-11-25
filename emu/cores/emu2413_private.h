@@ -94,9 +94,9 @@ typedef struct __EOPLL {
 
   uint8_t adr;
 
-  uint32_t inp_step;
-  uint32_t out_step;
-  uint32_t out_time;
+  double inp_step;
+  double out_step;
+  double out_time;
 
   uint8_t reg[0x40];
   uint8_t test_flag;
