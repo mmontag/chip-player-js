@@ -29,7 +29,8 @@ const DUMMY_EVENT = {
   channel: 0,
 }
 
-const DIR = '/Users/montag/Music/bomberman-hero';
+const DIR = '/Users/montag/Music/mystical';
+const GAME_NAME_OVERRIDE = 'Mystical Ninja Starring Goemon';
 
 
 const OUT_DIR = path.join(DIR, 'out');
@@ -73,10 +74,10 @@ const bundles = midiFiles
     let soundfont;
     if (parts && parts[2] && parts[3]) {
       // The file name has to include the hex identifiers in order to match lines in the INL file.
-      const gameName = path.basename(parts[2]);
+      const gameName = GAME_NAME_OVERRIDE || path.basename(parts[2]);
       const hexId = parts[3];
       if (!hexId) throw Error('Could not get hex ID from MIDI filename ' + midiFiles[i]);
-      const fallbackTitle = path.basename(midiFiles[i]);
+      const fallbackTitle = path.basename(midiFiles[i], '.mid');
       const inlInfo = getInlInfoFromHexId(inlInfoList, hexId);
       const niceTitle = inlInfo ? inlInfo.numberedName : fallbackTitle;
       outFile = `${debugOutputFilenames ? (hexId + ' ') : ''}${niceTitle}.mid`;
@@ -177,6 +178,15 @@ function getInlInfoFromHexId(inlInfoList, hexId) {
 }
 
 function repairN64Midi(midiFilename, outFilename, debugFilename, soundfontFilename) {
+  if (!fs.existsSync(midiFilename)) {
+    console.error('Skipping %s - MIDI file not found.', midiFilename);
+    return;
+  }
+  if (!fs.existsSync(debugFilename)) {
+    console.error('Skipping %s - debug file not found.', debugFilename);
+    return;
+  }
+
   console.log('Processing %s...', midiFilename);
 
   const midiData = fs.readFileSync(midiFilename);
@@ -264,7 +274,7 @@ function insertOctavePitchBendRange(trackIdx, events) {
 function addSoundfontMetaText(events, soundfontFilename) {
   // filename had better be lower ASCII
   const data = 'SF2=' + soundfontFilename;
-  console.log('Added EVENT_META_TEXT (%s) event to track 0.', data);
+  console.log('Added Soundfont EVENT_META_TEXT (%s) event to track 0.', data);
   events.unshift({
     type: EVENT_META,
     subtype: EVENT_META_TEXT,
