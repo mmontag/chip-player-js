@@ -1512,7 +1512,6 @@ fluid_synth_program_change(fluid_synth_t* synth, int chan, int prognum)
 
   /* inform the channel of the new program number */
   fluid_channel_set_prognum(channel, prognum);
-
   if (synth->verbose)
     FLUID_LOG(FLUID_INFO, "prog\t%d\t%d\t%d", chan, banknum, prognum);
 
@@ -1531,7 +1530,7 @@ fluid_synth_program_change(fluid_synth_t* synth, int chan, int prognum)
     subst_prog = prognum;
 
     /* Melodic instrument? */
-    if (banknum != DRUM_INST_BANK)
+    if (channel->channum != 9 && banknum != DRUM_INST_BANK)
     {
       subst_bank = 0;
 
