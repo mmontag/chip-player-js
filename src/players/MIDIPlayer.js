@@ -404,6 +404,8 @@ export default class MIDIPlayer extends Player {
         bankId = findBank('Descent 2');
       } else if (fp.indexOf('magic carpet') > -1) {
         bankId = findBank('Magic Carpet');
+      } else if (fp.indexOf('duke nukem') > -1) {
+        bankId = findBank('Duke Nukem');
       } else if (fp.indexOf('wacky wheels') > -1) {
         bankId = findBank('Apogee IMF');
       } else if (fp.indexOf('warcraft 2') > -1) {
@@ -412,6 +414,14 @@ export default class MIDIPlayer extends Player {
         bankId = findBank('Warcraft');
       } else if (fp.indexOf('system shock') > -1) {
         bankId = findBank('System Shock');
+      } else if (fp.indexOf('/hexen') > -1 || fp.indexOf('/heretic') > -1) {
+        bankId = findBank('Hexen');
+      } else if (fp.indexOf('/raptor') > -1) {
+        bankId = findBank('Raptor');
+      } else if (fp.indexOf('/doom 2') > -1) {
+        bankId = findBank('Doom 2');
+      } else if (fp.indexOf('/doom') > -1) {
+        bankId = findBank('DOOM');
       }
       if (bankId > -1) {
         return bankId;
