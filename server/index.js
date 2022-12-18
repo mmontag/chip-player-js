@@ -17,7 +17,8 @@ const http = require('http');
 const TrieSearch = require('trie-search');
 const { performance } = require('perf_hooks');
 const { sampleSize } = require('lodash');
-const { FORMATS } = require('../src/config');
+// Only used in DEV environment
+const { FORMATS } = process.env.DEV ? require('../src/config/index.js') : [];
 
 const CATALOG_PATH = './catalog.json';
 const catalog = require(CATALOG_PATH);
@@ -159,7 +160,7 @@ const routes = {
           stream.on('data', data => resolve(data.toString()));
           stream.on('error', () => resolve(null));
         });
-        const match = data?.match(sf2Regex);
+        const match = data ? data.match(sf2Regex) : null;
         if (match && match[1]) {
           soundfont = `${match[1]}.sf2`;
         } else {
