@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
 import diceImage from '../images/dice.png';
+import downloadImage from '../images/download.png';
 import linkImage from '../images/link.png';
 import repeatImage from '../images/repeat.png';
 import TimeSlider from './TimeSlider';
@@ -150,6 +151,10 @@ export default function AppFooter(props) {
                 <a style={{ color: 'var(--neutral4)' }} href={getCurrentSongLink()}>
                   {title}{' '}
                   <img alt="Copy link" src={linkImage} style={{ verticalAlign: 'bottom' }}/>
+                </a>
+                {' '}
+                <a style={{ color: 'var(--neutral4)' }} href={songUrl}>
+                  <img alt="Download" src={downloadImage} style={{ verticalAlign: 'bottom' }}/>
                 </a>
                 {' '}
                 {infoTexts.length > 0 &&
