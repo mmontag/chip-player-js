@@ -1,4 +1,4 @@
-// TODO: SCSP and (especially) WonderSwan
+// TODO: SCSP
  /************************
   *  DAC Stream Control  *
   ***********************/
@@ -106,21 +106,16 @@ INLINE void daccontrol_SendCommand(dac_control* chip)
 	ChipData = &chip->Data[chip->DataStart + chip->RealPos];
 	switch(chip->DstChipType)
 	{
-	// Explicit support for the important chips
-	case DEVID_YM2612:	// 16-bit Register (actually 9 Bit), 8-bit Data
-		Port = (chip->DstCommand & 0xFF00) >> 8;
-		Command = (chip->DstCommand & 0x00FF) >> 0;
-		Data = ChipData[0x00];
-		chip->Write.A8D8(chip->chipData, (Port << 1) | 0, Command);
-		chip->Write.A8D8(chip->chipData, (Port << 1) | 1, Data);
-		break;
 	case DEVID_32X_PWM:	// 4-bit Register, 12-bit Data
+		if (chip->Write.A8D16 == NULL)
+			return;
 		Port = (chip->DstCommand & 0x000F) >> 0;
 		Data16 = ((ChipData[0x01] & 0x0F) << 8) | (ChipData[0x00] << 0);
 		chip->Write.A8D16(chip->chipData, Port, Data16);
 		break;
-	// Support for other chips (mainly for completeness)
 	case DEVID_SN76496:	// 4-bit Register, 4-bit/10-bit Data
+		if (chip->Write.A8D8 == NULL)
+			return;
 		Command = (chip->DstCommand & 0x00F0) >> 0;
 		Data = ChipData[0x00] & 0x0F;
 		if (Command & 0x10)
@@ -137,6 +132,8 @@ INLINE void daccontrol_SendCommand(dac_control* chip)
 		}
 		break;
 	case DEVID_OKIM6295:	// TODO: verify
+		if (chip->Write.A8D8 == NULL)
+			return;
 		Command = (chip->DstCommand & 0x00FF) >> 0;
 		Data = ChipData[0x00];
 		
@@ -162,7 +159,7 @@ INLINE void daccontrol_SendCommand(dac_control* chip)
 			chip->Write.A8D8(chip->chipData, Command, Data);
 		}
 		break;
-		// Generic support: 8-bit Register, 8-bit Data
+	// 8-bit Register, 8-bit Data
 	case DEVID_YM2413:
 	case DEVID_YM2151:
 	case DEVID_YM2203:
@@ -171,6 +168,8 @@ INLINE void daccontrol_SendCommand(dac_control* chip)
 	case DEVID_Y8950:
 	case DEVID_YMZ280B:
 	case DEVID_AY8910:
+		if (chip->Write.A8D8 == NULL)
+			return;
 		Command = (chip->DstCommand & 0x00FF) >> 0;
 		Data = ChipData[0x00];
 		chip->Write.A8D8(chip->chipData, 0, Command);
@@ -178,38 +177,51 @@ INLINE void daccontrol_SendCommand(dac_control* chip)
 		break;
 	case DEVID_GB_DMG:
 	case DEVID_NES_APU:
-//	case DEVID_YMW258:
 	case DEVID_uPD7759:
 	case DEVID_OKIM6258:
 	case DEVID_K053260:	// TODO: Verify
-	case DEVID_POKEY:	// TODO: Verify
+	case DEVID_POKEY:
+	case DEVID_ES5503:
+	case DEVID_GA20:	// TODO: Verify
+		if (chip->Write.A8D8 == NULL)
+			return;
 		Command = (chip->DstCommand & 0x00FF) >> 0;
 		Data = ChipData[0x00];
 		chip->Write.A8D8(chip->chipData, Command, Data);
 		break;
-		// Generic support: 16-bit Register, 8-bit Data
+	// 16-bit Register, 8-bit Data
+	case DEVID_YM2612:
 	case DEVID_YM2608:
 	case DEVID_YM2610:
 	case DEVID_YMF262:
 	case DEVID_YMF278B:
 	case DEVID_YMF271:
+	case DEVID_K051649:
+		if (chip->Write.A8D8 == NULL)
+			return;
 		Port = (chip->DstCommand & 0xFF00) >> 8;
 		Command = (chip->DstCommand & 0x00FF) >> 0;
 		Data = ChipData[0x00];
 		chip->Write.A8D8(chip->chipData, (Port << 1) | 0, Command);
 		chip->Write.A8D8(chip->chipData, (Port << 1) | 1, Data);
 		break;
-	case DEVID_K051649:	// TODO: Verify
 	case DEVID_K054539:	// TODO: Verify
 	case DEVID_C140:	// TODO: Verify
-		Port = (chip->DstCommand & 0xFF00) >> 8;
-		Command = (chip->DstCommand & 0x00FF) >> 0;
+	case DEVID_C219:	// TODO: Verify
+	case DEVID_SCSP:	// TODO: Verify
+	case DEVID_VBOY_VSU:
+	case DEVID_X1_010:
+	case DEVID_C352:	// TODO: Verify
+		if (chip->Write.A16D8 == NULL)
+			return;
 		Data = ChipData[0x00];
-		//chip_reg_write(chip->DstChipType, chip->DstChipID, Port, Command, Data);
+		chip->Write.A16D8(chip->chipData, chip->DstCommand, Data);
 		break;
-		// Generic support: 8-bit Register with Channel Select, 8-bit Data
+	// 8-bit Register with Channel Select, 8-bit Data
 	case DEVID_RF5C68:
 	case DEVID_C6280:
+		if (chip->Write.A8D8 == NULL)
+			return;
 		Port = (chip->DstCommand & 0xFF00) >> 8;
 		Command = (chip->DstCommand & 0x00FF) >> 0;
 		Data = ChipData[0x00];
@@ -238,13 +250,30 @@ INLINE void daccontrol_SendCommand(dac_control* chip)
 				chip->Write.A8D8(chip->chipData, Command >> 4, prevChn);
 		}
 		break;
-		// Generic support: 8-bit Register, 16-bit Data
-	case DEVID_QSOUND:
+	case DEVID_QSOUND:	// 8-bit Register, 16-bit Data
+		if (chip->Write.A8D8 == NULL)
+			return;
 		Command = (chip->DstCommand & 0x00FF) >> 0;
 		chip->Write.A8D8(chip->chipData, 0x00, ChipData[0x00]);	// Data MSB
 		chip->Write.A8D8(chip->chipData, 0x01, ChipData[0x01]);	// Data LSB
 		chip->Write.A8D8(chip->chipData, 0x02, Command);		// Register
 		break;
+	case DEVID_WSWAN:	// 8-bit Register, 8-bit Data, register base 0x80
+		if (chip->Write.A8D8 == NULL)
+			return;
+		Command = (chip->DstCommand & 0x00FF) >> 0;
+		Data = ChipData[0x00];
+		chip->Write.A8D8(chip->chipData, 0x80 + Command, Data);
+		break;
+	case DEVID_SAA1099:	// 8-bit Register, 8-bit Data, swapped command/data port
+		if (chip->Write.A8D8 == NULL)
+			return;
+		Command = (chip->DstCommand & 0x00FF) >> 0;
+		Data = ChipData[0x00];
+		chip->Write.A8D8(chip->chipData, 1, Command);
+		chip->Write.A8D8(chip->chipData, 0, Data);
+		break;
+	//case DEVID_YMW258:	// TODO
 	}
 	
 	return;

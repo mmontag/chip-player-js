@@ -895,7 +895,7 @@ void VGMPlayer::Cmd_DACCtrl_Setup(void)	// DAC Stream Control: Setup Chip
 	if (destChip == NULL)
 		return;
 	
-	daccontrol_setup_chip(dacStrm->defInf.dataPtr, &destChip->base.defInf, chipType, chipCmd);
+	daccontrol_setup_chip(dacStrm->defInf.dataPtr, &destChip->base.defInf, destChip->chipType, chipCmd);
 	return;
 }
 
