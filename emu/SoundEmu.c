@@ -49,6 +49,7 @@
 #define SNDDEV_X1_010
 #define SNDDEV_C352
 #define SNDDEV_GA20
+#define SNDDEV_MIKEY
 #endif
 
 #ifdef SNDDEV_SN76496
@@ -161,6 +162,9 @@
 #endif
 #ifdef SNDDEV_GA20
 #include "cores/iremga20.h"
+#endif
+#ifdef SNDDEV_MIKEY
+#include "cores/mikey.h"
 #endif
 
 const DEV_DEF** SndEmu_GetDevDefList(UINT8 deviceID)
@@ -330,6 +334,10 @@ const DEV_DEF** SndEmu_GetDevDefList(UINT8 deviceID)
 #ifdef SNDDEV_GA20
 	case DEVID_GA20:
 		return devDefList_GA20;
+#endif
+#ifdef SNDDEV_MIKEY
+	case DEVID_MIKEY:
+		return devDefList_Mikey;
 #endif
 	default:
 		return NULL;
@@ -662,6 +670,10 @@ const char* SndEmu_GetDevName(UINT8 deviceID, UINT8 opts, const DEV_GEN_CFG* dev
 #ifdef SNDDEV_GA20
 	case DEVID_GA20:
 		return "GA20";
+#endif
+#ifdef SNDDEV_MIKEY
+	case DEVID_MIKEY:
+		return "MIKEY";
 #endif
 	default:
 		return NULL;

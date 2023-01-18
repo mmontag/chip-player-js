@@ -79,6 +79,7 @@ option(SNDEMU_ES5506_ALL "Sound Device ES5505/ES5506: all cores" OFF)
 option(SNDEMU_X1_010_ALL "Sound Device X1-010: all cores" OFF)
 option(SNDEMU_C352_ALL "Sound Device C352: all cores" OFF)
 option(SNDEMU_GA20_ALL "Sound Device Irem GA20: all cores" OFF)
+option(SNDEMU_MIKEY_ALL "Sound Device Mikey: all cores" OFF)
 
 # console/computer presets
 option(SNDEMU__PRESET_SMS "Sound Dev. Preset: Sega Master System/Game Gear" OFF)
@@ -137,6 +138,7 @@ if(SNDEMU__ALL)
 	set(SNDEMU_X1_010_ALL ON)
 	set(SNDEMU_C352_ALL ON)
 	set(SNDEMU_GA20_ALL ON)
+	set(SNDEMU_MIKEY_ALL ON)
 endif()
 
 
@@ -598,6 +600,11 @@ if(SNDEMU_GA20_ALL)
 	set(EMU_DEFS ${EMU_DEFS} " SNDDEV_GA20")
 	set(EMU_FILES ${EMU_FILES} cores/iremga20.c)
 	set(EMU_CORE_HEADERS ${EMU_CORE_HEADERS} cores/iremga20.h)
+endif()
+if(SNDEMU_MIKEY_ALL)
+	set(EMU_DEFS ${EMU_DEFS} " SNDDEV_MIKEY")
+	set(EMU_FILES ${EMU_FILES} cores/mikey.cpp)
+	set(EMU_CORE_HEADERS ${EMU_CORE_HEADERS} cores/mikey.h)
 endif()
 
 

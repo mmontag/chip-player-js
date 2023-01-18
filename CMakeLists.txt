@@ -12,6 +12,8 @@ endif()
 
 project(libvgmMain VERSION 0.1 LANGUAGES C CXX)
 
+set(CMAKE_CXX_STANDARD 14)
+
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/libs/cmake_modules/")
 
 include(GNUInstallDirs)

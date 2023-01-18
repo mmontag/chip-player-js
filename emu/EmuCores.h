@@ -15,5 +15,6 @@
 #define FCC_NRS_	0x4E525300	// NewRisingSun
 #define FCC_VBEL	0x5642454C	// Valley Bell
 #define FCC_CTR_	0x43545200	// superctr
+#define FCC_LAOO  0x4c414f4f	// laoo
 
 #endif	// __EMUCORES_H__
