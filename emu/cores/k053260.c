@@ -168,7 +168,8 @@ typedef struct
 INLINE void KDSC_voice_start(KDSC_Voice* voice, k053260_state *device);
 INLINE void KDSC_voice_reset(KDSC_Voice* voice);
 INLINE void KDSC_set_register(KDSC_Voice* voice, UINT8 offset, UINT8 data);
-INLINE void KDSC_set_loop_kadpcm(KDSC_Voice* voice, UINT8 data);
+INLINE void KDSC_set_loop(KDSC_Voice* voice, UINT8 data);
+INLINE void KDSC_set_kadpcm(KDSC_Voice* voice, UINT8 data);
 INLINE void KDSC_set_reverse(KDSC_Voice* voice, UINT8 data);
 INLINE void KDSC_set_pan(KDSC_Voice* voice, UINT8 data);
 INLINE void KDSC_update_pan_volume(KDSC_Voice* voice);
@@ -343,19 +344,16 @@ static void k053260_write(void* chip, UINT8 offset, UINT8 data)
 
 		// 0x04 through 0x07 seem to be unused
 
-		case 0x28: // key on/off
+		case 0x28: // key on/off and reverse
 		{
 			UINT8 rising_edge = data & ~info->keyon;
 
 			for (i = 0; i < 4; i++)
 			{
+				KDSC_set_reverse(&info->voice[i], (data >> (i | 4)) & 1);
+
 				if (rising_edge & (1 << i))
-				{
-					if (data & 0xF0)
-						data = data;
-					KDSC_set_reverse(&info->voice[i], (data >> (4 + i)) & 1);
 					KDSC_key_on(info, &info->voice[i]);
-				}
 				else if (!(data & (1 << i)))
 					KDSC_key_off(&info->voice[i]);
 			}
@@ -368,8 +366,8 @@ static void k053260_write(void* chip, UINT8 offset, UINT8 data)
 		case 0x2a: // loop and pcm/adpcm select
 			for (i = 0; i < 4; i++)
 			{
-				KDSC_set_loop_kadpcm(&info->voice[i], data);
-				data >>= 1;
+				KDSC_set_loop(&info->voice[i], (data >> i) & 1);
+				KDSC_set_kadpcm(&info->voice[i], (data >> (i | 4)) & 1);
 			}
 			break;
 
@@ -417,7 +415,7 @@ static void k053260_update(void* param, UINT32 samples, DEV_SMPL **outputs)
 	{
 		UINT32 i, j;
 
-		for ( j = 0; j < samples; j++ )
+		for (j = 0; j < samples; j++)
 		{
 			DEV_SMPL buffer[2] = {0, 0};
 			UINT16 cycles;
@@ -504,15 +502,19 @@ INLINE void KDSC_set_register(KDSC_Voice* voice, UINT8 offset, UINT8 data)
 	}
 }
 
-INLINE void KDSC_set_loop_kadpcm(KDSC_Voice* voice, UINT8 data)
+INLINE void KDSC_set_loop(KDSC_Voice* voice, UINT8 data)
 {
-	voice->loop = data & 0x01;
-	voice->kadpcm = data & 0x10;
+	voice->loop = data;
+}
+
+INLINE void KDSC_set_kadpcm(KDSC_Voice* voice, UINT8 data)
+{
+	voice->kadpcm = data;
 }
 
 INLINE void KDSC_set_reverse(KDSC_Voice* voice, UINT8 data)
 {
-	voice->reverse = data & 0x01;
+	voice->reverse = data;
 }
 
 INLINE void KDSC_set_pan(KDSC_Voice* voice, UINT8 data)
@@ -537,7 +539,7 @@ INLINE void KDSC_key_on(k053260_state* info, KDSC_Voice* voice)
 					voice->start, voice->length, voice->pitch, voice->volume, voice->pan,
 					voice->loop ? "yes" : "no",
 					voice->reverse ? "yes" : "no",
-					voice->kadpcm ? "KADPCM" : "PCM" );
+					voice->kadpcm ? "KADPCM" : "PCM");
 }
 
 INLINE void KDSC_key_off(KDSC_Voice* voice)
