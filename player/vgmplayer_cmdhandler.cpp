@@ -912,7 +912,10 @@ void VGMPlayer::Cmd_DACCtrl_SetData(void)	// DAC Stream Control: Set Data Bank
 	PCM_BANK* pcmBnk = &_pcmBank[dacStrm->bankID];
 	
 	dacStrm->maxItems = (UINT32)pcmBnk->bankOfs.size();
-	daccontrol_set_data(dacStrm->defInf.dataPtr, &pcmBnk->data[0], (UINT32)pcmBnk->data.size(), fData[0x03], fData[0x04]);
+	if (pcmBnk->data.empty())
+		daccontrol_set_data(dacStrm->defInf.dataPtr, NULL, 0, fData[0x03], fData[0x04]);
+	else
+		daccontrol_set_data(dacStrm->defInf.dataPtr, &pcmBnk->data[0], (UINT32)pcmBnk->data.size(), fData[0x03], fData[0x04]);
 	return;
 }
 

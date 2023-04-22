@@ -615,7 +615,7 @@ void VGMPlayer::RefreshDevOptions(CHIP_DEVICE& chipDev, const PLR_DEV_OPTS& devO
 	if (chipType == DEVID_YM2612)
 	{
 		if (chipDev.flags)
-			coreOpts = (coreOpts & ~0x30) | OPT_YM2612_TYPE_OPN2C_DISC;	// enforce YM3438 mode
+			coreOpts = (coreOpts & ~0x30) | OPT_YM2612_TYPE_OPN2C_ASIC;	// enforce YM3438 mode
 		if (_p2612Fix & P2612FIX_ACTIVE)
 			coreOpts |= OPT_YM2612_LEGACY_MODE;	// enable legacy mode
 	}

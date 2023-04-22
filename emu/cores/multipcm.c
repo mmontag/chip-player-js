@@ -22,9 +22,10 @@
  * This sample format might be derived from the one used by the older YM7138 'GEW6' chip.
  *
  * The first 3 bytes are the offset into the file (big endian). (0, 1, 2).
- * Bit 23 is the sample format flag: 0 for 8-bit linear, 1 for 12-bit linear.
- * Bits 21 and 22 are used by the MU5 on some samples for as-yet unknown purposes.
- * The next 2 are the loop start point, in samples (big endian) (3, 4)
+ * Bit 23 is unknown.
+ * Bit 22 is the sample format flag: 0 for 8-bit linear, 1 for 12-bit linear.
+ * Bit 21 is used by the MU5 on some samples for as-yet unknown purposes. (YMW-258-F has 22 address pins.)
+ * The next 2 bytes are the loop start point, in samples (big endian) (3, 4)
  * The next 2 are the 2's complement negation of of the total number of samples (big endian) (5, 6)
  * The next byte is LFO freq + depth (copied to reg 6 ?) (7, 8)
  * The next 3 are envelope params (Attack, Decay1 and 2, sustain level, release, Key Rate Scaling) (9, 10, 11)
@@ -264,6 +265,18 @@ static void init_sample(MultiPCM *ptChip, sample_t *sample, UINT16 index)
 	sample->lfo_amplitude_reg = ptChip->ROM[address + 11] & 0xf;
 }
 
+static void envelope_generator_calc(MultiPCM *ptChip, slot_t *slot);
+static void retrigger_sample(MultiPCM *ptChip, slot_t *slot)
+{
+	slot->offset = 0;
+	slot->prev_sample = 0;
+	slot->total_level = slot->dest_total_level << TL_SHIFT;
+
+	envelope_generator_calc(ptChip, slot);
+	slot->envelope_gen.state = ATTACK;
+	slot->envelope_gen.volume = 0;
+}
+
 static INT32 envelope_generator_update(slot_t *slot)
 {
 	switch(slot->envelope_gen.state)
@@ -477,12 +490,29 @@ static void write_slot(MultiPCM *ptChip, slot_t *slot, INT32 reg, UINT8 data)
 			slot->pan = (data >> 4) & 0xf;
 			break;
 		case 1: // Sample
-			//according to YMF278 sample write causes some base params written to the regs (envelope+lfos)
-			//the game should never change the sample while playing.
-			// patched to load all sample data here, so registers 6 and 7 aren't overridden by KeyOn -Valley Bell
+			// according to YMF278 sample write causes some base params written to the regs (envelope+lfos)
 			init_sample(ptChip, &slot->sample, slot->regs[1] | ((slot->regs[2] & 1) << 8));
 			write_slot(ptChip, slot, 6, slot->sample.lfo_vibrato_reg);
 			write_slot(ptChip, slot, 7, slot->sample.lfo_amplitude_reg);
+
+			slot->format = slot->sample.format;
+			slot->base = slot->sample.start;
+			if (ptChip->sega_banking)
+			{
+				slot->base &= 0x1fffff;
+				if (slot->base & 0x100000)
+				{
+					if (slot->base & 0x080000)
+						slot->base = (slot->base & 0x07ffff) | ptChip->bank1;
+					else
+						slot->base = (slot->base & 0x07ffff) | ptChip->bank0;
+				}
+			}
+
+			// retrigger if key is on
+			if (slot->playing)
+				retrigger_sample(ptChip, slot);
+
 			break;
 		case 2: //Pitch
 		case 3:
@@ -501,28 +531,7 @@ static void write_slot(MultiPCM *ptChip, slot_t *slot, INT32 reg, UINT8 data)
 			if (data & 0x80)       //KeyOn
 			{
 				slot->playing = 1;
-				slot->base = slot->sample.start;
-				slot->offset = 0;
-				slot->prev_sample = 0;
-				slot->total_level = slot->dest_total_level << TL_SHIFT;
-				slot->format = slot->sample.format;
-
-				envelope_generator_calc(ptChip, slot);
-				slot->envelope_gen.state = ATTACK;
-				slot->envelope_gen.volume = 0;
-
-				if (ptChip->sega_banking)
-				{
-					slot->base &= 0x1fffff;
-					if (slot->base & 0x100000)
-					{
-						if (slot->base & 0x080000)
-							slot->base = (slot->base & 0x07ffff) | ptChip->bank1;
-						else
-							slot->base = (slot->base & 0x07ffff) | ptChip->bank0;
-					}
-				}
-
+				retrigger_sample(ptChip, slot);
 			}
 			else
 			{
@@ -599,35 +608,20 @@ static void MultiPCM_update(void *info, UINT32 samples, DEV_SMPL **outputs)
 				INT32 fpart = slot->offset & ((1 << TL_SHIFT) - 1);
 				INT32 sample;
 
-				if (slot->format & 8)	// 12-bit linear
+				if (slot->format & 4)	// 12-bit linear
 				{
-					UINT32 adr = slot->base + (spos >> 2) * 6;
-					switch (spos & 3)
-					{
-						case 0:
-						{ // ab.c .... ....
-							INT16 w0 = read_byte(ptChip, adr) << 8 | ((read_byte(ptChip, adr + 1) & 0xf) << 4);
-							csample = w0;
-							break;
-						}
-						case 1:
-						{ // ..C. AB.. ....
-							INT16 w0 = (read_byte(ptChip, adr + 2) << 8) | (read_byte(ptChip, adr + 1) & 0xf0);
-							csample = w0;
-							break;
-						}
-						case 2:
-						{ // .... ..ab .c..
-							INT16 w0 = read_byte(ptChip, adr + 3) << 8 | ((read_byte(ptChip, adr + 4) & 0xf) << 4);
-							csample = w0;
-							break;
-						}
-						case 3:
-						{ // .... .... C.AB
-							INT16 w0 = (read_byte(ptChip, adr + 5) << 8) | (read_byte(ptChip, adr + 4) & 0xf0);
-							csample = w0;
-							break;
-						}
+					UINT32 adr = slot->base + (spos >> 1) * 3;
+					if (!(spos & 1))
+					{ // ab.c ..
+						INT16 w0 = (read_byte(ptChip, adr) << 8) | ((read_byte(ptChip, adr + 1) & 0xf) << 4);
+						csample = w0;
+						break;
+					}
+					else
+					{ // ..C. AB
+						INT16 w0 = (read_byte(ptChip, adr + 2) << 8) | (read_byte(ptChip, adr + 1) & 0xf0);
+						csample = w0;
+						break;
 					}
 				}
 				else
@@ -783,9 +777,6 @@ static UINT8 device_start_multipcm(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	ptChip->total_level_steps[0] = -(float)(0x80 << TL_SHIFT) / (78.2f * 44100.0f / 1000.0f); // lower
 	ptChip->total_level_steps[1] = (float)(0x80 << TL_SHIFT) / (78.2f * 2 * 44100.0f / 1000.0f); // raise
 
-	ptChip->sega_banking = 0;
-	ptChip->bank0 = ptChip->bank1 = 0x000000;
-
 	multipcm_set_mute_mask(ptChip, 0x00);
 
 	ptChip->_devData.chipInf = ptChip;
@@ -815,7 +806,10 @@ static void device_reset_multipcm(void *info)
 		ptChip->slots[slot].slot_index = slot;
 		ptChip->slots[slot].playing = 0;
 	}
-	
+
+	ptChip->sega_banking = 0;
+	ptChip->bank0 = ptChip->bank1 = 0x000000;
+
 	return;
 }
 

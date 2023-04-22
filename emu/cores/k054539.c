@@ -1,5 +1,5 @@
 // license:BSD-3-Clause
-// copyright-holders:Aaron Giles
+// copyright-holders:Olivier Galibert
 /*********************************************************
 
     Konami 054539 (TOP) PCM Sound Chip
@@ -133,8 +133,6 @@ struct _k054539_state {
 	UINT8 posreg_latch[8][3];
 	UINT8 flags;
 
-	float filter_hist[8][4];
-
 	UINT8 regs[0x230];
 	UINT8 *ram;
 	UINT16 reverb_pos;
@@ -188,27 +186,6 @@ static void k054539_keyoff(k054539_state *info, int channel)
 		info->regs[0x22c] &= ~(1 << channel);
 }
 
-static void k054539_advance_filter(k054539_state *info, int channel, int val)
-{
-	float* hist = info->filter_hist[channel];
-	hist[0] = hist[1];
-	hist[1] = hist[2];
-	hist[2] = hist[3];
-	hist[3] = ((float) val) / 32768.0f;
-}
-
-static float k054539_calculate_filter(k054539_state *info, int channel, float t)
-{
-	// Cubic hermite interpolation
-	// t is domain [0,1]
-
-	float* hist = info->filter_hist[channel];
-	const float a = (-hist[0] / 2.0f) + (3.0f * hist[1] / 2.0f) - (3.0f * hist[2] / 2.0f) + (hist[3] / 2.0f);
-	const float b = hist[0] - (5.0f * hist[1] / 2.0f) + (2.0f * hist[2]) - (hist[3] / 2.0f);
-	const float c = (-hist[0] / 2.0f) + (hist[2] / 2.0f);
-	return (t * t * t * a) + (t * t * b) + (t * c) + hist[1];
-}
-
 static void k054539_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 {
 	k054539_state *info = (k054539_state *)param;
@@ -247,8 +224,6 @@ static void k054539_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 				UINT32 cur_pos;
 				int rdelta, fdelta, pdelta;
 				int cur_pfrac, cur_val, cur_pval;
-				float filter_frac;
-				float filter_val;
 
 				delta = base1[0x00] | (base1[0x01] << 8) | (base1[0x02] << 16);
 
@@ -306,8 +281,6 @@ static void k054539_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 					cur_pval = chan->pval;
 				}
 
-				filter_frac = 0;
-
 				switch(base2[0] & 0xc) {
 				case 0x0: { // 8bit pcm
 					cur_pfrac += delta;
@@ -327,11 +300,7 @@ static void k054539_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 							cur_val = 0;
 							break;
 						}
-
-						k054539_advance_filter(info, ch, cur_val);
 					}
-
-					filter_frac = (float)(cur_pfrac & 0xffff) / 65536.0f;
 					break;
 				}
 
@@ -355,11 +324,7 @@ static void k054539_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 							cur_val = 0;
 							break;
 						}
-
-						k054539_advance_filter(info, ch, cur_val);
 					}
-
-					filter_frac = (float)(cur_pfrac & 0xffff) / 65536.0f;
 					break;
 				}
 
@@ -396,11 +361,7 @@ static void k054539_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 							cur_val = -32768;
 						else if(cur_val > 32767)
 							cur_val = 32767;
-
-						k054539_advance_filter(info, ch, cur_val);
 					}
-
-					filter_frac = (float)(cur_pfrac & 0xffff) / 65536.0f;
 
 					cur_pfrac >>= 1;
 					if(cur_pos & 1)
@@ -414,10 +375,9 @@ static void k054539_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 					break;
 				}
 
-				filter_val = k054539_calculate_filter(info, ch, filter_frac) * 32768;
-				lval += filter_val * (float)lvol;
-				rval += filter_val * (float)rvol;
-				rbase[(rdelta + info->reverb_pos) & 0x1fff] += (INT16)(filter_val*rbvol);
+				lval += cur_val * (float)lvol;
+				rval += cur_val * (float)rvol;
+				rbase[(rdelta + info->reverb_pos) & 0x1fff] += (INT16)(cur_val*rbvol);
 
 				chan->pos = cur_pos;
 				chan->pfrac = cur_pfrac;
@@ -429,9 +389,6 @@ static void k054539_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 					base1[0x0d] = cur_pos>> 8 & 0xff;
 					base1[0x0e] = cur_pos>>16 & 0xff;
 				}
-			} else {
-				// Fill the interpolation vectors with silence when channel is disabled
-				k054539_advance_filter(info, ch, 0);
 			}
 		info->reverb_pos = (info->reverb_pos + 1) & 0x1fff;
 		outputs[0][sample] = (DEV_SMPL)(lval);
@@ -693,7 +650,6 @@ static void device_reset_k054539(void *chip)
 	
 	memset(info->regs, 0, sizeof(info->regs));
 	memset(info->posreg_latch, 0, sizeof(info->posreg_latch));
-	memset(info->filter_hist, 0, sizeof(info->filter_hist));
 	
 	info->reverb_pos = 0;
 	info->cur_ptr = 0;

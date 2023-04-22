@@ -123,7 +123,8 @@ const DEV_DEF* devDefList_K053260[] =
 // Pan multipliers.  Set according to integer angles in degrees, amusingly.
 // Exact precision hard to know, the floating point-ish output format makes
 // comparisons iffy.  So we used a 1.16 format.
-static const int pan_mul[8][2] = {
+static const int pan_mul[8][2] =
+{
     {     0,     0 }, // No sound for pan 0
     { 65536,     0 }, //  0 degrees
     { 59870, 26656 }, // 24 degrees
@@ -160,6 +161,7 @@ typedef struct
 	UINT8  pan;
 	UINT8  loop;
 	UINT8  kadpcm;
+	UINT8  reverse;
 	UINT8  Muted;
 } KDSC_Voice;
 
@@ -167,6 +169,7 @@ INLINE void KDSC_voice_start(KDSC_Voice* voice, k053260_state *device);
 INLINE void KDSC_voice_reset(KDSC_Voice* voice);
 INLINE void KDSC_set_register(KDSC_Voice* voice, UINT8 offset, UINT8 data);
 INLINE void KDSC_set_loop_kadpcm(KDSC_Voice* voice, UINT8 data);
+INLINE void KDSC_set_reverse(KDSC_Voice* voice, UINT8 data);
 INLINE void KDSC_set_pan(KDSC_Voice* voice, UINT8 data);
 INLINE void KDSC_update_pan_volume(KDSC_Voice* voice);
 INLINE void KDSC_key_on(k053260_state* info, KDSC_Voice* voice);
@@ -347,7 +350,12 @@ static void k053260_write(void* chip, UINT8 offset, UINT8 data)
 			for (i = 0; i < 4; i++)
 			{
 				if (rising_edge & (1 << i))
+				{
+					if (data & 0xF0)
+						data = data;
+					KDSC_set_reverse(&info->voice[i], (data >> (4 + i)) & 1);
 					KDSC_key_on(info, &info->voice[i]);
+				}
 				else if (!(data & (1 << i)))
 					KDSC_key_off(&info->voice[i]);
 			}
@@ -460,6 +468,7 @@ INLINE void KDSC_voice_reset(KDSC_Voice* voice)
 	voice->pan = 0;
 	voice->loop = 0;
 	voice->kadpcm = 0;
+	voice->reverse = 0;
 	KDSC_update_pan_volume(voice);
 }
 
@@ -501,6 +510,11 @@ INLINE void KDSC_set_loop_kadpcm(KDSC_Voice* voice, UINT8 data)
 	voice->kadpcm = data & 0x10;
 }
 
+INLINE void KDSC_set_reverse(KDSC_Voice* voice, UINT8 data)
+{
+	voice->reverse = data & 0x01;
+}
+
 INLINE void KDSC_set_pan(KDSC_Voice* voice, UINT8 data)
 {
 	voice->pan = data & 0x7;
@@ -519,8 +533,11 @@ INLINE void KDSC_key_on(k053260_state* info, KDSC_Voice* voice)
 	voice->counter = 0xFFFF; // force update on next sound_stream_update
 	voice->output = 0;
 	voice->playing = 1;
-	if (LOG) emu_logf(&info->logger, DEVLOG_TRACE, "start = %06x, length = %06x, pitch = %04x, vol = %02x:%x, loop = %s, %s\n",
-					voice->start, voice->length, voice->pitch, voice->volume, voice->pan, voice->loop ? "yes" : "no", voice->kadpcm ? "KADPCM" : "PCM" );
+	if (LOG) emu_logf(&info->logger, DEVLOG_TRACE, "start = %06x, length = %06x, pitch = %04x, vol = %02x:%x, loop = %s, reverse = %s, %s\n",
+					voice->start, voice->length, voice->pitch, voice->volume, voice->pan,
+					voice->loop ? "yes" : "no",
+					voice->reverse ? "yes" : "no",
+					voice->kadpcm ? "KADPCM" : "PCM" );
 }
 
 INLINE void KDSC_key_off(KDSC_Voice* voice)
@@ -539,12 +556,12 @@ INLINE void KDSC_play(KDSC_Voice* voice, DEV_SMPL *outputs, UINT16 cycles)
 
 	while (voice->counter >= 0x1000)
 	{
-		UINT32 bytepos;
+		INT32 bytepos;
 		UINT8 romdata;
 
 		voice->counter = voice->counter - 0x1000 + voice->pitch;
 
-		bytepos = ++voice->position >> ( voice->kadpcm ? 1 : 0 );
+		bytepos = (INT32)(++voice->position >> (voice->kadpcm ? 1 : 0));
 		/*
 		Yes, _pre_increment. Playback must start 1 byte position after the
 		start address written to the register, or else ADPCM sounds will
@@ -568,7 +585,7 @@ INLINE void KDSC_play(KDSC_Voice* voice, DEV_SMPL *outputs, UINT16 cycles)
 			}
 		}
 
-		romdata = k053260_rom_data(voice->device, voice->start + bytepos);
+		romdata = k053260_rom_data(voice->device, voice->start + (voice->reverse ? -bytepos : +bytepos));
 
 		if (voice->kadpcm)
 		{
