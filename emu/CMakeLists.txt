@@ -603,7 +603,7 @@ if(SNDEMU_GA20_ALL)
 endif()
 if(SNDEMU_MIKEY_ALL)
 	set(EMU_DEFS ${EMU_DEFS} " SNDDEV_MIKEY")
-	set(EMU_FILES ${EMU_FILES} cores/mikey.cpp)
+	set(EMU_FILES ${EMU_FILES} cores/mikey.c)
 	set(EMU_CORE_HEADERS ${EMU_CORE_HEADERS} cores/mikey.h)
 endif()
 

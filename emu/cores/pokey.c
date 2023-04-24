@@ -88,6 +88,7 @@
 #include <string.h>
 
 #include "../../stdtype.h"
+#include "emutypes.h"
 #include "../EmuStructs.h"
 #include "../EmuCores.h"
 #include "../snddef.h"
@@ -1323,7 +1324,7 @@ static void pokey_vol_init(pokey_device *d)
 	}
 	//if (VERBOSE & LOG_GENERAL)
 	if (0)
-		for (int j=0; j<16; j++)
+		for (j=0; j<16; j++)
 		{
 			rTot = 1.0 / r_chan[j] + 3.0 / r_chan[0];
 			rTot = 1.0 / rTot;

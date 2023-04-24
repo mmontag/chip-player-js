@@ -195,11 +195,10 @@ static void es5503_halt_osc(ES5503Chip *chip, int onum, int type, UINT32 *accumu
 		// but we aren't, we retrigger (!!!)  Verified on IIgs hardware.
 		if ((partnerMode == MODE_SWAP) && ((onum & 1)==0))
 		{
-			pOsc->control &= ~1;
-
 			// preserve the phase in this case too
 			UINT16 wtsize = pOsc->wtsize - 1;
 			*accumulator -= (wtsize << resshift);
+			pOsc->control &= ~1;
 		}
 	}
 	// IRQ enabled for this voice?

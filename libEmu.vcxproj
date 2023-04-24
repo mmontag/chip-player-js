@@ -180,6 +180,7 @@
     <ClCompile Include="emu\cores\k051649.c" />
     <ClCompile Include="emu\cores\k053260.c" />
     <ClCompile Include="emu\cores\k054539.c" />
+    <ClCompile Include="emu\cores\mikey.c" />
     <ClCompile Include="emu\cores\multipcm.c" />
     <ClCompile Include="emu\cores\nesintf.c" />
     <ClCompile Include="emu\cores\nes_apu.c" />
@@ -265,6 +266,7 @@
     <ClInclude Include="emu\cores\k051649.h" />
     <ClInclude Include="emu\cores\k053260.h" />
     <ClInclude Include="emu\cores\k054539.h" />
+    <ClInclude Include="emu\cores\mikey.h" />
     <ClInclude Include="emu\cores\multipcm.h" />
     <ClInclude Include="emu\cores\nesintf.h" />
     <ClInclude Include="emu\cores\nes_apu.h" />
