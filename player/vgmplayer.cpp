@@ -1314,6 +1314,8 @@ void VGMPlayer::InitDevices(void)
 {
 	size_t curChip;
 	
+	memset(_shownCmdWarnings, 0, 0x100);
+	
 	_devices.clear();
 	_devNames.clear();
 	{
