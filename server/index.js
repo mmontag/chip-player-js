@@ -126,7 +126,7 @@ const routes = {
       const files = fs.readdirSync(path.join(LOCAL_CATALOG_ROOT, params.path), { withFileTypes: true });
       return files
         .filter(file => {
-          return (file.isDirectory() || (file.isFile() && FORMATS.includes(path.extname(file.name).slice(1))));
+          return (file.isDirectory() || (file.isFile() && FORMATS.includes(path.extname(file.name).slice(1)?.toLowerCase())));
         })
         .map((file, i) => {
           return {
