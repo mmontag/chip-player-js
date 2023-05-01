@@ -82,7 +82,7 @@
     "request-promise": "^4.2.2",
     "sanitize-filename": "^1.6.1",
     "sqlite": "^3.0.0",
-    "sqlite3": "^4.0.2",
+    "sqlite3": "^5.1.4",
     "tmp": "^0.0.33",
     "trie-search": "1.2.8",
     "unzipper": "^0.9.3",
