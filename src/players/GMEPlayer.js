@@ -185,6 +185,9 @@ export default class GMEPlayer extends Player {
     emu = libgme.getValue(this.emuPtr, "i32");
     this.voiceMask = Array(libgme._gme_voice_count(emu)).fill(true);
 
+    // Enable silence detection
+    libgme._gme_ignore_silence(emu, 0);
+
     this.connect();
     this.resume();
     if (this.playSubtune(this.subtune) !== 0) {
@@ -344,6 +347,9 @@ export default class GMEPlayer extends Player {
         }
       });
       libgme._gme_mute_voices(emu, bitmask);
+      // Disable silence detection if any voice is muted.
+      libgme._gme_ignore_silence(emu, bitmask === 0 ? 0 : 1);
+      console.log('GMEPlayer: Silence detection is %s.', bitmask === 0 ? 'enabled' : 'disabled');
       this.voiceMask = voiceMask;
     }
   }
