@@ -1,10 +1,11 @@
 import React from "react";
+import { NavLink } from 'react-router-dom';
 
 export default class AppHeader extends React.PureComponent {
   render() {
     return (
       <header className="AppHeader">
-        <a className="AppHeader-title" href="..">Chip Player JS</a>{' '}
+        <NavLink className="AppHeader-title" to={{ pathname: "/" }}>Chip Player JS</NavLink>{' '}
         {this.props.user ?
           <span>
               • Logged in as {this.props.user.displayName}.{' '}
