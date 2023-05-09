@@ -38,6 +38,8 @@ export default class Player extends EventEmitter {
     this.timeCount = 0;
     this.renderTime = 0;
     this.perfLoggingInterval = 100;
+    this.paramDefs = [];
+    this.params = {};
   }
 
   togglePause() {
@@ -129,7 +131,7 @@ export default class Player extends EventEmitter {
   }
 
   getParamDefs() {
-    return [];
+    return this.paramDefs;
   }
 
   getBasePlayerState() {

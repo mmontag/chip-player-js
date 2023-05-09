@@ -1,6 +1,6 @@
 import Player from "./Player.js";
 import SubBass from "../effects/SubBass";
-import { allOrNone } from '../util';
+import { allOrNone, remap01 } from '../util';
 import path from 'path';
 
 let emu = null;
@@ -48,6 +48,27 @@ window.cancelIdleCallback = window.cancelIdleCallback ||
   };
 
 export default class GMEPlayer extends Player {
+  paramDefs = [
+    {
+      id: 'subbass',
+      label: 'Sub Bass',
+      type: 'number',
+      min: 0.0,
+      max: 2.0,
+      step: 0.01,
+      defaultValue: 1.0,
+    },
+    {
+      id: 'stereoWidth',
+      label: 'Stereo Width',
+      type: 'number',
+      min: 0.0,
+      max: 1.0,
+      step: 0.01,
+      defaultValue: 1.0,
+    }
+  ];
+
   constructor(audioCtx, destNode, chipCore, bufferSize) {
     super(audioCtx, destNode, chipCore, bufferSize);
     this.setParameter = this.setParameter.bind(this);
@@ -72,6 +93,8 @@ export default class GMEPlayer extends Player {
 
     this.subBass = new SubBass(audioCtx.sampleRate);
 
+    this.params = {};
+    this.paramDefs.forEach(p => this.setParameter(p.id, p.defaultValue));
     this.setAudioProcess(this.gmeAudioProcess);
   }
 
@@ -122,6 +145,16 @@ export default class GMEPlayer extends Player {
         for (i = 0; i < this.bufferSize; i++) {
           channels[0][i] *= attenuate;
           channels[1][i] *= attenuate;
+        }
+      }
+
+      if (this.params.stereoWidth < 1) {
+        const width = remap01(this.params.stereoWidth, 0.5, 1);
+        for (i = 0; i < this.bufferSize; i++) {
+          const left = channels[0][i];
+          const right = channels[1][i];
+          channels[0][i] = left * width + right * (1 - width);
+          channels[1][i] = right * width + left * (1 - width);
         }
       }
 
@@ -293,23 +326,10 @@ export default class GMEPlayer extends Player {
     return this.params[id];
   }
 
-  getParamDefs() {
-    return [
-      {
-        id: 'subbass',
-        label: 'Sub Bass',
-        type: 'number',
-        min: 0.0,
-        max: 2.0,
-        step: 0.01,
-        value: 1.0,
-      },
-    ];
-  }
-
   setParameter(id, value) {
     switch (id) {
       case 'subbass':
+      case 'stereoWidth':
         this.params[id] = parseFloat(value);
         break;
       default:

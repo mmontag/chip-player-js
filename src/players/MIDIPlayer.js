@@ -201,7 +201,8 @@ export default class MIDIPlayer extends Player {
 
     // Initialize parameters
     this.params = {};
-    // Transient parameters hold a parameter that is valid only for the current song. They are reset when another song is loaded.
+    // Transient parameters hold a parameter that is valid only for the current song.
+    // They are reset when another song is loaded.
     this.transientParams = {};
     this.paramDefs.filter(p => p.id !== 'soundfont').forEach(p => this.setParameter(p.id, p.defaultValue));
 
@@ -501,10 +502,6 @@ export default class MIDIPlayer extends Player {
     if (id === 'fluidpoly') return lib._tp_get_polyphony();
     if (this.transientParams[id] != null) return this.transientParams[id];
     return this.params[id];
-  }
-
-  getParamDefs() {
-    return this.paramDefs;
   }
 
   updateSoundfontParamDefs() {
