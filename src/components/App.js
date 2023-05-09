@@ -48,6 +48,7 @@ import Search from './Search';
 import Visualizer from './Visualizer';
 import Alert from './Alert';
 import { MessageBox } from './MessageBox';
+import Settings from './Settings';
 
 class App extends React.Component {
   constructor(props) {
@@ -720,7 +721,14 @@ class App extends React.Component {
                          to={{ pathname: "/browse", ...search }}>Browse</NavLink>
                 <NavLink className="tab" activeClassName="tab-selected"
                          to={{ pathname: "/favorites", ...search }}>Favorites</NavLink>
+                {/*<NavLink className="tab" activeClassName="tab-selected"*/}
+                {/*         style={{ marginLeft: 'auto', marginRight: 0 }}*/}
+                {/*         to={{ pathname: "/settings", ...search }}>Settings</NavLink>*/}
+                <button className={this.state.showPlayerSettings ? 'tab tab-selected' : 'tab'}
+                        style={{ marginLeft: 'auto', marginRight: 0 }}
+                        onClick={this.toggleSettings}>Settings</button>
               </div>
+              <div className="App-main-content-and-settings">
               <div className="App-main-content-area" ref={this.contentAreaRef}>
                 <Switch>
                   <Route path="/" exact render={() => (
@@ -765,7 +773,34 @@ class App extends React.Component {
                               toggleFavorite={this.handleToggleFavorite}/>
                     );
                   }}/>
+                  <Route path="/settings" render={() => (
+                    <Settings
+                      ejected={this.state.ejected}
+                      tempo={this.state.tempo}
+                      currentSongNumVoices={this.state.currentSongNumVoices}
+                      voiceMask={this.state.voiceMask}
+                      voiceNames={this.state.voiceNames}
+                      handleSetVoiceMask={this.handleSetVoiceMask}
+                      handleTempoChange={this.handleTempoChange}
+                      sequencer={this.sequencer}
+                      />
+                  )}/>
                 </Switch>
+              </div>
+                { this.state.showPlayerSettings &&
+                <div className="App-main-content-area settings">
+                  <Settings
+                    ejected={this.state.ejected}
+                    tempo={this.state.tempo}
+                    currentSongNumVoices={this.state.currentSongNumVoices}
+                    voiceMask={this.state.voiceMask}
+                    voiceNames={this.state.voiceNames}
+                    handleSetVoiceMask={this.handleSetVoiceMask}
+                    handleTempoChange={this.handleTempoChange}
+                    sequencer={this.sequencer}
+                  />
+                </div>
+                }
               </div>
             </div>
             {!isMobile.phone && !this.state.loading &&

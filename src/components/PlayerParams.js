@@ -67,43 +67,57 @@ export default class PlayerParams extends PureComponent {
   render() {
     return (
       <div className='PlayerParams'>
-        Speed:{' '}
-        <input
-          disabled={this.props.ejected}
-          type='range' value={this.props.tempo}
-          min='0.3' max='2.0' step='0.05'
-          onInput={this.props.handleTempoChange}
-          onChange={this.props.handleTempoChange}/>{' '}
-        {this.props.tempo.toFixed(2)}<br/>
+        <span className='PlayerParams-param PlayerParams-group'>
+          <label htmlFor='tempo' className="PlayerParams-label">
+            Speed:{' '}
+          </label>
+          <input
+            id='tempo'
+            disabled={this.props.ejected}
+            type='range' value={this.props.tempo}
+            min='0.3' max='2.0' step='0.05'
+            onInput={this.props.handleTempoChange}
+            onChange={this.props.handleTempoChange}/>{' '}
+          {this.props.tempo.toFixed(2)}
+        </span>
 
-        Voices:{' '}
-        <div className="PlayerParams-voiceList">
-          {[...Array(this.props.numVoices)].map((_, i) => {
-            return (
-              <label className='App-voice-label inline' key={i}>
-                <input
-                  title='Alt+click to solo. Alt+click again to unmute all.'
-                  type='checkbox'
-                  onChange={(e) => this.handleVoiceToggle(e, i)}
-                  checked={this.props.voiceMask[i]}/>
-                {this.props.voiceNames[i]}
-              </label>
-            )
-          })}
-        </div>
+        {this.props.numVoices > 1 &&
+          <span className='PlayerParams-param PlayerParams-group'>
+            <label className="PlayerParams-label">
+              Voices:{' '}
+            </label>
+            <div className="PlayerParams-voiceList">
+              {[...Array(this.props.numVoices)].map((_, i) => {
+                return (
+                  <label className='App-voice-label inline' key={i}>
+                    <input
+                      title='Alt+click to solo. Alt+click again to unmute all.'
+                      type='checkbox'
+                      onChange={(e) => this.handleVoiceToggle(e, i)}
+                      checked={this.props.voiceMask[i]}/>
+                    {this.props.voiceNames[i]}
+                  </label>
+                )
+              })}
+            </div>
+          </span>
+        }
 
         {this.props.paramDefs.map(param => {
           const value = this.props.getParameter(param.id);
           const dependsOn = param.dependsOn;
           if (dependsOn && this.props.getParameter(dependsOn.param) !== dependsOn.value) {
-              return null;
+            return null;
           }
           switch (param.type) {
             case 'enum':
               return (
-                <label key={param.id} title={param.hint} className="PlayerParams-label">
+                <span className='PlayerParams-param'>
+                  <label htmlFor={param.id} key={param.id} title={param.hint} className="PlayerParams-label">
                   {param.label}:{' '}
+                </label>
                   <select
+                    id={param.id}
                     onChange={(e) => {
                       this.props.setParameter(param.id, e.target.value);
                       this.forceUpdate();
@@ -117,13 +131,16 @@ export default class PlayerParams extends PureComponent {
                       </optgroup>
                     )}
                   </select>
-                </label>
+                </span>
               );
             case 'number':
               return (
-                <label key={param.id} title={param.hint} className="PlayerParams-label">
-                  {param.label}:{' '}
-                  <input type='range'
+                <span className='PlayerParams-param'>
+                  <label htmlFor={param.id} key={param.id} title={param.hint} className="PlayerParams-label">
+                    {param.label}:{' '}
+                  </label>
+                  <input id={param.id}
+                         type='range'
                          title={param.hint}
                          min={param.min} max={param.max} step={param.step}
                          onChange={(e) => {
@@ -133,24 +150,27 @@ export default class PlayerParams extends PureComponent {
                          value={value}>
                   </input>{' '}
                   {value !== undefined && param.step >= 1 ? value : value.toFixed(2)}
-                </label>
+                </span>
               );
             case 'toggle':
               return (
-                <label key={param.id} title={param.hint} className="PlayerParams-label">
+                <span className='PlayerParams-param'>
                   <input type='checkbox'
+                         id={param.id}
                          onChange={(e) => {
                            this.props.setParameter(param.id, e.target.checked);
                            this.forceUpdate();
                          }}
                          checked={value}/>
-                  {param.label}
-                </label>
+                  <label htmlFor={param.id} key={param.id} title={param.hint} className="PlayerParams-label inline">
+                    {param.label}
+                  </label>
+                </span>
               );
             case 'button':
               return (
                 <button key={param.id} title={param.hint} className="box-button" onClick={() => {
-                   this.props.setParameter(param.id, true);
+                  this.props.setParameter(param.id, true);
                 }}>
                   {param.label}
                 </button>

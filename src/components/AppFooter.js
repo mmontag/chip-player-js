@@ -110,7 +110,7 @@ export default function AppFooter(props) {
               {SHUFFLE_LABELS[shuffle]}
               </button>
             {' '}
-            {!showPlayerSettings &&
+            {(!showPlayerSettings && false) && // TODO: Remove footer settings
               <button className="box-button" onClick={toggleSettings}>
                 Settings &gt;
               </button>}
@@ -168,7 +168,7 @@ export default function AppFooter(props) {
             </div>}
         </div>
       </div>
-      {showPlayerSettings &&
+      {(showPlayerSettings && false) && // TODO: Remove footer settings
         <div className="AppFooter-settings">
           <div style={{
             display: 'flex',
