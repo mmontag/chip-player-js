@@ -18,6 +18,7 @@ export default class N64Player extends Player {
     chipCore.FS.mkdirTree(MOUNTPOINT);
     chipCore.FS.mount(chipCore.FS.filesystems.IDBFS, {}, MOUNTPOINT);
 
+    this.name = 'N64 Player';
     this.lib = chipCore;
     this.fileExtensions = fileExtensions;
     this.buffer = chipCore._malloc(this.bufferSize * 4); // 2 ch, 16-bit

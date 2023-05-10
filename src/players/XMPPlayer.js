@@ -15,6 +15,7 @@ export default class XMPPlayer extends Player {
   constructor(audioCtx, destNode, chipCore, bufferSize) {
     super(audioCtx, destNode, chipCore, bufferSize);
 
+    this.name = 'XMP Player';
     this.lib = chipCore;
     this.xmpCtx = chipCore._xmp_create_context();
     this.xmp_frame_infoPtr = chipCore._malloc(2048);

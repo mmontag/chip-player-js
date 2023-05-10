@@ -153,6 +153,7 @@ export default class MIDIPlayer extends Player {
     lib.FS.mkdir(SOUNDFONT_MOUNTPOINT);
     lib.FS.mount(lib.FS.filesystems.IDBFS, {}, SOUNDFONT_MOUNTPOINT);
 
+    this.name = 'MIDI Player';
     this.fileExtensions = fileExtensions;
     this.activeChannels = [];
     this.buffer = lib.allocate(this.bufferSize * 8, 'i32', lib.ALLOC_NORMAL);

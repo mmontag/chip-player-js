@@ -76,6 +76,7 @@ export default class GMEPlayer extends Player {
     this.getParamDefs = this.getParamDefs.bind(this);
 
     libgme = chipCore;
+    this.name = 'Game Music Emu Player';
     this.paused = false;
     this.fileExtensions = fileExtensions;
     this.subtune = 0;

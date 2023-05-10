@@ -19,8 +19,7 @@ export default class Settings extends PureComponent {
     } = this.props;
     return (
       <div className='Settings'>
-        <h3>{sequencer?.getPlayer()?.constructor.name || 'Player'} Settings</h3>
-        <p>These settings affect the playback of the current song.</p>
+        <h3>{sequencer?.getPlayer()?.name || 'Player'} Settings</h3>
         {sequencer?.getPlayer() ?
           <PlayerParams
             ejected={ejected}

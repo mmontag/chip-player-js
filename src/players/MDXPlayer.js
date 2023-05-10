@@ -18,6 +18,7 @@ export default class MDXPlayer extends Player {
     chipCore.FS.mkdirTree(MOUNTPOINT);
     chipCore.FS.mount(chipCore.FS.filesystems.IDBFS, {}, MOUNTPOINT);
 
+    this.name = 'Sharp X68000 MDX Player';
     this.speed = 1;
     this.lib = chipCore;
     this.mdxCtx = chipCore._mdx_create_context();

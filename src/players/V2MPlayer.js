@@ -9,6 +9,7 @@ export default class V2MPlayer extends Player {
     super(audioCtx, destNode, chipCore, bufferSize);
     this.loadData = this.loadData.bind(this);
 
+    this.name = 'Farbrausch V2M Player';
     this.speed = 1;
     this.lib = chipCore;
     this.fileExtensions = fileExtensions;
