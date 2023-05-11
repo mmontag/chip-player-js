@@ -4,8 +4,6 @@ import { CATALOG_PREFIX } from '../config';
 import DirectoryLink from './DirectoryLink';
 import FavoriteButton from './FavoriteButton';
 
-const dirToken = <Fragment>&nbsp;&nbsp;&lt;DIR&gt;&nbsp;&nbsp;</Fragment>;
-
 export default function BrowseList({ virtual, ...props }) {
   const {
     currContext,
@@ -40,9 +38,12 @@ export default function BrowseList({ virtual, ...props }) {
                   <DirectoryLink to={'/browse/' + path}>{name}</DirectoryLink>
                 </div>
                 <div className="BrowseList-colDir">
-                  {dirToken}
+                  &lt;DIR&gt;
                 </div>
-                <div className="BrowseList-colSize">
+                <div className="BrowseList-colCount" title={`Contains ${item.numChildren} direct child items`}>
+                  {item.numChildren}
+                </div>
+                <div className="BrowseList-colSize" title={`Directory size is ${item.size} bytes (recursive)`}>
                   {item.size != null && bytes(item.size, { unitSeparator: ' ' })}
                 </div>
               </div>
