@@ -351,9 +351,11 @@ body,#root {
 .Browse-topRow { display: flex; justify-content: space-between; margin-bottom: var(--charH); }
 
 .BrowseList-row { display: flex; }
+.BrowseList-row:has(a:hover) { color: var(--neutral4); }
 .BrowseList-colName { overflow-x: hidden; white-space: nowrap; text-overflow: ellipsis; flex-grow: 1; }
-.BrowseList-colDir, .BrowseList-colSize { flex-shrink : 0; }
-.BrowseList-colSize { text-align: right; text-transform: uppercase; white-space: nowrap; min-width: 80px; }
+.BrowseList-colDir, .BrowseList-colSize { flex-shrink : 0; margin-left: calc(var(--charW1) * 2); }
+.BrowseList-colCount { flex-shrink : 0; margin-left: var(--charW1); width: calc(var(--charW1) * 5); text-align: right; }
+.BrowseList-colSize { text-align: right; text-transform: uppercase; white-space: nowrap; min-width: calc(var(--charW1) * 10); }
 
 .DirectoryLink-dim { color: var(--neutral2); }
 .DirectoryLink-folderIcon { vertical-align: bottom; }
