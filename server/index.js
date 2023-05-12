@@ -68,6 +68,12 @@ const routes = {
     let items = trie.get(query, TrieSearch.UNION_REDUCER) || [];
     const total = items.length;
     if (limit) items = items.slice(0, limit);
+    // Add directory depth to items for sorting
+    items = items.map(item => { item.depth = item.file.split('/').length; return item; });
+    items.sort((a, b) => {
+      if (a.depth !== b.depth) return a.depth - b.depth;
+      return a.file.localeCompare(b.file);
+    });
     const time = (performance.now() - start).toFixed(1);
     console.log('Returned %s results in %s ms.', items.length, time);
     return {
@@ -126,7 +132,9 @@ const routes = {
       const files = fs.readdirSync(path.join(LOCAL_CATALOG_ROOT, params.path), { withFileTypes: true });
       return files
         .filter(file => {
-          return (file.isDirectory() || (file.isFile() && FORMATS.includes(path.extname(file.name).slice(1)?.toLowerCase())));
+          // Get lowercase file extension, without the dot
+          const ext = path.extname(file.name).toLowerCase().slice(1);
+          return (file.isDirectory() || (file.isFile() && FORMATS.includes(ext)));
         })
         .map((file, i) => {
           return {
