@@ -89,8 +89,7 @@ export default class Search extends PureComponent {
           const { items, total } = payload;
           const results = items
             .map(item => item.file)
-            .map(result => result.replace('%', '%25').replace('#', '%23'))
-            .sort();
+            .map(result => result.replace('%', '%25').replace('#', '%23'));
           searchResultsCache[val] = {
             resultsCount: total,
             resultsHeadings: this.extractHeadings(results),
