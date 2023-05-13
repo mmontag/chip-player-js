@@ -40,7 +40,7 @@
 
 *::selection {
     background: rgba(170, 170, 170, 0.99);
-    color: var(--background);
+    color: #000088;
 }
 
 *:focus {
@@ -115,7 +115,7 @@ input[type=text] {
     padding: 0 var(--charW1);
     width: 256px;
 }
-input[type=text]::selection                 { background-color: var(--neutral4); }
+input[type=text]::selection                 { background-color: #FFFFFF; }
 input[type=text]::-webkit-input-placeholder { color: var(--neutral1) }
 
 input[type=checkbox]:focus,
