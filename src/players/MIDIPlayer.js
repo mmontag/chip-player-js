@@ -360,9 +360,8 @@ export default class MIDIPlayer extends Player {
       });
 
     const midiFile = new MIDIFile(data);
-    // TODO: Forced true for testing - make permanent after 2022-12-25.
-    //   checking filepath doesn't work for dragged files.
-    const useTrackLoops = true; // filepath.includes('SoundFont MIDI');
+    // Checking filepath doesn't work for dragged files. Force to true during development.
+    const useTrackLoops = filepath.includes('SoundFont MIDI');
     this.midiFilePlayer.load(midiFile, useTrackLoops);
     this.midiFilePlayer.play(() => this.emit('playerStateUpdate', { isStopped: true }));
 
