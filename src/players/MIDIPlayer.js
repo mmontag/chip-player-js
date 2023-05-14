@@ -226,11 +226,8 @@ export default class MIDIPlayer extends Player {
 
     const useWebMIDI = this.params['synthengine'] === MIDI_ENGINE_WEBMIDI;
 
-    if (this.midiFilePlayer.paused || useWebMIDI) {
-      for (channel = 0; channel < channels.length; channel++) {
-        channels[channel].fill(0);
-      }
-    }
+    // No early return or zero-fill during pause.
+    // Notes are allowed to ring out, and the MIDI synth behaves more like external hardware.
 
     if (useWebMIDI) {
       this.midiFilePlayer.processPlay();
