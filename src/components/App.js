@@ -186,6 +186,16 @@ class App extends React.Component {
             new MDXPlayer(audioCtx, playerNode, chipCore, bufferSize),
           ];
 
+          playerNode.onaudioprocess = (e) => {
+            const channels = [];
+            for (let i = 0; i < e.outputBuffer.numberOfChannels; i++) {
+              channels.push(e.outputBuffer.getChannelData(i));
+            }
+            for (let player of players) {
+              player.processAudio(channels, e.outputBuffer.length);
+            }
+          }
+
           // Populate all mounted IDBFS file systems from IndexedDB.
           chipCore.FS.syncfs(true, (err) => {
             if (err) {
