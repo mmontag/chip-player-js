@@ -160,7 +160,7 @@ export default class MIDIPlayer extends Player {
     this.filepathMeta = {};
     this.midiFilePlayer = new MIDIFilePlayer({
       // playerStateUpdate is debounced to prevent flooding program change events
-      programChangeCb: () => debounce(() => this.emit('playerStateUpdate', { isStopped: false }), 200),
+      programChangeCb: debounce(() => this.emit('playerStateUpdate', { isStopped: false }), 200),
       output: dummyMidiOutput,
       skipSilence: true,
       sampleRate: this.sampleRate,
