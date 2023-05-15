@@ -257,6 +257,8 @@ body,#root {
     -ms-flex-direction: row;
         flex-direction: row;
     overflow: hidden;
+    -ms-flex-positive: 1;
+        flex-grow: 1;
 }
 
 .App-main-content-area {
@@ -276,6 +278,8 @@ body,#root {
 .App-main-content-area.settings {
     width: 360px;
     min-width: 360px;
+    -ms-flex-positive: 0;
+        flex-grow: 0;
 }
 
 .AppFooter {
@@ -625,4 +629,4 @@ img { -ms-interpolation-mode: nearest-neighbor; image-rendering: -webkit-optimiz
 .message-box-button        { background: var(--background); padding: 0 var(--charW2); -webkit-box-shadow: none; box-shadow: none; }
 
 
-/*# sourceMappingURL=main.d53b8805.css.map*/
+/*# sourceMappingURL=main.e66640c8.css.map*/
