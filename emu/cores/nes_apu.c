@@ -600,7 +600,7 @@ INLINE void apu_regwrite(nesapu_state *info, uint8 offset, uint8 value)
 		info->APU.noi.regs[0] = value;
 		break;
 
-	case 0x400D:
+	case 0x0D:
 		/* unused */
 		info->APU.noi.regs[1] = value;
 		break;
