@@ -20,21 +20,23 @@ import EventEmitter from 'events';
 // "stopped" is synonymous with closed/empty.
 //
 export default class Player extends EventEmitter {
-  constructor(audioCtx, destNode, chipCore, bufferSize) {
+  /**
+   * @param {object} core - Emscripten module
+   * @param {number} sampleRate - Audio sample rate
+   * @param {number} [bufferSize=2048] - Audio buffer size
+   * @param {boolean} [debug=false] - Enable debug logging
+   */
+  constructor(core, sampleRate, bufferSize=2048, debug=false) {
     super();
 
-    this._outerAudioProcess = this._outerAudioProcess.bind(this);
-
+    this.core = core;
     this.paused = true;
+    this.stopped = true;
     this.fileExtensions = [];
     this.metadata = null;
-    this.audioCtx = audioCtx;
-    this.destinationNode = destNode;
+    this.sampleRate = sampleRate;
     this.bufferSize = bufferSize;
-    this._innerAudioProcess = null;
-    this.audioNode = this.audioCtx.createScriptProcessor(this.bufferSize, 2, 2);
-    this.audioNode.onaudioprocess = this._outerAudioProcess;
-    this.debug = window.location.search.indexOf('debug=true') !== -1;
+    this.debug = debug;
     this.timeCount = 0;
     this.renderTime = 0;
     this.perfLoggingInterval = 100;
@@ -52,6 +54,7 @@ export default class Player extends EventEmitter {
   }
 
   resume() {
+    this.stopped = false;
     this.paused = false;
   }
 
@@ -151,28 +154,14 @@ export default class Player extends EventEmitter {
     };
   }
 
-  connect() {
-    if (!this._innerAudioProcess) {
-      throw Error('Player.setAudioProcess has not been called.');
-    }
-    this.audioNode.connect(this.destinationNode);
-  }
-
   suspend() {
     this.stopped = true;
     this.paused = true;
   }
 
-  setAudioProcess(fn) {
-    if (typeof fn !== 'function') {
-      throw Error('AudioProcess must be a function.');
-    }
-    this._innerAudioProcess = fn;
-  }
-
-  _outerAudioProcess(event) {
+  processAudio(output) {
     const start = performance.now();
-    this._innerAudioProcess(event);
+    this.processAudioInner(output);
     const end = performance.now();
 
     if (this.debug) {
@@ -193,6 +182,10 @@ export default class Player extends EventEmitter {
         this.timeCount = 0;
       }
     }
+  }
+
+  processAudioInner() {
+    throw Error('Player.processAudioInner() must be implemented.');
   }
 
   muteAudioDuringCall(audioNode, fn) {
