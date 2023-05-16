@@ -112,8 +112,8 @@ export default class PlayerParams extends PureComponent {
           switch (param.type) {
             case 'enum':
               return (
-                <span className='PlayerParams-param'>
-                  <label htmlFor={param.id} key={param.id} title={param.hint} className="PlayerParams-label">
+                <span key={param.id} className='PlayerParams-param'>
+                  <label htmlFor={param.id} title={param.hint} className="PlayerParams-label">
                   {param.label}:{' '}
                 </label>
                   <select
@@ -135,8 +135,8 @@ export default class PlayerParams extends PureComponent {
               );
             case 'number':
               return (
-                <span className='PlayerParams-param'>
-                  <label htmlFor={param.id} key={param.id} title={param.hint} className="PlayerParams-label">
+                <span key={param.id} className='PlayerParams-param'>
+                  <label htmlFor={param.id} title={param.hint} className="PlayerParams-label">
                     {param.label}:{' '}
                   </label>
                   <input id={param.id}
@@ -154,7 +154,7 @@ export default class PlayerParams extends PureComponent {
               );
             case 'toggle':
               return (
-                <span className='PlayerParams-param'>
+                <span key={param.id} className='PlayerParams-param'>
                   <input type='checkbox'
                          id={param.id}
                          onChange={(e) => {
@@ -162,7 +162,7 @@ export default class PlayerParams extends PureComponent {
                            this.forceUpdate();
                          }}
                          checked={value}/>
-                  <label htmlFor={param.id} key={param.id} title={param.hint} className="PlayerParams-label inline">
+                  <label htmlFor={param.id} title={param.hint} className="PlayerParams-label inline">
                     {param.label}
                   </label>
                 </span>
