@@ -249,7 +249,13 @@ UINT8 ALSA_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audDr
 	else if (drv->waveFmt.wBitsPerSample == 16)
 		sndPcmFmt = SND_PCM_FORMAT_S16;
 	else if (drv->waveFmt.wBitsPerSample == 24)
-		sndPcmFmt = SND_PCM_FORMAT_S24;
+#if defined(VGM_LITTLE_ENDIAN)
+		sndPcmFmt = SND_PCM_FORMAT_S24_3LE;
+#elif defined(VGM_BIG_ENDIAN)
+		sndPcmFmt = SND_PCM_FORMAT_S24_3BE;
+#else
+		return 0xCF;
+#endif
 	else if (drv->waveFmt.wBitsPerSample == 32)
 		sndPcmFmt = SND_PCM_FORMAT_S32;
 	else

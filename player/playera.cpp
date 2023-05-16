@@ -9,10 +9,12 @@
 
 #include "playera.hpp"
 
+#pragma pack(1)
 struct int24_s
 {
 	INT32 data : 24;
 };
+#pragma pack()
 
 static void SampleConv_toU8(void* buffer, INT32 value)
 {
