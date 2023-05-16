@@ -381,9 +381,11 @@ body,#root {
 .Browse-topRow { display: -ms-flexbox; display: flex; -ms-flex-pack: justify; justify-content: space-between; margin-bottom: var(--charH); }
 
 .BrowseList-row { display: -ms-flexbox; display: flex; }
+.BrowseList-row:has(a:hover) { color: var(--neutral4); }
 .BrowseList-colName { overflow-x: hidden; white-space: nowrap; text-overflow: ellipsis; -ms-flex-positive: 1; flex-grow: 1; }
-.BrowseList-colDir, .BrowseList-colSize { -ms-flex-negative : 0; flex-shrink : 0; }
-.BrowseList-colSize { text-align: right; text-transform: uppercase; white-space: nowrap; min-width: 80px; }
+.BrowseList-colDir, .BrowseList-colSize { -ms-flex-negative : 0; flex-shrink : 0; margin-left: calc(var(--charW1) * 2); }
+.BrowseList-colCount { -ms-flex-negative : 0; flex-shrink : 0; margin-left: var(--charW1); width: calc(var(--charW1) * 5); text-align: right; }
+.BrowseList-colSize { text-align: right; text-transform: uppercase; white-space: nowrap; min-width: calc(var(--charW1) * 10); }
 
 .DirectoryLink-dim { color: var(--neutral2); }
 .DirectoryLink-folderIcon { vertical-align: bottom; }
@@ -629,4 +631,4 @@ img { -ms-interpolation-mode: nearest-neighbor; image-rendering: -webkit-optimiz
 .message-box-button        { background: var(--background); padding: 0 var(--charW2); -webkit-box-shadow: none; box-shadow: none; }
 
 
-/*# sourceMappingURL=main.e66640c8.css.map*/
+/*# sourceMappingURL=main.3d094302.css.map*/
