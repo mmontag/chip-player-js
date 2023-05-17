@@ -1,6 +1,8 @@
 // license:MIT
 // copyright-holders:laoo
 // C++17 -> C90 backport by Valley Bell
+#include <stdlib.h>
+
 #include "../../stdtype.h"
 #include "../../stdbool.h"
 #include "emutypes.h"
@@ -77,7 +79,7 @@ static uint32_t popcnt_intrinsic( uint32_t x )
 static uint32_t( *popcnt )( uint32_t );
 
 //detecting popcnt availability on msvc intel
-static void selectPOPCNT()
+static void selectPOPCNT(void)
 {
   int info[4];
   __cpuid( info, 1 );
@@ -94,7 +96,7 @@ static void selectPOPCNT()
 #else //defined( _M_IX86 ) || defined( _M_X64 )
 
 //MSVC non INTEL should use generic implementation
-static void selectPOPCNT()
+static void selectPOPCNT(void)
 {
 }
 
@@ -106,7 +108,7 @@ static void selectPOPCNT()
 
 //non MVSC should use builtin implementation
 
-inline void selectPOPCNT()
+static void selectPOPCNT(void)
 {
 }
 
