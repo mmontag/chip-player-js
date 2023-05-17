@@ -137,17 +137,17 @@ export default class MIDIPlayer extends Player {
     },
   ];
 
-  constructor(audioCtx, destNode, chipCore, bufferSize) {
-    super(audioCtx, destNode, chipCore, bufferSize);
+  constructor(...args) {
+    super(...args);
+
     this.setParameter = this.setParameter.bind(this);
     this.getParameter = this.getParameter.bind(this);
     this.getParamDefs = this.getParamDefs.bind(this);
     this.ensureWebMidiInitialized = this.ensureWebMidiInitialized.bind(this);
     this.updateSoundfontParamDefs = this.updateSoundfontParamDefs.bind(this);
 
-    lib = chipCore;
-    lib._tp_init(audioCtx.sampleRate);
-    this.sampleRate = audioCtx.sampleRate;
+    lib = this.core;
+    lib._tp_init(this.sampleRate);
 
     // Initialize Soundfont filesystem
     lib.FS.mkdir(SOUNDFONT_MOUNTPOINT);
@@ -160,7 +160,7 @@ export default class MIDIPlayer extends Player {
     this.filepathMeta = {};
     this.midiFilePlayer = new MIDIFilePlayer({
       // playerStateUpdate is debounced to prevent flooding program change events
-      programChangeCb: debounce(() => this.emit('playerStateUpdate', { isStopped: false }), 200),
+      programChangeCb: debounce(() => this.emit('playerStateUpdate', this.getBasePlayerState()), 200),
       output: dummyMidiOutput,
       skipSilence: true,
       sampleRate: this.sampleRate,
@@ -206,8 +206,6 @@ export default class MIDIPlayer extends Player {
     // They are reset when another song is loaded.
     this.transientParams = {};
     this.paramDefs.filter(p => p.id !== 'soundfont').forEach(p => this.setParameter(p.id, p.defaultValue));
-
-    this.setAudioProcess(this.midiAudioProcess);
   }
 
   handleFileSystemReady() {
@@ -216,14 +214,7 @@ export default class MIDIPlayer extends Player {
     this.updateSoundfontParamDefs();
   }
 
-  midiAudioProcess(e) {
-    let i, channel;
-    const channels = [];
-
-    for (channel = 0; channel < e.outputBuffer.numberOfChannels; channel++) {
-      channels[channel] = e.outputBuffer.getChannelData(channel);
-    }
-
+  processAudioInner(channels) {
     const useWebMIDI = this.params['synthengine'] === MIDI_ENGINE_WEBMIDI;
 
     // No early return or zero-fill during pause.
@@ -233,12 +224,12 @@ export default class MIDIPlayer extends Player {
       this.midiFilePlayer.processPlay();
     } else {
       if (this.midiFilePlayer.processPlaySynth(this.buffer, this.bufferSize)) {
-        for (channel = 0; channel < channels.length; channel++) {
-          for (i = 0; i < this.bufferSize; i++) {
-            channels[channel][i] = lib.getValue(
+        for (let ch = 0; ch < channels.length; ch++) {
+          for (let i = 0; i < this.bufferSize; i++) {
+            channels[ch][i] = lib.getValue(
               this.buffer +    // Interleaved channel format
               i * 4 * 2 +      // frame offset   * bytes per sample * num channels +
-              channel * 4,     // channel offset * bytes per sample
+              ch * 4,          // channel offset * bytes per sample
               'float'
             );
           }
@@ -367,7 +358,6 @@ export default class MIDIPlayer extends Player {
       if (this.midiFilePlayer.getChannelInUse(i)) this.activeChannels.push(i);
     }
 
-    this.connect();
     this.resume();
     this.emit('playerStateUpdate', {
       ...this.getBasePlayerState(),
