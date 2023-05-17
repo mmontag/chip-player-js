@@ -69,13 +69,14 @@ export default class GMEPlayer extends Player {
     }
   ];
 
-  constructor(audioCtx, destNode, chipCore, bufferSize) {
-    super(audioCtx, destNode, chipCore, bufferSize);
+  constructor(...args) {
+    super(...args);
+
     this.setParameter = this.setParameter.bind(this);
     this.getParameter = this.getParameter.bind(this);
     this.getParamDefs = this.getParamDefs.bind(this);
 
-    libgme = chipCore;
+    libgme = this.core;
     this.name = 'Game Music Emu Player';
     this.paused = false;
     this.fileExtensions = fileExtensions;
@@ -92,23 +93,17 @@ export default class GMEPlayer extends Player {
     this.buffer = libgme.allocate(this.bufferSize * 16, 'i16', libgme.ALLOC_NORMAL);
     this.emuPtr = libgme.allocate(1, 'i32', libgme.ALLOC_NORMAL);
 
-    this.subBass = new SubBass(audioCtx.sampleRate);
+    this.subBass = new SubBass(this.sampleRate);
 
     this.params = {};
     this.paramDefs.forEach(p => this.setParameter(p.id, p.defaultValue));
-    this.setAudioProcess(this.gmeAudioProcess);
   }
 
-  gmeAudioProcess(e) {
-    let i, channel;
-    const channels = [];
-    for (channel = 0; channel < e.outputBuffer.numberOfChannels; channel++) {
-      channels[channel] = e.outputBuffer.getChannelData(channel);
-    }
-
+  processAudioInner(channels) {
+    let ch, i;
     if (this.paused) {
-      for (channel = 0; channel < channels.length; channel++) {
-        channels[channel].fill(0);
+      for (ch = 0; ch < channels.length; ch++) {
+        channels[ch].fill(0);
       }
       return;
     }
@@ -122,12 +117,12 @@ export default class GMEPlayer extends Player {
     if (libgme._gme_track_ended(emu) !== 1) {
       libgme._gme_play(emu, this.bufferSize * 2, this.buffer);
 
-      for (channel = 0; channel < channels.length; channel++) {
+      for (ch = 0; ch < channels.length; ch++) {
         for (i = 0; i < this.bufferSize; i++) {
-          channels[channel][i] = libgme.getValue(this.buffer +
+          channels[ch][i] = libgme.getValue(this.buffer +
             // Interleaved channel format
             i * 2 * 2 +             // frame offset   * bytes per sample * num channels +
-            channel * 2,            // channel offset * bytes per sample
+            ch * 2,                 // chhannel offset * bytes per sample
             'i16') / INT16_MAX;     // convert int16 to float
         }
       }
@@ -162,7 +157,7 @@ export default class GMEPlayer extends Player {
       if (this.params.subbass > 0) {
         for (i = 0; i < this.bufferSize; i++) {
           const sub = this.subBass.process(channels[0][i]) * this.params.subbass;
-          for (let ch = 0; ch < channels.length; ch++) {
+          for (ch = 0; ch < channels.length; ch++) {
             channels[ch][i] += sub;
           }
         }
@@ -211,7 +206,7 @@ export default class GMEPlayer extends Player {
       "gme_open_data",
       "number",
       ["array", "number", "number", "number"],
-      [data, data.length, this.emuPtr, this.audioCtx.sampleRate]
+      [data, data.length, this.emuPtr, this.sampleRate]
     ) !== 0) {
       this.stop();
       throw Error('gme_open_data failed');
@@ -222,7 +217,6 @@ export default class GMEPlayer extends Player {
     // Enable silence detection
     libgme._gme_ignore_silence(emu, 0);
 
-    this.connect();
     this.resume();
     if (this.playSubtune(this.subtune) !== 0) {
       this.stop();
