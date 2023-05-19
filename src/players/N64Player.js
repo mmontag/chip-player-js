@@ -10,19 +10,18 @@ const MOUNTPOINT = '/n64';
 const INT16_MAX = Math.pow(2, 16) - 1;
 
 export default class N64Player extends Player {
-  constructor(audioCtx, destNode, chipCore, bufferSize) {
-    super(audioCtx, destNode, chipCore, bufferSize);
+  constructor(...args) {
+    super(...args);
+
     this.loadData = this.loadData.bind(this);
 
     // Initialize N64 filesystem
-    chipCore.FS.mkdirTree(MOUNTPOINT);
-    chipCore.FS.mount(chipCore.FS.filesystems.IDBFS, {}, MOUNTPOINT);
+    this.core.FS.mkdirTree(MOUNTPOINT);
+    this.core.FS.mount(this.core.FS.filesystems.IDBFS, {}, MOUNTPOINT);
 
     this.name = 'N64 Player';
-    this.lib = chipCore;
     this.fileExtensions = fileExtensions;
-    this.buffer = chipCore._malloc(this.bufferSize * 4); // 2 ch, 16-bit
-    this.setAudioProcess(this.n64AudioProcess);
+    this.buffer = this.core._malloc(this.bufferSize * 4); // 2 ch, 16-bit
   }
 
   loadData(data, filename) {
@@ -38,21 +37,21 @@ export default class N64Player extends Player {
     const dir = path.dirname(filename);
     const fsFilename = path.join(MOUNTPOINT, filename);
     const promises = [
-      ensureEmscFileWithData(this.lib, fsFilename, data),
+      ensureEmscFileWithData(this.core, fsFilename, data),
       ...usflibs.map(usflib => {
         const fsFilename = path.join(MOUNTPOINT, dir, usflib);
         const url = CATALOG_PREFIX + path.join(dir, usflib);
-        return ensureEmscFileWithUrl(this.lib, fsFilename, url);
+        return ensureEmscFileWithUrl(this.core, fsFilename, url);
       }),
     ];
 
     return Promise.all(promises)
       .then(([fsFilename]) => {
         this.muteAudioDuringCall(this.audioNode, () => {
-          err = this.lib.ccall(
+          err = this.core.ccall(
             'n64_load_file', 'number',
             ['string', 'number', 'number', 'number'],
-            [fsFilename, this.buffer, this.bufferSize, this.audioCtx.sampleRate],
+            [fsFilename, this.buffer, this.bufferSize, this.sampleRate],
           );
 
           if (err !== 0) {
@@ -62,7 +61,6 @@ export default class N64Player extends Player {
 
           this.metadata = { title: filename };
 
-          this.connect();
           this.resume();
           this.emit('playerStateUpdate', {
             ...this.getBasePlayerState(),
@@ -72,48 +70,39 @@ export default class N64Player extends Player {
       });
   }
 
-  n64AudioProcess(e) {
-    let i, channel;
-    const channels = [];
-    for (channel = 0; channel < e.outputBuffer.numberOfChannels; channel++) {
-      channels[channel] = e.outputBuffer.getChannelData(channel);
-    }
+  processAudioInner(channels) {
+    let i, ch;
 
     if (this.paused) {
-      for (channel = 0; channel < channels.length; channel++) {
-        channels[channel].fill(0);
+      for (ch = 0; ch < channels.length; ch++) {
+        channels[ch].fill(0);
       }
       return;
     }
 
-    const samplesWritten = this.lib._n64_render_audio(this.buffer, this.bufferSize);
+    const samplesWritten = this.core._n64_render_audio(this.buffer, this.bufferSize);
     if (samplesWritten <= 0) {
       this.stop();
     }
 
-    for (channel = 0; channel < channels.length; channel++) {
+    for (ch = 0; ch < channels.length; ch++) {
       for (i = 0; i < this.bufferSize; i++) {
-        channels[channel][i] = this.lib.getValue(
+        channels[ch][i] = this.core.getValue(
           this.buffer +           // Interleaved channel format
           i * 2 * 2 +             // frame offset   * bytes per sample * num channels +
-          channel * 2,            // channel offset * bytes per sample
+          ch * 2,                 // channel offset * bytes per sample
           'i16'                   // the sample values are signed 16-bit integers
         ) / INT16_MAX;
       }
     }
   }
 
-  // setTempo(val) {
-  //   return this.lib._v2m_set_speed(val);
-  //   // console.error('Unable to set speed for this file format.');
-  // }
-
   getPositionMs() {
-    return this.lib._n64_get_position_ms();
+    return this.core._n64_get_position_ms();
   }
 
   getDurationMs() {
-    return this.lib._n64_get_duration_ms();
+    return this.core._n64_get_duration_ms();
   }
 
   getMetadata() {
@@ -125,14 +114,13 @@ export default class N64Player extends Player {
   }
 
   seekMs(seekMs) {
-    this.muteAudioDuringCall(this.audioNode, () =>
-      this.lib._n64_seek_ms(seekMs)
-    );
+    // TODO: timesliced seeking
+    this.core._n64_seek_ms(seekMs)
   }
 
   stop() {
     this.suspend();
-    this.lib._n64_shutdown();
+    this.core._n64_shutdown();
     console.debug('N64Player.stop()');
     this.emit('playerStateUpdate', { isStopped: true });
   }
