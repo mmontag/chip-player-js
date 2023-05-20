@@ -3,8 +3,7 @@ import SubBass from "../effects/SubBass";
 import { allOrNone, remap01 } from '../util';
 import path from 'path';
 
-let emu = null;
-let libgme = null;
+let core, emu;
 const INT16_MAX = 65535;
 // "timesliced" seek in increments to prevent blocking UI/audio callback.
 const TIMESLICED_SEEK_MS_MAP = {
@@ -76,7 +75,7 @@ export default class GMEPlayer extends Player {
     this.getParameter = this.getParameter.bind(this);
     this.getParamDefs = this.getParamDefs.bind(this);
 
-    libgme = this.core;
+    core = this.core;
     this.name = 'Game Music Emu Player';
     this.paused = false;
     this.fileExtensions = fileExtensions;
@@ -90,8 +89,8 @@ export default class GMEPlayer extends Player {
     this.seekTargetMs = null;
     this.currentFileExt = null;
 
-    this.buffer = libgme.allocate(this.bufferSize * 16, 'i16', libgme.ALLOC_NORMAL);
-    this.emuPtr = libgme.allocate(1, 'i32', libgme.ALLOC_NORMAL);
+    this.buffer = core.allocate(this.bufferSize * 16, 'i16', core.ALLOC_NORMAL);
+    this.emuPtr = core.allocate(1, 'i32', core.ALLOC_NORMAL);
 
     this.subBass = new SubBass(this.sampleRate);
 
@@ -114,12 +113,12 @@ export default class GMEPlayer extends Player {
       this.fadingOut = true;
     }
 
-    if (libgme._gme_track_ended(emu) !== 1) {
-      libgme._gme_play(emu, this.bufferSize * 2, this.buffer);
+    if (core._gme_track_ended(emu) !== 1) {
+      core._gme_play(emu, this.bufferSize * 2, this.buffer);
 
       for (ch = 0; ch < channels.length; ch++) {
         for (i = 0; i < this.bufferSize; i++) {
-          channels[ch][i] = libgme.getValue(this.buffer +
+          channels[ch][i] = core.getValue(this.buffer +
             // Interleaved channel format
             i * 2 * 2 +             // frame offset   * bytes per sample * num channels +
             ch * 2,                 // chhannel offset * bytes per sample
@@ -165,13 +164,13 @@ export default class GMEPlayer extends Player {
     } else {
       this.subtune++;
 
-      if (this.subtune >= libgme._gme_track_count(emu) || this.playSubtune(this.subtune) !== 0) {
+      if (this.subtune >= core._gme_track_count(emu) || this.playSubtune(this.subtune) !== 0) {
         this.suspend();
         console.debug(
           'GMEPlayer.gmeAudioProcess(): _gme_track_ended == %s and subtune (%s) > _gme_track_count (%s).',
-          libgme._gme_track_ended(emu),
+          core._gme_track_ended(emu),
           this.subtune,
-          libgme._gme_track_count(emu)
+          core._gme_track_count(emu)
         );
         this.emit('playerStateUpdate', { isStopped: true });
       }
@@ -187,7 +186,7 @@ export default class GMEPlayer extends Player {
       ...this.getBasePlayerState(),
       isStopped: false,
     });
-    return libgme._gme_start_track(emu, subtune);
+    return core._gme_start_track(emu, subtune);
   }
 
   loadData(data, filepath) {
@@ -202,7 +201,7 @@ export default class GMEPlayer extends Player {
     );
     this.params.subbass = formatNeedsBass ? 1 : 0;
 
-    if (libgme.ccall(
+    if (core.ccall(
       "gme_open_data",
       "number",
       ["array", "number", "number", "number"],
@@ -211,11 +210,11 @@ export default class GMEPlayer extends Player {
       this.stop();
       throw Error('gme_open_data failed');
     }
-    emu = libgme.getValue(this.emuPtr, "i32");
-    this.voiceMask = Array(libgme._gme_voice_count(emu)).fill(true);
+    emu = core.getValue(this.emuPtr, "i32");
+    this.voiceMask = Array(core._gme_voice_count(emu)).fill(true);
 
     // Enable silence detection
-    libgme._gme_ignore_silence(emu, 0);
+    core._gme_ignore_silence(emu, 0);
 
     this.resume();
     if (this.playSubtune(this.subtune) !== 0) {
@@ -225,15 +224,15 @@ export default class GMEPlayer extends Player {
   }
 
   _parseMetadata(subtune) {
-    const metadataPtr = libgme.allocate(1, "i32", libgme.ALLOC_NORMAL);
-    if (libgme._gme_track_info(emu, metadataPtr, subtune) !== 0)
+    const metadataPtr = core.allocate(1, "i32", core.ALLOC_NORMAL);
+    if (core._gme_track_info(emu, metadataPtr, subtune) !== 0)
       console.error("could not load metadata");
-    const ref = libgme.getValue(metadataPtr, "*");
+    const ref = core.getValue(metadataPtr, "*");
 
     let offset = 0;
 
     const readInt32 = function () {
-      var value = libgme.getValue(ref + offset, "i32");
+      var value = core.getValue(ref + offset, "i32");
       offset += 4;
       return value;
     };
@@ -242,12 +241,12 @@ export default class GMEPlayer extends Player {
       let value = '';
 
       // Interpret as UTF8 (disabled)
-      // value = libgme.UTF8ToString(libgme.getValue(ref + offset, "i8*"));
+      // value = core.UTF8ToString(core.getValue(ref + offset, "i8*"));
 
       // Interpret as ISO-8859-1 (unsigned integer values, 0 to 255)
-      const ptr = libgme.getValue(ref + offset, 'i8*');
+      const ptr = core.getValue(ref + offset, 'i8*');
       for (let i = 0; i < 255; i++) {
-        let char = libgme.getValue(ptr + i, 'i8');
+        let char = core.getValue(ptr + i, 'i8');
         if (char === 0) {
           break;
         } else if (char < 0) {
@@ -288,15 +287,15 @@ export default class GMEPlayer extends Player {
   }
 
   getVoiceName(index) {
-    if (emu) return libgme.UTF8ToString(libgme._gme_voice_name(emu, index));
+    if (emu) return core.UTF8ToString(core._gme_voice_name(emu, index));
   }
 
   getNumVoices() {
-    if (emu) return libgme._gme_voice_count(emu);
+    if (emu) return core._gme_voice_count(emu);
   }
 
   getNumSubtunes() {
-    if (emu) return libgme._gme_track_count(emu);
+    if (emu) return core._gme_track_count(emu);
   }
 
   getSubtune() {
@@ -304,7 +303,7 @@ export default class GMEPlayer extends Player {
   }
 
   getPositionMs() {
-    if (emu) return libgme._gme_tell_scaled(emu);
+    if (emu) return core._gme_tell_scaled(emu);
     return 0;
   }
 
@@ -333,7 +332,7 @@ export default class GMEPlayer extends Player {
   }
 
   isPlaying() {
-    return !this.isPaused() && libgme._gme_track_ended(emu) !== 1;
+    return !this.isPaused() && core._gme_track_ended(emu) !== 1;
   }
 
   getTempo() {
@@ -342,11 +341,11 @@ export default class GMEPlayer extends Player {
 
   setTempo(val) {
     this.tempo = val;
-    if (emu) libgme._gme_set_tempo(emu, val);
+    if (emu) core._gme_set_tempo(emu, val);
   }
 
   setFadeout(startMs) {
-    if (emu) libgme._gme_set_fade(emu, startMs, 4000);
+    if (emu) core._gme_set_fade(emu, startMs, 4000);
   }
 
   getVoiceMask() {
@@ -361,9 +360,9 @@ export default class GMEPlayer extends Player {
           bitmask += 1 << i;
         }
       });
-      libgme._gme_mute_voices(emu, bitmask);
+      core._gme_mute_voices(emu, bitmask);
       // Disable silence detection if any voice is muted.
-      libgme._gme_ignore_silence(emu, bitmask === 0 ? 0 : 1);
+      core._gme_ignore_silence(emu, bitmask === 0 ? 0 : 1);
       console.log('GMEPlayer: Silence detection is %s.', bitmask === 0 ? 'enabled' : 'disabled');
       this.voiceMask = voiceMask;
     }
@@ -373,12 +372,12 @@ export default class GMEPlayer extends Player {
     // console.log('Scheduling incremental seek of %s ms...', seekMsIncrement);
     this.seekRequestId = requestIdleCallback(() => {
       const seekIntermediateMs = Math.min(this.getPositionMs() + seekMsIncrement, this.seekTargetMs);
-      libgme._gme_seek_scaled(emu, seekIntermediateMs);
+      core._gme_seek_scaled(emu, seekIntermediateMs);
       if (seekIntermediateMs < this.seekTargetMs) {
         this.doIncrementalSeek(seekMsIncrement);
       } else {
         // console.log('Done Seeking');
-        libgme._gme_set_tempo(emu, this.tempo);
+        core._gme_set_tempo(emu, this.tempo);
         this.seekTargetMs = null;
         this.seekRequestId = null;
       }
@@ -393,20 +392,20 @@ export default class GMEPlayer extends Player {
         const seekMsIncrement = TIMESLICED_SEEK_MS_MAP[this.currentFileExt];
         if (positionMs < this.getPositionMs()) {
           // reset to position 0 if seeking backward
-          libgme._gme_seek_scaled(emu, 0);
+          core._gme_seek_scaled(emu, 0);
         }
-        libgme._gme_set_tempo(emu, 2);
+        core._gme_set_tempo(emu, 2);
         this.doIncrementalSeek(seekMsIncrement);
       } else {
         this.muteAudioDuringCall(this.audioNode, () =>
-          libgme._gme_seek_scaled(emu, positionMs));
+          core._gme_seek_scaled(emu, positionMs));
       }
     }
   }
 
   stop() {
     this.suspend();
-    if (emu) libgme._gme_delete(emu);
+    if (emu) core._gme_delete(emu);
     emu = null;
     console.debug('GMEPlayer.stop()');
     this.emit('playerStateUpdate', { isStopped: true });
