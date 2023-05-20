@@ -9,7 +9,7 @@ import { GM_DRUM_KITS, GM_INSTRUMENTS } from '../gm-patch-map';
 import { ensureEmscFileWithUrl, getFilepathFromUrl, getMetadataUrlForFilepath, remap01 } from '../util';
 import requestCache from '../RequestCache';
 
-let lib = null;
+let core = null;
 
 const dummyMidiOutput = {
   send: () => {
@@ -146,17 +146,17 @@ export default class MIDIPlayer extends Player {
     this.ensureWebMidiInitialized = this.ensureWebMidiInitialized.bind(this);
     this.updateSoundfontParamDefs = this.updateSoundfontParamDefs.bind(this);
 
-    lib = this.core;
-    lib._tp_init(this.sampleRate);
+    core = this.core;
+    core._tp_init(this.sampleRate);
 
     // Initialize Soundfont filesystem
-    lib.FS.mkdir(SOUNDFONT_MOUNTPOINT);
-    lib.FS.mount(lib.FS.filesystems.IDBFS, {}, SOUNDFONT_MOUNTPOINT);
+    core.FS.mkdir(SOUNDFONT_MOUNTPOINT);
+    core.FS.mount(core.FS.filesystems.IDBFS, {}, SOUNDFONT_MOUNTPOINT);
 
     this.name = 'MIDI Player';
     this.fileExtensions = fileExtensions;
     this.activeChannels = [];
-    this.buffer = lib.allocate(this.bufferSize * 8, 'i32', lib.ALLOC_NORMAL);
+    this.buffer = core.allocate(this.bufferSize * 8, 'i32', core.ALLOC_NORMAL);
     this.filepathMeta = {};
     this.midiFilePlayer = new MIDIFilePlayer({
       // playerStateUpdate is debounced to prevent flooding program change events
@@ -171,26 +171,26 @@ export default class MIDIPlayer extends Player {
         //       The original benefit was to tie in tml.h (MIDI file reader) which is not used any more.
         //       Besides, MIDIPlayer.js already calls directly into libADLMIDI functions.
         //       see also ../../scripts/build-chip-core.js:29
-        noteOn: lib._tp_note_on,
-        noteOff: lib._tp_note_off,
-        pitchBend: lib._tp_pitch_bend,
-        controlChange: lib._tp_control_change,
-        programChange: lib._tp_program_change,
-        panic: lib._tp_panic,
-        panicChannel: lib._tp_panic_channel,
-        render: lib._tp_render,
-        reset: lib._tp_reset,
-        getValue: lib.getValue,
+        noteOn: core._tp_note_on,
+        noteOff: core._tp_note_off,
+        pitchBend: core._tp_pitch_bend,
+        controlChange: core._tp_control_change,
+        programChange: core._tp_program_change,
+        panic: core._tp_panic,
+        panicChannel: core._tp_panic_channel,
+        render: core._tp_render,
+        reset: core._tp_reset,
+        getValue: core.getValue,
       },
     });
 
     // Populate OPL3 banks
-    const numBanks = lib._adl_getBanksCount();
-    const ptr = lib._adl_getBankNames();
+    const numBanks = core._adl_getBanksCount();
+    const ptr = core._adl_getBankNames();
     const oplBanks = [];
     for (let i = 0; i < numBanks; i++) {
       oplBanks.push({
-        label: lib.UTF8ToString(lib.getValue(ptr + i * 4, '*')),
+        label: core.UTF8ToString(core.getValue(ptr + i * 4, '*')),
         value: i,
       });
     }
@@ -226,7 +226,7 @@ export default class MIDIPlayer extends Player {
       if (this.midiFilePlayer.processPlaySynth(this.buffer, this.bufferSize)) {
         for (let ch = 0; ch < channels.length; ch++) {
           for (let i = 0; i < this.bufferSize; i++) {
-            channels[ch][i] = lib.getValue(
+            channels[ch][i] = core.getValue(
               this.buffer +    // Interleaved channel format
               i * 4 * 2 +      // frame offset   * bytes per sample * num channels +
               ch * 4,          // channel offset * bytes per sample
@@ -319,7 +319,7 @@ export default class MIDIPlayer extends Player {
         const sf2Path = `user/${soundfontBasename}`;
         newTransientParams['soundfont'] = sf2Path;
         if (this.getParameter('soundfont') !== sf2Path) {
-          await ensureEmscFileWithUrl(lib, `${SOUNDFONT_MOUNTPOINT}/${sf2Path}`, soundfontUrl);
+          await ensureEmscFileWithUrl(core, `${SOUNDFONT_MOUNTPOINT}/${sf2Path}`, soundfontUrl);
           this.updateSoundfontParamDefs();
         }
         // Melodic mode mean CH 10 becomes like any other channel, using SoundFont bank 0 by default.
@@ -336,7 +336,7 @@ export default class MIDIPlayer extends Player {
           useMelodicChannel10 = true;
         }
       }
-      lib._tp_set_ch10_melodic(useMelodicChannel10);
+      core._tp_set_ch10_melodic(useMelodicChannel10);
     }
 
     // Apply transient params. Avoid thrashing of params that haven't changed.
@@ -486,7 +486,7 @@ export default class MIDIPlayer extends Player {
   }
 
   getParameter(id) {
-    if (id === 'fluidpoly') return lib._tp_get_polyphony();
+    if (id === 'fluidpoly') return core._tp_get_polyphony();
     if (this.transientParams[id] != null) return this.transientParams[id];
     return this.params[id];
   }
@@ -496,8 +496,8 @@ export default class MIDIPlayer extends Player {
       if (paramDef.id === 'soundfont') {
         const userSoundfonts = paramDef.options[0];
         const userSoundfontPath = `${SOUNDFONT_MOUNTPOINT}/user/`;
-        if (lib.FS.analyzePath(userSoundfontPath).exists) {
-          userSoundfonts.items = lib.FS.readdir(userSoundfontPath).filter(f => f.match(/\.sf2$/i)).map(f => ({
+        if (core.FS.analyzePath(userSoundfontPath).exists) {
+          userSoundfonts.items = core.FS.readdir(userSoundfontPath).filter(f => f.match(/\.sf2$/i)).map(f => ({
             label: f,
             value: `user/${f}`,
           }));
@@ -517,11 +517,11 @@ export default class MIDIPlayer extends Player {
   }
 
   setFluidChorus(value) {
-    const fluidSynth = lib._tp_get_fluid_synth();
+    const fluidSynth = core._tp_get_fluid_synth();
     if (value === 0) {
-      lib._fluid_synth_set_chorus_on(fluidSynth, false);
+      core._fluid_synth_set_chorus_on(fluidSynth, false);
     } else {
-      lib._fluid_synth_set_chorus_on(fluidSynth, true);
+      core._fluid_synth_set_chorus_on(fluidSynth, true);
       // FLUID_CHORUS_DEFAULT_N 3 (0 to 99)
       const nr = 3;
       // FLUID_CHORUS_DEFAULT_LEVEL 2.0f (0 to 10)
@@ -535,7 +535,7 @@ export default class MIDIPlayer extends Player {
       //   FLUID_CHORUS_MOD_TRIANGLE = 1
       const type = 0;
       // (fluid_synth_t* synth, int nr, double level, double speed, double depth_ms, int type)
-      lib._fluid_synth_set_chorus(fluidSynth, nr, level, speed, depthMs, type);
+      core._fluid_synth_set_chorus(fluidSynth, nr, level, speed, depthMs, type);
     }
   }
 
@@ -548,18 +548,18 @@ export default class MIDIPlayer extends Player {
           this.midiFilePlayer.setUseWebMIDI(true);
         } else {
           this.midiFilePlayer.setUseWebMIDI(false);
-          lib._tp_set_synth_engine(value);
+          core._tp_set_synth_engine(value);
         }
         break;
       case 'soundfont':
         const url = `${SOUNDFONT_URL_PATH}/${value}`;
-        ensureEmscFileWithUrl(lib, `${SOUNDFONT_MOUNTPOINT}/${value}`, url)
+        ensureEmscFileWithUrl(core, `${SOUNDFONT_MOUNTPOINT}/${value}`, url)
           .then(filename => this._loadSoundfont(filename));
         break;
       case 'reverb':
         // TODO: call fluidsynth directly from JS, similar to chorus
         value = parseFloat(value);
-        lib._tp_set_reverb(value);
+        core._tp_set_reverb(value);
         break;
       case 'chorus':
         value = parseFloat(value);
@@ -568,11 +568,11 @@ export default class MIDIPlayer extends Player {
       case 'fluidpoly':
         // TODO: call fluidsynth directly from JS, similar to chorus
         value = parseInt(value, 10);
-        lib._tp_set_polyphony(value);
+        core._tp_set_polyphony(value);
         break;
       case 'opl3bank':
         value = parseInt(value, 10);
-        lib._tp_set_bank(value);
+        core._tp_set_bank(value);
         break;
       case 'autoengine':
         value = !!value;
@@ -598,7 +598,7 @@ export default class MIDIPlayer extends Player {
   _loadSoundfont(filename) {
     console.log('Loading soundfont %s...', filename);
     this.muteAudioDuringCall(this.audioNode, () => {
-      const err = lib.ccall('tp_load_soundfont', 'number', ['string'], [filename]);
+      const err = core.ccall('tp_load_soundfont', 'number', ['string'], [filename]);
       if (err !== -1) console.log('Loaded soundfont.');
     });
   }
