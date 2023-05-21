@@ -8,6 +8,7 @@ import { SOUNDFONTS, SOUNDFONT_MOUNTPOINT, SOUNDFONT_URL_PATH } from '../config'
 import { GM_DRUM_KITS, GM_INSTRUMENTS } from '../gm-patch-map';
 import { ensureEmscFileWithUrl, getFilepathFromUrl, getMetadataUrlForFilepath, remap01 } from '../util';
 import requestCache from '../RequestCache';
+import { range } from 'lodash';
 
 let core = null;
 
@@ -145,6 +146,7 @@ export default class MIDIPlayer extends Player {
     this.getParamDefs = this.getParamDefs.bind(this);
     this.ensureWebMidiInitialized = this.ensureWebMidiInitialized.bind(this);
     this.updateSoundfontParamDefs = this.updateSoundfontParamDefs.bind(this);
+    this.getVoiceName = this.getVoiceName.bind(this);
 
     core = this.core;
     core._tp_init(this.sampleRate);
@@ -160,7 +162,9 @@ export default class MIDIPlayer extends Player {
     this.filepathMeta = {};
     this.midiFilePlayer = new MIDIFilePlayer({
       // playerStateUpdate is debounced to prevent flooding program change events
-      programChangeCb: debounce(() => this.emit('playerStateUpdate', this.getBasePlayerState()), 200),
+      programChangeCb: debounce(() => this.emit('playerStateUpdate', {
+        voiceNames: range(this.getNumVoices()).map(this.getVoiceName)
+      }), 200),
       output: dummyMidiOutput,
       skipSilence: true,
       sampleRate: this.sampleRate,
