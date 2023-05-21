@@ -120,15 +120,19 @@ class App extends React.Component {
     });
 
     // Initialize audio graph
+    // ┌────────────┐      ┌────────────┐      ┌─────────────┐
+    // │ playerNode ├─────>│  gainNode  ├─────>│ destination │
+    // └────────────┘      └────────────┘      └─────────────┘
     const audioCtx = this.audioCtx = window.audioCtx = new (window.AudioContext || window.webkitAudioContext)({
       latencyHint: 'playback'
     });
     const bufferSize = Math.max( // Make sure script node bufferSize is at least baseLatency
       Math.pow(2, Math.ceil(Math.log2((audioCtx.baseLatency || 0.001) * audioCtx.sampleRate))), 2048);
-    const gainNode = audioCtx.createGain();
+    const gainNode = this.gainNode = audioCtx.createGain();
     gainNode.gain.value = 1;
     gainNode.connect(audioCtx.destination);
-    const playerNode = this.playerNode = gainNode;
+    const playerNode = this.playerNode = audioCtx.createScriptProcessor(bufferSize, 0, 2);
+    playerNode.connect(gainNode);
 
     unlockAudioContext(audioCtx);
     console.log('Sample rate: %d hz. Base latency: %d. Buffer size: %d.',
@@ -176,15 +180,15 @@ class App extends React.Component {
         },
         onRuntimeInitialized: () => {
           // Create all the players. Players will set up IDBFS mount points.
-          this.midiPlayer = new MIDIPlayer(audioCtx, playerNode, chipCore, bufferSize);
           const players = [
-            this.midiPlayer,
-            new GMEPlayer(audioCtx, playerNode, chipCore, bufferSize),
-            new XMPPlayer(audioCtx, playerNode, chipCore, bufferSize),
-            new V2MPlayer(audioCtx, playerNode, chipCore, bufferSize),
-            new N64Player(audioCtx, playerNode, chipCore, bufferSize),
-            new MDXPlayer(audioCtx, playerNode, chipCore, bufferSize),
-          ];
+            MIDIPlayer,
+            GMEPlayer,
+            XMPPlayer,
+            V2MPlayer,
+            N64Player,
+            MDXPlayer,
+          ].map(P => new P(chipCore, audioCtx.sampleRate, bufferSize));
+          this.midiPlayer = players[0];
 
           playerNode.onaudioprocess = (e) => {
             const channels = [];
@@ -192,7 +196,8 @@ class App extends React.Component {
               channels.push(e.outputBuffer.getChannelData(i));
             }
             for (let player of players) {
-              player.processAudio(channels, e.outputBuffer.length);
+              if (player.stopped) continue;
+              player.processAudio(channels);
             }
           }
 
@@ -201,7 +206,7 @@ class App extends React.Component {
             if (err) {
               console.log('Error populating FS from indexeddb.', err);
             }
-            players.map(player => player.handleFileSystemReady());
+            players.forEach(player => player.handleFileSystemReady());
           });
 
           this.sequencer = new Sequencer(players);
@@ -210,19 +215,8 @@ class App extends React.Component {
 
           this.setState({ loading: false });
 
-          // Experimental: Split Module Support
-          //
-          // chipCore.loadDynamicLibrary('./xmp.wasm', {
-          //     loadAsync: true,
-          //     global: true,
-          //     nodelete: true,
-          //   })
-          //   .then(() => {
-          //     return this.sequencer.setPlayers([new XMPPlayer(audioCtx, playerNode, chipCore)]);
-          //   });
-
           // TODO: Move to separate processUrlParams method.
-          const urlParams = queryString.parse(window.location.search.substr(1));
+          const urlParams = queryString.parse(window.location.search.substring(1));
           if (urlParams.play) {
             const play = urlParams.play;
             const dirname = path.dirname(urlParams.play);
@@ -635,7 +629,7 @@ class App extends React.Component {
 
   handleVolumeChange(volume) {
     this.setState({ volume });
-    this.playerNode.gain.value = Math.max(0, Math.min(2, volume * 0.01));
+    this.gainNode.gain.value = Math.max(0, Math.min(2, volume * 0.01));
   }
 
   handleCycleRepeat() {
@@ -731,9 +725,7 @@ class App extends React.Component {
                          to={{ pathname: "/browse", ...search }}>Browse</NavLink>
                 <NavLink className="tab" activeClassName="tab-selected"
                          to={{ pathname: "/favorites", ...search }}>Favorites</NavLink>
-                {/*<NavLink className="tab" activeClassName="tab-selected"*/}
-                {/*         style={{ marginLeft: 'auto', marginRight: 0 }}*/}
-                {/*         to={{ pathname: "/settings", ...search }}>Settings</NavLink>*/}
+                {/* this.sequencer?.players?.map((p, i) => `p${i}:${p.stopped?'off':'on'}`).join(' ') */}
                 <button className={this.state.showPlayerSettings ? 'tab tab-selected' : 'tab'}
                         style={{ marginLeft: 'auto', marginRight: 0 }}
                         onClick={this.toggleSettings}>Settings</button>
