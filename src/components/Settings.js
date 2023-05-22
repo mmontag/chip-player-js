@@ -2,10 +2,6 @@ import React, { PureComponent } from 'react';
 import PlayerParams from './PlayerParams';
 
 export default class Settings extends PureComponent {
-  constructor(props) {
-    super(props);
-  }
-
   render() {
     const {
       ejected,

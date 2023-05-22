@@ -1,4 +1,4 @@
-import { EVENT_MIDI, EVENT_MIDI_CONTROLLER, EVENT_META, EVENT_META_END_OF_TRACK } from 'midievents';
+import { EVENT_MIDI, EVENT_MIDI_CONTROLLER } from 'midievents';
 import MIDIEvents from 'midievents';
 import MIDIFile from 'midifile';
 
@@ -93,7 +93,6 @@ MIDIFile.prototype.getLoopedEvents = function (tracks, loopCount = 1) {
   } else {
     smallestDelta = -1;
 
-    let count = 0;
     const trackIterators = [];
 
     // Creating iterators
