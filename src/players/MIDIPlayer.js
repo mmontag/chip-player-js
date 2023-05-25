@@ -9,6 +9,7 @@ import { GM_DRUM_KITS, GM_INSTRUMENTS } from '../gm-patch-map';
 import { ensureEmscFileWithUrl, getFilepathFromUrl, getMetadataUrlForFilepath, remap01 } from '../util';
 import requestCache from '../RequestCache';
 import { range } from 'lodash';
+import autoBind from 'auto-bind';
 
 let core = null;
 
@@ -140,13 +141,7 @@ export default class MIDIPlayer extends Player {
 
   constructor(...args) {
     super(...args);
-
-    this.setParameter = this.setParameter.bind(this);
-    this.getParameter = this.getParameter.bind(this);
-    this.getParamDefs = this.getParamDefs.bind(this);
-    this.ensureWebMidiInitialized = this.ensureWebMidiInitialized.bind(this);
-    this.updateSoundfontParamDefs = this.updateSoundfontParamDefs.bind(this);
-    this.getVoiceName = this.getVoiceName.bind(this);
+    autoBind(this);
 
     core = this.core;
     core._tp_init(this.sampleRate);

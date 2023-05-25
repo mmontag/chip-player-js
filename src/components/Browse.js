@@ -1,6 +1,7 @@
 import React, { Fragment, PureComponent } from 'react';
 import VirtualList from 'react-virtual-list';
 import BrowseList from './BrowseList';
+import autoBindReact from 'auto-bind/react';
 
 const ITEM_HEIGHT = 19; // should match --charH CSS variable
 const ITEM_BUFFER = 10;
@@ -31,10 +32,7 @@ const mapToVirtualProps = (props, state) => {
 export default class Browse extends PureComponent {
   constructor(props) {
     super(props);
-
-    this.navigate = this.navigate.bind(this);
-    this.handleShufflePlay = this.handleShufflePlay.bind(this);
-    this.saveScrollPosition = this.saveScrollPosition.bind(this);
+    autoBindReact(this);
   }
 
   componentDidMount() {

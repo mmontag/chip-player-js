@@ -7,6 +7,7 @@ import promisify from '../promisify-xhr';
 import { updateQueryString } from '../util';
 import DirectoryLink from './DirectoryLink';
 import FavoriteButton from './FavoriteButton';
+import autoBindReact from 'auto-bind/react';
 
 const MAX_RESULTS = 100;
 const searchResultsCache = {};
@@ -19,13 +20,9 @@ function getTotal() {
 export default class Search extends PureComponent {
   constructor(props) {
     super(props);
+    autoBindReact(this);
 
-    this.doSearch = this.doSearch.bind(this);
     this.debouncedDoSearch = debounce(this.doSearch, 150);
-    this.onChange = this.onChange.bind(this);
-    this.onSearchInputChange = this.onSearchInputChange.bind(this);
-    this.handleClear = this.handleClear.bind(this);
-    this.renderResultItem = this.renderResultItem.bind(this);
 
     this.textInput = React.createRef();
 

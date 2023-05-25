@@ -2,6 +2,7 @@ import Player from "./Player.js";
 import { ensureEmscFileWithData, ensureEmscFileWithUrl } from '../util';
 import { CATALOG_PREFIX } from '../config';
 import path from 'path';
+import autoBind from 'auto-bind';
 
 const fileExtensions = [
   'mdx',
@@ -12,8 +13,7 @@ const INT16_MAX = Math.pow(2, 16) - 1;
 export default class MDXPlayer extends Player {
   constructor(...args) {
     super(...args);
-
-    this.loadData = this.loadData.bind(this);
+    autoBind(this);
 
     // Initialize MDX filesystem
     this.core.FS.mkdirTree(MOUNTPOINT);

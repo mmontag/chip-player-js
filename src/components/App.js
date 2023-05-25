@@ -1,4 +1,5 @@
 import React from 'react';
+import autoBindReact from 'auto-bind/react';
 import isMobile from 'ismobilejs';
 import clamp from 'lodash/clamp';
 import shuffle from 'lodash/shuffle';
@@ -53,32 +54,7 @@ import Settings from './Settings';
 class App extends React.Component {
   constructor(props) {
     super(props);
-
-    this.togglePause = this.togglePause.bind(this);
-    this.toggleSettings = this.toggleSettings.bind(this);
-    this.toggleInfo = this.toggleInfo.bind(this);
-    this.playContext = this.playContext.bind(this);
-    this.prevSong = this.prevSong.bind(this);
-    this.nextSong = this.nextSong.bind(this);
-    this.prevSubtune = this.prevSubtune.bind(this);
-    this.nextSubtune = this.nextSubtune.bind(this);
-    this.handleCycleRepeat = this.handleCycleRepeat.bind(this);
-    this.handleCycleShuffle = this.handleCycleShuffle.bind(this);
-    this.handleVolumeChange = this.handleVolumeChange.bind(this);
-    this.handleTimeSliderChange = this.handleTimeSliderChange.bind(this);
-    this.handleTempoChange = this.handleTempoChange.bind(this);
-    this.handleSetVoiceMask = this.handleSetVoiceMask.bind(this);
-    this.handleSequencerStateUpdate = this.handleSequencerStateUpdate.bind(this);
-    this.handlePlayerError = this.handlePlayerError.bind(this);
-    this.handleShufflePlay = this.handleShufflePlay.bind(this);
-    this.handleSongClick = this.handleSongClick.bind(this);
-    this.handleLogin = this.handleLogin.bind(this);
-    this.handleLogout = this.handleLogout.bind(this);
-    this.handleToggleFavorite = this.handleToggleFavorite.bind(this);
-    this.attachMediaKeyHandlers = this.attachMediaKeyHandlers.bind(this);
-    this.fetchDirectory = this.fetchDirectory.bind(this);
-    this.setSpeedRelative = this.setSpeedRelative.bind(this);
-    this.getCurrentSongLink = this.getCurrentSongLink.bind(this);
+    autoBindReact(this);
 
     this.attachMediaKeyHandlers();
     this.contentAreaRef = React.createRef();

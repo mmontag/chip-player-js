@@ -2,6 +2,7 @@ import promisify from "./promisify-xhr";
 import {CATALOG_PREFIX} from "./config";
 import shuffle from 'lodash/shuffle';
 import EventEmitter from 'events';
+import autoBindReact from 'auto-bind/react';
 
 export const REPEAT_OFF = 0;
 export const REPEAT_ALL = 1;
@@ -17,25 +18,7 @@ export const SHUFFLE_LABELS = ['Off', 'On'];
 export default class Sequencer extends EventEmitter {
   constructor(players) {
     super();
-
-    this.playCurrentSong = this.playCurrentSong.bind(this);
-    this.playSong = this.playSong.bind(this);
-    this.playSongBuffer = this.playSongBuffer.bind(this);
-    this.playSongFile = this.playSongFile.bind(this);
-    this.getPlayer = this.getPlayer.bind(this);
-    this.handlePlayerStateUpdate = this.handlePlayerStateUpdate.bind(this);
-    this.handlePlayerError = this.handlePlayerError.bind(this);
-    this.playContext = this.playContext.bind(this);
-    this.advanceSong = this.advanceSong.bind(this);
-    this.nextSong = this.nextSong.bind(this);
-    this.prevSong = this.prevSong.bind(this);
-    this.prevSubtune = this.prevSubtune.bind(this);
-    this.nextSubtune = this.nextSubtune.bind(this);
-    this.toggleShuffle = this.toggleShuffle.bind(this);
-    this.getCurrUrl = this.getCurrUrl.bind(this);
-    this.getCurrContext = this.getCurrContext.bind(this);
-    this.getCurrIdx = this.getCurrIdx.bind(this);
-    this.setShuffle = this.setShuffle.bind(this);
+    autoBindReact(this);
 
     this.player = null;
     this.players = players;

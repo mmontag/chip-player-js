@@ -1,4 +1,5 @@
 import Player from "./Player.js";
+import autoBind from 'auto-bind';
 
 const fileExtensions = [
   'v2m',
@@ -7,8 +8,7 @@ const fileExtensions = [
 export default class V2MPlayer extends Player {
   constructor(...args) {
     super(...args);
-
-    this.loadData = this.loadData.bind(this);
+    autoBind(this);
 
     this.name = 'Farbrausch V2M Player';
     this.speed = 1;

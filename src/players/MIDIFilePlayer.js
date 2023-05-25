@@ -1,3 +1,5 @@
+import autoBind from 'auto-bind';
+
 const MIDIEvents = require('midievents');
 require('./midi/midi-helpers');
 
@@ -45,6 +47,7 @@ function printSysex(data) {
 
 // MIDIPlayer constructor
 function MIDIPlayer(options) {
+  autoBind(this);
   options = options || {};
   this.output = options.output || null; // Web MIDI output device (has a .send() method)
   this.synth = options.synth || null; // MIDI synth (has .noteOn(), .noteOff(), render()...)
@@ -62,30 +65,6 @@ function MIDIPlayer(options) {
   this.channelMask = [];
   this.channelProgramNums = [];
   this.textInfo = [];
-
-  this.doSkipSilence = this.doSkipSilence.bind(this);
-  this.play = this.play.bind(this);
-  this.processPlay = this.processPlay.bind(this);
-  this.processPlaySynth = this.processPlaySynth.bind(this);
-  this.getChannelInUse = this.getChannelInUse.bind(this);
-  this.getChannelProgramNum = this.getChannelProgramNum.bind(this);
-  this.summarizeMidiEvents = this.summarizeMidiEvents.bind(this);
-  this.getDuration = this.getDuration.bind(this);
-  this.getPosition = this.getPosition.bind(this);
-  this.handleProgramChange = this.handleProgramChange.bind(this);
-  this.panic = this.panic.bind(this);
-  this.reset = this.reset.bind(this);
-  this.resume = this.resume.bind(this);
-  this.send = this.send.bind(this);
-  this.stop = this.stop.bind(this);
-  this.setChannelMute = this.setChannelMute.bind(this);
-  this.setOutput = this.setOutput.bind(this);
-  this.setPosition = this.setPosition.bind(this);
-  this.setPositionSynth = this.setPositionSynth.bind(this);
-  this.setPositionWebMidi = this.setPositionWebMidi.bind(this);
-  this.setUseWebMIDI = this.setUseWebMIDI.bind(this);
-  this.setSpeed = this.setSpeed.bind(this);
-  this.togglePause = this.togglePause.bind(this);
 
   window.addEventListener('unload', this.stop);
 }

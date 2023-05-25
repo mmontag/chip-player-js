@@ -1,4 +1,5 @@
 import Player from "./Player.js";
+import autoBind from 'auto-bind';
 
 const INT16_MAX = Math.pow(2, 16) - 1;
 const XMP_PLAYER_STATE = 8;
@@ -14,6 +15,7 @@ const fileExtensions = [
 export default class XMPPlayer extends Player {
   constructor(...args) {
     super(...args);
+    autoBind(this);
 
     this.name = 'XMP Player';
     this.xmpCtx = this.core._xmp_create_context();

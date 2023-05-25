@@ -2,6 +2,7 @@ import Player from "./Player.js";
 import SubBass from "../effects/SubBass";
 import { allOrNone, remap01 } from '../util';
 import path from 'path';
+import autoBind from 'auto-bind';
 
 let core = null;
 
@@ -71,10 +72,7 @@ export default class GMEPlayer extends Player {
 
   constructor(...args) {
     super(...args);
-
-    this.setParameter = this.setParameter.bind(this);
-    this.getParameter = this.getParameter.bind(this);
-    this.getParamDefs = this.getParamDefs.bind(this);
+    autoBind(this);
 
     core = this.core;
 

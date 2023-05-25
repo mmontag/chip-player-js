@@ -1,4 +1,5 @@
-const chroma = require('chroma-js');
+import autoBind from 'auto-bind';
+import chroma from 'chroma-js';
 
 const MODE_LINEAR = 0;
 const MODE_LOG = 1;
@@ -31,9 +32,7 @@ function _getAWeighting(f) {
 
 export default class Spectrogram {
   constructor(chipCore, audioCtx, sourceNode, freqCanvas, specCanvas, pianoKeysImage, minDb = -90, maxDb = -30) {
-    this.updateFrame = this.updateFrame.bind(this);
-    this.setPaused = this.setPaused.bind(this);
-    this.setSpeed = this.setSpeed.bind(this);
+    autoBind(this);
 
     // Constant Q setup
     this.core = chipCore;
