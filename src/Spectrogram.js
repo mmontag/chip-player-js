@@ -36,7 +36,7 @@ export default class Spectrogram {
     this.setSpeed = this.setSpeed.bind(this);
 
     // Constant Q setup
-    this.lib = chipCore;
+    this.core = chipCore;
     const db = 32;
     const supersample = 0;
     const cqtBins = freqCanvas.width;
@@ -46,15 +46,15 @@ export default class Spectrogram {
     //                MIDI note 127 == 12543.8 hz
     const fMin = 25.95;
     const fMax = 4504.0;
-    const cqtSize = this.lib._cqt_init(audioCtx.sampleRate, cqtBins, db, fMin, fMax, supersample);
+    const cqtSize = this.core._cqt_init(audioCtx.sampleRate, cqtBins, db, fMin, fMax, supersample);
     if (!cqtSize) {
       console.error('Error initializing constant Q transform. Constant Q will be disabled.');
     } else {
-      this.cqtFreqs = Array(cqtBins).fill().map((_, i) => this.lib._cqt_bin_to_freq(i));
+      this.cqtFreqs = Array(cqtBins).fill().map((_, i) => this.core._cqt_bin_to_freq(i));
       _aWeightingLUT = this.cqtFreqs.map(f => 0.5 + 0.5 * _getAWeighting(f));
     }
     this.cqtSize = cqtSize;
-    this.dataPtr = this.lib._malloc(cqtSize * 4);
+    this.dataPtr = this.core._malloc(cqtSize * 4);
 
     this.paused = true;
     this.mode = MODE_LINEAR;
@@ -145,7 +145,7 @@ export default class Spectrogram {
     tempCtx.fillStyle = '#000033';
     tempCtx.fillRect(0, 0, this.tempCanvas.width, specSpeed);
     const _start = performance.now();
-    const dataHeap = new Float32Array(this.lib.HEAPF32.buffer, this.dataPtr, this.cqtSize);
+    const dataHeap = new Float32Array(this.core.HEAPF32.buffer, this.dataPtr, this.cqtSize);
     const bins = this.fftSize / 2;
     let isRepeated = false;
 
@@ -177,12 +177,12 @@ export default class Spectrogram {
     } else if (this.mode === MODE_CONSTANT_Q) {
       analyserNode.getFloatTimeDomainData(dataHeap);
       if (!dataHeap.every(n => n === 0)) {
-        this.lib._cqt_calc(this.dataPtr, this.dataPtr);
-        this.lib._cqt_render_line(this.dataPtr);
+        this.core._cqt_calc(this.dataPtr, this.dataPtr);
+        this.core._cqt_render_line(this.dataPtr);
         // copy output to canvas
         for (let x = 0; x < canvasWidth; x++) {
           const weighting = this.weighting === WEIGHTING_A ? _aWeightingLUT[x] : 1;
-          const val = 255 * weighting * dataHeap[x] | 0; //this.lib.getValue(this.cqtOutput + x * 4, 'float') | 0;
+          const val = 255 * weighting * dataHeap[x] | 0; //this.core.getValue(this.cqtOutput + x * 4, 'float') | 0;
           const h = val * hCoeff | 0;
           const style = colorMap(val).hex();
           freqCtx.fillStyle = style;
