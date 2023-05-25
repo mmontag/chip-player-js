@@ -1,10 +1,10 @@
 import React, { PureComponent } from 'react';
+import autoBindReact from 'auto-bind/react';
 
 export default class PlayerParams extends PureComponent {
   constructor(props) {
     super(props);
-
-    this.handleVoiceToggle = this.handleVoiceToggle.bind(this);
+    autoBindReact(this);
   }
 
   // Voicename polling implementation left here for reference.

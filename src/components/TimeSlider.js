@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import Slider from "./Slider";
+import autoBindReact from 'auto-bind/react';
 
 //  46 ms = 2048/44100 sec or 21.7 fps
 // 400 ms = 2.5 fps
@@ -8,11 +9,7 @@ const UPDATE_INTERVAL_MS = 100;
 export default class TimeSlider extends Component {
   constructor(props) {
     super(props);
-
-    this.getSongPos = this.getSongPos.bind(this);
-    this.getTimeLabel = this.getTimeLabel.bind(this);
-    this.handlePositionDrag = this.handlePositionDrag.bind(this);
-    this.handlePositionDrop = this.handlePositionDrop.bind(this);
+    autoBindReact(this);
 
     this.state = {
       draggedSongPositionMs: -1,

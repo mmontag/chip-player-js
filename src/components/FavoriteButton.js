@@ -1,9 +1,10 @@
 import React, { PureComponent } from "react";
+import autoBindReact from 'auto-bind/react';
 
 export default class FavoriteButton extends PureComponent {
   constructor(props) {
     super(props);
-    this.handleClick = this.handleClick.bind(this);
+    autoBindReact(this);
   }
 
   handleClick() {

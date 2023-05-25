@@ -1,11 +1,11 @@
 import promisify from './promisify-xhr';
+import autoBind from 'auto-bind';
 
 class RequestCache {
   constructor() {
+    autoBind(this);
     this.data = {};
     this.request = null;
-
-    this.fetchCached = this.fetchCached.bind(this);
   }
 
   fetchCached(url) {

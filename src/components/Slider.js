@@ -1,12 +1,10 @@
 import React, {PureComponent} from 'react';
+import autoBindReact from 'auto-bind/react';
 
 export default class Slider extends PureComponent {
   constructor(props) {
     super(props);
-
-    this.onMouseDown = this.onMouseDown.bind(this);
-    this.onMouseMove = this.onMouseMove.bind(this);
-    this.onMouseUp = this.onMouseUp.bind(this);
+    autoBindReact(this);
 
     this.node = React.createRef();
     this.state = {
