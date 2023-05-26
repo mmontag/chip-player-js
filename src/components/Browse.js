@@ -1,4 +1,4 @@
-import React, { Fragment, PureComponent } from 'react';
+import React, { Fragment } from 'react';
 import VirtualList from 'react-virtual-list';
 import BrowseList from './BrowseList';
 import autoBindReact from 'auto-bind/react';
@@ -29,7 +29,7 @@ const mapToVirtualProps = (props, state) => {
   };
 };
 
-export default class Browse extends PureComponent {
+export default class Browse extends React.PureComponent {
   constructor(props) {
     super(props);
     autoBindReact(this);
