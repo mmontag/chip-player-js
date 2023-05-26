@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { memo, useCallback } from 'react';
 import diceImage from '../images/dice.png';
 import downloadImage from '../images/download.png';
 import linkImage from '../images/link.png';
@@ -10,7 +10,8 @@ import PlayerParams from './PlayerParams';
 import { pathToLinks } from '../util';
 import { REPEAT_LABELS, SHUFFLE_LABELS } from '../Sequencer';
 
-export default function AppFooter(props) {
+export default memo(AppFooter);
+function AppFooter(props) {
   const {
     // this.state.
     currentSongDurationMs,
