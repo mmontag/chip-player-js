@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { memo } from 'react';
 import PlayerParams from './PlayerParams';
 
-export default function Settings(props) {
+export default memo(Settings);
+function Settings(props) {
   const {
     ejected,
     tempo,
