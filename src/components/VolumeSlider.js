@@ -1,6 +1,7 @@
-import React from "react";
+import React, { memo } from "react";
 
-export function VolumeSlider(props) {
+export default memo(VolumeSlider);
+function VolumeSlider(props) {
   return <div className="VolumeSlider">
     <input type='range'
            title={"Volume"}

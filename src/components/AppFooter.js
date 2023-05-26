@@ -4,7 +4,7 @@ import downloadImage from '../images/download.png';
 import linkImage from '../images/link.png';
 import repeatImage from '../images/repeat.png';
 import TimeSlider from './TimeSlider';
-import { VolumeSlider } from './VolumeSlider';
+import VolumeSlider from './VolumeSlider';
 import FavoriteButton from './FavoriteButton';
 import PlayerParams from './PlayerParams';
 import { pathToLinks } from '../util';
