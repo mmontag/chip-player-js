@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { memo, useCallback, useEffect, useState } from 'react';
 
-export function MessageBox(props) {
+export default memo(MessageBox);
+function MessageBox(props) {
   const {
     infoTexts = [],
     showInfo,

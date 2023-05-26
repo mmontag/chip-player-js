@@ -48,7 +48,7 @@ import Favorites from './Favorites';
 import Search from './Search';
 import Visualizer from './Visualizer';
 import Alert from './Alert';
-import { MessageBox } from './MessageBox';
+import MessageBox from './MessageBox';
 import Settings from './Settings';
 
 class App extends React.Component {
