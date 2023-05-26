@@ -59,12 +59,11 @@ export default class Sequencer extends EventEmitter {
       }
     } else {
       this.emit('sequencerStateUpdate', {
-        ...playerState,
         url: this.currUrl,
-        isPaused: false,
         hasPlayer: true,
         // TODO: combine isEjected and hasPlayer
         isEjected: false,
+        ...playerState,
       });
     }
   }
