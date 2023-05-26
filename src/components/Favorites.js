@@ -1,7 +1,8 @@
-import React, { useCallback } from "react";
+import React, { memo, useCallback } from "react";
 import FavoriteButton from "./FavoriteButton";
 
-export default function Favorites(props) {
+export default memo(Favorites);
+function Favorites(props) {
   const {
     favorites,
     currContext,
