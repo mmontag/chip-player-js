@@ -1,12 +1,13 @@
-import React, {Component} from 'react';
+import React from 'react';
 import Slider from "./Slider";
 import autoBindReact from 'auto-bind/react';
 
 //  46 ms = 2048/44100 sec or 21.7 fps
 // 400 ms = 2.5 fps
 const UPDATE_INTERVAL_MS = 100;
+const pad = (n) => n < 10 ? '0' + n : n;
 
-export default class TimeSlider extends Component {
+export default class TimeSlider extends React.Component {
   constructor(props) {
     super(props);
     autoBindReact(this);
@@ -18,15 +19,15 @@ export default class TimeSlider extends Component {
     this.timer = null;
   }
 
-  componentWillReceiveProps(nextProps) {
-    if (this.props.paused && !nextProps.paused) {
+  componentDidUpdate(prevProps) {
+    if (prevProps.paused === true && this.props.paused === false) {
       this.timer = setInterval(() => {
         const {getCurrentPositionMs, currentSongDurationMs} = this.props;
         this.setState({
           currentSongPositionMs: Math.min(getCurrentPositionMs(), currentSongDurationMs),
         });
       }, UPDATE_INTERVAL_MS);
-    } else if (!this.props.paused && nextProps.paused) {
+    } else if (prevProps.paused === false && this.props.paused === true) {
       clearInterval(this.timer);
     }
   }
@@ -49,7 +50,6 @@ export default class TimeSlider extends Component {
   getTime(ms) {
     const sign = ms < 0 ? '-' : '';
     ms = Math.abs(ms);
-    const pad = n => n < 10 ? '0' + n : n;
     const min = Math.floor(ms / 60000);
     const sec = (Math.floor((ms % 60000) / 100) / 10).toFixed(1);
     return `${sign}${min}:${pad(sec)}`;
@@ -66,6 +66,7 @@ export default class TimeSlider extends Component {
   handlePositionDrop(event) {
     this.setState({
       draggedSongPositionMs: -1,
+      currentSongPositionMs: this.state.draggedSongPositionMs,
     });
     this.props.onChange(event);
   }
