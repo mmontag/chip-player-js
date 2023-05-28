@@ -8,7 +8,7 @@ import { SOUNDFONTS, SOUNDFONT_MOUNTPOINT, SOUNDFONT_URL_PATH } from '../config'
 import { GM_DRUM_KITS, GM_INSTRUMENTS } from '../gm-patch-map';
 import { ensureEmscFileWithUrl, getFilepathFromUrl, getMetadataUrlForFilepath, remap01 } from '../util';
 import requestCache from '../RequestCache';
-import { range } from 'lodash';
+import range from 'lodash/range';
 import autoBind from 'auto-bind';
 
 let core = null;
