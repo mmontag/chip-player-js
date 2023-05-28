@@ -29,7 +29,7 @@
     font-style: normal
 }
 
-* {
+.App * {
     font-size: 24px !important;
     font-family: VGA_SquarePx, monospace !important;
     -webkit-font-smoothing: antialiased; /* supports Japanese characters better than 'none' */
@@ -631,4 +631,4 @@ img { -ms-interpolation-mode: nearest-neighbor; image-rendering: -webkit-optimiz
 .message-box-button        { background: var(--background); padding: 0 var(--charW2); -webkit-box-shadow: none; box-shadow: none; }
 
 
-/*# sourceMappingURL=main.afc47432.css.map*/
+/*# sourceMappingURL=main.353e9d26.css.map*/
