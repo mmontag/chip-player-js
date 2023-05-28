@@ -49,10 +49,12 @@ export default class Browse extends React.PureComponent {
     // console.log("Browse.storeScroll: %s stored at %s", locationKey, scrollTop);
   }
 
-  componentWillUpdate(nextProps, nextState, nextContext) {
-    if (nextProps.browsePath === this.props.browsePath) return;
-
-    this.saveScrollPosition(this.props.locationKey);
+  getSnapshotBeforeUpdate(prevProps, prevState) {
+    // Save the scroll position before the component updates
+    if (prevProps.browsePath !== this.props.browsePath) {
+      this.saveScrollPosition(prevProps.locationKey);
+    }
+    return null;
   }
 
   componentDidUpdate() {
@@ -94,6 +96,9 @@ export default class Browse extends React.PureComponent {
         sessionStorage.removeItem(locationKey); // Stop scroll restoration until next navigation
         console.debug("%s (%s) scroll position restored to %s", browsePath, locationKey, scrollToPosY);
       }
+    } else {
+      // Scroll to top when navigating to a new directory
+      this.props.scrollContainerRef.current.scrollTo(0, 0);
     }
   }
 
