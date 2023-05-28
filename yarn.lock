@@ -9300,10 +9300,9 @@ react-router@5.2.0:
     tiny-invariant "^1.0.2"
     tiny-warning "^1.0.0"
 
-react-virtual-list@^2.3.0:
+"react-virtual-list@git+https://github.com/glebcha/react-virtual-list.git#544bc7":
   version "2.3.0"
-  resolved "https://registry.npmjs.org/react-virtual-list/-/react-virtual-list-2.3.0.tgz"
-  integrity sha1-hOu6f5VLr8TeQ15LKdaf3TcbnNo=
+  resolved "git+https://github.com/glebcha/react-virtual-list.git#544bc78939ab3255af0538d349d5247fd08634bb"
   dependencies:
     prop-types "^15.5.10"
 
