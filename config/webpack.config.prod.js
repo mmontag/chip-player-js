@@ -178,6 +178,7 @@ module.exports = {
             loader: require.resolve('babel-loader'),
             options: {
               compact: true,
+              targets: 'last 2 versions',
             },
           },
           // "postcss" loader applies autoprefixer to our CSS.

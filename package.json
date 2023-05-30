@@ -5,7 +5,7 @@
   "repository": "https://github.com/mmontag/chip-player-js",
   "description": "Web-based music player for a variety of video game and chiptune music formats.",
   "dependencies": {
-    "@babel/core": "7.4.3",
+    "@babel/core": "7.22.1",
     "@typescript-eslint/eslint-plugin": "1.10.2",
     "@typescript-eslint/parser": "1.10.2",
     "auto-bind": "^5.0.1",
