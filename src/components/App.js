@@ -158,6 +158,8 @@ class App extends React.Component {
             return `${process.env.PUBLIC_URL}/${path}`;
           return prefix + path;
         },
+        print: (msg) => console.debug('[stdout] ' + msg),
+        printErr: (msg) => console.debug('[stderr] ' + msg),
       });
     } catch (e) {
       // Browser doesn't support WASM (Safari in iOS Simulator)
