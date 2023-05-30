@@ -170,7 +170,7 @@ export default class Player extends EventEmitter {
       this.timeCount++;
       if (this.timeCount >= this.perfLoggingInterval) {
         const cost = this.renderTime / this.timeCount;
-        const budget = 1000 * this.bufferSize / this.audioCtx.sampleRate;
+        const budget = 1000 * this.bufferSize / this.sampleRate;
         console.log(
           '[%s] %s ms to render %d frames (%s ms) (%s% utilization)',
           this.constructor.name,
