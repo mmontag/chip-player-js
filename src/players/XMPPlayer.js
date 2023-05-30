@@ -12,6 +12,7 @@ const fileExtensions = [
   'xm',  //  Fast Tracker II  1.02, 1.03, 1.04
 ];
 
+// noinspection PointlessArithmeticExpressionJS
 export default class XMPPlayer extends Player {
   constructor(...args) {
     super(...args);
@@ -25,7 +26,7 @@ export default class XMPPlayer extends Player {
     this.tempoScale = 1; // TODO: rename to speed
     this._positionMs = 0;
     this._durationMs = 1000;
-    this.buffer = this.core.allocate(this.bufferSize * 16, 'i16', this.core.ALLOC_NORMAL);
+    this.buffer = this.core._malloc(this.bufferSize * 16); // i16
   }
 
   processAudioInner(channels) {
@@ -85,14 +86,14 @@ export default class XMPPlayer extends Player {
     this._durationMs = xmp.getValue(infoPtr + 8 * 4, 'i32');
 
     // XMP-specific metadata
-    meta.patterns = xmp.getValue(xmp_modulePtr + 128 + 4 * 0, 'i32'); // patterns
-    meta.tracks = xmp.getValue(xmp_modulePtr + 128 + 4 * 1, 'i32'); // tracks
-    meta.numChannels = xmp.getValue(xmp_modulePtr + 128 + 4 * 2, 'i32'); // tracks per pattern
-    meta.numInstruments = xmp.getValue(xmp_modulePtr + 128 + 4 * 3, 'i32'); // instruments
-    meta.numSamples = xmp.getValue(xmp_modulePtr + 128 + 4 * 4, 'i32'); // samples
-    meta.initialSpeed = xmp.getValue(xmp_modulePtr + 128 + 4 * 5, 'i32'); // initial speed
-    meta.initialBPM = xmp.getValue(xmp_modulePtr + 128 + 4 * 6, 'i32'); // initial bpm
-    meta.moduleLength = xmp.getValue(xmp_modulePtr + 128 + 4 * 7, 'i32'); // module length
+    meta.patterns =        xmp.getValue(xmp_modulePtr + 128 + 4 * 0, 'i32'); // patterns
+    meta.tracks =          xmp.getValue(xmp_modulePtr + 128 + 4 * 1, 'i32'); // tracks
+    meta.numChannels =     xmp.getValue(xmp_modulePtr + 128 + 4 * 2, 'i32'); // tracks per pattern
+    meta.numInstruments =  xmp.getValue(xmp_modulePtr + 128 + 4 * 3, 'i32'); // instruments
+    meta.numSamples =      xmp.getValue(xmp_modulePtr + 128 + 4 * 4, 'i32'); // samples
+    meta.initialSpeed =    xmp.getValue(xmp_modulePtr + 128 + 4 * 5, 'i32'); // initial speed
+    meta.initialBPM =      xmp.getValue(xmp_modulePtr + 128 + 4 * 6, 'i32'); // initial bpm
+    meta.moduleLength =    xmp.getValue(xmp_modulePtr + 128 + 4 * 7, 'i32'); // module length
     meta.restartPosition = xmp.getValue(xmp_modulePtr + 128 + 4 * 8, 'i32'); // restart position
 
     // Filename fallback

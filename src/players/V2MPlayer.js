@@ -13,7 +13,7 @@ export default class V2MPlayer extends Player {
     this.name = 'Farbrausch V2M Player';
     this.speed = 1;
     this.fileExtensions = fileExtensions;
-    this.buffer = this.core.allocate(this.bufferSize * 8, 'i32', this.core.ALLOC_NORMAL);
+    this.buffer = this.core._malloc(this.bufferSize * 8);
   }
 
   loadData(data, filename) {

@@ -145,86 +145,94 @@ class App extends React.Component {
       paramDefs: [],
     };
 
+    this.initChipCore(audioCtx, playerNode, bufferSize);
+  }
+
+  async initChipCore(audioCtx, playerNode, bufferSize) {
     // Load the chip-core Emscripten runtime
     try {
-      const chipCore = this.chipCore = new ChipCore({
+      this.chipCore = await new ChipCore({
         // Look for .wasm file in web root, not the same location as the app bundle (static/js).
         locateFile: (path, prefix) => {
           if (path.endsWith('.wasm') || path.endsWith('.wast'))
             return `${process.env.PUBLIC_URL}/${path}`;
           return prefix + path;
         },
-        onRuntimeInitialized: () => {
-          // Create all the players. Players will set up IDBFS mount points.
-          const players = [
-            MIDIPlayer,
-            GMEPlayer,
-            XMPPlayer,
-            V2MPlayer,
-            N64Player,
-            MDXPlayer,
-          ].map(P => new P(chipCore, audioCtx.sampleRate, bufferSize));
-          this.midiPlayer = players[0];
-
-          playerNode.onaudioprocess = (e) => {
-            const channels = [];
-            for (let i = 0; i < e.outputBuffer.numberOfChannels; i++) {
-              channels.push(e.outputBuffer.getChannelData(i));
-            }
-            for (let player of players) {
-              if (player.stopped) continue;
-              player.processAudio(channels);
-            }
-          }
-
-          // Populate all mounted IDBFS file systems from IndexedDB.
-          chipCore.FS.syncfs(true, (err) => {
-            if (err) {
-              console.log('Error populating FS from indexeddb.', err);
-            }
-            players.forEach(player => player.handleFileSystemReady());
-          });
-
-          this.sequencer = new Sequencer(players);
-          this.sequencer.on('sequencerStateUpdate', this.handleSequencerStateUpdate);
-          this.sequencer.on('playerError', this.handlePlayerError);
-
-          this.setState({ loading: false });
-
-          // TODO: Move to separate processUrlParams method.
-          const urlParams = queryString.parse(window.location.search.substring(1));
-          if (urlParams.play) {
-            const play = urlParams.play;
-            const dirname = path.dirname(urlParams.play);
-            // Treat play param as a "transient command" and strip it away after starting playback.
-            // See comment in Browse.js for more about why a sticky play param is not a good idea.
-            delete urlParams.play;
-            const qs = queryString.stringify(urlParams);
-            const search = qs ? `?${qs}` : '';
-            // Navigate to song's containing folder. History comes from withRouter().
-            this.fetchDirectory(dirname).then(() => {
-              this.props.history.replace(`/browse/${dirname}${search}`);
-              const index = this.playContexts[dirname].indexOf(play);
-              this.playContext(this.playContexts[dirname], index);
-
-              if (urlParams.t) {
-                setTimeout(() => {
-                  if (this.sequencer.getPlayer()) {
-                    this.sequencer.getPlayer().seekMs(parseInt(urlParams.t, 10));
-                  }
-                }, 100);
-              }
-            });
-          }
-        },
       });
     } catch (e) {
       // Browser doesn't support WASM (Safari in iOS Simulator)
       Object.assign(this.state, {
-        playerError: 'Error loading player engine.',
-        loading: false
+        playerError: 'Error loading player engine. Old browser?',
+        loading: false,
+      });
+      return;
+    }
+
+    // Get debug from location.search
+    const debug = queryString.parse(window.location.search.substring(1)).debug;
+    // Create all the players. Players will set up IDBFS mount points.
+    const players = [
+      MIDIPlayer,
+      GMEPlayer,
+      XMPPlayer,
+      V2MPlayer,
+      N64Player,
+      MDXPlayer,
+    ].map(P => new P(this.chipCore, audioCtx.sampleRate, bufferSize, debug));
+    this.midiPlayer = players[0];
+
+    // Set up the central audio processing callback. This is where the magic happens.
+    playerNode.onaudioprocess = (e) => {
+      const channels = [];
+      for (let i = 0; i < e.outputBuffer.numberOfChannels; i++) {
+        channels.push(e.outputBuffer.getChannelData(i));
+      }
+      for (let player of players) {
+        if (player.stopped) continue;
+        player.processAudio(channels);
+      }
+    }
+
+    // Populate all mounted IDBFS file systems from IndexedDB.
+    this.chipCore.FS.syncfs(true, (err) => {
+      if (err) {
+        console.log('Error populating FS from indexeddb.', err);
+      }
+      players.forEach(player => player.handleFileSystemReady());
+    });
+
+    this.sequencer = new Sequencer(players);
+    this.sequencer.on('sequencerStateUpdate', this.handleSequencerStateUpdate);
+    this.sequencer.on('playerError', this.handlePlayerError);
+
+
+    // TODO: Move to separate processUrlParams method.
+    const urlParams = queryString.parse(window.location.search.substring(1));
+    if (urlParams.play) {
+      const play = urlParams.play;
+      const dirname = path.dirname(urlParams.play);
+      // Treat play param as a "transient command" and strip it away after starting playback.
+      // See comment in Browse.js for more about why a sticky play param is not a good idea.
+      delete urlParams.play;
+      const qs = queryString.stringify(urlParams);
+      const search = qs ? `?${qs}` : '';
+      // Navigate to song's containing folder. History comes from withRouter().
+      this.fetchDirectory(dirname).then(() => {
+        this.props.history.replace(`/browse/${dirname}${search}`);
+        const index = this.playContexts[dirname].indexOf(play);
+        this.playContext(this.playContexts[dirname], index);
+
+        if (urlParams.t) {
+          setTimeout(() => {
+            if (this.sequencer.getPlayer()) {
+              this.sequencer.getPlayer().seekMs(parseInt(urlParams.t, 10));
+            }
+          }, 100);
+        }
       });
     }
+
+    this.setState({ loading: false });
   }
 
   static mapSequencerStateToAppState(sequencerState) {

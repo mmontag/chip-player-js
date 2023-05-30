@@ -153,7 +153,7 @@ export default class MIDIPlayer extends Player {
     this.name = 'MIDI Player';
     this.fileExtensions = fileExtensions;
     this.activeChannels = [];
-    this.buffer = core.allocate(this.bufferSize * 8, 'i32', core.ALLOC_NORMAL);
+    this.buffer = core._malloc(this.bufferSize * 4 * 2); // f32 * 2 channels
     this.filepathMeta = {};
     this.midiFilePlayer = new MIDIFilePlayer({
       // playerStateUpdate is debounced to prevent flooding program change events

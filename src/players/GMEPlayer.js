@@ -90,8 +90,8 @@ export default class GMEPlayer extends Player {
     this.seekTargetMs = null;
     this.currentFileExt = null;
 
-    this.buffer = core.allocate(this.bufferSize * 16, 'i16', core.ALLOC_NORMAL);
-    this.emuPtr = core.allocate(1, 'i32', core.ALLOC_NORMAL);
+    this.buffer = core._malloc(this.bufferSize * 16); // i16
+    this.emuPtr = core._malloc(4); // i32
 
     this.subBass = new SubBass(this.sampleRate);
 
@@ -225,7 +225,7 @@ export default class GMEPlayer extends Player {
   }
 
   _parseMetadata(subtune) {
-    const metadataPtr = core.allocate(1, "i32", core.ALLOC_NORMAL);
+    const metadataPtr = core._malloc(4); // i32
     if (core._gme_track_info(this.gmeCtx, metadataPtr, subtune) !== 0)
       console.error("could not load metadata");
     const ref = core.getValue(metadataPtr, "*");

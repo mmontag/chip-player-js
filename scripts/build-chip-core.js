@@ -442,12 +442,13 @@ const runtimeMethods = [
   'ALLOC_NORMAL',
   'FS',
   'UTF8ToString',
-  'allocate',
   'ccall',
   'getValue',
   'setValue',
 ];
-const exportedFns = [].concat(...chipModules.filter(m => m.enabled).map(m => m.exportedFunctions));
+const exportedFns = [
+  '_malloc',
+].concat(...chipModules.filter(m => m.enabled).map(m => m.exportedFunctions));
 const sourceFiles = [].concat(...chipModules.filter(m => m.enabled).map(m => m.sourceFiles));
 const moduleFlags = [].concat(...chipModules.filter(m => m.enabled).map(m => m.flags));
 
@@ -463,6 +464,7 @@ const flags = [
   '-s', 'EXPORTED_RUNTIME_METHODS=[' + runtimeMethods.join(',') + ']',
   '-s', 'ALLOW_MEMORY_GROWTH=1',
   '-s', 'ASSERTIONS=0',      // assertions increase runtime size about 100K
+  '-s', 'STACK_SIZE=5MB',    // required for libxmp (aq16.xm). default is 64KB as of 2021
   '-s', 'MODULARIZE=1',
   '-s', 'EXPORT_NAME=CHIP_CORE',
   '-s', 'ENVIRONMENT=web',
