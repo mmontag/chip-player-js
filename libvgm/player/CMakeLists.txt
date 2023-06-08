@@ -12,6 +12,7 @@ set(PLAYER_FILES
 	vgmplayer_cmdhandler.cpp
 	vgmplayer.cpp
 	playera.cpp
+	player_wrapper.cpp
 )
 # export headers
 set(PLAYER_HEADERS
