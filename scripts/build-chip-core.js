@@ -247,20 +247,31 @@ const chipModules = [
     flags: [],
   },
   {
-    /*
-    TODO: implement libvgm.
-    Wait for libvgm player to get a C interface.
-    https://github.com/ValleyBell/libvgm/blob/master/player/playera.hpp
-    Or, use WebIDL Binder or Embind to interact with libvgm C++ player class.
-    https://emscripten.org/docs/porting/connecting_cpp_and_javascript/WebIDL-Binder.html#a-quick-example
-    https://emscripten.org/docs/porting/connecting_cpp_and_javascript/WebIDL-Binder.html#webidl-binder-type-name
-    */
     name: 'libvgm',
-    enabled: false,
+    enabled: true,
     sourceFiles: [
-      '../libvgm/build2/bin/libvgm-emu.a',
+      'libvgm/build/bin/libvgm-emu.a',
+      'libvgm/build/bin/libvgm-utils.a',
+      'libvgm/build/bin/libvgm-player.a',
     ],
-    exportedFunctions: [],
+    exportedFunctions: [
+      '_lvgm_init',
+      '_lvgm_load_data',
+      '_lvgm_start',
+      '_lvgm_stop',
+      '_lvgm_render',
+      '_lvgm_get_position_ms',
+      '_lvgm_get_duration_ms',
+      '_lvgm_get_metadata',
+      '_lvgm_get_voice_count',
+      '_lvgm_get_voice_name',
+      '_lvgm_get_voice_mask',
+      '_lvgm_set_voice_mask',
+      '_lvgm_seek_ms',
+      '_lvgm_set_playback_speed',
+      '_lvgm_get_playback_speed',
+      '_lvgm_reset',
+    ],
     flags: [],
   },
   {
@@ -454,7 +465,7 @@ const moduleFlags = [].concat(...chipModules.filter(m => m.enabled).map(m => m.f
 
 const flags = [
   /*
-  Build flags for Emscripten 1.39.11. Last updated March 22, 2020
+  Build flags for Emscripten 3.1.39. Last updated June 18, 2023
   */
   // '--closure', '1',       // causes TypeError: lib.FS.mkdir is not a function
   // '--llvm-lto', '3',
@@ -471,8 +482,10 @@ const flags = [
   '-s', 'USE_ZLIB=1',
   '-s', 'EXPORT_ES6=1',
   '-s', 'USE_ES6_IMPORT_META=0',
+  '-s', 'WASM_BIGINT',       // support passing 64 bit integers to/from JS
   '-lidbfs.js',
   '-Os',                     // set to O0 for fast compile during development
+  // '-g',                   // include DWARF debug symbols. Increases size ~2.5x
   '-o', jsOutFile,
 
   /*
