@@ -18,12 +18,8 @@ const fileExtensions = [
   'nsf',
   'nsfe',
   'spc',
-  'gym',
-  'vgm',
-  'vgz',
   'ay',
   'sgc',
-  'kss',
   'gbs',
 ];
 
