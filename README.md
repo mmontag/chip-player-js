@@ -119,6 +119,19 @@ cd ../lazyusf2/
 emmake make -f Emscripten.Makefile liblazyusf.a
 ```
 
+#### Subproject: libvgm
+
+Our goal is to produce **libvgm/build/bin/libvgm-emu.a**, **libvgm/build/bin/libvgm-player.a**, and **libvgm/build/bin/libvgm-util.a**.
+
+```sh
+cd chip-player-js/libvgm/
+source ~/src/emsdk/emsdk_env.sh  # load the emscripten environment variables
+mkdir build                      # create a build folder for Cmake output
+cd build
+emcmake cmake ..
+emmake make
+```
+
 #### WebAssembly build
 
 Once these are in place we can build the parent project.
