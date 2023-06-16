@@ -24,7 +24,7 @@
 @font-face {
     font-family: VGA_SquarePx;
     /*src: url(fonts/pxplus_vga_squarepx.ttf) format('truetype');*/
-    src: url(/chip-player-js/static/media/pxplus_chipplayer.85e11d57.ttf) format('truetype');
+    src: url(/static/media/pxplus_chipplayer.85e11d57.ttf) format('truetype');
     font-weight: 400;
     font-style: normal
 }
@@ -631,4 +631,4 @@ img { -ms-interpolation-mode: nearest-neighbor; image-rendering: -webkit-optimiz
 .message-box-button        { background: var(--background); padding: 0 var(--charW2); -webkit-box-shadow: none; box-shadow: none; }
 
 
-/*# sourceMappingURL=main.353e9d26.css.map*/
+/*# sourceMappingURL=main.e96a1c27.css.map*/

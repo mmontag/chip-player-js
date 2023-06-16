@@ -1,8 +1,8 @@
 {
-  "main.css": "/chip-player-js/static/css/main.353e9d26.css",
-  "main.js": "/chip-player-js/static/js/main.a78cc1bd.js",
-  "main.css.map": "/chip-player-js/static/css/main.353e9d26.css.map",
-  "main.js.map": "/chip-player-js/static/js/main.a78cc1bd.js.map",
-  "index.html": "/chip-player-js/index.html",
-  "static/media/index.css": "/chip-player-js/static/media/pxplus_chipplayer.85e11d57.ttf"
+  "main.css": "/static/css/main.e96a1c27.css",
+  "main.js": "/static/js/main.914cd366.js",
+  "main.css.map": "/static/css/main.e96a1c27.css.map",
+  "main.js.map": "/static/js/main.914cd366.js.map",
+  "index.html": "/index.html",
+  "static/media/index.css": "/static/media/pxplus_chipplayer.85e11d57.ttf"
 }
