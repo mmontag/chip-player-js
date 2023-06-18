@@ -1,0 +1,182 @@
+name: Build Tests
+
+inputs:
+  checkout_path:
+    description: "Where libvgm has been checked out to"
+    required: true
+  install_path:
+    description: "Where libvgm should be installed to."
+    required: true
+  build_type:
+    description: "What build configuration (debug or release) should be used"
+    required: true
+  with_msvc:
+    description: "If MSVC should be used (only makes sense on Windows)"
+    required: false
+    default: false
+  extra_settings:
+    description: "Extra settings to pass to CMake's configure step"
+    default: ""
+
+runs:
+  using: "composite"
+  steps:
+  - name: Convert Windows paths to Unix paths
+    id: path-fixer
+    shell: bash
+    run: |
+      function conv_path() {
+        echo "$1" | sed -e 's#\\#/#g' -e 's#^[A-Z]#\L&#g' -e 's#^\(.\):#/\1#'
+      }
+      export -f conv_path
+
+      export input_checkout_path='${{ inputs.checkout_path }}'
+      export output_checkout_path=$(conv_path ${input_checkout_path})
+      echo "${input_checkout_path} -> ${output_checkout_path}"
+      echo "::set-output name=checkout_path::${output_checkout_path}"
+
+      export input_install_path='${{ inputs.install_path }}'
+      export output_install_path=$(conv_path ${input_install_path})
+      echo "${input_install_path} -> ${output_install_path}"
+      echo "::set-output name=install_path::${output_install_path}"
+
+  - name: Dependencies [Windows MinGW]
+    if: ${{ runner.os == 'Windows' && inputs.with_msvc != 'true' }}
+    uses: msys2/setup-msys2@v2
+    with:
+      msystem: MINGW64
+      update: true
+      install: |
+        make mingw-w64-x86_64-cmake
+        mingw-w64-x86_64-toolchain
+        mingw-w64-x86_64-zlib mingw-w64-x86_64-libiconv
+
+  - name: Dependencies [Windows MSVC]
+    if: ${{ runner.os == 'Windows' && inputs.with_msvc == 'true' }}
+    shell: bash
+    run: |
+      # avoid linker errors by enforcing WinAPI (instead of libiconv)
+      # and zdll.lib (DLL instead of static)
+      # The libraries that are shipped with libvgm were built with VC6 and VC2010
+      # and don't work with VC2015 and higher.
+      echo "CMAKE_OPTS=-DUTIL_CHARCNV_ICONV=OFF -DUTIL_CHARCNV_WINAPI=ON " \
+      "-DZLIB_LIBRARY_DEBUG=${{ steps.path-fixer.outputs.checkout_path }}/libs/lib/zdll.lib " \
+      "-DZLIB_LIBRARY_RELEASE=${{ steps.path-fixer.outputs.checkout_path }}/libs/lib/zdll.lib" >> $GITHUB_ENV
+
+  - name: Dependencies [macOS]
+    if: runner.os == 'macOS'
+    shell: bash
+    run: |
+      export HOMEBREW_NO_INSTALL_CLEANUP=1
+      brew update
+      brew install libao
+
+  - name: Dependencies [Linux]
+    if: runner.os == 'Linux'
+    shell: bash
+    run: |
+      sudo apt update
+      sudo apt install \
+        libasound2-dev \
+        libpulse-dev \
+        libao-dev \
+        zlib1g-dev \
+
+  - name: Configuring [Windows MinGW]
+    if: ${{ runner.os == 'Windows' && inputs.with_msvc != 'true' }}
+    shell: "msys2 {0}"
+    run: |
+      function import_extra_settings() {
+        export INPUTS_EXTRA_SETTINGS=(${{ inputs.extra_settings }})
+      }
+      export -f import_extra_settings
+      export PATH_FIXER_CHECKOUT_PATH='${{ steps.path-fixer.outputs.checkout_path }}'
+      export PATH_FIXER_INSTALL_PATH='${{ steps.path-fixer.outputs.install_path }}'
+      export INPUTS_BUILD_TYPE='${{ inputs.build_type }}'
+      cd ${PATH_FIXER_CHECKOUT_PATH}
+      ${PATH_FIXER_CHECKOUT_PATH}/.github/workflows/action-build-libvgm/configure.sh
+
+  - name: Configuring [Everything Else]
+    if: ${{ runner.os != 'Windows' || inputs.with_msvc == 'true' }}
+    shell: bash
+    run: |
+      function import_extra_settings() {
+        export INPUTS_EXTRA_SETTINGS=(${{ inputs.extra_settings }})
+      }
+      export -f import_extra_settings
+      export PATH_FIXER_CHECKOUT_PATH='${{ steps.path-fixer.outputs.checkout_path }}'
+      export PATH_FIXER_INSTALL_PATH='${{ steps.path-fixer.outputs.install_path }}'
+      export INPUTS_BUILD_TYPE='${{ inputs.build_type }}'
+      cd ${PATH_FIXER_CHECKOUT_PATH}
+      ${PATH_FIXER_CHECKOUT_PATH}/.github/workflows/action-build-libvgm/configure.sh
+
+  - name: Build [Windows MinGW]
+    if: ${{ runner.os == 'Windows' && inputs.with_msvc != 'true' }}
+    shell: "msys2 {0}"
+    run: |
+      export PATH_FIXER_CHECKOUT_PATH='${{ steps.path-fixer.outputs.checkout_path }}'
+      export INPUTS_BUILD_TYPE='${{ inputs.build_type }}'
+      cd ${PATH_FIXER_CHECKOUT_PATH}
+      ${PATH_FIXER_CHECKOUT_PATH}/.github/workflows/action-build-libvgm/build.sh
+
+  - name: Build [Everything Else]
+    if: ${{ runner.os != 'Windows' || inputs.with_msvc == 'true' }}
+    shell: bash
+    run: |
+      export PATH_FIXER_CHECKOUT_PATH='${{ steps.path-fixer.outputs.checkout_path }}'
+      export INPUTS_BUILD_TYPE='${{ inputs.build_type }}'
+      cd ${PATH_FIXER_CHECKOUT_PATH}
+      ${PATH_FIXER_CHECKOUT_PATH}/.github/workflows/action-build-libvgm/build.sh
+
+  - name: Install [Windows MinGW]
+    if: ${{ runner.os == 'Windows' && inputs.with_msvc != 'true' }}
+    shell: "msys2 {0}"
+    run: |
+      export PATH_FIXER_CHECKOUT_PATH='${{ steps.path-fixer.outputs.checkout_path }}'
+      export INPUTS_BUILD_TYPE='${{ inputs.build_type }}'
+      cd ${PATH_FIXER_CHECKOUT_PATH}
+      ${PATH_FIXER_CHECKOUT_PATH}/.github/workflows/action-build-libvgm/install.sh
+
+  - name: Install [Everything Else]
+    if: ${{ runner.os != 'Windows' || inputs.with_msvc == 'true' }}
+    shell: bash
+    run: |
+      export PATH_FIXER_CHECKOUT_PATH='${{ steps.path-fixer.outputs.checkout_path }}'
+      export INPUTS_BUILD_TYPE='${{ inputs.build_type }}'
+      cd ${PATH_FIXER_CHECKOUT_PATH}
+      ${PATH_FIXER_CHECKOUT_PATH}/.github/workflows/action-build-libvgm/install.sh
+
+  - name: Check
+    if: ${{ runner.os == 'Windows' && inputs.with_msvc != 'true' }}
+    shell: bash
+    run: |
+      echo "Listing what we installed"
+      echo "========================="
+      find ${{ steps.path-fixer.outputs.install_path }}
+      echo ""
+      
+      function file_lib() {
+        echo "$(basename "$1")"
+        file "$1"
+        echo ""
+      }
+      export -f file_lib
+      
+      echo "Checking compiled libraries"
+      echo "==========================="
+      find ${{ steps.path-fixer.outputs.install_path }} \
+        -name 'libvgm-*' \
+        -exec bash -c "file_lib \"{}\"" \;
+      
+      function print_pc() {
+        echo "$(basename "$1")"
+        cat "$1"
+        echo ""
+      }
+      export -f print_pc
+      
+      echo "Listing pkg-config file contents"
+      echo "================================"
+      find ${{ steps.path-fixer.outputs.install_path }}/lib/pkgconfig \
+        -name '*.pc' \
+        -exec bash -c "print_pc \"{}\"" \;
