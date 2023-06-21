@@ -19,7 +19,6 @@ const FORMATS =  [
   'nsfe',
   'sgc',
   'spc',
-  'kss',
   's3m',
   'smf',
   'v2m',
