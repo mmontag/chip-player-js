@@ -211,7 +211,7 @@ extern int tp_load_soundfont(const char *filename) {
   char newFileHash[512];
   struct stat filestat;
   stat(filename, &filestat);
-  sprintf(newFileHash, "%s-%ld", filename, filestat.st_ctime);
+  sprintf(newFileHash, "%s-%ld", filename, (long)filestat.st_ctime);
 
   if (strcmp(newFileHash, g_currentSoundfontFileHash) != 0) {
     strcpy(g_currentSoundfontFileHash, newFileHash);
