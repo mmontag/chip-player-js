@@ -146,10 +146,14 @@
   },
   "eslintConfig": {
     "extends": "react-app",
+    "env": {
+      "es2020": true
+    },
     "rules": {
       "jsx-a11y/href-no-hash": "off",
       "jsx-a11y/anchor-is-valid": "off",
-      "no-fallthrough": "off"
+      "no-fallthrough": "off",
+      "import/no-anonymous-default-export": "off"
     }
   }
 }
