@@ -50,6 +50,7 @@ import Visualizer from './Visualizer';
 import Alert from './Alert';
 import MessageBox from './MessageBox';
 import Settings from './Settings';
+import VGMPlayer from '../players/VGMPlayer';
 
 class App extends React.Component {
   constructor(props) {
@@ -158,8 +159,8 @@ class App extends React.Component {
             return `${process.env.PUBLIC_URL}/${path}`;
           return prefix + path;
         },
-        print: (msg) => console.debug('[stdout] ' + msg),
-        printErr: (msg) => console.debug('[stderr] ' + msg),
+        // print: (msg) => console.debug('[stdout] ' + msg),
+        // printErr: (msg) => console.debug('[stderr] ' + msg),
       });
     } catch (e) {
       // Browser doesn't support WASM (Safari in iOS Simulator)
@@ -180,6 +181,7 @@ class App extends React.Component {
       V2MPlayer,
       N64Player,
       MDXPlayer,
+      VGMPlayer,
     ].map(P => new P(this.chipCore, audioCtx.sampleRate, bufferSize, debug));
     this.midiPlayer = players[0];
 
