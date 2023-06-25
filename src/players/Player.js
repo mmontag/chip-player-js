@@ -62,6 +62,10 @@ export default class Player extends EventEmitter {
     return this.fileExtensions.indexOf(fileExtension.toLowerCase()) !== -1;
   }
 
+  /**
+   * @param {ArrayBuffer} data - File contents
+   * @param {string} filename - Filename for metadata fallback
+   */
   loadData(data, filename) {
     throw Error('Player.loadData() must be implemented.');
   }
