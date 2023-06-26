@@ -95,7 +95,7 @@
     "webpack-bundle-analyzer": "^3.3.2",
     "worker-loader": "^2.0.0"
   },
-  "homepage": "http://mmontag.github.io/chip-player-js",
+  "homepage": "https://chiptune.app",
   "scripts": {
     "start": "node scripts/start.js",
     "build": "npm run build-catalog; npm run build-chip-core; node scripts/build.js",
