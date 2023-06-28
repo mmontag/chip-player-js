@@ -57,7 +57,7 @@ export default class Browse extends React.PureComponent {
     return null;
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(prevProps, prevState) {
     this.navigate();
 
     /*
@@ -96,7 +96,7 @@ export default class Browse extends React.PureComponent {
         sessionStorage.removeItem(locationKey); // Stop scroll restoration until next navigation
         console.debug("%s (%s) scroll position restored to %s", browsePath, locationKey, scrollToPosY);
       }
-    } else {
+    } else if (prevProps.locationKey !== this.props.locationKey) {
       // Scroll to top when navigating to a new directory
       this.props.scrollContainerRef.current.scrollTo(0, 0);
     }
