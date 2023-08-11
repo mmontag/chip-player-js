@@ -473,7 +473,8 @@ class App extends React.Component {
 
       this.setState({
         ...App.mapSequencerStateToAppState(sequencerState),
-        showInfo: false,
+        // TODO: sparse state update
+        showInfo: this.state.showInfo && player.getInfoTexts()?.length > 0,
       });
     }
   }
