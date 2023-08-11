@@ -478,10 +478,11 @@ export default class MIDIPlayer extends Player {
   }
 
   getMetadata() {
-    return {
-      ...this.filepathMeta,
-      infoTexts: [this.midiFilePlayer.textInfo.join('\n')].filter(text => text !== ''),
-    };
+    return this.filepathMeta;
+  }
+
+  getInfoTexts() {
+    return [this.midiFilePlayer.textInfo.join('\n')].filter(text => text !== '');
   }
 
   getParameter(id) {

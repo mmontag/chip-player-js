@@ -137,6 +137,10 @@ export default class Player extends EventEmitter {
     }
   }
 
+  getInfoTexts() {
+    return [];
+  }
+
   getParamDefs() {
     return this.paramDefs;
   }
@@ -153,7 +157,7 @@ export default class Player extends EventEmitter {
       tempo: this.getTempo(),
       voiceMask: this.getVoiceMask(),
       voiceNames: [...Array(this.getNumVoices())].map((_, i) => this.getVoiceName(i)),
-      infoTexts: [],
+      infoTexts: this.getInfoTexts(),
       isStopped: this.stopped,
       isPaused: this.paused,
     };
