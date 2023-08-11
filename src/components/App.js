@@ -433,7 +433,7 @@ class App extends React.Component {
     } else {
       const player = this.sequencer.getPlayer();
       const url = this.sequencer.getCurrUrl();
-      if (url) {
+      if (url && url !== this.state.songUrl) {
         const metadataUrl = getMetadataUrlForCatalogUrl(url);
         // TODO: Disabled to support scroll restoration.
         // const filepath = url.replace(CATALOG_PREFIX, '');
