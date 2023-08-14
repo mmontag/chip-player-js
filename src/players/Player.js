@@ -42,6 +42,7 @@ export default class Player extends EventEmitter {
     this.perfLoggingInterval = 100;
     this.paramDefs = [];
     this.params = {};
+    this.infoTexts = [];
   }
 
   togglePause() {
@@ -138,7 +139,7 @@ export default class Player extends EventEmitter {
   }
 
   getInfoTexts() {
-    return [];
+    return this.infoTexts;
   }
 
   getParamDefs() {
