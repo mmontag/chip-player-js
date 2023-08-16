@@ -71,7 +71,7 @@ export default class XMPPlayer extends Player {
 
   _parseMetadata() {
     const meta = {};
-    const infoTexts = [];
+    const infoText = [];
     const xmp = this.core;
     const infoPtr = this.infoPtr;
 
@@ -83,68 +83,10 @@ export default class XMPPlayer extends Player {
     meta.title = xmp.UTF8ToString(xmp_modulePtr, 256);
     meta.system = xmp.UTF8ToString(xmp_modulePtr + 64, 256);
     meta.comment = xmp.UTF8ToString(xmp.getValue(infoPtr + 24, '*'), 512);
+    if (meta.comment) infoText.push('Comment:', meta.comment);
 
     xmp._xmp_get_frame_info(this.xmpCtx, infoPtr);
     this._durationMs = xmp.getValue(infoPtr + 8 * 4, 'i32');
-
-    // struct xmp_module {
-    //   char name[XMP_NAME_SIZE];	/* Module title */
-    //   char type[XMP_NAME_SIZE];	/* Module format */
-    //   int pat;			/* Number of patterns */
-    //   int trk;			/* Number of tracks */
-    //   int chn;			/* Tracks per pattern */
-    //   int ins;			/* Number of instruments */
-    //   int smp;			/* Number of samples */
-    //   int spd;			/* Initial speed */
-    //   int bpm;			/* Initial BPM */
-    //   int len;			/* Module length in patterns */
-    //   int rst;			/* Restart position */
-    //   int gvl;			/* Global volume */
-    //
-    //   struct xmp_pattern **xxp;	/* Patterns */
-    //   struct xmp_track **xxt;		/* Tracks */
-    //   struct xmp_instrument *xxi;	/* Instruments */
-    //   struct xmp_sample *xxs;		/* Samples */
-    //   struct xmp_channel xxc[XMP_MAX_CHANNELS]; /* Channel info */
-    //   unsigned char xxo[XMP_MAX_MOD_LENGTH];	/* Orders */
-    // };
-
-    // struct xmp_instrument {
-    //   char name[32];			/* Instrument name */
-    //   int vol;			/* Instrument volume */
-    //   int nsm;			/* Number of samples */
-    //   int rls;			/* Release (fadeout) */
-    //   struct xmp_envelope aei;	/* Amplitude envelope info */
-    //   struct xmp_envelope pei;	/* Pan envelope info */
-    //   struct xmp_envelope fei;	/* Frequency envelope info */
-    //
-    //   struct {
-    //     unsigned char ins;	/* Instrument number for each key */
-    //     signed char xpo;	/* Instrument transpose for each key */
-    //   } map[XMP_MAX_KEYS];
-    //
-    //   struct xmp_subinstrument	*sub;
-    //
-    //   void *extra;			/* Extra fields */
-    // };
-
-    // struct xmp_sample {
-    //   char name[32];			/* Sample name */
-    //   int len;			/* Sample length */
-    //   int lps;			/* Loop start */
-    //   int lpe;			/* Loop end */
-    //   #define XMP_SAMPLE_16BIT	(1 << 0)  /* 16bit sample */
-    //   #define XMP_SAMPLE_LOOP		(1 << 1)  /* Sample is looped */
-    //   #define XMP_SAMPLE_LOOP_BIDIR	(1 << 2)  /* Bidirectional sample loop */
-    //   #define XMP_SAMPLE_LOOP_REVERSE	(1 << 3)  /* Backwards sample loop */
-    //   #define XMP_SAMPLE_LOOP_FULL	(1 << 4)  /* Play full sample before looping */
-    //   #define XMP_SAMPLE_SLOOP	(1 << 5)  /* Sample has sustain loop */
-    //   #define XMP_SAMPLE_SLOOP_BIDIR	(1 << 6)  /* Bidirectional sustain loop */
-    //   #define XMP_SAMPLE_SYNTH	(1 << 15) /* Data contains synth patch */
-    //   int flg;			/* Flags */
-    //   unsigned char *data;		/* Sample data */
-    // };
-
 
     // XMP-specific metadata
     meta.patterns =        xmp.getValue(xmp_modulePtr + 128 + 4 * 0, 'i32'); // patterns
@@ -157,30 +99,25 @@ export default class XMPPlayer extends Player {
     meta.moduleLength =    xmp.getValue(xmp_modulePtr + 128 + 4 * 7, 'i32'); // module length
     meta.restartPosition = xmp.getValue(xmp_modulePtr + 128 + 4 * 8, 'i32'); // restart position
     const xmp_instPtr =    xmp.getValue(xmp_modulePtr + 128 + 4 * 12, 'i32');
-    const xmp_sampPtr =    xmp.getValue(xmp_modulePtr + 128 + 4 * 13, 'i32');
 
-    // size of xmp_envelope struct is 7 * 4 + 128 = 156 bytes
-    const envStructSize = 156;
-    // size of xmp_instrument map struct is 2 * 122 (rounded up from 121) = 244 bytes
-    const mapStructSize = 244;
-    // size of xmp_instrument struct is 32 + 4 + 4 + 4 + 156 + 156 + 156 + 242 + 4 + 4
-    const instStructSize = 32 + 4 + 4 + 4 + (envStructSize * 3) + mapStructSize + 4 + 4;
-    // for (let j = instStructSize - 32; j < instStructSize + 32; j++) {
-      const instStrings = [];
-      for (let i = 0; i < meta.numInstruments; i++) {
-        const ptr = xmp_instPtr + i * instStructSize;
-        instStrings.push(xmp.UTF8ToString(ptr));
-      }
-    // }
-    infoTexts.push('Instruments\n===========\n' + instStrings.join('\n'));
+    // xmp_envelope struct =       7 * 4 + 128 =                                    156 bytes
+    // xmp_instrument map struct = 2 * 122 (rounded up from 121) =                  244 bytes
+    // xmp_instrument struct =     32 + 4 + 4 + 4 + 156 + 156 + 156 + 244 + 4 + 4 = 764 bytes
+    const instStructSize = 764;
+    const instStrings = [];
+    for (let i = 0; i < meta.numInstruments; i++) {
+      const ptr = xmp_instPtr + i * instStructSize;
+      instStrings.push(xmp.UTF8ToString(ptr));
+    }
+    const instText = instStrings.join('\n');
+    if (instText.trim()) infoText.push('Instruments:', instText);
 
     // Filename fallback
     if (!meta.title) meta.title = this.filepathMeta.title;
 
     this.initialBPM = meta.initialBPM;
-
     this.metadata = meta;
-    this.infoTexts = infoTexts;
+    this.infoTexts = infoText.length ? [ infoText.join('\n\n') ] : [];
   }
 
   loadData(data, filename) {
