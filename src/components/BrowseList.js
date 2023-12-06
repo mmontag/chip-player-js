@@ -5,7 +5,7 @@ import { CATALOG_PREFIX } from '../config';
 import DirectoryLink from './DirectoryLink';
 import FavoriteButton from './FavoriteButton';
 import queryString from 'querystring';
-import { useHistory } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 
 export default memo(BrowseList);
 function BrowseList({ virtual, ...props }) {
@@ -23,14 +23,15 @@ function BrowseList({ virtual, ...props }) {
   // ----------------
   // Note this does not work for virtual list, since the playing item might not be in the DOM.
   // See also https://medium.com/@teh_builder/ref-objects-inside-useeffect-hooks-eb7c15198780
-  const urlParams = queryString.parse(window.location.search.substring(1));
+  const location = useLocation();
+  const urlParams = queryString.parse(location.search.substring(1));
   delete urlParams.q;
   const search = queryString.stringify(urlParams);
 
   // Check if previous page url is the parent directory of current page url.
   const history = useHistory();
   const prevPath = trimEnd(history.location.state?.prevPathname, '/');
-  const currPath = trimEnd(window.location.pathname, '/');
+  const currPath = trimEnd(location.pathname, '/');
   const prevPageIsParentDir = prevPath === currPath.substring(0, currPath.lastIndexOf('/'));
 
   return (

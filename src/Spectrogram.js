@@ -17,7 +17,7 @@ const colorMap = new chroma.scale([
   '#ffffa0',
   '#ffffff',
 ]).domain([0, 255]);
-const _debug = window.location.search.indexOf('debug=true') !== -1;
+// const _debug = window.location.search.indexOf('debug=true') !== -1;
 let _aWeightingLUT;
 let _calcTime = 0;
 let _totalTime = 0;

@@ -132,6 +132,10 @@ export default class Browse extends React.PureComponent {
       type: 'directory',
     }, ...(listing || [])];
 
+    if (typeof window === 'undefined') {
+      return <BrowseList virtual={{ items: listing}}></BrowseList>;
+    }
+
     return (
       <Fragment>
         <div className="Browse-topRow">

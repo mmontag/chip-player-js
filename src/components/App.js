@@ -1,4 +1,8 @@
 import React from 'react';
+
+// DELETE ME
+import '../index.css';
+
 import autoBindReact from 'auto-bind/react';
 import isMobile from 'ismobilejs';
 import clamp from 'lodash/clamp';
@@ -62,7 +66,6 @@ class App extends React.Component {
     this.playContexts = {};
     this.errorTimer = null;
     this.midiPlayer = null; // Need a reference to MIDIPlayer to handle SoundFont loading.
-    window.ChipPlayer = this;
 
     // Initialize Firebase
     const firebaseApp = firebaseInitializeApp(firebaseConfig);
@@ -96,25 +99,6 @@ class App extends React.Component {
       }
     });
 
-    // Initialize audio graph
-    // ┌────────────┐      ┌────────────┐      ┌─────────────┐
-    // │ playerNode ├─────>│  gainNode  ├─────>│ destination │
-    // └────────────┘      └────────────┘      └─────────────┘
-    const audioCtx = this.audioCtx = window.audioCtx = new (window.AudioContext || window.webkitAudioContext)({
-      latencyHint: 'playback'
-    });
-    const bufferSize = Math.max( // Make sure script node bufferSize is at least baseLatency
-      Math.pow(2, Math.ceil(Math.log2((audioCtx.baseLatency || 0.001) * audioCtx.sampleRate))), 2048);
-    const gainNode = this.gainNode = audioCtx.createGain();
-    gainNode.gain.value = 1;
-    gainNode.connect(audioCtx.destination);
-    const playerNode = this.playerNode = audioCtx.createScriptProcessor(bufferSize, 0, 2);
-    playerNode.connect(gainNode);
-
-    unlockAudioContext(audioCtx);
-    console.log('Sample rate: %d hz. Base latency: %d. Buffer size: %d.',
-      audioCtx.sampleRate, audioCtx.baseLatency * audioCtx.sampleRate, bufferSize);
-
     this.state = {
       loading: true,
       loadingUser: true,
@@ -141,12 +125,224 @@ class App extends React.Component {
       volume: 100,
       repeat: REPEAT_OFF,
       shuffle: SHUFFLE_OFF,
-      directories: {},
+      directories: {
+        '': [
+          {
+            "path": "/Classical MIDI",
+            "size": 94881698,
+            "type": "directory",
+            "numChildren": 50
+          },
+          {
+            "path": "/Contemporary",
+            "size": 137644872,
+            "type": "directory",
+            "numChildren": 29
+          },
+          {
+            "path": "/Demo MIDI",
+            "size": 131876378,
+            "type": "directory",
+            "numChildren": 31
+          },
+          {
+            "path": "/Famicompo",
+            "size": 96195074,
+            "type": "directory",
+            "numChildren": 16
+          },
+          {
+            "path": "/Famicompo (NSFE)",
+            "size": 37986180,
+            "type": "directory",
+            "numChildren": 12
+          },
+          {
+            "path": "/Farbrausch V2",
+            "size": 40945968,
+            "type": "directory",
+            "numChildren": 80
+          },
+          {
+            "path": "/Game MIDI",
+            "size": 710832918,
+            "type": "directory",
+            "numChildren": 778
+          },
+          {
+            "path": "/Game Mods",
+            "size": 1938270138,
+            "type": "directory",
+            "numChildren": 1128
+          },
+          {
+            "path": "/Jazz MIDI",
+            "size": 11596626,
+            "type": "directory",
+            "numChildren": 304
+          },
+          {
+            "path": "/MIDI",
+            "size": 804315608,
+            "type": "directory",
+            "numChildren": 2198
+          },
+          {
+            "path": "/ModArchives",
+            "size": 116737615,
+            "type": "directory",
+            "numChildren": 91
+          },
+          {
+            "path": "/Modland",
+            "size": 509827324,
+            "type": "directory",
+            "numChildren": 29
+          },
+          {
+            "path": "/Nintendo",
+            "size": 41408983,
+            "type": "directory",
+            "numChildren": 1931
+          },
+          {
+            "path": "/Nintendo (NSFE)",
+            "size": 40668842,
+            "type": "directory",
+            "numChildren": 8
+          },
+          {
+            "path": "/Nintendo 64",
+            "size": 16126615,
+            "type": "directory",
+            "numChildren": 109
+          },
+          {
+            "path": "/Nintendo 64 (SoundFont MIDI)",
+            "size": 8998781,
+            "type": "directory",
+            "numChildren": 12
+          },
+          {
+            "path": "/Nintendo SNES",
+            "size": 2390883929,
+            "type": "directory",
+            "numChildren": 1602
+          },
+          {
+            "path": "/OnlyMIDIs",
+            "size": 89038355,
+            "type": "directory",
+            "numChildren": 995
+          },
+          {
+            "path": "/OPLArchive",
+            "size": 15035261,
+            "type": "directory",
+            "numChildren": 136
+          },
+          {
+            "path": "/Piano E-Competition MIDI",
+            "size": 173578058,
+            "type": "directory",
+            "numChildren": 11
+          },
+          {
+            "path": "/Project AY",
+            "size": 6409016,
+            "type": "directory",
+            "numChildren": 2
+          },
+          {
+            "path": "/Roland SMF MIDI Disks",
+            "size": 52722881,
+            "type": "directory",
+            "numChildren": 86
+          },
+          {
+            "path": "/Sega Game Gear",
+            "size": 6217358,
+            "type": "directory",
+            "numChildren": 257
+          },
+          {
+            "path": "/Sega Genesis",
+            "size": 554408255,
+            "type": "directory",
+            "numChildren": 672
+          },
+          {
+            "path": "/Sega Master System",
+            "size": 6189177,
+            "type": "directory",
+            "numChildren": 250
+          },
+          {
+            "path": "/Sharp X68000 MDX",
+            "size": 102136173,
+            "type": "directory",
+            "numChildren": 50
+          },
+          {
+            "path": "/Sound Canvas MIDI Collection",
+            "size": 179040312,
+            "type": "directory",
+            "numChildren": 187
+          },
+          {
+            "path": "/Tune 1000 SMF MIDI Disks",
+            "size": 35607131,
+            "type": "directory",
+            "numChildren": 69
+          },
+          {
+            "path": "/Ultimate Mod Collection",
+            "size": 1205415792,
+            "type": "directory",
+            "numChildren": 24
+          },
+          {
+            "path": "/VGM Rips",
+            "size": 260292960,
+            "type": "directory",
+            "numChildren": 156
+          },
+          {
+            "path": "/vgmusic.com MIDI",
+            "size": 851106123,
+            "type": "directory",
+            "numChildren": 3
+          }
+        ],
+      },
       hasPlayer: false,
       paramDefs: [],
     };
 
-    this.initChipCore(audioCtx, playerNode, bufferSize);
+    if (typeof window !== 'undefined') {
+      window.ChipPlayer = this;
+
+      // Initialize audio graph
+      // ┌────────────┐      ┌────────────┐      ┌─────────────┐
+      // │ playerNode ├─────>│  gainNode  ├─────>│ destination │
+      // └────────────┘      └────────────┘      └─────────────┘
+      const audioCtx = this.audioCtx = window.audioCtx = new (window.AudioContext || window.webkitAudioContext)({
+        latencyHint: 'playback'
+      });
+      const bufferSize = Math.max( // Make sure script node bufferSize is at least baseLatency
+        Math.pow(2, Math.ceil(Math.log2((audioCtx.baseLatency || 0.001) * audioCtx.sampleRate))), 2048);
+      const gainNode = this.gainNode = audioCtx.createGain();
+      gainNode.gain.value = 1;
+      gainNode.connect(audioCtx.destination);
+      const playerNode = this.playerNode = audioCtx.createScriptProcessor(bufferSize, 0, 2);
+      playerNode.connect(gainNode);
+
+      unlockAudioContext(audioCtx);
+      console.log('Sample rate: %d hz. Base latency: %d. Buffer size: %d.',
+        audioCtx.sampleRate, audioCtx.baseLatency * audioCtx.sampleRate, bufferSize);
+
+      this.initChipCore(audioCtx, playerNode, bufferSize);
+    }
   }
 
   async initChipCore(audioCtx, playerNode, bufferSize) {
@@ -312,6 +508,9 @@ class App extends React.Component {
   }
 
   attachMediaKeyHandlers() {
+    // Support SSR
+    if (typeof document === 'undefined') return;
+
     if ('mediaSession' in navigator) {
       console.log('Attaching Media Key event handlers.');
 
@@ -687,7 +886,7 @@ class App extends React.Component {
     const { title, subtitle } = titlesFromMetadata(this.state.currentSongMetadata);
     const currContext = this.sequencer?.getCurrContext();
     const currIdx = this.sequencer?.getCurrIdx();
-    const search = { search: window.location.search };
+    const search = { search: this.props.location.search };
     return (
       <Dropzone
         disableClick
@@ -721,15 +920,16 @@ class App extends React.Component {
               </div>
               <div className="App-main-content-and-settings">
               <div className="App-main-content-area" ref={this.contentAreaRef}>
+                Hey hy
                 <Switch>
-                  <Route path="/" exact render={() => (
+                  <Route path="/" exact render={({ history, match, location }) => (
                     <Search
                       currContext={currContext}
                       currIdx={currIdx}
                       toggleFavorite={this.handleToggleFavorite}
                       favorites={this.state.faves}
                       onSongClick={this.handleSongClick}>
-                      {this.state.loading && <p>Loading player engine...</p>}
+                      {this.state.loading && <p>Location: <pre>{ JSON.stringify(match, null, 2) }</pre></p>}
                     </Search>
                   )}/>
                   <Route path="/favorites" render={() => (
@@ -748,7 +948,7 @@ class App extends React.Component {
                     // Undo the react-router-dom double-encoded % workaround - see DirectoryLink.js
                     const browsePath = match.params?.browsePath?.replace('%25', '%') || '';
                     return (
-                      this.contentAreaRef.current &&
+                      // this.contentAreaRef.current &&
                       <Browse currContext={currContext}
                               currIdx={currIdx}
                               historyAction={history.action}
@@ -794,7 +994,7 @@ class App extends React.Component {
                 }
               </div>
             </div>
-            {!isMobile.phone && !this.state.loading &&
+            {!isMobile.phone && !this.state.loading && typeof window !== 'undefined' &&
               <Visualizer audioCtx={this.audioCtx}
                           sourceNode={this.playerNode}
                           chipCore={this.chipCore}
