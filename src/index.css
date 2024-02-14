@@ -421,10 +421,10 @@ body,#root {
 .Favorite-button:active { color: var(--clickable); }
 .Favorite-button.isFavorite { color: var(--clickable); }
 .Favorite-button {
-    white-space: pre;
     cursor: pointer;
     color: var(--button);
     background: initial;
+    padding: 0 var(--charW1);
 }
 
 .Visualizer { position: relative; display: flex; flex-direction: column; align-items: flex-end }

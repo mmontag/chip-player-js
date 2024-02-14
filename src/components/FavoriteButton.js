@@ -16,7 +16,7 @@ export default class FavoriteButton extends PureComponent {
     return (
       <button onClick={this.handleClick}
               className={'Favorite-button' + (isFavorite ? ' isFavorite' : '')}>
-        &nbsp;♥︎&nbsp;
+        &hearts;
       </button>
     );
   }
