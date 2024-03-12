@@ -322,7 +322,7 @@ void lvgm_set_voice_mask(lvgm_player *player, UINT64 mask) {
       masks[i] |= mask >> bitOffset;
       // Slide window by number of voices in this device
       bitOffset += chip.voiceCounts[i];
-       std::bitset<32> bits(masks[i]); printf("Chip %d: %s (%d voices)\n", (int)chip.idx, bits.to_string().c_str(), (int)chip.voiceCounts[i]);
+      // std::bitset<32> bits(masks[i]); printf("Chip %d: %s (%d voices)\n", (int)chip.idx, bits.to_string().c_str(), (int)chip.voiceCounts[i]);
     }
     PLR_MUTE_OPTS muteOpts = {0, masks[0], masks[1]};
     base->SetDeviceMuting(chip.idx, muteOpts);
