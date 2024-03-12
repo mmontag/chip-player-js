@@ -73,6 +73,13 @@ const chipModules = [
     name: 'gme',
     enabled: true,
     sourceFiles: [
+      /*
+      game_music_emu has a large overlap with libvgm, but is included because
+      it supports crucial file formats like .NSF, .SPC, and .GBS.
+      Sources disabled below are provided by the libvgm implementation.
+
+      One exception is ym2413.c, which is needed for NES VRC7 support.
+       */
       'Ay_Apu.cpp',
       'Ay_Core.cpp',
       'Ay_Cpu.cpp',
@@ -84,7 +91,7 @@ const chipModules = [
       // 'c140.c',
       // 'C140_Emu.cpp',
       'Classic_Emu.cpp',
-      'dac_control.c',
+      // 'dac_control.c', // New dac_control.c from libvgm used for Sega 32X PWM support
       'Data_Reader.cpp',
       // 'dbopl.cpp', // Currently using later version of dbopl.cpp from libADLMIDI
       'Downsampler.cpp',
