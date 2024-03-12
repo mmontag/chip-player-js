@@ -36,7 +36,7 @@ struct VoiceInfo {
 };
 
 const std::map<int, VoiceInfo> deviceToVoiceInfo = { // --------------------------------------------------
-  {DEVID_32X_PWM,  {1,  0}},
+  {DEVID_32X_PWM,  {1,  0, "", {"PWM"}}},
   {DEVID_AY8910,   {3,  0}},
   {DEVID_C140,     {24, 0, "PCM"}},
   {DEVID_C219,     {16, 0, "PCM"}},
@@ -322,7 +322,7 @@ void lvgm_set_voice_mask(lvgm_player *player, UINT64 mask) {
       masks[i] |= mask >> bitOffset;
       // Slide window by number of voices in this device
       bitOffset += chip.voiceCounts[i];
-      // std::bitset<32> bits(masks[i]); printf("Chip %d: %s (%d voices)\n", (int)chip.idx, bits.to_string().c_str(), (int)chip.voiceCounts[i]);
+       std::bitset<32> bits(masks[i]); printf("Chip %d: %s (%d voices)\n", (int)chip.idx, bits.to_string().c_str(), (int)chip.voiceCounts[i]);
     }
     PLR_MUTE_OPTS muteOpts = {0, masks[0], masks[1]};
     base->SetDeviceMuting(chip.idx, muteOpts);
