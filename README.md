@@ -132,6 +132,8 @@ emcmake cmake ..
 emmake make
 ```
 
+To reconfigure the build-enabled sound chips with CMake UI, run `emcmake ccmake ..` from the build folder. Make desired changes to build flags, then `c` to configure and `g` to generate new Makefile. Then run `emmake make`. Optionally, commit the same changes back to CMakeLists.txt in libvgm parent folder. 
+
 #### WebAssembly build
 
 Once these are in place we can build the parent project.
