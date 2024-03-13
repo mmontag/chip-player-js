@@ -43,6 +43,7 @@ const SOUNDFONTS = [
       {label: 'Alan Chan 5MBGMGS (4.9 MB)', value: '5MBGMGS.SF2'},
       {label: 'E-mu 2MBGMGS (2.1 MB)', value: '2MBGMGS.SF2'},
       {label: 'E-mu 8MBGMGS (8.2 MB)', value: '8MBGMGS.SF2'},
+      {label: 'Phoenix MT-32 (6.3 MB)', value: 'Phoenix_MT-32.sf2'},
     ],
   },
   {
@@ -58,6 +59,9 @@ const SOUNDFONTS = [
       {label: 'AnotherXG (31.4 MB)', value: 'bennetng_AnotherXG_v2-1.sf2'},
       {label: 'NTONYX 32Mb GM Stereo (32.5 MB)', value: '32MbGMStereo.sf2'},
       {label: 'Weeds GM 3 (54.9 MB)', value: 'weedsgm3.sf2'},
+      {label: 'EmperorGrieferus SC-55 (58.7 MB)', value: 'SC-55.sf2'},
+      // https://www.youtube.com/watch?v=_J8-CgvC-As
+      // https://drive.google.com/open?id=1G53wKnIBMONgOVx0gCOWrBlJaXsyaKml
     ],
   },
   {
