@@ -2,7 +2,7 @@
  * libADLMIDI is a free Software MIDI synthesizer library with OPL3 emulation
  *
  * Original ADLMIDI code: Copyright (c) 2010-2014 Joel Yliluoma <bisqwit@iki.fi>
- * ADLMIDI Library API:   Copyright (c) 2015-2020 Vitaly Novichkov <admin@wohlnet.ru>
+ * ADLMIDI Library API:   Copyright (c) 2015-2021 Vitaly Novichkov <admin@wohlnet.ru>
  *
  * Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 emulation:
  * http://iki.fi/bisqwit/source/adlmidi.html
@@ -24,7 +24,7 @@
 #ifndef ADLMIDI_MIDIPLAY_HPP
 #define ADLMIDI_MIDIPLAY_HPP
 
-#include "adldata.hh"
+#include "oplinst.h"
 #include "adlmidi_private.hpp"
 #include "adlmidi_ptr.hpp"
 #include "structures/pl_list.hpp"
@@ -172,7 +172,7 @@ public:
             //! Time-to-live until release (short percussion note fix)
             double  ttl;
             //! Patch selected
-            const adlinsdata2 *ains;
+            const OplInstMeta *ains;
             enum
             {
                 MaxNumPhysChans = 2,
@@ -196,18 +196,18 @@ public:
                 //! Destination chip channel
                 uint16_t chip_chan;
                 //! ins, inde to adl[]
-                adldata ains;
+                OplTimbre op;
                 //! Is this voice must be detunable?
                 bool    pseudo4op;
 
                 void assign(const Phys &oth)
                 {
-                    ains = oth.ains;
+                    op = oth.op;
                     pseudo4op = oth.pseudo4op;
                 }
                 bool operator==(const Phys &oth) const
                 {
-                    return (ains == oth.ains) && (pseudo4op == oth.pseudo4op);
+                    return (op == oth.op) && (pseudo4op == oth.pseudo4op);
                 }
                 bool operator!=(const Phys &oth) const
                 {
@@ -526,6 +526,7 @@ public:
         //unsigned int SkipForward;
         int     scaleModulators;
         bool    fullRangeBrightnessCC74;
+        bool    enableAutoArpeggio;
 
         double delay;
         double carry;

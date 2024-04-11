@@ -262,7 +262,7 @@ void windowed_fir_init(void)
 #define LOOP(x, y) \
     printf("static signed short %s[%lu] = {\n", #x, y); \
     \
-    for (int i = 0; i < y; i++) { \
+    for (i = 0; i < y; i++) { \
         if (i && !(i % 64)) { \
             printf("\n"); \
         } \
@@ -272,10 +272,10 @@ void windowed_fir_init(void)
     printf("\n};\n\n");
 
 #define LOOP2(x, y) \
-for(int j = 0; j < 4; j++) { \
+for(j = 0; j < 4; j++) { \
     printf("static int16 %s%d[%lu] = {\n\t", #x, j, y); \
     \
-    for (int i = 0; i < y; i++) { \
+    for (i = 0; i < y; i++) { \
         if (i && !(i % 8)) { \
             printf("\n\t"); \
         } \
@@ -285,15 +285,15 @@ for(int j = 0; j < 4; j++) { \
     printf("\n};\n\n"); \
 }
 
-
 int main(int argc, char **argv)
 {
+    int i, j;
+
     cubic_spline_init();
     windowed_fir_init();
 
-    LOOP2(cubic_spline_lut, SPLINE_LUTLEN);
-    //LOOP(windowed_fir_lut, (WFIR_LUTLEN * WFIR_WIDTH));
+    LOOP2(cubic_spline_lut, SPLINE_LUTLEN)
+    //LOOP(windowed_fir_lut, (WFIR_LUTLEN * WFIR_WIDTH))
 
     return 0;
 }
-

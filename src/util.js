@@ -1,11 +1,10 @@
 import queryString from 'querystring';
 import React from 'react';
-import { toArabic } from 'roman-numerals';
 import path from 'path';
 
-import DirectoryLink from './DirectoryLink';
+import DirectoryLink from './components/DirectoryLink';
+import { API_BASE, CATALOG_PREFIX } from './config';
 
-const ROMAN_NUMERAL_REGEX = /\b([IVXLC]+|[ivxlc]+)[-.,)]/; // All upper case or all lower case
 const CATALOG_PREFIX_REGEX = /^https?:\/\/[a-z0-9\-.:]+\/(music|catalog)\//;
 
 export function updateQueryString(newParams) {
@@ -20,16 +19,6 @@ export function updateQueryString(newParams) {
   const stateUrl = '?' + queryString.stringify(params).replace(/%20/g, '+');
   // Update address bar URL
   window.history.replaceState(null, '', stateUrl);
-}
-
-export function replaceRomanWithArabic(str) {
-  // Works up to 399 (CCCXCIX)
-  try {
-    return str.replace(ROMAN_NUMERAL_REGEX, (_, match) => String(toArabic(match)).padStart(4, '0'));
-  } catch (e) {
-    // Ignore false positives like 'mill.', 'did-', or 'mix,'
-    return str;
-  }
 }
 
 export function unlockAudioContext(context) {
@@ -72,13 +61,31 @@ export function pathToLinks(path) {
   return <DirectoryLink dim to={'/browse' + path}>{decodeURI(path)}</DirectoryLink>;
 }
 
+export function getFilepathFromUrl(url) {
+  return url.replace(CATALOG_PREFIX, '/');
+}
+
+export function getMetadataUrlForFilepath(filepath) {
+  return `${API_BASE}/metadata?path=${encodeURIComponent(filepath)}`;
+}
+
+export function getMetadataUrlForCatalogUrl(url) {
+  const filepath = getFilepathFromUrl(url);
+  return getMetadataUrlForFilepath(filepath);
+}
+
 export function ensureEmscFileWithUrl(emscRuntime, filename, url) {
   if (emscRuntime.FS.analyzePath(filename).exists) {
-    console.log(`${filename} exists in Emscripten file system.`);
+    console.debug(`${filename} exists in Emscripten file system.`);
     return Promise.resolve(filename);
   } else {
     console.log(`Downloading ${filename}...`);
     return fetch(url)
+      .then(response => {
+        // Because fetch doesn't reject on 404
+        if(!response.ok) throw Error(`HTTP ${response.status} while fetching ${filename}`);
+        return response;
+      })
       .then(response => response.arrayBuffer())
       .then(buffer => {
         const arr = new Uint8Array(buffer);
@@ -89,23 +96,31 @@ export function ensureEmscFileWithUrl(emscRuntime, filename, url) {
 
 export function ensureEmscFileWithData(emscRuntime, filename, uint8Array, forceWrite=false) {
   if (!forceWrite && emscRuntime.FS.analyzePath(filename).exists) {
-    console.log(`${filename} exists in Emscripten file system.`);
+    console.debug(`${filename} exists in Emscripten file system.`);
     return Promise.resolve(filename);
   } else {
-    console.log(`Writing ${filename} to Emscripten file system...`);
+    console.debug(`Writing ${filename} to Emscripten file system...`);
     const dir = path.dirname(filename);
     emscRuntime.FS.mkdirTree(dir);
     emscRuntime.FS.writeFile(filename, uint8Array);
     return new Promise((resolve, reject) => {
       emscRuntime.FS.syncfs(false, (err) => {
         if (err) {
-          console.log('Error synchronizing to indexeddb.', err);
+          console.error('Error synchronizing to indexeddb.', err);
           reject(err);
         } else {
-          console.log(`Synchronized ${filename} to indexeddb.`);
+          console.debug(`Synchronized ${filename} to indexeddb.`);
           resolve(filename);
         }
       });
     });
   }
+}
+
+export function remap(number, fromLeft, fromRight, toLeft, toRight) {
+  return toLeft + (number - fromLeft) / (fromRight - fromLeft) * (toRight - toLeft)
+}
+
+export function remap01(number, toLeft, toRight) {
+  return remap(number, 0, 1, toLeft, toRight);
 }

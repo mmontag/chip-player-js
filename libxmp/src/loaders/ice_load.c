@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -79,9 +79,9 @@ static int ice_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 	LOAD_INIT();
 
-	hio_read(&ih.title, 20, 1, f);
+	hio_read(ih.title, 20, 1, f);
 	for (i = 0; i < 31; i++) {
-		hio_read(&ih.ins[i].name, 22, 1, f);
+		hio_read(ih.ins[i].name, 22, 1, f);
 		ih.ins[i].len = hio_read16b(f);
 		ih.ins[i].finetune = hio_read8(f);
 		ih.ins[i].volume = hio_read8(f);
@@ -90,7 +90,7 @@ static int ice_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	}
 	ih.len = hio_read8(f);
 	ih.trk = hio_read8(f);
-	hio_read(&ih.ord, 128 * 4, 1, f);
+	hio_read(ih.ord, 128 * 4, 1, f);
 	ih.magic = hio_read32b(f);
 
 	/* Sanity check */
@@ -175,7 +175,10 @@ static int ice_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 		for (j = 0; j < mod->xxt[i]->rows; j++) {
 			event = &mod->xxt[i]->event[j];
-			hio_read(ev, 1, 4, f);
+			if (hio_read(ev, 1, 4, f) < 4) {
+				D_(D_CRIT "read error at track %d", i);
+				return -1;
+			}
 			libxmp_decode_protracker_event(event, ev);
 
 			if (event->fxt == FX_SPEED) {

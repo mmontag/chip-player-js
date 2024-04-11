@@ -41,6 +41,7 @@
 #include <memory>
 #include "dbopl.h"
 #include "../common/mutex.hpp"
+#include "../common/ptr.hpp"
 
 #if defined(__GNUC__) && __GNUC__ > 3
 #define INLINE inline __attribute__((__always_inline__))
@@ -1353,11 +1354,7 @@ static const CacheEntry &ComputeRateDependent( Bit32u rate )
 	double original = OPLRATE;
 	double scale = original / (double)rate;
 
-#if __cplusplus >= 201103L
-	std::unique_ptr<CacheEntry> entry(new CacheEntry);
-#else
-	std::auto_ptr<CacheEntry> entry(new CacheEntry);
-#endif
+	My_UPtr<CacheEntry> entry(new CacheEntry);
 	entry->rate = rate;
 	Bit32u *freqMul = entry->freqMul;
 	Bit32u *linearRates = entry->linearRates;
@@ -1438,8 +1435,8 @@ static const CacheEntry &ComputeRateDependent( Bit32u rate )
 	}
 
 	MutexHolder lock( cache.mutex );
-	if (const CacheEntry *entry = CacheLookupRateDependent( rate ))
-		return *entry;
+	if (const CacheEntry *e = CacheLookupRateDependent( rate ))
+		return *e;
 
 	cache.entries.push_back(entry.get());
 	return *entry.release();

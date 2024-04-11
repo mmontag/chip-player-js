@@ -174,10 +174,16 @@ struct BanksDump
 
         MidiBank(const MidiBank &o)
         {
+            operator=(o);
+        }
+
+        MidiBank &operator=(const MidiBank &o)
+        {
             midiBankId = o.midiBankId;
             msb = o.msb;
             lsb = o.lsb;
             std::memcpy(instruments, o.instruments, sizeof(int_fast32_t) * 128);
+            return *this;
         }
 
         bool operator==(const MidiBank &o)
@@ -278,17 +284,27 @@ struct BanksDump
         uint_fast32_t opId = 0;
         uint_fast32_t d_E862 = 0;
         uint_fast32_t d_40 = 0;
+
         explicit Operator() {}
+
         Operator(const Operator &o)
+        {
+            operator=(o);
+        }
+
+        Operator &operator=(const Operator &o)
         {
             opId = o.opId;
             d_E862 = o.d_E862;
             d_40 = o.d_40;
+            return *this;
         }
+
         bool operator==(const Operator &o)
         {
             return ((d_E862 == o.d_E862) && (d_40 == o.d_40));
         }
+
         bool operator!=(const Operator &o)
         {
             return !operator==(o);
@@ -308,7 +324,9 @@ struct BanksDump
     size_t initBank(size_t bankId, const std::string &title, uint_fast16_t bankSetup);
     void addMidiBank(size_t bankId, bool percussion, MidiBank b);
     void addInstrument(MidiBank &bank, size_t patchId, InstrumentEntry e, Operator *ops, const std::string &meta = std::string());
-    void exportBanks(const std::string &outPath, const std::string &headerName = "adlmidi_db.h");
+    void exportBanks(const std::string &outPath,
+                     bool donntOverride,
+                     const std::string &headerName = "adlmidi_db.h");
 };
 
 

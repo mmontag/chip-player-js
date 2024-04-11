@@ -93,5 +93,8 @@ TEST(test_effect_e9_retrig)
 	xmp_play_frame(opaque);
 	fail_unless(vi->note == 61, "row 0 frame 3");
 	fail_unless(vi->pos0 ==  0, "sample position frame 2");
+
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

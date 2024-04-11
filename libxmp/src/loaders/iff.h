@@ -1,8 +1,8 @@
 #ifndef LIBXMP_IFF_H
 #define LIBXMP_IFF_H
 
-#include "list.h"
-#include "hio.h"
+#include "../hio.h"
+#include "../list.h"
 
 #define IFF_NOBUFFER 0x0001
 
@@ -13,7 +13,7 @@
 #define IFF_SKIP_EMBEDDED	0x10
 #define IFF_CHUNK_TRUNC4	0x20
 
-#define IFF_MAX_CHUNK_SIZE	0x400000
+#define IFF_MAX_CHUNK_SIZE	0x800000
 
 typedef void *iff_handle;
 

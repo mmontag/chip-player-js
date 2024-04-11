@@ -1,3 +1,4 @@
+import EventEmitter from 'events';
 //
 // Player can be viewed as a state machine with
 // 3 states (playing, paused, stopped) and 5 transitions
@@ -18,24 +19,30 @@
 // In the "stop" transition, it is disconnected.
 // "stopped" is synonymous with closed/empty.
 //
-export default class Player {
-  constructor(audioCtx, destNode, chipCore, onPlayerStateUpdate) {
-    this._outerAudioProcess = this._outerAudioProcess.bind(this);
+export default class Player extends EventEmitter {
+  /**
+   * @param {object} core - Emscripten module
+   * @param {number} sampleRate - Audio sample rate
+   * @param {number} [bufferSize=2048] - Audio buffer size
+   * @param {boolean} [debug=false] - Enable debug logging
+   */
+  constructor(core, sampleRate, bufferSize=2048, debug=false) {
+    super();
 
+    this.core = core;
     this.paused = true;
+    this.stopped = true;
     this.fileExtensions = [];
-    this.metadata = {};
-    this.audioCtx = audioCtx;
-    this.destinationNode = destNode;
-    this.onPlayerStateUpdate = onPlayerStateUpdate;
-    this.bufferSize = 2048;
-    this._innerAudioProcess = null;
-    this.audioNode = this.audioCtx.createScriptProcessor(this.bufferSize, 2, 2);
-    this.audioNode.onaudioprocess = this._outerAudioProcess;
-    this.debug = window.location.search.indexOf('debug=true') !== -1;
+    this.metadata = null;
+    this.sampleRate = sampleRate;
+    this.bufferSize = bufferSize;
+    this.debug = debug;
     this.timeCount = 0;
     this.renderTime = 0;
     this.perfLoggingInterval = 100;
+    this.paramDefs = [];
+    this.params = {};
+    this.infoTexts = [];
   }
 
   togglePause() {
@@ -48,6 +55,7 @@ export default class Player {
   }
 
   resume() {
+    this.stopped = false;
     this.paused = false;
   }
 
@@ -55,6 +63,10 @@ export default class Player {
     return this.fileExtensions.indexOf(fileExtension.toLowerCase()) !== -1;
   }
 
+  /**
+   * @param {ArrayBuffer} data - File contents
+   * @param {string} filename - Filename for metadata fallback
+   */
   loadData(data, filename) {
     throw Error('Player.loadData() must be implemented.');
   }
@@ -67,12 +79,13 @@ export default class Player {
     throw Error('Player.isPlaying() must be implemented.');
   }
 
-  setTempo() {
-    console.warn('Player.setTempo() not implemented for this player.');
+  getTempo() { // TODO: rename all tempo to speed
+    console.warn('Player.getTempo() not implemented for this player.');
+    return 1;
   }
 
-  setVoices() {
-    console.warn('Player.setVoices() not implemented for this player.');
+  setTempo() {
+    console.warn('Player.setTempo() not implemented for this player.');
   }
 
   setFadeout(startMs) {
@@ -97,6 +110,15 @@ export default class Player {
     console.warn('Player.getVoiceName() not implemented for this player.');
   }
 
+  getVoiceMask() {
+    console.warn('Player.getVoiceMask() not implemented for this player.');
+    return [];
+  }
+
+  setVoiceMask() {
+    console.warn('Player.setVoiceMask() not implemented for this player.');
+  }
+
   getNumVoices() {
     return 0;
   }
@@ -116,15 +138,30 @@ export default class Player {
     }
   }
 
-  getParamDefs() {
-    return [];
+  getInfoTexts() {
+    return this.infoTexts;
   }
 
-  connect() {
-    if (!this._innerAudioProcess) {
-      throw Error('Player.setAudioProcess has not been called.');
-    }
-    this.audioNode.connect(this.destinationNode);
+  getParamDefs() {
+    return this.paramDefs;
+  }
+
+  getBasePlayerState() {
+    return {
+      metadata: this.getMetadata(),
+      durationMs: this.getDurationMs(),
+      positionMs: this.getPositionMs(),
+      numVoices: this.getNumVoices(),
+      numSubtunes: this.getNumSubtunes(),
+      subtune: this.getSubtune(),
+      paramDefs: this.getParamDefs(),
+      tempo: this.getTempo(),
+      voiceMask: this.getVoiceMask(),
+      voiceNames: [...Array(this.getNumVoices())].map((_, i) => this.getVoiceName(i)),
+      infoTexts: this.getInfoTexts(),
+      isStopped: this.stopped,
+      isPaused: this.paused,
+    };
   }
 
   suspend() {
@@ -132,20 +169,9 @@ export default class Player {
     this.paused = true;
   }
 
-  setOnPlayerStateUpdate(fn) {
-    this.onPlayerStateUpdate = fn;
-  }
-
-  setAudioProcess(fn) {
-    if (typeof fn !== 'function') {
-      throw Error('AudioProcess must be a function.');
-    }
-    this._innerAudioProcess = fn;
-  }
-
-  _outerAudioProcess(event) {
+  processAudio(output) {
     const start = performance.now();
-    this._innerAudioProcess(event);
+    this.processAudioInner(output);
     const end = performance.now();
 
     if (this.debug) {
@@ -153,7 +179,7 @@ export default class Player {
       this.timeCount++;
       if (this.timeCount >= this.perfLoggingInterval) {
         const cost = this.renderTime / this.timeCount;
-        const budget = 1000 * this.bufferSize / this.audioCtx.sampleRate;
+        const budget = 1000 * this.bufferSize / this.sampleRate;
         console.log(
           '[%s] %s ms to render %d frames (%s ms) (%s% utilization)',
           this.constructor.name,
@@ -166,6 +192,10 @@ export default class Player {
         this.timeCount = 0;
       }
     }
+  }
+
+  processAudioInner() {
+    throw Error('Player.processAudioInner() must be implemented.');
   }
 
   muteAudioDuringCall(audioNode, fn) {
@@ -185,6 +215,8 @@ export default class Player {
       fn();
     }
   }
+
+  handleFileSystemReady() {}
 
   static metadataFromFilepath(filepath) {
     // Guess metadata from path/filename for MIDI files.

@@ -1,5 +1,28 @@
+/* ProWizard
+ * Copyright (C) 1998 Asle / ReDoX
+ * Modified in 2020 by Alice Rowan
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 /*
- *   TrackerPacker_v2.c   1998 (c) Asle / ReDoX
+ * TrackerPacker_v2.c
  *
  * Converts TP2 packed MODs back to PTK MODs
  ********************************************************
@@ -7,10 +30,10 @@
  *   - no more open() of input file ... so no more hio_read() !.
  *     It speeds-up the process quite a bit :).
  *
-*/
+ * Currently deadcode as this functionality has been merged into tp3.c.
+ */
 
-#include <string.h>
-#include <stdlib.h>
+#include "prowiz.h"
 
 void Depack_TP2 (FILE * in, FILE * out)
 {
@@ -35,8 +58,8 @@ void Depack_TP2 (FILE * in, FILE * out)
 	if (Save_Status == BAD)
 		return;
 
-	memset(Track_Address, 0, 128 * 4 * 4);
-	memset(pnum, 0, 128);
+	memset(Track_Address, 0, sizeof(Track_Address));
+	memset(pnum, 0, sizeof(pnum));
 
 	// sprintf ( Depacked_OutName , "%ld.mod" , Cpt_Filename-1 );
 	// out = fdopen (fd_out, "w+b");
@@ -88,7 +111,7 @@ void Depack_TP2 (FILE * in, FILE * out)
 		fwrite (&c2, 1, 1, out);
 
 	}
-	memset(tmp, 0, 30);
+	memset(tmp, 0, sizeof(tmp));
 	tmp[29] = 0x01;
 	while (i != 31) {
 		fwrite (tmp, 30, 1, out);
@@ -154,7 +177,7 @@ void Depack_TP2 (FILE * in, FILE * out)
 	/*printf ( "converting pattern data " ); */
 	for (i = 0; i <= PatMax; i++) {
 /*fprintf ( info , "\npattern %ld:\n\n" , i );*/
-		memset(Pattern, 0, 1024);
+		memset(Pattern, 0, sizeof(Pattern));
 		for (j = 0; j < 4; j++) {
 /*fprintf ( info , "track %ld: (at %ld)\n" , j , Track_Address[i][j]+Start_Pat_Address );*/
 			Where =

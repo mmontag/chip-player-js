@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -22,7 +22,7 @@
 
 #include "loader.h"
 #include "mod.h"
-#include "period.h"
+#include "../period.h"
 
 static int flt_test(HIO_HANDLE *, char *, const int);
 static int flt_load(struct module_data *, HIO_HANDLE *, const int);
@@ -209,7 +209,7 @@ static int read_am_instrument(struct module_data *m, HIO_HANDLE *nt, int i)
 	 * Startrekker increments/decrements the envelope by the stage speed
 	 * until it reaches the next stage level.
 	 *
-	 *         ^ 
+	 *         ^
 	 *         |
 	 *     100 +.........o
 	 *         |        /:
@@ -336,9 +336,9 @@ static int flt_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		}
 	}
 
-	hio_read(&mh.name, 20, 1, f);
+	hio_read(mh.name, 20, 1, f);
 	for (i = 0; i < 31; i++) {
-		hio_read(&mh.ins[i].name, 22, 1, f);
+		hio_read(mh.ins[i].name, 22, 1, f);
 		mh.ins[i].size = hio_read16b(f);
 		mh.ins[i].finetune = hio_read8(f);
 		mh.ins[i].volume = hio_read8(f);
@@ -347,8 +347,8 @@ static int flt_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	}
 	mh.len = hio_read8(f);
 	mh.restart = hio_read8(f);
-	hio_read(&mh.order, 128, 1, f);
-	hio_read(&mh.magic, 4, 1, f);
+	hio_read(mh.order, 128, 1, f);
+	hio_read(mh.magic, 4, 1, f);
 
 	if (mh.magic[3] == '4') {
 		mod->chn = 4;
@@ -430,13 +430,19 @@ static int flt_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 		for (j = 0; j < (64 * 4); j++) {
 			event = &EVENT(i, j % 4, j / 4);
-			hio_read(mod_event, 1, 4, f);
+			if (hio_read(mod_event, 1, 4, f) < 4) {
+				D_(D_CRIT "read error at pat %d", i);
+				goto err;
+			}
 			libxmp_decode_noisetracker_event(event, mod_event);
 		}
 		if (mod->chn > 4) {
 			for (j = 0; j < (64 * 4); j++) {
 				event = &EVENT(i, (j % 4) + 4, j / 4);
-				hio_read(mod_event, 1, 4, f);
+				if (hio_read(mod_event, 1, 4, f) < 4) {
+					D_(D_CRIT "read error at pat %d", i);
+					goto err;
+				}
 				libxmp_decode_noisetracker_event(event, mod_event);
 
 				/* no macros */

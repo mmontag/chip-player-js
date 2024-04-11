@@ -1,0 +1,8 @@
+
+ifeq ($(W32),1)
+include mak/w32.mak
+else
+include mak/general.mak
+endif
+
+include mak/lib.mak

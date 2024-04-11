@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 This script is meant to serve source code (C/C++) to the browser for WASM source maps.
-The only reason it's a special script is because it needs to return CORS headers.
+The only reason it's a special script is that it needs to return CORS headers.
 """
 from http.server import HTTPServer, SimpleHTTPRequestHandler, test
 import sys

@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -22,8 +22,8 @@
 
 #include "loader.h"
 #include "mod.h"
-#include "period.h"
-#include "hmn_extras.h"
+#include "../period.h"
+#include "../hmn_extras.h"
 
 /*
  * From http://www.livet.se/mahoney/:
@@ -161,11 +161,11 @@ static int hmn_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	 */
 	memset(mupp, 0, 31 * sizeof (struct mupp));
 
-	hio_read(&mh.name, 20, 1, f);
+	hio_read(mh.name, 20, 1, f);
 	num_mupp = 0;
 
 	for (i = 0; i < 31; i++) {
-		hio_read(&mh.ins[i].name, 22, 1, f);	/* Instrument name */
+		hio_read(mh.ins[i].name, 22, 1, f);	/* Instrument name */
 		if (memcmp(mh.ins[i].name, "Mupp", 4) == 0) {
 			mupp[i].prgon = 1;
 			mupp[i].pattno = mh.ins[i].name[4];
@@ -182,8 +182,8 @@ static int hmn_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	}
 	mh.len = hio_read8(f);
 	mh.restart = hio_read8(f);
-	hio_read(&mh.order, 128, 1, f);
-	hio_read(&mh.magic, 4, 1, f);
+	hio_read(mh.order, 128, 1, f);
+	hio_read(mh.magic, 4, 1, f);
 
 	mod->chn = 4;
 	mod->ins = 31;
@@ -254,7 +254,10 @@ static int hmn_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 		for (j = 0; j < (64 * 4); j++) {
 			event = &EVENT(i, j % 4, j / 4);
-			hio_read(mod_event, 1, 4, f);
+			if (hio_read(mod_event, 1, 4, f) < 4) {
+				D_(D_CRIT "read error at pat %d", i);
+				return -1;
+			}
 			libxmp_decode_protracker_event(event, mod_event);
 
 			switch (event->fxt) {

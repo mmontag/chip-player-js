@@ -1,13 +1,33 @@
-/*
- * Zen_Packer.c   Copyright (C) 1998 Asle / ReDoX
- *
- * Converts ZEN packed MODs back to PTK MODs
- *
+/* ProWizard
+ * Copyright (C) 1998 Asle / ReDoX
  * Modified in 2006,2007,2014 by Claudio Matsuoka
+ * Modified in 2020 by Alice Rowan
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
-#include <string.h>
-#include <stdlib.h>
+/*
+ * Zen_Packer.c
+ *
+ * Converts ZEN packed MODs back to PTK MODs
+ */
+
 #include "prowiz.h"
 
 
@@ -27,9 +47,9 @@ static int depack_zen(HIO_HANDLE *in, FILE *out)
 	int sdata_addr = 999999l;
 	int i, j, k;
 
-	memset(paddr, 0, 128 * 4);
-	memset(paddr2, 0, 128 * 4);
-	memset(ptable, 0, 128);
+	memset(paddr, 0, sizeof(paddr));
+	memset(paddr2, 0, sizeof(paddr2));
+	memset(ptable, 0, sizeof(ptable));
 
 	ptable_addr = hio_read32b(in);	/* read pattern table address */
 	pat_max = hio_read8(in);	/* read patmax */
@@ -106,7 +126,7 @@ static int depack_zen(HIO_HANDLE *in, FILE *out)
 	/* pattern data */
 	/*printf ( "converting pattern datas " ); */
 	for (i = 0; i <= pat_max; i++) {
-		memset(pat, 0, 1024);
+		memset(pat, 0, sizeof(pat));
 		hio_seek(in, paddr2[i], SEEK_SET);
 		for (j = 0; j < 256; j++) {
 			uint8 *p;
@@ -117,6 +137,11 @@ static int depack_zen(HIO_HANDLE *in, FILE *out)
 			c4 = hio_read8(in);
 
 			note = (c2 & 0x7f) / 2;
+
+			if (hio_error(in) || !PTK_IS_VALID_NOTE(note)) {
+				return -1;
+			}
+
 			fxp = c4;
 			ins = ((c2 << 4) & 0x10) | ((c3 >> 4) & 0x0f);
 			fxt = c3 & 0x0f;

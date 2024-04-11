@@ -103,5 +103,8 @@ TEST(test_effect_8_setpan)
 		xmp_get_frame_info(opaque, &info);
 		fail_unless(info.channel_info[0].pan == vals_it_dp[i], "pan error");
 	}
+
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

@@ -1,0 +1,3 @@
+#include <winresrc.h>
+
+123     RT_MANIFEST    "adlconfig.manifest"

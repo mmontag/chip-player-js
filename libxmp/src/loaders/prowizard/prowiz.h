@@ -1,11 +1,10 @@
 #ifndef PROWIZ_H
 #define PROWIZ_H
 
-#include <stdio.h>
-#include "list.h"
-#include "common.h"
-#include "format.h"
-#include "hio.h"
+#include "../../common.h"
+#include "../../format.h"
+#include "../../hio.h"
+/*#include "../../list.h"*/
 
 #define MIN_FILE_LENGHT 2048
 
@@ -19,6 +18,8 @@
 #define PW_REQUEST_DATA(s,n) \
 	do { if ((s)<(n)) return ((n)-(s)); } while (0)
 
+#define PTK_IS_VALID_NOTE(n) ((n) < ARRAY_SIZE(ptk_table))
+
 /*
  * depackb() and depackf() perform the same action reading the packed
  * module from a buffer or a file. We're supporting both protocols to
@@ -29,14 +30,14 @@ struct pw_format {
 	const char *name;
 	int (*test)(const uint8 *, char *, int);
 	int (*depack)(HIO_HANDLE *, FILE *);
-	struct list_head list;
+	/*struct list_head list;*/
 };
 
 int pw_wizardry(HIO_HANDLE *, FILE *, const char **);
 int pw_move_data(FILE *, HIO_HANDLE *, int);
 int pw_write_zero(FILE *, int);
 /* int pw_enable(char *, int); */
-int pw_check(unsigned char *, int, struct xmp_test_info *);
+const struct pw_format *pw_check(HIO_HANDLE *, struct xmp_test_info *);
 void pw_read_title(const unsigned char *, char *, int);
 
 extern const uint8 ptk_table[37][2];

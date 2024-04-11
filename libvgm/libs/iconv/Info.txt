@@ -1,0 +1,11 @@
+libiconv-1.15
+http://www.gnu.org/software/libiconv/
+
+Compiled using Visual Studio 2010, DLL, Release Mode, Multithreaded-DLL runtime
+https://github.com/kiyolee/libiconv-win-build
+
+Files:
+	include/iconv.h
+	lib/libiconv.dll
+	lib/libiconv.exp
+	lib/libiconv.lib

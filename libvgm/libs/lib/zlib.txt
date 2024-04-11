@@ -1,0 +1,8 @@
+zlib 1.2.11 MSVC libraries
+--------------------------
+zdll.lib - for dynamic linking to zlib1.dll [compiled with MSVC 6]
+zlib.def - exported functions
+zlib.lib - for static linking, Win32 Release [compiled with MSVC 6]
+zlibd.lib - for static linking, Win32 Debug [compiled with MSVC 6]
+zlib64.lib - for static linking, Win64 Release [compiled with MSVC 2010]
+zlib64d.lib - for static linking, Win64 Debug [compiled with MSVC 2010]

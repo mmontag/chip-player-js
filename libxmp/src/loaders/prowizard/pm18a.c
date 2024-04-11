@@ -1,23 +1,43 @@
+/* ProWizard
+ * Copyright (C) 1997 Asle / ReDoX
+ * Modified in 2006,2007,2014 by Claudio Matsuoka
+ * Modified in 2021 by Alice Rowan
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 /*
- * Promizer_18a.c   Copyright (C) 1997 Asle / ReDoX
+ * Promizer_18a.c
  *
  * Converts PM18a packed MODs back to PTK MODs
  * thanks to Gryzor and his ProWizard tool ! ... without it, this prog
  * would not exist !!!
- *
- * Modified in 2006,2007,2014 by Claudio Matsuoka
  */
 
-#include <string.h>
-#include <stdlib.h>
 #include "prowiz.h"
 
 
 static int depack_p18a(HIO_HANDLE *in, FILE *out)
 {
 	short pat_max;
-	int tmp_ptr;
 	int refmax;
+	int refsize;
 	uint8 pnum[128];
 	int paddr[128];
 	short pptr[64][256];
@@ -31,17 +51,23 @@ static int depack_p18a(HIO_HANDLE *in, FILE *out)
 	uint8 fin[31];
 	uint8 oldins[4];
 
-	memset(pnum, 0, 128);
-	memset(pptr, 0, 64 << 8);
-	memset(pat, 0, 128 * 1024);
-	memset(fin, 0, 31);
-	memset(oldins, 0, 4);
-	memset(paddr, 0, 128 * 4);
+	memset(pnum, 0, sizeof(pnum));
+	memset(pptr, 0, sizeof(pptr));
+	memset(pat, 0, sizeof(pat));
+	memset(fin, 0, sizeof(fin));
+	memset(oldins, 0, sizeof(oldins));
+	memset(paddr, 0, sizeof(paddr));
 
 	pw_write_zero(out, 20);				/* title */
 
 	/* bypass replaycode routine */
-	hio_seek(in, 4464, SEEK_SET);
+	hio_seek(in, 4460, SEEK_SET);
+	psize = hio_read32b(in);
+
+	/* Sanity check */
+	if (psize < 0) {
+		return -1;
+	}
 
 	ssize = 0;
 	for (i = 0; i < 31; i++) {
@@ -64,16 +90,22 @@ static int depack_p18a(HIO_HANDLE *in, FILE *out)
 	write8(out, num_pat);
 	write8(out, 0x7f);				/* NoiseTracker byte */
 
-	for (i = 0; i < 128; i++)
+	for (i = 0; i < 128; i++) {
 		paddr[i] = hio_read32b(in);
+
+		/* Sanity check */
+		if (paddr[i] < 0 || paddr[i] - 5226 > psize) {
+			return -1;
+		}
+	}
+	/* At 5226 now, the start of the pattern data. */
 
 	/* ordering of patterns addresses */
 
-	tmp_ptr = 0;
+	pat_max = 0;
 	for (i = 0; i < num_pat; i++) {
 		if (i == 0) {
 			pnum[0] = 0;
-			tmp_ptr++;
 			continue;
 		}
 		for (j = 0; j < i; j++) {
@@ -83,10 +115,8 @@ static int depack_p18a(HIO_HANDLE *in, FILE *out)
 			}
 		}
 		if (j == i)
-			pnum[i] = tmp_ptr++;
+			pnum[i] = (++pat_max);
 	}
-
-	pat_max = tmp_ptr - 1;
 
 	fwrite(pnum, 128, 1, out);		/* pattern table */
 	write32b(out, PW_MOD_MAGIC);		/* M.K. */
@@ -95,9 +125,6 @@ static int depack_p18a(HIO_HANDLE *in, FILE *out)
 	/* a little pre-calc code ... no other way to deal with these unknown
 	 * pattern data sizes ! :(
 	 */
-	hio_seek(in, 4460, SEEK_SET);
-	psize = hio_read32b(in);
-	hio_seek(in, 5226, SEEK_SET);	/* back to pattern data start */
 
 	/* now, reading all pattern data to get the max value of note */
 	refmax = 0;
@@ -112,22 +139,30 @@ static int depack_p18a(HIO_HANDLE *in, FILE *out)
 
 	/* read "reference table" */
 	refmax += 1;			/* 1st value is 0 ! */
-	i = refmax * 4;			/* each block is 4 bytes long */
-	if ((reftab = (uint8 *)malloc(i)) == NULL) {
+	refsize = refmax * 4;		/* each block is 4 bytes long */
+	if ((reftab = (uint8 *)malloc(refsize)) == NULL) {
 		return -1;
 	}
-	
-	hio_read(reftab, i, 1, in);
+
+	if (hio_read(reftab, refsize, 1, in) < 1) {
+		goto err;
+	}
+
 	hio_seek(in, 5226, SEEK_SET);	/* back to pattern data start */
 
 	for (j = 0; j <= pat_max; j++) {
 		int flag = 0;
-		hio_seek(in, paddr[j] + 5226, 0);
+		hio_seek(in, paddr[j] + 5226, SEEK_SET);
 		for (i = 0; i < 64; i++) {
 			for (k = 0; k < 4; k++) {
 				uint8 *p = &pat[j][i * 16 + k * 4];
 				int x = hio_read16b(in) << 2;
 				int fine, ins, per, fxt;
+
+				/* Sanity check */
+				if (x >= refsize || hio_error(in)) {
+					goto err;
+				}
 
 				memcpy(p, &reftab[x], 4);
 

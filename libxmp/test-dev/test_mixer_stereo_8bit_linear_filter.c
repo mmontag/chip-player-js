@@ -27,7 +27,8 @@ TEST(test_mixer_stereo_8bit_linear_filter)
 		xmp_play_frame(opaque);
 		xmp_get_frame_info(opaque, &info);
 		for (k = j = 0; j < info.buffer_size / 4; j++) {
-			fscanf(f, "%d", &val);
+			int ret = fscanf(f, "%d", &val);
+			fail_unless(ret == 1, "read error");
 			fail_unless(abs(s->buf32[k++] - val) <= 1, "mixing error L");
 			fail_unless(abs(s->buf32[k++] - val) <= 1, "mixing error R");
 		}

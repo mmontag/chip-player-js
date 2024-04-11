@@ -5,46 +5,53 @@
   "repository": "https://github.com/mmontag/chip-player-js",
   "description": "Web-based music player for a variety of video game and chiptune music formats.",
   "dependencies": {
-    "@babel/core": "7.4.3",
-    "@typescript-eslint/eslint-plugin": "1.10.2",
-    "@typescript-eslint/parser": "1.10.2",
+    "@babel/core": "^7.22.5",
+    "@babel/eslint-parser": "^7.22.5",
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@babel/plugin-syntax-flow": "^7.14.5",
+    "@babel/plugin-syntax-bigint": "^7.8.3",
+    "@babel/plugin-transform-optional-chaining": "^7.22.5",
+    "@babel/plugin-transform-react-jsx": "^7.14.9",
+    "@babel/preset-env": "^7.22.5",
+    "@babel/preset-react": "^7.22.5",
+    "@typescript-eslint/eslint-plugin": "5.59.9",
+    "@typescript-eslint/parser": "5.59.9",
+    "auto-bind": "^5.0.1",
     "autoprefixer": "7.1.6",
-    "babel-eslint": "10.0.1",
     "babel-jest": "24.8.0",
-    "babel-loader": "^8.0.6",
+    "babel-loader": "^8.3.0",
     "babel-plugin-named-asset-import": "^0.3.2",
-    "babel-preset-react-app": "^9.0.0",
     "bytes": "latest",
     "case-sensitive-paths-webpack-plugin": "2.1.1",
     "chalk": "^2.4.1",
     "chroma-js": "^1.4.0",
     "css-loader": "0.28.7",
-    "directory-tree": "^2.2.1",
+    "directory-tree": "2.2.1",
     "dotenv": "4.0.0",
     "dotenv-expand": "4.2.0",
-    "eslint": "^5.16.0",
-    "eslint-config-react-app": "^4.0.1",
-    "eslint-loader": "2.1.2",
-    "eslint-plugin-flowtype": "2.50.1",
-    "eslint-plugin-import": "2.16.0",
-    "eslint-plugin-jsx-a11y": "6.2.1",
-    "eslint-plugin-react": "7.12.4",
-    "eslint-plugin-react-hooks": "^1.5.0",
+    "eslint": "^8.42.0",
+    "eslint-config-react-app": "^7.0.1",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-jsx-a11y": "^6.7.1",
+    "eslint-plugin-react": "^7.32.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-webpack-plugin": "^2.7.0",
+    "events": "^3.3.0",
     "file-loader": "3.0.1",
     "fili": "^2.0.3",
-    "firebase": "^5.7.0",
+    "firebase": "^9.13.0",
     "fs-extra": "3.0.1",
     "html-webpack-plugin": "^4.0.0-beta.5",
     "immutability-helper": "^2.7.1",
     "ismobilejs": "^0.4.1",
     "jest": "20.0.4",
-    "lodash": "^4.17.19",
+    "lodash": "^4.17.21",
     "midievents": "latest",
     "midifile": "^2.0.0",
     "mini-css-extract-plugin": "^0.7.0",
     "node-unrar-js": "^0.8.1",
     "object-assign": "4.1.1",
-    "path-parse": "^1.0.6",
+    "path-parse": "^1.0.7",
     "postcss-flexbugs-fixes": "3.2.0",
     "postcss-loader": "2.0.8",
     "promise": "8.0.1",
@@ -55,17 +62,17 @@
     "react-dom": "^16.8.0",
     "react-dropzone": "7.0.0",
     "react-router-dom": "^5.2.0",
-    "react-virtual-list": "^2.3.0",
+    "react-virtual-list": "git+https://github.com/glebcha/react-virtual-list.git#544bc7",
     "resolve": "1.6.0",
     "roman-numerals": "^0.3.2",
     "style-loader": "0.19.0",
     "typescript": "^3.5.2",
     "url-loader": "0.6.2",
-    "webpack": "4.29.6",
-    "webpack-dev-server": "3.2.1",
-    "webpack-manifest-plugin": "^2.0.4",
+    "webpack": "^4.46.0",
+    "webpack-dev-server": "^3.11.3",
+    "webpack-manifest-plugin": "^2.2.0",
     "whatwg-fetch": "2.0.3",
-    "workbox-webpack-plugin": "4.2.0"
+    "workbox-webpack-plugin": "^4.3.1"
   },
   "devDependencies": {
     "@firebase/app-types": "0.x",
@@ -81,14 +88,14 @@
     "request-promise": "^4.2.2",
     "sanitize-filename": "^1.6.1",
     "sqlite": "^3.0.0",
-    "sqlite3": "^4.0.2",
+    "sqlite3": "^5.1.4",
     "tmp": "^0.0.33",
     "trie-search": "1.2.8",
     "unzipper": "^0.9.3",
     "webpack-bundle-analyzer": "^3.3.2",
     "worker-loader": "^2.0.0"
   },
-  "homepage": "http://mmontag.github.io/chip-player-js",
+  "homepage": "https://chiptune.app",
   "scripts": {
     "start": "node scripts/start.js",
     "build": "npm run build-catalog; npm run build-chip-core; node scripts/build.js",
@@ -100,6 +107,7 @@
     "deploy": "gh-pages -d build",
     "deploy-lite": "npm run build-lite; gh-pages -d build",
     "prepare": "patch-package",
+    "server": "DEV=1 node public/index.js",
     "fixvgm": "node $NODE_DEBUG_OPTION scripts/fixvgm.js"
   },
   "jest": {
@@ -136,16 +144,16 @@
       "mjs"
     ]
   },
-  "babel": {
-    "presets": [
-      "react-app"
-    ]
-  },
   "eslintConfig": {
     "extends": "react-app",
+    "env": {
+      "es2020": true
+    },
     "rules": {
       "jsx-a11y/href-no-hash": "off",
-      "jsx-a11y/anchor-is-valid": "off"
+      "jsx-a11y/anchor-is-valid": "off",
+      "no-fallthrough": "off",
+      "import/no-anonymous-default-export": "off"
     }
   }
 }

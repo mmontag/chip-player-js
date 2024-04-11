@@ -1,6 +1,6 @@
 set(CMAKE_CXX_STANDARD 11)
 
-find_package(OpenMP)
+find_package(OpenMP QUIET)
 if(OPENMP_FOUND)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
@@ -8,8 +8,13 @@ endif()
 
 if(NOT WIN32 AND NOT ADLMIDI_DOS)
     option(ADLMIDI2_HAS_PUZZLE_GAME     "Enable the built-in puzzle game" ON)
+endif()
+if(NOT ADLMIDI_DOS)
     option(ADLMIDI2_VIDEO_OUT_SUPPORT   "Allow video recording with using of FFMPEG" ON)
 endif()
+
+try_compile(HAS_TERMIO ${CMAKE_BINARY_DIR}/compile_tests "${CMAKE_CURRENT_SOURCE_DIR}/cmake/check-termio.c")
+try_compile(HAS_TERMIOS ${CMAKE_BINARY_DIR}/compile_tests "${CMAKE_CURRENT_SOURCE_DIR}/cmake/check-termios.c")
 
 set(adlmidi2_src)
 list(APPEND adlmidi2_src
@@ -30,6 +35,14 @@ if(NOT WIN32 AND NOT ADLMIDI_DOS)
 endif()
 
 set_nopie(adlmidi2)
+
+if(HAS_TERMIO)
+    target_compile_definitions(adlmidi2 PRIVATE -DHAS_TERMIO)
+endif()
+
+if(HAS_TERMIOS)
+    target_compile_definitions(adlmidi2 PRIVATE -DHAS_TERMIOS)
+endif()
 
 if(ADLMIDI2_HAS_PUZZLE_GAME)
     target_compile_definitions(adlmidi2 PUBLIC SUPPORT_PUZZLE_GAME)

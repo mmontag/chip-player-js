@@ -1,13 +1,33 @@
-/*
- * Digital_Illusion.c   Copyright (C) 1997 Asle / ReDoX
- *
- * Converts DI packed MODs back to PTK MODs
- *
+/* ProWizard
+ * Copyright (C) 1997 Asle / ReDoX
  * Modified in 2006,2007,2014 by Claudio Matsuoka
+ * Modified in 2021 by Alice Rowan
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
-#include <string.h>
-#include <stdlib.h>
+/*
+ * Digital_Illusion.c
+ *
+ * Converts DI packed MODs back to PTK MODs
+ */
+
 #include "prowiz.h"
 
 
@@ -17,7 +37,7 @@ static int write_event(uint8 c1, uint8 c2, uint8 fxp, FILE *out)
 	uint8 p[4];
 
 	note = ((c1 << 4) & 0x30) | ((c2 >> 4) & 0x0f);
-	if (note >= 37) {
+	if (!PTK_IS_VALID_NOTE(note)) {
 		/* di.nightmare has note 49! */
 		uint32 x = 0;
 		fwrite(&x, 4, 1, out);
@@ -48,8 +68,8 @@ static int depack_di(HIO_HANDLE *in, FILE *out)
 	int size, ssize;
 	int pos;
 
-	memset(ptable, 0, 128);
-	memset(paddr, 0, 256);
+	memset(ptable, 0, sizeof(ptable));
+	memset(paddr, 0, sizeof(paddr));
 
 	pw_write_zero(out, 20);			/* title */
 
@@ -74,7 +94,7 @@ static int depack_di(HIO_HANDLE *in, FILE *out)
 		write16b(out, hio_read16b(in));		/* loop size */
 	}
 
-	memset(tmp, 0, 50);
+	memset(tmp, 0, sizeof(tmp));
 	for (i = nins; i < 31; i++) {
 		fwrite(tmp, 30, 1, out);
 	}
@@ -99,6 +119,11 @@ static int depack_di(HIO_HANDLE *in, FILE *out)
 		write8(out, ptable[i]);
 		if (ptable[i] > max)
 			max = ptable[i];
+	}
+
+	/* Sanity check */
+	if (max >= 128) {
+		return -1;
 	}
 
 	write32b(out, PW_MOD_MAGIC);
@@ -143,7 +168,7 @@ static int test_di(const uint8 *data, char *t, int s)
 	int numsmp, ssize, psize;
 	int ptab_offs, pat_offs, smp_offs;
 
-	PW_REQUEST_DATA (s, 21);
+	PW_REQUEST_DATA(s, 14);
 
 #if 0
 	/* test #1 */
@@ -158,13 +183,15 @@ static int test_di(const uint8 *data, char *t, int s)
 	if (numsmp > 31)
 		return -1;
 
+	PW_REQUEST_DATA(s, 14 + numsmp*8);
+
 	/* test #3 (finetunes and whole sample size) */
 	ssize = 0;
 	for (i = 0; i < numsmp; i++) {
-		int len = readmem16b(data + 14) << 1;
-		int start = readmem16b(data + 18) << 1;
-		int lsize = readmem16b(data + 20) << 1;
 		const uint8 *d = data + i * 8;
+		int len = readmem16b(d + 14) << 1;
+		int start = readmem16b(d + 18) << 1;
+		int lsize = readmem16b(d + 20) << 1;
 
 		if (len > 0xffff || start > 0xffff || lsize > 0xffff)
 			return -1;
@@ -193,6 +220,10 @@ static int test_di(const uint8 *data, char *t, int s)
 	pat_offs = readmem32b(data + 6);	/* address of pattern data */
 	smp_offs = readmem32b(data + 10);	/* address of sample data */
 
+	/* test #4,1 :) */
+	if (ptab_offs < psize)
+		return -1;
+
 	if (pat_offs <= ptab_offs || smp_offs <= ptab_offs || smp_offs <= pat_offs)
 		return -1;
 
@@ -204,10 +235,6 @@ static int test_di(const uint8 *data, char *t, int s)
 		return -1;
 #endif
 
-	/* test #4,1 :) */
-	if (ptab_offs < psize)
-		return -1;
-
 #if 0
 	/* test #5 */
 	if ((pat_offs + start) > in_size) {
@@ -216,7 +243,7 @@ static int test_di(const uint8 *data, char *t, int s)
 	}
 #endif
 
-	PW_REQUEST_DATA(s, pat_offs - 1);
+	PW_REQUEST_DATA(s, pat_offs);
 
 	/* test pattern table reliability */
 	for (i = ptab_offs; i < pat_offs - 1; i++) {

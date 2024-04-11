@@ -1,8 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "md5.h"
+#include "../src/md5.h"
 #include "xmp.h"
+
+#ifdef LIBXMP_NO_DEPACKERS
+#define TEST_IT_FILE "test.it"
+#else
+#define TEST_IT_FILE "test.itz"
+#endif
 
 static inline int is_big_endian() {
 	unsigned short w = 0x00ff;
@@ -23,13 +29,15 @@ static void convert_endian(unsigned char *p, int l)
 	}
 }
 
-static int compare_md5(unsigned char *d, char *digest)
+static int compare_md5(const unsigned char *d, const char *digest)
 {
 	int i;
 
-	/*for (i = 0; i < 16 ; i++)
+	/*
+	for (i = 0; i < 16 ; i++)
 		printf("%02x", d[i]);
-	printf("\n");*/
+	printf("\n");
+	*/
 
 	for (i = 0; i < 16 && *digest; i++, digest += 2) {
 		char hex[3];
@@ -44,7 +52,7 @@ static int compare_md5(unsigned char *d, char *digest)
 	return 0;
 }
 
-int main()
+int main(void)
 {
 	int ret;
 	xmp_context c;
@@ -57,7 +65,7 @@ int main()
 	if (c == NULL)
 		goto err;
 
-	ret = xmp_load_module(c, "test.itz");
+	ret = xmp_load_module(c, TEST_IT_FILE);
 	if (ret != 0) {
 		printf("can't load module\n");
 		goto err;
@@ -88,9 +96,9 @@ int main()
 		time += info.frame_time;
 
 		if (is_big_endian())
-			convert_endian(info.buffer, info.buffer_size >> 1);
+			convert_endian((unsigned char *)info.buffer, info.buffer_size >> 1);
 
-		MD5Update(&ctx, info.buffer, info.buffer_size);
+		MD5Update(&ctx, (unsigned char *)info.buffer, info.buffer_size);
 
 		printf(".");
 		fflush(stdout);
@@ -98,7 +106,12 @@ int main()
 
 	MD5Final(digest, &ctx);
 
-	if (compare_md5(digest, "8ddeaa84bf9d90fd3b3c0a19453d005b") < 0) {
+	/*
+	  x87 floating point results in a very slightly different output from
+	  SSE and other floating point implementations, so check two hashes.
+	 */
+	if (compare_md5(digest, "28cb82d8774f4388a91e32cc6d3a29ed") < 0 && /* SSE2 */
+	    compare_md5(digest, "051d9d24253f9cf010672a0c2625034f") < 0) { /* x87 */
 		printf("rendering error\n");
 		goto err;
 	}
@@ -110,9 +123,15 @@ int main()
 
 	printf(" pass\n");
 
+	xmp_release_module(c);
+	xmp_free_context(c);
 	exit(0);
 
     err:
 	printf(" fail\n");
+	if (c) {
+		xmp_release_module(c);
+		xmp_free_context(c);
+	}
 	exit(1);
 }

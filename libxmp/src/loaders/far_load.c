@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -27,6 +27,7 @@
  */
 
 #include "loader.h"
+#include "../far_extras.h"
 
 struct far_header {
 	uint32 magic;		/* File magic: 'FAR\xfe' */
@@ -92,67 +93,163 @@ static int far_test(HIO_HANDLE *f, char *t, const int start)
 }
 
 
-#define NONE			0xff
-#define FX_FAR_SETVIBRATO	0xfe
-#define FX_FAR_VSLIDE_UP	0xfd
-#define FX_FAR_VSLIDE_DN	0xfc
-#define FX_FAR_RETRIG		0xfb
-#define FX_FAR_DELAY		0xfa
-#define FX_FAR_PORTA_UP		0xf9
-#define FX_FAR_PORTA_DN		0xf8
+static void far_translate_effect(struct xmp_event *event, int fx, int param, int vol)
+{
+	switch (fx) {
+	case 0x0:		/* 0x0?  Global funct */
+		switch (param) {
+		case 0x1:	/* 0x01  Ramp delay on */
+		case 0x2:	/* 0x02  Ramp delay off */
+			/* These control volume ramping and can be ignored. */
+			break;
+		case 0x3:	/* 0x03  Fulfill loop */
+			/* This is intended to be sustain release, but the
+			 * effect is buggy and just cuts most of the time. */
+			event->fxt = FX_KEYOFF;
+			break;
+		case 0x4:	/* 0x04  Old FAR tempo */
+			event->fxt = FX_FAR_TEMPO;
+			event->fxp = 0x10;
+			break;
+		case 0x5:	/* 0x05  New FAR tempo */
+			event->fxt = FX_FAR_TEMPO;
+			event->fxp = 0x20;
+			break;
+		}
+		break;
+	case 0x1:		/* 0x1?  Pitch offset up */
+		event->fxt = FX_FAR_PORTA_UP;
+		event->fxp = param;
+		break;
+	case 0x2:		/* 0x2?  Pitch offset down */
+		event->fxt = FX_FAR_PORTA_DN;
+		event->fxp = param;
+		break;
+	case 0x3:		/* 0x3?  Note-port */
+		event->fxt = FX_FAR_TPORTA;
+		event->fxp = param;
+		break;
+	case 0x4:			/* 0x4?  Retrigger */
+		event->fxt = FX_FAR_RETRIG;
+		event->fxp = param;
+		break;
+	case 0x5:			/* 0x5?  Set Vibrato depth */
+		event->fxt = FX_FAR_VIBDEPTH;
+		event->fxp = param;
+		break;
+	case 0x6:			/* 0x6?  Vibrato note */
+		event->fxt = FX_FAR_VIBRATO;
+		event->fxp = param;
+		break;
+	case 0x7:			/* 0x7?  Vol Sld Up */
+		event->fxt = FX_F_VSLIDE_UP;
+		event->fxp = (param << 4);
+		break;
+	case 0x8:			/* 0x8?  Vol Sld Dn */
+		event->fxt = FX_F_VSLIDE_DN;
+		event->fxp = (param << 4);
+		break;
+	case 0x9:			/* 0x9?  Sustained vibrato */
+		event->fxt = FX_FAR_VIBRATO;
+		event->fxp = 0x10 /* Vibrato sustain flag */ | param;
+		break;
+	case 0xa:			/* 0xa?  Slide-to-vol */
+		if (vol >= 0x01 && vol <= 0x10) {
+			event->fxt = FX_FAR_SLIDEVOL;
+			event->fxp = ((vol - 1) << 4) | param;
+			event->vol = 0;
+		}
+		break;
+	case 0xb:			/* 0xb?  Balance */
+		event->fxt = FX_SETPAN;
+		event->fxp = (param << 4) | param;
+		break;
+	case 0xc:			/* 0xc?  Note Offset */
+		event->fxt = FX_FAR_DELAY;
+		event->fxp = param;
+		break;
+	case 0xd:			/* 0xd?  Fine tempo down */
+		event->fxt = FX_FAR_F_TEMPO;
+		event->fxp = param;
+		break;
+	case 0xe:			/* 0xe?  Fine tempo up */
+		event->fxt = FX_FAR_F_TEMPO;
+		event->fxp = param << 4;
+		break;
+	case 0xf:			/* 0xf?  Set tempo */
+		event->fxt = FX_FAR_TEMPO;
+		event->fxp = param;
+		break;
+	}
+}
 
-static const uint8 fx[] = {
-    NONE,
-    FX_FAR_PORTA_UP,		/* 0x1?  Pitch Adjust */
-    FX_FAR_PORTA_DN,		/* 0x2?  Pitch Adjust */
-    FX_PER_TPORTA,		/* 0x3?  Port to Note -- FIXME */
-    FX_FAR_RETRIG,		/* 0x4?  Retrigger */
-    FX_FAR_SETVIBRATO,		/* 0x5?  Set VibDepth */
-    FX_VIBRATO,			/* 0x6?  Vibrato note */
-    FX_FAR_VSLIDE_UP,		/* 0x7?  VolSld Up */
-    FX_FAR_VSLIDE_DN,		/* 0x8?  VolSld Dn */
-    FX_PER_VIBRATO,		/* 0x9?  Vibrato Sust */
-    NONE,			/* 0xa?  Port To Vol */
-    NONE,			/* N/A */
-    FX_FAR_DELAY,		/* 0xc?  Note Offset */
-    NONE,			/* 0xd?  Fine Tempo dn */
-    NONE,			/* 0xe?  Fine Tempo up */
-    FX_SPEED			/* 0xf?  Tempo */
-};
+#define COMMENT_MAXLINES 44
 
+static void far_read_text(char *dest, size_t textlen, HIO_HANDLE *f)
+{
+	/* FAR module text uses 132-char lines with no line breaks... */
+	size_t end, lastchar, i;
+
+	if (textlen > COMMENT_MAXLINES * 132)
+		textlen = COMMENT_MAXLINES * 132;
+
+	while (textlen) {
+		end = MIN(textlen, 132);
+		textlen -= end;
+		end = hio_read(dest, 1, end, f);
+
+		lastchar = 0;
+		for (i = 0; i < end; i++) {
+			/* Nulls in the text area are equivalent to spaces. */
+			if (dest[i] == '\0')
+				dest[i] = ' ';
+			else if (dest[i] != ' ')
+				lastchar = i;
+		}
+		dest += lastchar + 1;
+		*dest++ = '\n';
+	}
+	*dest = '\0';
+}
 
 static int far_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
-    int i, j, vib = 0;
+    struct far_module_extras *me;
+    int i, j, k;
     struct xmp_event *event;
     struct far_header ffh;
     struct far_header2 ffh2;
     struct far_instrument fih;
+    uint8 *patbuf = NULL;
     uint8 sample_map[8];
 
     LOAD_INIT();
 
     hio_read32b(f);			/* File magic: 'FAR\xfe' */
-    hio_read(&ffh.name, 40, 1, f);	/* Song name */
-    hio_read(&ffh.crlf, 3, 1, f);	/* 0x0d 0x0a 0x1A */
+    hio_read(ffh.name, 40, 1, f);	/* Song name */
+    hio_read(ffh.crlf, 3, 1, f);	/* 0x0d 0x0a 0x1A */
     ffh.headersize = hio_read16l(f);	/* Remaining header size in bytes */
     ffh.version = hio_read8(f);		/* Version MSN=major, LSN=minor */
-    hio_read(&ffh.ch_on, 16, 1, f);	/* Channel on/off switches */
+    hio_read(ffh.ch_on, 16, 1, f);	/* Channel on/off switches */
     hio_seek(f, 9, SEEK_CUR);		/* Current editing values */
     ffh.tempo = hio_read8(f);		/* Default tempo */
-    hio_read(&ffh.pan, 16, 1, f);	/* Channel pan definitions */
+    hio_read(ffh.pan, 16, 1, f);	/* Channel pan definitions */
     hio_read32l(f);			/* Grid, mode (for editor) */
     ffh.textlen = hio_read16l(f);	/* Length of embedded text */
 
     /* Sanity check */
-    if (ffh.tempo == 0) {
+    if (ffh.tempo >= 16) {
 	return -1;
     }
 
-    hio_seek(f, ffh.textlen, SEEK_CUR);	/* Skip song text */
+    if ((m->comment = (char *)malloc(ffh.textlen + COMMENT_MAXLINES + 1)) != NULL) {
+	far_read_text(m->comment, ffh.textlen, f);
+    } else {
+	hio_seek(f, ffh.textlen, SEEK_CUR);	/* Skip song text */
+    }
 
-    hio_read(&ffh2.order, 256, 1, f);	/* Orders */
+    hio_read(ffh2.order, 256, 1, f);	/* Orders */
     ffh2.patterns = hio_read8(f);	/* Number of stored patterns (?) */
     ffh2.songlen = hio_read8(f);	/* Song length in patterns */
     ffh2.restart = hio_read8(f);	/* Restart pos */
@@ -164,19 +261,45 @@ static int far_load(struct module_data *m, HIO_HANDLE *f, const int start)
         return -1;
     }
 
+    /* Skip unsupported header extension if it exists. The documentation claims
+     * this field is the "remaining" header size, but it's the total size. */
+    if (ffh.headersize > 869 + ffh.textlen) {
+	if (hio_seek(f, ffh.headersize, SEEK_SET))
+	    return -1;
+    }
+
     mod->chn = 16;
     /*mod->pat=ffh2.patterns; (Error in specs? --claudio) */
     mod->len = ffh2.songlen;
-    mod->spd = 6;
-    mod->bpm = 8 * 60 / ffh.tempo;
+    mod->rst = ffh2.restart;
     memcpy (mod->xxo, ffh2.order, mod->len);
 
     for (mod->pat = i = 0; i < 256; i++) {
 	if (ffh2.patsize[i])
 	    mod->pat = i + 1;
     }
+    /* Make sure referenced zero-sized patterns are also counted. */
+    for (i = 0; i < mod->len; i++) {
+	if (mod->pat <= mod->xxo[i])
+	    mod->pat = mod->xxo[i] + 1;
+    }
 
     mod->trk = mod->chn * mod->pat;
+
+    if (libxmp_far_new_module_extras(m) != 0)
+	return -1;
+
+    me = FAR_MODULE_EXTRAS(*m);
+    me->coarse_tempo = ffh.tempo;
+    me->fine_tempo = 0;
+    me->tempo_mode = 1;
+    m->time_factor = FAR_TIME_FACTOR;
+    libxmp_far_translate_tempo(1, 0, me->coarse_tempo, &me->fine_tempo, &mod->spd, &mod->bpm);
+
+    m->period_type = PERIOD_CSPD;
+    m->c4rate = C4_NTSC_RATE;
+
+    m->quirk |= QUIRK_VSALL | QUIRK_PBALL | QUIRK_VIBALL;
 
     strncpy(mod->name, (char *)ffh.name, 40);
     libxmp_set_type(m, "Farandole Composer %d.%d", MSN(ffh.version), LSN(ffh.version));
@@ -190,12 +313,16 @@ static int far_load(struct module_data *m, HIO_HANDLE *f, const int start)
     D_(D_INFO "Comment bytes  : %d", ffh.textlen);
     D_(D_INFO "Stored patterns: %d", mod->pat);
 
+    if ((patbuf = (uint8 *)malloc(256 * 16 * 4)) == NULL)
+	return -1;
+
     for (i = 0; i < mod->pat; i++) {
 	uint8 brk, note, ins, vol, fxb;
+	uint8 *pos;
 	int rows;
 
 	if (libxmp_alloc_pattern(mod, i) < 0)
-	    return -1;
+	    goto err;
 
 	if (!ffh2.patsize[i])
 	    continue;
@@ -204,92 +331,65 @@ static int far_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	/* Sanity check */
 	if (rows <= 0 || rows > 256) {
-	    return -1;
+	    goto err;
 	}
 
 	mod->xxp[i]->rows = rows;
 
 	if (libxmp_alloc_tracks_in_pattern(mod, i) < 0)
-	    return -1;
+	    goto err;
 
 	brk = hio_read8(f) + 1;
 	hio_read8(f);
 
-	for (j = 0; j < mod->xxp[i]->rows * mod->chn; j++) {
-	    event = &EVENT(i, j % mod->chn, j / mod->chn);
+	if (hio_read(patbuf, rows * 64, 1, f) < 1) {
+	    D_(D_CRIT "read error at pat %d", i);
+	    goto err;
+	}
 
-	    if ((j % mod->chn) == 0 && (j / mod->chn) == brk)
-		event->f2t = FX_BREAK;
-	
-	    note = hio_read8(f);
-	    ins = hio_read8(f);
-	    vol = hio_read8(f);
-	    fxb = hio_read8(f);
+	pos = patbuf;
+	for (j = 0; j < mod->xxp[i]->rows; j++) {
+	    for (k = 0; k < mod->chn; k++) {
+		event = &EVENT(i, k, j);
 
-	    if (note)
-		event->note = note + 48;
-	    if (event->note || ins)
-		event->ins = ins + 1;
+		if (k == 0 && j == brk)
+		    event->f2t = FX_BREAK;
 
-	    vol = 16 * LSN(vol) + MSN(vol);
+		note = *pos++;
+		ins  = *pos++;
+		vol  = *pos++;
+		fxb  = *pos++;
 
-	    if (vol)
-		event->vol = vol - 0x10;	/* ? */
+		if (note)
+		    event->note = note + 48;
+		if (event->note || ins)
+		    event->ins = ins + 1;
 
-	    event->fxt = fx[MSN(fxb)];
-	    event->fxp = LSN(fxb);
+		if (vol >= 0x01 && vol <= 0x10)
+		    event->vol = (vol - 1) * 16 + 1;
 
-	    switch (event->fxt) {
-	    case NONE:
-	        event->fxt = event->fxp = 0;
-		break;
-	    case FX_FAR_PORTA_UP:
-		event->fxt = FX_EXTENDED;
-		event->fxp |= (EX_F_PORTA_UP << 4);
-		break;
-	    case FX_FAR_PORTA_DN:
-		event->fxt = FX_EXTENDED;
-		event->fxp |= (EX_F_PORTA_DN << 4);
-		break;
-	    case FX_FAR_RETRIG:
-		event->fxt = FX_EXTENDED;
-		event->fxp |= (EX_RETRIG << 4);
-		break;
-	    case FX_FAR_DELAY:
-		event->fxt = FX_EXTENDED;
-		event->fxp |= (EX_DELAY << 4);
-		break;
-	    case FX_FAR_SETVIBRATO:
-		vib = event->fxp & 0x0f;
-		event->fxt = event->fxp = 0;
-		break;
-	    case FX_VIBRATO:
-		event->fxp = (event->fxp << 4) + vib;
-		break;
-	    case FX_PER_VIBRATO:
-		event->fxp = (event->fxp << 4) + vib;
-		break;
-	    case FX_FAR_VSLIDE_UP:	/* Fine volume slide up */
-		event->fxt = FX_EXTENDED;
-		event->fxp |= (EX_F_VSLIDE_UP << 4);
-		break;
-	    case FX_FAR_VSLIDE_DN:	/* Fine volume slide down */
-		event->fxt = FX_EXTENDED;
-		event->fxp |= (EX_F_VSLIDE_DN << 4);
-		break;
-	    case FX_SPEED:
-		if (event->fxp != 0) {
-			event->fxp = 8 * 60 / event->fxp;
-		} else {
-			event->fxt = 0;
-		}
-		break;
+		far_translate_effect(event, MSN(fxb), LSN(fxb), vol);
 	    }
+	}
+    }
+    free(patbuf);
+
+    /* Allocate tracks for any patterns referenced with a size of 0. These
+     * use the configured pattern break position, which is 64 by default. */
+    for (i = 0; i < mod->len; i++) {
+	int pat = mod->xxo[i];
+	if (mod->xxp[pat]->rows == 0) {
+	    mod->xxp[pat]->rows = 64;
+	    if (libxmp_alloc_tracks_in_pattern(mod, pat) < 0)
+		return -1;
 	}
     }
 
     mod->ins = -1;
-    hio_read(sample_map, 1, 8, f);
+    if (hio_read(sample_map, 1, 8, f) < 8) {
+	D_(D_CRIT "read error at sample map");
+	return -1;
+    }
     for (i = 0; i < 64; i++) {
 	if (sample_map[i / 8] & (1 << (i % 8)))
 		mod->ins = i;
@@ -310,7 +410,7 @@ static int far_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 	    return -1;
 
-	hio_read(&fih.name, 32, 1, f);	/* Instrument name */
+	hio_read(fih.name, 32, 1, f);	/* Instrument name */
 	fih.length = hio_read32l(f);	/* Length of sample (up to 64Kb) */
 	fih.finetune = hio_read8(f);	/* Finetune (unsuported) */
 	fih.volume = hio_read8(f);	/* Volume (unsuported?) */
@@ -354,7 +454,19 @@ static int far_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		return -1;
     }
 
-    m->volbase = 0xff;
+    /* Panning map */
+    for (i = 0; i < 16; i++) {
+	if (ffh.ch_on[i] == 0)
+	    mod->xxc[i].flg |= XMP_CHANNEL_MUTE;
+	if (ffh.pan[i] < 0x10)
+	    mod->xxc[i].pan = (ffh.pan[i] << 4) | ffh.pan[i];
+    }
+
+    m->volbase = 0xf0;
 
     return 0;
+
+  err:
+    free(patbuf);
+    return -1;
 }

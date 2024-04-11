@@ -147,7 +147,7 @@ function copyPublicFolder() {
     dereference: true,
     filter: file => (
       file !== paths.appHtml &&
-      file !== 'catalog'
+      !file.includes('_ignore')
     ),
   });
 }

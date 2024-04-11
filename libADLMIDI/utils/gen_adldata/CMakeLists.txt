@@ -3,10 +3,15 @@ project(gen_adldata CXX)
 
 set(CMAKE_CXX_STANDARD 11)
 
-find_package(OpenMP)
+find_package(OpenMP QUIET)
 if(OPENMP_FOUND)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    if(MSVC AND NOT (MSVC_VERSION LESS 1900))
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -openmp:experimental")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -openmp:experimental")
+    else()
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    endif()
 endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
@@ -78,12 +83,17 @@ if(WITH_GENADLDATA_PROGRESS OR WITH_GENADLDATA_DEEPDEBUG)
     target_compile_options(gen_adldata PUBLIC "-DADL_GENDATA_PRINT_PROGRESS")
 endif()
 
+option(WITH_GENADLDATA_MINIFY "Minify the printing result at gen_adldata" ON)
+if(WITH_GENADLDATA_MINIFY)
+    target_compile_options(gen_adldata PUBLIC "-DADL_GENDATA_MINIFY")
+endif()
+
 if(WITH_GENADLDATA_COMMENTS)
     target_compile_options(gen_adldata PUBLIC "-DADLDATA_WITH_COMMENTS")
 endif()
 
 set(ADLDATA_DATABASE
-    "${libADLMIDI_SOURCE_DIR}/src/adldata.cpp"
+    "${libADLMIDI_SOURCE_DIR}/src/inst_db.cpp"
 )
 add_custom_target(gen-adldata-run #OUTPUT ${ADLDATA_DATABASE}
     COMMAND gen_adldata "${ADLDATA_DATABASE}"

@@ -48,5 +48,8 @@ TEST(test_effect_f_set_speed)
 		fail_unless(info.bpm == vals[i * 2], "tempo setting error");
 		fail_unless(info.speed == vals[i * 2 + 1], "speed setting error");
 	}
+
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

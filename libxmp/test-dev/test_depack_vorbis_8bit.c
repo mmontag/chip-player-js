@@ -3,10 +3,10 @@
 
 TEST(test_depack_vorbis_8bit)
 {
-	FILE *f;
-	struct stat st;
 	int i, ret;
-	int8 *buf, *pcm8;
+	void *buf;
+	int8 *pcm8;
+	long size;
 	xmp_context c;
 	struct xmp_module_info info;
 
@@ -19,21 +19,18 @@ TEST(test_depack_vorbis_8bit)
 	xmp_start_player(c, 44100, 0);
 	xmp_get_module_info(c, &info);
 
-	stat("data/sample4.raw", &st);
-	f = fopen("data/sample4.raw", "rb");
-	fail_unless(f != NULL, "can't open raw data file");
-
-	buf = malloc(st.st_size);
-	fail_unless(buf != NULL, "can't alloc raw buffer");
-	fread(buf, 1, st.st_size, f);
-	fclose(f);
+	read_file_to_memory("data/sample4.raw", &buf, &size);
+	fail_unless(buf != NULL, "can't open raw data file");
 
 	pcm8 = (int8 *)info.mod->xxs[4].data;
 
 	for (i = 0; i < 5492; i++) {
-		if (pcm8[i] != buf[i])
-			printf("%d %d\n", pcm8[i], buf[i]);
-			fail_unless(abs(pcm8[i] - buf[i]) <= 1, "data error");
+		if (pcm8[i] != ((int8 *)buf)[i])
+			fail_unless(abs(pcm8[i] - ((int8 *)buf)[i]) <= 1, "data error");
 	}
+
+	xmp_release_module(c);
+	xmp_free_context(c);
+	free(buf);
 }
 END_TEST

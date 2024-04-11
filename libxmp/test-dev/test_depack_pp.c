@@ -16,5 +16,8 @@ TEST(test_depack_pp)
 
 	ret = compare_md5(info.md5, "80ba11ca20f7ffef184a58c1fc619c18");
 	fail_unless(ret == 0, "MD5 error");
+
+	xmp_release_module(c);
+	xmp_free_context(c);
 }
 END_TEST

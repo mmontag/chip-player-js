@@ -164,5 +164,6 @@ TEST(test_api_set_player)
 	ret = xmp_set_player(opaque, XMP_PLAYER_SMIX_VOLUME, 201);
 	fail_unless(ret == -XMP_ERROR_INVALID, "error setting invalid smix volume");
 
+	xmp_free_context(opaque);
 }
 END_TEST

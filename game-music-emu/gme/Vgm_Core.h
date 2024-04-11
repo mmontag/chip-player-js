@@ -150,13 +150,17 @@ public:
 	
 	// True if any FM chips are used by file. Always false until init_fm()
 	// is called.
-	bool uses_fm() const                { return ym2612[0].enabled() || ym2413[0].enabled() || ym2151[0].enabled() || c140.enabled() ||
-		segapcm.enabled() || rf5c68.enabled() || rf5c164.enabled() || pwm.enabled() || okim6258[0].enabled() || okim6295[0].enabled() ||
-		k051649.enabled() || k053260.enabled() || k054539.enabled() || ym2203[0].enabled() || ym3812[0].enabled() || ymf262[0].enabled() ||
-        ymz280b.enabled() || ym2610[0].enabled() || ym2608[0].enabled() || qsound[0].enabled() ||
-        (header().ay8910_rate[0] | header().ay8910_rate[1] | header().ay8910_rate[2] | header().ay8910_rate[3]) ||
-        (header().huc6280_rate[0] | header().huc6280_rate[1] | header().huc6280_rate[2] | header().huc6280_rate[3]) ||
-		(header().gbdmg_rate[0] | header().gbdmg_rate[1] | header().gbdmg_rate[2] | header().gbdmg_rate[3]); }
+  bool uses_fm() const {
+    return ym2612[0].enabled() || ym2413[0].enabled() || ym2151[0].enabled() || c140.enabled() || segapcm.enabled() ||
+           rf5c68.enabled() || rf5c164.enabled() || pwm.enabled() || okim6258[0].enabled() || okim6295[0].enabled() ||
+           k051649.enabled() || k053260.enabled() || k054539.enabled() || ym2203[0].enabled() || ym3812[0].enabled() ||
+           ymf262[0].enabled() || ymz280b.enabled() || ym2610[0].enabled() || ym2608[0].enabled() ||
+           qsound[0].enabled() ||
+           (header().ay8910_rate[0] | header().ay8910_rate[1] | header().ay8910_rate[2] | header().ay8910_rate[3]) ||
+           (header().huc6280_rate[0] | header().huc6280_rate[1] | header().huc6280_rate[2] |
+            header().huc6280_rate[3]) ||
+           (header().gbdmg_rate[0] | header().gbdmg_rate[1] | header().gbdmg_rate[2] | header().gbdmg_rate[3]);
+  }
 	
 	// Adjusts music tempo, where 1.0 is normal. Can be changed while playing.
 	// Loading a file resets tempo to 1.0.

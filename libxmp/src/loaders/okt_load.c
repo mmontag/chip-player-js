@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -63,9 +63,13 @@ struct local_data {
 	int idx[36];
 	int pattern;
 	int sample;
+	int samples;
+	int has_cmod;
+	int has_samp;
+	int has_slen;
 };
 
-static const int fx[] = {
+static const int fx[32] = {
 	NONE,
 	FX_PORTA_UP,		/*  1 */
 	FX_PORTA_DN,		/*  2 */
@@ -103,7 +107,14 @@ static const int fx[] = {
 static int get_cmod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
+	struct local_data *data = (struct local_data *)parm;
 	int i;
+
+	/* Sanity check */
+	if (data->has_cmod || size < 8) {
+		return -1;
+	}
+	data->has_cmod = 1;
 
 	mod->chn = 0;
 	for (i = 0; i < 4; i++) {
@@ -132,8 +143,10 @@ static int get_samp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	int looplen;
 
 	/* Sanity check */
-	if (size != 36 * 32)
+	if (data->has_samp || size != 36 * 32) {
 		return -1;
+	}
+	data->has_samp = 1;
 
 	/* Should be always 36 */
 	mod->ins = size / 32;	/* sizeof(struct okt_instrument_header); */
@@ -174,6 +187,7 @@ static int get_samp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 			j++;
 		}
 	}
+	data->samples = j;
 
 	return 0;
 }
@@ -191,6 +205,13 @@ static int get_spee(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 static int get_slen(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
+	struct local_data *data = (struct local_data *)parm;
+
+	/* Sanity check */
+	if (data->has_slen || !data->has_cmod || size < 2) {
+		return -1;
+	}
+	data->has_slen = 1;
 
 	mod->pat = hio_read16b(f);
 	mod->trk = mod->pat * mod->chn;
@@ -231,6 +252,11 @@ static int get_pbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	uint16 rows;
 	int j;
 
+	/* Sanity check */
+	if (!data->has_slen || !data->has_cmod) {
+		return -1;
+	}
+
 	if (data->pattern >= mod->pat)
 		return 0;
 
@@ -260,7 +286,7 @@ static int get_pbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		}
 
 		fxt = hio_read8(f);
-		if (fxt >= 32) {
+		if (fxt >= ARRAY_SIZE(fx)) {
 			return -1;
 		}
 		e->fxt = fx[fxt];
@@ -298,7 +324,7 @@ static int get_sbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	int flags = 0;
 	int i, sid;
 
-	if (data->sample >= mod->ins)
+	if (data->sample >= data->samples)
 		return 0;
 
 	D_(D_INFO "Stored samples: %d", mod->smp);

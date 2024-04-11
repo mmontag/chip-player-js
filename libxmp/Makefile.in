@@ -1,6 +1,6 @@
 VERSION_MAJOR	= 4
-VERSION_MINOR	= 4
-VERSION_RELEASE	= 2
+VERSION_MINOR	= 5
+VERSION_RELEASE	= 0
 
 VERSION		= $(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_RELEASE)
 
@@ -9,9 +9,12 @@ COMPAT_VERSION	= $(VERSION_MAJOR)
 
 CC		= @CC@
 CFLAGS		= -c @CFLAGS@ @DEFS@ -D_REENTRANT
+CFLAGS_SHARED	= @CFLAGS_SHARED@
+CFLAGS_STATIC	= -DBUILDING_STATIC
 LD		= @CC@
 LDFLAGS		= @LDFLAGS@
 LIBS		= @LIBS@
+AR		= @AR@
 RANLIB		= @RANLIB@
 INSTALL		= @INSTALL@
 DESTDIR		=
@@ -26,10 +29,10 @@ LD_VERSCRIPT	= @LD_VERSCRIPT@
 SHELL		= /bin/sh
 
 DIST		= libxmp-$(VERSION)
-DFILES		= README INSTALL install-sh configure configure.ac config.sub \
-		  config.guess Makefile.in libxmp.pc.in libxmp.map Makefile.vc \
-		  Makefile.os2
-DDIRS		= docs include src loaders prowiz depackers win32 os2 test
+DFILES		= README INSTALL install-sh configure configure.ac config.sub config.guess    \
+		  Makefile.in Makefile.vc Makefile.os2 Makefile.w32 watcom.mif CMakeLists.txt \
+		  aclocal.m4 libxmp.map libxmp.pc.in
+DDIRS		= docs include src loaders prowiz depackers test cmake m4
 V		= 0
 LIB		= libxmp.a
 SOLIB		= libxmp.so
@@ -52,36 +55,37 @@ endif
 
 all: @STATIC@ @SHARED@
 
+include cmake/Makefile
+include m4/Makefile
 include docs/Makefile
 include include/Makefile
 include src/Makefile
 include src/loaders/Makefile
 include src/loaders/prowizard/Makefile
 include src/depackers/Makefile
-include src/os2/Makefile
-include src/win32/Makefile
 include test/Makefile
+ALL_OBJS=$(OBJS) @PROWIZARD_OBJS@ @DEPACKER_OBJS@
 
-LOBJS = $(OBJS:.o=.lo)
+LOBJS = $(ALL_OBJS:.o=.lo)
 
-GCOBJS = $(OBJS:.o=.gco)
+GCOBJS = $(ALL_OBJS:.o=.gco)
 
-CFLAGS += -Iinclude -Isrc
+CFLAGS += -Iinclude
 
 .SUFFIXES: .c .o .lo .a .so .dll .in .gco .gcda .gcno
 
 .c.o:
-	@CMD='$(CC) $(CPPFLAGS) $(CFLAGS) -o $*.o $<'; \
+	@CMD='$(CC) $(CPPFLAGS) $(CFLAGS_STATIC) $(CFLAGS) -o $*.o $<'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo CC $*.o ; fi; \
 	eval $$CMD
 
 .c.lo:
-	@CMD='$(CC) $(CPPFLAGS) $(CFLAGS) -fPIC -o $*.lo $<'; \
+	@CMD='$(CC) $(CPPFLAGS) $(CFLAGS_SHARED) $(CFLAGS) -o $*.lo $<'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo CC $*.lo ; fi; \
 	eval $$CMD
 
 .c.gco:
-	@CMD='$(CC) $(CPPFLAGS) $(CFLAGS) -O0 -fno-inline -fprofile-arcs -ftest-coverage -o $*.gco $<'; \
+	@CMD='$(CC) $(CPPFLAGS) $(CFLAGS_STATIC) $(CFLAGS) -O0 -fno-inline -fprofile-arcs -ftest-coverage -o $*.gco $<'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo CC $*.gco ; fi; \
 	eval $$CMD
 
@@ -95,9 +99,9 @@ dll: lib/$(DLL)
 
 dylib: lib/$(DYLIB)
 
-lib/$(LIB): $(OBJS)
+lib/$(LIB): $(ALL_OBJS)
 	@mkdir -p lib
-	@CMD='$(AR) r $@ $(OBJS)'; \
+	@CMD='$(AR) r $@ $(ALL_OBJS)'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo AR $@ ; fi; \
 	eval $$CMD
 	$(RANLIB) $@
@@ -110,9 +114,9 @@ lib/$(SHLIB): $(LOBJS)
 	ln -sf $(SHLIB) lib/$(SONAME)
 	ln -sf $(SONAME) lib/$(SOLIB)
 
-lib/$(DLL): $(OBJS)
+lib/$(DLL): $(LOBJS)
 	@mkdir -p lib
-	@CMD='$(LD) $(LDFLAGS) -shared -Wl,--output-def,lib/libxmp.def,--out-implib,lib/$(IMPLIB) -o $@ $(OBJS) $(LIBS)'; \
+	@CMD='$(LD) $(LDFLAGS) -shared -Wl,--output-def,lib/libxmp.def,--out-implib,lib/$(IMPLIB) -o $@ $(LOBJS) $(LIBS)'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 
@@ -120,10 +124,10 @@ lib/$(DLL): $(OBJS)
 # The version number checks that dyld performs are limited to ensuring that
 # the compatibility version of the library being loaded is higher than the
 # compatibility version of the library that was used at build time.
-
+#
 lib/$(DYLIB): $(LOBJS)
 	@mkdir -p lib
-	@CMD='$(LD) $(LDFLAGS) -dynamiclib -Wl,-headerpad_max_install_names,-undefined,dynamic_lookup,$(DYLIB_COMPAT)-current_version,$(VERSION),-install_name,$(prefix)/lib/$(DYLIB) -o $@ $(LOBJS) $(LIBS)'; \
+	@CMD='$(LD) $(LDFLAGS) -dynamiclib -Wl,-headerpad_max_install_names,$(DYLIB_COMPAT)-current_version,$(VERSION),-install_name,$(prefix)/lib/$(DYLIB) -o $@ $(LOBJS) $(LIBS)'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 	ln -sf $(DYLIB) lib/libxmp.dylib
@@ -136,8 +140,11 @@ lib/$(GCLIB): $(GCOBJS)
 	$(RANLIB) $@
 
 clean:
-	@rm -f $(OBJS) $(LOBJS) lib/lib*
-	@rm -f $(GCOBJS) $(OBJS:.o=.gcno) $(OBJS:.o=.gcda)
+	@rm -f $(ALL_OBJS) $(LOBJS) $(T_OBJS)
+	@rm -f $(GCOBJS) $(ALL_OBJS:.o=.gcno) $(ALL_OBJS:.o=.gcda)
+
+distclean: clean
+	@rm -f config.log config.cache config.status libxmp.pc depend Makefile lib/* test/libxmp-test*
 
 install: all
 	@mkdir -p $(DESTDIR)$(BINDIR) $(DESTDIR)$(LIBDIR) $(DESTDIR)$(INCLUDEDIR)
@@ -170,31 +177,45 @@ install: all
 depend:
 	@echo Building dependencies...
 	@echo > $@
-	@for i in $(OBJS) $(T_OBJS); do \
+	@for i in $(ALL_OBJS) $(T_OBJS); do \
 	    c="$${i%.o}.c"; l="$${i%.o}.lo"; \
 	    $(CC) $(CFLAGS) -MM $$c | \
 		sed "s!^.*\.o:!$$i $$l:!" >> $@ ; \
 	done
 
-dist: version-prepare all-docs dist-prepare vc-prepare dist-jni dist-subdirs
+dist: version-prepare all-docs dist-prepare dist-jni dist-subdirs
 
 dist-jni:
 	mkdir $(DIST)/jni
 	cp jni/Android.mk jni/Application.mk $(DIST)/jni
 
-dist-prepare:
+dist-prepare: cmake-prepare vc-prepare watcom-prepare
 	./config.status
 	rm -Rf $(DIST) $(DIST).tar.gz
 	mkdir -p $(DIST)
 	cp -RPp $(DFILES) $(DIST)/
 
+space := $(eval) $(eval)
+cmake-prepare:
+	@echo Generate cmake/libxmp-sources.cmake
+	@sed -e 's!@SRCS@!\n$(subst $(space),    , $(OBJS:.o=.c\n))!' \
+	     -e 's!@PSRCS@!\n$(subst $(space),    , $(PROWIZARD_OBJS:.o=.c\n))!' \
+	     -e 's!@DSRCS@!\n$(subst $(space),    , $(DEPACKER_OBJS:.o=.c\n))!' \
+	     cmake/libxmp-sources.cmake.in > cmake/libxmp-sources.cmake
+
 vc-prepare:
 	@echo Generate Makefile.vc
-	@sed -e 's!@OBJS@!$(subst /,\\,$(OBJS:.o=.obj))!' Makefile.vc.in > Makefile.vc
+	@sed -e 's!@OBJS@!\\\r\n $(subst /,\\,$(OBJS:.o=.obj \\\r\n))!' \
+	     -e 's!@POBJS@!\\\r\n $(subst /,\\,$(PROWIZARD_OBJS:.o=.obj \\\r\n))!' \
+	     -e 's!@DOBJS@!\\\r\n $(subst /,\\,$(DEPACKER_OBJS:.o=.obj \\\r\n))!' \
+	     Makefile.vc.in > Makefile.vc
 
-os2-prepare:
-	@echo Generate Makefile.os2
-	@sed -e 's!@OBJS@!$(OBJS:.o=.obj)!' Makefile.os2.in > Makefile.os2
+watcom-prepare:
+	@echo Generate watcom.mif
+	@sed -e 's!@OBJS@! \&\n $(OBJS:.o=.obj \&\n)!' \
+	     -e 's!@POBJS@! \&\n $(PROWIZARD_OBJS:.o=.obj \&\n)!' \
+	     -e 's!@DOBJS@! \&\n $(DEPACKER_OBJS:.o=.obj \&\n)!' \
+	     watcom.mif.in > watcom.mif
 
 dist-subdirs: $(addprefix dist-,$(DDIRS))
 	chmod -R u+w $(DIST)/*
@@ -207,7 +228,6 @@ distcheck:
 	tar xf $(DIST).tar.gz
 	(cd $(DIST); ./configure --enable-static --prefix=`pwd`/test-install; make; make check; make install; find test-install)
 
-
 devcheck:
 	$(MAKE) -C test-dev
 
@@ -215,10 +235,10 @@ covercheck: coverage
 	$(MAKE) -C test-dev covercheck
 
 coverclean:
-	rm -f $(OBJS:.o=.gco) $(OBJS:.o=.gcno) $(OBJS:.o=.gcda)
+	rm -f $(ALL_OBJS:.o=.gco) $(ALL_OBJS:.o=.gcno) $(ALL_OBJS:.o=.gcda)
 	$(MAKE) -C test-dev coverclean
 
-$(OBJS): Makefile
+$(ALL_OBJS): Makefile
 
 $(LOBJS): Makefile
 
@@ -230,4 +250,3 @@ version-prepare:
 	./config.status
 
 sinclude depend
-

@@ -1,8 +1,8 @@
 #ifndef LIBXMP_MED_H
 #define LIBXMP_MED_H
 
-#include "common.h"
-#include "hio.h"
+#include "../common.h"
+#include "../hio.h"
 
 #define MMD_INST_TYPES 9
 

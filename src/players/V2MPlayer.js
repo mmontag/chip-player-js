@@ -1,28 +1,26 @@
 import Player from "./Player.js";
+import autoBind from 'auto-bind';
 
 const fileExtensions = [
   'v2m',
 ];
 
 export default class V2MPlayer extends Player {
-  constructor(audioCtx, destNode, chipCore, onPlayerStateUpdate = function() {}) {
-    super(audioCtx, destNode, chipCore, onPlayerStateUpdate);
-    this.loadData = this.loadData.bind(this);
+  constructor(...args) {
+    super(...args);
+    autoBind(this);
 
-    this.lib = chipCore;
+    this.name = 'Farbrausch V2M Player';
+    this.speed = 1;
     this.fileExtensions = fileExtensions;
-    this.buffer = chipCore.allocate(this.bufferSize * 8, 'i32', chipCore.ALLOC_NORMAL);
-    this.setAudioProcess(this.v2mAudioProcess);
+    this.buffer = this.core._malloc(this.bufferSize * 8);
   }
 
   loadData(data, filename) {
-    let err;
-    this.filepathMeta = Player.metadataFromFilepath(filename);
-
-    err = this.lib.ccall(
+    const err = this.core.ccall(
       'v2m_open', 'number',
       ['array', 'number', 'number'],
-      [data, data.byteLength, this.audioCtx.sampleRate]
+      [data, data.byteLength, this.sampleRate]
     );
 
     if (err !== 0) {
@@ -32,52 +30,55 @@ export default class V2MPlayer extends Player {
 
     this.metadata = { title: filename };
 
-    this.connect();
     this.resume();
-    this.onPlayerStateUpdate(false);
+    this.emit('playerStateUpdate', {
+      ...this.getBasePlayerState(),
+      isStopped: false
+    });
   }
 
-  v2mAudioProcess(e) {
-    let i, channel;
-    const channels = [];
-    for (channel = 0; channel < e.outputBuffer.numberOfChannels; channel++) {
-      channels[channel] = e.outputBuffer.getChannelData(channel);
-    }
+  processAudioInner(channels) {
+    let i, ch;
 
     if (this.paused) {
-      for (channel = 0; channel < channels.length; channel++) {
-        channels[channel].fill(0);
+      for (ch = 0; ch < channels.length; ch++) {
+        channels[ch].fill(0);
       }
       return;
     }
 
-    const samplesWritten = this.lib._v2m_write_audio(this.buffer, this.bufferSize);
+    const samplesWritten = this.core._v2m_write_audio(this.buffer, this.bufferSize);
     if (samplesWritten === 0) {
       this.stop();
     }
 
-    for (channel = 0; channel < channels.length; channel++) {
+    for (ch = 0; ch < channels.length; ch++) {
       for (i = 0; i < this.bufferSize; i++) {
-        channels[channel][i] = this.lib.getValue(
+        channels[ch][i] = this.core.getValue(
           this.buffer +           // Interleaved channel format
           i * 4 * 2 +             // frame offset   * bytes per sample * num channels +
-          channel * 4,            // channel offset * bytes per sample
+          ch * 4,                 // channel offset * bytes per sample
           'float'                 // the sample values are 32-bit floating point
         );
       }
     }
   }
 
+  getTempo() {
+    return this.speed;
+  }
+
   setTempo(val) {
-    return this.lib._v2m_set_speed(val);
+    this.speed = val;
+    return this.core._v2m_set_speed(val);
   }
 
   getPositionMs() {
-    return this.lib._v2m_get_position_ms();
+    return this.core._v2m_get_position_ms();
   }
 
   getDurationMs() {
-    return this.lib._v2m_get_duration_ms();
+    return this.core._v2m_get_duration_ms();
   }
 
   getMetadata() {
@@ -89,13 +90,13 @@ export default class V2MPlayer extends Player {
   }
 
   seekMs(seekMs) {
-    this.lib._v2m_seek_ms(seekMs);
+    this.core._v2m_seek_ms(seekMs);
   }
 
   stop() {
     this.suspend();
-    this.lib._v2m_close();
+    this.core._v2m_close();
     console.debug('V2MPlayer.stop()');
-    this.onPlayerStateUpdate(true);
+    this.emit('playerStateUpdate', { isStopped: true });
   }
 }

@@ -1,13 +1,33 @@
-/*
- * ProRunner2.c   Copyright (C) 1996-1999 Asle / ReDoX
- *
- * Converts ProRunner v2 packed MODs back to Protracker
- *
+/* ProWizard
+ * Copyright (C) 1996-1999 Asle / ReDoX
  * Modified in 2006,2007,2014 by Claudio Matsuoka
+ * Modified in 2020 by Alice Rowan
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
-#include <string.h>
-#include <stdlib.h>
+/*
+ * ProRunner2.c
+ *
+ * Converts ProRunner v2 packed MODs back to Protracker
+ */
+
 #include "prowiz.h"
 
 
@@ -21,9 +41,9 @@ static int depack_pru2(HIO_HANDLE *in, FILE *out)
 	int size, ssize = 0;
 	int i, j;
 
-	memset(header, 0, 2048);
-	memset(ptable, 0, 128);
-	memset(v, 0, 16);
+	memset(header, 0, sizeof(header));
+	memset(ptable, 0, sizeof(ptable));
+	memset(v, 0, sizeof(v));
 
 	pw_write_zero(out, 20);				/* title */
 
@@ -56,14 +76,14 @@ static int depack_pru2(HIO_HANDLE *in, FILE *out)
 	for (i = 0; i <= max; i++) {
 		for (j = 0; j < 256; j++) {
 			uint8 c[4];
-			memset(c, 0, 4);
+			memset(c, 0, sizeof(c));
 			header[0] = hio_read8(in);
 			if (header[0] == 0x80) {
 				write32b(out, 0);
 			} else if (header[0] == 0xc0) {
 				fwrite(v[0], 4, 1, out);
 				memcpy(c, v[0], 4);
-			} else if (header[0] >= 74) {
+			} else if (!PTK_IS_VALID_NOTE(header[0] >> 1)) {
 				return -1;
 			} else {
 				header[1] = hio_read8(in);
@@ -81,9 +101,9 @@ static int depack_pru2(HIO_HANDLE *in, FILE *out)
 			}
 
 			/* rol previous values */
-			memcpy(&v[0], &v[1], 4);
-			memcpy(&v[1], &v[2], 4);
-			memcpy(&v[2], &v[3], 4);
+			memcpy(v[0], v[1], 4);
+			memcpy(v[1], v[2], 4);
+			memcpy(v[2], v[3], 4);
 
 			memcpy(v[3], c, 4);
 		}
@@ -125,7 +145,7 @@ static int test_pru2(const uint8 *data, char *t, int s)
 	}
 
 	pw_read_title(NULL, t, 0);
-	
+
 	return 0;
 }
 

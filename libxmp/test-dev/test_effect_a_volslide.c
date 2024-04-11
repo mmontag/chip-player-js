@@ -3,49 +3,49 @@
 
 
 static int vals[] = {
-	64, 64, 62, 60,		/* down 2 */
-	58, 58, 56, 54,		/* memory */
-	52, 52, 53, 54,		/* up 1 */
-	55, 55, 56, 57,		/* memory */
+	64, 62, 60, 58,		/* down 2 */
+	58, 56, 54, 52,		/* memory */
+	52, 53, 54, 55,		/* up 1 */
+	55, 56, 57, 58,		/* memory */
 	63, 63, 63, 63,		/* set 63 */
-	63, 63, 64, 64,		/* up 1 */
+	63, 64, 64, 64,		/* up 1 */
 	1, 1, 1, 1,		/* set 1 */
-	1, 1, 0, 0,		/* down 1 */
+	1, 0, 0, 0,		/* down 1 */
 	10, 10, 10, 10,		/* set 10 */
-	10, 10, 25, 40,		/* slide 0xf2 */
-	55, 55, 64, 64,		/* slide 0x00 */
+	10, 25, 40, 55,		/* slide 0xf2 */
+	55, 64, 64, 64,		/* slide 0x00 */
 	64, 64, 64, 64,		/* slide 0x1f */
 	64, 64, 64, 64		/* slide 0x00 */
 };
 
 static int vals_fine[] = {
-	64, 64, 62, 60,		/* down 2 */
-	58, 58, 56, 54,		/* memory */
-	52, 52, 53, 54,		/* up 1 */
-	55, 55, 56, 57,		/* memory */
+	64, 62, 60, 58,		/* down 2 */
+	58, 56, 54, 52,		/* memory */
+	52, 53, 54, 55,		/* up 1 */
+	55, 56, 57, 58,		/* memory */
 	63, 63, 63, 63,		/* set 63 */
-	63, 63, 64, 64,		/* up 1 */
+	63, 64, 64, 64,		/* up 1 */
 	1, 1, 1, 1,		/* set 1 */
-	1, 1, 0, 0,		/* down 1 */
+	1, 0, 0, 0,		/* down 1 */
 	10, 10, 10, 10,		/* set 10 */
-	10, 8, 8, 8,		/* fine slide down 2 */
-	8, 6, 6, 6,		/* continue */
-	6, 7, 7, 7,		/* fine slide up 1 */
-	7, 8, 8, 8		/* continue */
+	8, 8, 8, 8,		/* fine slide down 2 */
+	6, 6, 6, 6,		/* continue */
+	7, 7, 7, 7,		/* fine slide up 1 */
+	8, 8, 8, 8		/* continue */
 };
 
 static int vals_pdn[] = {
-	64, 64, 62, 60,		/* down 2 */
-	58, 58, 56, 54,		/* memory */
-	52, 52, 53, 54,		/* up 1 */
-	55, 55, 56, 57,		/* memory */
+	64, 62, 60, 58,		/* down 2 */
+	58, 56, 54, 52,		/* memory */
+	52, 53, 54, 55,		/* up 1 */
+	55, 56, 57, 58,		/* memory */
 	63, 63, 63, 63,		/* set 63 */
-	63, 63, 64, 64,		/* up 1 */
+	63, 64, 64, 64,		/* up 1 */
 	1, 1, 1, 1,		/* set 1 */
-	1, 1, 0, 0,		/* down 1 */
+	1, 0, 0, 0,		/* down 1 */
 	10, 10, 10, 10,		/* set 10 */
-	10, 10, 8, 6,		/* slide 0xf2 */
-	4, 4, 2, 0,		/* continue */
+	10, 8, 6, 4,		/* slide 0xf2 */
+	4, 2, 0, 0,		/* continue */
 	0, 0, 0, 0,		/* slide 0x1f */
 	0, 0, 0, 0		/* continue */
 };
@@ -112,5 +112,8 @@ TEST(test_effect_a_volslide)
 		xmp_get_frame_info(opaque, &info);
 		fail_unless(info.channel_info[0].volume == vals_pdn[i], "volume slide error");
 	}
+
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

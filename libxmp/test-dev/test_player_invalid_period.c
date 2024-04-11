@@ -50,5 +50,8 @@ TEST(test_player_invalid_period)
 	xmp_get_frame_info(opaque, &info);
 	fail_unless(info.channel_info[0].period == 4096, "period error");
 	fail_unless(info.channel_info[0].volume == 0, "volume error");
+
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

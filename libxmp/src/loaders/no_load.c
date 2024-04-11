@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -21,7 +21,7 @@
  */
 
 #include "loader.h"
-#include "period.h"
+#include "../period.h"
 
 /* Nir Oren's Liquid Tracker old "NO" format. I have only one NO module,
  * Moti Radomski's "Time after time" from ftp.modland.com.
@@ -79,7 +79,7 @@ static int no_test(HIO_HANDLE *f, char *t, const int start)
 }
 
 
-static const uint8 fx[] = {
+static const uint8 fx[15] = {
 	FX_ARPEGGIO,
 	0,
 	FX_BREAK,

@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -80,7 +80,7 @@ struct c669_instrument_header {
 
 /* Effects bug fixed by Miod Vallat <miodrag@multimania.com> */
 
-static const uint8 fx[] = {
+static const uint8 fx[6] = {
     FX_669_PORTA_UP,
     FX_669_PORTA_DN,
     FX_669_TPORTA,
@@ -101,8 +101,8 @@ static int c669_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     LOAD_INIT();
 
-    hio_read(&sfh.marker, 2, 1, f);	/* 'if'=standard, 'JN'=extended */
-    hio_read(&sfh.message, 108, 1, f);	/* Song message */
+    hio_read(sfh.marker, 2, 1, f);	/* 'if'=standard, 'JN'=extended */
+    hio_read(sfh.message, 108, 1, f);	/* Song message */
     sfh.nos = hio_read8(f);		/* Number of samples (0-64) */
     sfh.nop = hio_read8(f);		/* Number of patterns (0-128) */
 
@@ -111,11 +111,11 @@ static int c669_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	return -1;
 
     sfh.loop = hio_read8(f);		/* Loop order number */
-    if (hio_read(&sfh.order, 1, 128, f) != 128)	/* Order list */
+    if (hio_read(sfh.order, 1, 128, f) != 128)	/* Order list */
 	return -1;
-    if (hio_read(&sfh.speed, 1, 128, f) != 128)	/* Tempo list for patterns */
+    if (hio_read(sfh.speed, 1, 128, f) != 128)	/* Tempo list for patterns */
 	return -1;
-    if (hio_read(&sfh.pbrk, 1, 128, f) != 128) 	/* Break list for patterns */
+    if (hio_read(sfh.pbrk, 1, 128, f) != 128) 	/* Break list for patterns */
 	return -1;
 
     mod->chn = 8;
@@ -141,10 +141,10 @@ static int c669_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     MODULE_INFO();
 
-    m->comment = malloc(109);
+    m->comment = (char *) malloc(109);
     memcpy(m->comment, sfh.message, 108);
     m->comment[108] = 0;
-    
+
     /* Read and convert instruments and samples */
 
     if (libxmp_init_instrument(m) < 0)
@@ -162,7 +162,7 @@ static int c669_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	sub = &xxi->sub[0];
 
-	hio_read (&sih.name, 13, 1, f);		/* ASCIIZ instrument name */
+	hio_read (sih.name, 13, 1, f);		/* ASCIIZ instrument name */
 	sih.length = hio_read32l(f);		/* Instrument size */
 	sih.loop_start = hio_read32l(f);	/* Instrument loop start */
 	sih.loopend = hio_read32l(f);		/* Instrument loop end */
@@ -215,7 +215,10 @@ static int c669_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	for (j = 0; j < 64 * 8; j++) {
 	    event = &EVENT(i, j % 8, j / 8);
-	    hio_read(&ev, 1, 3, f);
+	    if(hio_read(ev, 1, 3, f) < 3) {
+		D_(D_CRIT "read error at pat %d", i);
+		return -1;
+	    }
 
 	    if ((ev[0] & 0xfe) != 0xfe) {
 		event->note = 1 + 36 + (ev[0] >> 2);
@@ -226,7 +229,7 @@ static int c669_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		event->vol = (LSN(ev[1]) << 2) + 1;
 
 	    if (ev[2] != 0xff) {
-		if (MSN(ev[2]) > 5)
+		if (MSN(ev[2]) >= ARRAY_SIZE(fx))
 		    continue;
 
 		event->fxt = fx[MSN(ev[2])];

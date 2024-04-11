@@ -1,0 +1,341 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{AD993CE2-4F1A-458C-86A0-69B9D7853D25}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>libEmu</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IncludePath>$(ProjectDir);$(IncludePath)</IncludePath>
+    <OutDir>$(SolutionDir)bin\</OutDir>
+    <IntDir>obj\$(ProjectName)\$(Platform)_$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName)_$(Platform)d</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>$(ProjectDir);$(IncludePath)</IncludePath>
+    <OutDir>$(SolutionDir)bin\</OutDir>
+    <IntDir>obj\$(ProjectName)\$(Platform)_$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName)_$(Platform)d</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IncludePath>$(ProjectDir);$(IncludePath)</IncludePath>
+    <OutDir>$(SolutionDir)bin\</OutDir>
+    <IntDir>obj\$(ProjectName)\$(Platform)_$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName)_$(Platform)</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>$(ProjectDir);$(IncludePath)</IncludePath>
+    <OutDir>$(SolutionDir)bin\</OutDir>
+    <IntDir>obj\$(ProjectName)\$(Platform)_$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName)_$(Platform)</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <None Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="emu\cores\2151intf.c" />
+    <ClCompile Include="emu\cores\2413intf.c" />
+    <ClCompile Include="emu\cores\2612intf.c" />
+    <ClCompile Include="emu\cores\262intf.c" />
+    <ClCompile Include="emu\cores\adlibemu_opl2.c" />
+    <ClCompile Include="emu\cores\adlibemu_opl3.c" />
+    <ClCompile Include="emu\cores\adlibemu_opl_inc.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="emu\cores\ay8910.c" />
+    <ClCompile Include="emu\cores\ayintf.c" />
+    <ClCompile Include="emu\cores\c140.c" />
+    <ClCompile Include="emu\cores\c219.c" />
+    <ClCompile Include="emu\cores\c352.c" />
+    <ClCompile Include="emu\cores\c6280intf.c" />
+    <ClCompile Include="emu\cores\c6280_mame.c" />
+    <ClCompile Include="emu\cores\emu2149.c" />
+    <ClCompile Include="emu\cores\emu2413.c" />
+    <ClCompile Include="emu\cores\es5503.c" />
+    <ClCompile Include="emu\cores\es5506.c" />
+    <ClCompile Include="emu\cores\fmopl.c" />
+    <ClCompile Include="emu\cores\fmopn.c" />
+    <ClCompile Include="emu\cores\gb.c" />
+    <ClCompile Include="emu\cores\iremga20.c" />
+    <ClCompile Include="emu\cores\k051649.c" />
+    <ClCompile Include="emu\cores\k053260.c" />
+    <ClCompile Include="emu\cores\k054539.c" />
+    <ClCompile Include="emu\cores\mikey.c" />
+    <ClCompile Include="emu\cores\multipcm.c" />
+    <ClCompile Include="emu\cores\nesintf.c" />
+    <ClCompile Include="emu\cores\nes_apu.c" />
+    <ClCompile Include="emu\cores\np_nes_apu.c" />
+    <ClCompile Include="emu\cores\np_nes_dmc.c" />
+    <ClCompile Include="emu\cores\np_nes_fds.c" />
+    <ClCompile Include="emu\cores\nukedopl3.c" />
+    <ClCompile Include="emu\cores\nukedopll.c" />
+    <ClCompile Include="emu\cores\nukedopm.c" />
+    <ClCompile Include="emu\cores\okiadpcm.c" />
+    <ClCompile Include="emu\cores\okim6258.c" />
+    <ClCompile Include="emu\cores\Ootake_PSG.c" />
+    <ClCompile Include="emu\cores\oplintf.c" />
+    <ClCompile Include="emu\cores\opnintf.c" />
+    <ClCompile Include="emu\cores\pokey.c" />
+    <ClCompile Include="emu\cores\pwm.c" />
+    <ClCompile Include="emu\cores\qsound_mame.c" />
+    <ClCompile Include="emu\cores\qsoundintf.c" />
+    <ClCompile Include="emu\cores\qsound_ctr.c" />
+    <ClCompile Include="emu\cores\rf5c68.c" />
+    <ClCompile Include="emu\cores\rf5cintf.c" />
+    <ClCompile Include="emu\cores\saa1099_mame.c" />
+    <ClCompile Include="emu\cores\saa1099_vb.c" />
+    <ClCompile Include="emu\cores\saaintf.c" />
+    <ClCompile Include="emu\cores\scd_pcm.c" />
+    <ClCompile Include="emu\cores\scsp.c" />
+    <ClCompile Include="emu\cores\scspdsp.c" />
+    <ClCompile Include="emu\cores\scsplfo.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="emu\cores\segapcm.c" />
+    <ClCompile Include="emu\cores\upd7759.c" />
+    <ClCompile Include="emu\cores\vsu.c" />
+    <ClCompile Include="emu\cores\ws_audio.c" />
+    <ClCompile Include="emu\cores\x1_010.c" />
+    <ClCompile Include="emu\cores\ym2151.c" />
+    <ClCompile Include="emu\cores\ym2413.c" />
+    <ClCompile Include="emu\cores\ym2612.c" />
+    <ClCompile Include="emu\cores\ym3438.c" />
+    <ClCompile Include="emu\cores\ymdeltat.c" />
+    <ClCompile Include="emu\cores\ymf262.c" />
+    <ClCompile Include="emu\cores\ymf271.c" />
+    <ClCompile Include="emu\cores\ymf278b.c" />
+    <ClCompile Include="emu\cores\ymz280b.c" />
+    <ClCompile Include="emu\dac_control.c" />
+    <ClCompile Include="emu\logging.c" />
+    <ClCompile Include="emu\panning.c" />
+    <ClCompile Include="emu\cores\okim6295.c" />
+    <ClCompile Include="emu\Resampler.c" />
+    <ClCompile Include="emu\cores\sn76489.c" />
+    <ClCompile Include="emu\cores\sn76496.c" />
+    <ClCompile Include="emu\cores\sn764intf.c" />
+    <ClCompile Include="emu\SoundEmu.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="emu\cores\2151intf.h" />
+    <ClInclude Include="emu\cores\2413intf.h" />
+    <ClInclude Include="emu\cores\2612intf.h" />
+    <ClInclude Include="emu\cores\262intf.h" />
+    <ClInclude Include="emu\cores\adlibemu.h" />
+    <ClInclude Include="emu\cores\adlibemu_opl_inc.h" />
+    <ClInclude Include="emu\cores\ay8910.h" />
+    <ClInclude Include="emu\cores\ayintf.h" />
+    <ClInclude Include="emu\cores\c140.h" />
+    <ClInclude Include="emu\cores\c219.h" />
+    <ClInclude Include="emu\cores\c352.h" />
+    <ClInclude Include="emu\cores\c6280intf.h" />
+    <ClInclude Include="emu\cores\c6280_mame.h" />
+    <ClInclude Include="emu\cores\emu2149.h" />
+    <ClInclude Include="emu\cores\emu2149_private.h" />
+    <ClInclude Include="emu\cores\emu2413.h" />
+    <ClInclude Include="emu\cores\emu2413_private.h" />
+    <ClInclude Include="emu\cores\emutypes.h" />
+    <ClInclude Include="emu\cores\es5503.h" />
+    <ClInclude Include="emu\cores\es5506.h" />
+    <ClInclude Include="emu\cores\fmopl.h" />
+    <ClInclude Include="emu\cores\fmopn.h" />
+    <ClInclude Include="emu\cores\gb.h" />
+    <ClInclude Include="emu\cores\iremga20.h" />
+    <ClInclude Include="emu\cores\k051649.h" />
+    <ClInclude Include="emu\cores\k053260.h" />
+    <ClInclude Include="emu\cores\k054539.h" />
+    <ClInclude Include="emu\cores\mikey.h" />
+    <ClInclude Include="emu\cores\multipcm.h" />
+    <ClInclude Include="emu\cores\nesintf.h" />
+    <ClInclude Include="emu\cores\nes_apu.h" />
+    <ClInclude Include="emu\cores\nes_defs.h" />
+    <ClInclude Include="emu\cores\np_nes_apu.h" />
+    <ClInclude Include="emu\cores\np_nes_dmc.h" />
+    <ClInclude Include="emu\cores\np_nes_fds.h" />
+    <ClInclude Include="emu\cores\nukedopl3.h" />
+    <ClInclude Include="emu\cores\nukedopll.h" />
+    <ClInclude Include="emu\cores\nukedopll_int.h" />
+    <ClInclude Include="emu\cores\nukedopl3_int.h" />
+    <ClInclude Include="emu\cores\nukedopm.h" />
+    <ClInclude Include="emu\cores\nukedopm_int.h" />
+    <ClInclude Include="emu\cores\okiadpcm.h" />
+    <ClInclude Include="emu\cores\okim6258.h" />
+    <ClInclude Include="emu\cores\Ootake_PSG.h" />
+    <ClInclude Include="emu\cores\Ootake_PSG_private.h" />
+    <ClInclude Include="emu\cores\oplintf.h" />
+    <ClInclude Include="emu\cores\opll_2413tone.h" />
+    <ClInclude Include="emu\cores\opll_281btone.h" />
+    <ClInclude Include="emu\cores\opll_vrc7tone.h" />
+    <ClInclude Include="emu\cores\opnintf.h" />
+    <ClInclude Include="emu\cores\pokey.h" />
+    <ClInclude Include="emu\cores\pwm.h" />
+    <ClInclude Include="emu\cores\qsound_mame.h" />
+    <ClInclude Include="emu\cores\qsoundintf.h" />
+    <ClInclude Include="emu\cores\qsound_ctr.h" />
+    <ClInclude Include="emu\cores\rf5c68.h" />
+    <ClInclude Include="emu\cores\rf5cintf.h" />
+    <ClInclude Include="emu\cores\saa1099_mame.h" />
+    <ClInclude Include="emu\cores\saa1099_vb.h" />
+    <ClInclude Include="emu\cores\saaintf.h" />
+    <ClInclude Include="emu\cores\scd_pcm.h" />
+    <ClInclude Include="emu\cores\scsp.h" />
+    <ClInclude Include="emu\cores\scspdsp.h" />
+    <ClInclude Include="emu\cores\segapcm.h" />
+    <ClInclude Include="emu\cores\sn76489_private.h" />
+    <ClInclude Include="emu\cores\upd7759.h" />
+    <ClInclude Include="emu\cores\vsu.h" />
+    <ClInclude Include="emu\cores\ws_audio.h" />
+    <ClInclude Include="emu\cores\ws_initialIo.h" />
+    <ClInclude Include="emu\cores\x1_010.h" />
+    <ClInclude Include="emu\cores\ym2151.h" />
+    <ClInclude Include="emu\cores\ym2413.h" />
+    <ClInclude Include="emu\cores\ym2612.h" />
+    <ClInclude Include="emu\cores\ym2612_int.h" />
+    <ClInclude Include="emu\cores\ym3438.h" />
+    <ClInclude Include="emu\cores\ym3438_int.h" />
+    <ClInclude Include="emu\cores\ymdeltat.h" />
+    <ClInclude Include="emu\cores\ymf262.h" />
+    <ClInclude Include="emu\cores\ymf271.h" />
+    <ClInclude Include="emu\cores\ymf278b.h" />
+    <ClInclude Include="emu\cores\ymz280b.h" />
+    <ClInclude Include="emu\EmuHelper.h" />
+    <ClInclude Include="emu\logging.h" />
+    <ClInclude Include="emu\panning.h" />
+    <ClInclude Include="emu\EmuCores.h" />
+    <ClInclude Include="emu\EmuStructs.h" />
+    <ClInclude Include="emu\cores\okim6295.h" />
+    <ClInclude Include="emu\RatioCntr.h" />
+    <ClInclude Include="emu\Resampler.h" />
+    <ClInclude Include="emu\cores\sn76489.h" />
+    <ClInclude Include="emu\cores\sn76496.h" />
+    <ClInclude Include="emu\cores\sn764intf.h" />
+    <ClInclude Include="emu\snddef.h" />
+    <ClInclude Include="emu\SoundDevs.h" />
+    <ClInclude Include="emu\SoundEmu.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

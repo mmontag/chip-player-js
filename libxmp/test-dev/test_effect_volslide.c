@@ -3,22 +3,22 @@
 
 
 static int vals[] = {
-	64, 64, 62, 60,		/* down 2 */
-	58, 58, 56, 54,		/* memory */
-	52, 52, 53, 54,		/* up 1 */
-	55, 55, 56, 57,		/* memory */
+	64, 62, 60, 58,		/* down 2 */
+	58, 56, 54, 52,		/* memory */
+	52, 53, 54, 55,		/* up 1 */
+	55, 56, 57, 58,		/* memory */
 	63, 63, 63, 63,		/* set 63 */
-	63, 63, 64, 64,		/* up 1 */
+	63, 64, 64, 64,		/* up 1 */
 	1, 1, 1, 1,		/* set 1 */
-	1, 1, 0, 0,		/* down 1 */
+	1, 0, 0, 0,		/* down 1 */
 	10, 10, 10, 10,		/* set 10 */
-	10, 8, 8, 8,		/* fine slide down 2 */
-	8, 9, 9, 9,		/* fine slide up 1 */
-	9, 10, 10, 10,		/* memory */
+	8, 8, 8, 8,		/* fine slide down 2 */
+	9, 9, 9, 9,		/* fine slide up 1 */
+	10, 10, 10, 10,		/* memory */
 	32, 32, 32, 32,		/* set 32 */
-	32, 32, 30, 28,		/* down 2 */
-	26, 26, 29, 32,		/* up 3 */
-	35, 35, 38, 41		/* memory */
+	32, 30, 28, 26,		/* down 2 */
+	26, 29, 32, 35,		/* up 3 */
+	35, 38, 41, 44		/* memory */
 };
 
 TEST(test_effect_volslide)
@@ -66,5 +66,8 @@ TEST(test_effect_volslide)
 		fail_unless(info.channel_info[0].volume == vals[i], "volume slide error");
 
 	}
+
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

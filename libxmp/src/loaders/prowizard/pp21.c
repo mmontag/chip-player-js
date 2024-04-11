@@ -1,5 +1,29 @@
+/* ProWizard
+ * Copyright (C) 1997 Sylvain "Asle" Chipaux
+ * Modified in 2006,2009,2014,2015 by Claudio Matsuoka
+ * Modified in 2021 by Alice Rowan
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 /*
- * ProPacker_21.c   Copyright (C) 1997 Sylvain "Asle" Chipaux
+ * ProPacker_21.c
  *
  * Converts PP21 packed MODs back to PTK MODs
  * thanks to Gryzor and his ProWizard tool ! ... without it, this prog
@@ -12,8 +36,6 @@
  * - Add PP30 support
  */
 
-#include <string.h>
-#include <stdlib.h>
 #include "prowiz.h"
 
 
@@ -31,9 +53,9 @@ static int depack_pp21_pp30(HIO_HANDLE *in, FILE *out, int is_30)
 	int ssize;
 	int tabsize;		/* Reference Table Size */
 
-	memset(ptable, 0, 128);
-	memset(trk, 0, 4 * 128);
-	memset(tptr, 0, 512 * 64 * sizeof (int));
+	memset(ptable, 0, sizeof(ptable));
+	memset(trk, 0, sizeof(trk));
+	memset(tptr, 0, sizeof(tptr));
 
 	pw_write_zero(out, 20);			/* title */
 
@@ -94,10 +116,13 @@ static int depack_pp21_pp30(HIO_HANDLE *in, FILE *out, int is_30)
 
 	/* read "reference Table" */
 	tab = (uint8 *)malloc(tabsize);
-	hio_read(tab, tabsize, 1, in);
+	if (hio_read(tab, tabsize, 1, in) != 1) {
+		free(tab);
+		return -1;
+	}
 
 	for (i = 0; i < numpat; i++) {
-		memset(buf, 0, 1024);
+		memset(buf, 0, sizeof(buf));
 		for (j = 0; j < 64; j++) {
 			uint8 *b = buf + j * 16;
 			memcpy(b, tab + tptr[trk[0][i]][j] * 4, 4);
@@ -131,6 +156,8 @@ static int test_pp21(const uint8 *data, char *t, int s)
 	int i;
 	int ssize, tsize, npat, max_ref;
 
+	PW_REQUEST_DATA(s, 762);
+
 	ssize = 0;
 	for (i = 0; i < 31; i++) {
 		const uint8 *d = data + i * 8;
@@ -170,6 +197,8 @@ static int test_pp21(const uint8 *data, char *t, int s)
 
 	tsize++;
 	tsize <<= 6;
+
+	PW_REQUEST_DATA(s, tsize * 2 + 4 + 762);
 
 	/* test #4  track data value > $4000 ? */
 	max_ref = 0;
@@ -199,6 +228,8 @@ static int test_pp30(const uint8 *data, char *t, int s)
 	int i;
 	int ssize, tsize, npat, max_ref, ref_size;
 
+	PW_REQUEST_DATA(s, 762);
+
 	ssize = 0;
 	for (i = 0; i < 31; i++) {
 		const uint8 *d = data + i * 8;
@@ -239,6 +270,8 @@ static int test_pp30(const uint8 *data, char *t, int s)
 	tsize++;
 	tsize <<= 6;
 
+	PW_REQUEST_DATA(s, (tsize * 2) + 4 + 762);
+
 	/* test #4  track data value *4 ? */
 	max_ref = 0;
 	for (i = 0; i < tsize; i++) {
@@ -266,9 +299,11 @@ static int test_pp30(const uint8 *data, char *t, int s)
 
 	ref_size >>= 2;
 
+	PW_REQUEST_DATA(s, (ref_size * 4) + (tsize * 2) + 4 + 762);
+
 	/* test #6  data in reference table ... */
 	for (i = 0; i < ref_size; i++) {
-		const uint8 *d = data + tsize + 766 + i * 4;
+		const uint8 *d = data + (tsize * 2) + 766 + i * 4;
 		uint8 fxt = d[2] & 0x0f;
 		uint8 fxp = d[3];
 
@@ -277,8 +312,8 @@ static int test_pp30(const uint8 *data, char *t, int s)
 			return -1;
 		}
 
-		/* break > 40 ? */
-		if (fxt == 0x0d && fxp > 0x40) {
+		/* break > 64 (packed decimal) ? */
+		if (fxt == 0x0d && (fxp > 0x64 || (fxp & 0xf) > 9)) {
 			return -1;
 		}
 

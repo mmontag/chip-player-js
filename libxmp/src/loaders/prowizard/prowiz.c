@@ -1,21 +1,37 @@
-/*
- * Pro-Wizard_1.c
- *
+/* ProWizard
  * Copyright (C) 1997-1999 Sylvain "Asle" Chipaux
  * Copyright (C) 2006-2007 Claudio Matsuoka
+ * Copyright (C) 2021 Alice Rowan
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
-#include <string.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
+/*
+ * Pro-Wizard_1.c
+ */
+
 #include "xmp.h"
 
 #include "prowiz.h"
 
 
-const struct pw_format *const pw_format[NUM_PW_FORMATS + 1] = {
+const struct pw_format *const pw_formats[NUM_PW_FORMATS + 1] = {
 	/* With signature */
 	&pw_ac1d,
 	&pw_fchs,
@@ -40,7 +56,6 @@ const struct pw_format *const pw_format[NUM_PW_FORMATS + 1] = {
 
 	/* No signature */
 	&pw_xann,
-	&pw_mp_noid,	/* Must check before Heatseeker */
 	&pw_di,
 	&pw_eu,
 	&pw_p4x,
@@ -50,6 +65,7 @@ const struct pw_format *const pw_format[NUM_PW_FORMATS + 1] = {
 	&pw_p50a,
 	&pw_p60a,
 	&pw_p61a,
+	&pw_mp_noid,	/* Must check before Heatseeker, after ProPacker 1.0 */
 	&pw_nru,
 	&pw_np2,
 	&pw_np1,
@@ -85,7 +101,7 @@ int pw_write_zero(FILE *out, int len)
 {
 	uint8 buf[1024];
 	int l;
-	
+
 	do {
 		l = len > 1024 ? 1024 : len;
 		memset(buf, 0, l);
@@ -98,90 +114,80 @@ int pw_write_zero(FILE *out, int len)
 
 int pw_wizardry(HIO_HANDLE *file_in, FILE *file_out, const char **name)
 {
-	int in_size;
-	uint8 *data;
-	char title[21];
-	int i;
+	const struct pw_format *format;
 
-	in_size = hio_size(file_in);
-
-	/* printf ("input file size : %d\n", in_size); */
-	if (in_size < MIN_FILE_LENGHT) {
-		return -2;
-	}
-
-	if ((data = (uint8 *)malloc(in_size)) == NULL) {
-		goto err;
-	}
-	if (hio_read(data, 1, in_size, file_in) != in_size) {
-		goto err2;
-	}
-
-
-  /********************************************************************/
-  /**************************   SEARCH   ******************************/
-  /********************************************************************/
-
-	for (i = 0; pw_format[i] != NULL; i++) {
-		D_("checking format: %s", pw_format[i]->name);
-		if (pw_format[i]->test(data, title, in_size) >= 0)
-			break;
-	}
-
-	if (pw_format[i] == NULL) {
-		goto err2;
-	}
-
-	if (hio_error(file_in)) {
-		/* reset error flag */
+	/**********   SEARCH   **********/
+	format = pw_check(file_in, NULL);
+	if (format == NULL) {
+		return -1;
 	}
 
 	hio_seek(file_in, 0, SEEK_SET);
-	if (pw_format[i]->depack(file_in, file_out) < 0) {
-		goto err2;
+	if (format->depack(file_in, file_out) < 0) {
+		return -1;
 	}
 
 	if (hio_error(file_in)) {
-		goto err2;
+		return -1;
 	}
 
 	fflush(file_out);
-	free(data);
 
 	if (name != NULL) {
-		*name = pw_format[i]->name;
+		*name = format->name;
 	}
 
 	return 0;
-
-    err2:
-	free(data);
-    err:
-	return -1;
 }
 
-int pw_check(unsigned char *b, int s, struct xmp_test_info *info)
+#define BUF_SIZE 0x10000
+
+const struct pw_format *pw_check(HIO_HANDLE *f, struct xmp_test_info *info)
 {
 	int i, res;
 	char title[21];
+	unsigned char *b;
+	int s = BUF_SIZE;
 
-	for (i = 0; pw_format[i] != NULL; i++) {
-		D_("checking format [%d]: %s", s, pw_format[i]->name);
-		res = pw_format[i]->test(b, title, s);
+	b = (unsigned char *) calloc(1, BUF_SIZE);
+	if (b == NULL)
+		return NULL;
+
+	s = hio_read(b, 1, s, f);
+
+	for (i = 0; pw_formats[i] != NULL; i++) {
+		D_("checking format [%d]: %s", s, pw_formats[i]->name);
+		res = pw_formats[i]->test(b, title, s);
 		if (res > 0) {
-			return res;
+			/* Extra data was requested. */
+			unsigned char *buf = (unsigned char *) realloc(b, s + res);
+			if (buf == NULL) {
+				free(b);
+				return NULL;
+			}
+			b = buf;
+
+			/* If the requested data can't be read, try the next format. */
+			if (!hio_read(b + s, res, 1, f)) {
+				continue;
+			}
+
+			/* Try this format again... */
+			s += res;
+			i--;
 		} else if (res == 0) {
-			D_("format ok: %s\n", pw_format[i]->name);
+			D_("format ok: %s\n", pw_formats[i]->name);
 			if (info != NULL) {
 				memcpy(info->name, title, 21);
-				strncpy(info->type, pw_format[i]->name,
+				strncpy(info->type, pw_formats[i]->name,
 							XMP_NAME_SIZE - 1);
 			}
-			return 0;
+			free(b);
+			return pw_formats[i];
 		}
 	}
-
-	return -1;
+	free(b);
+	return NULL;
 }
 
 void pw_read_title(const unsigned char *b, char *t, int s)

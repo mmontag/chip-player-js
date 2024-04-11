@@ -86,5 +86,8 @@ TEST(test_effect_pastnote_off)
 
 	xmp_play_frame(opaque); /* frame 4 */
 	fail_unless(vi->chn == -1, "didn't end envelope");
+
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

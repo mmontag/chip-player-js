@@ -29,7 +29,7 @@ docs/libxmp.man.rst: docs/libxmp.rst docs/manpage-header.rst docs/Makefile
 	sed -n '/^Introduction/,$$p' docs/libxmp.rst >> $@
 
 docs/libxmp.html: docs/libxmp.rst
-	rst2html docs/libxmp.rst > $@
+	rst2html docs/libxmp.rst --stylesheet docs/style.css > $@
 
 docs/libxmp.pdf: docs/libxmp.rst docs/custom.style
 	rst2pdf docs/libxmp.rst -c --smart-quotes=1 -s docs/custom.style --footer="###Page###" -o $@

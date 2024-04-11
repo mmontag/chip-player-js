@@ -1,5 +1,4 @@
 #include "test.h"
-#include <math.h>
 
 /*
 Periodtable for Tuning 0, Normal
@@ -9,8 +8,6 @@ Periodtable for Tuning 0, Normal
 
 Amiga limits: 907 to 108
 */
-
-#define PERIOD ((int)round(1.0 * info.channel_info[0].period / 4096))
 
 TEST(test_player_period_mod_range)
 {
@@ -113,5 +110,8 @@ TEST(test_player_period_mod_range)
 		xmp_get_frame_info(opaque, &info);
 		fail_unless(PERIOD >= 108, "Bad upper limit");
 	}
+
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

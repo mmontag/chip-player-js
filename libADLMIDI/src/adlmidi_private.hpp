@@ -2,7 +2,7 @@
  * libADLMIDI is a free Software MIDI synthesizer library with OPL3 emulation
  *
  * Original ADLMIDI code: Copyright (c) 2010-2014 Joel Yliluoma <bisqwit@iki.fi>
- * ADLMIDI Library API:   Copyright (c) 2015-2020 Vitaly Novichkov <admin@wohlnet.ru>
+ * ADLMIDI Library API:   Copyright (c) 2015-2021 Vitaly Novichkov <admin@wohlnet.ru>
  *
  * Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 emulation:
  * http://iki.fi/bisqwit/source/adlmidi.html
@@ -145,7 +145,7 @@ class OPLChipBase;
 
 typedef class OPL3 Synth;
 
-#include "adldata.hh"
+#include "oplinst.h"
 #include "adlmidi_db.h"
 
 #define ADLMIDI_BUILD
@@ -228,7 +228,7 @@ extern void adl_audioTickHandler(void *instance, uint32_t chipId, uint32_t rate)
 extern int adlCalculateFourOpChannels(MIDIplay *play, bool silent = false);
 
 #ifndef DISABLE_EMBEDDED_BANKS
-extern void adlFromInstrument(const BanksDump::InstrumentEntry &instIn, adlinsdata2 &instOut);
+extern void adlFromInstrument(const BanksDump::InstrumentEntry &instIn, OplInstMeta &instOut);
 #endif
 
 #endif // ADLMIDI_PRIVATE_HPP

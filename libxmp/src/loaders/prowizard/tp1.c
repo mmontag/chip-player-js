@@ -1,13 +1,33 @@
-/*
- * TrackerPacker_v1.c  Copyright (C) 1998 Asle / ReDoX
- *
- * Converts TP1 packed MODs back to PTK MODs
- *
+/* ProWizard
+ * Copyright (C) 1998 Asle / ReDoX
  * Modified in 2016 by Claudio Matsuoka
+ * Modified in 2021 by Alice Rowan
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
-#include <string.h>
-#include <stdlib.h>
+/*
+ * TrackerPacker_v1.c
+ *
+ * Converts TP1 packed MODs back to PTK MODs
+ */
+
 #include "prowiz.h"
 
 static int depack_tp1(HIO_HANDLE *in, FILE *out)
@@ -19,15 +39,15 @@ static int depack_tp1(HIO_HANDLE *in, FILE *out)
 	uint8 npat = 0x00;
 	uint8 len;
 	int i, j;
-	int pat_ofs = 999999;
-	int paddr[128];
-	int paddr_ord[128];
+	uint32 pat_ofs = 999999;
+	uint32 paddr[128];
+	uint32 paddr_ord[128];
 	int size, ssize = 0;
 	int smp_ofs;
 
-	memset(paddr, 0, 128 * 4);
-	memset(paddr_ord, 0, 128 * 4);
-	memset(pnum, 0, 128);
+	memset(paddr, 0, sizeof(paddr));
+	memset(paddr_ord, 0, sizeof(paddr_ord));
+	memset(pnum, 0, sizeof(pnum));
 
 	hio_read32b(in);			/* skip magic */
 	hio_read32b(in);			/* skip size */
@@ -93,7 +113,7 @@ static int depack_tp1(HIO_HANDLE *in, FILE *out)
 		if (hio_seek(in, 794 + paddr_ord[i] - pat_ofs, SEEK_SET) < 0) {
 			return -1;
 		}
-		memset(pdata, 0, 1024);
+		memset(pdata, 0, sizeof(pdata));
 		for (j = 0; j < 256; j++) {
 			uint8 *p = pdata + j * 4;
 
@@ -114,10 +134,10 @@ static int depack_tp1(HIO_HANDLE *in, FILE *out)
 
 			note = (c1 & 0xfe) >> 1;
 
-			if (note > 36) {
+			if (!PTK_IS_VALID_NOTE(note)) {
 				return -1;
 			}
-			
+
 			ins = ((c2 >> 4) & 0x0f) | ((c1 << 4) & 0x10);
 			fxt = c2 & 0x0f;
 			fxp = c3;
@@ -178,14 +198,14 @@ static int test_tp1(const uint8 *data, char *t, int s)
 	/* test sample sizes */
 	for (i = 0; i < 31; i++) {
 		const uint8 *d = data + i * 8 + 32;
-		int len = readmem16b(d + 2) << 1;	/* size */
+		int sz  = readmem16b(d + 2) << 1;	/* size */
 		int start = readmem16b(d + 4) << 1;	/* loop start */
 		int lsize = readmem16b(d + 6) << 1;	/* loop size */
 
-		if (len > 0xffff || start > 0xffff || lsize > 0xffff)
+		if (sz > 0xffff || start > 0xffff || lsize > 0xffff)
 			return -1;
 
-		if (start + lsize > len + 2)
+		if (start + lsize > sz + 2)
 			return -1;
 
 		if (start != 0 && lsize == 0)
@@ -193,8 +213,8 @@ static int test_tp1(const uint8 *data, char *t, int s)
 	}
 
 	/* pattern list size */
-	len = data[281];
-	if (len == 0 || len > 128) {
+	len = readmem16b(data + 280) + 1;
+	if (len > 128) {
 		return -1;
 	}
 

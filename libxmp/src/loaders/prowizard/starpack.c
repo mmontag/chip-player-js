@@ -1,13 +1,33 @@
-/*
- * StarTrekker_Packer.c   Copyright (C) 1997 Sylvain "Asle" Chipaux
- *
- * Converts back to ptk StarTrekker packed MODs
- *
+/* ProWizard
+ * Copyright (C) 1997 Sylvain "Asle" Chipaux
  * Modified in 2006,2009,2014 by Claudio Matsuoka
+ * Modified in 2021 by Alice Rowan
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
-#include <string.h>
-#include <stdlib.h>
+/*
+ * StarTrekker_Packer.c
+ *
+ * Converts back to ptk StarTrekker packed MODs
+ */
+
 #include "prowiz.h"
 
 
@@ -25,12 +45,13 @@ static int depack_starpack(HIO_HANDLE *in, FILE *out)
 	int paddr_tmp2[128];
 	int tmp_ptr, tmp1, tmp2;
 	int smp_addr = 0;
+	int spaces_left;
 
-	memset(pnum, 0, 128);
-	memset(pnum_tmp, 0, 128);
-	memset(paddr, 0, 128 * 4);
-	memset(paddr_tmp, 0, 128 * 4);
-	memset(paddr_tmp2, 0, 128 * 4);
+	memset(pnum, 0, sizeof(pnum));
+	memset(pnum_tmp, 0, sizeof(pnum_tmp));
+	memset(paddr, 0, sizeof(paddr));
+	memset(paddr_tmp, 0, sizeof(paddr_tmp));
+	memset(paddr_tmp2, 0, sizeof(paddr_tmp2));
 
 	pw_move_data(out, in, 20);		/* title */
 
@@ -44,7 +65,7 @@ static int depack_starpack(HIO_HANDLE *in, FILE *out)
 		write16b(out, hio_read16b(in));	/* loop size */
 	}
 
-	pat_pos = hio_read16b(in);		/* size of pattern table */
+	pat_pos = hio_read16b(in) >> 2;		/* num positions = size of pattern table / 4 */
 
 	if (pat_pos >= 128) {
 		return -1;
@@ -107,13 +128,15 @@ static int depack_starpack(HIO_HANDLE *in, FILE *out)
 	}
 
 	/* try to locate unused patterns .. hard ! */
+	spaces_left = 128 - pat_pos;
 	j = 0;
 	for (i = 0; i < (pat_pos - 1); i++) {
 		paddr_tmp[j] = paddr_tmp2[i];
 		j += 1;
-		if ((paddr_tmp2[i + 1] - paddr_tmp2[i]) > 1024) {
+		if ((paddr_tmp2[i + 1] - paddr_tmp2[i]) > 1024 && spaces_left > 0) {
 			/*printf ( "! pattern %ld is not used ... saved anyway\n" , j ); */
 			paddr_tmp[j] = paddr_tmp2[i] + 1024;
+			spaces_left--;
 			j += 1;
 		}
 	}
@@ -127,7 +150,7 @@ static int depack_starpack(HIO_HANDLE *in, FILE *out)
 			}
 	}
 
-	memset(pnum, 0, 128);
+	memset(pnum, 0, sizeof(pnum));
 	for (i = 0; i < pat_pos; i++) {
 		pnum[i] = pnum_tmp[i];
 	}
@@ -151,7 +174,7 @@ static int depack_starpack(HIO_HANDLE *in, FILE *out)
 	/* pattern data */
 	num_pat += 1;
 	for (i = 0; i < num_pat; i++) {
-		memset(buffer, 0, 1024);
+		memset(buffer, 0, sizeof(buffer));
 		for (j = 0; j < 64; j++) {
 			for (k = 0; k < 4; k++) {
 				uint8 c1, c2, c3, c4, c5;
@@ -190,13 +213,7 @@ static int test_starpack(const uint8 *data, char *t, int s)
 	int i;
 	int plist_size, len, sdata_ofs, pdata_ofs;
 
-#if 0
-	/* test 1 */
-	if (i < 23) {
-		Test = BAD;
-		return;
-	}
-#endif
+	PW_REQUEST_DATA(s, 788);
 
 	/* test 2 */
 	plist_size = readmem16b(data + 268);
@@ -248,17 +265,19 @@ static int test_starpack(const uint8 *data, char *t, int s)
 		return -1;
 
 	/* pattern addresses > sample address ? */
-	for (i = 0; i < len; i += 4) {
+	for (i = 0; i < len; i++) {
 		/* each pattern address */
-		if (readmem32b(data + i + 272) > sdata_ofs)
+		if (readmem32b(data + i * 4 + 272) > sdata_ofs)
 			return -1;
 	}
 
 	/* test last patterns of the pattern list == 0 ? */
-	for (i += 2; i < 128; i++) {
+	for (; i < 128; i++) {
 		if (readmem32b(data + i * 4 + 272) != 0)
 			return -1;
 	}
+
+	PW_REQUEST_DATA(s, sdata_ofs + 4);
 
 	/* test pattern data */
 	pdata_ofs = 788;

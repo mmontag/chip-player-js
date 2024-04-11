@@ -2,7 +2,7 @@
  * libADLMIDI is a free Software MIDI synthesizer library with OPL3 emulation
  *
  * Original ADLMIDI code: Copyright (c) 2010-2014 Joel Yliluoma <bisqwit@iki.fi>
- * ADLMIDI Library API:   Copyright (c) 2015-2020 Vitaly Novichkov <admin@wohlnet.ru>
+ * ADLMIDI Library API:   Copyright (c) 2015-2021 Vitaly Novichkov <admin@wohlnet.ru>
  *
  * Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 emulation:
  * http://iki.fi/bisqwit/source/adlmidi.html
@@ -24,34 +24,20 @@
 #include "adlmidi_midiplay.hpp"
 #include "adlmidi_opl3.hpp"
 #include "adlmidi_private.hpp"
+#ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
 #include "midi_sequencer.hpp"
+#endif
 
 // Minimum life time of percussion notes
-static const double drum_note_min_time = 0.03;
-
-//static const char MIDIsymbols[256+1] =
-//"PPPPPPhcckmvmxbd"  // Ins  0-15
-//"oooooahoGGGGGGGG"  // Ins 16-31
-//"BBBBBBBBVVVVVHHM"  // Ins 32-47
-//"SSSSOOOcTTTTTTTT"  // Ins 48-63
-//"XXXXTTTFFFFFFFFF"  // Ins 64-79
-//"LLLLLLLLpppppppp"  // Ins 80-95
-//"XXXXXXXXGGGGGTSS"  // Ins 96-111
-//"bbbbMMMcGXXXXXXX"  // Ins 112-127
-//"????????????????"  // Prc 0-15
-//"????????????????"  // Prc 16-31
-//"???DDshMhhhCCCbM"  // Prc 32-47
-//"CBDMMDDDMMDDDDDD"  // Prc 48-63
-//"DDDDDDDDDDDDDDDD"  // Prc 64-79
-//"DD??????????????"  // Prc 80-95
-//"????????????????"  // Prc 96-111
-//"????????????????"; // Prc 112-127
+static const double s_drum_note_min_time = 0.03;
 
 enum { MasterVolumeDefault = 127 };
 
+
 inline bool isXgPercChannel(uint8_t msb, uint8_t lsb)
 {
-    return (msb == 0x7E || msb == 0x7F) && (lsb == 0);
+    ADL_UNUSED(lsb);
+    return (msb == 0x7E || msb == 0x7F);
 }
 
 void MIDIplay::AdlChannel::addAge(int64_t us)
@@ -105,6 +91,7 @@ MIDIplay::MIDIplay(unsigned long sampleRate):
     //m_setup.SkipForward = 0;
     m_setup.scaleModulators     = -1;
     m_setup.fullRangeBrightnessCC74 = false;
+    m_setup.enableAutoArpeggio = true;
     m_setup.delay = 0.0;
     m_setup.carry = 0.0;
     m_setup.tick_skip_samples_delay = 0;
@@ -305,7 +292,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
         if(!i.is_end())
         {
             MIDIchannel::NoteInfo &ni = i->value;
-            const int veloffset = ni.ains->midi_velocity_offset;
+            const int veloffset = ni.ains->midiVelocityOffset;
             velocity = (uint8_t)std::min(127, std::max(1, (int)velocity + veloffset));
             ni.vol = velocity;
             noteUpdate(channel, i, Upd_Volume);
@@ -344,7 +331,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
             // Let XG Percussion bank will use (0...127 LSB range in WOPN file)
 
             // Choose: SFX or Drum Kits
-            bank = midiins + ((bank == 0x7E00) ? 128 : 0);
+            bank = midiins + ((midiChan.bank_msb == 0x7E) ? 128 : 0);
         }
         else
         {
@@ -356,7 +343,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     if(isPercussion)
         bank += Synth::PercussionTag;
 
-    const adlinsdata2 *ains = &Synth::m_emptyInstrument;
+    const OplInstMeta *ains = &Synth::m_emptyInstrument;
 
     //Set bank bank
     const Synth::Bank *bnk = NULL;
@@ -372,8 +359,8 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
             caughtMissingBank = true;
     }
 
-    //Or fall back to bank ignoring LSB (GS)
-    if((ains->flags & adlinsdata::Flag_NoSound) && ((m_synthMode & Mode_GS) != 0))
+    //Or fall back to bank ignoring LSB (GS/XG)
+    if(ains->flags & OplInstMeta::Flag_NoSound)
     {
         size_t fallback = bank & ~(size_t)0x7F;
         if(fallback != bank)
@@ -404,7 +391,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     }
 
     //Or fall back to first bank
-    if((ains->flags & adlinsdata::Flag_NoSound) != 0)
+    if((ains->flags & OplInstMeta::Flag_NoSound) != 0)
     {
         Synth::BankMap::iterator b = synth.m_insBanks.find(bank & Synth::PercussionTag);
         if(b != synth.m_insBanks.end())
@@ -413,13 +400,13 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
             ains = &bnk->ins[midiins];
     }
 
-    const int veloffset = ains->midi_velocity_offset;
+    const int veloffset = ains->midiVelocityOffset;
     velocity = (uint8_t)std::min(127, std::max(1, (int)velocity + veloffset));
 
     int32_t tone = note;
     if(!isPercussion && (bank > 0)) // For non-zero banks
     {
-        if(ains->flags & adlinsdata::Flag_NoSound)
+        if(ains->flags & OplInstMeta::Flag_NoSound)
         {
             if(hooks.onDebugMessage && caugh_missing_instruments.insert(static_cast<uint8_t>(midiins)).second)
             {
@@ -432,37 +419,37 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
         }
     }
 
-    if(ains->tone)
+    if(ains->drumTone)
     {
-        if(ains->tone >= 128)
-            tone = ains->tone - 128;
+        if(ains->drumTone >= 128)
+            tone = ains->drumTone - 128;
         else
-            tone = ains->tone;
+            tone = ains->drumTone;
     }
 
     //uint16_t i[2] = { ains->adlno1, ains->adlno2 };
-    bool is_2op = !(ains->flags & (adlinsdata::Flag_Pseudo4op|adlinsdata::Flag_Real4op));
-    bool pseudo_4op = ains->flags & adlinsdata::Flag_Pseudo4op;
+    bool is_2op = !(ains->flags & (OplInstMeta::Flag_Pseudo4op|OplInstMeta::Flag_Real4op));
+    bool pseudo_4op = ains->flags & OplInstMeta::Flag_Pseudo4op;
 #ifndef __WATCOMC__
     MIDIchannel::NoteInfo::Phys voices[MIDIchannel::NoteInfo::MaxNumPhysChans] =
     {
-        {0, ains->adl[0], false},
-        {0, (!is_2op) ? ains->adl[1] : ains->adl[0], pseudo_4op}
+        {0, ains->op[0], false},
+        {0, (!is_2op) ? ains->op[1] : ains->op[0], pseudo_4op}
     };
 #else /* Unfortunately, Watcom can't brace-initialize structure that incluses structure fields */
     MIDIchannel::NoteInfo::Phys voices[MIDIchannel::NoteInfo::MaxNumPhysChans];
     voices[0].chip_chan = 0;
-    voices[0].ains = ains->adl[0];
+    voices[0].op = ains->op[0];
     voices[0].pseudo4op = false;
     voices[1].chip_chan = 0;
-    voices[1].ains = (!is_2op) ? ains->adl[1] : ains->adl[0];
+    voices[1].op = (!is_2op) ? ains->op[1] : ains->op[0];
     voices[1].pseudo4op = pseudo_4op;
 #endif /* __WATCOMC__ */
 
     if(
         (synth.m_rhythmMode == 1) &&
         (
-            ((ains->flags & adlinsdata::Mask_RhythmMode) != 0) ||
+            ((ains->flags & OplInstMeta::Mask_RhythmMode) != 0) ||
             (m_cmfPercussionMode && (channel >= 11))
         )
     )
@@ -470,7 +457,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
         voices[1] = voices[0];//i[1] = i[0];
     }
 
-    bool isBlankNote = (ains->flags & adlinsdata::Flag_NoSound) != 0;
+    bool isBlankNote = (ains->flags & OplInstMeta::Flag_NoSound) != 0;
 
     if(hooks.onDebugMessage)
     {
@@ -528,16 +515,16 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
                     else
                     {
                         expected_mode = OPL3::ChanCat_Regular;
-                        uint32_t rm = (ains->flags & adlinsdata::Mask_RhythmMode);
-                        if(rm == adlinsdata::Flag_RM_BassDrum)
+                        uint32_t rm = (ains->flags & OplInstMeta::Mask_RhythmMode);
+                        if(rm == OplInstMeta::Flag_RM_BassDrum)
                             expected_mode = OPL3::ChanCat_Rhythm_Bass;
-                        else if(rm == adlinsdata::Flag_RM_Snare)
+                        else if(rm == OplInstMeta::Flag_RM_Snare)
                             expected_mode = OPL3::ChanCat_Rhythm_Snare;
-                        else if(rm == adlinsdata::Flag_RM_TomTom)
+                        else if(rm == OplInstMeta::Flag_RM_TomTom)
                             expected_mode = OPL3::ChanCat_Rhythm_Tom;
-                        else if(rm == adlinsdata::Flag_RM_Cymbal)
+                        else if(rm == OplInstMeta::Flag_RM_Cymbal)
                             expected_mode = OPL3::ChanCat_Rhythm_Cymbal;
-                        else if(rm == adlinsdata::Flag_RM_HiHat)
+                        else if(rm == OplInstMeta::Flag_RM_HiHat)
                             expected_mode = OPL3::ChanCat_Rhythm_HiHat;
                     }
                 }
@@ -550,7 +537,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
                 if(ccount == 0)
                 {
                     // Only use four-op master channels
-                    if(synth.m_channelCategory[a] != Synth::ChanCat_4op_Master)
+                    if(synth.m_channelCategory[a] != Synth::ChanCat_4op_First)
                         continue;
                 }
                 else
@@ -629,7 +616,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     // Enable life time extension on percussion note
     if (isPercussion)
     {
-        ni.ttl = drum_note_min_time;
+        ni.ttl = s_drum_note_min_time;
         ++midiChan.extended_note_count;
     }
 
@@ -1171,7 +1158,7 @@ void MIDIplay::noteUpdate(size_t midCh,
     const double currentTone    = info.currentTone;
     const uint8_t vol     = info.vol;
     const int midiins     = static_cast<int>(info.midiins);
-    const adlinsdata2 &ains = *info.ains;
+    const OplInstMeta &ains = *info.ains;
     AdlChannel::Location my_loc;
     my_loc.MidCh = static_cast<uint16_t>(midCh);
     my_loc.note  = info.note;
@@ -1192,15 +1179,15 @@ void MIDIplay::noteUpdate(size_t midCh,
 
         if(props_mask & Upd_Patch)
         {
-            synth.setPatch(c, ins.ains);
+            synth.setPatch(c, ins.op);
             AdlChannel::users_iterator i = m_chipChannels[c].find_or_create_user(my_loc);
             if(!i.is_end())    // inserts if necessary
             {
                 AdlChannel::LocationData &d = i->value;
                 d.sustained = AdlChannel::LocationData::Sustain_None;
                 d.vibdelay_us = 0;
-                d.fixed_sustain = (ains.ms_sound_kon == static_cast<uint16_t>(adlNoteOnMaxTime));
-                d.kon_time_until_neglible_us = 1000 * ains.ms_sound_kon;
+                d.fixed_sustain = (ains.soundKeyOnMs == static_cast<uint16_t>(OPLNoteOnMaxTime));
+                d.kon_time_until_neglible_us = 1000 * ains.soundKeyOnMs;
                 d.ins       = ins;
             }
         }
@@ -1210,7 +1197,7 @@ void MIDIplay::noteUpdate(size_t midCh,
     {
         const MIDIchannel::NoteInfo::Phys &ins = info.chip_channels[ccount];
         uint16_t c          = ins.chip_chan;
-        uint16_t c_slave    = info.chip_channels[1].chip_chan;
+        uint16_t c_secondary    = info.chip_channels[1].chip_chan;
 
         if(select_adlchn >= 0 && c != select_adlchn)
             continue;
@@ -1237,7 +1224,7 @@ void MIDIplay::noteUpdate(size_t midCh,
                     }
                     else
                     {
-                        m_chipChannels[c].koff_time_until_neglible_us = 1000 * int64_t(ains.ms_sound_koff);
+                        m_chipChannels[c].koff_time_until_neglible_us = 1000 * int64_t(ains.soundKeyOffMs);
                     }
                 }
             }
@@ -1264,7 +1251,7 @@ void MIDIplay::noteUpdate(size_t midCh,
         {
             const MIDIchannel &ch = m_midiChannels[midCh];
             bool is_percussion = (midCh == 9) || ch.is_xg_percussion;
-            uint_fast32_t brightness = is_percussion ? 127 : ch.brightness;
+            uint_fast32_t brightness = ch.brightness;
 
             if(!m_setup.fullRangeBrightnessCC74)
             {
@@ -1279,7 +1266,8 @@ void MIDIplay::noteUpdate(size_t midCh,
                             vol,
                             ch.volume,
                             ch.expression,
-                            static_cast<uint8_t>(brightness));
+                            brightness,
+                            is_percussion);
 
             /* DEBUG ONLY!!!
             static uint32_t max = 0;
@@ -1304,20 +1292,21 @@ void MIDIplay::noteUpdate(size_t midCh,
             {
                 MIDIchannel &chan = m_midiChannels[midCh];
                 double midibend = chan.bend * chan.bendsense;
-                double bend = midibend + ins.ains.finetune;
+                double bend = midibend + ins.op.noteOffset;
                 double phase = 0.0;
                 uint8_t vibrato = std::max(chan.vibrato, chan.aftertouch);
+
                 vibrato = std::max(vibrato, info.vibrato);
 
-                if((ains.flags & adlinsdata::Flag_Pseudo4op) && ins.pseudo4op)
+                if((ains.flags & OplInstMeta::Flag_Pseudo4op) && ins.pseudo4op)
                 {
-                    phase = ains.voice2_fine_tune;//0.125; // Detune the note slightly (this is what Doom does)
+                    phase = ains.voice2_fine_tune;
                 }
 
                 if(vibrato && (d.is_end() || d->value.vibdelay_us >= chan.vibdelay_us))
                     bend += static_cast<double>(vibrato) * chan.vibdepth * std::sin(chan.vibpos);
 
-                synth.noteOn(c, c_slave, BEND_COEFFICIENT * std::exp(0.057762265 * (currentTone + bend + phase)));
+                synth.noteOn(c, c_secondary, currentTone + bend + phase);
 
                 if(hooks.onNote)
                     hooks.onNote(hooks.onNote_userData, c, noteTone, midiins, vol, midibend);
@@ -1362,14 +1351,25 @@ int64_t MIDIplay::calculateChipChannelGoodness(size_t c, const MIDIchannel::Note
     // Rate channel with a releasing note
     if(s < 0 && chan.users.empty())
     {
+        bool isSame = (chan.recent_ins == ins);
         s -= 40000;
+
         // If it's same instrument, better chance to get it when no free channels
-        if(chan.recent_ins == ins && synth.m_musicMode == Synth::MODE_CMF)
-            s = 0; // Re-use releasing channel with the same instrument
+        if(synth.m_musicMode == Synth::MODE_CMF)
+        {
+            if(isSame)
+                s = 0; // Re-use releasing channel with the same instrument
+        }
         else if(synth.m_volumeScale == Synth::VOLUME_HMI)
+        {
             s = 0; // HMI doesn't care about the same instrument
-        else if(chan.recent_ins == ins)
-            s =  -koff_ms; // Wait until releasing sound will complete
+        }
+        else
+        {
+            if(isSame)
+                s =  -koff_ms; // Wait until releasing sound will complete
+        }
+
         return s;
     }
 
@@ -1504,6 +1504,9 @@ void MIDIplay::killOrEvacuate(size_t from_channel,
     {
         uint16_t cs = static_cast<uint16_t>(c);
 
+        if(!m_setup.enableAutoArpeggio)
+            break; // Arpeggio disabled completely
+
         if(c >= maxChannels)
             break;
         if(c == from_channel)
@@ -1548,13 +1551,6 @@ void MIDIplay::killOrEvacuate(size_t from_channel,
         }
     }
 
-    /*UI.PrintLn(
-                "collision @%u: [%ld] <- ins[%3u]",
-                c,
-                //ch[c].midiins<128?'M':'P', ch[c].midiins&127,
-                ch[c].age, //adlins[ch[c].insmeta].ms_sound_kon,
-                ins
-                );*/
     // Kill it
     noteUpdate(jd.loc.MidCh,
                i,
@@ -1723,7 +1719,7 @@ size_t MIDIplay::chooseDevice(const std::string &name)
     size_t n = m_midiDevices.size() * 16;
     m_midiDevices.insert(std::make_pair(name, n));
     m_midiChannels.resize(n + 16);
-    resetMIDIDefaults(n);
+    resetMIDIDefaults(static_cast<int>(n));
     return n;
 }
 
@@ -1733,6 +1729,13 @@ void MIDIplay::updateArpeggio(double) // amount = amount of time passed
     // simulated on the same channel, arpeggio them.
 
     Synth &synth = *m_synth;
+
+    if(!m_setup.enableAutoArpeggio) // Arpeggio was disabled
+    {
+        if(m_arpeggioCounter != 0)
+            m_arpeggioCounter = 0;
+        return;
+    }
 
 #if 0
     const unsigned desired_arpeggio_rate = 40; // Hz (upper limit)
@@ -1852,7 +1855,7 @@ void MIDIplay::describeChannels(char *str, char *attr, size_t size)
         AdlChannel::const_users_iterator locnext(loc);
         if(!loc.is_end()) ++locnext;
 
-	    if(loc.is_end())  // off
+        if(loc.is_end())  // off
         {
             str[index] = '-';
         }
@@ -1867,8 +1870,8 @@ void MIDIplay::describeChannels(char *str, char *attr, size_t size)
             case Synth::ChanCat_Regular:
                 str[index] = '+';
                 break;
-            case Synth::ChanCat_4op_Master:
-            case Synth::ChanCat_4op_Slave:
+            case Synth::ChanCat_4op_First:
+            case Synth::ChanCat_4op_Second:
                 str[index] = '#';
                 break;
             default:  // rhythm-mode percussion

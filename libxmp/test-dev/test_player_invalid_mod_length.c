@@ -19,5 +19,10 @@ TEST(test_player_invalid_mod_length)
 
 	xmp_play_frame(opaque);
 	xmp_get_frame_info(opaque, &info);
+
+	/* Fix length so the mod is freed correctly. */
+	m->mod.len = 2;
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

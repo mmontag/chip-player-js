@@ -16,5 +16,8 @@ TEST(test_depack_lha_l2_lzhuff7)
 
 	ret = compare_md5(info.md5, "d1b4a2c15dcd1730244e2334eae30876");
 	fail_unless(ret == 0, "MD5 error");
+
+	xmp_release_module(c);
+	xmp_free_context(c);
 }
 END_TEST

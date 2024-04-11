@@ -2,7 +2,7 @@
  * libADLMIDI is a free Software MIDI synthesizer library with OPL3 emulation
  *
  * Original ADLMIDI code: Copyright (c) 2010-2014 Joel Yliluoma <bisqwit@iki.fi>
- * ADLMIDI Library API:   Copyright (c) 2015-2020 Vitaly Novichkov <admin@wohlnet.ru>
+ * ADLMIDI Library API:   Copyright (c) 2015-2021 Vitaly Novichkov <admin@wohlnet.ru>
  *
  * Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 emulation:
  * http://iki.fi/bisqwit/source/adlmidi.html
@@ -43,11 +43,9 @@ int adlCalculateFourOpChannels(MIDIplay *play, bool silent)
     Synth &synth = *play->m_synth;
     size_t n_fourop[2] = {0, 0}, n_total[2] = {0, 0};
     bool rhythmModeNeeded = false;
+    size_t numFourOps = 0;
 
     //Automatically calculate how much 4-operator channels is necessary
-//#ifndef DISABLE_EMBEDDED_BANKS
-//    if(synth.m_embeddedBank == Synth::CustomBankTag)
-//#endif
     {
         //For custom bank
         Synth::BankMap::iterator it = synth.m_insBanks.begin();
@@ -58,38 +56,17 @@ int adlCalculateFourOpChannels(MIDIplay *play, bool silent)
             size_t div = (bank & Synth::PercussionTag) ? 1 : 0;
             for(size_t i = 0; i < 128; ++i)
             {
-                adlinsdata2 &ins = it->second.ins[i];
-                if(ins.flags & adlinsdata::Flag_NoSound)
+                OplInstMeta &ins = it->second.ins[i];
+                if(ins.flags & OplInstMeta::Flag_NoSound)
                     continue;
-                if((ins.flags & adlinsdata::Flag_Real4op) != 0)
+                if((ins.flags & OplInstMeta::Flag_Real4op) != 0)
                     ++n_fourop[div];
                 ++n_total[div];
-                if(div && ((ins.flags & adlinsdata::Mask_RhythmMode) != 0))
+                if(div && ((ins.flags & OplInstMeta::Mask_RhythmMode) != 0))
                     rhythmModeNeeded = true;
             }
         }
     }
-//#ifndef DISABLE_EMBEDDED_BANKS
-//    else
-//    {
-//        //For embedded bank
-//        for(size_t  a = 0; a < 256; ++a)
-//        {
-//            size_t insno = banks[play->m_setup.bankId][a];
-//            size_t div = a / 128;
-//            if(insno == 198)
-//                continue;
-//            ++n_total[div];
-//            adlinsdata2 ins = adlinsdata2::from_adldata(::adlins[insno]);
-//            if((ins.flags & adlinsdata::Flag_Real4op) != 0)
-//                ++n_fourop[div];
-//            if(div && ((ins.flags & adlinsdata::Mask_RhythmMode) != 0))
-//                rhythmModeNeeded = true;
-//        }
-//    }
-//#endif
-
-    size_t numFourOps = 0;
 
     // All 2ops (no 4ops)
     if((n_fourop[0] == 0) && (n_fourop[1] == 0))
@@ -104,13 +81,8 @@ int adlCalculateFourOpChannels(MIDIplay *play, bool silent)
     else if(n_fourop[0] > 0)
         numFourOps = 4;
 
-/* //Old formula
-    unsigned NumFourOps = ((n_fourop[0] == 0) && (n_fourop[1] == 0)) ? 0
-        : (n_fourop[0] >= (n_total[0] * 7) / 8) ? play->m_setup.NumCards * 6
-        : (play->m_setup.NumCards == 1 ? 1 : play->m_setup.NumCards * 4);
-*/
-
     synth.m_numFourOps = static_cast<unsigned>(numFourOps * synth.m_numChips);
+
     // Update channel categories and set up four-operator channels
     if(!silent)
         synth.updateChannelCategories();
@@ -122,17 +94,17 @@ int adlCalculateFourOpChannels(MIDIplay *play, bool silent)
 }
 
 #ifndef DISABLE_EMBEDDED_BANKS
-void adlFromInstrument(const BanksDump::InstrumentEntry &instIn, adlinsdata2 &instOut)
+void adlFromInstrument(const BanksDump::InstrumentEntry &instIn, OplInstMeta &instOut)
 {
     instOut.voice2_fine_tune = 0.0;
     if(instIn.secondVoiceDetune != 0)
         instOut.voice2_fine_tune = (double)((((int)instIn.secondVoiceDetune + 128) >> 1) - 64) / 32.0;
 
-    instOut.midi_velocity_offset = instIn.midiVelocityOffset;
-    instOut.tone = instIn.percussionKeyNumber;
-    instOut.flags = (instIn.instFlags & WOPL_Ins_4op) && (instIn.instFlags & WOPL_Ins_Pseudo4op) ? adlinsdata::Flag_Pseudo4op : 0;
-    instOut.flags|= (instIn.instFlags & WOPL_Ins_4op) && ((instIn.instFlags & WOPL_Ins_Pseudo4op) == 0) ? adlinsdata::Flag_Real4op : 0;
-    instOut.flags|= (instIn.instFlags & WOPL_Ins_IsBlank) ? adlinsdata::Flag_NoSound : 0;
+    instOut.midiVelocityOffset = instIn.midiVelocityOffset;
+    instOut.drumTone = instIn.percussionKeyNumber;
+    instOut.flags = (instIn.instFlags & WOPL_Ins_4op) && (instIn.instFlags & WOPL_Ins_Pseudo4op) ? OplInstMeta::Flag_Pseudo4op : 0;
+    instOut.flags|= (instIn.instFlags & WOPL_Ins_4op) && ((instIn.instFlags & WOPL_Ins_Pseudo4op) == 0) ? OplInstMeta::Flag_Real4op : 0;
+    instOut.flags|= (instIn.instFlags & WOPL_Ins_IsBlank) ? OplInstMeta::Flag_NoSound : 0;
     instOut.flags|= instIn.instFlags & WOPL_RhythmModeMask;
 
     for(size_t op = 0; op < 2; op++)
@@ -141,15 +113,15 @@ void adlFromInstrument(const BanksDump::InstrumentEntry &instIn, adlinsdata2 &in
             break;
         const BanksDump::Operator &op1 = g_embeddedBanksOperators[instIn.ops[(op * 2) + 0]];
         const BanksDump::Operator &op2 = g_embeddedBanksOperators[instIn.ops[(op * 2) + 1]];
-        instOut.adl[op].modulator_E862 = op1.d_E862;
-        instOut.adl[op].modulator_40   = op1.d_40;
-        instOut.adl[op].carrier_E862 = op2.d_E862;
-        instOut.adl[op].carrier_40   = op2.d_40;
-        instOut.adl[op].feedconn = (instIn.fbConn >> (op * 8)) & 0xFF;
-        instOut.adl[op].finetune = static_cast<int8_t>(op == 0 ? instIn.noteOffset1 : instIn.noteOffset2);
+        instOut.op[op].modulator_E862 = op1.d_E862;
+        instOut.op[op].modulator_40   = op1.d_40;
+        instOut.op[op].carrier_E862 = op2.d_E862;
+        instOut.op[op].carrier_40   = op2.d_40;
+        instOut.op[op].feedconn = (instIn.fbConn >> (op * 8)) & 0xFF;
+        instOut.op[op].noteOffset = static_cast<int8_t>(op == 0 ? instIn.noteOffset1 : instIn.noteOffset2);
     }
 
-    instOut.ms_sound_kon  = instIn.delay_on_ms;
-    instOut.ms_sound_koff = instIn.delay_off_ms;
+    instOut.soundKeyOnMs  = instIn.delay_on_ms;
+    instOut.soundKeyOffMs = instIn.delay_off_ms;
 }
 #endif

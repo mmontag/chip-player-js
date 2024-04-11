@@ -2,7 +2,7 @@
  * libADLMIDI is a free Software MIDI synthesizer library with OPL3 emulation
  *
  * Original ADLMIDI code: Copyright (c) 2010-2014 Joel Yliluoma <bisqwit@iki.fi>
- * ADLMIDI Library API:   Copyright (c) 2015-2020 Vitaly Novichkov <admin@wohlnet.ru>
+ * ADLMIDI Library API:   Copyright (c) 2015-2021 Vitaly Novichkov <admin@wohlnet.ru>
  *
  * Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 emulation:
  * http://iki.fi/bisqwit/source/adlmidi.html
@@ -24,7 +24,7 @@
 #ifndef ADLMIDI_OPL3_HPP
 #define ADLMIDI_OPL3_HPP
 
-#include "adldata.hh"
+#include "oplinst.h"
 #include "adlmidi_ptr.hpp"
 #include "adlmidi_private.hpp"
 #include "adlmidi_bankmap.h"
@@ -66,7 +66,7 @@ public:
 
 private:
     //! Cached patch data, needed by Touch()
-    std::vector<adldata>    m_insCache;
+    std::vector<OplTimbre>    m_insCache;
     //! Value written to B0, cached, needed by NoteOff.
     /*! Contains Key on/off state, octave block and frequency number values
      */
@@ -81,17 +81,17 @@ public:
     struct Bank
     {
         //! MIDI Bank instruments
-        adlinsdata2 ins[128];
+        OplInstMeta ins[128];
     };
     typedef BasicBankMap<Bank> BankMap;
     //! MIDI bank instruments data
     BankMap         m_insBanks;
     //! MIDI bank-wide setup
-    AdlBankSetup    m_insBankSetup;
+    OplBankSetup    m_insBankSetup;
 
 public:
     //! Blank instrument template
-    static const adlinsdata2 m_emptyInstrument;
+    static const OplInstMeta m_emptyInstrument;
     //! Total number of running concurrent emulated chips
     uint32_t m_numChips;
     //! Currently running embedded bank number. "CustomBankTag" means usign of the custom bank.
@@ -157,7 +157,9 @@ public:
         //! Windows 9x Generic FM driver volume scale table
         VOLUME_9X_GENERIC_FM,
         //! HMI Sound Operating System volume scale table
-        VOLUME_HMI
+        VOLUME_HMI,
+        //! HMI Sound Operating System volume scale model, older variant
+        VOLUME_HMI_OLD
     } m_volumeScale;
 
     //! Reserved
@@ -170,10 +172,10 @@ public:
     {
         //! Regular melodic/percussion channel
         ChanCat_Regular     = 0,
-        //! Four-op master
-        ChanCat_4op_Master  = 1,
-        //! Four-op slave
-        ChanCat_4op_Slave   = 2,
+        //! Four-op first part
+        ChanCat_4op_First  = 1,
+        //! Four-op second part
+        ChanCat_4op_Second   = 2,
         //! Rhythm-mode Bass drum
         ChanCat_Rhythm_Bass     = 3,
         //! Rhythm-mode Snare drum
@@ -184,18 +186,18 @@ public:
         ChanCat_Rhythm_Cymbal   = 6,
         //! Rhythm-mode Hi-Hat
         ChanCat_Rhythm_HiHat    = 7,
-        //! Rhythm-mode Slave channel
-        ChanCat_Rhythm_Slave    = 8
+        //! Rhythm-mode Secondary channel
+        ChanCat_Rhythm_Secondary    = 8
     };
 
     //! Category of the channel
-    /*! 1 = quad-master, 2 = quad-slave, 0 = regular
+    /*! 1 = quad-first, 2 = quad-second, 0 = regular
         3 = percussion BassDrum
         4 = percussion Snare
         5 = percussion Tom
         6 = percussion Crash cymbal
         7 = percussion Hihat
-        8 = percussion slave
+        8 = percussion Secondary
     */
     std::vector<uint32_t> m_channelCategory;
 
@@ -255,29 +257,33 @@ public:
     /**
      * @brief On the note in specified chip channel with specified frequency of the tone
      * @param c1 Channel of chip [or master 4-op channel] (Emulated chip choosing by next formula: [c = ch + (chipId * 23)])
-     * @param c2 Slave 4-op channel of chip, unused for 2op (Emulated chip choosing by next formula: [c = ch + (chipId * 23)])
-     * @param hertz Frequency of the tone in hertzes
+     * @param c2 Second 4-op channel of chip, unused for 2op (Emulated chip choosing by next formula: [c = ch + (chipId * 23)])
+     * @param tone The tone to play (integer part - MIDI halftone, decimal part - relative bend offset)
      */
-    void noteOn(size_t c1, size_t c2, double hertz);
+    void noteOn(size_t c1, size_t c2, double tone);
 
     /**
      * @brief Change setup of instrument in specified chip channel
      * @param c Channel of chip (Emulated chip choosing by next formula: [c = ch + (chipId * 23)])
-     * @param volume Volume level (from 0 to 127)
+     * @param velocity Note velocity (from 0 to 127)
+     * @param channelVolume Channel volume level (from 0 to 127)
+     * @param channelExpression Channel expression level (from 0 to 127)
      * @param brightness CC74 Brightness level (from 0 to 127)
+     * @param isDrum Is this a drum note? This flag is needed for some volume model algorithms
      */
     void touchNote(size_t c,
                    uint_fast32_t velocity,
                    uint_fast32_t channelVolume = 127,
                    uint_fast32_t channelExpression = 127,
-                   uint8_t brightness = 127);
+                   uint_fast32_t brightness = 127,
+                   bool isDrum = false);
 
     /**
      * @brief Set the instrument into specified chip channel
      * @param c Channel of chip (Emulated chip choosing by next formula: [c = ch + (chipId * 23)])
      * @param instrument Instrument data to set into the chip channel
      */
-    void setPatch(size_t c, const adldata &instrument);
+    void setPatch(size_t c, const OplTimbre &instrument);
 
     /**
      * @brief Set panpot position

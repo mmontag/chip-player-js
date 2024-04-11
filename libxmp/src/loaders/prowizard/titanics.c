@@ -1,15 +1,35 @@
-/*
- * TitanicsPlayer.c  Copyright (C) 2007 Sylvain "Asle" Chipaux
- *
+/* ProWizard
+ * Copyright (C) 2007 Sylvain "Asle" Chipaux
  * Modified in 2009,2014 by Claudio Matsuoka
+ * Modified in 2021 by Alice Rowan
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
+/*
+ * TitanicsPlayer.c
  */
 
 /*
  * Titan Trax vol. 1: http://www.youtube.com/watch?v=blgm0EcPUd8
  */
 
-#include <string.h>
-#include <stdlib.h>
 #include "prowiz.h"
 
 
@@ -95,7 +115,7 @@ static int depack_titanics(HIO_HANDLE *in, FILE *out)
 
 		hio_seek(in, pat_addr_final[i], SEEK_SET);
 
-		memset(buf, 0, 1024);
+		memset(buf, 0, sizeof(buf));
 		x = hio_read8(in);
 
 		for (k = 0; k < 64; ) {			/* row number */
@@ -104,7 +124,7 @@ static int depack_titanics(HIO_HANDLE *in, FILE *out)
 
 			note = y & 0x3f;
 
-			if (note <= 36) {
+			if (PTK_IS_VALID_NOTE(note)) {
 				buf[k * 16 + c] = ptk_table[note][0];
 				buf[k * 16 + c + 1] = ptk_table[note][1];
 			}
@@ -149,7 +169,7 @@ static int test_titanics(const uint8 *data, char *t, int s)
 
 		if (d[7] > 0x40)
 			return -1;
-			
+
 		if (d[6] != 0)
 			return -1;
 
@@ -182,15 +202,16 @@ static int test_titanics(const uint8 *data, char *t, int s)
 		int addr = 0;
 
 		for (i = 0; i < 256; i += 2) {
+			PW_REQUEST_DATA(s, i + 182);
 			addr = readmem16b(data + i + 180);
-	
+
 			if (addr == 0xffff)
 				break;
-	
+
 			if (addr < 180)
 				return -1;
 		}
-	
+
 		if (addr != 0xffff) {
 			return -1;
 		}

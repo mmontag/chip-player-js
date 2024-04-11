@@ -1,13 +1,32 @@
-/*
- * Promizer_0.1_Packer.c Copyright (C) 1997 Asle / ReDoX
- *
- * Converts back to ptk Promizer 0.1 packed MODs
- *
+/* ProWizard
+ * Copyright (C) 1997 Asle / ReDoX
  * Modified in 2016 by Claudio Matsuoka
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
-#include <string.h>
-#include <stdlib.h>
+/*
+ * Promizer_0.1_Packer.c
+ *
+ * Converts back to ptk Promizer 0.1 packed MODs
+ */
+
 #include <math.h>
 #include "prowiz.h"
 
@@ -24,10 +43,10 @@ static int depack_pm01(HIO_HANDLE *in, FILE *out)
 	int psize, size, ssize = 0;
 	int pat_ofs[128];
 
-	memset(ptable, 0, 128);
-	memset(pat_ofs, 0, 128 * 4);
-	memset(fin, 0, 31);
-	memset(oldins, 0, 4);
+	memset(ptable, 0, sizeof(ptable));
+	memset(pat_ofs, 0, sizeof(pat_ofs));
+	memset(fin, 0, sizeof(fin));
+	memset(oldins, 0, sizeof(oldins));
 
 	pw_write_zero(out, 20);			/* title */
 
@@ -83,7 +102,7 @@ static int depack_pm01(HIO_HANDLE *in, FILE *out)
 
 	/* read and XOR pattern data */
 	for (i = 0; i < npat; i++) {
-		memset(pdata, 0, 1024);
+		memset(pdata, 0, sizeof(pdata));
 		if (hio_read(pdata, 1, 1024, in) != 1024) {
 			return -1;
 		}

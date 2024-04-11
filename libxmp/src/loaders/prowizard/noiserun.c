@@ -1,13 +1,33 @@
-/*
- *  NoiseRunner.c	Copyright (C) 1997 Asle / ReDoX
+/* ProWizard
+ * Copyright (C) 1997 Asle / ReDoX
+ * Modified in 2010,2014 by Claudio Matsuoka
+ * Modified in 2020 by Alice Rowan
  *
- *  Converts NoiseRunner packed MODs back to Protracker
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
  *
- *  Modified in 2010,2014 by Claudio Matsuoka
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
-#include <string.h>
-#include <stdlib.h>
+/*
+ *  NoiseRunner.c
+ *
+ *  Converts NoiseRunner packed MODs back to Protracker
+ */
+
 #include "prowiz.h"
 
 
@@ -78,7 +98,7 @@ static int depack_nru(HIO_HANDLE *in, FILE *out)
 	/* pattern data */
 	hio_seek(in, 0x043c, SEEK_SET);
 	for (i = 0; i < max_pat; i++) {
-		memset(pat_data, 0, 1025);
+		memset(pat_data, 0, sizeof(pat_data));
 		hio_read(tmp, 1024, 1, in);
 		for (j = 0; j < 256; j++) {
 			ins = (tmp[j * 4 + 3] >> 3) & 0x1f;
@@ -97,8 +117,10 @@ static int depack_nru(HIO_HANDLE *in, FILE *out)
 				break;
 			}
 			pat_data[j * 4] = ins & 0xf0;
-			pat_data[j * 4] |= ptk_table[note / 2][0];
-			pat_data[j * 4 + 1] = ptk_table[note / 2][1];
+			if (PTK_IS_VALID_NOTE(note / 2)) {
+				pat_data[j * 4] |= ptk_table[note / 2][0];
+				pat_data[j * 4 + 1] = ptk_table[note / 2][1];
+			}
 			pat_data[j * 4 + 2] = (ins << 4) & 0xf0;
 			pat_data[j * 4 + 2] |= fxt;
 			pat_data[j * 4 + 3] = fxp;
@@ -137,7 +159,14 @@ static int test_nru(const uint8 *data, char *t, int s)
 
 	/* test #3 volumes */
 	for (i = 0; i < 31; i++) {
+		int addr, start;
 		if (data[1 + i * 16] > 0x40)
+			return -1;
+
+		/* Also check sample offsets. */
+		addr = readmem32b(data + 2 + i * 16);
+		start = readmem32b(data + 8 + i * 16);
+		if (addr < 0 || start < 0 || start < addr)
 			return -1;
 	}
 
@@ -167,6 +196,8 @@ static int test_nru(const uint8 *data, char *t, int s)
 
 	psize++;
 	psize <<= 8;
+
+	PW_REQUEST_DATA(s, psize * 4 + 1084);
 
 	/* test #5 pattern data ... */
 	for (i = 0; i < psize; i++) {

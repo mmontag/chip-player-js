@@ -12,6 +12,9 @@ The Authors
   * software mixer
   * virtual channel system design and implementation
 
+- Cameron Cawley
+  * Coconizer loader improvements, cleanup
+
 - Rudolf Cejka <cejkar@dcse.fee.vutbr.cz>
   * MED loader alignment and endianism fixes
   * XM loader endianism fixes
@@ -22,6 +25,9 @@ The Authors
 
 - Chris Cox <cox.christopher@gmail.com>
   * S3M loader fixes
+
+- Lionel Debroux
+  * numerous fuzzing test files
 
 - Michael Doering <mldoering@gmx.net>
   * RAR unpacking support
@@ -52,6 +58,13 @@ The Authors
 - Dominik Mierzejewski <dmierzej@elka.pw.edu.pl>
   * fixes for gcc 2.96/glibc 2.2
 
+- Vitaly Novichkov
+  * build system fixes, Emscripten port fixes
+
+- Alice Rowan <petrifiedrowan@gmail.com>
+  * numerous format loader fixes, improvements, and tests
+  * stability fixes
+
 - Francis Russell <francis@unchartedbackwaters.co.uk>
   * OctaMED tempo fixes
 
@@ -60,6 +73,11 @@ The Authors
 
 - Johan Samuelsson <spot@triad.se>
   * Amiga port and fixes
+
+- Özkan Sezer <sezeroz@gmail.com>
+  * build system/portability improvements
+  * stability fixes and cleanup
+  * Unreal UMX loader
 
 - Attila Sipos <h430827@stud.u-szeged.hu>
   * SQSH decruncher checksum
@@ -81,7 +99,8 @@ Rudá Moura, Paul Wise, Henrik Pauli, Zbigniew Luszpinski, Jon Rafkind,
 Reynir Stefansson, Ralf Hoffmann, Douglas Carmichael, Adric Riedel,
 Gürkan Sengün, Lorence Lombardo, Martin Willers, Laurent Clevy,
 Michael Doering, Bert Jahn, Adi Sapir, Jools Smyth, Martin Jeppesen,
-Stuart Caie, Bernhard März, Matthias Arndt.
+Stuart Caie, Bernhard März, Matthias Arndt, Johannes Schultz, viiri,
+NoSuck, Gabriel Kind, LossyDragon, Carsten Teibes.
 
 
 Third-party code licenses:
@@ -265,3 +284,38 @@ mkstemp implementation
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  SUCH DAMAGE.
 
+
+fnmatch implementation
+
+ Copyright (c) 1989, 1993, 1994
+      The Regents of the University of California.  All rights reserved.
+
+ This code is derived from software contributed to Berkeley by
+ Guido van Rossum.
+
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions
+ are met:
+
+ 1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+
+ 3. Neither the name of the University nor the names of its contributors
+    may be used to endorse or promote products derived from this software
+    without specific prior written permission.
+
+ THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+ ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+ FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ SUCH DAMAGE.

@@ -3,7 +3,7 @@
  * a Software MIDI synthesizer library with OPL3 emulation
  *
  * Original ADLMIDI code: Copyright (c) 2010-2014 Joel Yliluoma <bisqwit@iki.fi>
- * ADLMIDI Library API:   Copyright (c) 2015-2020 Vitaly Novichkov <admin@wohlnet.ru>
+ * ADLMIDI Library API:   Copyright (c) 2015-2021 Vitaly Novichkov <admin@wohlnet.ru>
  *
  * Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 emulation:
  * http://iki.fi/bisqwit/source/adlmidi.html
@@ -221,11 +221,13 @@ const char* volume_model_to_str(int vm)
     case ADLMIDI_VolumeModel_APOGEE_Fixed:
         return "Apogee Sound System (fixed AM voices)";
     case ADLMIDI_VolumeModel_AIL:
-        return "Audio Interfaces Library (AIL)";
+        return "Audio Interface Library (AIL)";
     case ADLMIDI_VolumeModel_9X_GENERIC_FM:
         return "9X (Generic FM)";
     case ADLMIDI_VolumeModel_HMI:
-        return "HMI";
+        return "HMI Sound Operating System";
+    case ADLMIDI_VolumeModel_HMI_OLD:
+        return "HMI Sound Operating System (Old)";
     }
 }
 
@@ -247,13 +249,18 @@ static int stop = 0;
 #ifndef HARDWARE_OPL3
 static void sighandler(int dum)
 {
-    if((dum == SIGINT)
-        || (dum == SIGTERM)
-    #if !defined(_WIN32) && !defined(__WATCOMC__)
-        || (dum == SIGHUP)
-    #endif
-    )
+    switch(dum)
+    {
+    case SIGINT:
+    case SIGTERM:
+#ifndef _WIN32
+    case SIGHUP:
+#endif
         stop = 1;
+        break;
+    default:
+        break;
+    }
 }
 #endif
 
@@ -381,7 +388,7 @@ int main(int argc, char **argv)
             "    5 9x SB16\n"
             "    6 DMX (Fixed AM voices)\n"
             "    7 Apogee Sound System (Fixed AM voices)\n"
-            "    8 Audio Interfaces Library (AIL)\n"
+            "    8 Audio Interface Library (AIL)\n"
             "    9 9x Generic FM\n"
             "   10 HMI Sound Operating System\n"
         );
@@ -396,6 +403,7 @@ int main(int argc, char **argv)
             "      will be combined into one\n"
             " --solo <track>             Selects a solo track to play\n"
             " --only <track1,...,trackN> Selects a subset of tracks to play\n"
+            " -na Disable the auto-arpeggio\n"
 #ifndef HARDWARE_OPL3
             " -fp Enables full-panning stereo support\n"
             " --emu-nuked  Uses Nuked OPL3 v 1.8 emulator\n"
@@ -476,6 +484,7 @@ int main(int argc, char **argv)
     bool recordWave = false;
     int loopEnabled = 1;
 #endif
+    int autoArpeggioEnabled = 1;
 
 #ifndef HARDWARE_OPL3
     int emulator = ADLMIDI_EMU_NUKED;
@@ -533,6 +542,8 @@ int main(int argc, char **argv)
         else if(!std::strcmp("-nl", argv[2]))
             loopEnabled = 0; //Enable loop
 #endif
+        else if(!std::strcmp("-na", argv[2]))
+            autoArpeggioEnabled = 0; //Enable auto-arpeggio
 
 #ifndef HARDWARE_OPL3
         else if(!std::strcmp("--emu-nuked", argv[2]))
@@ -631,6 +642,8 @@ int main(int argc, char **argv)
     //Turn loop on/off (for WAV recording loop must be disabled!)
     adl_setLoopEnabled(myDevice, recordWave ? 0 : loopEnabled);
 #endif
+
+    adl_setAutoArpeggio(myDevice, autoArpeggioEnabled);
 
 #ifdef DEBUG_TRACE_ALL_EVENTS
     //Hook all MIDI events are ticking while generating an output buffer
@@ -834,6 +847,8 @@ int main(int argc, char **argv)
         }
         std::fprintf(stdout, "\n");
     }
+
+    std::fprintf(stdout, " - Automatic arpeggion is turned %s\n", autoArpeggioEnabled ? "ON" : "OFF");
 
     std::fprintf(stdout, " - File [%s] opened!\n", musPath.c_str());
     flushout(stdout);

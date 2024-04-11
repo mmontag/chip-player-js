@@ -1,0 +1,7 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+@PACKAGE_DEPENDENCIES@
+
+include(${CMAKE_CURRENT_LIST_DIR}/@TARGETS_FILENAME@)
+check_required_components("@CMCFG_NAME@")

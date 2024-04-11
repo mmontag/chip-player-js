@@ -5,7 +5,9 @@ TEST(test_api_scan_module)
 {
 	xmp_context opaque;
 	struct context_data *ctx;
+	struct xmp_module_info minfo;
 	struct xmp_frame_info info;
+	int ret;
 	int i;
 
 	opaque = xmp_create_context();
@@ -31,5 +33,22 @@ TEST(test_api_scan_module)
 		xmp_get_frame_info(opaque, &info);
 		fail_unless(info.total_time == 5720, "total time error");
 	}
+
+	xmp_release_module(opaque);
+
+	/* Load something with an absurd number of sequences. */
+	ret = xmp_load_module(opaque, "data/scan_240_seq.it");
+	fail_unless(ret == 0, "load module");
+
+	xmp_scan_module(opaque);
+
+	xmp_get_module_info(opaque, &minfo);
+	fail_unless(minfo.num_sequences == 240, "should have 240 sequences");
+
+	for (i = 0; i < minfo.num_sequences; i++) {
+		fail_unless(minfo.seq_data[i].entry_point == i, "entry point");
+	}
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -20,11 +20,9 @@
  * THE SOFTWARE.
  */
 
-#include <assert.h>
-
 #include "loader.h"
 #include "iff.h"
-#include "period.h"
+#include "../period.h"
 
 #define MAGIC_D_T_	MAGIC4('D','.','T','.')
 
@@ -121,9 +119,19 @@ static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	struct xmp_module *mod = &m->mod;
 	struct local_data *data = (struct local_data *)parm;
 
+	/* Sanity check */
+	if (data->pflag) {
+		return -1;
+	}
+
 	mod->chn = hio_read16b(f);
 	data->realpat = hio_read16b(f);
 	mod->trk = mod->chn * mod->pat;
+
+	/* Sanity check */
+	if (mod->chn > XMP_MAX_CHANNELS) {
+		return -1;
+	}
 
 	return 0;
 }
@@ -134,7 +142,17 @@ static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	int i, c2spd;
 	uint8 name[30];
 
+	/* Sanity check */
+	if (mod->ins != 0) {
+		return -1;
+	}
+
 	mod->ins = mod->smp = hio_read16b(f);
+
+	/* Sanity check */
+	if (mod->ins > MAX_INSTRUMENTS) {
+		return -1;
+	}
 
 	D_(D_INFO "Instruments    : %d ", mod->ins);
 
@@ -142,7 +160,8 @@ static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		return -1;
 
 	for (i = 0; i < mod->ins; i++) {
-		int fine, replen, flag;
+		uint32 repstart, replen;
+		int fine, flag;
 
 		if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 			return -1;
@@ -153,12 +172,15 @@ static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		fine = hio_read8s(f);	/* finetune */
 		mod->xxi[i].sub[0].vol = hio_read8(f);
 		mod->xxi[i].sub[0].pan = 0x80;
-		mod->xxs[i].lps = hio_read32b(f);
+		repstart = hio_read32b(f);
 		replen = hio_read32b(f);
-		mod->xxs[i].lpe = mod->xxs[i].lps + replen - 1;
+		mod->xxs[i].lps = repstart;
+		mod->xxs[i].lpe = repstart + replen - 1;
 		mod->xxs[i].flg = replen > 2 ?  XMP_SAMPLE_LOOP : 0;
 
-		hio_read(name, 22, 1, f);
+		if (hio_read(name, 22, 1, f) == 0)
+			return -1;
+
 		libxmp_instrument_name(mod, i, name, 22);
 
 		flag = hio_read16b(f);	/* bit 0-7:resol 8:stereo */
@@ -182,7 +204,7 @@ static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 			i, mod->xxi[i].name,
 			mod->xxs[i].len,
 			mod->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
-			mod->xxs[i].lps,
+			repstart,
 			replen,
 			mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 			flag & 0x100 ? 'S' : ' ',
@@ -294,7 +316,7 @@ static int dt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	LOAD_INIT();
 
 	memset(&data, 0, sizeof (struct local_data));
-	
+
 	handle = libxmp_iff_new();
 	if (handle == NULL)
 		return -1;

@@ -19,7 +19,7 @@ TEST(test_api_stop_module)
 
 	ret = xmp_play_frame(ctx);
 	fail_unless(ret == -XMP_END, "module stop error");
-	
 
+	xmp_free_context(ctx);
 }
 END_TEST

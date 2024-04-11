@@ -1,14 +1,34 @@
+/* ProWizard
+ * Copyright (C) 1997 Asle / ReDoX
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 /*
- *   ProPacker_30.c   1997 (c) Asle / ReDoX
+ * ProPacker_30.c
  *
  * Converts PP30 packed MODs back to PTK MODs
  * thanks to Gryzor and his ProWizard tool ! ... without it, this prog
  * would not exist !!!
- *
-*/
+ */
 
-#include <string.h>
-#include <stdlib.h>
+#include "prowiz.h"
 
 void Depack_PP30 (FILE * in, FILE * out)
 {
@@ -28,9 +48,9 @@ void Depack_PP30 (FILE * in, FILE * out)
 	if (Save_Status == BAD)
 		return;
 
-	memset(ptable, 0, 128);
-	memset(Tracks_Numbers, 0, 4 * 128);
-	memset(Tracks_PrePointers, 0, 512 * 64);
+	memset(ptable, 0, sizeof(ptable));
+	memset(Tracks_Numbers, 0, sizeof(Tracks_Numbers));
+	memset(Tracks_PrePointers, 0, sizeof(Tracks_PrePointers));
 
 	// in = fdopen (fd_in, "rb");
 	// sprintf ( Depacked_OutName , "%ld.mod" , Cpt_Filename-1 );
@@ -127,7 +147,7 @@ void Depack_PP30 (FILE * in, FILE * out)
 
 	/* NOW, the real shit takes place :) */
 	for (i = 0; i < NOP; i++) {
-		memset(Pattern, 0, 1024);
+		memset(Pattern, 0, sizeof(Pattern));
 		for (j = 0; j < 64; j++) {
 
 			Pattern[j * 16] =

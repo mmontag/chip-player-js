@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.2)
-project (libADLMIDI VERSION 1.4.1 LANGUAGES C CXX)
+project (libADLMIDI VERSION 1.5.1 LANGUAGES C CXX)
 
 include(GNUInstallDirs)
 include(CheckCCompilerFlag)
@@ -61,6 +61,11 @@ if(NOT MSVC AND NOT MSDOS)
         set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined" )
         set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,--no-undefined" )
     endif()
+# Supress the std::vector::insert() GCC change warning
+    if(VITA)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DVITA -DVITA=1 -fcompare-debug-second")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVITA -DVITA=1 -fcompare-debug-second")
+    endif()
 endif()
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -110,8 +115,22 @@ function(set_visibility_hidden destTarget)
 endfunction()
 #===========================================================================================
 
-option(libADLMIDI_STATIC   "Build static library of libADLMIDI" ON)
-option(libADLMIDI_SHARED   "Build shared library of libADLMIDI" OFF)
+if(VITA OR 3DS)
+    set(DEFAULT_HEAVY_EMULATORS OFF)
+else()
+    set(DEFAULT_HEAVY_EMULATORS ON)
+endif()
+
+if(NOT EMSCRIPTEN
+   AND NOT VITA
+   AND NOT 3DS
+   AND NOT ADLMIDI_DOS)
+    option(libADLMIDI_STATIC   "Build static library of libADLMIDI" ON)
+    option(libADLMIDI_SHARED   "Build shared library of libADLMIDI" OFF)
+else()
+    set(libADLMIDI_STATIC ON)
+    set(libADLMIDI_SHARED OFF)
+endif()
 
 option(WITH_MIDI_SEQUENCER  "Build with embedded MIDI sequencer. Disable this if you want use library in real-time MIDI drivers or plugins." ON)
 option(WITH_EMBEDDED_BANKS  "Use embedded banks" ON)
@@ -119,12 +138,12 @@ option(WITH_HQ_RESAMPLER    "Build with support for high quality resampling" OFF
 option(WITH_MUS_SUPPORT     "Build with support for DMX MUS files" ON)
 option(WITH_XMI_SUPPORT     "Build with support for AIL XMI files" ON)
 option(USE_DOSBOX_EMULATOR  "Use DosBox 0.74 OPL3 emulator (semi-accurate, suggested for slow or mobile platforms)" ON)
-option(USE_NUKED_EMULATOR   "Use Nuked OPL3 emulator (most accurate, powerful)" ON)
-option(USE_OPAL_EMULATOR    "Use Opal emulator (inaccurate)" ON)
-option(USE_JAVA_EMULATOR    "Use JavaOPL emulator" ON)
+option(USE_NUKED_EMULATOR   "Use Nuked OPL3 emulator (most accurate, powerful)" ${DEFAULT_HEAVY_EMULATORS})
+option(USE_OPAL_EMULATOR    "Use Opal emulator (inaccurate)" ${DEFAULT_HEAVY_EMULATORS})
+option(USE_JAVA_EMULATOR    "Use JavaOPL emulator" ${DEFAULT_HEAVY_EMULATORS})
 
 option(WITH_GENADLDATA      "Build and run full rebuild of embedded banks cache" OFF)
-option(WITH_GENADLDATA_COMMENTS "Enable comments in generated ADLDATA cache file" OFF)
+option(WITH_GENADLDATA_COMMENTS "Enable comments in a generated embedded instruments cache file" OFF)
 
 option(WITH_MIDIPLAY        "Build also demo MIDI player" OFF)
 option(MIDIPLAY_WAVE_ONLY   "Build Demo MIDI player without support of real time playing. It will output into WAV only." OFF)
@@ -135,6 +154,20 @@ option(WITH_OLD_UTILS       "Build also old utilities" OFF)
 option(WITH_MUS2MID         "Build a MUS to MIDI converter" OFF)
 option(WITH_XMI2MID         "Build a XMI to MIDI converter" OFF)
 option(EXAMPLE_SDL2_AUDIO   "Build also a simple SDL2 demo MIDI player" OFF)
+
+if(WIN32)
+    option(WITH_WINMMDRV    "Build a WinMM MIDI driver" OFF)
+endif()
+
+if(NOT WIN32
+   AND NOT VITA
+   AND NOT 3DS
+   AND NOT EMSCRIPTEN
+   AND NOT ADLMIDI_DOS)
+    option(ENABLE_FPIC "Build static libraries as position independent code" ON)
+else()
+    set(ENABLE_FPIC OFF)
+endif()
 
 function(handle_options targetLib)
     if(WITH_MIDI_SEQUENCER)
@@ -198,7 +231,7 @@ function(handle_options targetLib)
 
     if(WITH_EMBEDDED_BANKS)
         target_sources(${targetLib} PRIVATE
-            ${libADLMIDI_SOURCE_DIR}/src/adldata.cpp
+            ${libADLMIDI_SOURCE_DIR}/src/inst_db.cpp
         )
     else()
         target_compile_definitions(${targetLib} PUBLIC DISABLE_EMBEDDED_BANKS)
@@ -245,7 +278,7 @@ if(libADLMIDI_STATIC OR WITH_VLC_PLUGIN)
     handle_options(ADLMIDI_static)
 
     # -fPIC thing
-    if(NOT WIN32 AND NOT ADLMIDI_DOS)
+    if(ENABLE_FPIC)
         set_target_properties(ADLMIDI_static PROPERTIES COMPILE_FLAGS "-fPIC")
     endif()
 
@@ -275,11 +308,6 @@ if(libADLMIDI_SHARED)
     endif()
     if(OPENBSD_LOCALBASE)
         set_property(TARGET ADLMIDI_shared APPEND_STRING PROPERTY LINK_FLAGS " -lc")
-    endif()
-
-    # -fPIC thing
-    if(NOT WIN32 AND NOT ADLMIDI_DOS)
-        set_target_properties(ADLMIDI_shared PROPERTIES COMPILE_FLAGS "-fPIC")
     endif()
 
     set_target_properties(ADLMIDI_shared PROPERTIES SOVERSION "1")
@@ -343,6 +371,10 @@ endif()
 
 if(WITH_VLC_PLUGIN AND NOT ADLMIDI_DOS)
     add_subdirectory(utils/vlc_codec)
+endif()
+
+if(WIN32 AND WITH_WINMMDRV)
+    add_subdirectory(utils/winmm_drv)
 endif()
 
 set(libADLMIDI_INSTALLS )
@@ -422,3 +454,6 @@ message("WITH_OLD_UTILS           = ${WITH_OLD_UTILS}")
 message("WITH_MUS2MID             = ${WITH_MUS2MID}")
 message("WITH_XMI2MID             = ${WITH_XMI2MID}")
 message("EXAMPLE_SDL2_AUDIO       = ${EXAMPLE_SDL2_AUDIO}")
+if(WIN32)
+    message("WITH_WINMMDRV            = ${WITH_WINMMDRV}")
+endif()

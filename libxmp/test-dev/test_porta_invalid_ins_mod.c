@@ -62,5 +62,8 @@ TEST(test_porta_invalid_ins_mod)
 	 */
 	xmp_play_frame(opaque);
 	fail_unless(vi->vol  ==  0, "didn't cut sample");
+
+	xmp_release_module(opaque);
+	xmp_free_context(opaque);
 }
 END_TEST

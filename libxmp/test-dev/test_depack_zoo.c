@@ -16,5 +16,8 @@ TEST(test_depack_zoo)
 
 	ret = compare_md5(info.md5, "a3c22f92e1ec5d7d324e975364a775e8");
 	fail_unless(ret == 0, "MD5 error");
+
+	xmp_release_module(c);
+	xmp_free_context(c);
 }
 END_TEST

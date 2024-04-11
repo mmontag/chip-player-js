@@ -5,9 +5,10 @@ xInput::xInput()
 #ifdef _WIN32
     inhandle = GetStdHandle(STD_INPUT_HANDLE);
 #endif
-#if (!defined(_WIN32) || defined(__CYGWIN__)) && !defined(__DJGPP__) && !defined(__APPLE__)
+
+#ifdef USE_TERMIO
     ioctl(0, TCGETA, &back);
-    struct termio term = back;
+    InputTermio_t term = back;
     term.c_lflag &= ~(ICANON | ECHO);
     term.c_cc[VMIN] = 0; // 0=no block, 1=do block
     if(ioctl(0, TCSETA, &term) < 0)
@@ -17,7 +18,7 @@ xInput::xInput()
 
 xInput::~xInput()
 {
-#if (!defined(_WIN32) || defined(__CYGWIN__)) && !defined(__DJGPP__) && !defined(__APPLE__)
+#ifdef USE_TERMIO
     if(ioctl(0, TCSETA, &back) < 0)
         fcntl(0, F_SETFL, fcntl(0, F_GETFL) & ~ O_NONBLOCK);
 #endif
@@ -32,6 +33,7 @@ char xInput::PeekInput()
         return c ? c : getch();
     }
 #endif
+
 #ifdef _WIN32
     DWORD nread = 0;
     INPUT_RECORD inbuf[1];
@@ -48,9 +50,11 @@ char xInput::PeekInput()
         }
     }
 #endif
+
 #if (!defined(_WIN32) || defined(__CYGWIN__)) && !defined(__DJGPP__)
     char c = 0;
     if(read(0, &c, 1) == 1) return c;
 #endif
+
     return '\0';
 }

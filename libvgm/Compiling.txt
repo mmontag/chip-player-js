@@ -1,0 +1,29 @@
+Compilation
+-----------
+- Use CMake to generate a Makefile/project.
+  You can enable/disable almost everything - audio drivers, sound cores, etc., so you are free to build only what you need.
+- I tested the CMake file with:
+	- [Windows] Visual Studio 6.0 (Note: VC6 projects require CMake 3.5 or lower)
+	- [Windows] Visual Studio 2010 [32 and 64 bit configurations]
+	- [Windows] MSYS2 GCC 6.3 [64 bit]
+	- [Linux] GCC 4.8 [64 bit] on OpenSUSE 13.1
+	- [Linux] GCC 6.3 [64 bit] on Ubuntu 17.04 and Gentoo
+
+Required Libraries
+------------------
+- Under Linux, you will need to install additional packages before you can enable support for certain audio drivers.
+	ALSA: libasound2-dev [Debian] / alsa-devel [SUSE]
+	PulseAudio: libpulse-dev [Debian] / libpulse-devel [SUSE]
+	libao: libao-dev [Debian] / libao-devel [SUSE]
+- Under Windows, header files for WinMM and DirectSound should be included with MSYS or Visual Studio.
+  Headers for XAudio2 are included with libvgm.
+  For WASAPI support you need to use Visual Studio 2005 or higher and install the Windows SDK.
+- In order to build the VGM test program, you need the package for the zlib library:
+	zlib1g-dev [Debian] / zlib-devel [SUSE]
+
+Notes
+-----
+- In order to select certain sound cores, you need to disable SNDEMU_ALL.
+- The non-CMake Makefiles and projects are just for internal testing.
+  They usually compile everything or are horribly out-of-date.
+  They also might use different names for the libraries.

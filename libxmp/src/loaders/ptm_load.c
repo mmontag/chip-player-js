@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -21,7 +21,7 @@
  */
 
 #include "loader.h"
-#include "period.h"
+#include "../period.h"
 
 #define PTM_CH_MASK	0x1f
 #define PTM_NI_FOLLOW	0x20
@@ -110,7 +110,7 @@ static int ptm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	/* Load and convert header */
 
-	hio_read(&pfh.name, 28, 1, f);	/* Song name */
+	hio_read(pfh.name, 28, 1, f);	/* Song name */
 	pfh.doseof = hio_read8(f);	/* 0x1a */
 	pfh.vermin = hio_read8(f);	/* Minor version */
 	pfh.vermaj = hio_read8(f);	/* Major type */
@@ -132,11 +132,14 @@ static int ptm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		return -1;
 	}
 
-	hio_read(&pfh.rsvd3, 16, 1, f);	/* Reserved */
-	hio_read(&pfh.chset, 32, 1, f);	/* Channel settings */
-	hio_read(&pfh.order, 256, 1, f);	/* Orders */
+	hio_read(pfh.rsvd3, 16, 1, f);	/* Reserved */
+	hio_read(pfh.chset, 32, 1, f);	/* Channel settings */
+	hio_read(pfh.order, 256, 1, f);	/* Orders */
 	for (i = 0; i < 128; i++)
 		pfh.patseg[i] = hio_read16l(f);
+
+	if (hio_error(f))
+		return -1;
 
 	mod->len = pfh.ordnum;
 	mod->ins = pfh.insnum;
@@ -167,7 +170,7 @@ static int ptm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		struct xmp_subinstrument *sub;
 
 		pih.type = hio_read8(f);	/* Sample type */
-		hio_read(&pih.dosname, 12, 1, f);	/* DOS file name */
+		hio_read(pih.dosname, 12, 1, f);	/* DOS file name */
 		pih.vol = hio_read8(f);		/* Volume */
 		pih.c4spd = hio_read16l(f);	/* C4 speed */
 		pih.smpseg = hio_read16l(f);	/* Sample segment (not used) */
@@ -180,7 +183,7 @@ static int ptm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		pih.guslpe = hio_read32l(f);	/* GUS loop end address */
 		pih.gusflg = hio_read8(f);	/* GUS loop flags */
 		pih.rsvd1 = hio_read8(f);	/* Reserved */
-		hio_read(&pih.name, 28, 1, f);	/* Instrument name */
+		hio_read(pih.name, 28, 1, f);	/* Instrument name */
 		pih.magic = hio_read32b(f);	/* 'PTMS' */
 
 		if (hio_error(f)) {
@@ -257,14 +260,14 @@ static int ptm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		hio_seek(f, start + 16L * pfh.patseg[i], SEEK_SET);
 		r = 0;
 
-		memset(chn_ctrl, 0, 32);
+		memset(chn_ctrl, 0, sizeof(chn_ctrl));
 
 		while (r < 64) {
 
 			b = hio_read8(f);
 			if (!b) {
 				r++;
-				memset(chn_ctrl, 0, 32);
+				memset(chn_ctrl, 0, sizeof(chn_ctrl));
 				continue;
 			}
 
@@ -357,7 +360,7 @@ static int ptm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			return -1;
 	}
 
-	m->vol_table = (int *)ptm_vol;
+	m->vol_table = ptm_vol;
 
 	for (i = 0; i < mod->chn; i++)
 		mod->xxc[i].pan = pfh.chset[i] << 4;

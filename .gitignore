@@ -1,3 +1,4 @@
+.env.local
 .idea/
 node_modules/
 dist/
@@ -12,11 +13,12 @@ public/soundfonts/
 scripts/untracked/
 src/-catalog-tests/
 src/chip-core.js
-public/catalog.json
-public/catalog-trie.json
-public/directories.json
+server/catalog.json
+server/directories.json
 catalog
 public/music
 src/config/firebaseConfig.js
 libxmp/a.out.js
 libxmp/lite/Makefile.in
+*.backup/
+_ignore/
