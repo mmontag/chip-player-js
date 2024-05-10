@@ -4,6 +4,7 @@ const SOUNDFONT_URL_PATH = 'https://gifx.co/soundfonts/';
 // const API_BASE = 'http://localhost:8080';                       // npm run server - Node.js server on port 8080
 // const CATALOG_PREFIX = 'http://localhost:8000/catalog/';        // python scripts/httpserver.py - Python file server
 // const SOUNDFONT_URL_PATH = 'http://localhost:3000/soundfonts/'; // Webpack dev server
+const MAX_SAMPLE_RATE = 48000;                            // Higher rates are problematic for some players.
 const MAX_VOICES = 64;
 const REPLACE_STATE_ON_SEEK = false;
 const ERROR_FLASH_DURATION_MS = 6000;
@@ -97,6 +98,7 @@ module.exports = {
   CATALOG_PREFIX,
   ERROR_FLASH_DURATION_MS,
   FORMATS,
+  MAX_SAMPLE_RATE,
   MAX_VOICES,
   REPLACE_STATE_ON_SEEK,
   SOUNDFONT_MOUNTPOINT,

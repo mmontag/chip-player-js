@@ -27,7 +27,8 @@ import {
   ERROR_FLASH_DURATION_MS,
   MAX_VOICES,
   REPLACE_STATE_ON_SEEK,
-  SOUNDFONT_MOUNTPOINT
+  SOUNDFONT_MOUNTPOINT,
+  MAX_SAMPLE_RATE,
 } from '../config';
 import { ensureEmscFileWithData, getMetadataUrlForCatalogUrl, titlesFromMetadata, unlockAudioContext } from '../util';
 import requestCache from '../RequestCache';
@@ -100,9 +101,23 @@ class App extends React.Component {
     // ┌────────────┐      ┌────────────┐      ┌─────────────┐
     // │ playerNode ├─────>│  gainNode  ├─────>│ destination │
     // └────────────┘      └────────────┘      └─────────────┘
-    const audioCtx = this.audioCtx = window.audioCtx = new (window.AudioContext || window.webkitAudioContext)({
+    let audioCtx = this.audioCtx = window.audioCtx = new (window.AudioContext || window.webkitAudioContext)({
       latencyHint: 'playback'
     });
+
+    // Limit the sample rate if needed
+    if (audioCtx.sampleRate > MAX_SAMPLE_RATE) {
+      console.warn("AudioContext default sample rate was too high (%s). Limiting to %s.", audioCtx.sampleRate, MAX_SAMPLE_RATE);
+      let targetRate = audioCtx.sampleRate;
+      while (targetRate > MAX_SAMPLE_RATE) {
+        targetRate /= 2;
+      }
+      audioCtx = this.audioCtx = window.audioCtx = new (window.AudioContext || window.webkitAudioContext)({
+        latencyHint: 'playback',
+        sampleRate: targetRate,
+      });
+    }
+
     const bufferSize = Math.max( // Make sure script node bufferSize is at least baseLatency
       Math.pow(2, Math.ceil(Math.log2((audioCtx.baseLatency || 0.001) * audioCtx.sampleRate))), 2048);
     const gainNode = this.gainNode = audioCtx.createGain();
