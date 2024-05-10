@@ -22,8 +22,8 @@ export default class XMPPlayer extends Player {
     this.xmpCtx = this.core._xmp_create_context();
     this.infoPtr = this.core._malloc(2048);
     this.fileExtensions = fileExtensions;
-    this.initialBPM = 125;
-    this.tempoScale = 1; // TODO: rename to speed
+    this.lastBPM = 125;
+    this.tempoScale = this.lastTempoScale = 1; // TODO: rename to speed
     this._positionMs = 0;
     this._durationMs = 1000;
     this.buffer = this.core._malloc(this.bufferSize * 16); // i16
@@ -115,7 +115,7 @@ export default class XMPPlayer extends Player {
     // Filename fallback
     if (!meta.title) meta.title = this.filepathMeta.title;
 
-    this.initialBPM = meta.initialBPM;
+    this.lastBPM = meta.initialBPM;
     this.metadata = meta;
     this.infoTexts = infoText.length ? [ infoText.join('\n\n') ] : [];
   }
@@ -179,9 +179,19 @@ export default class XMPPlayer extends Player {
     const xmp = this.core;
     const minBPM = 20;
     const maxBPM = 255;
-    const targetBPM = Math.floor(Math.max(Math.min(this.metadata.initialBPM * this.tempoScale, maxBPM), minBPM));
+    const estimatedBPM = Math.floor(Math.max(Math.min(this.lastBPM * this.tempoScale, maxBPM), minBPM));
 
-    if (targetBPM === measuredBPM) return;
+    if (estimatedBPM === measuredBPM) return;
+
+    let targetBPM = this.metadata.initialBPM;
+    if (this.lastTempoScale === this.tempoScale) {  // tempo event received
+      this.lastBPM = measuredBPM;
+      if (this.tempoScale === 1) return;
+      targetBPM = Math.floor(Math.max(Math.min(measuredBPM * this.tempoScale, maxBPM), minBPM));
+    } else {                                        // `Speed` slider changed
+      targetBPM = estimatedBPM;
+      this.lastTempoScale = this.tempoScale;
+    }
 
     console.log('Injecting %d BPM into libxmp. (Initial: %d)', targetBPM, this.metadata.initialBPM);
     const xmp_eventPtr = xmp._malloc(8);
