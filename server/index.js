@@ -140,6 +140,7 @@ const routes = {
           return {
             path: path.join(params.path, file.name),
             size: 999,
+            mtime: 1665174068,
             type: file.isDirectory() ? 'directory' : 'file',
             idx: i,
           }

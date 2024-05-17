@@ -71,7 +71,11 @@ fs.writeSync(fs.openSync(outputPath, 'w+'), data);
 console.log('Wrote %d entries in %s (%d bytes).', files.length, outputPath, data.length);
 
 const dirDict = {};
-directoryTree(catalogPath, { extensions: formatsRegex }, null, item => {
+const dirOptions = {
+  extensions: formatsRegex,
+  attributes: [ 'mtimeMs' ],
+};
+directoryTree(catalogPath, dirOptions, null, item => {
   if (item.children) {
     item.path = item.path.replace(catalogPath, '/');
 
@@ -81,8 +85,10 @@ directoryTree(catalogPath, { extensions: formatsRegex }, null, item => {
         child.numChildren = child.children.length;
         delete child.children;
       }
+      child.mtime = Math.floor(child.mtimeMs / 1000);
       delete child.name;
       delete child.extension;
+      delete child.mtimeMs;
       return child;
     });
 
