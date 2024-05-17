@@ -58,6 +58,9 @@ function BrowseList({ virtual, ...props }) {
                   <div className="BrowseList-colCount" title={`Contains ${item.numChildren} direct child items`}>
                     {item.numChildren}
                   </div>
+                  <div className="BrowseList-colMtime">
+                    {item.mtime}
+                  </div>
                   <div className="BrowseList-colSize" title={`Directory size is ${item.size} bytes (recursive)`}>
                     {item.size != null && bytes(item.size, { unitSeparator: ' ' })}
                   </div>
@@ -76,6 +79,9 @@ function BrowseList({ virtual, ...props }) {
                        href={href}>
                       {name}
                     </a>
+                  </div>
+                  <div className="BrowseList-colMtime">
+                    {item.mtime}
                   </div>
                   <div className="BrowseList-colSize">
                     {bytes(item.size, { unitSeparator: ' ' })}

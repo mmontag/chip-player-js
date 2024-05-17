@@ -382,7 +382,12 @@ body,#root {
 .BrowseList-colName { overflow-x: hidden; white-space: nowrap; text-overflow: ellipsis; flex-grow: 1; }
 .BrowseList-colDir, .BrowseList-colSize { flex-shrink : 0; margin-left: calc(var(--charW1) * 2); }
 .BrowseList-colCount { flex-shrink : 0; margin-left: var(--charW1); width: calc(var(--charW1) * 5); text-align: right; }
+.BrowseList-colMtime { text-align: right; text-transform: uppercase; white-space: nowrap; min-width: calc(var(--charW1) * 12); }
 .BrowseList-colSize { text-align: right; text-transform: uppercase; white-space: nowrap; min-width: calc(var(--charW1) * 10); }
+
+@media screen and (max-width: 800px) {
+    .BrowseList-colMtime { display: none }
+}
 
 .DirectoryLink-dim { color: var(--neutral2); }
 .DirectoryLink-folderIcon { vertical-align: bottom; }
