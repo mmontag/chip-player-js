@@ -278,6 +278,7 @@ body,#root {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     border-right: 1px solid var(--clickable);
+    container-type: inline-size;
 }
 
 .App-main-content-area.settings {
@@ -386,6 +387,9 @@ body,#root {
 .BrowseList-colSize { text-align: right; text-transform: uppercase; white-space: nowrap; min-width: calc(var(--charW1) * 10); }
 
 @media screen and (max-width: 800px) {
+    .BrowseList-colMtime { display: none }
+}
+@container (max-width: 800px) {
     .BrowseList-colMtime { display: none }
 }
 
