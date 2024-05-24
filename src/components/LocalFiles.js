@@ -18,11 +18,8 @@ function LocalFiles(props) {
     currIdx,
     onSongClick,
     onDelete,
+    loading,
   } = props;
-
-  const handleShufflePlayLocalFiles = useCallback(() => {
-    handleShufflePlay('local');
-  }, [handleShufflePlay]);
 
   const handleDelete = useCallback((event) => {
     const href = event.currentTarget.dataset.href;
@@ -39,50 +36,53 @@ function LocalFiles(props) {
       <h3 className="Browse-topRow">
         Local Files ({listing.length})
       </h3>
-      {listing.length > 0 ?
-        <div>
-          {
-            listing.map((item, i) => {
-              const href = item.path;
-              const title = decodeURIComponent(href.split('/').pop());
-              const isPlaying = currContext === playContext && currIdx === i;
-              return (
-                <div key={title} className={isPlaying ? 'Song-now-playing BrowseList-row' : 'BrowseList-row'}>
-                  <button className='Trash-button' onClick={handleDelete} data-href={href}>
-                    <img alt='trash' className='fileIcon' src={trash}/>
-                  </button>
-                  <div className="BrowseList-colName">
-                    <a onClick={onSongClick(href, playContext, i)} href={href}>{title}</a>
-                  </div>
-                  <div className="BrowseList-colMtime">
-                    {item.mtime}
-                  </div>
-                  <div className="BrowseList-colSize">
-                    {bytes(item.size, { unitSeparator: ' ' })}
-                  </div>
-                </div>
-              );
-            })
-          }
-        </div>
+      {loading ?
+        "Loading local files..."
         :
-        <div>
-          <p>
-            You don't have any Local Files yet.
-          </p>
-          <p>
-            Files dropped here will be persisted in your local browser.<br/>
-            (Keep a copy - your browser might lose this data.)<br/>
-            Local Files can't be added to Favorites (well, not yet).
-          </p>
-          <p>
-            Supported formats:
-          </p>
-          <p>
-            {formatsLine1}<br/>
-            {formatsLine2}<br/>
-          </p>
-        </div>
+        listing.length == 0 ?
+          <div>
+            <p>
+              You don't have any Local Files yet.
+            </p>
+            <p>
+              Files dropped here will be persisted in your local browser.<br/>
+              (Keep a copy - your browser might lose this data.)<br/>
+              Local Files can't be added to Favorites.
+            </p>
+            <p>
+              Supported formats:
+            </p>
+            <p>
+              {formatsLine1}<br/>
+              {formatsLine2}<br/>
+            </p>
+          </div>
+          :
+          <div>
+            {
+              listing.map((item, i) => {
+                const href = item.path;
+                const title = decodeURIComponent(href.split('/').pop());
+                const isPlaying = currContext === playContext && currIdx === i;
+                return (
+                  <div key={title} className={isPlaying ? 'Song-now-playing BrowseList-row' : 'BrowseList-row'}>
+                    <button className='Trash-button' onClick={handleDelete} data-href={href}>
+                      <img alt='trash' className='fileIcon' src={trash}/>
+                    </button>
+                    <div className="BrowseList-colName">
+                      <a onClick={onSongClick(href, playContext, i)} href={href}>{title}</a>
+                    </div>
+                    <div className="BrowseList-colMtime">
+                      {item.mtime}
+                    </div>
+                    <div className="BrowseList-colSize">
+                      {bytes(item.size, { unitSeparator: ' ' })}
+                    </div>
+                  </div>
+                );
+              })
+            }
+          </div>
       }
     </div>
   );
