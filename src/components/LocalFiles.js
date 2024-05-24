@@ -39,7 +39,7 @@ function LocalFiles(props) {
       {loading ?
         "Loading local files..."
         :
-        listing.length == 0 ?
+        listing.length === 0 ?
           <div>
             <p>
               You don't have any Local Files yet.

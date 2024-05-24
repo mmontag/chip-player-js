@@ -29,9 +29,11 @@ import {
   REPLACE_STATE_ON_SEEK,
   SOUNDFONT_MOUNTPOINT,
   MAX_SAMPLE_RATE,
+  FORMATS,
 } from '../config';
 import { ensureEmscFileWithData, getMetadataUrlForCatalogUrl, titlesFromMetadata, unlockAudioContext } from '../util';
 import requestCache from '../RequestCache';
+import LocalFilesManager from '../LocalFilesManager';
 import Sequencer, { NUM_REPEAT_MODES, NUM_SHUFFLE_MODES, REPEAT_OFF, SHUFFLE_OFF } from '../Sequencer';
 
 import GMEPlayer from '../players/GMEPlayer';
@@ -40,6 +42,7 @@ import V2MPlayer from '../players/V2MPlayer';
 import XMPPlayer from '../players/XMPPlayer';
 import N64Player from '../players/N64Player';
 import MDXPlayer from '../players/MDXPlayer';
+import VGMPlayer from '../players/VGMPlayer';
 
 import AppFooter from './AppFooter';
 import AppHeader from './AppHeader';
@@ -51,7 +54,7 @@ import Visualizer from './Visualizer';
 import Alert from './Alert';
 import MessageBox from './MessageBox';
 import Settings from './Settings';
-import VGMPlayer from '../players/VGMPlayer';
+import LocalFiles from './LocalFiles';
 
 class App extends React.Component {
   constructor(props) {
@@ -133,6 +136,7 @@ class App extends React.Component {
     this.state = {
       loading: true,
       loadingUser: true,
+      loadingLocalFiles: true,
       paused: true,
       ejected: true,
       playerError: null,
@@ -151,7 +155,6 @@ class App extends React.Component {
       showPlayerError: false,
       showPlayerSettings: false,
       user: null,
-      faves: [],
       songUrl: null,
       volume: 100,
       repeat: REPEAT_OFF,
@@ -159,6 +162,9 @@ class App extends React.Component {
       directories: {},
       hasPlayer: false,
       paramDefs: [],
+      // Special playable contexts
+      faves: [],
+      localFiles: [],
     };
 
     this.initChipCore(audioCtx, playerNode, bufferSize);
@@ -212,18 +218,22 @@ class App extends React.Component {
       }
     }
 
+    // Create localFilesManager before performing the syncfs.
+    this.localFilesManager = new LocalFilesManager(this.chipCore.FS, 'local');
+
     // Populate all mounted IDBFS file systems from IndexedDB.
     this.chipCore.FS.syncfs(true, (err) => {
       if (err) {
         console.log('Error populating FS from indexeddb.', err);
       }
       players.forEach(player => player.handleFileSystemReady());
+      this.updateLocalFiles();
+      this.setState({ loadingLocalFiles: false });
     });
 
-    this.sequencer = new Sequencer(players);
+    this.sequencer = new Sequencer(players, this.localFilesManager);
     this.sequencer.on('sequencerStateUpdate', this.handleSequencerStateUpdate);
     this.sequencer.on('playerError', this.handlePlayerError);
-
 
     // TODO: Move to separate processUrlParams method.
     const urlParams = queryString.parse(window.location.search.substring(1));
@@ -603,6 +613,8 @@ class App extends React.Component {
   handleShufflePlay(path) {
     if (path === 'favorites') {
       this.sequencer.playContext(shuffle(this.state.faves));
+    } else if (path === 'local') {
+      this.sequencer.playContext(shuffle(this.playContexts['local']));
     } else {
       // This is more like a synthetic recursive shuffle.
       fetch(`${API_BASE}/shuffle?path=${encodeURI(path)}&limit=100`)
@@ -649,15 +661,21 @@ class App extends React.Component {
     });
   }
 
+  directoryListingToContext(items) {
+    return items
+      .filter(item => item.type === 'file')
+      .map(item =>
+        item.path.replace('%', '%25').replace('#', '%23').replace(/^\//, '')
+      );
+  }
+
   fetchDirectory(path) {
     return fetch(`${API_BASE}/browse?path=%2F${encodeURIComponent(path)}`)
       .then(response => response.json())
       .then(items => {
-        this.playContexts[path] = items
-          .filter(item => item.type === 'file')
-          .map(item =>
-            item.path.replace('%', '%25').replace('#', '%23').replace(/^\//, '')
-          );
+        this.playContexts[path] = this.directoryListingToContext(items);
+        // Convert timestamp 1704067200 to ISO date 2024-01-01
+        items.forEach(item => item.mtime = new Date(item.mtime * 1000).toISOString().split('T')[0]);
         const directories = {
           ...this.state.directories,
           [path]: items,
@@ -667,36 +685,94 @@ class App extends React.Component {
   }
 
   getCurrentSongLink() {
-    const url = this.sequencer.getCurrUrl();
-    return url ? process.env.PUBLIC_URL + '/?play=' + encodeURIComponent(url.replace(CATALOG_PREFIX, '')) : '#';
+    const url = this.sequencer?.getCurrUrl();
+    if (!url) return null;
+    return process.env.PUBLIC_URL + '/?play=' + encodeURIComponent(url.replace(CATALOG_PREFIX, ''));
+  }
+
+  updateLocalFiles() {
+    const localFiles = this.localFilesManager.readAll();
+    // Convert timestamp 1704067200 to ISO date 2024-01-01
+    localFiles.forEach(item => item.mtime = new Date(item.mtime * 1000).toISOString().split('T')[0]);
+    this.playContexts['local'] = this.directoryListingToContext(localFiles);
+    this.setState({ localFiles });
   }
 
   onDrop = (droppedFiles) => {
-    const reader = new FileReader();
-    const file = droppedFiles[0];
-    const ext = path.extname(file.name).toLowerCase();
-    if (ext === '.sf2' && !this.midiPlayer) {
-      this.handlePlayerError('MIDIPlayer has not been created - unable to load SoundFont.');
-      return;
-    }
-    reader.onload = async () => {
-      if (ext === '.sf2' && this.midiPlayer) {
-        const sf2Path = `user/${file.name}`;
-        const forceWrite = true;
-        const isTransient = false;
-        await ensureEmscFileWithData(this.chipCore, `${SOUNDFONT_MOUNTPOINT}/${sf2Path}`, new Uint8Array(reader.result), forceWrite);
-        this.midiPlayer.updateSoundfontParamDefs();
-        this.midiPlayer.setParameter('soundfont', sf2Path, isTransient);
-        // TODO: emit "paramDefsChanged" from player.
-        // See https://reactjs.org/docs/integrating-with-other-libraries.html#integrating-with-model-layers
+    const promises = droppedFiles.map(file => {
+      return new Promise((resolve, reject) => {
+        // TODO: refactor, avoid creating new reader/handlers for every dropped file.
+        const reader = new FileReader();
+        reader.onerror = (event) => reject(event.target.error);
+        reader.onload = async () => {
+          const ext = path.extname(file.name).toLowerCase().substring(1);
+          if (ext === 'sf2') {
+            // Handle dropped Soundfont
+            if (!this.midiPlayer) {
+              reject('MIDIPlayer has not been created - unable to load SoundFont.');
+            } else if (droppedFiles.length !== 1) {
+              reject('Soundfonts must be added one at a time, separate from other files.');
+            } else {
+              const sf2Path = `user/${file.name}`;
+              await ensureEmscFileWithData(this.chipCore, `${SOUNDFONT_MOUNTPOINT}/${sf2Path}`, new Uint8Array(reader.result), /*forceWrite=*/true);
+              this.midiPlayer.updateSoundfontParamDefs();
+              this.midiPlayer.setParameter('soundfont', sf2Path, /*isTransient=*/false);
+              // TODO: emit "paramDefsChanged" from player.
+              // See https://reactjs.org/docs/integrating-with-other-libraries.html#integrating-with-model-layers
+              this.forceUpdate();
+              resolve(0);
+            }
+          } else if (FORMATS.includes(ext)) {
+            // Handle dropped song file
+            const songData = reader.result;
+            this.localFilesManager.write(path.join('local', file.name), songData);
+            resolve(1);
+          } else {
+            reject(`The file format ".${ext}" was not recognized.`);
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      });
+    });
+
+    Promise.allSettled(promises).then(results => {
+      const numSongsAdded = results
+        .filter(result => result.status === 'fulfilled')
+        .reduce((acc, result) => acc + result.value, 0);
+      if (numSongsAdded > 0) {
+        const currContextIsLocalFiles = this.sequencer?.getCurrContext() === this.playContexts['local'];
+        this.updateLocalFiles();
+        this.props.history.push('/local');
+        if (currContextIsLocalFiles) this.sequencer.context = this.playContexts['local'];
         this.forceUpdate();
-      } else {
-        const songData = reader.result;
-        this.sequencer.playSongFile(file.name, songData);
       }
-    };
-    reader.readAsArrayBuffer(file);
+      // Display all rejection reasons with duplicate reasons removed.
+      results.filter(result => result.status === 'rejected')
+        .reduce((acc, result) => acc.includes(result.reason) ? acc : [ ...acc, result.reason ], [])
+        .forEach((reason, i) => setTimeout(() => this.handlePlayerError(reason), i * 1500));
+    });
   };
+
+  handleLocalFileDelete = (filePaths) => {
+    if (!Array.isArray(filePaths)) filePaths = [filePaths];
+    const currContextIsLocalFiles = this.sequencer?.getCurrContext() === this.playContexts['local'];
+    let currIndexWasDeleted = false;
+    filePaths.forEach(filePath => {
+      const deleted = this.localFilesManager.delete(filePath);
+
+      if (deleted && currContextIsLocalFiles) {
+        const index = this.playContexts['local'].indexOf(filePath);
+        if (index === this.sequencer.currIdx) currIndexWasDeleted = true;
+        if (index <= this.sequencer.currIdx) {
+          this.sequencer.currIdx--;
+        }
+      }
+    });
+
+    this.updateLocalFiles();
+    if (currContextIsLocalFiles) this.sequencer.context = this.playContexts['local'];
+    if (currIndexWasDeleted)     this.sequencer.nextSong();
+  }
 
   render() {
     const { title, subtitle } = titlesFromMetadata(this.state.currentSongMetadata);
@@ -729,6 +805,8 @@ class App extends React.Component {
                          to={{ pathname: "/browse", ...search }}>Browse</NavLink>
                 <NavLink className="tab" activeClassName="tab-selected"
                          to={{ pathname: "/favorites", ...search }}>Favorites</NavLink>
+                <NavLink className="tab" activeClassName="tab-selected"
+                         to={{ pathname: "/local", ...search }}>Local</NavLink>
                 {/* this.sequencer?.players?.map((p, i) => `p${i}:${p.stopped?'off':'on'}`).join(' ') */}
                 <button className={this.state.showPlayerSettings ? 'tab tab-selected' : 'tab'}
                         style={{ marginLeft: 'auto', marginRight: 0 }}
@@ -779,6 +857,17 @@ class App extends React.Component {
                               toggleFavorite={this.handleToggleFavorite}/>
                     );
                   }}/>
+                  <Route path="/local" render={() => (
+                    <LocalFiles
+                      loading={this.state.loadingLocalFiles}
+                      handleShufflePlay={this.handleShufflePlay}
+                      onSongClick={this.handleSongClick}
+                      onDelete={this.handleLocalFileDelete}
+                      playContext={this.playContexts['local']}
+                      currContext={currContext}
+                      currIdx={currIdx}
+                      listing={this.state.localFiles}/>
+                  )}/>>
                   <Route path="/settings" render={() => (
                     <Settings
                       ejected={this.state.ejected}
