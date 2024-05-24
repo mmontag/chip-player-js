@@ -149,14 +149,20 @@ function AppFooter(props) {
                                   href={songUrl}/>
                 </div>}
               <div className="SongDetails-title">
-                <a style={{ color: 'var(--neutral4)' }} href={getCurrentSongLink()}>
-                  {title}{' '}
-                  <img alt="Copy link" src={linkImage} style={{ verticalAlign: 'bottom' }}/>
-                </a>
-                {' '}
-                <a style={{ color: 'var(--neutral4)' }} href={songUrl}>
-                  <img alt="Download" src={downloadImage} style={{ verticalAlign: 'bottom' }}/>
-                </a>
+                { songUrl ?
+                  <>
+                    <a style={{ color: 'var(--neutral4)' }} href={getCurrentSongLink()}>
+                      {title}{' '}
+                      <img alt="Copy link" src={linkImage} style={{ verticalAlign: 'bottom' }}/>
+                    </a>
+                    {' '}
+                    <a style={{ color: 'var(--neutral4)' }} href={songUrl}>
+                      <img alt="Download" src={downloadImage} style={{ verticalAlign: 'bottom' }}/>
+                    </a>
+                  </>
+                  :
+                  title
+                }
                 {' '}
                 {infoTexts.length > 0 &&
                   <a onClick={handleToggleInfo} href='#'>
