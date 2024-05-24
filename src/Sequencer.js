@@ -2,7 +2,7 @@ import promisify from "./promisify-xhr";
 import {CATALOG_PREFIX} from "./config";
 import shuffle from 'lodash/shuffle';
 import EventEmitter from 'events';
-import autoBindReact from 'auto-bind/react';
+import autoBind from 'auto-bind';
 
 export const REPEAT_OFF = 0;
 export const REPEAT_ALL = 1;
@@ -16,12 +16,13 @@ export const NUM_SHUFFLE_MODES = 2;
 export const SHUFFLE_LABELS = ['Off', 'On'];
 
 export default class Sequencer extends EventEmitter {
-  constructor(players) {
+  constructor(players, localFilesManager) {
     super();
-    autoBindReact(this);
+    autoBind(this);
 
     this.player = null;
     this.players = players;
+    this.localFilesManager = localFilesManager;
     // this.onSequencerStateUpdate = onSequencerStateUpdate;
     // this.onPlayerError = onError;
 
@@ -182,9 +183,6 @@ export default class Sequencer extends EventEmitter {
       this.player.suspend();
     }
 
-    // Normalize url - paths are assumed to live under CATALOG_PREFIX
-    url = url.startsWith('http') ? url : CATALOG_PREFIX + url;
-
     // Find a player that can play this filetype
     const ext = url.split('.').pop().toLowerCase();
     for (let i = 0; i < this.players.length; i++) {
@@ -198,22 +196,31 @@ export default class Sequencer extends EventEmitter {
       return;
     }
 
-    // Fetch the song file (cancelable request)
-    // Cancel any outstanding request so that playback doesn't happen out of order
-    if (this.songRequest) this.songRequest.abort();
-    this.songRequest = promisify(new XMLHttpRequest());
-    this.songRequest.responseType = 'arraybuffer';
-    this.songRequest.open('GET', url);
-    this.songRequest.send()
-      .then(xhr => xhr.response)
-      .then(buffer => {
-        this.currUrl = url;
-        const filepath = url.replace(CATALOG_PREFIX, '');
-        this.playSongBuffer(filepath, buffer)
-      })
-      .catch(e => {
-        this.handlePlayerError(e.message || `HTTP ${e.status} ${e.statusText} ${url}`);
-      });
+    if (url.startsWith('local/')) {
+      const buffer = this.localFilesManager.read(url);
+      this.currUrl = null;
+      this.playSongBuffer(url, buffer);
+    } else {
+      // Normalize url - paths are assumed to live under CATALOG_PREFIX
+      url = url.startsWith('http') ? url : CATALOG_PREFIX + url;
+
+      // Fetch the song file (cancelable request)
+      // Cancel any outstanding request so that playback doesn't happen out of order
+      if (this.songRequest) this.songRequest.abort();
+      this.songRequest = promisify(new XMLHttpRequest());
+      this.songRequest.responseType = 'arraybuffer';
+      this.songRequest.open('GET', url);
+      this.songRequest.send()
+        .then(xhr => xhr.response)
+        .then(buffer => {
+          this.currUrl = url;
+          const filepath = url.replace(CATALOG_PREFIX, '');
+          this.playSongBuffer(filepath, buffer)
+        })
+        .catch(e => {
+          this.handlePlayerError(e.message || `HTTP ${e.status} ${e.statusText} ${url}`);
+        });
+    }
   }
 
   playSongFile(filepath, songData) {
