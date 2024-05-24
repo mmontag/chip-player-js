@@ -300,6 +300,7 @@ body,#root {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     border-right: 1px solid var(--clickable);
+    container-type: inline-size;
 }
 
 .App-main-content-area.settings {
@@ -412,11 +413,22 @@ body,#root {
 .BrowseList-colName { overflow-x: hidden; white-space: nowrap; text-overflow: ellipsis; -ms-flex-positive: 1; flex-grow: 1; }
 .BrowseList-colDir, .BrowseList-colSize { -ms-flex-negative : 0; flex-shrink : 0; margin-left: calc(var(--charW1) * 2); }
 .BrowseList-colCount { -ms-flex-negative : 0; flex-shrink : 0; margin-left: var(--charW1); width: calc(var(--charW1) * 5); text-align: right; }
+.BrowseList-colMtime { text-align: right; text-transform: uppercase; white-space: nowrap; min-width: calc(var(--charW1) * 12); }
 .BrowseList-colSize { text-align: right; text-transform: uppercase; white-space: nowrap; min-width: calc(var(--charW1) * 10); }
+
+@media screen and (max-width: 800px) {
+    .BrowseList-colMtime { display: none }
+}
+@container (max-width: 800px) {
+    .BrowseList-colMtime { display: none }
+}
 
 .DirectoryLink-dim { color: var(--neutral2); }
 .DirectoryLink-folderIcon { vertical-align: bottom; }
 .DirectoryLink-folderIconDim { vertical-align: bottom; -webkit-filter: grayscale(100%) brightness(0.75); filter: grayscale(100%) brightness(0.75); }
+
+.fileIcon { vertical-align: bottom; }
+.fileIconDim { vertical-align: bottom; -webkit-filter: grayscale(100%) brightness(0.75); filter: grayscale(100%) brightness(0.75); }
 
 .PlayerParams h3 { margin-top: 0; }
 .PlayerParams-param { display: -ms-flexbox; display: flex; -ms-flex-wrap: wrap; flex-wrap: wrap; }
@@ -457,6 +469,12 @@ body,#root {
     color: var(--button);
     background: initial;
     padding: 0 var(--charW1);
+}
+
+/*.Song-now-playing .Trash-button { background: var(--button); }*/
+.Trash-button {
+    cursor: pointer;
+    background: initial;
 }
 
 .Visualizer { position: relative; display: -ms-flexbox; display: flex; -ms-flex-direction: column; flex-direction: column; -ms-flex-align: end; align-items: flex-end }
@@ -658,4 +676,4 @@ img { -ms-interpolation-mode: nearest-neighbor; image-rendering: -webkit-optimiz
 .message-box-button        { background: var(--background); padding: 0 var(--charW2); -webkit-box-shadow: none; box-shadow: none; }
 
 
-/*# sourceMappingURL=main.69e86a22.css.map*/
+/*# sourceMappingURL=main.dbb4ab9d.css.map*/
