@@ -36,6 +36,7 @@ function AppFooter(props) {
 
     // this.
     getCurrentSongLink,
+    handleCopyLink,
     handleCycleRepeat,
     handleCycleShuffle,
     handleSetVoiceMask,
@@ -54,10 +55,22 @@ function AppFooter(props) {
   } = props;
 
   const pathLinks = pathToLinks(songUrl);
+  const subtuneText = `Tune ${currentSongSubtune + 1} of ${currentSongNumSubtunes}`;
+
   const handleToggleInfo = useCallback((e) => {
     e.preventDefault();
     toggleInfo();
   }, [toggleInfo]);
+
+  const handleCopySongLink = useCallback((e) => {
+    e.preventDefault();
+    handleCopyLink(getCurrentSongLink());
+  });
+
+  const handleCopySubtuneLink = useCallback((e) => {
+    e.preventDefault();
+    handleCopyLink(getCurrentSongLink(/*withSubtune=*/true));
+  });
 
   return (
     <div className="AppFooter">
@@ -86,7 +99,18 @@ function AppFooter(props) {
           {' '}
           {currentSongNumSubtunes > 1 &&
             <span style={{ whiteSpace: 'nowrap' }}>
-              Tune {currentSongSubtune + 1} of {currentSongNumSubtunes}{' '}
+              { songUrl ?
+                <a style={{ color: 'var(--neutral4)' }} href={getCurrentSongLink(/*subtune=*/true)}
+                   title="Copy subtune link to clipboard"
+                   onClick={handleCopySubtuneLink}>
+                  {subtuneText}
+                  {' '}
+                  <img alt="Copy link" src={linkImage} style={{ verticalAlign: 'bottom' }}/>
+                </a>
+                :
+                subtuneText
+              }
+              {' '}
               <button
                 className="box-button"
                 disabled={ejected}
@@ -151,7 +175,10 @@ function AppFooter(props) {
               <div className="SongDetails-title">
                 { songUrl ?
                   <>
-                    <a style={{ color: 'var(--neutral4)' }} href={getCurrentSongLink()}>
+                    <a style={{ color: 'var(--neutral4)' }} href={getCurrentSongLink()}
+                       title="Copy song link to clipboard"
+                       onClick={handleCopySongLink}
+                    >
                       {title}{' '}
                       <img alt="Copy link" src={linkImage} style={{ verticalAlign: 'bottom' }}/>
                     </a>
