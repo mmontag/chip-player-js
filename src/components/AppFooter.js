@@ -1,7 +1,7 @@
 import React, { memo, useCallback } from 'react';
 import diceImage from '../images/dice.png';
 import downloadImage from '../images/download.png';
-import linkImage from '../images/link.png';
+import copyImage from '../images/copy.png';
 import repeatImage from '../images/repeat.png';
 import TimeSlider from './TimeSlider';
 import VolumeSlider from './VolumeSlider';
@@ -105,7 +105,7 @@ function AppFooter(props) {
                    onClick={handleCopySubtuneLink}>
                   {subtuneText}
                   {' '}
-                  <img alt="Copy link" src={linkImage} style={{ verticalAlign: 'bottom' }}/>
+                  <img alt="Copy link" src={copyImage} style={{ verticalAlign: 'bottom' }}/>
                 </a>
                 :
                 subtuneText
@@ -180,7 +180,7 @@ function AppFooter(props) {
                        onClick={handleCopySongLink}
                     >
                       {title}{' '}
-                      <img alt="Copy link" src={linkImage} style={{ verticalAlign: 'bottom' }}/>
+                      <img alt="Copy link" src={copyImage} style={{ verticalAlign: 'bottom' }}/>
                     </a>
                     {' '}
                     <a style={{ color: 'var(--neutral4)' }} href={songUrl}>
