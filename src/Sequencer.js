@@ -69,22 +69,22 @@ export default class Sequencer extends EventEmitter {
     }
   }
 
-  playContext(context, index = 0) {
+  playContext(context, index = 0, subtune = 0) {
     this.currIdx = index;
     this.context = context;
     if (this.shuffle === SHUFFLE_ON) {
       this.setShuffle(this.shuffle);
     }
-    this.playCurrentSong();
+    this.playCurrentSong(subtune);
   }
 
-  playCurrentSong() {
+  playCurrentSong(subtune = 0) {
     let idx = this.currIdx;
     if (this.shuffle === SHUFFLE_ON) {
       idx = this.shuffleOrder[idx];
       console.log('Shuffle (%s): %s', this.currIdx, idx);
     }
-    this.playSong(this.context[idx]);
+    this.playSong(this.context[idx], subtune);
   }
 
   playSonglist(urls) {
@@ -178,7 +178,11 @@ export default class Sequencer extends EventEmitter {
     return this.currUrl;
   }
 
-  playSong(url) {
+  getSubtune() {
+    return this.player.getSubtune();
+  }
+
+  playSong(url, subtune = 0) {
     if (this.player !== null) {
       this.player.suspend();
     }
@@ -199,7 +203,7 @@ export default class Sequencer extends EventEmitter {
     if (url.startsWith('local/')) {
       const buffer = this.localFilesManager.read(url);
       this.currUrl = null;
-      this.playSongBuffer(url, buffer);
+      this.playSongBuffer(url, buffer, subtune);
     } else {
       // Normalize url - paths are assumed to live under CATALOG_PREFIX
       url = url.startsWith('http') ? url : CATALOG_PREFIX + url;
@@ -215,7 +219,7 @@ export default class Sequencer extends EventEmitter {
         .then(buffer => {
           this.currUrl = url;
           const filepath = url.replace(CATALOG_PREFIX, '');
-          this.playSongBuffer(filepath, buffer)
+          this.playSongBuffer(filepath, buffer, subtune)
         })
         .catch(e => {
           this.handlePlayerError(e.message || `HTTP ${e.status} ${e.statusText} ${url}`);
@@ -244,12 +248,12 @@ export default class Sequencer extends EventEmitter {
     this.playSongBuffer(filepath, songData);
   }
 
-  async playSongBuffer(filepath, buffer) {
+  async playSongBuffer(filepath, buffer, subtune = 0) {
     let uint8Array;
     uint8Array = new Uint8Array(buffer);
     this.player.setTempo(1);
     try {
-      await this.player.loadData(uint8Array, filepath);
+      await this.player.loadData(uint8Array, filepath, subtune);
     } catch (e) {
       this.handlePlayerError(`Unable to play ${filepath} (${e.message}).`);
     }
