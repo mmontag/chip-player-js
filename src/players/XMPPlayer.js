@@ -209,10 +209,6 @@ export default class XMPPlayer extends Player {
     return this.metadata.numChannels;
   }
 
-  getNumSubtunes() {
-    return 0;
-  }
-
   getPositionMs() {
     return this._positionMs;
   }

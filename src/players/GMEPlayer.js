@@ -186,8 +186,8 @@ export default class GMEPlayer extends Player {
     return core._gme_start_track(this.gmeCtx, subtune);
   }
 
-  loadData(data, filepath) {
-    this.subtune = 0;
+  loadData(data, filepath, subtune = 0) {
+    this.subtune = subtune;
     this.fadingOut = false;
     this.seekTargetMs = null;
     this.seekRequestId = null;
