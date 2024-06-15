@@ -238,23 +238,28 @@ class App extends React.Component {
     // TODO: Move to separate processUrlParams method.
     const urlParams = queryString.parse(window.location.search.substring(1));
     if (urlParams.play) {
-      const play = urlParams.play;
-      const dirname = path.dirname(urlParams.play);
-      // Treat play param as a "transient command" and strip it away after starting playback.
+      // Treat play params as "transient command" and strip them after starting playback.
       // See comment in Browse.js for more about why a sticky play param is not a good idea.
+      const play = urlParams.play;
+      const subtune = urlParams.subtune ? parseInt(urlParams.subtune, 10) : 0;
+      const time = urlParams.t ? parseInt(urlParams.t, 10) : 0;
       delete urlParams.play;
+      delete urlParams.subtune;
+      delete urlParams.t;
       const qs = queryString.stringify(urlParams);
       const search = qs ? `?${qs}` : '';
       // Navigate to song's containing folder. History comes from withRouter().
+      const dirname = path.dirname(play);
       this.fetchDirectory(dirname).then(() => {
         this.props.history.replace(`/browse/${dirname}${search}`);
         const index = this.playContexts[dirname].indexOf(play);
-        this.playContext(this.playContexts[dirname], index);
 
-        if (urlParams.t) {
+        this.playContext(this.playContexts[dirname], index, subtune);
+
+        if (time) {
           setTimeout(() => {
             if (this.sequencer.getPlayer()) {
-              this.sequencer.getPlayer().seekMs(parseInt(urlParams.t, 10));
+              this.sequencer.getPlayer().seekMs(time);
             }
           }, 100);
         }
