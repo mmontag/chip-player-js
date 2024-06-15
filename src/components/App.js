@@ -56,6 +56,8 @@ import MessageBox from './MessageBox';
 import Settings from './Settings';
 import LocalFiles from './LocalFiles';
 
+const BASE_URL = process.env.PUBLIC_URL || document.location.origin;
+
 class App extends React.Component {
   constructor(props) {
     super(props);
@@ -177,7 +179,7 @@ class App extends React.Component {
         // Look for .wasm file in web root, not the same location as the app bundle (static/js).
         locateFile: (path, prefix) => {
           if (path.endsWith('.wasm') || path.endsWith('.wast'))
-            return `${process.env.PUBLIC_URL}/${path}`;
+            return `${BASE_URL}/${path}`;
           return prefix + path;
         },
         print: (msg) => console.debug('[stdout] ' + msg),
@@ -349,7 +351,7 @@ class App extends React.Component {
       // See https://bugs.chromium.org/p/chromium/issues/detail?id=944538
       //     https://github.com/GoogleChrome/samples/issues/637
       this.mediaSessionAudio = document.createElement('audio');
-      this.mediaSessionAudio.src = process.env.PUBLIC_URL + '/5-seconds-of-silence.mp3';
+      this.mediaSessionAudio.src = BASE_URL + '/5-seconds-of-silence.mp3';
       this.mediaSessionAudio.loop = true;
       this.mediaSessionAudio.volume = 0;
 
@@ -413,8 +415,8 @@ class App extends React.Component {
     });
   }
 
-  playContext(context, index = 0) {
-    this.sequencer.playContext(context, index);
+  playContext(context, index = 0, subtune = 0) {
+    this.sequencer.playContext(context, index, subtune);
   }
 
   prevSong() {
@@ -689,10 +691,17 @@ class App extends React.Component {
       });
   }
 
-  getCurrentSongLink() {
+  getCurrentSongLink(withSubtune = false) {
     const url = this.sequencer?.getCurrUrl();
     if (!url) return null;
-    return process.env.PUBLIC_URL + '/?play=' + encodeURIComponent(url.replace(CATALOG_PREFIX, ''));
+    let link = BASE_URL + '/?play=' + encodeURIComponent(url.replace(CATALOG_PREFIX, ''));
+    if (withSubtune) {
+      const subtune = this.sequencer?.getSubtune();
+      if (subtune !== 0) {
+        link += '&subtune=' + subtune;
+      }
+    }
+    return link;
   }
 
   updateLocalFiles() {
@@ -777,6 +786,11 @@ class App extends React.Component {
     this.updateLocalFiles();
     if (currContextIsLocalFiles) this.sequencer.context = this.playContexts['local'];
     if (currIndexWasDeleted)     this.sequencer.nextSong();
+  }
+
+  handleCopyLink = (url) => {
+    navigator.clipboard.writeText(url);
+    this.handlePlayerError('Copied song link to clipboard.');
   }
 
   render() {
@@ -917,6 +931,7 @@ class App extends React.Component {
             ejected={this.state.ejected}
             faves={this.state.faves}
             getCurrentSongLink={this.getCurrentSongLink}
+            handleCopyLink={this.handleCopyLink}
             handleCycleRepeat={this.handleCycleRepeat}
             handleCycleShuffle={this.handleCycleShuffle}
             handleSetVoiceMask={this.handleSetVoiceMask}
