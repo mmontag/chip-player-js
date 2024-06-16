@@ -51,7 +51,7 @@ import DropMessage from './DropMessage';
 import Favorites from './Favorites';
 import Search from './Search';
 import Visualizer from './Visualizer';
-import Alert from './Alert';
+import Toast, { ToastLevels } from './Toast';
 import MessageBox from './MessageBox';
 import Settings from './Settings';
 import LocalFiles from './LocalFiles';
@@ -141,7 +141,7 @@ class App extends React.Component {
       loadingLocalFiles: true,
       paused: true,
       ejected: true,
-      playerError: null,
+      toast: {},
       currentSongMetadata: {},
       currentSongNumVoices: 0,
       currentSongNumSubtunes: 0,
@@ -154,7 +154,7 @@ class App extends React.Component {
       imageUrl: null,
       infoTexts: [],
       showInfo: false,
-      showPlayerError: false,
+      showToast: false,
       showPlayerSettings: false,
       user: null,
       songUrl: null,
@@ -188,7 +188,7 @@ class App extends React.Component {
     } catch (e) {
       // Browser doesn't support WASM (Safari in iOS Simulator)
       Object.assign(this.state, {
-        playerError: 'Error loading player engine. Old browser?',
+        toast: { message: 'Error loading player engine. Old browser?', level: ToastLevels.ERROR },
         loading: false,
       });
       return;
@@ -235,7 +235,7 @@ class App extends React.Component {
 
     this.sequencer = new Sequencer(players, this.localFilesManager);
     this.sequencer.on('sequencerStateUpdate', this.handleSequencerStateUpdate);
-    this.sequencer.on('playerError', this.handlePlayerError);
+    this.sequencer.on('playerError', (message) => this.addToast(message, ToastLevels.ERROR));
 
     // TODO: Move to separate processUrlParams method.
     const urlParams = queryString.parse(window.location.search.substring(1));
@@ -511,11 +511,18 @@ class App extends React.Component {
     }
   }
 
-  handlePlayerError(message) {
-    if (message) this.setState({ playerError: message });
-    this.setState({ showPlayerError: !!message });
+  addToast(message, level) {
+    this.setState({
+      toast: { message, level },
+      showToast: true,
+    });
     clearTimeout(this.errorTimer);
-    this.errorTimer = setTimeout(() => this.setState({ showPlayerError: false }), ERROR_FLASH_DURATION_MS);
+    this.errorTimer = setTimeout(() => this.setState({ showToast: false }), ERROR_FLASH_DURATION_MS);
+  }
+
+  removeToast() {
+    this.setState({ showToast: false });
+    clearTimeout(this.errorTimer);
   }
 
   togglePause() {
@@ -763,7 +770,7 @@ class App extends React.Component {
       // Display all rejection reasons with duplicate reasons removed.
       results.filter(result => result.status === 'rejected')
         .reduce((acc, result) => acc.includes(result.reason) ? acc : [ ...acc, result.reason ], [])
-        .forEach((reason, i) => setTimeout(() => this.handlePlayerError(reason), i * 1500));
+        .forEach((reason, i) => setTimeout(() => this.addToast(reason, ToastLevels.ERROR), i * 1500));
     });
   };
 
@@ -790,7 +797,7 @@ class App extends React.Component {
 
   handleCopyLink = (url) => {
     navigator.clipboard.writeText(url);
-    this.handlePlayerError('Copied song link to clipboard.');
+    this.addToast('Copied song link to clipboard.', ToastLevels.INFO);
   }
 
   render() {
@@ -808,9 +815,9 @@ class App extends React.Component {
           <MessageBox showInfo={this.state.showInfo}
                       infoTexts={this.state.infoTexts}
                       toggleInfo={this.toggleInfo}/>
-          <Alert handlePlayerError={this.handlePlayerError}
-                 playerError={this.state.playerError}
-                 showPlayerError={this.state.showPlayerError}/>
+          <Toast handleClose={this.removeToast}
+                 toast={this.state.toast}
+                 showToast={this.state.showToast}/>
           <AppHeader user={this.state.user}
                      handleLogout={this.handleLogout}
                      handleLogin={this.handleLogin}

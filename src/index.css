@@ -493,7 +493,7 @@ img { image-rendering: pixelated; }
     margin-bottom: -1px;
 }
 
-.error-box-outer {
+.toast-box-outer {
     position: absolute;
     z-index: 100;
     display: flex;
@@ -508,9 +508,7 @@ img { image-rendering: pixelated; }
     padding: 0 var(--charW2);
     box-sizing: border-box;
 }
-.error-box {
-    background-color: var(--active);
-    color: var(--neutral4);
+.toast-box {
     padding: var(--charH) var(--charW2);
     box-shadow: var(--charW1) var(--charW1) var(--shadow);
     box-sizing: border-box;
@@ -523,11 +521,11 @@ img { image-rendering: pixelated; }
     width: 100%;
     height: calc(4 * var(--charH));
 }
-.error-box-outer[hidden] {
+.toast-box-outer[hidden] {
     top: calc(-4 * var(--charH));
     visibility: hidden;
 }
-.error-box .message {
+.toast-box .message {
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     display: -webkit-box;
@@ -536,6 +534,14 @@ img { image-rendering: pixelated; }
     padding-right: var(--charW1);
     text-overflow: ellipsis;
     white-space: initial;
+}
+.toast-error {
+    background-color: var(--active);
+    color: var(--neutral4);
+}
+.toast-info {
+    background-color: var(--button);
+    color: var(--neutral3);
 }
 
 /* message-box is used by Info box and DropMessage component. */
