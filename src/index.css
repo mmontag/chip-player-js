@@ -29,6 +29,14 @@
     font-style: normal
 }
 
+.grid { /* utility class for testing the character grid */
+    background-image:
+        repeating-linear-gradient(
+            to right, #fff1 0px, #fff1 1px, #fff0 1px, #fff0 var(--charW1)),
+        repeating-linear-gradient(
+            to bottom, #fff2 0px, #fff2 1px, #fff0 1px, #fff0 var(--charH));
+}
+
 .App * {
     font-size: 24px !important;
     font-family: VGA_SquarePx, monospace !important;
@@ -252,6 +260,7 @@ body,#root {
     overflow: hidden;
     height: 100%;
     margin: 0 var(--charW2neg);
+    margin-top: -1px; /* shrink by 1px for top border of tabs */
 }
 
 .App-main-inner {
@@ -279,6 +288,9 @@ body,#root {
     -webkit-overflow-scrolling: touch;
     border-right: 1px solid var(--clickable);
     container-type: inline-size;
+}
+.App-main-content-area:focus { /* I have no idea why this became focusable */
+    background-color: initial;
 }
 
 .App-main-content-area.settings {
@@ -485,12 +497,15 @@ img { image-rendering: pixelated; }
     border-bottom: none;
     margin: 0 8px 0 0;
     border-radius: 3px 3px 0 0;
+    box-sizing: border-box;
+    height: var(--charH);
 }
 
 .tab-selected {
     border-bottom: 1px solid var(--background);
     background: var(--background);
     margin-bottom: -1px;
+    height: calc(var(--charH) + 1px);
 }
 
 .toast-box-outer {
