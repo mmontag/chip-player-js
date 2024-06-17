@@ -9,6 +9,7 @@ function Settings(props) {
     currentSongNumVoices,
     voiceMask,
     voiceNames,
+    voiceGroups,
     handleSetVoiceMask,
     handleTempoChange,
     sequencer,
@@ -23,6 +24,7 @@ function Settings(props) {
           numVoices={currentSongNumVoices}
           voiceMask={voiceMask}
           voiceNames={voiceNames}
+          voiceGroups={voiceGroups}
           handleTempoChange={handleTempoChange}
           handleSetVoiceMask={handleSetVoiceMask}
           getParameter={sequencer.getPlayer().getParameter}

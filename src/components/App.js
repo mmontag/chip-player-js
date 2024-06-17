@@ -284,6 +284,7 @@ class App extends React.Component {
       tempo: 'tempo',
       voiceNames: 'voiceNames',
       voiceMask: 'voiceMask',
+      voiceGroups: 'voiceGroups',
       songUrl: 'url',
       hasPlayer: 'hasPlayer',
       // TODO: add param values? move to paramStateUpdate?
@@ -916,6 +917,7 @@ class App extends React.Component {
                     currentSongNumVoices={this.state.currentSongNumVoices}
                     voiceMask={this.state.voiceMask}
                     voiceNames={this.state.voiceNames}
+                    voiceGroups={this.state.voiceGroups}
                     handleSetVoiceMask={this.handleSetVoiceMask}
                     handleTempoChange={this.handleTempoChange}
                     sequencer={this.sequencer}

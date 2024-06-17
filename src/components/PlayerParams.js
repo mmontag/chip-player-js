@@ -1,5 +1,6 @@
 import React, { PureComponent } from 'react';
 import autoBindReact from 'auto-bind/react';
+import chip from '../images/chip.png';
 
 export default class PlayerParams extends PureComponent {
   constructor(props) {
@@ -80,11 +81,33 @@ export default class PlayerParams extends PureComponent {
             onChange={this.props.handleTempoChange}/>{' '}
           {this.props.tempo.toFixed(2)}
         </span>
-
-        {this.props.numVoices > 1 &&
+        {this.props.voiceGroups.length > 0 ?
+          this.props.voiceGroups.map((voiceGroup) => {
+            return (
+              <span className='PlayerParams-param PlayerParams-group'>
+                  <label className="PlayerParams-group-title">
+                    <img src={chip} alt="Sound chip" style={{verticalAlign: 'bottom'}}/>{voiceGroup.name}:
+                  </label>
+                  <div className="PlayerParams-voiceList">
+                    {voiceGroup.voices.map((voice) => (
+                      <label className='App-voice-label inline' key={voice.idx}>
+                        <input
+                          title='Alt+click to solo. Alt+click again to unmute all.'
+                          type='checkbox'
+                          onChange={(e) => this.handleVoiceToggle(e, voice.idx)}
+                          checked={this.props.voiceMask[voice.idx]}/>
+                        {voice.name}
+                      </label>
+                    ))}
+                  </div>
+              </span>
+            )
+          })
+          :
+          this.props.numVoices > 1 &&
           <span className='PlayerParams-param PlayerParams-group'>
-            <label className="PlayerParams-label">
-              Voices:{' '}
+            <label className="PlayerParams-group-title">
+              Voices:
             </label>
             <div className="PlayerParams-voiceList">
               {[...Array(this.props.numVoices)].map((_, i) => {
@@ -162,7 +185,7 @@ export default class PlayerParams extends PureComponent {
                            this.forceUpdate();
                          }}
                          checked={value}/>
-                  <label htmlFor={param.id} title={param.hint} className="PlayerParams-label inline">
+                  <label htmlFor={param.id} title={param.hint}>
                     {param.label}
                   </label>
                 </span>
