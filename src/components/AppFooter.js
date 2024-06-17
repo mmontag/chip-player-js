@@ -65,12 +65,12 @@ function AppFooter(props) {
   const handleCopySongLink = useCallback((e) => {
     e.preventDefault();
     handleCopyLink(getCurrentSongLink());
-  });
+  }, [getCurrentSongLink, handleCopyLink]);
 
   const handleCopySubtuneLink = useCallback((e) => {
     e.preventDefault();
     handleCopyLink(getCurrentSongLink(/*withSubtune=*/true));
-  });
+  }, [getCurrentSongLink, handleCopyLink]);
 
   return (
     <div className="AppFooter">
