@@ -444,7 +444,7 @@ const char* SndEmu_GetDevName(UINT8 deviceID, UINT8 opts, const DEV_GEN_CFG* dev
 				return (snCfg->clkDiv == 1) ? "SN94624" : "SN76489";
 			case 0x10:
 				if (snCfg->noiseTaps == 0x0009)
-					return "SEGA PSG";
+					return "Sega PSG";
 				else if (snCfg->noiseTaps == 0x0022)
 				{
 					if (snCfg->ncrPSG)	// Tandy noise mode
@@ -465,16 +465,22 @@ const char* SndEmu_GetDevName(UINT8 deviceID, UINT8 opts, const DEV_GEN_CFG* dev
 	case DEVID_YM2413:
 		if (devCfg != NULL && devCfg->flags)
 			return "VRC7";
+    if (opts & 0x01)
+		  return "YM2413 (OPLL)";
 		return "YM2413";
 #endif
 #ifdef SNDDEV_YM2612
 	case DEVID_YM2612:
 		if (devCfg != NULL && devCfg->flags)
 			return "YM3438";
+    if (opts & 0x01)
+  		return "YM2612 (OPN2)";
 		return "YM2612";
 #endif
 #ifdef SNDDEV_YM2151
 	case DEVID_YM2151:
+    if (opts & 0x01)
+      return "YM2151 (OPM)";
 		return "YM2151";
 #endif
 #ifdef SNDDEV_SEGAPCM
@@ -492,48 +498,70 @@ const char* SndEmu_GetDevName(UINT8 deviceID, UINT8 opts, const DEV_GEN_CFG* dev
 			else if (devCfg->flags == 2)
 				return "RF5C105";
 		}
+    if (opts & 0x01)
+		  return "Ricoh RF5C68";
 		return "RF5C68";
 #endif
 #ifdef SNDDEV_YM2203
 	case DEVID_YM2203:
+    if (opts & 0x01)
+		  return "YM2203 (OPN)";
 		return "YM2203";
 #endif
 #ifdef SNDDEV_YM2608
 	case DEVID_YM2608:
+    if (opts & 0x01)
+		  return "YM2608 (OPNA)";
 		return "YM2608";
 #endif
 #ifdef SNDDEV_YM2610
 	case DEVID_YM2610:
 		if (devCfg != NULL && devCfg->flags)
 			return "YM2610B";
+    if (opts & 0x01)
+		  return "YM2610 (OPNB)";
 		return "YM2610";
 #endif
 #ifdef SNDDEV_YM3812
 	case DEVID_YM3812:
+    if (opts & 0x01)
+  		return "YM3812 (OPL2)";
 		return "YM3812";
 #endif
 #ifdef SNDDEV_YM3526
 	case DEVID_YM3526:
+    if (opts & 0x01)
+		  return "YM3526 (OPL)";
 		return "YM3526";
 #endif
 #ifdef SNDDEV_Y8950
 	case DEVID_Y8950:
+    if (opts & 0x01)
+  		return "Y8950 (MSX-AUDIO)";
 		return "Y8950";
 #endif
 #ifdef SNDDEV_YMF262
 	case DEVID_YMF262:
+    if (opts & 0x01)
+      return "YMF262 (OPL3)";
 		return "YMF262";
 #endif
 #ifdef SNDDEV_YMF278B
 	case DEVID_YMF278B:
-		return "YMF278B";
+    if (opts & 0x01)
+      return "YMF278B (OPL4)";
+    return "YMF278B";
 #endif
 #ifdef SNDDEV_YMF271
 	case DEVID_YMF271:
+    if (opts & 0x01)
+		  return "YMF271 (OPX)";
 		return "YMF271";
 #endif
 #ifdef SNDDEV_YMZ280B
 	case DEVID_YMZ280B:
+    if (opts & 0x01)
+		  return "YMZ280B (PCMD8)";
 		return "YMZ280B";
 #endif
 #ifdef SNDDEV_32X_PWM
@@ -579,10 +607,14 @@ const char* SndEmu_GetDevName(UINT8 deviceID, UINT8 opts, const DEV_GEN_CFG* dev
 	case DEVID_NES_APU:
 		if (devCfg != NULL && devCfg->flags)
 			return "NES APU + FDS";
+    if (opts & 0x01)
+      return "NES APU (2A03)";
 		return "NES APU";
 #endif
 #ifdef SNDDEV_YMW258
 	case DEVID_YMW258:
+    if (opts & 0x01)
+		  return "YMW258 (MultiPCM)";
 		return "YMW258";
 #endif
 #ifdef SNDDEV_UPD7759
@@ -599,33 +631,50 @@ const char* SndEmu_GetDevName(UINT8 deviceID, UINT8 opts, const DEV_GEN_CFG* dev
 #endif
 #ifdef SNDDEV_K051649
 	case DEVID_K051649:
-		if (devCfg != NULL && devCfg->flags)
-			return "K052539";
+		if (devCfg != NULL && devCfg->flags) {
+      if (opts & 0x01)
+        return "K052539 (SCC+)";
+      return "K052539";
+    }
+    if (opts & 0x01)
+		  return "K051649 (SCC)";
 		return "K051649";
 #endif
 #ifdef SNDDEV_K054539
 	case DEVID_K054539:
+    if (opts & 0x01)
+		  return "Konami K054539";
 		return "K054539";
 #endif
 #ifdef SNDDEV_C6280
 	case DEVID_C6280:
+    if (opts & 0x01)
+		  return "Hudson C6280";
 		return "C6280";
 #endif
 #ifdef SNDDEV_C140
 	case DEVID_C140:
+    if (opts & 0x01)
+		  return "Namco C140";
 		return "C140";
 #endif
 #ifdef SNDDEV_C219
 	case DEVID_C219:
+    if (opts & 0x01)
+		  return "Namco C219";
 		return "C219";
 #endif
 #ifdef SNDDEV_K053260
 	case DEVID_K053260:
+    if (opts & 0x01)
+		  return "Konami K053260";
 		return "K053260";
 #endif
 #ifdef SNDDEV_POKEY
 	case DEVID_POKEY:
-		return "Pokey";
+    if (opts & 0x01)
+      return "Atari POKEY";
+		return "POKEY";
 #endif
 #ifdef SNDDEV_QSOUND
 	case DEVID_QSOUND:
@@ -633,6 +682,8 @@ const char* SndEmu_GetDevName(UINT8 deviceID, UINT8 opts, const DEV_GEN_CFG* dev
 #endif
 #ifdef SNDDEV_SCSP
 	case DEVID_SCSP:
+    if (opts & 0x01)
+		  return "YMF292 (SCSP)";
 		return "SCSP";
 #endif
 #ifdef SNDDEV_WSWAN
@@ -665,14 +716,20 @@ const char* SndEmu_GetDevName(UINT8 deviceID, UINT8 opts, const DEV_GEN_CFG* dev
 #endif
 #ifdef SNDDEV_C352
 	case DEVID_C352:
+    if (opts & 0x01)
+		  return "Namco C352";
 		return "C352";
 #endif
 #ifdef SNDDEV_GA20
 	case DEVID_GA20:
+    if (opts & 0x01)
+		  return "Irem GA20";
 		return "GA20";
 #endif
 #ifdef SNDDEV_MIKEY
 	case DEVID_MIKEY:
+    if (opts & 0x01)
+  		return "Atari MIKEY";
 		return "MIKEY";
 #endif
 	default:
