@@ -29,6 +29,14 @@
     font-style: normal
 }
 
+.grid { /* utility class for testing the character grid */
+    background-image:
+        repeating-linear-gradient(
+            to right, #fff1 0px, #fff1 1px, #fff0 1px, #fff0 var(--charW1)),
+        repeating-linear-gradient(
+            to bottom, #fff2 0px, #fff2 1px, #fff0 1px, #fff0 var(--charH));
+}
+
 .App * {
     font-size: 24px !important;
     font-family: VGA_SquarePx, monospace !important;
@@ -130,7 +138,7 @@ input[type=checkbox]:focus,
 input[type=radio]:focus,
 input[type=range]:focus { background: var(--focus); }
 
-label.inline { display: inline-block; margin-right: var(--charW1); }
+label.inline { display: inline-block; margin-right: var(--charW1);   }
 label.inline:last-child { margin-right: 0; }
 input[type=checkbox],
 input[type=radio] {
@@ -265,6 +273,7 @@ body,#root {
     overflow: hidden;
     height: 100%;
     margin: 0 var(--charW2neg);
+    margin-top: -1px; /* shrink by 1px for top border of tabs */
 }
 
 .App-main-inner {
@@ -301,6 +310,9 @@ body,#root {
     -webkit-overflow-scrolling: touch;
     border-right: 1px solid var(--clickable);
     container-type: inline-size;
+}
+.App-main-content-area:focus { /* I have no idea why this became focusable */
+    background-color: initial;
 }
 
 .App-main-content-area.settings {
@@ -433,7 +445,7 @@ body,#root {
 .PlayerParams h3 { margin-top: 0; }
 .PlayerParams-param { display: -ms-flexbox; display: flex; -ms-flex-wrap: wrap; flex-wrap: wrap; }
 .PlayerParams-param>input { margin-right: var(--charW1); }
-.PlayerParams-label { margin-right: var(--charW1); }
+.PlayerParams-group-title { }
 .PlayerParams-voiceList {
     display: -ms-flexbox;
     display: flex;
@@ -442,8 +454,8 @@ body,#root {
     margin-right: calc(var(--charW1) * -1);
     max-width: calc(var(--charW1) * 60);
 }
-.Settings .PlayerParams-label:first-child { -ms-flex-negative: 0; flex-shrink: 0; width: calc(var(--charW1) * 14); }
-.Settings .PlayerParams-group { margin-bottom: var(--charH); }
+.PlayerParams-label { -ms-flex-negative: 0; flex-shrink: 0; width: calc(var(--charW1) * 14); }
+.PlayerParams-group { margin-bottom: var(--charH); }
 
 .SongDetails {}
 .SongDetails-title {color: var(--neutral4);}
@@ -518,15 +530,19 @@ img { -ms-interpolation-mode: nearest-neighbor; image-rendering: -webkit-optimiz
     border-bottom: none;
     margin: 0 8px 0 0;
     border-radius: 3px 3px 0 0;
+    -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+    height: var(--charH);
 }
 
 .tab-selected {
     border-bottom: 1px solid var(--background);
     background: var(--background);
     margin-bottom: -1px;
+    height: calc(var(--charH) + 1px);
 }
 
-.error-box-outer {
+.toast-box-outer {
     position: absolute;
     z-index: 100;
     display: -ms-flexbox;
@@ -546,9 +562,7 @@ img { -ms-interpolation-mode: nearest-neighbor; image-rendering: -webkit-optimiz
     -webkit-box-sizing: border-box;
             box-sizing: border-box;
 }
-.error-box {
-    background-color: var(--active);
-    color: var(--neutral4);
+.toast-box {
     padding: var(--charH) var(--charW2);
     -webkit-box-shadow: var(--charW1) var(--charW1) var(--shadow);
             box-shadow: var(--charW1) var(--charW1) var(--shadow);
@@ -566,11 +580,11 @@ img { -ms-interpolation-mode: nearest-neighbor; image-rendering: -webkit-optimiz
     width: 100%;
     height: calc(4 * var(--charH));
 }
-.error-box-outer[hidden] {
+.toast-box-outer[hidden] {
     top: calc(-4 * var(--charH));
     visibility: hidden;
 }
-.error-box .message {
+.toast-box .message {
     -webkit-line-clamp: 2;
     display: -webkit-box;
     max-height: 100%;
@@ -578,6 +592,14 @@ img { -ms-interpolation-mode: nearest-neighbor; image-rendering: -webkit-optimiz
     padding-right: var(--charW1);
     text-overflow: ellipsis;
     white-space: initial;
+}
+.toast-error {
+    background-color: var(--active);
+    color: var(--neutral4);
+}
+.toast-info {
+    background-color: var(--button);
+    color: var(--neutral3);
 }
 
 /* message-box is used by Info box and DropMessage component. */
@@ -676,4 +698,4 @@ img { -ms-interpolation-mode: nearest-neighbor; image-rendering: -webkit-optimiz
 .message-box-button        { background: var(--background); padding: 0 var(--charW2); -webkit-box-shadow: none; box-shadow: none; }
 
 
-/*# sourceMappingURL=main.dbb4ab9d.css.map*/
+/*# sourceMappingURL=main.97c2d5a7.css.map*/
