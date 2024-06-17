@@ -1,6 +1,7 @@
 import Player from "./Player.js";
 import autoBind from 'auto-bind';
 import { allOrNone } from '../util';
+import chipImage from '../images/chip.png';
 
 const fileExtensions = [
   'vgm',
@@ -129,6 +130,7 @@ export default class VGMPlayer extends Player {
       if (chipName !== currChipName) {
         currGroup = {
           name: chipName,
+          icon: chipImage,
           voices: [],
         };
         currChipName = chipName;

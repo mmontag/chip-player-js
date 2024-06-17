@@ -1,6 +1,5 @@
 import React, { PureComponent } from 'react';
 import autoBindReact from 'auto-bind/react';
-import chip from '../images/chip.png';
 
 export default class PlayerParams extends PureComponent {
   constructor(props) {
@@ -86,7 +85,8 @@ export default class PlayerParams extends PureComponent {
             return (
               <span className='PlayerParams-param PlayerParams-group'>
                   <label className="PlayerParams-group-title">
-                    <img src={chip} alt="Sound chip" style={{verticalAlign: 'bottom'}}/>{voiceGroup.name}:
+                    {voiceGroup.icon && <img src={voiceGroup.icon} alt="Sound chip" className="inline-icon"/>}
+                    {voiceGroup.name}:
                   </label>
                   <div className="PlayerParams-voiceList">
                     {voiceGroup.voices.map((voice) => (
