@@ -272,6 +272,7 @@ const chipModules = [
       '_lvgm_get_metadata',
       '_lvgm_get_voice_count',
       '_lvgm_get_voice_name',
+      '_lvgm_get_voice_chip_name',
       '_lvgm_get_voice_mask',
       '_lvgm_set_voice_mask',
       '_lvgm_seek_ms',

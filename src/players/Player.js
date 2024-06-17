@@ -123,6 +123,41 @@ export default class Player extends EventEmitter {
     return 0;
   }
 
+  /*
+  [
+    {
+      name: 'Sega PSG',
+      voices: [
+        {
+          idx: 0,
+          name: 'Pulse 1',
+        },
+        {
+          idx: 1,
+          name: 'Pulse 2'
+        },
+      ],
+    },
+    {
+      name: 'YM2612',
+      voices: [
+        {
+          idx: 2,
+          name: 'FM 1',
+        },
+        {
+          idx: 3,
+          name: 'FM 2'
+        },
+      ],
+    },
+  ]
+   */
+  // a nice replacement for getNumVoices and getVoiceName.
+  getVoiceGroups() {
+    return [];
+  }
+
   getNumSubtunes() {
     return 1;
   }
@@ -158,6 +193,7 @@ export default class Player extends EventEmitter {
       tempo: this.getTempo(),
       voiceMask: this.getVoiceMask(),
       voiceNames: [...Array(this.getNumVoices())].map((_, i) => this.getVoiceName(i)),
+      voiceGroups: this.getVoiceGroups(),
       infoTexts: this.getInfoTexts(),
       isStopped: this.stopped,
       isPaused: this.paused,

@@ -118,6 +118,30 @@ export default class VGMPlayer extends Player {
       return this.core._lvgm_get_voice_count(this.vgmCtx);
   }
 
+  getVoiceGroups() {
+    const voiceGroups = [];
+    const numVoices = this.core._lvgm_get_voice_count(this.vgmCtx);
+    let currChipName;
+    let currGroup;
+    for (let i = 0; i < numVoices; i++) {
+      const voiceName = this.core.UTF8ToString(this.core._lvgm_get_voice_name(this.vgmCtx, i));
+      const chipName = this.core.UTF8ToString(this.core._lvgm_get_voice_chip_name(this.vgmCtx, i));
+      if (chipName !== currChipName) {
+        currGroup = {
+          name: chipName,
+          voices: [],
+        };
+        currChipName = chipName;
+        voiceGroups.push(currGroup);
+      }
+      currGroup.voices.push({
+        idx: i,
+        name: voiceName,
+      });
+    }
+    return voiceGroups;
+  }
+
   getMetadata() {
     return this.metadata;
   }
