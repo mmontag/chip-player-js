@@ -105,7 +105,7 @@ function AppFooter(props) {
                    onClick={handleCopySubtuneLink}>
                   {subtuneText}
                   {' '}
-                  <img alt="Copy link" src={copyImage} style={{ verticalAlign: 'bottom' }}/>
+                  <img alt="Copy link" src={copyImage} className="inline-icon"/>
                 </a>
                 :
                 subtuneText
@@ -126,12 +126,12 @@ function AppFooter(props) {
           <span className="AppFooter-more-buttons">
               <button title="Cycle Repeat (repeat off, repeat all songs in the context, or repeat one song)"
                       className="box-button" onClick={handleCycleRepeat}>
-                <img alt="Repeat" src={repeatImage} style={{ verticalAlign: 'bottom' }}/>
+                <img alt="Repeat" src={repeatImage} className="inline-icon"/>
                 {REPEAT_LABELS[repeat]}
               </button>
             {' '}
             <button title="Toggle shuffle mode" className="box-button" onClick={handleCycleShuffle}>
-                <img alt="Roll the dice" src={diceImage} style={{ verticalAlign: 'bottom' }}/>
+                <img alt="Roll the dice" src={diceImage} className="inline-icon"/>
               {SHUFFLE_LABELS[shuffle]}
               </button>
             {' '}
@@ -180,11 +180,11 @@ function AppFooter(props) {
                        onClick={handleCopySongLink}
                     >
                       {title}{' '}
-                      <img alt="Copy link" src={copyImage} style={{ verticalAlign: 'bottom' }}/>
+                      <img alt="Copy link" src={copyImage} className="inline-icon"/>
                     </a>
                     {' '}
                     <a style={{ color: 'var(--neutral4)' }} href={songUrl}>
-                      <img alt="Download" src={downloadImage} style={{ verticalAlign: 'bottom' }}/>
+                      <img alt="Download" src={downloadImage} className="inline-icon"/>
                     </a>
                   </>
                   :

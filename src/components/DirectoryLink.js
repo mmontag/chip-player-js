@@ -14,7 +14,7 @@ export default memo(DirectoryLink);
 
 function DirectoryLink(props) {
   const linkClassName = props.dim ? 'DirectoryLink-dim' : null;
-  const folderClassName = props.dim ? 'DirectoryLink-folderIconDim' : 'DirectoryLink-folderIcon';
+  const folderClassName = props.dim ? 'inline-icon dim-icon' : 'inline-icon';
   // Double encode % because react-router will decode this into history.
   // See https://github.com/ReactTraining/history/issues/505
   // The fix https://github.com/ReactTraining/history/pull/656

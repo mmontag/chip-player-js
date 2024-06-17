@@ -67,7 +67,7 @@ function LocalFiles(props) {
                 return (
                   <div key={title} className={isPlaying ? 'Song-now-playing BrowseList-row' : 'BrowseList-row'}>
                     <button className='Trash-button' onClick={handleDelete} data-href={href}>
-                      <img alt='trash' className='fileIcon' src={trash}/>
+                      <img alt='trash' className='inline-icon' src={trash}/>
                     </button>
                     <div className="BrowseList-colName">
                       <a onClick={onSongClick(href, playContext, i)} href={href}>{title}</a>

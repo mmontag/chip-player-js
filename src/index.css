@@ -406,11 +406,6 @@ body,#root {
 }
 
 .DirectoryLink-dim { color: var(--neutral2); }
-.DirectoryLink-folderIcon { vertical-align: bottom; }
-.DirectoryLink-folderIconDim { vertical-align: bottom; filter: grayscale(100%) brightness(0.75); }
-
-.fileIcon { vertical-align: bottom; }
-.fileIconDim { vertical-align: bottom; filter: grayscale(100%) brightness(0.75); }
 
 .PlayerParams h3 { margin-top: 0; }
 .PlayerParams-param { display: flex; flex-wrap: wrap; }
@@ -482,6 +477,9 @@ body,#root {
 
 td { padding: 0 }
 img { image-rendering: pixelated; }
+
+.inline-icon { vertical-align: bottom; }
+.dim-icon { filter: grayscale(100%) brightness(0.75); }
 
 .tab-container {
     border-bottom: 1px solid var(--clickable);
