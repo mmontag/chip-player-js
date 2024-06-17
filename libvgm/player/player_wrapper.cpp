@@ -64,7 +64,10 @@ const std::map<int, VoiceInfo> deviceToVoiceInfo = { // ------------------------
   {DEVID_VBOY_VSU, {6,  0, "", {"Wave 1",  "Wave 2",  "Wave 3",   "Wave 4", "Wave 5", "Noise"}}},
   {DEVID_WSWAN,    {4,  0}},
   {DEVID_X1_010,   {16, 0}},
-  {DEVID_Y8950,    {1,  0}},
+  // See fmopl.c for mute mask info
+  /* OPL/OPL2 chips have 9 channels*/
+  /* Mute Special: 5 Rhythm + 1 DELTA-T Channel */
+  {DEVID_Y8950,    {15, 0, "", {"FM 1",    "FM 2",    "FM 3",     "FM 4",   "FM 5",   "FM 6",  "FM 7",  "FM 8",  "FM 9", "FM Drum 1", "FM Drum 2", "FM Drum 3", "FM Drum 4", "FM Drum 5", "PCM"}}},
   {DEVID_YM2151,   {8,  0, "FM"}},
   {DEVID_YM2203,   {3,  3, "", {"FM 1",    "FM 2",    "FM 3",     "PSG 1",  "PSG 2",  "PSG 3"}}},
   {DEVID_YM2413,   {6,  3, "", {"FM 1",    "FM 2",    "FM 3",     "FM 4",   "FM 5",   "FM 6", "PSG 1", "PSG 2", "PSG 3"}}},
