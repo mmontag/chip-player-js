@@ -97,6 +97,7 @@ std::vector<Chip> chips;
 struct DevIdVoiceName {
   size_t id;
   std::string name;
+  std::string chipName;
 };
 
 // Vector of voice names (populated after song load)
@@ -201,7 +202,7 @@ UINT8 lvgm_load_data(lvgm_player *player, const UINT8 *data, const UINT32 size) 
       // get voice name
       const std::string voiceName = getVoiceName(pdi.type, i);
       // add to voiceNames
-      voices.emplace_back(DevIdVoiceName({curDev, voiceName}));
+      voices.emplace_back(DevIdVoiceName({curDev, voiceName, devName}));
     }
     // add to chips
     std::vector<size_t> voiceCounts;
@@ -308,6 +309,16 @@ const char* lvgm_get_voice_name(lvgm_player *player, UINT8 index) {
   if (index >= voices.size()) return nullptr;
 
   return voices[index].name.c_str();
+}
+
+const char* lvgm_get_voice_chip_name(lvgm_player *player, UINT8 index) {
+  PlayerA* playerA = real(player);
+  PlayerBase* base = playerA->GetPlayer();
+  if (base == nullptr) return "";
+
+  if (index >= voices.size()) return nullptr;
+
+  return voices[index].chipName.c_str();
 }
 
 void lvgm_set_voice_mask(lvgm_player *player, UINT64 mask) {
