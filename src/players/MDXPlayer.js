@@ -3,6 +3,7 @@ import { ensureEmscFileWithData, ensureEmscFileWithUrl } from '../util';
 import { CATALOG_PREFIX } from '../config';
 import path from 'path';
 import autoBind from 'auto-bind';
+import chipImage from '../images/chip.png';
 
 const fileExtensions = [
   'mdx',
@@ -139,6 +140,37 @@ export default class MDXPlayer extends Player {
 
   getNumVoices() {
     if (this.mdxCtx) return this.core._mdx_get_tracks(this.mdxCtx);
+  }
+
+  getVoiceGroups() {
+    if (!this.mdxCtx) return [];
+    const voiceGroups = [];
+    const numVoices = this.core._mdx_get_tracks(this.mdxCtx);
+    let currGroup;
+    for (let i = 0; i < numVoices; i++) {
+      const voiceName = this.core.UTF8ToString(this.core._mdx_get_track_name(this.mdxCtx, i));
+      if (i === 0) {
+        currGroup = {
+          name: 'YM2151 (OPM)',
+          icon: chipImage,
+          voices: [],
+        };
+        voiceGroups.push(currGroup);
+      }
+      if (i === 8) {
+        currGroup = {
+          name: numVoices === 9 ? 'OKI MSM6258' : 'Mercury Unit (PCM8)',
+          icon: chipImage,
+          voices: [],
+        };
+        voiceGroups.push(currGroup);
+      }
+      currGroup.voices.push({
+        idx: i,
+        name: voiceName,
+      });
+    }
+    return voiceGroups;
   }
 
   getVoiceMask() {
