@@ -436,16 +436,11 @@ body,#root {
 }
 
 .DirectoryLink-dim { color: var(--neutral2); }
-.DirectoryLink-folderIcon { vertical-align: bottom; }
-.DirectoryLink-folderIconDim { vertical-align: bottom; -webkit-filter: grayscale(100%) brightness(0.75); filter: grayscale(100%) brightness(0.75); }
-
-.fileIcon { vertical-align: bottom; }
-.fileIconDim { vertical-align: bottom; -webkit-filter: grayscale(100%) brightness(0.75); filter: grayscale(100%) brightness(0.75); }
 
 .PlayerParams h3 { margin-top: 0; }
 .PlayerParams-param { display: -ms-flexbox; display: flex; -ms-flex-wrap: wrap; flex-wrap: wrap; }
 .PlayerParams-param>input { margin-right: var(--charW1); }
-.PlayerParams-group-title { }
+.PlayerParams-group-title { width: 100%; }
 .PlayerParams-voiceList {
     display: -ms-flexbox;
     display: flex;
@@ -514,6 +509,9 @@ body,#root {
 
 td { padding: 0 }
 img { -ms-interpolation-mode: nearest-neighbor; image-rendering: -webkit-optimize-contrast; image-rendering: -moz-crisp-edges; image-rendering: -o-pixelated; image-rendering: pixelated; }
+
+.inline-icon { vertical-align: bottom; }
+.dim-icon { -webkit-filter: grayscale(100%) brightness(0.75); filter: grayscale(100%) brightness(0.75); }
 
 .tab-container {
     border-bottom: 1px solid var(--clickable);
@@ -698,4 +696,4 @@ img { -ms-interpolation-mode: nearest-neighbor; image-rendering: -webkit-optimiz
 .message-box-button        { background: var(--background); padding: 0 var(--charW2); -webkit-box-shadow: none; box-shadow: none; }
 
 
-/*# sourceMappingURL=main.97c2d5a7.css.map*/
+/*# sourceMappingURL=main.64127347.css.map*/
