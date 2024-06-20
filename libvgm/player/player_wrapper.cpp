@@ -71,7 +71,7 @@ const std::map<int, VoiceInfo> deviceToVoiceInfo = { // ------------------------
   {DEVID_YM2151,   {8,  0, "FM"}},
   {DEVID_YM2203,   {3,  3, "", {"FM 1",    "FM 2",    "FM 3",     "PSG 1",  "PSG 2",  "PSG 3"}}},
   {DEVID_YM2413,   {6,  3, "", {"FM 1",    "FM 2",    "FM 3",     "FM 4",   "FM 5",   "FM 6", "PSG 1", "PSG 2", "PSG 3"}}},
-  {DEVID_YM2608,   {13, 3, "", {"FM 1",    "FM 2",    "FM 3",     "FM 4",   "FM 5",   "FM 6", "PCM 1", "PCM 2", "PCM 3", "PCM 4", "PCM 5", "PCM 6", "PCM 7", "PSG 1", "PSG 2", "PSG 3"}}},
+  {DEVID_YM2608,   {13, 3, "", {"FM 1",    "FM 2",    "FM 3",     "FM 4",   "FM 5",   "FM 6", "Bass Drum", "Snare Drum", "Cymbal", "Hi-Hat", "Tom", "Rimshot", "PCM", "PSG 1", "PSG 2", "PSG 3"}}},
   {DEVID_YM2610,   {13, 3, "", {"FM 1",    "FM 2",    "FM 3",     "FM 4",   "FM 5",   "FM 6", "PCM 1", "PCM 2", "PCM 3", "PCM 4", "PCM 5", "PCM 6", "PCM 7", "PSG 1", "PSG 2", "PSG 3"}}},
   {DEVID_YM2612,   {7,  0, "", {"FM 1",    "FM 2",    "FM 3",     "FM 4",   "FM 5",   "FM 6", "PCM"}}},
   {DEVID_YM3526,   {9,  0, "FM"}},
