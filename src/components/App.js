@@ -5,22 +5,10 @@ import clamp from 'lodash/clamp';
 import shuffle from 'lodash/shuffle';
 import path from 'path';
 import queryString from 'querystring';
-import { initializeApp as firebaseInitializeApp } from 'firebase/app';
-import { getAuth, onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider } from 'firebase/auth';
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  updateDoc,
-  setDoc,
-  arrayRemove,
-  arrayUnion
-} from 'firebase/firestore/lite';
 import { NavLink, Route, Switch, withRouter } from 'react-router-dom';
 import Dropzone from 'react-dropzone';
 
 import ChipCore from '../chip-core';
-import firebaseConfig from '../config/firebaseConfig';
 import {
   API_BASE,
   CATALOG_PREFIX,
@@ -55,10 +43,13 @@ import Toast, { ToastLevels } from './Toast';
 import MessageBox from './MessageBox';
 import Settings from './Settings';
 import LocalFiles from './LocalFiles';
+import { UserContext } from './UserProvider';
 
 const BASE_URL = process.env.PUBLIC_URL || document.location.origin;
 
 class App extends React.Component {
+  static contextType = UserContext;
+
   constructor(props) {
     super(props);
     autoBindReact(this);
@@ -70,37 +61,6 @@ class App extends React.Component {
     this.midiPlayer = null; // Need a reference to MIDIPlayer to handle SoundFont loading.
     window.ChipPlayer = this;
 
-    // Initialize Firebase
-    const firebaseApp = firebaseInitializeApp(firebaseConfig);
-    const auth = getAuth(firebaseApp);
-    this.db = getFirestore(firebaseApp);
-    onAuthStateChanged(auth, user => {
-      this.setState({ user: user, loadingUser: !!user });
-      if (user) {
-        const docRef = doc(this.db, 'users', user.uid);
-        getDoc(docRef)
-          .then(userSnapshot => {
-            if (!userSnapshot.exists()) {
-              // Create user
-              console.debug('Creating user document', user.uid);
-              setDoc(docRef, {
-                faves: [],
-                settings: {},
-              });
-            } else {
-              // Restore user
-              const data = userSnapshot.data();
-              this.setState({
-                faves: data.faves || [],
-                showPlayerSettings: data.settings ? data.settings.showPlayerSettings : false,
-              });
-            }
-          })
-          .finally(() => {
-            this.setState({ loadingUser: false });
-          });
-      }
-    });
 
     // Initialize audio graph
     // ┌────────────┐      ┌────────────┐      ┌─────────────┐
@@ -137,7 +97,7 @@ class App extends React.Component {
 
     this.state = {
       loading: true,
-      loadingUser: true,
+      // loadingUser: true,
       loadingLocalFiles: true,
       paused: true,
       ejected: true,
@@ -155,8 +115,8 @@ class App extends React.Component {
       infoTexts: [],
       showInfo: false,
       showToast: false,
-      showPlayerSettings: false,
-      user: null,
+      // showPlayerSettings: false,
+      // user: null,
       songUrl: null,
       volume: 100,
       repeat: REPEAT_OFF,
@@ -165,7 +125,7 @@ class App extends React.Component {
       hasPlayer: false,
       paramDefs: [],
       // Special playable contexts
-      faves: [],
+      // faves: [],
       localFiles: [],
     };
 
@@ -299,49 +259,6 @@ class App extends React.Component {
       }
     }
     return appState;
-  }
-
-  handleLogin() {
-    const auth = getAuth();
-    const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider).then(result => {
-      console.log('Firebase auth result:', result);
-    }).catch(error => {
-      console.log('Firebase auth error:', error);
-    });
-  }
-
-  handleLogout() {
-    const auth = getAuth();
-    signOut(auth).then(() => {
-      this.setState({
-        user: null,
-        faves: [],
-      });
-    });
-  }
-
-  handleToggleFavorite(path) {
-    const user = this.state.user;
-    if (user) {
-      const userRef = doc(this.db, 'users', user.uid);
-      let newFaves, favesOp;
-      const oldFaves = this.state.faves;
-      const exists = oldFaves.includes(path);
-      if (exists) {
-        newFaves = oldFaves.filter(fave => fave !== path);
-        favesOp = arrayRemove(path);
-      } else {
-        newFaves = [...oldFaves, path];
-        favesOp = arrayUnion(path);
-      }
-      // Optimistic update
-      this.setState({ faves: newFaves });
-      updateDoc(userRef, { faves: favesOp }).catch((e) => {
-        this.setState({ faves: oldFaves });
-        console.log('Couldn\'t update favorites in Firebase.', e);
-      });
-    }
   }
 
   attachMediaKeyHandlers() {
@@ -538,21 +455,6 @@ class App extends React.Component {
       }
     }
     this.setState({ paused: paused });
-  }
-
-  toggleSettings() {
-    let showPlayerSettings = !this.state.showPlayerSettings;
-    // Optimistic update
-    this.setState({ showPlayerSettings: showPlayerSettings });
-
-    const user = this.state.user;
-    if (user) {
-      const userRef = doc(this.db, 'users', user.uid);
-      updateDoc(userRef, { settings: { showPlayerSettings: showPlayerSettings } })
-        .catch((e) => {
-          console.log('Couldn\'t update settings in Firebase.', e);
-        });
-    }
   }
 
   handleTimeSliderChange(event) {
@@ -806,6 +708,8 @@ class App extends React.Component {
     const currContext = this.sequencer?.getCurrContext();
     const currIdx = this.sequencer?.getCurrIdx();
     const search = { search: window.location.search };
+    const { showPlayerSettings, handleToggleSettings } = this.context;
+
     return (
       <Dropzone
         disableClick
@@ -819,10 +723,7 @@ class App extends React.Component {
           <Toast handleClose={this.removeToast}
                  toast={this.state.toast}
                  showToast={this.state.showToast}/>
-          <AppHeader user={this.state.user}
-                     handleLogout={this.handleLogout}
-                     handleLogin={this.handleLogin}
-                     isPhone={isMobile.phone}/>
+          <AppHeader/>
           <div className="App-main">
             <div className="App-main-inner">
               <div className="tab-container">
@@ -835,9 +736,9 @@ class App extends React.Component {
                 <NavLink className="tab" activeClassName="tab-selected"
                          to={{ pathname: "/local", ...search }}>Local</NavLink>
                 {/* this.sequencer?.players?.map((p, i) => `p${i}:${p.stopped?'off':'on'}`).join(' ') */}
-                <button className={this.state.showPlayerSettings ? 'tab tab-selected' : 'tab'}
+                <button className={showPlayerSettings ? 'tab tab-selected' : 'tab'}
                         style={{ marginLeft: 'auto', marginRight: 0 }}
-                        onClick={this.toggleSettings}>Settings</button>
+                        onClick={handleToggleSettings}>Settings</button>
               </div>
               <div className="App-main-content-and-settings">
               <div className="App-main-content-area" ref={this.contentAreaRef}>
@@ -846,23 +747,16 @@ class App extends React.Component {
                     <Search
                       currContext={currContext}
                       currIdx={currIdx}
-                      toggleFavorite={this.handleToggleFavorite}
-                      favorites={this.state.faves}
                       onSongClick={this.handleSongClick}>
                       {this.state.loading && <p>Loading player engine...</p>}
                     </Search>
                   )}/>
                   <Route path="/favorites" render={() => (
                     <Favorites
-                      user={this.state.user}
-                      loadingUser={this.state.loadingUser}
-                      handleLogin={this.handleLogin}
                       handleShufflePlay={this.handleShufflePlay}
                       onSongClick={this.handleSongClick}
                       currContext={currContext}
-                      currIdx={currIdx}
-                      toggleFavorite={this.handleToggleFavorite}
-                      favorites={this.state.faves}/>
+                      currIdx={currIdx}/>
                   )}/>
                   <Route path="/browse/:browsePath*" render={({ history, match, location }) => {
                     // Undo the react-router-dom double-encoded % workaround - see DirectoryLink.js
@@ -880,8 +774,7 @@ class App extends React.Component {
                               handleSongClick={this.handleSongClick}
                               handleShufflePlay={this.handleShufflePlay}
                               scrollContainerRef={this.contentAreaRef}
-                              favorites={this.state.faves}
-                              toggleFavorite={this.handleToggleFavorite}/>
+                      />
                     );
                   }}/>
                   <Route path="/local" render={() => (
@@ -909,7 +802,7 @@ class App extends React.Component {
                   )}/>
                 </Switch>
               </div>
-                { this.state.showPlayerSettings &&
+                { showPlayerSettings &&
                 <div className="App-main-content-area settings">
                   <Settings
                     ejected={this.state.ejected}
@@ -938,7 +831,6 @@ class App extends React.Component {
             currentSongNumVoices={this.state.currentSongNumVoices}
             currentSongSubtune={this.state.currentSongSubtune}
             ejected={this.state.ejected}
-            faves={this.state.faves}
             getCurrentSongLink={this.getCurrentSongLink}
             handleCopyLink={this.handleCopyLink}
             handleCycleRepeat={this.handleCycleRepeat}
@@ -946,7 +838,6 @@ class App extends React.Component {
             handleSetVoiceMask={this.handleSetVoiceMask}
             handleTempoChange={this.handleTempoChange}
             handleTimeSliderChange={this.handleTimeSliderChange}
-            handleToggleFavorite={this.handleToggleFavorite}
             handleVolumeChange={this.handleVolumeChange}
             imageUrl={this.state.imageUrl}
             infoTexts={this.state.infoTexts}
@@ -958,14 +849,12 @@ class App extends React.Component {
             repeat={this.state.repeat}
             shuffle={this.state.shuffle}
             sequencer={this.sequencer}
-            showPlayerSettings={this.state.showPlayerSettings}
             songUrl={this.state.songUrl}
             subtitle={subtitle}
             tempo={this.state.tempo}
             title={title}
             toggleInfo={this.toggleInfo}
             togglePause={this.togglePause}
-            toggleSettings={this.toggleSettings}
             voiceNames={this.state.voiceNames}
             voiceMask={this.state.voiceMask}
             volume={this.state.volume}

@@ -1,19 +1,23 @@
-import React, { memo, useCallback } from "react";
+import React, { memo, useCallback, useContext } from "react";
 import FavoriteButton from "./FavoriteButton";
+import { UserContext } from "./UserProvider";
 
 export default memo(Favorites);
 function Favorites(props) {
   const {
-    favorites,
     currContext,
     currIdx,
     onSongClick,
-    toggleFavorite,
-    user,
-    loadingUser,
-    handleLogin,
     handleShufflePlay,
   } = props;
+
+  const {
+    user,
+    loadingUser,
+    faves: favorites,
+    handleLogin,
+    handleToggleFavorite: toggleFavorite,
+  } = useContext(UserContext);
 
   const handleShufflePlayFavorites = useCallback(() => {
     handleShufflePlay('favorites');

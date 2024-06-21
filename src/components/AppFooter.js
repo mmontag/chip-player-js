@@ -1,4 +1,4 @@
-import React, { memo, useCallback } from 'react';
+import React, { memo, useCallback, useContext } from 'react';
 import diceImage from '../images/dice.png';
 import downloadImage from '../images/download.png';
 import copyImage from '../images/copy.png';
@@ -9,6 +9,7 @@ import FavoriteButton from './FavoriteButton';
 import PlayerParams from './PlayerParams';
 import { pathToLinks } from '../util';
 import { REPEAT_LABELS, SHUFFLE_LABELS } from '../Sequencer';
+import { UserContext } from './UserProvider';
 
 export default memo(AppFooter);
 function AppFooter(props) {
@@ -19,13 +20,11 @@ function AppFooter(props) {
     currentSongNumVoices,
     currentSongSubtune,
     ejected,
-    faves,
     imageUrl,
     infoTexts,
     paused,
     repeat,
     shuffle,
-    showPlayerSettings,
     songUrl,
     subtitle,
     tempo,
@@ -42,7 +41,6 @@ function AppFooter(props) {
     handleSetVoiceMask,
     handleTempoChange,
     handleTimeSliderChange,
-    handleToggleFavorite,
     handleVolumeChange,
     nextSong,
     nextSubtune,
@@ -51,8 +49,14 @@ function AppFooter(props) {
     sequencer,
     toggleInfo,
     togglePause,
-    toggleSettings,
   } = props;
+
+  const {
+    faves,
+    showPlayerSettings,
+    handleToggleFavorite,
+    toggleSettings,
+  } = useContext(UserContext);
 
   const pathLinks = pathToLinks(songUrl);
   const subtuneText = `Tune ${currentSongSubtune + 1} of ${currentSongNumSubtunes}`;

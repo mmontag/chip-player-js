@@ -12,8 +12,6 @@ function BrowseList({ virtual, ...props }) {
   const {
     currContext,
     currIdx,
-    favorites,
-    toggleFavorite,
     handleSongClick,
     browsePath,
     playContext,
@@ -71,10 +69,7 @@ function BrowseList({ virtual, ...props }) {
               return (
                 <div key={name} className={isPlaying ? 'Song-now-playing BrowseList-row' : 'BrowseList-row'}>
                   <div className="BrowseList-colName">
-                    {favorites &&
-                      <FavoriteButton isFavorite={favorites.includes(href)}
-                                      href={href}
-                                      toggleFavorite={toggleFavorite}/>}
+                    <FavoriteButton href={href} />
                     <a onClick={(e) => handleSongClick(href, playContext, item.idx)(e)}
                        href={href}>
                       {name}

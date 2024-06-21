@@ -144,7 +144,7 @@ export default class Search extends PureComponent {
         <DirectoryLink dim to={'/browse/' + href}>{decodeURI(href)}</DirectoryLink>
       );
     }
-    const { favorites, toggleFavorite, currContext, currIdx, onSongClick } = this.props;
+    const { currContext, currIdx, onSongClick } = this.props;
     const href = CATALOG_PREFIX + result;
     const resultTitle = decodeURI(result.substring(result.lastIndexOf('/') + 1));
     const isPlaying = currContext === this.state.results && currIdx === i;
@@ -152,10 +152,7 @@ export default class Search extends PureComponent {
       <Fragment key={i}>
         {headingFragment}
         <div className={isPlaying ? 'Song-now-playing' : '' }>
-          {favorites &&
-          <FavoriteButton isFavorite={favorites.includes(href)}
-                          toggleFavorite={toggleFavorite}
-                          href={href}/>}
+          <FavoriteButton href={href}/>
           <a onClick={onSongClick(href, this.state.results, i)}
              href={href}>
             {resultTitle}
