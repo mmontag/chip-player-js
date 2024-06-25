@@ -716,14 +716,6 @@ class App extends React.Component {
               <div className="App-main-content-and-settings">
               <div className="App-main-content-area" ref={this.contentAreaRef}>
                 <Switch>
-                  <Route path="/" exact render={() => (
-                    <Search
-                      currContext={currContext}
-                      currIdx={currIdx}
-                      onSongClick={this.handleSongClick}>
-                      {this.state.loading && <p>Loading player engine...</p>}
-                    </Search>
-                  )}/>
                   <Route path="/favorites" render={() => (
                     <Favorites
                       handleShufflePlay={this.handleShufflePlay}
@@ -772,6 +764,15 @@ class App extends React.Component {
                       handleTempoChange={this.handleTempoChange}
                       sequencer={this.sequencer}
                       />
+                  )}/>
+                  {/* Catch-all route */}
+                  <Route render={() => (
+                    <Search
+                      currContext={currContext}
+                      currIdx={currIdx}
+                      onSongClick={this.handleSongClick}>
+                      {this.state.loading && <p>Loading player engine...</p>}
+                    </Search>
                   )}/>
                 </Switch>
               </div>
