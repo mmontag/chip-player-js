@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import autoBindReact from 'auto-bind/react';
 import isMobile from 'ismobilejs';
 import clamp from 'lodash/clamp';
@@ -12,7 +12,6 @@ import ChipCore from '../chip-core';
 import {
   API_BASE,
   CATALOG_PREFIX,
-  ERROR_FLASH_DURATION_MS,
   MAX_VOICES,
   REPLACE_STATE_ON_SEEK,
   SOUNDFONT_MOUNTPOINT,
@@ -44,12 +43,11 @@ import MessageBox from './MessageBox';
 import Settings from './Settings';
 import LocalFiles from './LocalFiles';
 import { UserContext } from './UserProvider';
+import { ToastContext } from './ToastProvider';
 
 const BASE_URL = process.env.PUBLIC_URL || document.location.origin;
 
 class App extends React.Component {
-  static contextType = UserContext;
-
   constructor(props) {
     super(props);
     autoBindReact(this);
@@ -57,7 +55,6 @@ class App extends React.Component {
     this.attachMediaKeyHandlers();
     this.contentAreaRef = React.createRef();
     this.playContexts = {};
-    this.errorTimer = null;
     this.midiPlayer = null; // Need a reference to MIDIPlayer to handle SoundFont loading.
     window.ChipPlayer = this;
 
@@ -97,11 +94,9 @@ class App extends React.Component {
 
     this.state = {
       loading: true,
-      // loadingUser: true,
       loadingLocalFiles: true,
       paused: true,
       ejected: true,
-      toast: {},
       currentSongMetadata: {},
       currentSongNumVoices: 0,
       currentSongNumSubtunes: 0,
@@ -114,9 +109,6 @@ class App extends React.Component {
       imageUrl: null,
       infoTexts: [],
       showInfo: false,
-      showToast: false,
-      // showPlayerSettings: false,
-      // user: null,
       songUrl: null,
       volume: 100,
       repeat: REPEAT_OFF,
@@ -125,7 +117,6 @@ class App extends React.Component {
       hasPlayer: false,
       paramDefs: [],
       // Special playable contexts
-      // faves: [],
       localFiles: [],
     };
 
@@ -147,10 +138,8 @@ class App extends React.Component {
       });
     } catch (e) {
       // Browser doesn't support WASM (Safari in iOS Simulator)
-      Object.assign(this.state, {
-        toast: { message: 'Error loading player engine. Old browser?', level: ToastLevels.ERROR },
-        loading: false,
-      });
+      this.setState({ loading: false });
+      this.props.toastContext.enqueueToast({ message: 'Error loading player engine. Old browser?', level: ToastLevels.ERROR });
       return;
     }
 
@@ -195,7 +184,7 @@ class App extends React.Component {
 
     this.sequencer = new Sequencer(players, this.localFilesManager);
     this.sequencer.on('sequencerStateUpdate', this.handleSequencerStateUpdate);
-    this.sequencer.on('playerError', (message) => this.addToast(message, ToastLevels.ERROR));
+    this.sequencer.on('playerError', (message) => this.props.toastContext.enqueueToast(message, ToastLevels.ERROR));
 
     // TODO: Move to separate processUrlParams method.
     const urlParams = queryString.parse(window.location.search.substring(1));
@@ -429,20 +418,6 @@ class App extends React.Component {
     }
   }
 
-  addToast(message, level) {
-    this.setState({
-      toast: { message, level },
-      showToast: true,
-    });
-    clearTimeout(this.errorTimer);
-    this.errorTimer = setTimeout(() => this.setState({ showToast: false }), ERROR_FLASH_DURATION_MS);
-  }
-
-  removeToast() {
-    this.setState({ showToast: false });
-    clearTimeout(this.errorTimer);
-  }
-
   togglePause() {
     if (this.state.ejected || !this.sequencer.getPlayer()) return;
 
@@ -673,7 +648,7 @@ class App extends React.Component {
       // Display all rejection reasons with duplicate reasons removed.
       results.filter(result => result.status === 'rejected')
         .reduce((acc, result) => acc.includes(result.reason) ? acc : [ ...acc, result.reason ], [])
-        .forEach((reason, i) => setTimeout(() => this.addToast(reason, ToastLevels.ERROR), i * 1500));
+        .forEach((reason, i) => setTimeout(() => this.props.toastContext.enqueueToast(reason, ToastLevels.ERROR), i * 1500));
     });
   };
 
@@ -700,7 +675,7 @@ class App extends React.Component {
 
   handleCopyLink = (url) => {
     navigator.clipboard.writeText(url);
-    this.addToast('Copied song link to clipboard.', ToastLevels.INFO);
+    this.props.toastContext.enqueueToast('Copied song link to clipboard.', ToastLevels.INFO);
   }
 
   render() {
@@ -708,7 +683,7 @@ class App extends React.Component {
     const currContext = this.sequencer?.getCurrContext();
     const currIdx = this.sequencer?.getCurrIdx();
     const search = { search: window.location.search };
-    const { showPlayerSettings, handleToggleSettings } = this.context;
+    const { showPlayerSettings, handleToggleSettings } = this.props.userContext;
 
     return (
       <Dropzone
@@ -720,9 +695,7 @@ class App extends React.Component {
           <MessageBox showInfo={this.state.showInfo}
                       infoTexts={this.state.infoTexts}
                       toggleInfo={this.toggleInfo}/>
-          <Toast handleClose={this.removeToast}
-                 toast={this.state.toast}
-                 showToast={this.state.showToast}/>
+          <Toast/>
           <AppHeader/>
           <div className="App-main">
             <div className="App-main-inner">
@@ -865,4 +838,12 @@ class App extends React.Component {
   }
 }
 
-export default withRouter(App);
+// TODO: convert App to a function component and remove this.
+// Inject contexts as props since class components only support a single context.
+const AppWithContext = (props) => {
+  const userContext = useContext(UserContext);
+  const toastContext = useContext(ToastContext);
+  return (<App {...props} userContext={userContext} toastContext={toastContext} />);
+}
+
+export default withRouter(AppWithContext);

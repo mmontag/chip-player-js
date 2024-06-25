@@ -7,7 +7,6 @@ const SOUNDFONT_URL_PATH = 'https://gifx.co/soundfonts/';
 const MAX_SAMPLE_RATE = 48000;                            // Higher rates are problematic for some players.
 const MAX_VOICES = 64;
 const REPLACE_STATE_ON_SEEK = false;
-const ERROR_FLASH_DURATION_MS = 6000;
 const FORMATS =  [
   'ay',
   'gbs',
@@ -96,7 +95,6 @@ const SOUNDFONTS = [
 module.exports = {
   API_BASE,
   CATALOG_PREFIX,
-  ERROR_FLASH_DURATION_MS,
   FORMATS,
   MAX_SAMPLE_RATE,
   MAX_VOICES,
