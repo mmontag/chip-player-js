@@ -175,6 +175,7 @@ export default class Search extends PureComponent {
                    autoComplete="off"
                    autoCorrect="false"
                    autoCapitalize="none"
+                   autoFocus
                    ref={this.textInput}
                    className="Search-input"
                    value={this.state.totalSongs ? this.state.query || '' : ''}
