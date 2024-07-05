@@ -83,7 +83,7 @@ export default class PlayerParams extends PureComponent {
         {this.props.voiceGroups.length > 0 ?
           this.props.voiceGroups.map((voiceGroup) => {
             return (
-              <span className='PlayerParams-param PlayerParams-group'>
+              <span className='PlayerParams-param PlayerParams-group' key={voiceGroup.name}>
                   <label className="PlayerParams-group-title">
                     {voiceGroup.icon && <img src={voiceGroup.icon} alt="Sound chip" className="inline-icon"/>}
                     {voiceGroup.name}:
