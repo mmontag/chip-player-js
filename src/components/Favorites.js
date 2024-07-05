@@ -16,8 +16,9 @@ function Favorites(props) {
     loadingUser,
     faves: favorites,
     handleLogin,
-    handleToggleFavorite: toggleFavorite,
   } = useContext(UserContext);
+
+  const favesContext = favorites.map(fave => fave.href);
 
   const handleShufflePlayFavorites = useCallback(() => {
     handleShufflePlay('favorites');
@@ -32,6 +33,7 @@ function Favorites(props) {
   //     playingRowRef.current.scrollIntoViewIfNeeded();
   //   }
   // });
+  console.log('Favorites');
 
   return (
     loadingUser ?
@@ -52,18 +54,23 @@ function Favorites(props) {
           favorites.length > 0 ?
             <div>
               {
-                favorites.map((href, i) => {
-                  const title = decodeURIComponent(href.split('/').pop());
-                  const isPlaying = currContext === favorites && currIdx === i;
+                favorites.map((favorite, i) => {
+                  const { href, mtime } = favorite;
+                  const date = new Date(mtime * 1000).toISOString().split('T')[0];
+                  const name = decodeURIComponent(href.split('/').pop());
+                  const isPlaying = currContext === favesContext && currIdx === i;
                   return (
-                    <div className={isPlaying ? 'Song-now-playing' : ''}
+                    <div className={isPlaying ? 'Song-now-playing BrowseList-row' : 'BrowseList-row'}
                       // Scroll Into View
                       // ref={isPlaying ? playingRowRef : null}
                          key={i}>
-                      <FavoriteButton isFavorite={true}
-                                      toggleFavorite={toggleFavorite}
-                                      href={href}/>
-                      <a onClick={onSongClick(href, favorites, i)} href={href}>{title}</a>
+                      <div className="BrowseList-colName">
+                        <FavoriteButton href={href}/>
+                        <a onClick={onSongClick(href, favesContext, i)} href={href}>{name}</a>
+                      </div>
+                      <div className="BrowseList-colMtime">
+                        {date}
+                      </div>
                     </div>
                   );
                 })

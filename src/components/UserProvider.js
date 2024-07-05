@@ -25,6 +25,31 @@ const UserContext = createContext({
   handleToggleSettings: () => {},
 });
 
+/**
+ * Convert favorites from list of path strings to list of objects.
+ * As of July 2024, the converted objects are not persisted to Firebase.
+ * Only new favorites are saved to Firebase in the object form.
+ *
+ * {
+ *   path: 'https://web.site/music/game/song.vgm',
+ *   date: 1650000000,
+ * }
+ *
+ * @param faves
+ */
+function migrateFaves(faves) {
+  if (faves.length > 0) {
+    return faves.map(fave => {
+      return typeof fave === 'string' ? {
+        href: fave,
+        mtime: Math.floor(Date.parse('2024-01-01') / 1000),
+      } : fave;
+    });
+  }
+
+  return faves;
+}
+
 const UserProvider = ({ children }) => {
   // Use authState hook for user state
   // const [authUser, userLoading] = useAuthState(firebase.auth());
@@ -55,7 +80,8 @@ const UserProvider = ({ children }) => {
             } else {
               // Restore user
               const data = userSnapshot.data();
-              setFaves(data.faves || []);
+              const faves = migrateFaves(data.faves || []);
+              setFaves(faves);
               setShowPlayerSettings(data.settings?.showPlayerSettings || false);
             }
           })
@@ -89,19 +115,27 @@ const UserProvider = ({ children }) => {
     }
   };
 
-  const handleToggleFavorite = async (path) => {
-    // const user = authUser; // Use authUser from useAuthState
+  const handleToggleFavorite = async (href) => {
     if (user) {
       const userRef = doc(getFirestore(), 'users', user.uid);
       let newFaves, favesOp;
       const oldFaves = faves;
-      const exists = oldFaves.includes(path);
-      if (exists) {
-        newFaves = oldFaves.filter(fave => fave !== path);
-        favesOp = arrayRemove(path);
+      const existingIdx = oldFaves.findLastIndex(f => f === href || f.href === href);
+      if (existingIdx === -1) {
+        // ADD
+        const newFave = {
+          href,
+          mtime: Math.floor(Date.now() / 1000),
+        }
+        newFaves = [...oldFaves, newFave];
+        favesOp = arrayUnion(newFave);
       } else {
-        newFaves = [...oldFaves, path];
-        favesOp = arrayUnion(path);
+        // REMOVE
+        // Firebase cannot remove from array by index, only by value.
+        // Remove both the object and href (for legacy favorites).
+        const element = oldFaves[existingIdx];
+        newFaves = oldFaves.toSpliced(existingIdx, 1);
+        favesOp = arrayRemove(element, element.href);
       }
       // Optimistic update
       setFaves(newFaves);

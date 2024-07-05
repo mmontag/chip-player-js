@@ -17,7 +17,8 @@ const FavoriteButton = ({ href }) => {
     toggleFavorite(href);
   }, [toggleFavorite, href, user]);
 
-  const className = `Favorite-button ${faves.includes(href) ? 'isFavorite' : ''}`;
+  const isFavorite = faves.find(fave => fave.href === href);
+  const className = `Favorite-button ${isFavorite ? 'isFavorite' : ''}`;
 
   return (
     <button onClick={handleClick} className={className}>
