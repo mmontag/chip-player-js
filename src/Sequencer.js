@@ -131,6 +131,7 @@ export default class Sequencer extends EventEmitter {
         this.currIdx = 0;
         this.context = null;
         this.player.stop();
+        this.player = null;
         this.emit('sequencerStateUpdate', { isEjected: true });
       }
     } else {
