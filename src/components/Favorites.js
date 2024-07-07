@@ -15,10 +15,9 @@ function Favorites(props) {
     user,
     loadingUser,
     faves: favorites,
+    favesContext,
     handleLogin,
   } = useContext(UserContext);
-
-  const favesContext = favorites.map(fave => fave.href);
 
   const handleShufflePlayFavorites = useCallback(() => {
     handleShufflePlay('favorites');

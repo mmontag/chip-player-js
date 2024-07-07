@@ -1,4 +1,4 @@
-import React, { createContext, useEffect, useState } from 'react';
+import React, { createContext, useEffect, useMemo, useState } from 'react';
 import { getAuth, onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider } from 'firebase/auth';
 // import { useAuthState } from 'react-firebase-hooks/auth'; // Consider using react-firebase-hooks
 // import firebase from 'firebase/app'; // Assuming you have firebase configured
@@ -18,6 +18,7 @@ const UserContext = createContext({
   user: null,
   loadingUser: true,
   faves: [],
+  favesContext: [],
   showPlayerSettings: false,
   handleLogin: () => {},
   handleLogout: () => {},
@@ -162,12 +163,18 @@ const UserProvider = ({ children }) => {
     }
   }
 
+  // We need to derive a list of hrefs to use as the play context.
+  const favesContext = useMemo(() => {
+    return faves.map(fave => fave.href);
+  }, [faves]);
+
   return (
     <UserContext.Provider
       value={{
         user,
         loadingUser,
         faves,
+        favesContext,
         showPlayerSettings,
         handleLogin,
         handleLogout,
