@@ -14,7 +14,7 @@ function Favorites(props) {
   const {
     user,
     loadingUser,
-    faves: favorites,
+    faves,
     favesContext,
     handleLogin,
   } = useContext(UserContext);
@@ -32,7 +32,6 @@ function Favorites(props) {
   //     playingRowRef.current.scrollIntoViewIfNeeded();
   //   }
   // });
-  console.log('Favorites');
 
   return (
     loadingUser ?
@@ -40,21 +39,21 @@ function Favorites(props) {
       :
       <div>
         <h3 className="Browse-topRow">
-          Favorite Songs ({favorites.length})
-          {favorites.length > 1 &&
+          Favorite Songs ({faves.length})
+          {faves.length > 1 &&
             <button
               className="box-button"
-              title={`Shuffle all ${favorites.length} favorites`}
+              title={`Shuffle all ${faves.length} favorites`}
               onClick={handleShufflePlayFavorites}>
               Shuffle Play
             </button>}
         </h3>
         {user ?
-          favorites.length > 0 ?
+          faves.length > 0 ?
             <div>
               {
-                favorites.map((favorite, i) => {
-                  const { href, mtime } = favorite;
+                faves.map((fave, i) => {
+                  const { href, mtime } = fave;
                   const date = new Date(mtime * 1000).toISOString().split('T')[0];
                   const name = decodeURIComponent(href.split('/').pop());
                   const isPlaying = currContext === favesContext && currIdx === i;
