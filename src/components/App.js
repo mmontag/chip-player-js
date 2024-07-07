@@ -372,7 +372,13 @@ class App extends React.Component {
     } else {
       const player = this.sequencer.getPlayer();
       const url = this.sequencer.getCurrUrl();
-      if (url && url !== this.state.songUrl) {
+      // TODO: this is messy. imageUrl comes asynchronously from the /metadata request.
+      //       Title, artist, etc. come synchronously from player.getMetadata().
+      //       ...but these are also emitted with playerStateUpdate.
+      //       It would be better to incorporate imageUrl into playerStateUpdate.
+      if (!url) {
+        this.setState({ imageUrl: null });
+      } else if (url !== this.state.songUrl) {
         const metadataUrl = getMetadataUrlForCatalogUrl(url);
         // TODO: Disabled to support scroll restoration.
         // const filepath = url.replace(CATALOG_PREFIX, '');
