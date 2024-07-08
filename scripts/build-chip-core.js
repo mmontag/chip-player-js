@@ -461,12 +461,14 @@ const runtimeMethods = [
   'ALLOC_NORMAL',
   'FS',
   'UTF8ToString',
+  'stringToNewUTF8',
   'ccall',
   'getValue',
   'setValue',
 ];
 const exportedFns = [
   '_malloc',
+  '_free',
 ].concat(...chipModules.filter(m => m.enabled).map(m => m.exportedFunctions));
 const sourceFiles = [].concat(...chipModules.filter(m => m.enabled).map(m => m.sourceFiles));
 const moduleFlags = [].concat(...chipModules.filter(m => m.enabled).map(m => m.flags));
@@ -484,7 +486,8 @@ const flags = [
   '-s', 'ALLOW_MEMORY_GROWTH=1',
   '-s', 'ASSERTIONS=0',      // assertions increase runtime size about 100K
   '-s', 'STACK_OVERFLOW_CHECK=2',
-  '-s', 'STACK_SIZE=10MB',   // support large VGM and XM files. default is 64KB
+  // '-s', 'STACK_SIZE=5MB', // support large VGM and XM files. default is 64KB
+                             // disabled after allocating file data on heap
   '-s', 'MODULARIZE=1',
   '-s', 'EXPORT_NAME=CHIP_CORE',
   '-s', 'ENVIRONMENT=web',
