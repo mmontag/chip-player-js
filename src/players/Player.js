@@ -45,6 +45,19 @@ export default class Player extends EventEmitter {
     this.infoTexts = [];
   }
 
+  /**
+   * Copies data to the Emscripten heap.
+   * Useful for loading files.
+   *
+   * @param {ArrayBuffer} data
+   * @return {number} - A pointer to the allocated memory.
+   */
+  copyToHeap(data) {
+    const dataPtr = this.core._malloc(data.byteLength);
+    this.core.HEAPU8.set(data, dataPtr);
+    return dataPtr;
+  }
+
   togglePause() {
     this.paused = !this.paused;
     return this.paused;
