@@ -85,9 +85,6 @@ const UserProvider = ({ children }) => {
               setFaves(faves);
               setShowPlayerSettings(data.settings?.showPlayerSettings || false);
             }
-          })
-          .finally(() => {
-            setLoadingUser(false);
           });
       }
     });
