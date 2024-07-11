@@ -510,7 +510,7 @@ class App extends React.Component {
 
   handleShufflePlay(path) {
     if (path === 'favorites') {
-      this.sequencer.playContext(shuffle(this.state.faves));
+      this.sequencer.playContext(shuffle(this.props.userContext.favesContext));
     } else if (path === 'local') {
       this.sequencer.playContext(shuffle(this.playContexts['local']));
     } else {
