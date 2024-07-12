@@ -17,11 +17,9 @@ export default class V2MPlayer extends Player {
   }
 
   loadData(data, filename) {
-    const err = this.core.ccall(
-      'v2m_open', 'number',
-      ['array', 'number', 'number'],
-      [data, data.byteLength, this.sampleRate]
-    );
+    const dataPtr = this.copyToHeap(data);
+    const err = this.core._v2m_open(dataPtr, data.byteLength, this.sampleRate);
+    this.core._free(dataPtr);
 
     if (err !== 0) {
       console.error("v2m_open failed. error code: %d", err);

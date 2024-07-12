@@ -30,11 +30,13 @@ export default class MDXPlayer extends Player {
   }
 
   loadData(data, filename) {
+    // MDXPlayer reads song data from the Emscripten filesystem,
+    // rather than loading bytes from memory like other players.
     let err;
     this.filepathMeta = Player.metadataFromFilepath(filename);
     const dir = path.dirname(filename);
     const mdxFilename = path.join(MOUNTPOINT, filename);
-    // Preload PDX sample files into Emscripten filesystem.
+    // First, write PDX sample files into Emscripten filesystem.
     return ensureEmscFileWithData(this.core, mdxFilename, data)
       .then(() => {
         const pdx = this.core.ccall(
@@ -48,6 +50,7 @@ export default class MDXPlayer extends Player {
           // MDX files were authored on old case-insensitive filesystems, but
           // the music server filesystem (and URLs in general) are case-sensitive.
           const pdxUrl = CATALOG_PREFIX + path.join(dir, pdx.toUpperCase());
+          // Write MDX file into Emscripten filesystem.
           return ensureEmscFileWithUrl(this.core, pdxFilename, pdxUrl);
         }
       })

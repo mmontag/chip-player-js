@@ -198,12 +198,11 @@ export default class GMEPlayer extends Player {
     );
     this.params.subbass = formatNeedsBass ? 1 : 0;
 
-    if (core.ccall(
-      "gme_open_data",
-      "number",
-      ["array", "number", "number", "number"],
-      [data, data.length, this.emuPtr, this.sampleRate]
-    ) !== 0) {
+    const dataPtr = this.copyToHeap(data);
+    const err = core._gme_open_data(dataPtr, data.length, this.emuPtr, this.sampleRate);
+    core._free(dataPtr);
+
+    if (err !== 0) {
       this.stop();
       throw Error('gme_open_data failed');
     }

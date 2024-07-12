@@ -124,11 +124,10 @@ export default class XMPPlayer extends Player {
     let err;
     this.filepathMeta = Player.metadataFromFilepath(filename);
 
-    err = this.core.ccall(
-      'xmp_load_module_from_memory', 'number',
-      ['number', 'array', 'number'],
-      [this.xmpCtx, data, data.length]
-    );
+    const dataPtr = this.copyToHeap(data);
+    err = this.core._xmp_load_module_from_memory(this.xmpCtx, dataPtr, data.length);
+    this.core._free(dataPtr);
+
     if (err !== 0) {
       console.error("xmp_load_module_from_memory failed. error code: %d", err);
       throw Error('xmp_load_module_from_memory failed');

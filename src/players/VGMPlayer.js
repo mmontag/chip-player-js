@@ -26,12 +26,9 @@ export default class VGMPlayer extends Player {
   }
 
   loadData(data, filename) {
-    const err = this.core.ccall(
-      'lvgm_load_data', 'number',
-      ['number', 'array', 'number'],
-      [this.vgmCtx, data, data.byteLength]
-    );
-    // const err = this.core._lvgm_load_data(this.vgmCtx, data, data.byteLength);
+    const dataPtr = this.copyToHeap(data);
+    const err = this.core._lvgm_load_data(this.vgmCtx, dataPtr, data.byteLength);
+    this.core._free(dataPtr);
 
     if (err !== 0) {
       console.error("lvgm_load_data failed. error code: %d", err);

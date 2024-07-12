@@ -25,6 +25,8 @@ export default class N64Player extends Player {
   }
 
   loadData(data, filename) {
+    // N64Player reads song data from the Emscripten filesystem,
+    // rather than loading bytes from memory like other players.
     let err;
     this.filepathMeta = Player.metadataFromFilepath(filename);
 
