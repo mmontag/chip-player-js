@@ -475,7 +475,7 @@ const moduleFlags = [].concat(...chipModules.filter(m => m.enabled).map(m => m.f
 
 const flags = [
   /*
-  Build flags for Emscripten 3.1.39. Last updated June 18, 2023
+  Build flags for Emscripten 3.1.39. Last updated July 15, 2024
   */
   // '--closure', '1',       // causes TypeError: lib.FS.mkdir is not a function
   // '--llvm-lto', '3',
