@@ -8,8 +8,8 @@
     "@babel/core": "^7.22.5",
     "@babel/eslint-parser": "^7.22.5",
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
-    "@babel/plugin-syntax-flow": "^7.14.5",
     "@babel/plugin-syntax-bigint": "^7.8.3",
+    "@babel/plugin-syntax-flow": "^7.14.5",
     "@babel/plugin-transform-optional-chaining": "^7.22.5",
     "@babel/plugin-transform-react-jsx": "^7.14.9",
     "@babel/preset-env": "^7.22.5",
@@ -63,6 +63,8 @@
     "react-dropzone": "7.0.0",
     "react-router-dom": "^5.2.0",
     "react-virtual-list": "git+https://github.com/glebcha/react-virtual-list.git#544bc7",
+    "react-virtualized": "^9.22.5",
+    "react-window": "^1.8.10",
     "resolve": "1.6.0",
     "roman-numerals": "^0.3.2",
     "style-loader": "0.19.0",
@@ -107,7 +109,7 @@
     "deploy": "gh-pages -d build",
     "deploy-lite": "npm run build-lite; gh-pages -d build",
     "prepare": "patch-package",
-    "server": "DEV=1 node public/index.js",
+    "server": "DEV=1 node server/index.js",
     "fixvgm": "node $NODE_DEBUG_OPTION scripts/fixvgm.js"
   },
   "jest": {
