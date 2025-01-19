@@ -57,8 +57,21 @@ export function pathToLinks(path) {
 
   path = path
     .replace(CATALOG_PREFIX_REGEX, '/')
-    .split('/').slice(0, -1).join('/') + '/';
-  return <DirectoryLink dim to={'/browse' + path}>{decodeURI(path)}</DirectoryLink>;
+    .split('/').slice(0, -1).join('/');
+  return <DirectoryLink dim to={pathJoin('/browse', path)}>{decodeURI(path)}</DirectoryLink>;
+}
+
+// Preserves leading and trailing slashes.
+export function pathJoin(...parts) {
+  const sep = '/';
+  const last = parts.length - 1;
+  return parts
+    .map((part, i) => {
+      if (i !== 0 && part.startsWith(sep)) part = part.slice(1);
+      if (i !== last && part.endsWith(sep)) part = part.slice(0, -1);
+      return part;
+    })
+    .join(sep);
 }
 
 export function getFilepathFromUrl(url) {
@@ -83,7 +96,7 @@ export function ensureEmscFileWithUrl(emscRuntime, filename, url) {
     return fetch(url)
       .then(response => {
         // Because fetch doesn't reject on 404
-        if(!response.ok) throw Error(`HTTP ${response.status} while fetching ${filename}`);
+        if (!response.ok) throw Error(`HTTP ${response.status} while fetching ${filename}`);
         return response;
       })
       .then(response => response.arrayBuffer())
@@ -94,7 +107,7 @@ export function ensureEmscFileWithUrl(emscRuntime, filename, url) {
   }
 }
 
-export function ensureEmscFileWithData(emscRuntime, filename, uint8Array, forceWrite=false) {
+export function ensureEmscFileWithData(emscRuntime, filename, uint8Array, forceWrite = false) {
   if (!forceWrite && emscRuntime.FS.analyzePath(filename).exists) {
     console.debug(`${filename} exists in Emscripten file system.`);
     return Promise.resolve(filename);
