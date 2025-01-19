@@ -32,7 +32,7 @@ const UserContext = createContext({
  * Only new favorites are saved to Firebase in the object form.
  *
  * {
- *   path: 'https://web.site/music/game/song.vgm',
+ *   href: 'https://web.site/music/game/song.vgm',
  *   date: 1650000000,
  * }
  *
@@ -45,6 +45,10 @@ function migrateFaves(faves) {
         href: fave,
         mtime: Math.floor(Date.parse('2024-01-01') / 1000),
       } : fave;
+    }).map((fave, idx) => {
+      fave.idx = idx;
+      fave.type = 'file';
+      return fave;
     });
   }
 
