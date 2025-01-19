@@ -1,5 +1,5 @@
 import Player from "./Player.js";
-import { ensureEmscFileWithData, ensureEmscFileWithUrl } from '../util';
+import { ensureEmscFileWithData, ensureEmscFileWithUrl, pathJoin } from '../util';
 import { CATALOG_PREFIX } from '../config';
 import path from 'path';
 import autoBind from 'auto-bind';
@@ -35,7 +35,7 @@ export default class MDXPlayer extends Player {
     let err;
     this.filepathMeta = Player.metadataFromFilepath(filename);
     const dir = path.dirname(filename);
-    const mdxFilename = path.join(MOUNTPOINT, filename);
+    const mdxFilename = pathJoin(MOUNTPOINT, filename);
     // First, write PDX sample files into Emscripten filesystem.
     return ensureEmscFileWithData(this.core, mdxFilename, data)
       .then(() => {
@@ -45,11 +45,11 @@ export default class MDXPlayer extends Player {
           [this.mdxCtx, mdxFilename],
         );
         if (pdx) {
-          const pdxFilename = path.join(MOUNTPOINT, dir, pdx);
+          const pdxFilename = pathJoin(MOUNTPOINT, dir, pdx);
           // Force upper case in the URL, as the entire MDX archive is upper case.
           // MDX files were authored on old case-insensitive filesystems, but
           // the music server filesystem (and URLs in general) are case-sensitive.
-          const pdxUrl = CATALOG_PREFIX + path.join(dir, pdx.toUpperCase());
+          const pdxUrl = pathJoin(CATALOG_PREFIX, dir, pdx.toUpperCase());
           // Write MDX file into Emscripten filesystem.
           return ensureEmscFileWithUrl(this.core, pdxFilename, pdxUrl);
         }

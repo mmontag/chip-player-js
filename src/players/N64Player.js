@@ -1,5 +1,5 @@
 import Player from "./Player.js";
-import { ensureEmscFileWithData, ensureEmscFileWithUrl } from '../util';
+import { ensureEmscFileWithData, ensureEmscFileWithUrl, pathJoin } from '../util';
 import { CATALOG_PREFIX } from '../config';
 import path from 'path';
 import autoBind from 'auto-bind';
@@ -37,12 +37,12 @@ export default class N64Player extends Player {
     }
 
     const dir = path.dirname(filename);
-    const fsFilename = path.join(MOUNTPOINT, filename);
+    const fsFilename = pathJoin(MOUNTPOINT, filename);
     const promises = [
       ensureEmscFileWithData(this.core, fsFilename, data),
       ...usflibs.map(usflib => {
-        const fsFilename = path.join(MOUNTPOINT, dir, usflib);
-        const url = CATALOG_PREFIX + path.join(dir, usflib);
+        const fsFilename = pathJoin(MOUNTPOINT, dir, usflib);
+        const url = pathJoin(CATALOG_PREFIX, dir, usflib);
         return ensureEmscFileWithUrl(this.core, fsFilename, url);
       }),
     ];

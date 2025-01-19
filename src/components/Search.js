@@ -4,7 +4,7 @@ import queryString from 'querystring';
 import debounce from 'lodash/debounce';
 import { API_BASE, CATALOG_PREFIX } from '../config';
 import promisify from '../promisify-xhr';
-import { updateQueryString } from '../util';
+import { pathJoin, updateQueryString } from '../util';
 import DirectoryLink from './DirectoryLink';
 import FavoriteButton from './FavoriteButton';
 import autoBindReact from 'auto-bind/react';
@@ -145,7 +145,7 @@ export default class Search extends PureComponent {
       );
     }
     const { currContext, currIdx, onSongClick } = this.props;
-    const href = CATALOG_PREFIX + result;
+    const href = pathJoin(CATALOG_PREFIX, result);
     const resultTitle = decodeURI(result.substring(result.lastIndexOf('/') + 1));
     const isPlaying = currContext === this.state.results && currIdx === i;
     return (
