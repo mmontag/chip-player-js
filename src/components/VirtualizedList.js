@@ -101,6 +101,8 @@ function VirtualizedList(props) {
         const index = listRef.current.props.scrollToIndex;
         listRef.current.scrollToRow(index);
         onActivate(index)(e);
+      } else if (e.key === 'Backspace') {
+        history.goBack();
       } else if (e.key === 'Home') {
         setSelectedRow(0);
       } else if (e.key === 'End') {
