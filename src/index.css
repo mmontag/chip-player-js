@@ -11,6 +11,7 @@
     --clickable:  #ff0;
     --active:     #800;
     --button:     #66d;
+    --selected:   #66d6;
     --focus:      #00f;
     --background: #008;
     --shadow:     #005;
@@ -52,10 +53,16 @@
     color: #000088;
 }
 
-*:focus {
-    outline: none;
-    background-color: var(--focus);
-}
+/*div:focus {*/
+/*    outline: none;*/
+/*}*/
+/*button:focus,*/
+/*input:focus,*/
+/*a:focus*/
+/*{*/
+/*    outline: none;*/
+/*    background-color: var(--focus);*/
+/*}*/
 
 /* Basic elements */
 
@@ -280,10 +287,10 @@ body,#root {
 
 .App-main-content-area {
     flex-grow: 1;
-    display: flex;
+    /*display: flex;*/
     flex-direction: column;
     min-width: 0;
-    padding: var(--charH) var(--charW2);
+    padding: var(--charH) var(--charW2) 0 var(--charW2);
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     border-right: 1px solid var(--clickable);
@@ -291,6 +298,10 @@ body,#root {
 }
 .App-main-content-area:focus { /* I have no idea why this became focusable */
     background-color: initial;
+}
+
+.ReactVirtualized__Grid:focus {
+    outline: none;
 }
 
 .App-main-content-area.settings {
@@ -391,6 +402,20 @@ body,#root {
 .Browse-topRow { display: flex; justify-content: space-between; margin-bottom: var(--charH); }
 
 .BrowseList-row { display: flex; }
+/* Selected */
+.ReactVirtualized__Grid:focus .BrowseList-row-selected {
+    background-color:  var(--focus);
+}
+/* Playing */
+.App-main .App-main-content-area .Song-now-playing {
+    background-color: var(--button);
+    color: var(--neutral3);
+}
+/* Selected AND Playing */
+.ReactVirtualized__Grid:focus .BrowseList-row-selected.Song-now-playing {
+    box-shadow: 0 0 1px 1px inset var(--focus);
+    outline: 1px solid var(--focus);
+}
 .BrowseList-row:has(a:hover) { color: var(--neutral4); }
 .BrowseList-colName { overflow-x: hidden; white-space: nowrap; text-overflow: ellipsis; flex-grow: 1; }
 .BrowseList-colDir, .BrowseList-colSize { flex-shrink : 0; margin-left: calc(var(--charW1) * 2); }
@@ -468,11 +493,6 @@ body,#root {
 .VolumeSlider { flex-shrink: 0; margin-top: var(--charH); margin-bottom: var(--charH); margin-left: var(--charW2); }
 @media screen and (max-width: 600px) {
     .VolumeSlider { display: none; }
-}
-
-.Song-now-playing {
-    background-color: var(--button);
-    color: var(--neutral3);
 }
 
 td { padding: 0 }

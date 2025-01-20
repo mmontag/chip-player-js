@@ -1,4 +1,5 @@
 import React, { useContext } from 'react';
+import { findDOMNode } from 'react-dom';
 import autoBindReact from 'auto-bind/react';
 import isMobile from 'ismobilejs';
 import clamp from 'lodash/clamp';
@@ -54,6 +55,7 @@ class App extends React.Component {
 
     this.attachMediaKeyHandlers();
     this.contentAreaRef = React.createRef();
+    this.listRef = React.createRef(); // react-virtualized List component ref
     this.playContexts = {};
     this.midiPlayer = null; // Need a reference to MIDIPlayer to handle SoundFont loading.
     window.ChipPlayer = this;
@@ -518,7 +520,7 @@ class App extends React.Component {
       fetch(`${API_BASE}/shuffle?path=${encodeURI(path)}&limit=100`)
         .then(response => response.json())
         .then(json => json.items.map(item =>
-          item.replace('%', '%25').replace('#', '%23').replace(/^\//, '')
+          item.replace('%', '%25').replace('#', '%23')
         ))
         .then(items => this.sequencer.playContext(items));
     }
@@ -563,7 +565,7 @@ class App extends React.Component {
     return items
       .filter(item => item.type === 'file')
       .map(item =>
-        item.path.replace('%', '%25').replace('#', '%23').replace(/^\//, '')
+        item.path.replace('%', '%25').replace('#', '%23')
       );
   }
 
@@ -572,8 +574,26 @@ class App extends React.Component {
       .then(response => response.json())
       .then(items => {
         this.playContexts[path] = this.directoryListingToContext(items);
-        // Convert timestamp 1704067200 to ISO date 2024-01-01
-        items.forEach(item => item.mtime = new Date(item.mtime * 1000).toISOString().split('T')[0]);
+        items.forEach(item => {
+          // Convert timestamp 1704067200 to ISO date 2024-01-01
+          item.mtime = new Date(item.mtime * 1000).toISOString().split('T')[0];
+          // XXX: Escape immediately: the escaped URL is considered canonical.
+          //      The URL must be decoded for display from here on out.
+          item.path.replace('%', '%25').replace('#', '%23');
+            // .replace(/^\//, '');
+          item.name = item.path.split('/').pop();
+        });
+
+        if (path !== '') { // No '..' at top level browse path.
+          // Use substring, not slice, to pass through strings that don't contain any '/'.
+          const parentPath = path.substring(0, path.lastIndexOf('/'));
+          items.unshift({
+            type: 'directory',
+            path: parentPath,
+            name: '..',
+          });
+        }
+
         const directories = {
           ...this.state.directories,
           [path]: items,
@@ -684,6 +704,13 @@ class App extends React.Component {
     this.props.toastContext.enqueueToast('Copied song link to clipboard.', ToastLevels.INFO);
   }
 
+  handleContentAreaFocus = (e) => {
+    if (this.listRef.current) {
+      e.preventDefault();
+      findDOMNode(this.listRef.current).focus();
+    }
+  }
+
   render() {
     const { title, subtitle } = titlesFromMetadata(this.state.currentSongMetadata);
     const currContext = this.sequencer?.getCurrContext();
@@ -720,14 +747,18 @@ class App extends React.Component {
                         onClick={handleToggleSettings}>Settings</button>
               </div>
               <div className="App-main-content-and-settings">
-              <div className="App-main-content-area" ref={this.contentAreaRef}>
+              <div className="App-main-content-area"
+                   onMouseDown={this.handleContentAreaFocus}
+                   ref={this.contentAreaRef}>
                 <Switch>
                   <Route path="/favorites" render={() => (
                     <Favorites
+                      scrollContainerRef={this.contentAreaRef}
                       handleShufflePlay={this.handleShufflePlay}
                       onSongClick={this.handleSongClick}
                       currContext={currContext}
-                      currIdx={currIdx}/>
+                      currIdx={currIdx}
+                      listRef={this.listRef}/>
                   )}/>
                   <Route path="/browse/:browsePath*" render={({ history, match, location }) => {
                     // Undo the react-router-dom double-encoded % workaround - see DirectoryLink.js
@@ -736,15 +767,16 @@ class App extends React.Component {
                       this.contentAreaRef.current &&
                       <Browse currContext={currContext}
                               currIdx={currIdx}
-                              historyAction={history.action}
+                              history={history}
                               locationKey={location.key}
                               browsePath={browsePath}
                               listing={this.state.directories[browsePath]}
                               playContext={this.playContexts[browsePath]}
                               fetchDirectory={this.fetchDirectory}
-                              handleSongClick={this.handleSongClick}
+                              onSongClick={this.handleSongClick}
                               handleShufflePlay={this.handleShufflePlay}
                               scrollContainerRef={this.contentAreaRef}
+                              listRef={this.listRef}
                       />
                     );
                   }}/>
