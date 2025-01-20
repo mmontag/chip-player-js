@@ -19,7 +19,13 @@ import {
   MAX_SAMPLE_RATE,
   FORMATS,
 } from '../config';
-import { ensureEmscFileWithData, getMetadataUrlForCatalogUrl, titlesFromMetadata, unlockAudioContext } from '../util';
+import {
+  ensureEmscFileWithData,
+  getMetadataUrlForCatalogUrl,
+  pathJoin,
+  titlesFromMetadata,
+  unlockAudioContext
+} from '../util';
 import requestCache from '../RequestCache';
 import LocalFilesManager from '../LocalFilesManager';
 import Sequencer, { NUM_REPEAT_MODES, NUM_SHUFFLE_MODES, REPEAT_OFF, SHUFFLE_OFF } from '../Sequencer';
@@ -204,7 +210,7 @@ class App extends React.Component {
       // Navigate to song's containing folder. History comes from withRouter().
       const dirname = path.dirname(play);
       this.fetchDirectory(dirname).then(() => {
-        this.props.history.replace(`/browse/${dirname}${search}`);
+        this.props.history.replace(`${pathJoin('/browse', dirname)}${search}`);
         const index = this.playContexts[dirname].indexOf(play);
 
         this.playContext(this.playContexts[dirname], index, subtune);
@@ -570,7 +576,8 @@ class App extends React.Component {
   }
 
   fetchDirectory(path) {
-    return fetch(`${API_BASE}/browse?path=%2F${encodeURIComponent(path)}`)
+    const slashPath = pathJoin('/', path);
+    return fetch(`${API_BASE}/browse?path=${encodeURIComponent(slashPath)}`)
       .then(response => response.json())
       .then(items => {
         this.playContexts[path] = this.directoryListingToContext(items);
@@ -580,7 +587,6 @@ class App extends React.Component {
           // XXX: Escape immediately: the escaped URL is considered canonical.
           //      The URL must be decoded for display from here on out.
           item.path.replace('%', '%25').replace('#', '%23');
-            // .replace(/^\//, '');
           item.name = item.path.split('/').pop();
         });
 
@@ -605,7 +611,8 @@ class App extends React.Component {
   getCurrentSongLink(withSubtune = false) {
     const url = this.sequencer?.getCurrUrl();
     if (!url) return null;
-    let link = BASE_URL + '/?play=' + encodeURIComponent(url.replace(CATALOG_PREFIX, ''));
+    let link = BASE_URL + '/?play=' +
+      encodeURIComponent(pathJoin('/', url.replace(CATALOG_PREFIX, '')));
     if (withSubtune) {
       const subtune = this.sequencer?.getSubtune();
       if (subtune !== 0) {
