@@ -36,7 +36,7 @@ function VirtualizedList(props) {
         selectedRow,
         scrollTop: Math.round(scrollContainerRef.current.scrollTop),
       };
-      console.log('Updating history %s with new state:', history.location.pathname, newState);
+      // console.log('Updating history %s with new state:', history.location.pathname, newState);
       history.replace(history.location.pathname, newState);
     };
   }, [selectedRow, scrollContainerRef, history]);
@@ -45,7 +45,7 @@ function VirtualizedList(props) {
     // history.block runs *before* navigation.
     const unblock = history.block((location, action) => {
       if (!updateHistoryRef.current) return;
-      console.log(`History updating to location: ${location.pathname} with action: ${action}`);
+      // console.log(`History updating to location: ${location.pathname} with action: ${action}`);
       if (action === 'PUSH') {
         updateHistoryRef.current();
       }
@@ -60,7 +60,7 @@ function VirtualizedList(props) {
 
     if (item.type === 'directory') {
       return (e) => {
-        console.log('Directory clicked', index, e);
+        // console.log('Directory clicked', index, e);
         e.preventDefault();
         if (item.isBackLink) {
           history.goBack();

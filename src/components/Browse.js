@@ -53,7 +53,6 @@ export default class Browse extends React.PureComponent {
     // Check if previous page url is the parent directory of current page url.
     const prevPath = trimEnd(history.location.state?.prevPathname, '/');
     const currPath = trimEnd(window.location.pathname, '/');
-    console.log("prevPath: %s\ncurrPath: %s", prevPath, currPath);
     const prevPageIsParentDir = prevPath === currPath.slice(0, currPath.lastIndexOf('/'));
 
     const BrowseRow = (props) => {
