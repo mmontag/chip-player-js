@@ -80,7 +80,7 @@
     "@firebase/util": "0.x",
     "cheerio": "^1.0.0-rc.2",
     "child_process": "^1.0.2",
-    "gh-pages": "^1.2.0",
+    "gh-pages": "^6.3.0",
     "glob": "^7.1.2",
     "node-stream-zip": "^1.7.0",
     "patch-package": "^5.1.1",
@@ -101,7 +101,6 @@
     "start": "node scripts/start.js",
     "build": "npm run build-catalog; npm run build-chip-core; node scripts/build.js",
     "build-lite": "node scripts/build.js",
-    "test": "node scripts/test.js --env=jsdom",
     "build-chip-core": "source ~/src/emsdk/emsdk_env.sh; node scripts/build-chip-core.js",
     "build-catalog": "node $NODE_DEBUG_OPTION scripts/build-catalog.js",
     "predeploy": "npm run build",
@@ -110,40 +109,6 @@
     "prepare": "patch-package",
     "server": "DEV=1 node server/index.js",
     "fixvgm": "node $NODE_DEBUG_OPTION scripts/fixvgm.js"
-  },
-  "jest": {
-    "collectCoverageFrom": [
-      "src/**/*.{js,jsx,mjs}"
-    ],
-    "setupFiles": [
-      "<rootDir>/config/polyfills.js"
-    ],
-    "testMatch": [
-      "<rootDir>/src/**/__tests__/**/*.{js,jsx,mjs}",
-      "<rootDir>/src/**/?(*.)(spec|test).{js,jsx,mjs}"
-    ],
-    "testEnvironment": "node",
-    "testURL": "http://localhost",
-    "transform": {
-      "^.+\\.(js|jsx|mjs)$": "<rootDir>/node_modules/babel-jest",
-      "^.+\\.css$": "<rootDir>/config/jest/cssTransform.js",
-      "^(?!.*\\.(js|jsx|mjs|css|json)$)": "<rootDir>/config/jest/fileTransform.js"
-    },
-    "transformIgnorePatterns": [
-      "[/\\\\]node_modules[/\\\\].+\\.(js|jsx|mjs)$"
-    ],
-    "moduleNameMapper": {
-      "^react-native$": "react-native-web"
-    },
-    "moduleFileExtensions": [
-      "web.js",
-      "js",
-      "json",
-      "web.jsx",
-      "jsx",
-      "node",
-      "mjs"
-    ]
   },
   "eslintConfig": {
     "extends": "react-app",
