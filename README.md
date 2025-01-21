@@ -227,9 +227,9 @@ The best modern option for playing MIDI is probably using a well-designed GM Sou
 - FluidSynth Lite, supports SF3: https://github.com/divideconcept/FluidLite
 - Compress SF2 to SF3: https://github.com/cognitone/sf2convert
 
-#### SoundFont Credits
+### SoundFont Credits
 
-Diverse and usable GM SoundFonts.
+#### GM SoundFonts
 
 - GeneralUser SF2 sound bank: http://schristiancollins.com/generaluser.php
 - Many excellent piano SoundFonts: https://sites.google.com/site/soundfonts4u
@@ -237,6 +237,11 @@ Diverse and usable GM SoundFonts.
 - NTONYX SoundFont: http://ntonyx.com/sf_f.htm
 - SoundFonts at MuseScore: https://musescore.org/en/handbook/soundfonts-and-sfz-files#list
 - SoundFonts at Woolyss: https://woolyss.com/chipmusic-soundfonts.php
+- Weeds GM3: Rich "Weeds" Nagel, 2010 http://bhservices.us/weeds/Temp/
+
+#### Novelty SoundFonts
+
+- PC Beep: Rich "Weeds" Nagel, 1998
 
 ### Music Archive Sources
 
