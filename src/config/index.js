@@ -51,6 +51,7 @@ const SOUNDFONTS = [
     items: [
       {label: 'Masquerade 55 v006 (18.4 MB)', value: 'masquerade55v006.sf2'},
       {label: 'GeneralUser GS v1.471 (31.3 MB)', value: 'generaluser.sf2'},
+      {label: 'GeneralUser GS v2.0.1 (32.3 MB)', value: 'generaluser2.sf2'},
       {label: 'Chorium Revision A (28.9 MB)', value: 'choriumreva.sf2'},
       {label: 'Unison (29.3 MB)', value: 'Unison.SF2'},
       {label: 'Creative 28MBGM (29.7 MB)', value: '28MBGM.sf2'},
@@ -59,6 +60,7 @@ const SOUNDFONTS = [
       {label: 'AnotherXG (31.4 MB)', value: 'bennetng_AnotherXG_v2-1.sf2'},
       {label: 'NTONYX 32Mb GM Stereo (32.5 MB)', value: '32MbGMStereo.sf2'},
       {label: 'Weeds GM 3 (54.9 MB)', value: 'weedsgm3.sf2'},
+      {label: 'Weeds GM 4 (68.5 MB)', value: 'WeedsGM4.sf2'},
       {label: 'EmperorGrieferus SC-55 (58.7 MB)', value: 'SC-55.sf2'},
       // https://www.youtube.com/watch?v=_J8-CgvC-As
       // https://drive.google.com/open?id=1G53wKnIBMONgOVx0gCOWrBlJaXsyaKml
