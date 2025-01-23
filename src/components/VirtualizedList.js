@@ -113,7 +113,8 @@ function VirtualizedList(props) {
       } else if (e.key === 'PageDown') {
         e.preventDefault();
         setSelectedRow(Math.min(itemList.length - 1, selectedRow + 10));
-      } else if (e.key.length === 1 && isSorted) {
+      } else if (isSorted && e.metaKey === false && e.ctrlKey === false && e.altKey === false
+        && 'abcdefghijklmnopqrstuvwxyz0123456789'.includes(e.key)) {
         e.preventDefault();
         const char = e.key.toLowerCase();
         let left = 0;
@@ -147,74 +148,74 @@ function VirtualizedList(props) {
           <>
             {props.children}
             <div ref={registerChild}>
-            <ArrowKeyStepper
-              ref={arrowKeyStepperRef}
-              columnCount={1}
-              rowCount={itemList.length}
-              mode="cells"
-              isControlled={true}
-              scrollToRow={selectedRow}
-              onScrollToChange={selectCell}
-            >
-              {({ onSectionRendered, scrollToRow }) => (
-                <List
-                  ref={listRef}
-                  onRowsRendered={({ startIndex, stopIndex }) => {
-                    onSectionRendered({ rowStartIndex: startIndex, rowStopIndex: stopIndex })
-                  }}
-                  scrollToIndex={scrollToRow}
-                  scrollToAlignment="auto"
-                  autoHeight
-                  height={height || 0}
-                  width={500}
-                  onScroll={onChildScroll}
-                  containerProps= {{ autoFocus: true }}
-                  containerStyle={{ width: "100%", maxWidth: "100%" }}
-                  style={{ width: "100%" }}
-                  rowCount={itemList.length}
-                  rowHeight={19}
-                  rowRenderer={({ index, key, style }) => {
-                    const item = itemList[index];
-                    // Song index may differ from item index if there are directories
-                    const songIndex = item.idx;
-                    const isPlaying = currContext === songContext && currIdx === songIndex;
-                    const isSelected = index === scrollToRow;
-                    const classNames = ['BrowseList-row'];
-                    if (isPlaying) classNames.push('Song-now-playing');
-                    if (isSelected) classNames.push('BrowseList-row-selected');
+              <ArrowKeyStepper
+                ref={arrowKeyStepperRef}
+                columnCount={1}
+                rowCount={itemList.length}
+                mode="cells"
+                isControlled={true}
+                scrollToRow={selectedRow}
+                onScrollToChange={selectCell}
+              >
+                {({ onSectionRendered, scrollToRow }) => (
+                  <List
+                    ref={listRef}
+                    onRowsRendered={({ startIndex, stopIndex }) => {
+                      onSectionRendered({ rowStartIndex: startIndex, rowStopIndex: stopIndex })
+                    }}
+                    scrollToIndex={scrollToRow}
+                    scrollToAlignment="auto"
+                    autoHeight
+                    height={height || 0}
+                    width={500}
+                    onScroll={onChildScroll}
+                    containerProps={{ autoFocus: true }}
+                    containerStyle={{ width: "100%", maxWidth: "100%" }}
+                    style={{ width: "100%" }}
+                    rowCount={itemList.length}
+                    rowHeight={19}
+                    rowRenderer={({ index, key, style }) => {
+                      const item = itemList[index];
+                      // Song index may differ from item index if there are directories
+                      const songIndex = item.idx;
+                      const isPlaying = currContext === songContext && currIdx === songIndex;
+                      const isSelected = index === scrollToRow;
+                      const classNames = ['BrowseList-row'];
+                      if (isPlaying) classNames.push('Song-now-playing');
+                      if (isSelected) classNames.push('BrowseList-row-selected');
 
-                    // NOTE: Why not use ref.current.focus(), and rely on browser default behaviors?
-                    // Focusing <a> element seems to force it to center of viewport.
-                    // It is also impossible to play an item scrolled off screen if relying on <a> focus.
-                    // For these reasons we will use a fake focus instead of the browser built-in.
+                      // NOTE: Why not use ref.current.focus(), and rely on browser default behaviors?
+                      // Focusing <a> element seems to force it to center of viewport.
+                      // It is also impossible to play an item scrolled off screen if relying on <a> focus.
+                      // For these reasons we will use a fake focus instead of the browser built-in.
 
-                    const onSelect = (e) => {
-                      setSelectedRow(index);
-                      // Prevent focus on the anchor element
-                      e.preventDefault();
-                      // Bubble focus up to the containing List component (it should have a tabIndex)
-                      let el = e.target.parentElement;
-                      while (el?.tabIndex < 0) el = el.parentElement;
-                      el?.focus({
-                        preventScroll: true
-                      });
-                    };
+                      const onSelect = (e) => {
+                        setSelectedRow(index);
+                        // Prevent focus on the anchor element
+                        e.preventDefault();
+                        // Bubble focus up to the containing List component (it should have a tabIndex)
+                        let el = e.target.parentElement;
+                        while (el?.tabIndex < 0) el = el.parentElement;
+                        el?.focus({
+                          preventScroll: true
+                        });
+                      };
 
-                    const onActivateWithIndex = onActivate(index);
+                      const onActivateWithIndex = onActivate(index);
 
-                    return <div key={key} style={style}
-                                className={classNames.join(' ')}
-                                onMouseUp={onSelect}
-                                onDoubleClick={onActivateWithIndex}>{
-                      rowRenderer({
-                        item,
-                        onPlay: onActivateWithIndex,
-                      })
-                    }</div>;
-                  }}
-                />
-              )}
-            </ArrowKeyStepper>
+                      return <div key={key} style={style}
+                                  className={classNames.join(' ')}
+                                  onMouseUp={onSelect}
+                                  onDoubleClick={onActivateWithIndex}>{
+                        rowRenderer({
+                          item,
+                          onPlay: onActivateWithIndex,
+                        })
+                      }</div>;
+                    }}
+                  />
+                )}
+              </ArrowKeyStepper>
             </div>
           </>
         )}
