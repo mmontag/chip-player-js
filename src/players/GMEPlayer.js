@@ -63,7 +63,14 @@ export default class GMEPlayer extends Player {
       max: 1.0,
       step: 0.01,
       defaultValue: 1.0,
-    }
+    },
+    {
+      id: 'disableEcho',
+      label: 'Disable SPC Echo',
+      hint: 'Disable echo effect for Super Nintendo SPC files.',
+      type: 'toggle',
+      defaultValue: false,
+    },
   ];
 
   constructor(...args) {
@@ -209,8 +216,9 @@ export default class GMEPlayer extends Player {
     this.gmeCtx = core.getValue(this.emuPtr, "i32");
     this.voiceMask = Array(core._gme_voice_count(this.gmeCtx)).fill(true);
 
-    // Enable silence detection
     core._gme_ignore_silence(this.gmeCtx, 0);
+    core._gme_set_stereo_depth(this.gmeCtx, this.params.stereoWidth);
+    core._gme_disable_echo(this.gmeCtx, this.params.disableEcho ? 1 : 0);
 
     this.resume();
     if (this.playSubtune(this.subtune) !== 0) {
@@ -319,8 +327,15 @@ export default class GMEPlayer extends Player {
   setParameter(id, value) {
     switch (id) {
       case 'subbass':
+        this.params[id] = parseFloat(value);
+        break;
       case 'stereoWidth':
         this.params[id] = parseFloat(value);
+        if (this.gmeCtx) core._gme_set_stereo_depth(this.gmeCtx, value);
+        break;
+      case 'disableEcho':
+        this.params[id] = !!value;
+        if (this.gmeCtx) core._gme_disable_echo(this.gmeCtx, value ? 1 : 0);
         break;
       default:
         console.warn('GMEPlayer has no parameter with id "%s".', id);
