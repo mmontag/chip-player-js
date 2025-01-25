@@ -40,10 +40,10 @@ The music catalog is created by [scripts/build-catalog.js](scripts/build-catalog
 
 ### Local Development Setup
 
-Prerequisites: yarn, cmake, emsdk.
+Prerequisites: npm, cmake, emsdk.
 
 * Clone the repository. 
-* Run `yarn install`.
+* Run `npm install`.
 
 In building the subprojects, we ultimately invoke `emmake make` instead of `make` to yield an object file that Emscripten can link to in the final build.
 
@@ -134,6 +134,30 @@ emmake make
 
 To reconfigure the build-enabled sound chips with CMake UI, run `emcmake ccmake ..` from the build folder. Make desired changes to build flags, then `c` to configure and `g` to generate new Makefile. Then run `emmake make`. Optionally, commit the same changes back to CMakeLists.txt in libvgm parent folder. 
 
+#### External project: game-music-emu
+
+Our goal is to produce **../game-music-emu/build/libgme.a** (assumes you have cloned **game-music-emu** side-by-side with chip-player-js).
+
+A **game-music-emu** subtree has been included in this repository, but this is deprecated.
+
+```sh
+git clone git@github.com:mmontag/game-music-emu.git
+cd game-music-emu/
+source ~/src/emsdk/emsdk_env.sh  # load the emscripten environment variables
+mkdir build                      # create a build folder for Cmake output
+cd build
+emcmake cmake ..
+emmake make
+```
+
+Optionally, use **ccmake** instead to configure the build.  See screenshot below for recommended build options. We do not want VGM support as this is handled by libvgm.
+
+```
+ccmake -DCMAKE_TOOLCHAIN_FILE="$(dirname $(which emcc))/cmake/Modules/Platform/Emscripten.cmake" ..
+```
+
+![game-music-emu cmake example](https://github.com/user-attachments/assets/1899b5e6-5620-4cf2-b253-672b39212124)
+
 #### WebAssembly build
 
 Once these are in place we can build the parent project.
@@ -141,7 +165,7 @@ Our goal is to produce **public/chip-core.wasm**.
 
 ```sh
 cd chip-player-js/
-yarn run build-chip-core
+npm run build-chip-core
 ```
 
 This will use object files created in the previous steps and link them into chip-core.wasm.
@@ -149,25 +173,25 @@ If you change some C/C++ component of the subprojects, you'll need to redo this 
 Once we have chip-core.wasm, we can proceed to develop JavaScript interactively on localhost:
 
 ```sh
-yarn start
+npm start
 ```
 
 Build the entire project:
 
 ```sh
-yarn build
+npm build
 ```
 
 Or deploy to Github Pages:
 
 ```sh
-yarn deploy
+npm deploy
 ```
 
 Deploy to Github Pages without rebuilding chip-core.wasm: 
 
 ```sh
-yarn deploy-lite
+npm deploy-lite
 ```
 
 ## Related Projects
