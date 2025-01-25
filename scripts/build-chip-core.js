@@ -93,6 +93,7 @@ const chipModules = [
       '_gme_set_fade',
       '_gme_voice_name',
       '_gme_set_stereo_depth',
+      '_gme_disable_echo',
     ],
     flags: [
       '-DHAVE_ZLIB_H',    // used by game_music_emu for vgz and lazyusf2 for psf
