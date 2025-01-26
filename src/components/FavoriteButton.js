@@ -8,12 +8,13 @@ const FavoriteButton = ({ href }) => {
     handleToggleFavorite: toggleFavorite,
   } = useContext(UserContext);
 
-  const handleClick = useCallback(() => {
+  const handleClick = useCallback((e) => {
     if (!user) {
       // TODO: prompt user with ToastManager.
       return;
     }
-
+    e.preventDefault();
+    e.stopPropagation();
     toggleFavorite(href);
   }, [toggleFavorite, href, user]);
 
@@ -21,7 +22,7 @@ const FavoriteButton = ({ href }) => {
   const className = `Favorite-button ${isFavorite ? 'isFavorite' : ''}`;
 
   return (
-    <button onClick={handleClick} className={className}>
+    <button onClick={handleClick} className={className} tabIndex="-1">
       &hearts;
     </button>
   );
