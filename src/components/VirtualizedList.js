@@ -92,12 +92,13 @@ function VirtualizedList(props) {
     setTimeout(() => {
       scrollContainerRef.current.scrollTo(0, scrollTop);
     }, 0);
-  }, [history, itemList, scrollContainerRef, listRef]);
+  }, [history.location, scrollContainerRef, listRef]);
 
   return (
     <div onKeyDown={(e) => {
       // TODO: Possibly remove ArrowKeyStepper and just use this instead.
       if (!e.repeat && (e.key === 'Enter' || e.key === 'Return')) {
+        if (e.target.tagName === 'BUTTON') return;
         const index = listRef.current.props.scrollToIndex;
         listRef.current.scrollToRow(index);
         onActivate(index)(e);
@@ -177,8 +178,9 @@ function VirtualizedList(props) {
                     rowRenderer={({ index, key, style }) => {
                       const item = itemList[index];
                       // Song index may differ from item index if there are directories
-                      const songIndex = item.idx;
-                      const isPlaying = currContext === songContext && currIdx === songIndex;
+                      // const songIndex = item.idx;
+                      // const isPlaying = currContext === songContext && currIdx === songIndex;
+                      const isPlaying = currContext && currContext[currIdx] === item.href;
                       const isSelected = index === scrollToRow;
                       const classNames = ['BrowseList-row'];
                       if (isPlaying) classNames.push('Song-now-playing');
@@ -205,7 +207,7 @@ function VirtualizedList(props) {
 
                       return <div key={key} style={style}
                                   className={classNames.join(' ')}
-                                  onMouseUp={onSelect}
+                                  onClick={onSelect}
                                   onDoubleClick={onActivateWithIndex}>{
                         rowRenderer({
                           item,
