@@ -45,10 +45,6 @@ function migrateFaves(faves) {
         href: fave,
         mtime: Math.floor(Date.parse('2024-01-01') / 1000),
       } : fave;
-    }).map((fave, idx) => {
-      fave.idx = idx;
-      fave.type = 'file';
-      return fave;
     });
   }
 
