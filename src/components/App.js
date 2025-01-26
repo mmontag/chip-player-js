@@ -523,11 +523,10 @@ class App extends React.Component {
       this.sequencer.playContext(shuffle(this.playContexts['local']));
     } else {
       // This is more like a synthetic recursive shuffle.
+      // Response of this API is an array of *paths*.
       fetch(`${API_BASE}/shuffle?path=${encodeURI(path)}&limit=100`)
         .then(response => response.json())
-        .then(json => json.items.map(item =>
-          item.replace('%', '%25').replace('#', '%23')
-        ))
+        .then(json => json.items.map(this.pathToHref))
         .then(items => this.sequencer.playContext(items));
     }
   }
@@ -570,9 +569,11 @@ class App extends React.Component {
   directoryListingToContext(items) {
     return items
       .filter(item => item.type === 'file')
-      .map(item =>
-        item.path.replace('%', '%25').replace('#', '%23')
-      );
+      .map(item => this.pathToHref(item.path));
+  }
+
+  pathToHref(path) {
+    return pathJoin(CATALOG_PREFIX, path.replace('%', '%25').replace('#', '%23'));
   }
 
   fetchDirectory(path) {
@@ -584,10 +585,11 @@ class App extends React.Component {
         items.forEach(item => {
           // Convert timestamp 1704067200 to ISO date 2024-01-01
           item.mtime = new Date(item.mtime * 1000).toISOString().split('T')[0];
+          item.name = item.path.split('/').pop();
           // XXX: Escape immediately: the escaped URL is considered canonical.
           //      The URL must be decoded for display from here on out.
           item.path.replace('%', '%25').replace('#', '%23');
-          item.name = item.path.split('/').pop();
+          item.href = pathJoin(CATALOG_PREFIX, item.path);
         });
 
         if (path !== '') { // No '..' at top level browse path.
