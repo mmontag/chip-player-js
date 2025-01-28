@@ -53,16 +53,16 @@
     color: #000088;
 }
 
-/*div:focus {*/
-/*    outline: none;*/
-/*}*/
-/*button:focus,*/
-/*input:focus,*/
-/*a:focus*/
-/*{*/
-/*    outline: none;*/
-/*    background-color: var(--focus);*/
-/*}*/
+a:focus,
+button:focus,
+input:focus,
+input[type=checkbox]:focus,
+input[type=radio]:focus,
+input[type=range]:focus
+{
+    outline: none;
+    background-color: var(--focus);
+}
 
 /* Basic elements */
 
@@ -88,7 +88,6 @@ a {
     cursor: pointer;
 }
 
-a:focus   { background: var(--focus); }
 a:active  { background: var(--active); }
 a:visited { color: var(--clickable); }
 
@@ -117,7 +116,6 @@ select {
 select option                { font-size: 14px; }
 
 button          { background: var(--button); padding: 0; margin: 0; }
-button:focus    { background: var(--focus); }
 button:active   { background: var(--active); }
 button:disabled { background: var(--neutral1); color: var(--neutral3); }
 .box-button        { padding: 0 var(--charW2); box-shadow: var(--charW1) var(--charW1) var(--shadow); white-space: pre; }
@@ -135,10 +133,6 @@ input[type=text] {
 input[type=text]::selection                 { background-color: #FFFFFF; }
 input[type=text]::-webkit-input-placeholder { color: var(--neutral1) }
 
-input[type=checkbox]:focus,
-input[type=radio]:focus,
-input[type=range]:focus { background: var(--focus); }
-
 label.inline { display: inline-block; margin-right: var(--charW1);   }
 label.inline:last-child { margin-right: 0; }
 input[type=checkbox],
@@ -148,17 +142,15 @@ input[type=radio] {
     background: transparent;
     border: 0;
     border-radius: 0;
-    outline: 0;
-    width: 32px;
-    margin: 0;
+    margin: 0 var(--charW1) 0 0;
     color: var(--clickable);
 }
 
 input[type=checkbox]:before         { content: '[ ]'; }
 input[type=checkbox]:checked:before { content: '[×]'; }
 
-input[type=radio]:before         { content: '( )'; }
-input[type=radio]:checked:before { content: '(●)'; }
+input[type=radio]:before            { content: '( )'; }
+input[type=radio]:checked:before    { content: '(●)'; }
 
 input[type=range] {
     margin: 0;
@@ -434,7 +426,7 @@ body,#root {
 
 .PlayerParams h3 { margin-top: 0; }
 .PlayerParams-param { display: flex; flex-wrap: wrap; }
-.PlayerParams-param>input { margin-right: var(--charW1); }
+.PlayerParams-param input { margin-right: var(--charW1); }
 .PlayerParams-group-title { width: 100%; }
 .PlayerParams-voiceList {
     display: flex;
@@ -653,4 +645,8 @@ img { image-rendering: pixelated; }
     white-space: nowrap;
 }
 
-.message-box-button        { background: var(--background); padding: 0 var(--charW2); box-shadow: none; }
+.message-box-button {
+    background: var(--background);
+    padding: 0 var(--charW2);
+    box-shadow: none;
+}
