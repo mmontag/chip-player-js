@@ -450,7 +450,6 @@ body,#root {
 .Search-clearButton { white-space: pre; }
 .Search-clearButton::before { content: ' ×'; }
 .Search-clearButton::after  { content: ' '; }
-.Search-results { margin-top: var(--charH); }
 .Search-resultsLabel { white-space: nowrap; }
 
 .Song-now-playing .Favorite-button { color: var(--background); }

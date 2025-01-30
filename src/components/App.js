@@ -718,6 +718,8 @@ class App extends React.Component {
   }
 
   handleContentAreaFocus = (e) => {
+    if (e.target.tagName === 'INPUT') return;
+    if (e.target.tagName === 'BUTTON') return;
     if (this.listRef.current) {
       e.preventDefault();
       findDOMNode(this.listRef.current).focus();
@@ -817,11 +819,16 @@ class App extends React.Component {
                       />
                   )}/>
                   {/* Catch-all route */}
-                  <Route render={() => (
+                  <Route render={({history}) => (
+                    this.contentAreaRef.current &&
                     <Search
+                      history={history}
                       currContext={currContext}
                       currIdx={currIdx}
-                      onSongClick={this.handleSongClick}>
+                      onSongClick={this.handleSongClick}
+                      scrollContainerRef={this.contentAreaRef}
+                      listRef={this.listRef}
+                    >
                       {this.state.loading && <p>Loading player engine...</p>}
                     </Search>
                   )}/>

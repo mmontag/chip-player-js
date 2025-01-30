@@ -4,10 +4,11 @@ import queryString from 'querystring';
 import debounce from 'lodash/debounce';
 import { API_BASE, CATALOG_PREFIX } from '../config';
 import promisify from '../promisify-xhr';
-import { pathJoin, updateQueryString } from '../util';
+import { pathJoin } from '../util';
 import DirectoryLink from './DirectoryLink';
 import FavoriteButton from './FavoriteButton';
 import autoBindReact from 'auto-bind/react';
+import VirtualizedList from './VirtualizedList';
 
 const MAX_RESULTS = 100;
 const searchResultsCache = {};
@@ -27,11 +28,13 @@ export default class Search extends PureComponent {
     this.textInput = React.createRef();
 
     this.state = {
-      searching: false,
-      results: {},
-      resultsCount: 0,
       totalSongs: 0,
       query: null,
+      searching: false,
+
+      results: [],
+      resultsContext: [],
+      resultsCount: 0,
     };
 
     getTotal()
@@ -53,7 +56,20 @@ export default class Search extends PureComponent {
 
   onSearchInputChange(val, immediate = false) {
     this.setState({query: val});
-    updateQueryString({ q: val ? val.trim() : undefined });
+    // updateQueryString({ q: val ? val.trim() : undefined });
+    const newParams = { q: val ? val.trim() : undefined };
+    // Merge new params with current query string
+    const params = {
+      ...queryString.parse(window.location.search.substr(1)),
+      ...newParams,
+    };
+    // Delete undefined properties
+    Object.keys(params).forEach(key => params[key] === undefined && delete params[key]);
+    // Object.keys(params).forEach(key => params[key] = decodeURIComponent(params[key]));
+    const stateUrl = '?' + queryString.stringify(params).replace(/%20/g, '+');
+    // Update address bar URL
+    this.props.history.replace(stateUrl);
+
     if (val.length) {
       if (immediate) {
         this.doSearch(val);
@@ -79,18 +95,63 @@ export default class Search extends PureComponent {
       this.searchRequest.open('GET', url);
       this.searchRequest.send()
         .then(response => {
+          /*
+          Example search response:
+          {
+            "items": [
+              {
+                "id": 609,
+                "file": "Classical MIDI/Bach/Bwv0565 Toccata and Fugue In Dm A.mid",
+                "depth": 3
+              },
+              {
+                "id": 677,
+                "file": "Classical MIDI/Bach/Bwv1046 aSinfonia h.mid",
+                "depth": 3
+              },
+            ],
+            "total": 2
+          }
+          */
           this.searchRequest = null;
           return JSON.parse(response.responseText);
         })
         .then((payload) => {
           const { items, total } = payload;
-          const results = items
-            .map(item => item.file)
-            .map(result => result.replace('%', '%25').replace('#', '%23'));
+          // Decorate file items with idx (to match up with song context) and other properties.
+          const resultFiles = items
+            .map((item, i) => {
+              const path = item.file;
+              return {
+                idx: i,
+                path: path,
+                name: decodeURIComponent(path.substring(path.lastIndexOf('/') + 1)),
+                href: pathJoin(CATALOG_PREFIX, path.replace('%', '%25').replace('#', '%23')),
+                type: 'file',
+              };
+            });
+          const resultsContext = resultFiles.map(item => item.href);
+          // Build the results list with interleaved directory headings.
+          const resultsWithHeadings = [];
+          let currHeading = null;
+          resultFiles.forEach((item) => {
+            const { path } = item;
+            const heading = path.substring(0, path.lastIndexOf('/') + 1);
+            if (heading !== currHeading) {
+              currHeading = heading;
+              resultsWithHeadings.push({
+                type: 'directory',
+                href: pathJoin('/browse', heading),
+                name: decodeURIComponent(heading),
+              });
+            }
+            resultsWithHeadings.push(item);
+          });
+          // Cache the computed results for this query.
           searchResultsCache[val] = {
             resultsCount: total,
-            resultsHeadings: this.extractHeadings(results),
-            results: results,
+            resultsContext: resultsContext,
+            results: resultsWithHeadings,
           };
           this.setState({
             searching: true,
@@ -108,99 +169,86 @@ export default class Search extends PureComponent {
     this.setState({
       query: null,
       searching: false,
+      results: [],
+      resultsContext: [],
       resultsCount: 0,
-      results: {}
     });
     this.textInput.current.focus();
   }
 
   showEmptyState() {
-    this.setState({searching: false, results: {}})
+    this.setState({searching: false, results: []})
   }
 
-  extractHeadings(sortedResults) {
-    // Results input must be sorted. Returns a map of indexes to headings.
-    // {
-    //   0: 'Nintendo/A Boy And His Blob',
-    //   12: 'Sega Genesis/A Boy And His Blob',
-    // }
-    const headings = {};
-    let currHeading = null;
-    sortedResults.forEach((result, i) => {
-      const heading = result.substring(0, result.lastIndexOf('/') + 1);
-      if (heading !== currHeading) {
-        currHeading = heading;
-        headings[i] = currHeading;
-      }
-    });
-    return headings;
-  }
-
-  renderResultItem(result, i) {
-    let headingFragment = null;
-    if (this.state.resultsHeadings[i]) {
-      const href = this.state.resultsHeadings[i];
-      headingFragment = (
-        <DirectoryLink dim to={'/browse/' + href}>{decodeURI(href)}</DirectoryLink>
+  renderResultItem(props) {
+    const { item, onPlay } = props;
+    if (item.type === 'directory') {
+      return (
+        <DirectoryLink dim to={item.href}>{item.name}</DirectoryLink>
+      );
+    } else {
+      return (
+        <>
+          <FavoriteButton href={item.href}/>
+          <a onClick={onPlay} href={item.href} tabIndex="-1">{item.name}</a>
+        </>
       );
     }
-    const { currContext, currIdx, onSongClick } = this.props;
-    const href = pathJoin(CATALOG_PREFIX, result);
-    const resultTitle = decodeURI(result.substring(result.lastIndexOf('/') + 1));
-    const isPlaying = currContext === this.state.results && currIdx === i;
-    return (
-      <Fragment key={i}>
-        {headingFragment}
-        <div className={isPlaying ? 'Song-now-playing' : '' }>
-          <FavoriteButton href={href}/>
-          <a onClick={onSongClick(href, this.state.results, i)}
-             href={href}>
-            {resultTitle}
-          </a>
-        </div>
-      </Fragment>
-    );
   }
 
   render() {
     const placeholder = this.state.totalSongs ?
       `${this.state.totalSongs} tunes` : 'Loading catalog...';
+
+    const {
+      onSongClick,
+      currContext,
+      currIdx,
+      scrollContainerRef,
+      listRef,
+    } = this.props;
+
     return (
-      <Fragment>
-        <div>
-          <label className="Search-label">Search:{' '}
-            <input type="text"
-                   placeholder={placeholder}
-                   spellCheck="false"
-                   autoComplete="off"
-                   autoCorrect="false"
-                   autoCapitalize="none"
-                   autoFocus
-                   ref={this.textInput}
-                   className="Search-input"
-                   value={this.state.totalSongs ? this.state.query || '' : ''}
-                   onChange={this.onChange}/>
-            {
-              this.state.searching &&
-              <Fragment>
-                <button className="Search-clearButton" onClick={this.handleClear}/>
-                {' '}
-                <span className="Search-resultsLabel">
-                  {this.state.resultsCount} result{this.state.resultsCount !== 1 && 's'}
-                </span>
-              </Fragment>
-            }
-          </label>
-        </div>
-        {
-          this.state.searching ?
-            <div className="Search-results">
-              {this.state.results.map(this.renderResultItem)}
-            </div>
-            :
-            this.props.children
-        }
-      </Fragment>
+        <>
+          <VirtualizedList
+            currContext={currContext}
+            currIdx={currIdx}
+            onSongClick={onSongClick}
+            itemList={this.state.results}
+            songContext={this.state.resultsContext}
+            rowRenderer={this.renderResultItem}
+            isSorted={false}
+            scrollContainerRef={scrollContainerRef}
+            listRef={listRef}
+          >
+            <h3 className="Browse-topRow">
+              <label className="Search-label">Search:{' '}
+                <input type="text"
+                       placeholder={placeholder}
+                       spellCheck="false"
+                       autoComplete="off"
+                       autoCorrect="false"
+                       autoCapitalize="none"
+                       autoFocus
+                       ref={this.textInput}
+                       className="Search-input"
+                       value={this.state.totalSongs ? this.state.query || '' : ''}
+                       onChange={this.onChange}/>
+                {
+                  this.state.searching &&
+                  <Fragment>
+                    <button className="Search-clearButton" onClick={this.handleClear}/>
+                    {' '}
+                    <span className="Search-resultsLabel">
+                        {this.state.resultsCount} result{this.state.resultsCount !== 1 && 's'}
+                      </span>
+                  </Fragment>
+                }
+              </label>
+            </h3>
+          </VirtualizedList>
+          {this.state.searching || this.props.children}
+        </>
     );
   }
 }

@@ -3,22 +3,21 @@ import { ArrowKeyStepper, List, WindowScroller } from 'react-virtualized';
 import 'react-virtualized/styles.css';
 import { findDOMNode } from 'react-dom';
 import { useHistory } from 'react-router-dom';
-import { pathJoin } from '../util';
 
 
 export default VirtualizedList;
 
 function VirtualizedList(props) {
   const {
-    scrollContainerRef,
     currContext,
     currIdx,
     onSongClick,
     itemList,
     songContext,
     rowRenderer,
-    listRef,
     isSorted,
+    scrollContainerRef,
+    listRef,
   } = props;
 
   const arrowKeyStepperRef = useRef();
@@ -37,7 +36,7 @@ function VirtualizedList(props) {
         scrollTop: Math.round(scrollContainerRef.current.scrollTop),
       };
       // console.log('Updating history %s with new state:', history.location.pathname, newState);
-      history.replace(history.location.pathname, newState);
+      history.replace(history.location.pathname + history.location.search, newState);
     };
   }, [selectedRow, scrollContainerRef, history]);
 
@@ -92,11 +91,14 @@ function VirtualizedList(props) {
     setTimeout(() => {
       scrollContainerRef.current.scrollTo(0, scrollTop);
     }, 0);
-  }, [history.location, scrollContainerRef, listRef]);
+    // We only want to run this scroll-restoration effect when location pathname changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [history.location.pathname]);
 
   return (
     <div onKeyDown={(e) => {
       // TODO: Possibly remove ArrowKeyStepper and just use this instead.
+      if (e.target.tagName === 'INPUT') return;
       if (!e.repeat && (e.key === 'Enter' || e.key === 'Return')) {
         if (e.target.tagName === 'BUTTON') return;
         const index = listRef.current.props.scrollToIndex;
