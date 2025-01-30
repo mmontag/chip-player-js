@@ -63,7 +63,7 @@ export default class Browse extends React.PureComponent {
         return (
           <>
             <div className="BrowseList-colName">
-              <DirectoryLink to={pathJoin('/browse', item.path)} search={search}
+              <DirectoryLink to={item.href} search={search}
                              isBackLink={item.isBackLink}>{item.name}</DirectoryLink>
             </div>
             <div className="BrowseList-colDir">

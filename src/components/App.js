@@ -589,7 +589,10 @@ class App extends React.Component {
           // XXX: Escape immediately: the escaped URL is considered canonical.
           //      The URL must be decoded for display from here on out.
           item.path.replace('%', '%25').replace('#', '%23');
-          item.href = pathJoin(CATALOG_PREFIX, item.path);
+          if (item.type === 'file')
+            item.href = pathJoin(CATALOG_PREFIX, item.path);
+          else
+            item.href = pathJoin('/browse', item.path);
         });
 
         if (path !== '') { // No '..' at top level browse path.
@@ -598,6 +601,7 @@ class App extends React.Component {
           items.unshift({
             type: 'directory',
             path: parentPath,
+            href: pathJoin('/browse', parentPath),
             name: '..',
           });
         }

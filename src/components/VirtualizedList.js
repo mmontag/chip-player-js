@@ -65,7 +65,7 @@ function VirtualizedList(props) {
         if (item.isBackLink) {
           history.goBack();
         } else {
-          history.push(pathJoin('/browse', item.path), {
+          history.push(item.href, {
             prevPathname: window.location.pathname,
           });
         }
