@@ -632,7 +632,7 @@ class App extends React.Component {
     const localFiles = this.localFilesManager.readAll();
     // Convert timestamp 1704067200 to ISO date 2024-01-01
     localFiles.forEach(item => item.mtime = new Date(item.mtime * 1000).toISOString().split('T')[0]);
-    this.playContexts['local'] = this.directoryListingToContext(localFiles);
+    this.playContexts['local'] = localFiles.map(item => item.path);
     this.setState({ localFiles });
   }
 
