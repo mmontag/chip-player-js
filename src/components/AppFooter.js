@@ -6,7 +6,6 @@ import repeatImage from '../images/repeat.png';
 import TimeSlider from './TimeSlider';
 import VolumeSlider from './VolumeSlider';
 import FavoriteButton from './FavoriteButton';
-import PlayerParams from './PlayerParams';
 import { pathToLinks } from '../util';
 import { REPEAT_LABELS, SHUFFLE_LABELS } from '../Sequencer';
 import { UserContext } from './UserProvider';
@@ -17,7 +16,6 @@ function AppFooter(props) {
     // this.state.
     currentSongDurationMs,
     currentSongNumSubtunes,
-    currentSongNumVoices,
     currentSongSubtune,
     ejected,
     imageUrl,
@@ -27,10 +25,7 @@ function AppFooter(props) {
     shuffle,
     songUrl,
     subtitle,
-    tempo,
     title,
-    voiceNames,
-    voiceMask,
     volume,
 
     // this.
@@ -38,8 +33,6 @@ function AppFooter(props) {
     handleCopyLink,
     handleCycleRepeat,
     handleCycleShuffle,
-    handleSetVoiceMask,
-    handleTempoChange,
     handleTimeSliderChange,
     handleVolumeChange,
     nextSong,
@@ -53,9 +46,7 @@ function AppFooter(props) {
 
   const {
     faves,
-    showPlayerSettings,
     handleToggleFavorite,
-    toggleSettings,
   } = useContext(UserContext);
 
   const pathLinks = pathToLinks(songUrl);
@@ -139,11 +130,7 @@ function AppFooter(props) {
               {SHUFFLE_LABELS[shuffle]}
               </button>
             {' '}
-            {(!showPlayerSettings && false) && // TODO: Remove footer settings
-              <button className="box-button" onClick={toggleSettings}>
-                Settings &gt;
-              </button>}
-            </span>
+          </span>
           <div style={{ display: 'flex', flexDirection: 'row' }}>
             <TimeSlider
               paused={paused}
@@ -206,36 +193,7 @@ function AppFooter(props) {
             </div>}
         </div>
       </div>
-      {(showPlayerSettings && false) && // TODO: Remove footer settings
-        <div className="AppFooter-settings">
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'start',
-            marginBottom: '19px'
-          }}>
-            <h3 style={{ margin: '0 8px 0 0' }}>Player Settings</h3>
-            <button className='box-button' onClick={toggleSettings}>
-              Close
-            </button>
-          </div>
-          {sequencer.getPlayer() ?
-            <PlayerParams
-              ejected={ejected}
-              tempo={tempo}
-              numVoices={currentSongNumVoices}
-              voiceMask={voiceMask}
-              voiceNames={voiceNames}
-              handleTempoChange={handleTempoChange}
-              handleSetVoiceMask={handleSetVoiceMask}
-              getParameter={sequencer.getPlayer().getParameter}
-              setParameter={sequencer.getPlayer().setParameter}
-              paramDefs={sequencer.getPlayer().getParamDefs()}/>
-            :
-            <div>(No active player)</div>}
-        </div>}
-      {imageUrl &&
-        <img alt="Cover art" className="AppFooter-art" src={imageUrl}/>}
+      {imageUrl && <img alt="Cover art" className="AppFooter-art" src={imageUrl}/>}
     </div>
   );
 }
