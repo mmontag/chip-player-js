@@ -14,7 +14,7 @@ export const REPEAT_LABELS = ['Off', 'All', 'One'];
 export const SHUFFLE_OFF = 0;
 export const SHUFFLE_ON = 1;
 export const NUM_SHUFFLE_MODES = 2;
-export const SHUFFLE_LABELS = ['Off', 'On'];
+export const SHUFFLE_LABELS = ['Off', 'On '];
 
 export default class Sequencer extends EventEmitter {
   constructor(players, localFilesManager) {

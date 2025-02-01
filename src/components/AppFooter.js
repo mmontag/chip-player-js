@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useContext } from 'react';
-import diceImage from '../images/dice.png';
+import shuffleImage from '../images/shuffle.png';
 import downloadImage from '../images/download.png';
 import copyImage from '../images/copy.png';
 import repeatImage from '../images/repeat.png';
@@ -119,16 +119,16 @@ function AppFooter(props) {
               </button>
             </span>}
           <span className="AppFooter-more-buttons">
-              <button title="Cycle Repeat (repeat off, repeat all songs in the context, or repeat one song)"
-                      className="box-button" onClick={handleCycleRepeat}>
-                <img alt="Repeat" src={repeatImage} className="inline-icon"/>
-                {REPEAT_LABELS[repeat]}
-              </button>
+            <button title="Cycle Repeat (repeat off, repeat all songs in the context, or repeat one song)"
+                    className="box-button" onClick={handleCycleRepeat}>
+              <img alt="Repeat" src={repeatImage} className="inline-icon"/>
+              {REPEAT_LABELS[repeat]}
+            </button>
             {' '}
             <button title="Toggle shuffle mode" className="box-button" onClick={handleCycleShuffle}>
-                <img alt="Roll the dice" src={diceImage} className="inline-icon"/>
+              <img alt="Shuffle" src={shuffleImage} className="inline-icon"/>
               {SHUFFLE_LABELS[shuffle]}
-              </button>
+            </button>
             {' '}
           </span>
           <div style={{ display: 'flex', flexDirection: 'row' }}>
