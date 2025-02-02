@@ -13,6 +13,7 @@ const FORMATS =  [
   'it',
   'mdx',
   'mid',
+  'midi',
   'miniusf',
   'mod',
   'nsf',
