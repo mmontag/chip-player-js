@@ -1,6 +1,5 @@
 import React, { memo, useCallback } from "react";
 import { FORMATS } from '../config';
-import trash from '../images/trash.png';
 import bytes from 'bytes';
 
 const formatList = FORMATS.filter(f => f !== 'miniusf').map(f => `.${f}`);
@@ -66,8 +65,8 @@ function LocalFiles(props) {
                 const isPlaying = currContext === playContext && currIdx === i;
                 return (
                   <div key={title} className={isPlaying ? 'Song-now-playing BrowseList-row' : 'BrowseList-row'}>
-                    <button className='Trash-button' onClick={handleDelete} data-href={href}>
-                      <img alt='trash' className='inline-icon' src={trash}/>
+                    <button className='Trash-button' title='Delete' onClick={handleDelete} data-href={href}>
+                      <span className='inline-icon icon-trash'/>
                     </button>
                     <div className="BrowseList-colName">
                       <a onClick={onSongClick(href, playContext, i)} href={href}>{title}</a>

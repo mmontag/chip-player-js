@@ -1,8 +1,4 @@
 import React, { memo, useCallback, useContext } from 'react';
-import shuffleImage from '../images/shuffle.png';
-import downloadImage from '../images/download.png';
-import copyImage from '../images/copy.png';
-import repeatImage from '../images/repeat.png';
 import TimeSlider from './TimeSlider';
 import VolumeSlider from './VolumeSlider';
 import FavoriteButton from './FavoriteButton';
@@ -67,6 +63,9 @@ function AppFooter(props) {
     handleCopyLink(getCurrentSongLink(/*withSubtune=*/true));
   }, [getCurrentSongLink, handleCopyLink]);
 
+  const playPauseTitle = paused ? 'Play' : 'Pause';
+  const playPauseClass = paused ? 'icon-play' : 'icon-pause';
+
   return (
     <div className="AppFooter">
       <div className="AppFooter-main">
@@ -75,21 +74,21 @@ function AppFooter(props) {
                   title="Previous"
                   className="box-button"
                   disabled={ejected}>
-            ⏮
+            <span className="inline-icon icon-prev"/>
           </button>
           {' '}
           <button onClick={togglePause}
-                  title={paused ? 'Resume' : 'Pause'}
+                  title={playPauseTitle}
                   className="box-button"
                   disabled={ejected}>
-            {paused ? ' ► ' : ' ⏸ '}
+            <span className={`inline-icon ${playPauseClass}`}/>
           </button>
           {' '}
           <button onClick={nextSong}
                   title="Next"
                   className="box-button"
                   disabled={ejected}>
-            ⏭
+            <span className="inline-icon icon-next"/>
           </button>
           {' '}
           {currentSongNumSubtunes > 1 &&
@@ -100,7 +99,7 @@ function AppFooter(props) {
                    onClick={handleCopySubtuneLink}>
                   {subtuneText}
                   {' '}
-                  <img alt="Copy link" src={copyImage} className="inline-icon"/>
+                  <span className="inline-icon icon-copy"/>
                 </a>
                 :
                 subtuneText
@@ -121,12 +120,12 @@ function AppFooter(props) {
           <span className="AppFooter-more-buttons">
             <button title="Cycle Repeat (repeat off, repeat all songs in the context, or repeat one song)"
                     className="box-button" onClick={handleCycleRepeat}>
-              <img alt="Repeat" src={repeatImage} className="inline-icon"/>
+              <span className="inline-icon icon-repeat"/>
               {REPEAT_LABELS[repeat]}
             </button>
             {' '}
             <button title="Toggle shuffle mode" className="box-button" onClick={handleCycleShuffle}>
-              <img alt="Shuffle" src={shuffleImage} className="inline-icon"/>
+              <span className="inline-icon icon-shuffle"/>
               {SHUFFLE_LABELS[shuffle]}
             </button>
             {' '}
@@ -168,14 +167,14 @@ function AppFooter(props) {
                   <>
                     <a style={{ color: 'var(--neutral4)' }} href={getCurrentSongLink()}
                        title="Copy song link to clipboard"
-                       onClick={handleCopySongLink}
-                    >
+                       onClick={handleCopySongLink}>
                       {title}{' '}
-                      <img alt="Copy link" src={copyImage} className="inline-icon"/>
+                      <span className="inline-icon icon-copy"/>
                     </a>
                     {' '}
-                    <a style={{ color: 'var(--neutral4)' }} href={songUrl}>
-                      <img alt="Download" src={downloadImage} className="inline-icon"/>
+                    <a style={{ color: 'var(--neutral4)' }} href={songUrl}
+                       title="Download song">
+                      <span className="inline-icon icon-download"/>
                     </a>
                   </>
                   :

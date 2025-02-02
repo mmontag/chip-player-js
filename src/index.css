@@ -489,8 +489,28 @@ body,#root {
 td { padding: 0 }
 img { image-rendering: pixelated; }
 
-.inline-icon { vertical-align: bottom; }
-.dim-icon { filter: grayscale(100%) brightness(0.75); }
+.inline-icon {
+    vertical-align: bottom;
+    display: inline-block;
+    background-color: var(--clickable);
+    mask-repeat: no-repeat;
+    mask-position: center;
+    image-rendering: pixelated;
+    height: var(--charH);
+}
+[disabled] .inline-icon { background-color: var(--neutral2); }
+.dim-icon      { background-color: var(--neutral2); }
+.icon-play     { width: 24px; mask-image: url(images/play.png); }
+.icon-pause    { width: 24px; mask-image: url(images/pause.png); }
+.icon-prev     { width: 24px; mask-image: url(images/prev.png); }
+.icon-next     { width: 24px; mask-image: url(images/next.png); }
+.icon-folder   { width: 24px; mask-image: url(images/folder.png); }
+.icon-trash    { width: 24px; mask-image: url(images/trash.png); }
+.icon-copy     { width: 24px; mask-image: url(images/copy.png); }
+.icon-download { width: 16px; mask-image: url(images/download.png); }
+.icon-repeat   { width: 16px; mask-image: url(images/repeat.png); }
+.icon-shuffle  { width: 16px; mask-image: url(images/shuffle.png); }
+.icon-chip     { width: 24px; mask-image: url(images/chip.png); }
 
 .tab-container {
     border-bottom: 1px solid var(--clickable);
