@@ -736,7 +736,7 @@ class App extends React.Component {
     return (
       <Dropzone
         disableClick
-        style={{}}
+        style={{}} // Required to clear Dropzone styles
         onDrop={this.onDrop}>{dropzoneProps => (
         <div className="App">
           <DropMessage dropzoneProps={dropzoneProps}/>
@@ -757,8 +757,7 @@ class App extends React.Component {
                 <NavLink className="tab" activeClassName="tab-selected"
                          to={{ pathname: "/local", ...search }}>Local</NavLink>
                 {/* this.sequencer?.players?.map((p, i) => `p${i}:${p.stopped?'off':'on'}`).join(' ') */}
-                <button className={showPlayerSettings ? 'tab tab-selected' : 'tab'}
-                        style={{ marginLeft: 'auto', marginRight: 0 }}
+                <button className={`tab tab-settings ${showPlayerSettings ? 'tab-selected' : ''}`}
                         onClick={handleToggleSettings}>Settings</button>
               </div>
               <div className="App-main-content-and-settings">

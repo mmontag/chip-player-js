@@ -144,6 +144,7 @@ input[type=radio] {
     border-radius: 0;
     margin: 0 var(--charW1) 0 0;
     color: var(--clickable);
+    white-space: pre;  /* prevent iOS Safari text wrapping */
 }
 
 input[type=checkbox]:before         { content: '[ ]'; }
@@ -529,6 +530,8 @@ img { image-rendering: pixelated; }
     box-sizing: border-box;
     height: var(--charH);
 }
+
+.tab-settings { margin-left: auto; margin-right: 0; }
 
 .tab-selected {
     border-bottom: 1px solid var(--background);
