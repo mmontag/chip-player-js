@@ -717,15 +717,6 @@ class App extends React.Component {
     this.props.toastContext.enqueueToast('Copied song link to clipboard.', ToastLevels.INFO);
   }
 
-  handleContentAreaFocus = (e) => {
-    if (e.target.tagName === 'INPUT') return;
-    if (e.target.tagName === 'BUTTON') return;
-    if (this.listRef.current) {
-      e.preventDefault();
-      findDOMNode(this.listRef.current).focus();
-    }
-  }
-
   render() {
     const { title, subtitle } = titlesFromMetadata(this.state.currentSongMetadata);
     const currContext = this.sequencer?.getCurrContext();
@@ -762,7 +753,6 @@ class App extends React.Component {
               </div>
               <div className="App-main-content-and-settings">
               <div className="App-main-content-area"
-                   onMouseDown={this.handleContentAreaFocus}
                    ref={this.contentAreaRef}>
                 <Switch>
                   <Route path="/favorites" render={() => (
