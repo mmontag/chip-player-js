@@ -4,6 +4,8 @@ import 'react-virtualized/styles.css';
 import { findDOMNode } from 'react-dom';
 import { useHistory } from 'react-router-dom';
 
+const root = document.documentElement;
+const rowHeight = parseInt(getComputedStyle(root).getPropertyValue('--rowHeight'), 10) || 20;
 
 export default VirtualizedList;
 
@@ -176,7 +178,7 @@ function VirtualizedList(props) {
                     containerStyle={{ width: "100%", maxWidth: "100%" }}
                     style={{ width: "100%" }}
                     rowCount={itemList.length}
-                    rowHeight={19}
+                    rowHeight={rowHeight}
                     rowRenderer={({ index, key, style }) => {
                       const item = itemList[index];
                       // Song index may differ from item index if there are directories

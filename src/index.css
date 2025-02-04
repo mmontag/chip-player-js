@@ -8,6 +8,8 @@
     --charW3:     24px;
     --charW3neg: -24px;
 
+    --rowHeight:  var(--charH);
+
     --clickable:  #ff0;
     --active:     #800;
     --button:     #66d;
