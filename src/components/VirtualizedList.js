@@ -189,6 +189,7 @@ function VirtualizedList(props) {
                       const classNames = ['BrowseList-row'];
                       if (isPlaying) classNames.push('Song-now-playing');
                       if (isSelected) classNames.push('BrowseList-row-selected');
+                      if (index % 2 === 0) classNames.push('even'); else classNames.push('odd');
 
                       // NOTE: Why not use ref.current.focus(), and rely on browser default behaviors?
                       // Focusing <a> element seems to force it to center of viewport.
