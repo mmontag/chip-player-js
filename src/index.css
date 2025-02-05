@@ -1,5 +1,8 @@
+@import 'fonts/fonts.css';
+
 /* MSDOS 6.22 CSS Theme */
 :root {
+    --font:       var(--fontPxPlusChipPlayer);
     --charH:      19px;
     --charHneg:  -19px;
     --charW1:      8px;
@@ -41,8 +44,7 @@
 }
 
 .App * {
-    font-size: 24px !important;
-    font-family: VGA_SquarePx, monospace !important;
+    font: var(--font) !important;
     -webkit-font-smoothing: antialiased; /* supports Japanese characters better than 'none' */
     -moz-osx-font-smoothing: grayscale; /* Firefox */
     -webkit-tap-highlight-color: rgba(0,0,0,0);
