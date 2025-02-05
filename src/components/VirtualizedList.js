@@ -4,9 +4,6 @@ import 'react-virtualized/styles.css';
 import { findDOMNode } from 'react-dom';
 import { useHistory } from 'react-router-dom';
 
-const root = document.documentElement;
-const rowHeight = parseInt(getComputedStyle(root).getPropertyValue('--rowHeight'), 10) || 20;
-
 export default VirtualizedList;
 
 function VirtualizedList(props) {
@@ -25,7 +22,15 @@ function VirtualizedList(props) {
   const arrowKeyStepperRef = useRef();
   const history = useHistory();
   const [selectedRow, setSelectedRow] = useState(0);
+  const [rowHeight, setRowHeight] = useState(20);
   const updateHistoryRef = useRef();
+
+  useEffect(() => {
+    if (!scrollContainerRef.current) return;
+    const rowHeight = getComputedStyle(scrollContainerRef.current).getPropertyValue('--rowHeight');
+    if (!rowHeight) return;
+    setRowHeight(parseInt(rowHeight, 10));
+  }, [scrollContainerRef]);
 
   // Create a new 'update history' function every time selection changes.
   // TODO: Use a selectedRowRef instead, so that the callback doesn't have to be updated?
