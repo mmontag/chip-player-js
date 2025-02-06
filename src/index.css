@@ -603,7 +603,7 @@ img { image-rendering: pixelated; }
     align-items: center;
     justify-content: center;
     height: 100%;
-    width: 100%;
+    width: round(calc(100% + 0px), 2px);;
     pointer-events: none;
     top: 0;
     left: 0;
