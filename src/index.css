@@ -10,6 +10,9 @@
     --charW2neg: -16px;
     --charW3:     24px;
     --charW3neg: -24px;
+    --railH:       3px;
+    --knobH:       11px;
+    --knobW:       16px;
 
     --rowHeight:  var(--charH);
 
@@ -167,12 +170,12 @@ input[type=range] {
 }
 
 input[type=range]::-webkit-slider-runnable-track {
-    height: 3px;
+    height: var(--railH);
     border: 1px solid var(--clickable);
     margin: var(--charW1) 0;
 }
 input[type=range]::-moz-range-track { /* Firefox */
-    height: 3px;
+    height: var(--railH);
     border: 1px solid var(--clickable);
     margin: var(--charW1) 0;
     box-sizing: border-box;
@@ -187,20 +190,20 @@ input[type=range]:active::-moz-range-thumb { background: var(--clickable); } /* 
 
 input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none;
-    background: var(--clickable);
-    border: 0;
-    height: var(--charH);
-    margin-top: -9px;
-    width: var(--charW1);
+    background: var(--button);
+    border: 1px solid var(--clickable);
+    height: var(--knobH);
+    margin-top: calc(var(--knobH) / -2);
+    width: var(--charW2);
 }
 input[type=range]::-moz-range-thumb { /* Firefox */
     -moz-appearance: none;
-    background: var(--clickable);
-    border: 0;
+    background: var(--button);
+    border: 1px solid var(--clickable);
     border-radius: 0;
-    height: var(--charH);
-    margin-top: -9px;
-    width: var(--charW1);
+    height: var(--knobH);
+    margin-top: calc((var(--charH) - var(--knobH)) / -2);
+    width: var(--charW2);
 }
 /* Scrollbars */
 
@@ -369,31 +372,33 @@ body,#root {
     padding: 0;
     cursor: pointer;
     position: relative;
-    width: calc(100% - var(--charW1));
+    width: calc(100% - var(--knobW));
     box-sizing: border-box;
     border: 0;
 }
 
 .Slider-rail {
-    width: calc(100% + var(--charW1));
-    height: 3px;
-    margin-top: -2px;
+    width: calc(100% + var(--knobW));
+    height: var(--railH);
     background: none;
     position: absolute;
-    top: 50%;
+    top: calc((var(--charH) - var(--railH)) / 2);
     box-sizing: border-box;
     border: 1px solid var(--clickable);
 }
 
 .Slider-knob {
-    height: var(--charH);
-    width: var(--charW1);
+    height: var(--knobH);
+    width: var(--knobW);
+    top: calc((var(--charH) - var(--knobH)) / 2);
     margin: 0;
-    border-radius: 0;
-    background-color: var(--clickable);
+    border-radius: 0px;
+    background-color: var(--button);
+    border: 1px solid var(--clickable);
     position: absolute;
     -webkit-box-shadow: none;
     box-shadow: none;
+    box-sizing: border-box;
 }
 
 .Browse-topRow { display: flex; justify-content: space-between; margin-bottom: var(--charH); }
