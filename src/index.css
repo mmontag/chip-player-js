@@ -48,10 +48,10 @@
 
 .App * {
     font: var(--font) !important;
+    line-height: var(--charH) !important;
     -webkit-font-smoothing: antialiased; /* supports Japanese characters better than 'none' */
     -moz-osx-font-smoothing: grayscale; /* Firefox */
     -webkit-tap-highlight-color: rgba(0,0,0,0);
-    line-height: var(--charH);
     text-decoration: none;
 }
 
@@ -403,7 +403,7 @@ body,#root {
 
 .Browse-topRow { display: flex; justify-content: space-between; margin-bottom: var(--charH); }
 
-.BrowseList-row { display: flex; }
+.BrowseList-row { display: flex; align-items: center; }
 /* Selected */
 .ReactVirtualized__Grid:focus .BrowseList-row-selected {
     background-color:  var(--focus);
@@ -419,7 +419,8 @@ body,#root {
     outline: 1px solid var(--focus);
 }
 .BrowseList-row:has(a:hover) { color: var(--neutral4); }
-.BrowseList-colName { overflow-x: hidden; white-space: nowrap; text-overflow: ellipsis; flex-grow: 1; }
+.BrowseList-colName { overflow: hidden; flex-grow: 1; display: flex; align-items: center; }
+.BrowseList-colName a { white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
 .BrowseList-colDir, .BrowseList-colSize { flex-shrink : 0; margin-left: calc(var(--charW1) * 2); }
 .BrowseList-colCount { flex-shrink : 0; margin-left: var(--charW1); width: calc(var(--charW1) * 5); text-align: right; }
 .BrowseList-colMtime { text-align: right; text-transform: uppercase; white-space: nowrap; min-width: calc(var(--charW1) * 12); }
@@ -453,6 +454,8 @@ body,#root {
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
 }
 .SongDetails-filepath a {color: var(--neutral2);}
 
@@ -507,6 +510,7 @@ img { image-rendering: pixelated; }
     mask-position: center;
     image-rendering: pixelated;
     height: var(--charH);
+    flex-shrink: 0;
 }
 [disabled] .inline-icon { background-color: var(--neutral2); }
 .dim-icon      { background-color: var(--neutral2); }
@@ -529,7 +533,8 @@ img { image-rendering: pixelated; }
 }
 
 .tab {
-    display: inline-block;
+    display: flex;
+    align-items: center;
     padding: 0 15px 0 15px;
     background: transparent;
     border: 1px solid var(--clickable);
