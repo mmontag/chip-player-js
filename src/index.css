@@ -448,8 +448,18 @@ body,#root {
 .PlayerParams-label { flex-shrink: 0; width: calc(var(--charW1) * 14); }
 .PlayerParams-group { margin-bottom: var(--charH); }
 
-.SongDetails {}
-.SongDetails-title {color: var(--neutral4);}
+.SongDetails {
+    display: grid;
+    grid-template-areas:
+        'fav title'
+        '... subtitle'
+        '... path';
+    grid-template-columns: auto 1fr;
+}
+.SongDetails-title { grid-area: title; color: var(--neutral4); display: flex; gap: var(--charW1); }
+.SongDetails-title a { color: var(--neutral4); }
+.SongDetails-subtitle { grid-area: subtitle; }
+.SongDetails-filepath { grid-area: path; }
 .SongDetails-subtitle, .SongDetails-subtitle, .SongDetails-filepath {
     overflow: hidden;
     white-space: nowrap;

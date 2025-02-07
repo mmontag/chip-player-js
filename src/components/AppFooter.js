@@ -69,128 +69,119 @@ function AppFooter(props) {
   return (
     <div className="AppFooter">
       <div className="AppFooter-main">
-        <div className="AppFooter-main-inner">
+        <div className="AppFooter-top-row">
           <button onClick={prevSong}
                   title="Previous"
                   className="box-button"
                   disabled={ejected}>
             <span className="inline-icon icon-prev"/>
           </button>
-          {' '}
           <button onClick={togglePause}
                   title={playPauseTitle}
                   className="box-button"
                   disabled={ejected}>
             <span className={`inline-icon ${playPauseClass}`}/>
           </button>
-          {' '}
           <button onClick={nextSong}
                   title="Next"
                   className="box-button"
                   disabled={ejected}>
             <span className="inline-icon icon-next"/>
           </button>
-          {' '}
           {currentSongNumSubtunes > 1 &&
-            <span style={{ whiteSpace: 'nowrap' }}>
-              { songUrl ?
-                <a style={{ color: 'var(--neutral4)' }} href={getCurrentSongLink(/*subtune=*/true)}
+            <>
+              {songUrl ?
+                <a style={{ color: 'var(--neutral4)' }}
+                   href={getCurrentSongLink(/*subtune=*/true)}
                    title="Copy subtune link to clipboard"
                    onClick={handleCopySubtuneLink}>
                   {subtuneText}
-                  {' '}
                   <span className="inline-icon icon-copy"/>
                 </a>
                 :
                 subtuneText
               }
-              {' '}
               <button
-                className="box-button"
+                className="AppFooter-rewind box-button"
                 disabled={ejected}
-                onClick={prevSubtune}>&lt;
+                onClick={prevSubtune}>
+                <span className="inline-icon icon-rewind"/>
               </button>
-              {' '}
               <button
-                className="box-button"
+                className="AppFooter-forward box-button"
                 disabled={ejected}
-                onClick={nextSubtune}>&gt;
+                onClick={nextSubtune}>
+                <span className="inline-icon icon-forward"/>
               </button>
-            </span>}
-          <span className="AppFooter-more-buttons">
-            <button title="Cycle Repeat (repeat off, repeat all songs in the context, or repeat one song)"
-                    className="box-button" onClick={handleCycleRepeat}>
-              <span className="inline-icon icon-repeat"/>
-              {REPEAT_LABELS[repeat]}
-            </button>
-            {' '}
-            <button title="Toggle shuffle mode" className="box-button" onClick={handleCycleShuffle}>
-              <span className="inline-icon icon-shuffle"/>
-              {SHUFFLE_LABELS[shuffle]}
-            </button>
-            {' '}
-          </span>
-          <div style={{ display: 'flex', flexDirection: 'row' }}>
-            <TimeSlider
-              paused={paused}
-              currentSongDurationMs={currentSongDurationMs}
-              getCurrentPositionMs={() => {
-                // TODO: reevaluate this approach
-                if (sequencer && sequencer.getPlayer()) {
-                  return sequencer.getPlayer().getPositionMs();
-                }
-                return 0;
-              }}
-              onChange={handleTimeSliderChange}/>
-            <VolumeSlider
-              onChange={(e) => {
-                handleVolumeChange(e.target.value);
-              }}
-              handleReset={(e) => {
-                handleVolumeChange(100);
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-              title="Double-click or right-click to reset to 100%."
-              value={volume}/>
-          </div>
-          {!ejected &&
-            <div className="SongDetails">
-              {faves && songUrl &&
-                <div style={{ float: 'left', marginBottom: '58px' }}>
-                  <FavoriteButton isFavorite={faves.includes(songUrl)}
-                                  toggleFavorite={handleToggleFavorite}
-                                  href={songUrl}/>
-                </div>}
-              <div className="SongDetails-title">
-                { songUrl ?
-                  <>
-                    <a style={{ color: 'var(--neutral4)' }} href={getCurrentSongLink()}
-                       title="Copy song link to clipboard"
-                       onClick={handleCopySongLink}>
-                      {title}{' '}
-                      <span className="inline-icon icon-copy"/>
-                    </a>
-                    {' '}
-                    <a style={{ color: 'var(--neutral4)' }} href={songUrl}
-                       title="Download song">
-                      <span className="inline-icon icon-download"/>
-                    </a>
-                  </>
-                  :
-                  title
-                }
-                {' '}
-                {infoTexts.length > 0 &&
-                  <a onClick={handleToggleInfo} href='#'>
-                    тхт
-                  </a>
-                }
-              </div>
-              <div className="SongDetails-subtitle">{subtitle}</div>
-              <div className="SongDetails-filepath">{pathLinks}</div>
-            </div>}
+            </>}
+          <button title="Cycle Repeat (repeat off, repeat all songs in the context, or repeat one song)"
+                  style={{ marginLeft: 'auto' }}
+                  className="AppFooter-repeat box-button" onClick={handleCycleRepeat}>
+            <span className="inline-icon icon-repeat"/>
+            {REPEAT_LABELS[repeat]}
+          </button>
+          <button title="Toggle shuffle mode"
+                  className="AppFooter-shuffle box-button" onClick={handleCycleShuffle}>
+            <span className="inline-icon icon-shuffle"/>
+            {SHUFFLE_LABELS[shuffle]}
+          </button>
         </div>
+        <div style={{ display: 'flex' }}>
+          <TimeSlider
+            paused={paused}
+            currentSongDurationMs={currentSongDurationMs}
+            getCurrentPositionMs={() => {
+              // TODO: reevaluate this approach
+              if (sequencer && sequencer.getPlayer()) {
+                return sequencer.getPlayer().getPositionMs();
+              }
+              return 0;
+            }}
+            onChange={handleTimeSliderChange}/>
+          <VolumeSlider
+            onChange={(e) => {
+              handleVolumeChange(e.target.value);
+            }}
+            handleReset={(e) => {
+              handleVolumeChange(100);
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            title="Double-click or right-click to reset to 100%."
+            value={volume}/>
+        </div>
+        {!ejected &&
+          <div className="SongDetails">
+            {faves && songUrl &&
+              <FavoriteButton isFavorite={faves.includes(songUrl)}
+                                toggleFavorite={handleToggleFavorite}
+                                href={songUrl}/>}
+            <div className="SongDetails-title">
+              {songUrl ?
+                <>
+                  <a href={getCurrentSongLink()}
+                     title="Copy song link to clipboard"
+                     onClick={handleCopySongLink}>
+                    {title}{' '}
+                    <span className="inline-icon icon-copy"/>
+                  </a>
+                  <a href={songUrl}
+                     title="Download song">
+                    <span className="inline-icon icon-download"/>
+                  </a>
+                </>
+                :
+                title
+              }
+              {infoTexts.length > 0 &&
+                <a onClick={handleToggleInfo} href='#'>
+                  тхт
+                </a>
+              }
+            </div>
+            <div className="SongDetails-subtitle">{subtitle}</div>
+            <div className="SongDetails-filepath">{pathLinks}</div>
+          </div>}
       </div>
       {imageUrl && <img alt="Cover art" className="AppFooter-art" src={imageUrl}/>}
     </div>
