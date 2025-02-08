@@ -55,20 +55,44 @@
     text-decoration: none;
 }
 
-*::selection {
-    background: rgba(170, 170, 170, 0.99);
-    color: #000088;
+[data-theme="msdos"] {
+    --font: var(--fontPxPlusChipPlayer);
+
+    --message-box-background: var(--button);
+    --message-box-color: var(--clickable);
+    --message-box-info-text-color: var(--clickable);
+    --message-box-inner-border: 1px solid var(--clickable);
+    --message-box-box-shadow: var(--charW1) var(--charW1) var(--shadow);
+    --msdos-box-shadow: var(--charW1) var(--charW1) var(--shadow);
+    --hide-mtime-column-below-width: 800px;
+
+    /* chunky DOS animation */
+    .message-box { transition: all 250ms steps(5); }
+    .toast-box-outer { transition: all 150ms steps(4); }
+
+    *::selection {
+        background: rgba(170, 170, 170, 0.99);
+        color: var(--background);
+    }
+
+    a:focus,
+    button:focus,
+    input:focus,
+    input[type=checkbox]:focus,
+    input[type=radio]:focus,
+    input[type=range]:focus {
+        outline: none;
+        background-color: var(--focus);
+    }
+
+    a:active { background: var(--active); }
 }
 
-a:focus,
-button:focus,
-input:focus,
-input[type=checkbox]:focus,
-input[type=radio]:focus,
-input[type=range]:focus
-{
-    outline: none;
-    background-color: var(--focus);
+input,
+button,
+select,
+textarea {
+    font: inherit;
 }
 
 /* Basic elements */

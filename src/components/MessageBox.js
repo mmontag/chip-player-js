@@ -27,10 +27,8 @@ function MessageBox(props) {
   return (<div hidden={!showInfo} className="message-box-outer">
     <div hidden={!showInfo} className="message-box"
          style={{ height: showInfo ? `calc(${numLines} * var(--charH))` : 0 }}>
-      <div className="message-box-inner">
-              <pre style={{ maxHeight: '100%', margin: 0 }}>
-                {infoText}
-              </pre>
+      <div className="message-box-inner info-text">
+        {infoText}
       </div>
       <div className="message-box-footer">
         <button className="box-button message-box-button" onClick={toggleInfo}>Close</button>
