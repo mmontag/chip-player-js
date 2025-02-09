@@ -126,7 +126,7 @@ function AppFooter(props) {
             {SHUFFLE_LABELS[shuffle]}
           </button>
         </div>
-        <div style={{ display: 'flex' }}>
+        <div style={{ display: 'flex', gap: 'var(--charW2)' }}>
           <TimeSlider
             paused={paused}
             currentSongDurationMs={currentSongDurationMs}
