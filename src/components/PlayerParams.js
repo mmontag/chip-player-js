@@ -81,23 +81,24 @@ export default class PlayerParams extends PureComponent {
           {this.props.tempo.toFixed(2)}
         </span>
         {this.props.voiceGroups.length > 0 ?
-          this.props.voiceGroups.map((voiceGroup) => {
+          this.props.voiceGroups.map((voiceGroup, i) => {
             return (
               <span className='PlayerParams-param PlayerParams-group' key={voiceGroup.name}>
                   <label className="PlayerParams-group-title" title="Sound chip">
-                    {voiceGroup.icon && <span className={`inline-icon icon-chip`}/>}
+                    {voiceGroup.icon && <span className='inline-icon dim-icon icon-chip'/>}
                     {voiceGroup.name}:
                   </label>
                   <div className="PlayerParams-voiceList">
-                    {voiceGroup.voices.map((voice) => (
-                      <label className='App-voice-label inline' key={voice.idx}>
-                        <input
-                          title='Alt+click to solo. Alt+click again to unmute all.'
-                          type='checkbox'
-                          onChange={(e) => this.handleVoiceToggle(e, voice.idx)}
-                          checked={this.props.voiceMask[voice.idx]}/>
+                    {voiceGroup.voices.map((voice, j) => (
+                      <div key={voice.idx} className='App-voice-label inline'><input
+                        title='Alt+click to solo. Alt+click again to unmute all.'
+                        type='checkbox'
+                        id={'v_'+i+j}
+                        onChange={(e) => this.handleVoiceToggle(e, voice.idx)}
+                        checked={this.props.voiceMask[voice.idx]}/>
+                      <label htmlFor={'v_'+i+j}>
                         {voice.name}
-                      </label>
+                      </label></div>
                     ))}
                   </div>
               </span>
@@ -112,14 +113,15 @@ export default class PlayerParams extends PureComponent {
             <div className="PlayerParams-voiceList">
               {[...Array(this.props.numVoices)].map((_, i) => {
                 return (
-                  <label className='App-voice-label inline' key={i}>
-                    <input
-                      title='Alt+click to solo. Alt+click again to unmute all.'
-                      type='checkbox'
-                      onChange={(e) => this.handleVoiceToggle(e, i)}
-                      checked={this.props.voiceMask[i]}/>
+                  <div key={i} className='App-voice-label inline'><input
+                    title='Alt+click to solo. Alt+click again to unmute all.'
+                    type='checkbox'
+                    id={'v_'+i}
+                    onChange={(e) => this.handleVoiceToggle(e, i)}
+                    checked={this.props.voiceMask[i]}/>
+                  <label htmlFor={'v_'+i}>
                     {this.props.voiceNames[i]}
-                  </label>
+                  </label></div>
                 )
               })}
             </div>
