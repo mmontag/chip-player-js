@@ -1,0 +1,383 @@
+[data-theme="winamp"] {
+    --font: var(--fontTahoma);
+    @media (resolution: 1dppx) {
+        --font: var(--fontTahomaPixel);
+    }
+
+    --gold:            #a3946a;
+    --lightGold:       #ecce7a;
+    --buttonLight:     #bdced6;
+    --buttonDark:      #7b8494;
+    --buttonShadow:    #4a5a6b;
+    --darkPurple:      #3e3c60;
+    --darkoPurple:     #292940;
+    --darkerPurple:    #1e1e2f;
+    --whiteAlpha75:    #eefb;
+    --neutral0:        #000;
+    --neutral1:        #777;
+    --neutral2:        #eef9;
+    --neutral3:        #ccc;
+    --neutral4:        #fff;
+    --clickable:       #0f0;
+    --slider:          #fa0;
+
+    --background:      linear-gradient(45deg, var(--darkerPurple) 0%, var(--darkPurple) 35%, var(--darkerPurple) 100%);
+    --selected:        #0000c6;
+    --focus:           #0000c6;
+    --focusOutline:    1px dotted var(--whiteAlpha75);
+    --shadow:          #005;
+    --button:          var(--buttonLight);
+
+    --charH:           16px;
+    --charW1:          6px;
+    --charW2:          16px;
+    --rowHeight:       17px;
+    --railH:           10px;
+    --knobH:           10px;
+    --knobW:           28px;
+    --formFieldHeight: 22px;
+    --buttonHeight: 22px;
+    --grooveBorder: 2px groove var(--darkPurple);
+    --fieldBoxShadow: inset -1px -1px #fff, inset 1px 1px grey, inset -2px -2px #dfdfdf, inset 2px 2px #0a0a0a;
+    --message-box-background: var(--background);
+    --message-box-inner-background: #fff;
+    --message-box-color: var(--whiteAlpha75);
+    --message-box-border: var(--grooveBorder);
+    --message-box-info-text-font: 11px/16px Menlo, Consolas, monospace;
+    --message-box-inner-border: var(--grooveBorder);
+    --message-box-info-text-color: #000;
+    --message-box-info-text-background: #fff;
+
+    input[type=text]:focus,
+    input[type=radio]:focus,
+    input[type=range]:focus {
+        outline: none;
+    }
+    .AppHeader a:link, .AppHeader a:visited { color: var(--neutral4); }
+    a:focus { outline: var(--focusOutline); }
+    .App-main-content-area a:active { background: var(--selected); }
+    .App-main-content-area a:focus { outline: none; }
+
+    /* don't allow text selection, except for input */
+    *:not(input, .info-text) { user-select: none; }
+
+    .App { padding: 0; background: var(--background); }
+    .App-main .App-main-content-area:not(.settings) { background-color: #000; }
+    .Browse-topRow { align-items: center; }
+    .App-main .App-main-content-area .BrowseList-row.Song-now-playing {
+        a { color: #fff; }
+        background-color: transparent; color: #fff;
+    }
+    .App-main .App-main-content-area .BrowseList-row.Song-now-playing.BrowseList-row-selected { background: var(--selected); }
+
+    button { padding: 0; border: none; text-wrap: nowrap; }
+
+    .FavoriteButton { color: #0f05; font-family: sans-serif; font-size: 10px; }
+    .AppFooter .FavoriteButton { color: #fff5; }
+    .AppFooter .FavoriteButton.isFavorite { color: var(--neutral4); }
+
+    .tab, button.box-button, .Search-clearButton {
+        color: #000;
+        height: var(--buttonHeight);
+        box-shadow: 1px 1px 0 inset #adb5c6,
+        -1px -1px 0 inset var(--buttonShadow),
+        2px 2px 0 inset #fff,
+        -3px -3px 2px inset var(--buttonDark);
+        padding: 0 var(--charW2);
+        border-radius: 0;
+        background: var(--buttonLight);
+        border: 1px solid #151520;
+        box-sizing: border-box;
+        display: inline-flex;
+        align-items: center;
+
+        &:focus {
+            outline: 1px dotted #000;
+            outline-offset: -4px;
+        }
+
+        &:active {
+            box-shadow: 0 0 16px inset #0006,
+            1px 1px 0 inset #adb5c6,
+            -1px -1px 0 inset var(--buttonShadow),
+            2px 2px 0 inset #fff,
+            -3px -3px 2px inset var(--buttonDark);
+        }
+    }
+
+    .Search-clearButton::before { content: 'Clear'; }
+
+    .tab { padding: 0 15px; }
+
+    button[disabled] { background-color: var(--button); color: var(--buttonShadow); }
+    .inline-icon.icon-copy { width: 18px; background-color: var(--neutral2); }
+    .inline-icon.icon-download { background-color: var(--neutral2); }
+    .box-button .inline-icon { background-color: #000; }
+    [disabled] .inline-icon { background-color: var(--buttonShadow); }
+
+    .App-main-content-area:not(.settings) { border-right: var(--grooveBorder); }
+    .tab-container { padding-bottom: 16px; border-bottom: var(--grooveBorder); }
+    .AppFooter { border-top: 2px ridge var(--darkPurple); height: 170px; }
+    .AppFooter-art { border: 2px ridge var(--darkPurple); position: relative; top: -40px; }
+    .BrowseList-colDir { display: none; }
+
+    @container (max-width: 400px) {
+        .BrowseList-colMtime { display: none }
+        .AppFooter-top-row { gap: 4px; }
+        button.box-button { padding: var(--charW1); }
+    }
+    @media screen and (max-width: 500px) {
+        .BrowseList-colMtime { display: none }
+        .AppFooter-art { display: none }
+    }
+    @container (max-width: 500px) { button.AppFooter-shuffle, button.AppFooter-repeat { display: none; } }
+    @media screen and (max-width: 800px) {
+        .AppFooter-art { top: 0; width: 170px; height: 170px; }
+    }
+
+    .box-button .icon-prev    { background: url(images/winamp/prev.png) center no-repeat; mask-image: none; }
+    .box-button .icon-next    { background: url(images/winamp/next.png) center no-repeat; mask-image: none; }
+    .box-button .icon-play    { background: url(images/winamp/play.png) center no-repeat; mask-image: none; }
+    .box-button .icon-pause   { background: url(images/winamp/pause.png) center no-repeat; mask-image: none; }
+    .box-button .icon-back    { background: url(images/winamp/back.png) center no-repeat; mask-image: none; }
+    .box-button .icon-forward { background: url(images/winamp/forward.png) center no-repeat; mask-image: none; }
+
+    .Slider-rail {
+        border-top: 2px solid #0004;
+        border-left: 2px solid #0004;
+        border-bottom: 1px solid #fff4;
+        border-right: 1px solid #fff4;
+        background: #1e1e2f60;
+    }
+    .Slider-knob {
+        border: 0;
+        background-image: url(images/winamp/handle-wide.png);
+    }
+
+    .Visualizer {
+        border-top: var(--grooveBorder);
+        border-left: var(--grooveBorder);
+    }
+    .VisualizerParams-label { width: 70px; }
+    .Visualizer-options {
+        padding: 12px;
+        text-align: unset;
+        background-image: linear-gradient(0deg, #0008, #0003 60%);
+        border-bottom: var(--grooveBorder);
+
+        & > div { display: flex; align-items: center; height: var(--formFieldHeight); }
+    }
+    .Visualizer-overlay { top: 92px; }
+
+    .App-main-content-area.settings {
+        background: #0003; color: var(--whiteAlpha75);
+        width: 300px;
+        min-width: 300px;
+        padding: var(--charH) var(--charW2);
+        /*background: silver; color: black; !* Windows 98 *!*/
+    }
+
+    .Settings h3 { border-bottom: var(--grooveBorder); padding-bottom: 4px; }
+
+    .PlayerParams-param:not(.PlayerParams-group) {
+        margin: 4px 0;
+        height: var(--formFieldHeight);
+    }
+    .PlayerParams-param input[type=range] { margin-right: 6px; }
+    .PlayerParams-group-title { height: var(--formFieldHeight); display: flex; align-items: center; }
+
+    .App-voice-label {
+        width: 90px;
+        max-width: 90px;
+        display: flex;
+        align-items: center;
+        height: var(--formFieldHeight);
+    }
+
+    .message-box { width: 720px; }
+    .message-box-footer { padding-top: 10px; }
+
+    /* because the button is 22px instead of 16px height */
+    .toast-box-outer { transition: all 150ms; padding: 0; }
+    .toast-box-outer[hidden] { top: -85px; }
+    .toast-box { height: 85px; color: #000; border-bottom: 2px groove #8888; }
+    .toast-info { background: linear-gradient(90deg, #ffecab 0%, #ffe58e 100%); }
+    .toast-error { color: #fff; background: linear-gradient(15deg, #571515 0%, #751d1d 50%, #571515 100%); }
+
+    input[type=range]:focus::-webkit-slider-runnable-track { background: #ff0; }
+
+    input[type=range]:active {
+        background: unset;
+        &::-webkit-slider-thumb { background: url(images/winamp/handle-mini.png); }
+    }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="email"],
+    select {
+        width: 200px;
+        box-shadow: var(--fieldBoxShadow);
+        height: var(--formFieldHeight);
+        box-sizing: border-box;
+    }
+
+    input[type=text] {
+        color: #000;
+        background-color: #fff;
+        border: 1px solid var(--buttonDark);
+        padding: 1px 4px;
+    }
+
+    input[type=radio] {
+        appearance: none;
+        margin: 0 6px 0 0;
+        background: 0;
+        position: relative;
+        border: none;
+        height: 12px;
+        width: 12px;
+    }
+
+    input[type=radio]:before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        background: url(images/98.css/radio-border.svg);
+    }
+
+    input[type=radio]:active:before {
+        background: url(images/98.css/radio-border-disabled.svg)
+    }
+
+    input[type=radio]:checked:after {
+        content: "";
+        display: block;
+        width: 4px;
+        height: 4px;
+        top: 4px;
+        left: 4px;
+        position: absolute;
+        background: url(images/98.css/radio-dot.svg)
+    }
+
+    input[type=checkbox] {
+        display: inline-block;
+        height: 13px;
+        width: 13px;
+        box-shadow: var(--fieldBoxShadow);
+        background: #fff
+    }
+
+    input[type=checkbox]:checked::after {
+        content: "";
+        position: absolute;
+        height: 7px;
+        width: 7px;
+        background: url(images/98.css/checkmark.svg);
+        bottom: 2px;
+        left: 0;
+    }
+
+    input[type=checkbox] {
+        appearance: none;
+        margin: 0 6px 0 0;
+        background: #fff;
+        border: none;
+        position: relative;
+    }
+
+    input[type=radio]:focus + label,
+    input[type=checkbox]:focus + label { outline: var(--focusOutline); }
+    input[type=checkbox]:active { background: silver; }
+    input[type=checkbox]:checked:after {
+        content: "";
+        display: block;
+        width: 7px;
+        height: 7px;
+        position: absolute;
+        top: 3px;
+        left: 3px;
+    }
+
+    select {
+        height: 21px; /* Hard coded for Windows 98 style dropdown */
+        border: none;
+        background-color: #fff;
+        box-sizing: border-box;
+        appearance: none;
+        position: relative;
+        padding: 3px 32px 3px 4px;
+        background-image: url(images/98.css/button-down.svg);
+        background-position: top 2px right 2px;
+        background-repeat: no-repeat;
+        border-radius: 0;
+    }
+    select:focus { outline: none; color: #fff; background-color: navy; }
+    select:focus option { color: #000; background-color: #fff; }
+    select:active { background-image: url(images/98.css/button-down-active.svg); }
+
+    /* scrollbars */
+    .App-main-content-and-settings {
+        ::-webkit-scrollbar { width: 15px; }
+        ::-webkit-scrollbar:horizontal { height: 15px; }
+        ::-webkit-scrollbar-corner { background: #555 }
+        ::-webkit-scrollbar-track {
+            background: var(--darkoPurple) url(images/winamp/track.png) repeat-y 0 0;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: url(images/winamp/thumb-top.png) 0 0 no-repeat, url(images/winamp/thumb-bottom.png) 0 100% no-repeat, url(images/winamp/thumb-mid.png) 0 0 repeat-y;
+        }
+    }
+
+
+    input[type=range] {
+        margin: 0;
+        -webkit-appearance: none;
+        background: transparent;
+        vertical-align: bottom;
+        height: var(--charH); /* Firefox */
+        width: 128px; /* Firefox */
+    }
+
+    input[type=range]::-webkit-slider-runnable-track {
+        height: 6px;
+        background: var(--slider);
+        box-shadow: 0 2px 2px inset #0008;
+        border-radius: 6px;
+        border: 1px solid #000;border-right-color: #747a8c;border-bottom-color: #747a8c;
+        margin: var(--charW1) 0;
+    }
+    input[type=range]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        background: url(images/winamp/handle-mini.png);
+        border: 0;
+        height: 11px;
+        width: 14px;
+        margin-top: -3px;
+    }
+    /*
+    This has to come last, because -moz selectors explode subsequent declarations in Chrome.
+    - https://github.com/w3c/csswg-drafts/issues/8349
+    - https://web.dev/blog/css-nesting-cssnesteddeclarations
+     */
+    input[type=range]::-moz-range-track {
+        height: 6px;
+        background: var(--slider);
+        box-shadow: 0 2px 2px inset #0008;
+        border-radius: 6px;
+        border: 1px solid #000;border-right-color: #747a8c;border-bottom-color: #747a8c;
+        margin: var(--charW1) 0;
+    }
+    input[type=range]::-moz-range-thumb {
+        -webkit-appearance: none;
+        background: url(images/winamp/handle-mini.png);
+        border: 0;
+        height: 11px;
+        width: 14px;
+        margin-top: -3px;
+    }
+}
