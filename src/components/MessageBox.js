@@ -36,7 +36,7 @@ function MessageBox(props) {
           <span>
             <button disabled={currTextIdx === 0}
                     className="box-button message-box-button"
-                    onClick={prevInfo}><span className="inline-icon icon-rewind"/></button>
+                    onClick={prevInfo}><span className="inline-icon icon-back"/></button>
               {' '}
               <button disabled={currTextIdx === infoTexts.length - 1}
                       className="box-button message-box-button"

@@ -552,7 +552,7 @@ img { image-rendering: pixelated; }
 .icon-pause    { width: 24px; mask-image: url(images/pause.png); }
 .icon-prev     { width: 24px; mask-image: url(images/prev.png); }
 .icon-next     { width: 24px; mask-image: url(images/next.png); }
-.icon-rewind   { width: 24px; mask-image: url(images/rewind.png); }
+.icon-back     { width: 24px; mask-image: url(images/back.png); }
 .icon-forward  { width: 24px; mask-image: url(images/forward.png); }
 .icon-folder   { width: 24px; mask-image: url(images/folder.png); }
 .icon-trash    { width: 24px; mask-image: url(images/trash.png); }

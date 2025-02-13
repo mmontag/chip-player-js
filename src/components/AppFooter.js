@@ -102,10 +102,10 @@ function AppFooter(props) {
                 subtuneText
               }
               <button
-                className="AppFooter-rewind box-button"
+                className="AppFooter-back box-button"
                 disabled={ejected}
                 onClick={prevSubtune}>
-                <span className="inline-icon icon-rewind"/>
+                <span className="inline-icon icon-back"/>
               </button>
               <button
                 className="AppFooter-forward box-button"
