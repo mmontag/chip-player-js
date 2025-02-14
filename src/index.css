@@ -499,10 +499,9 @@ body,#root {
 .Search-clearButton::after  { content: ' '; }
 .Search-resultsLabel { white-space: nowrap; }
 
-.Song-now-playing .Favorite-button { color: var(--background); }
-.Favorite-button:active { color: var(--clickable); }
-.Favorite-button.isFavorite { color: var(--clickable); }
-.Favorite-button {
+button.FavoriteButton:active { color: var(--clickable); }
+button.FavoriteButton.isFavorite { color: var(--clickable); }
+button.FavoriteButton {
     cursor: pointer;
     color: var(--button);
     background: initial;
