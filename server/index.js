@@ -198,8 +198,16 @@ const routes = {
         infoTexts.push(fs.readFileSync(infoFiles[0], 'utf8'));
       }
 
+      // 2. Try matching same filename for image.
+      const imageFiles = glob.sync(`${LOCAL_CATALOG_ROOT}/${dir}/${name}.{gif,png,jpg,jpeg}`, {nocase: true});
+      if (imageFiles.length > 0) {
+        const imageFile = encodeURI(path.basename(imageFiles[0]));
+        const imageDir = encodeURI(dir);
+        imageUrl = `${PUBLIC_CATALOG_URL}${imageDir}/${imageFile}`;
+      }
+
       const segments = dir.split('/');
-      // 2. Walk up parent directories to find image or text.
+      // 3. Walk up parent directories to find image or text.
       while (segments.length) {
         const dir = segments.join('/');
         if (imageUrl === null) {
