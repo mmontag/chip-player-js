@@ -460,12 +460,13 @@ body,#root {
 .DirectoryLink-dim { color: var(--neutral2); }
 
 .PlayerParams h3 { margin-top: 0; }
-.PlayerParams-param { display: flex; flex-wrap: wrap; }
+.PlayerParams-param { display: flex; flex-wrap: wrap; align-items: center; }
 .PlayerParams-param input { margin-right: var(--charW1); }
 .PlayerParams-group-title { width: 100%; }
 .PlayerParams-voiceList {
     display: flex;
     flex-wrap: wrap;
+    column-gap: var(--charW1);
     margin-right: calc(var(--charW1) * -1);
     max-width: calc(var(--charW1) * 60);
 }

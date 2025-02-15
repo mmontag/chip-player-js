@@ -90,7 +90,7 @@ export default class PlayerParams extends PureComponent {
                   </label>
                   <div className="PlayerParams-voiceList">
                     {voiceGroup.voices.map((voice, j) => (
-                      <div key={voice.idx} className='App-voice-label inline'><input
+                      <div key={voice.idx} className='App-voice-label'><input
                         title='Alt+click to solo. Alt+click again to unmute all.'
                         type='checkbox'
                         id={'v_'+i+j}
@@ -113,7 +113,7 @@ export default class PlayerParams extends PureComponent {
             <div className="PlayerParams-voiceList">
               {[...Array(this.props.numVoices)].map((_, i) => {
                 return (
-                  <div key={i} className='App-voice-label inline'><input
+                  <div key={i} className='App-voice-label'><input
                     title='Alt+click to solo. Alt+click again to unmute all.'
                     type='checkbox'
                     id={'v_'+i}
