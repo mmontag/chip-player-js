@@ -134,7 +134,7 @@ export default class MIDIPlayer extends Player {
     {
       id: 'gmreset',
       label: 'GM Reset',
-      hint: 'Send a GM Reset sysex and reset all controllers on all channels.',
+      hint: 'Send a General MIDI Reset sysex and reset all controllers on all channels.',
       type: 'button',
     },
   ];
