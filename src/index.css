@@ -1,41 +1,30 @@
 @import 'fonts/fonts.css';
+@import 'winamp.css';
 
 /* MSDOS 6.22 CSS Theme */
-:root {
-    --font:       var(--fontPxPlusChipPlayer);
-    --charH:      19px;
-    --charHneg:  -19px;
-    --charW1:      8px;
-    --charW2:     16px;
-    --charW2neg: -16px;
-    --charW3:     24px;
-    --charW3neg: -24px;
-    --railH:       3px;
-    --knobH:       11px;
-    --knobW:       16px;
-
-    --rowHeight:  var(--charH);
+[data-theme="msdos"] {
+    --charH:       19px;
+    --charW1:       8px;
+    --charW2:      16px;
+    --charW2neg:  -16px;
+    --railH:        3px;
+    --knobW:        8px;
+    --knobH:       19px;
+    --buttonHeight: var(--charH);
+    --rowHeight:    var(--charH);
 
     --clickable:  #ff0;
     --active:     #800;
     --button:     #66d;
-    --selected:   #66d6;
+    --selected:   #00f;
     --focus:      #00f;
     --background: #008;
     --shadow:     #005;
-    --neutral4:   #fff;
-    --neutral3:   #ccc;
-    --neutral2:   #aaa;
-    --neutral1:   #777;
     --neutral0:   #000;
-}
-
-@font-face {
-    font-family: VGA_SquarePx;
-    /*src: url(fonts/pxplus_vga_squarepx.ttf) format('truetype');*/
-    src: url(fonts/pxplus_chipplayer.ttf) format('truetype');
-    font-weight: 400;
-    font-style: normal
+    --neutral1:   #777;
+    --neutral2:   #aaa;
+    --neutral3:   #ccc;
+    --neutral4:   #fff;
 }
 
 .grid { /* utility class for testing the character grid */
@@ -47,8 +36,7 @@
 }
 
 .App * {
-    font: var(--font) !important;
-    line-height: var(--charH) !important;
+    font: var(--font);
     -webkit-font-smoothing: antialiased; /* supports Japanese characters better than 'none' */
     -moz-osx-font-smoothing: grayscale; /* Firefox */
     -webkit-tap-highlight-color: rgba(0,0,0,0);
@@ -75,17 +63,18 @@
         color: var(--background);
     }
 
-    a:focus,
-    button:focus,
-    input:focus,
-    input[type=checkbox]:focus,
-    input[type=radio]:focus,
-    input[type=range]:focus {
-        outline: none;
-        background-color: var(--focus);
-    }
-
     a:active { background: var(--active); }
+}
+
+[data-theme="msdos"] a:focus,
+[data-theme="msdos"] button:focus,
+[data-theme="msdos"] select:focus,
+[data-theme="msdos"] input:focus,
+[data-theme="msdos"] input[type=checkbox]:focus,
+[data-theme="msdos"] input[type=radio]:focus,
+[data-theme="msdos"] input[type=range]:focus {
+    outline: none;
+    background-color: var(--focus);
 }
 
 input,
@@ -119,21 +108,45 @@ a {
     cursor: pointer;
 }
 
-a:active  { background: var(--active); }
 a:visited { color: var(--clickable); }
 
-/* Form elements */
+[data-theme="msdos"] {
+    /* Scrollbars */
+    body { /* Firefox */
+        scrollbar-color: var(--clickable) var(--button);
+        scrollbar-width: thin;
+    }
 
-select, button {
+    ::-webkit-scrollbar {
+        height: var(--charW1);
+        width: var(--charW1);
+        background: var(--button);
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--clickable);
+        -webkit-border-radius: 0;
+    }
+
+    /* Form elements */
+
+button {
     border: none;
-    background: none;
+    border-radius: 0;
+    padding: 0;
+    text-wrap: nowrap;
+    align-self: start;
+    -moz-appearance: none;
+    -webkit-appearance: none;
+    color: var(--clickable);
+}
+select {
+    border: none;
     border-radius: 0;
     -moz-appearance: none;
     -webkit-appearance: none;
     padding: 0 var(--charW1);
     color: var(--clickable);
-}
-select {
     background-color: var(--button);
     background-image: /* A little down-arrow */
             linear-gradient(60deg, transparent 50%, var(--clickable) 50%),
@@ -142,17 +155,54 @@ select {
     background-size: calc(var(--charW1)*0.5) 12px, calc(var(--charW1)*0.5) 12px;
     background-repeat: no-repeat;
     padding-right: var(--charW2);
-    max-width: 240px;
+    max-width: 232px;
 }
 select option                { font-size: 14px; }
-
-button          { background: var(--button); padding: 0; margin: 0; }
+.Song-now-playing .FavoriteButton { color: var(--background); }
+  @media screen and (max-width: 800px) { .BrowseList-colMtime { display: none } }
+  @container (max-width: 800px) { .BrowseList-colMtime { display: none } }
 button:active   { background: var(--active); }
 button:disabled { background: var(--neutral1); color: var(--neutral3); }
-.box-button        { padding: 0 var(--charW2); box-shadow: var(--charW1) var(--charW1) var(--shadow); white-space: pre; }
+.box-button     { background: var(--button); box-shadow: var(--msdos-box-shadow); white-space: pre; padding: 0 var(--charW2); }
 .box-button:active { box-shadow: none; }
 
-input[type=text] {
+    .tab {
+        padding: 0 15px 0 15px;
+        background: transparent;
+        border: 1px solid var(--clickable);
+        border-bottom: none;
+        border-radius: 3px 3px 0 0;
+        box-sizing: border-box;
+        height: var(--charH);
+    }
+
+    .tab-selected {
+        border-bottom: 1px solid var(--background);
+        background: var(--background);
+        margin-bottom: -1px;
+        height: calc(var(--charH) + 1px);
+    }
+    input[type=checkbox],
+    input[type=radio] {
+        appearance: none;
+        background: transparent;
+        border: 0;
+        border-radius: 0;
+        margin: 0 var(--charW1) 0 0;
+        color: var(--clickable);
+        white-space: pre;  /* prevent iOS Safari text wrapping */
+    }
+
+    input[type=checkbox]:before         { content: '[ ]'; }
+    input[type=checkbox]:checked:before { content: '[️x]'; }
+
+    input[type=radio]:before            { content: '( )'; }
+    input[type=radio]:checked:before    { content: '(•)'; }
+  input[type=text]::selection                 { background-color: #FFFFFF; }
+  input[type=text]::-webkit-input-placeholder { color: var(--neutral1) }
+}
+
+[data-theme="msdos"] input[type=text] {
     border: 0;
     border-radius: 0;
     background-color: var(--neutral2);
@@ -161,28 +211,9 @@ input[type=text] {
     width: 256px;
     height: var(--charH); /* Firefox */
 }
-input[type=text]::selection                 { background-color: #FFFFFF; }
-input[type=text]::-webkit-input-placeholder { color: var(--neutral1) }
 
-label.inline { display: inline-block; margin-right: var(--charW1);   }
-label.inline:last-child { margin-right: 0; }
-input[type=checkbox],
-input[type=radio] {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background: transparent;
-    border: 0;
-    border-radius: 0;
-    margin: 0 var(--charW1) 0 0;
-    color: var(--clickable);
-    white-space: pre;  /* prevent iOS Safari text wrapping */
-}
-
-input[type=checkbox]:before         { content: '[ ]'; }
-input[type=checkbox]:checked:before { content: '[×]'; }
-
-input[type=radio]:before            { content: '( )'; }
-input[type=radio]:checked:before    { content: '(●)'; }
+.inline { display: inline-block; margin-right: var(--charW1);   }
+.inline:last-child { margin-right: 0; }
 
 input[type=range] {
     margin: 0;
@@ -192,7 +223,6 @@ input[type=range] {
     height: var(--charH); /* Firefox */
     width: 128px; /* Firefox */
 }
-
 input[type=range]::-webkit-slider-runnable-track {
     height: var(--railH);
     border: 1px solid var(--clickable);
@@ -209,42 +239,21 @@ input[type=range]:disabled::-webkit-slider-runnable-track { border-color: var(--
 input[type=range]:disabled::-moz-range-track { border-color: var(--neutral2); } /* Firefox */
 input[type=range]:disabled::-webkit-slider-thumb { background: var(--neutral2); }
 input[type=range]:disabled::-moz-range-thumb { background: var(--neutral2); } /* Firefox */
-input[type=range]:active::-webkit-slider-thumb { background: var(--clickable); }
-input[type=range]:active::-moz-range-thumb { background: var(--clickable); } /* Firefox */
-
 input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none;
-    background: var(--button);
-    border: 1px solid var(--clickable);
+    background: var(--clickable);
     height: var(--knobH);
     margin-top: calc(var(--knobH) / -2);
-    width: var(--charW2);
+    width: var(--knobW);
 }
 input[type=range]::-moz-range-thumb { /* Firefox */
-    -moz-appearance: none;
-    background: var(--button);
-    border: 1px solid var(--clickable);
+    appearance: none;
+    background: var(--clickable);
+    border: 0;
     border-radius: 0;
     height: var(--knobH);
-    margin-top: calc((var(--charH) - var(--knobH)) / -2);
-    width: var(--charW2);
-}
-/* Scrollbars */
-
-body { /* Firefox */
-    scrollbar-color: var(--clickable) var(--button);
-    scrollbar-width: thin;
-}
-
-::-webkit-scrollbar {
-    height: var(--charW1);
-    width: var(--charW1);
-    background: var(--button);
-}
-
-::-webkit-scrollbar-thumb {
-    background: var(--clickable);
-    -webkit-border-radius: 0;
+    margin-top: calc(var(--knobH) / -2);
+    width: var(--knobW);
 }
 
 /* Component overrides */
@@ -316,9 +325,10 @@ body,#root {
     min-width: 0;
     padding: var(--charH) var(--charW2) 0 var(--charW2);
     overflow-y: auto;
+    overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
     border-right: 1px solid var(--clickable);
-    container-type: inline-size;
+    container-type: size;
 }
 .App-main-content-area:focus { /* I have no idea why this became focusable */
     background-color: initial;
@@ -351,23 +361,22 @@ body,#root {
     border-left: 1px solid var(--clickable);
     flex-shrink: 0;
 }
-@media screen and (max-width: 600px) {
-    .AppFooter-art {
-        display: none;
+
+[data-theme="msdos"] {
+    @media screen and (max-width: 600px) {
+        .AppFooter-art, .AppFooter-shuffle, .AppFooter-repeat { display: none; }
     }
 }
+
+button.box-button.AppFooter-forward,
+button.box-button.AppFooter-back { padding: 0 var(--charW1); }
 
 .AppFooter-main {
     flex-grow: 1;
     overflow: auto;
-}
-
-/*
- Required due to strange flexbox/padding behavior in Safari.
- https://stackoverflow.com/questions/42802717
-*/
-.AppFooter-main-inner {
     padding: var(--charH) var(--charW2);
+    box-sizing: border-box;
+    container-type: size;
 }
 
 .AppFooter-settings {
@@ -379,16 +388,16 @@ body,#root {
 }
 
 .App-voice-label {
-    width: 112px;
+    width: calc(var(--charW1) * 14);
     white-space: nowrap;
     overflow-x: hidden;
 }
 
-.AppFooter-more-buttons {
-    float: right;
-}
-@media screen and (max-width: 600px) {
-    .AppFooter-more-buttons { display: none; }
+.AppFooter-top-row {
+    display: flex;
+    align-items: center;
+    gap: var(--charW1);
+    white-space: nowrap;
 }
 
 .Slider {
@@ -417,32 +426,37 @@ body,#root {
     top: calc((var(--charH) - var(--knobH)) / 2);
     margin: 0;
     border-radius: 0px;
-    background-color: var(--button);
-    border: 1px solid var(--clickable);
+    background-color: var(--clickable);
     position: absolute;
     -webkit-box-shadow: none;
     box-shadow: none;
     box-sizing: border-box;
 }
 
-.Browse-topRow { display: flex; justify-content: space-between; margin-bottom: var(--charH); }
+.Browse-topRow {
+    display: flex; justify-content: space-between; margin-bottom: var(--charH); gap: var(--charW2);
+    min-height: var(--buttonHeight);
+}
 
-.BrowseList-row { display: flex; align-items: center; }
+.BrowseList-row { display: flex; align-items: center; height: var(--rowHeight); }
 /* Selected */
 .ReactVirtualized__Grid:focus .BrowseList-row-selected {
-    background-color:  var(--focus);
+    background-color:  var(--selected);
 }
 /* Playing */
 .App-main .App-main-content-area .Song-now-playing {
     background-color: var(--button);
     color: var(--neutral3);
 }
+[data-theme="msdos"] {
 /* Selected AND Playing */
 .ReactVirtualized__Grid:focus .BrowseList-row-selected.Song-now-playing {
-    box-shadow: 0 0 1px 1px inset var(--focus);
-    outline: 1px solid var(--focus);
+    box-shadow: 0 0 1px 1px inset var(--selected);
+    outline: 1px solid var(--selected);
 }
 .BrowseList-row:has(a:hover) { color: var(--neutral4); }
+ }
+.BrowseList-row a { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .BrowseList-colName { overflow: hidden; flex-grow: 1; display: flex; align-items: center; }
 .BrowseList-colName a { white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
 .BrowseList-colDir, .BrowseList-colSize { flex-shrink : 0; margin-left: calc(var(--charW1) * 2); }
@@ -450,14 +464,7 @@ body,#root {
 .BrowseList-colMtime { text-align: right; text-transform: uppercase; white-space: nowrap; min-width: calc(var(--charW1) * 12); }
 .BrowseList-colSize { text-align: right; text-transform: uppercase; white-space: nowrap; min-width: calc(var(--charW1) * 10); }
 
-@media screen and (max-width: 800px) {
-    .BrowseList-colMtime { display: none }
-}
-@container (max-width: 800px) {
-    .BrowseList-colMtime { display: none }
-}
-
-.DirectoryLink-dim { color: var(--neutral2); }
+.DirectoryLink-dim { color: var(--neutral2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .PlayerParams h3 { margin-top: 0; }
 .PlayerParams-param { display: flex; flex-wrap: wrap; align-items: center; }
@@ -494,9 +501,10 @@ body,#root {
 }
 .SongDetails-filepath a {color: var(--neutral2);}
 
+.Search-label { display: flex; align-items: center; gap: var(--charW1); }
 .Search-input { width: calc(var(--charW1) * 20); }
-.Search-clearButton { white-space: pre; }
-.Search-clearButton::before { content: ' ×'; }
+.Search-clearButton { white-space: pre; background: var(--button); box-shadow: none; }
+.Search-clearButton::before { content: ' x'; }
 .Search-clearButton::after  { content: ' '; }
 .Search-resultsLabel { white-space: nowrap; }
 
@@ -516,9 +524,10 @@ button.FavoriteButton {
 }
 
 .Visualizer { position: relative; display: flex; flex-direction: column; align-items: flex-end }
-.Visualizer-overlay { position: absolute; top: calc(4 * var(--charH)); image-rendering: pixelated; }
+.Visualizer-overlay { position: absolute; top: calc(4 * var(--charH)); }
 .Visualizer-options { padding: var(--charH) var(--charW2) 0; text-align: right; }
 .Visualizer-toggle { position: fixed; top: var(--charH); right: var(--charW2); }
+@media screen and (max-width: 600px) { .Visualizer-toggle { display: none; } }
 .Visualizer-analyzer { display: block; image-rendering: pixelated; }
 .Visualizer-spectrogram { display: block; flex-grow: 1; flex-shrink: 0; min-height: 800px; image-rendering: pixelated; }
 .Visualizer-analyzer, .Visualizer-spectrogram {
@@ -526,15 +535,15 @@ button.FavoriteButton {
 }
 
 .TimeSlider { flex-grow: 1; margin: var(--charH) 0; }
-.TimeSlider-labels, .VolumeSlider-labels { display: flex; flex-direction: row; justify-content: space-between; }
+.TimeSlider-labels, .VolumeSlider-labels { display: flex; justify-content: space-between; gap: var(--charW2); }
 
-.VolumeSlider { flex-shrink: 0; margin-top: var(--charH); margin-bottom: var(--charH); margin-left: var(--charW2); }
-@media screen and (max-width: 600px) {
-    .VolumeSlider { display: none; }
+.VolumeSlider { flex-shrink: 0; margin: var(--charH) 0; }
+
+[data-theme="msdos"] {
+    @media screen and (max-width: 600px) {
+        .VolumeSlider { display: none; }
+    }
 }
-
-td { padding: 0 }
-img { image-rendering: pixelated; }
 
 .inline-icon {
     vertical-align: bottom;
@@ -542,8 +551,8 @@ img { image-rendering: pixelated; }
     background-color: var(--clickable);
     mask-repeat: no-repeat;
     mask-position: center;
-    image-rendering: pixelated;
-    height: var(--charH);
+    /* the icon PNGs are 19px tall, so the container needs odd height for vertical centering. */
+    height: calc(round(up, var(--charH), 2px) - 1px);
     flex-shrink: 0;
 }
 [disabled] .inline-icon { background-color: var(--neutral2); }
@@ -566,29 +575,10 @@ img { image-rendering: pixelated; }
     border-bottom: 1px solid var(--clickable);
     padding: 0 var(--charW2);
     display: flex;
-}
-
-.tab {
-    display: flex;
-    align-items: center;
-    padding: 0 15px 0 15px;
-    background: transparent;
-    border: 1px solid var(--clickable);
-    border-bottom: none;
-    margin: 0 8px 0 0;
-    border-radius: 3px 3px 0 0;
-    box-sizing: border-box;
-    height: var(--charH);
+    gap: var(--charW1);
 }
 
 .tab-settings { margin-left: auto; margin-right: 0; }
-
-.tab-selected {
-    border-bottom: 1px solid var(--background);
-    background: var(--background);
-    margin-bottom: -1px;
-    height: calc(var(--charH) + 1px);
-}
 
 .toast-box-outer {
     position: absolute;
@@ -601,13 +591,12 @@ img { image-rendering: pixelated; }
     pointer-events: none;
     top: 0;
     left: 0;
-    transition: all 150ms steps(4);
     padding: 0 var(--charW2);
     box-sizing: border-box;
 }
 .toast-box {
     padding: var(--charH) var(--charW2);
-    box-shadow: var(--charW1) var(--charW1) var(--shadow);
+    box-shadow: var(--msdos-box-shadow);
     box-sizing: border-box;
     display: flex;
     justify-content: space-between;
@@ -662,12 +651,12 @@ img { image-rendering: pixelated; }
 }
 
 .message-box {
-    background-color: var(--button);
+    background: var(--message-box-background);
     padding: var(--charH) var(--charW2);
-    box-shadow: var(--charW1) var(--charW1) var(--shadow);
+    box-shadow: var(--message-box-box-shadow);
+    outline: var(--message-box-border);
     box-sizing: border-box;
     display: flex;
-    transition: all 250ms steps(5);
     visibility: visible;
     overflow: hidden;
     max-height: 100%;
@@ -688,10 +677,17 @@ img { image-rendering: pixelated; }
 }
 
 .message-box-inner {
-    color: var(--clickable);
-    border: 1px solid var(--clickable);
+    color: var(--message-box-color);
+    outline: var(--message-box-inner-border);
     padding: var(--charH) var(--charW2);
     overflow: auto;
+}
+
+.message-box-inner.info-text {
+    white-space: pre;
+    font: var(--message-box-info-text-font);
+    color: var(--message-box-info-text-color);
+    background: var(--message-box-info-text-background);
 }
 
 .message-box-footer {
@@ -717,8 +713,17 @@ img { image-rendering: pixelated; }
     white-space: nowrap;
 }
 
-.message-box-button {
+
+[data-theme="msdos"] .message-box-button {
     background: var(--background);
     padding: 0 var(--charW2);
     box-shadow: none;
 }
+
+@media (max-resolution: 1dppx) {
+  /* ensure crisp icons at 1:1 native resolution, smooth images otherwise */
+  img, .Visualizer-overlay, .Visualizer-analyzer, .Visualizer-spectrogram, .inline-icon {
+      image-rendering: pixelated;
+  }
+}
+
