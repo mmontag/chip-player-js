@@ -1,5 +1,4 @@
 import React, { useContext } from 'react';
-import { findDOMNode } from 'react-dom';
 import autoBindReact from 'auto-bind/react';
 import isMobile from 'ismobilejs';
 import clamp from 'lodash/clamp';
@@ -51,6 +50,7 @@ import Settings from './Settings';
 import LocalFiles from './LocalFiles';
 import { UserContext } from './UserProvider';
 import { ToastContext } from './ToastProvider';
+import Announcements from './Announcements';
 
 const BASE_URL = process.env.PUBLIC_URL || document.location.origin;
 
@@ -819,6 +819,7 @@ class App extends React.Component {
                       listRef={this.listRef}
                     >
                       {this.state.loading && <p>Loading player engine...</p>}
+                      <Announcements/>
                     </Search>
                   )}/>
                 </Switch>
