@@ -15,3 +15,13 @@ ReactDOM.render((
     </ToastProvider>
   </Router>
 ), document.getElementById('root'));
+
+// check the 'theme' param in the URL and set the theme accordingly
+const urlParams = new URLSearchParams(window.location.search);
+const theme = urlParams.get('theme');
+if (theme) {
+  // This maps to CSS selector `html[data-theme=...]`
+  document.documentElement.setAttribute('data-theme', theme);
+} else {
+  document.documentElement.setAttribute('data-theme', 'msdos');
+}
