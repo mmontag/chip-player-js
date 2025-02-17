@@ -199,7 +199,7 @@ class App extends React.Component {
     if (urlParams.play) {
       // Treat play params as "transient command" and strip them after starting playback.
       // See comment in Browse.js for more about why a sticky play param is not a good idea.
-      const play = urlParams.play;
+      const playPath = urlParams.play;
       const subtune = urlParams.subtune ? parseInt(urlParams.subtune, 10) : 0;
       const time = urlParams.t ? parseInt(urlParams.t, 10) : 0;
       delete urlParams.play;
@@ -208,10 +208,12 @@ class App extends React.Component {
       const qs = queryString.stringify(urlParams);
       const search = qs ? `?${qs}` : '';
       // Navigate to song's containing folder. History comes from withRouter().
-      const dirname = path.dirname(play);
+      const dirname = path.dirname(playPath);
       this.fetchDirectory(dirname).then(() => {
         this.props.history.replace(`${pathJoin('/browse', dirname)}${search}`);
-        const index = this.playContexts[dirname].indexOf(play);
+        // Convert play path to href (context contains full hrefs)
+        const playHref = CATALOG_PREFIX + playPath;
+        const index = this.playContexts[dirname].indexOf(playHref);
 
         this.playContext(this.playContexts[dirname], index, subtune);
 
