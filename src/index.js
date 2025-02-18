@@ -22,6 +22,18 @@ const theme = urlParams.get('theme');
 if (theme) {
   // This maps to CSS selector `html[data-theme=...]`
   document.documentElement.setAttribute('data-theme', theme);
+  if (theme === 'winamp') setThemeColor('#1e1e2f');
 } else {
   document.documentElement.setAttribute('data-theme', 'msdos');
+  setThemeColor('#000088');
+}
+
+function setThemeColor(color) {
+  let metaThemeColor = document.querySelector("meta[name='theme-color']");
+  if (!metaThemeColor) {
+    metaThemeColor = document.createElement("meta");
+    metaThemeColor.name = "theme-color";
+    document.head.appendChild(metaThemeColor);
+  }
+  metaThemeColor.content = color;
 }
