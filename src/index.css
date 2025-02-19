@@ -158,7 +158,7 @@ select {
     max-width: 232px;
 }
 select option                { font-size: 14px; }
-.Song-now-playing .FavoriteButton { color: var(--background); }
+.Song-now-playing .FavoriteButton:not(.isFavorite) { color: var(--background); }
   @media screen and (max-width: 800px) { .BrowseList-colMtime { display: none } }
   @container (max-width: 800px) { .BrowseList-colMtime { display: none } }
 button:active   { background: var(--active); }
