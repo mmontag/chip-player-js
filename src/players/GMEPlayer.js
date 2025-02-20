@@ -19,7 +19,6 @@ const fileExtensions = [
   'nsfe',
   'spc',
   'ay',
-  'sgc',
   'gbs',
 ];
 

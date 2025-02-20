@@ -18,7 +18,6 @@ const FORMATS =  [
   'mod',
   'nsf',
   'nsfe',
-  'sgc',
   'spc',
   's3m',
   'smf',
