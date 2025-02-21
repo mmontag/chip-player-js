@@ -4,12 +4,15 @@ export default function Announcements() {
   return (
     <div className="Announcements" style={{maxWidth: 544 }}>
       <p style={{font: 'var(--fontPxPlusChipPlayer)', whiteSpace: 'pre-wrap'}}>
-{`
-| .  /|       |   )      |\\  |           
-| | / |-. ,-: |-   ,-.   | \\ | ,-. , , , 
-|/|/  | | | | |    \`-.   |  \\| |-' |/|/  
-' '   ' ' \`-' \`-'  \`-'   '   ' \`-' ' '  
+{`╔═══════════════════════════════╗
+║     W h a t ' s    N e w      ║
+╚═══════════════════════════════╝
 `}
+      </p>
+      <h3>2025-02-24</h3>
+      <p>
+        Added <a href="/browse/Battle%20of%20the%20Bits">Battle of the Bits</a> to the catalog. (2356 tunes so far)<br/>
+        Added <a href="/browse/Nintendo%20Game%20Boy">Nintendo Game Boy</a> (.gbs) to the catalog. (1559 + 39 homebrew)<br/>
       </p>
       <h3>2025-02-16</h3>
       <p>Experimental: themes. Try out <a href="?theme=winamp">Winamp theme</a> or switch back to <a href="?theme=msdos">MSDOS</a>.</p>
