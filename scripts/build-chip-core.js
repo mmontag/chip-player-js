@@ -105,7 +105,8 @@ const chipModules = [
     enabled: true,
     sourceFiles: [
       // 'libxmp/lib/libxmp.a', // full libxmp build
-      'libxmp/libxmp-lite-stagedir/lib/libxmp-lite.a',
+      // 'libxmp/libxmp-lite-stagedir/lib/libxmp-lite.a',
+      '../libxmp/build/libxmp-lite.a',
     ],
     exportedFunctions: [
       '_xmp_create_context',
@@ -122,6 +123,8 @@ const chipModules = [
       '_xmp_channel_mute',
       '_xmp_get_player',
       '_xmp_load_module_from_memory',
+      '_xmp_set_player',
+      '_xmp_set_tempo_factor',
     ],
     flags: [],
   },
