@@ -22,8 +22,7 @@ export default class XMPPlayer extends Player {
     this.xmpCtx = this.core._xmp_create_context();
     this.infoPtr = this.core._malloc(2048);
     this.fileExtensions = fileExtensions;
-    this.lastBPM = 125;
-    this.tempoScale = this.lastTempoScale = 1; // TODO: rename to speed
+    this.tempoScale = 1; // TODO: rename to speed
     this._positionMs = 0;
     this._durationMs = 1000;
     this.buffer = this.core._malloc(this.bufferSize * 16); // i16
@@ -53,9 +52,7 @@ export default class XMPPlayer extends Player {
     // Get current module BPM
     // see http://xmp.sourceforge.net/libxmp.html#id25
     this.core._xmp_get_frame_info(this.xmpCtx, infoPtr);
-    const bpm = this.core.getValue(infoPtr + 6 * 4, 'i32');
     this._positionMs = this.core.getValue(infoPtr + 7 * 4, 'i32'); // xmp_frame_info.time
-    this._maybeInjectTempo(bpm);
 
     for (ch = 0; ch < channels.length; ch++) {
       for (i = 0; i < this.bufferSize; i++) {
@@ -115,7 +112,6 @@ export default class XMPPlayer extends Player {
     // Filename fallback
     if (!meta.title) meta.title = this.filepathMeta.title;
 
-    this.lastBPM = meta.initialBPM;
     this.metadata = meta;
     this.infoTexts = infoText.length ? [ infoText.join('\n\n') ] : [];
   }
@@ -129,7 +125,7 @@ export default class XMPPlayer extends Player {
     this.core._free(dataPtr);
 
     if (err !== 0) {
-      console.error("xmp_load_module_from_memory failed. error code: %d", err);
+      console.error('xmp_load_module_from_memory failed. error code: %d', err);
       throw Error('xmp_load_module_from_memory failed');
     }
 
@@ -167,37 +163,9 @@ export default class XMPPlayer extends Player {
   }
 
   setTempo(val) {
-    if (this.metadata && !this.metadata.initialSpeed) {
-      console.log('Unable to set speed for %s.', this.filepathMeta.title);
-      return;
-    }
+    if (!this.xmpCtx) return;
+    this.core._xmp_set_tempo_factor(this.xmpCtx, 1 / val); // Expects inverse value.
     this.tempoScale = val;
-  }
-
-  _maybeInjectTempo(measuredBPM) {
-    const xmp = this.core;
-    const minBPM = 20;
-    const maxBPM = 255;
-    const estimatedBPM = Math.floor(Math.max(Math.min(this.lastBPM * this.tempoScale, maxBPM), minBPM));
-
-    if (estimatedBPM === measuredBPM) return;
-
-    let targetBPM = this.metadata.initialBPM;
-    if (this.lastTempoScale === this.tempoScale) {  // tempo event received
-      this.lastBPM = measuredBPM;
-      if (this.tempoScale === 1) return;
-      targetBPM = Math.floor(Math.max(Math.min(measuredBPM * this.tempoScale, maxBPM), minBPM));
-    } else {                                        // `Speed` slider changed
-      targetBPM = estimatedBPM;
-      this.lastTempoScale = this.tempoScale;
-    }
-
-    console.log('Injecting %d BPM into libxmp. (Initial: %d)', targetBPM, this.metadata.initialBPM);
-    const xmp_eventPtr = xmp._malloc(8);
-    for (let i = 0; i < 8; i++) xmp.setValue(xmp_eventPtr + i, 0, 'i8');
-    xmp.setValue(xmp_eventPtr + 3, 0x87, 'i8');
-    xmp.setValue(xmp_eventPtr + 4, targetBPM, 'i32');
-    xmp._xmp_inject_event(this.xmpCtx, 0, xmp_eventPtr);
   }
 
   getVoiceName(index) {
