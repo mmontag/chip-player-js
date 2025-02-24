@@ -12,8 +12,31 @@ const fileExtensions = [
   'xm',  //  Fast Tracker II  1.02, 1.03, 1.04
 ];
 
+// Defines copied from xmp.h
+const XMP_PLAYER_INTERP	= 2;
+const XMP_INTERP_NEAREST = 0;
+const XMP_INTERP_LINEAR	= 1;
+const XMP_INTERP_SPLINE	= 2;
+
 // noinspection PointlessArithmeticExpressionJS
 export default class XMPPlayer extends Player {
+  paramDefs = [
+    {
+      id: 'interpolation',
+      label: 'Interpolation',
+      type: 'enum',
+      options: [{
+        label: 'Interpolation Mode',
+        items: [
+          { label: 'Nearest-neighbor (None)', value: XMP_INTERP_NEAREST },
+          { label: 'Linear', value: XMP_INTERP_LINEAR },
+          { label: 'Spline (Cubic)', value: XMP_INTERP_SPLINE },
+        ],
+      }],
+      defaultValue: XMP_INTERP_LINEAR,
+    },
+  ];
+
   constructor(...args) {
     super(...args);
     autoBind(this);
@@ -202,5 +225,26 @@ export default class XMPPlayer extends Player {
     this.core._xmp_stop_module(this.xmpCtx);
     console.debug('XMPPlayer.stop()');
     this.emit('playerStateUpdate', { isStopped: true });
+  }
+
+  getParameter(id) {
+    if (!this.xmpCtx) return null;
+    switch (id) {
+      case 'interpolation':
+        return this.core._xmp_get_player(this.xmpCtx, XMP_PLAYER_INTERP);
+      default:
+        console.warn('Unknown parameter id:', id);
+        return null;
+    }
+  }
+
+  setParameter(id, value, isTransient=false) {
+    switch (id) {
+      case 'interpolation':
+        this.core._xmp_set_player(this.xmpCtx, XMP_PLAYER_INTERP, value);
+        break;
+      default:
+        console.warn('Unknown parameter id:', id);
+    }
   }
 }
