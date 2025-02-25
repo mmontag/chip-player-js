@@ -70,6 +70,13 @@ export default class GMEPlayer extends Player {
       type: 'toggle',
       defaultValue: false,
     },
+    {
+      id: 'enableAccuracy',
+      label: 'Accurate SPC Filter',
+      hint: 'Simple low-pass and high-pass filter to better match sound output of the SNES.',
+      type: 'toggle',
+      defaultValue: false,
+    },
   ];
 
   constructor(...args) {
@@ -336,6 +343,9 @@ export default class GMEPlayer extends Player {
         this.params[id] = !!value;
         if (this.gmeCtx) core._gme_disable_echo(this.gmeCtx, value ? 1 : 0);
         break;
+      case 'enableAccuracy':
+        this.params[id] = !!value;
+        if (this.gmeCtx) core._gme_enable_accuracy(this.gmeCtx, value ? 1 : 0);
       default:
         console.warn('GMEPlayer has no parameter with id "%s".', id);
     }
