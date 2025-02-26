@@ -62,7 +62,7 @@ If you wish to deploy to your own Github Pages account, change the `"homepage"` 
 
 User account management is provided through Firebase Cloud Firestore. You must obtain your own [Google Firebase](https://console.firebase.google.com/) credentials and update [src/config/firebaseConfig.js](src/config/firebaseConfig.js) with these credentials. This file is not tracked. Without these credentials, Login/Favorites functionality won't work.
 
-#### Subproject: libxmp-lite
+#### Subproject: libxmp-lite (Deprecated - see next section)
 
 Our goal is to produce **libxmp/libxmp-lite-stagedir/lib/libxmp-lite.a**.
 Build libxmp (uses GNU make):
@@ -84,6 +84,31 @@ autoconf
 emconfigure ./configure --enable-static --disable-shared
 emmake make
 ```
+
+#### External project: libxmp-lite
+
+Our goal is to produce **../libxmp/build/libxmp-lite.a** (assumes you have cloned **libxmp** side-by-side with chip-player-js).
+
+A **libxmp** subtree has been included in this repository, but this is deprecated.
+
+```sh
+git clone git@[TODO]
+cd libxmp/
+source ~/src/emsdk/emsdk_env.sh  # load the emscripten environment variables
+mkdir build                      # create a build folder for Cmake output
+cd build
+emcmake cmake .. -DBUILD_LITE -DBUILD_STATIC  # or use ccmake (see note below)
+emmake make
+```
+
+Optionally, use **ccmake** instead to configure the build.  See screenshot below for recommended build options. We want `BUILD_LITE` and `BUILD_STATIC`.
+
+```
+ccmake -DCMAKE_TOOLCHAIN_FILE="$(dirname $(which emcc))/cmake/Modules/Platform/Emscripten.cmake" ..
+```
+
+![image](https://github.com/user-attachments/assets/1ca9de9c-8123-4619-a691-aff289eb6066)
+
 
 #### Subproject: fluidlite
 
