@@ -62,42 +62,19 @@ If you wish to deploy to your own Github Pages account, change the `"homepage"` 
 
 User account management is provided through Firebase Cloud Firestore. You must obtain your own [Google Firebase](https://console.firebase.google.com/) credentials and update [src/config/firebaseConfig.js](src/config/firebaseConfig.js) with these credentials. This file is not tracked. Without these credentials, Login/Favorites functionality won't work.
 
-#### Subproject: libxmp-lite (Deprecated - see next section)
-
-Our goal is to produce **libxmp/libxmp-lite-stagedir/lib/libxmp-lite.a**.
-Build libxmp (uses GNU make):
-
-```sh
-cd chip-player-js/libxmp/        # navigate to libxmp root
-source ~/src/emsdk/emsdk_env.sh  # load the emscripten environment variables
-autoconf
-emconfigure ./configure
-emmake make
-```
-
-Proceed to build libxmp-lite:
-
-```sh
-emmake make -f Makefile.lite     # this will have some errors, but they can be ignored
-cd libxmp-lite-stagedir/
-autoconf
-emconfigure ./configure --enable-static --disable-shared
-emmake make
-```
-
 #### External project: libxmp-lite
 
 Our goal is to produce **../libxmp/build/libxmp-lite.a** (assumes you have cloned **libxmp** side-by-side with chip-player-js).
 
-A **libxmp** subtree has been included in this repository, but this is deprecated.
+A **libxmp** subtree was previously included in this repository, but this is deprecated.
 
 ```sh
-git clone git@[TODO]
+git clone git@github.com:libxmp/libxmp.git
 cd libxmp/
 source ~/src/emsdk/emsdk_env.sh  # load the emscripten environment variables
 mkdir build                      # create a build folder for Cmake output
 cd build
-emcmake cmake .. -DBUILD_LITE -DBUILD_STATIC  # or use ccmake (see note below)
+emcmake cmake -DBUILD_LITE -DBUILD_STATIC ..  # or use ccmake (see note below)
 emmake make
 ```
 
@@ -163,7 +140,7 @@ To reconfigure the build-enabled sound chips with CMake UI, run `emcmake ccmake 
 
 Our goal is to produce **../game-music-emu/build/libgme.a** (assumes you have cloned **game-music-emu** side-by-side with chip-player-js).
 
-A **game-music-emu** subtree has been included in this repository, but this is deprecated.
+A **game-music-emu** subtree was previously included in this repository, but this is deprecated.
 
 ```sh
 git clone git@github.com:mmontag/game-music-emu.git
