@@ -111,22 +111,6 @@ a {
 a:visited { color: var(--clickable); }
 
 [data-theme="msdos"] {
-    /* Scrollbars */
-    body { /* Firefox */
-        scrollbar-color: var(--clickable) var(--button);
-        scrollbar-width: thin;
-    }
-
-    ::-webkit-scrollbar {
-        height: var(--charW1);
-        width: var(--charW1);
-        background: var(--button);
-    }
-
-    ::-webkit-scrollbar-thumb {
-        background: var(--clickable);
-        -webkit-border-radius: 0;
-    }
 
     /* Form elements */
 
@@ -468,7 +452,7 @@ button.box-button.AppFooter-back { padding: 0 var(--charW1); }
 
 .PlayerParams h3 { margin-top: 0; }
 .PlayerParams-param { display: flex; flex-wrap: wrap; align-items: center; }
-.PlayerParams-param input { margin-right: var(--charW1); }
+.PlayerParams-param input { margin-right: var(--charW1); flex-shrink: 0; }
 .PlayerParams-group-title { width: 100%; }
 .PlayerParams-voiceList {
     display: flex;
@@ -727,3 +711,14 @@ button.FavoriteButton {
   }
 }
 
+/* Scrollbar styling */
+[data-theme="msdos"] ::-webkit-scrollbar {
+    height: var(--charW1);
+    width: 8px;
+    background-color: var(--button);
+}
+
+[data-theme="msdos"] ::-webkit-scrollbar-thumb {
+    background-color: var(--clickable);
+    -webkit-border-radius: 0;
+}
