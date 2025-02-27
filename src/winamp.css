@@ -194,7 +194,7 @@
         height: var(--formFieldHeight);
     }
 
-    .message-box { width: 720px; }
+    .message-box { width: 720px; box-shadow: 0 15px 30px #0008; }
     .message-box-footer { padding-top: 10px; }
 
     /* because the button is 22px instead of 16px height */
