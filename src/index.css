@@ -714,11 +714,14 @@ button.FavoriteButton {
 /* Scrollbar styling */
 [data-theme="msdos"] ::-webkit-scrollbar {
     height: var(--charW1);
-    width: 8px;
+    width: var(--charW1);
     background-color: var(--button);
 }
 
 [data-theme="msdos"] ::-webkit-scrollbar-thumb {
     background-color: var(--clickable);
     -webkit-border-radius: 0;
+}
+[data-theme="msdos"] ::-webkit-scrollbar-corner {
+    background-color: var(--neutral2);
 }
