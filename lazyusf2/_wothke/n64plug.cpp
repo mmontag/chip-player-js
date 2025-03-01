@@ -1,3 +1,7 @@
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#pragma ide diagnostic ignored "EmptyDeclOrStmt"
+#pragma ide diagnostic ignored "cppcoreguidelines-narrowing-conversions"
 /*
 	USF Decoder: for playing "(Ultra) Nintendo 64 Sound" format (.USF/.MINIUSF) files
 	
@@ -827,3 +831,5 @@ void n64_shutdown() {
 #endif
 
 
+
+#pragma clang diagnostic pop
