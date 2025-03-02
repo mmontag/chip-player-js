@@ -9,10 +9,7 @@ let core = null;
 const INT16_MAX = 65535;
 // "timesliced" seek in increments to prevent blocking UI/audio callback.
 const TIMESLICED_SEEK_MS_MAP = {
-  '.spc': 5000,
-  '.gym': 10000,
-  '.vgm': 10000,
-  '.vgz': 10000,
+  '.spc': 10000,
 };
 const fileExtensions = [
   'nsf',
