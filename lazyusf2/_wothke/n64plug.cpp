@@ -130,7 +130,7 @@ const psf_file_callbacks psf_file_system = {
 
 static unsigned int cfg_deflength = 170000;
 static unsigned int cfg_deffade = 10000;
-static unsigned int cfg_suppressopeningsilence = 0;
+static unsigned int cfg_suppressopeningsilence = 1;
 static unsigned int cfg_suppressendsilence = 0;
 static unsigned int cfg_endsilenceseconds = 10;
 
@@ -621,8 +621,6 @@ public:
       return -1;
 
     unsigned int written = 0;
-
-    int samples = size;
 
     short *ptr;
 
