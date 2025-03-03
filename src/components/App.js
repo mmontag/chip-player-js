@@ -163,6 +163,9 @@ class App extends React.Component {
       MDXPlayer,
       VGMPlayer,
     ].map(P => new P(this.chipCore, audioCtx.sampleRate, bufferSize, debug));
+    players.forEach(p => {
+      p.audioNode = this.playerNode;
+    });
     this.midiPlayer = players[0];
 
     // Set up the central audio processing callback. This is where the magic happens.

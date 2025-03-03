@@ -247,22 +247,11 @@ export default class Player extends EventEmitter {
     throw Error('Player.processAudioInner() must be implemented.');
   }
 
-  muteAudioDuringCall(audioNode, fn) {
-    if (audioNode && audioNode.context.state === 'running' && this.paused === false) {
-      const audioprocess = audioNode.onaudioprocess;
-      // Workaround to eliminate stuttering:
-      // Temporarily swap the audio process callback, and do the
-      // expensive operation only after buffer is filled with silence
-      audioNode.onaudioprocess = function (e) {
-        for (let i = 0; i < e.outputBuffer.numberOfChannels; i++) {
-          e.outputBuffer.getChannelData(i).fill(0);
-        }
-        fn();
-        audioNode.onaudioprocess = audioprocess;
-      };
-    } else {
-      fn();
-    }
+  async muteAudioDuringCall(audioNode, fn) {
+    // Workaround to eliminate stuttering.
+    await audioNode.context.suspend();
+    fn();
+    await audioNode.context.resume();
   }
 
   handleFileSystemReady() {}
