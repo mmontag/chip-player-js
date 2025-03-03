@@ -49,25 +49,23 @@ export default class N64Player extends Player {
 
     return Promise.all(promises)
       .then(([fsFilename]) => {
-        this.muteAudioDuringCall(this.audioNode, () => {
-          err = this.core.ccall(
-            'n64_load_file', 'number',
-            ['string', 'number', 'number', 'number'],
-            [fsFilename, this.buffer, this.bufferSize, this.sampleRate],
-          );
+        err = this.core.ccall(
+          'n64_load_file', 'number',
+          ['string', 'number', 'number', 'number'],
+          [fsFilename, this.buffer, this.bufferSize, this.sampleRate],
+        );
 
-          if (err !== 0) {
-            console.error("n64_load_file failed. error code: %d", err);
-            throw Error('n64_load_file failed');
-          }
+        if (err !== 0) {
+          console.error("n64_load_file failed. error code: %d", err);
+          throw Error('n64_load_file failed');
+        }
 
-          this.metadata = { title: filename };
+        this.metadata = { title: filename };
 
-          this.resume();
-          this.emit('playerStateUpdate', {
-            ...this.getBasePlayerState(),
-            isStopped: false,
-          });
+        this.resume();
+        this.emit('playerStateUpdate', {
+          ...this.getBasePlayerState(),
+          isStopped: false,
         });
       });
   }
@@ -115,9 +113,8 @@ export default class N64Player extends Player {
     return !this.isPaused();
   }
 
-  seekMs(seekMs) {
-    // TODO: timesliced seeking
-    this.core._n64_seek_ms(seekMs)
+  seekMs(positionMs) {
+    this.muteAudioDuringCall(this.audioNode, () => this.core._n64_seek_ms(positionMs));
   }
 
   stop() {
