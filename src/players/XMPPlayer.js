@@ -17,6 +17,9 @@ const XMP_PLAYER_INTERP	= 2;
 const XMP_INTERP_NEAREST = 0;
 const XMP_INTERP_LINEAR	= 1;
 const XMP_INTERP_SPLINE	= 2;
+const XMP_INFO_ROW = 2;
+const XMP_INFO_FRAME = 4;
+const XMP_INFO_TIME = 7;
 
 // noinspection PointlessArithmeticExpressionJS
 export default class XMPPlayer extends Player {
@@ -75,8 +78,9 @@ export default class XMPPlayer extends Player {
     // Get current module BPM
     // see http://xmp.sourceforge.net/libxmp.html#id25
     this.core._xmp_get_frame_info(this.xmpCtx, infoPtr);
-    this._positionMs = this.core.getValue(infoPtr + 7 * 4, 'i32'); // xmp_frame_info.time
-
+    this._positionMs = this.core.getValue(infoPtr + XMP_INFO_TIME * 4, 'i32'); // xmp_frame_info.time
+    // const row = this.core.getValue(infoPtr + XMP_INFO_ROW * 4, 'i32'); // xmp_frame_info.row
+    // const frame = this.core.getValue(infoPtr + XMP_INFO_FRAME * 4, 'i32'); // xmp_frame_info.frame
     for (ch = 0; ch < channels.length; ch++) {
       for (i = 0; i < this.bufferSize; i++) {
         channels[ch][i] = this.core.getValue(
