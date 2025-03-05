@@ -132,7 +132,7 @@ static unsigned int cfg_deflength = 170000;
 static unsigned int cfg_deffade = 10000;
 static unsigned int cfg_suppressopeningsilence = 1;
 static unsigned int cfg_suppressendsilence = 0;
-static unsigned int cfg_endsilenceseconds = 10;
+static unsigned int cfg_endsilenceseconds = 3;
 
 static unsigned int cfg_resample = 1;
 
@@ -593,6 +593,7 @@ public:
     }
 
     if (do_suppressendsilence) {
+      // Invoke usf_render once to obtain a sample_rate if not already set.
       if (!resample && !sample_rate) {
         const char *err = usf_render(m_state->emu_state, 0, 0, &sample_rate);
         if (err != 0)
@@ -639,11 +640,9 @@ public:
         unsigned int todo = size;
         if (todo > count)
           todo = (unsigned int) count;
-        const char *err = resample ? usf_render_resampled(m_state->emu_state, ptr, todo, sample_rate) : usf_render(
-          m_state->emu_state,
-          ptr,
-          todo,
-          &sample_rate);
+        const char *err = resample ?
+          usf_render_resampled(m_state->emu_state, ptr, todo, sample_rate) :
+          usf_render(m_state->emu_state, ptr, todo, &sample_rate);
         if (err != 0) {
           throw exception_io_data();
         }
