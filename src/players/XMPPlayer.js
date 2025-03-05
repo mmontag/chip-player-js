@@ -106,7 +106,7 @@ export default class XMPPlayer extends Player {
     const xmp_modulePtr = xmp.getValue(infoPtr + 20, '*');
     meta.title = xmp.UTF8ToString(xmp_modulePtr, 256);
     meta.system = xmp.UTF8ToString(xmp_modulePtr + 64, 256);
-    meta.comment = xmp.UTF8ToString(xmp.getValue(infoPtr + 24, '*'), 512);
+    meta.comment = xmp.UTF8ToString(xmp.getValue(infoPtr + 24, '*'), 2048);
     if (meta.comment) infoText.push('Comment:', meta.comment);
 
     xmp._xmp_get_frame_info(this.xmpCtx, infoPtr);
