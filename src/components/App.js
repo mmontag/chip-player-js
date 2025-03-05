@@ -399,7 +399,7 @@ class App extends React.Component {
         // TODO: move fetch metadata to Player when it becomes event emitter
         requestCache.fetchCached(metadataUrl).then(response => {
           const { imageUrl, infoTexts } = response;
-          const newInfoTexts = [ ...infoTexts, ...this.state.infoTexts ];
+          const newInfoTexts = [...this.state.infoTexts, ...infoTexts ];
           this.setState({ imageUrl, infoTexts: newInfoTexts });
 
           if ('mediaSession' in navigator) {
