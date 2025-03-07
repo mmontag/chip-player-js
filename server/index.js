@@ -14,6 +14,7 @@ const URL = require('url');
 const glob = require('glob');
 const path = require('path');
 const http = require('http');
+const crypto = require('crypto');
 const TrieSearch = require('trie-search');
 const { performance } = require('perf_hooks');
 const { sampleSize } = require('lodash');
@@ -154,8 +155,17 @@ const routes = {
     let imageUrl = null;
     let soundfont = null;
     let infoTexts = [];
+    let md5 = null;
     if (params.path) {
       const { dir, name, ext } = path.parse(params.path);
+      if (['.it', '.s3m', '.xm', '.mod'].includes(ext.toLowerCase())) {
+        // Calculate MD5 hash of file.
+        // Used to generate a link for Mod Sample Master.
+        const data = fs.readFileSync(path.join(LOCAL_CATALOG_ROOT, params.path));
+        const hash = crypto.createHash('md5');
+        hash.update(data);
+        md5 = hash.digest('hex');
+      }
 
       // --- MIDI SoundFonts ---
       if (['.mid', '.midi'].includes(ext.toLowerCase())) {
@@ -232,6 +242,7 @@ const routes = {
       imageUrl: imageUrl,
       infoTexts: infoTexts,
       soundfont: soundfont,
+      md5: md5,
     };
   },
 };
