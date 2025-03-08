@@ -398,9 +398,9 @@ class App extends React.Component {
         // updateQueryString({ play: filepath, t: undefined });
         // TODO: move fetch metadata to Player when it becomes event emitter
         requestCache.fetchCached(metadataUrl).then(response => {
-          const { imageUrl, infoTexts } = response;
+          const { imageUrl, infoTexts, md5 } = response;
           const newInfoTexts = [...this.state.infoTexts, ...infoTexts ];
-          this.setState({ imageUrl, infoTexts: newInfoTexts });
+          this.setState({ imageUrl, infoTexts: newInfoTexts, md5 });
 
           if ('mediaSession' in navigator) {
             // Clear artwork if imageUrl is null.
@@ -868,6 +868,7 @@ class App extends React.Component {
             handleVolumeChange={this.handleVolumeChange}
             imageUrl={this.state.imageUrl}
             infoTexts={this.state.infoTexts}
+            md5={this.state.md5}
             nextSong={this.nextSong}
             nextSubtune={this.nextSubtune}
             paused={this.state.paused}

@@ -16,6 +16,7 @@ function AppFooter(props) {
     ejected,
     imageUrl,
     infoTexts,
+    md5,
     paused,
     repeat,
     shuffle,
@@ -174,8 +175,14 @@ function AppFooter(props) {
                 title
               }
               {infoTexts.length > 0 &&
-                <a onClick={handleToggleInfo} href='#'>
+                <a onClick={handleToggleInfo} href="#" title="Display song information">
                   тхт
+                </a>
+              }
+              {md5 &&
+                <a href={`https://modsamplemaster.thegang.nu/module.php?md5=${md5}`}
+                   title="Look up this song on Mod Sample Master" target="_blank">
+                  msm
                 </a>
               }
             </div>
