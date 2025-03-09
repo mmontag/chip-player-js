@@ -215,7 +215,7 @@
     input[type="password"],
     input[type="email"],
     select {
-        width: 200px;
+        width: 192px;
         box-shadow: var(--fieldBoxShadow);
         height: var(--formFieldHeight);
         box-sizing: border-box;
