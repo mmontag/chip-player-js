@@ -119,7 +119,8 @@
       "jsx-a11y/href-no-hash": "off",
       "jsx-a11y/anchor-is-valid": "off",
       "no-fallthrough": "off",
-      "import/no-anonymous-default-export": "off"
+      "import/no-anonymous-default-export": "off",
+      "react/jsx-no-target-blank": "off"
     }
   }
 }

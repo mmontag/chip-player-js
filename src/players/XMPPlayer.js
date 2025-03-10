@@ -17,8 +17,6 @@ const XMP_PLAYER_INTERP	= 2;
 const XMP_INTERP_NEAREST = 0;
 const XMP_INTERP_LINEAR	= 1;
 const XMP_INTERP_SPLINE	= 2;
-const XMP_INFO_ROW = 2;
-const XMP_INFO_FRAME = 4;
 const XMP_INFO_TIME = 7;
 
 // noinspection PointlessArithmeticExpressionJS
