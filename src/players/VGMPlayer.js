@@ -24,10 +24,11 @@ export default class VGMPlayer extends Player {
     this.vgmCtx = this.core._lvgm_init(this.sampleRate);
   }
 
-  loadData(data, filename) {
+  loadData(data, filepath) {
     const dataPtr = this.copyToHeap(data);
     const err = this.core._lvgm_load_data(this.vgmCtx, dataPtr, data.byteLength);
     this.core._free(dataPtr);
+    const filepathMeta = Player.metadataFromFilepath(filepath);
 
     if (err !== 0) {
       console.error("lvgm_load_data failed. error code: %d", err);
@@ -38,7 +39,7 @@ export default class VGMPlayer extends Player {
 
     const metaPtr = this.core._lvgm_get_metadata(this.vgmCtx);
     const meta = {
-      title:   this.core.UTF8ToString(this.core.getValue(metaPtr + 0, 'i32')),
+      title:   this.core.UTF8ToString(this.core.getValue(metaPtr + 0, 'i32')) || filepathMeta.title,
       artist:  this.core.UTF8ToString(this.core.getValue(metaPtr + 4, 'i32')),
       game:    this.core.UTF8ToString(this.core.getValue(metaPtr + 8, 'i32')),
       system:  this.core.UTF8ToString(this.core.getValue(metaPtr + 12, 'i32')),
