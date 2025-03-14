@@ -322,6 +322,7 @@ export default class GMEPlayer extends Player {
       case 'enableAccuracy':
         this.params[id] = !!value;
         if (this.gmeCtx) core._gme_enable_accuracy(this.gmeCtx, value ? 1 : 0);
+        break;
       default:
         console.warn('GMEPlayer has no parameter with id "%s".', id);
     }
