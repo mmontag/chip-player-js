@@ -94,8 +94,11 @@ body {
 
 /* Margins in one direction (bottom) */
 h1, h2, h3, h4, h5, h6 {
+    &:first-child {
+        margin: 0 0 var(--charH) 0;
+    }
     color: var(--neutral4);
-    margin: 0 0 var(--charH) 0;
+    margin: var(--charH) 0;
     padding: 0;
     font-weight: normal;
 }
