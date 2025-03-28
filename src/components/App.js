@@ -722,12 +722,19 @@ class App extends React.Component {
     this.props.toastContext.enqueueToast('Copied song link to clipboard.', ToastLevels.INFO);
   }
 
+  handleToggleSettings = (e) => {
+    const { settings, updateSettings } = this.props.userContext;
+    const showPlayerSettings = settings?.showPlayerSettings;
+    updateSettings({ showPlayerSettings: !showPlayerSettings });
+  }
+
   render() {
     const { title, subtitle } = titlesFromMetadata(this.state.currentSongMetadata);
     const currContext = this.sequencer?.getCurrContext();
     const currIdx = this.sequencer?.getCurrIdx();
     const search = { search: window.location.search };
-    const { showPlayerSettings, handleToggleSettings } = this.props.userContext;
+    const { settings } = this.props.userContext;
+    const showPlayerSettings = settings?.showPlayerSettings;
 
     return (
       <Dropzone
@@ -754,7 +761,7 @@ class App extends React.Component {
                          to={{ pathname: "/local", ...search }}>Local</NavLink>
                 {/* this.sequencer?.players?.map((p, i) => `p${i}:${p.stopped?'off':'on'}`).join(' ') */}
                 <button className={`tab tab-settings ${showPlayerSettings ? 'tab-selected' : ''}`}
-                        onClick={handleToggleSettings}>Settings</button>
+                        onClick={this.handleToggleSettings}>Settings</button>
               </div>
               <div className="App-main-content-and-settings">
               <div className="App-main-content-area"

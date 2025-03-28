@@ -1,4 +1,4 @@
-import React, { createContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react';
 import { getAuth, onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider } from 'firebase/auth';
 // import { useAuthState } from 'react-firebase-hooks/auth'; // Consider using react-firebase-hooks
 // import firebase from 'firebase/app'; // Assuming you have firebase configured
@@ -23,8 +23,14 @@ const UserContext = createContext({
   handleLogin: () => {},
   handleLogout: () => {},
   handleToggleFavorite: () => {},
-  handleToggleSettings: () => {},
+  settings: {},
+  updateSettings: () => {},
 });
+
+const DEFAULT_SETTINGS = {
+  showPlayerSettings: false,
+  theme: 'msdos',
+};
 
 /**
  * Convert favorites from list of path strings to list of objects.
@@ -51,13 +57,23 @@ function migrateFaves(faves) {
   return faves;
 }
 
+function migrateSettings(settings) {
+  const migratedSettings = { ...settings };
+  Object.keys(DEFAULT_SETTINGS).forEach(key => {
+    if (settings[key] === undefined) {
+      migratedSettings[key] = DEFAULT_SETTINGS[key];
+    }
+  });
+  return migratedSettings;
+}
+
 const UserProvider = ({ children }) => {
   // Use authState hook for user state
   // const [authUser, userLoading] = useAuthState(firebase.auth());
   const [user, setUser] = useState(null); // Local state for user data
   const [faves, setFaves] = useState([]);
-  const [showPlayerSettings, setShowPlayerSettings] = useState(false);
   const [loadingUser, setLoadingUser] = useState(true); // Manage loading state
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
 
   useEffect(() => {
     // Initialize Firebase
@@ -76,14 +92,15 @@ const UserProvider = ({ children }) => {
               console.debug('Creating user document', user.uid);
               setDoc(docRef, {
                 faves: [],
-                settings: {},
+                settings: DEFAULT_SETTINGS,
               });
             } else {
               // Restore user
               const data = userSnapshot.data();
               const faves = migrateFaves(data.faves || []);
               setFaves(faves);
-              setShowPlayerSettings(data.settings?.showPlayerSettings || false);
+              const settings = migrateSettings(data.settings);
+              setSettings(settings);
             }
           });
       }
@@ -146,19 +163,18 @@ const UserProvider = ({ children }) => {
     }
   };
 
-  const handleToggleSettings = () => {
-    // Optimistic update
-    const newShowPlayerSettings = !showPlayerSettings;
-    setShowPlayerSettings(newShowPlayerSettings);
+  const updateSettings = useCallback((partialSettings) => {
+    const newSettings = { ...settings, ...partialSettings };
+    setSettings(newSettings);
 
     if (user) {
       const userRef = doc(getFirestore(), 'users', user.uid);
-      updateDoc(userRef, { settings: { showPlayerSettings: newShowPlayerSettings } })
+      updateDoc(userRef, { settings: newSettings })
         .catch((e) => {
           console.log('Couldn\'t update settings in Firebase.', e);
         });
     }
-  }
+  }, [user, settings]);
 
   // We need to derive a list of hrefs to use as the play context.
   const favesContext = useMemo(() => {
@@ -172,11 +188,11 @@ const UserProvider = ({ children }) => {
         loadingUser,
         faves,
         favesContext,
-        showPlayerSettings,
         handleLogin,
         handleLogout,
         handleToggleFavorite,
-        handleToggleSettings,
+        settings,
+        updateSettings,
       }}>
       {children}
     </UserContext.Provider>
