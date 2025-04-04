@@ -1,6 +1,12 @@
-import React from 'react';
+import React, { useCallback, useContext } from 'react';
+import { UserContext } from './UserProvider';
 
 export default function Announcements() {
+  const { updateSettings } = useContext(UserContext);
+  const setTheme = useCallback((theme) => {
+    updateSettings({ theme });
+  }, [updateSettings]);
+
   return (
     <div className="Announcements" style={{maxWidth: 544 }}>
       <p style={{font: 'var(--fontPxPlusChipPlayer)', whiteSpace: 'pre-wrap'}}>
@@ -15,7 +21,7 @@ export default function Announcements() {
         Added <a href="/browse/Nintendo%20Game%20Boy">Nintendo Game Boy</a> (.gbs) to the catalog. (1559 + 39 homebrew)<br/>
       </p>
       <h3>2025-02-16</h3>
-      <p>Experimental: themes. Try out <a href="?theme=winamp">Winamp theme</a> or switch back to <a href="?theme=msdos">MSDOS</a>.</p>
+      <p>Experimental: themes. Try out <a onClick={() => setTheme('winamp')}>Winamp theme</a> or switch back to <a onClick={() => setTheme('msdos')}>MSDOS</a>.</p>
       <h3>2025-01-25</h3>
       <p>
         Updated game-music-emu from a 2018 fork to the latest upstream (0.6.4). Among other things, this adds support for glitched SPC files (i.e. from <a href="/browse/Contemporary/SNES%20Romhacks%20(SPC)">SMWCentral romhacks</a>).
