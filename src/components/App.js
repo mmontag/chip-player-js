@@ -71,8 +71,11 @@ class App extends React.Component {
     // ┌────────────┐      ┌────────────┐      ┌─────────────┐
     // │ playerNode ├─────>│  gainNode  ├─────>│ destination │
     // └────────────┘      └────────────┘      └─────────────┘
+
+    // Smaller buffer for mobile devices. 'interactive' yields 128 samples on iOS/Android.
+    const latencyHint = isMobile.any ? 'interactive' : 'playback';
     let audioCtx = this.audioCtx = window.audioCtx = new (window.AudioContext || window.webkitAudioContext)({
-      latencyHint: 'playback'
+      latencyHint,
     });
 
     // Limit the sample rate if needed
@@ -83,7 +86,7 @@ class App extends React.Component {
         targetRate /= 2;
       }
       audioCtx = this.audioCtx = window.audioCtx = new (window.AudioContext || window.webkitAudioContext)({
-        latencyHint: 'playback',
+        latencyHint,
         sampleRate: targetRate,
       });
     }
