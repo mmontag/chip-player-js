@@ -15,7 +15,7 @@ const outputPath = 'server/catalog.json';
 const dirDictOutputPath = 'server/directories.json';
 const formatsRegex = new RegExp(`\\.(${FORMATS.join('|')})$`);
 const romanNumeralNineRegex = /\bix\b/i;
-const romanNumeralRegex = /\b([IVXLC]+|[ivxlc]+)([-.,)]|$)/; // All upper case or all lower case
+const romanNumeralRegex = /\b([IVXLC]+|[ivxlc]+)([-.,) ]|$)/; // All upper case or all lower case
 const NUMERIC_COLLATOR = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
 
 /*
