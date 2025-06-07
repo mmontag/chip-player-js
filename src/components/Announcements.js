@@ -15,6 +15,22 @@ export default function Announcements() {
 ╚═══════════════════════════════╝
 `}
       </p>
+      <h3>2025-05-02</h3>
+      <p>
+        Improve audio playback for Android and iOS devices.
+      </p>
+      <h3>2025-04-01</h3>
+      <p>
+        Add Theme to Global Settings, persist in Firebase.<br/>
+        Use upstream FluidLite - I'm now contributing to the project.
+        For example, <a href="https://github.com/divideconcept/FluidLite/pull/59">stereo chorus</a>.
+      </p>
+      <h3>2025-03-09</h3>
+      <p>
+        Improve N64 (usflib) player performance.<br/>
+        Initial playback is much faster.<br/>
+        Added <a href="/browse/The%20Module%20Collection">The Module Collection</a> to the catalog. (6000 oldskool mods)<br/>
+      </p>
       <h3>2025-02-24</h3>
       <p>
         Added <a href="/browse/Battle%20of%20the%20Bits">Battle of the Bits</a> to the catalog. (2356 tunes so far)<br/>
