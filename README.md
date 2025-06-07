@@ -87,17 +87,20 @@ ccmake -DCMAKE_TOOLCHAIN_FILE="$(dirname $(which emcc))/cmake/Modules/Platform/E
 ![image](https://github.com/user-attachments/assets/1ca9de9c-8123-4619-a691-aff289eb6066)
 
 
-#### Subproject: fluidlite
+#### External project: fluidlite
 
-Our goal is to produce **fluidlite/build/libfluidlite.a**.
+Our goal is to produce **../fluidlite/build/libfluidlite.a** (**build-chip-core.js** assumes you have cloned FluidLite side-by-side with chip-player-js). A **fluidlite** subtree was previously included in this repository, but this is deprecated and can be ignored.
+
 Build fluidlite (uses Cmake):
 
 ```sh
-cd chip-player-js/fluidlite/     # navigate to fluidlite root
+git clone git@github.com:divideconcept/FluidLite.git
+cd FluidLite/                    # navigate to fluidlite root
 source ~/src/emsdk/emsdk_env.sh  # load the emscripten environment variables
 mkdir build                      # create a build folder for Cmake output
 cd build                         
-emcmake cmake -DDISABLE_SF3=1 .. # Cmake will generate a Makefile by default
+emcmake cmake ..                 # Cmake will generate a Makefile
+                                 # Note: SF3 support is now disabled by default
                                  # Problems here? Try deleting CMake cache files
 emmake make fluidlite-static
 ```

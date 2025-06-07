@@ -162,7 +162,7 @@ const chipModules = [
     name: 'fluidlite',
     enabled: true,
     sourceFiles: [
-      'fluidlite/build/libfluidlite.a',
+      '../FluidLite/build/libfluidlite.a',
     ],
     exportedFunctions: [
       '_new_fluid_settings',
@@ -184,6 +184,7 @@ const chipModules = [
       '_fluid_synth_get_polyphony',
       '_fluid_synth_set_polyphony',
       '_fluid_synth_bank_select',
+      '_fluid_synth_get_active_voice_count',
     ],
     flags: [],
   },
