@@ -41,6 +41,7 @@ const SOUNDFONTS = [
       {label: 'Gravis Ultrasound (5.9 MB)', value: 'Gravis_Ultrasound_Classic_PachSet_v1.6.sf2'},
       {label: 'Tim GM (6 MB)', value: 'TimGM6mb.sf2'},
       {label: 'Alan Chan 5MBGMGS (4.9 MB)', value: '5MBGMGS.SF2'},
+      {label: 'E-mu 1MGM (AWE32) (1.1 MB)', value: '1mgm.sf2'},
       {label: 'E-mu 2MBGMGS (2.1 MB)', value: '2MBGMGS.SF2'},
       {label: 'E-mu 8MBGMGS (8.2 MB)', value: '8MBGMGS.SF2'},
       {label: 'Phoenix MT-32 (6.3 MB)', value: 'Phoenix_MT-32.sf2'},
