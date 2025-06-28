@@ -218,7 +218,7 @@ class App extends React.Component {
       this.fetchDirectory(dirname).then(() => {
         this.props.history.replace(`${pathJoin('/browse', dirname)}${search}`);
         // Convert play path to href (context contains full hrefs)
-        const playHref = CATALOG_PREFIX + playPath;
+        const playHref = pathJoin(CATALOG_PREFIX, playPath);
         const index = this.playContexts[dirname].indexOf(playHref);
 
         this.playContext(this.playContexts[dirname], index, subtune);
