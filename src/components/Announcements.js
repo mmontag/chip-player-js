@@ -1,5 +1,6 @@
 import React, { useCallback, useContext } from 'react';
 import { UserContext } from './UserProvider';
+import { Link } from 'react-router-dom';
 
 export default function Announcements() {
   const { updateSettings } = useContext(UserContext);
@@ -15,6 +16,11 @@ export default function Announcements() {
 ╚═══════════════════════════════╝
 `}
       </p>
+      <h3>2025-06-25</h3>
+      <p>
+        Added <Link to="/browse/MIDI Datasets">MIDI Datasets</Link> to the catalog. (10475 tunes)<br/>
+        Piano performances transcribed to MIDI using machine learning.<br/>
+      </p>
       <h3>2025-05-02</h3>
       <p>
         Improved audio playback for Android and iOS devices.
@@ -29,18 +35,18 @@ export default function Announcements() {
       <p>
         Improved N64 (usflib) player performance.<br/>
         Playback startup is much faster.<br/>
-        Added <a href="/browse/The%20Module%20Collection">The Module Collection</a> to the catalog. (6000 oldskool mods)<br/>
+        Added <Link to="/browse/The%20Module%20Collection">The Module Collection</Link> to the catalog. (6000 oldskool mods)<br/>
       </p>
       <h3>2025-02-24</h3>
       <p>
-        Added <a href="/browse/Battle%20of%20the%20Bits">Battle of the Bits</a> to the catalog. (2356 tunes so far)<br/>
-        Added <a href="/browse/Nintendo%20Game%20Boy">Nintendo Game Boy</a> (.gbs) to the catalog. (1559 + 39 homebrew)<br/>
+        Added <Link to="/browse/Battle%20of%20the%20Bits">Battle of the Bits</Link> to the catalog. (2356 tunes so far)<br/>
+        Added <Link to="/browse/Nintendo%20Game%20Boy">Nintendo Game Boy</Link> (.gbs) to the catalog. (1559 + 39 homebrew)<br/>
       </p>
       <h3>2025-02-16</h3>
       <p>Experimental: themes. Try out <a onClick={() => setTheme('winamp')}>Winamp theme</a> or switch back to <a onClick={() => setTheme('msdos')}>MSDOS</a>.</p>
       <h3>2025-01-25</h3>
       <p>
-        Updated game-music-emu from a 2018 fork to the latest upstream (0.6.4). Among other things, this adds support for glitched SPC files (i.e. from <a href="/browse/Contemporary/SNES%20Romhacks%20(SPC)">SMWCentral romhacks</a>).
+        Updated game-music-emu from a 2018 fork to the latest upstream (0.6.4). Among other things, this adds support for glitched SPC files (i.e. from <Link to="/browse/Contemporary/SNES%20Romhacks%20(SPC)">SMWCentral romhacks</Link>).
         <br/><br/>
         New for Game Music Emu player settings:<br/>
         - stereoWidth (now built into game-music-emu)<br/>
