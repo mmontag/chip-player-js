@@ -403,7 +403,8 @@ class App extends React.Component {
         requestCache.fetchCached(metadataUrl).then(response => {
           const { imageUrl, infoTexts, md5 } = response;
           const newInfoTexts = [...this.state.infoTexts, ...infoTexts ];
-          this.setState({ imageUrl, infoTexts: newInfoTexts, md5 });
+          const newShowInfo = this.state.showInfo && newInfoTexts.length > 0;
+          this.setState({ imageUrl, infoTexts: newInfoTexts, md5, showInfo: newShowInfo });
 
           if ('mediaSession' in navigator) {
             // Clear artwork if imageUrl is null.
@@ -434,8 +435,6 @@ class App extends React.Component {
 
       this.setState({
         ...App.mapSequencerStateToAppState(sequencerState),
-        // TODO: sparse state update
-        showInfo: this.state.showInfo && player.getInfoTexts()?.length > 0,
       });
     }
   }

@@ -9,7 +9,7 @@ function MessageBox(props) {
   } = props;
 
   const [currTextIdx, setCurrTextIdx] = useState(0);
-  const infoText = (infoTexts[currTextIdx] || '').trim();
+  const infoText = (infoTexts[currTextIdx] || '').trim() || 'No information available.';
   const numLines = Math.min(40, infoText.split('\n').length + 6);
 
   useEffect(() => {
