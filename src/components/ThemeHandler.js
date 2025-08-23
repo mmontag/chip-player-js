@@ -25,7 +25,7 @@ function setThemeColor(color) {
   if (!metaThemeColor) {
     metaThemeColor = document.createElement("meta");
     metaThemeColor.name = "theme-color";
-    document.head.appendChild(metaThemeColor);ÅÅ
+    document.head.appendChild(metaThemeColor);
   }
   metaThemeColor.content = color;
 }
