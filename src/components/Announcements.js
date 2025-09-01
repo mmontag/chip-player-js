@@ -16,6 +16,11 @@ export default function Announcements() {
 ╚═══════════════════════════════╝
 `}
       </p>
+      <h3>2025-07-16</h3>
+      <p>
+        Migrated to a new hosting provider. <br/>
+        Chip Player JS is now supported by <a href="https://m.do.co/c/fb2d6eb51d7b">Digital Ocean</a>.
+      </p>
       <h3>2025-06-25</h3>
       <p>
         Added <Link to="/browse/MIDI Datasets">MIDI Datasets</Link> to the catalog. (10475 tunes)<br/>
