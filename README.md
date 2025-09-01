@@ -298,3 +298,9 @@ The best modern option for playing MIDI is probably using a well-designed GM Sou
 A word about licensing: chip-player-js represents the hard work of many individuals because it is built upon several open-source projects. Each of these projects carries their own license restrictions, and chip-player-js as a whole must adhere to the most restrictive licenses among these. Therefore, chip-player-js is *generally* licensed under [GPLv3](LICENSE). 
 
 However, each subdirectory in this project *may* contain additional, more specific license info that pertains to files contained therein. For example, the code under [src/](src) is written by me and is more permissively [MIT licensed](src/LICENSE).
+
+This project is supported by:
+
+<a href="https://m.do.co/c/fb2d6eb51d7b">
+<img src="https://opensource.nyc3.cdn.digitaloceanspaces.com/attribution/assets/SVG/DO_Logo_horizontal_blue.svg" width="170px">
+</a>
