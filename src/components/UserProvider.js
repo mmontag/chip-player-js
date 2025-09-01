@@ -71,9 +71,41 @@ const UserProvider = ({ children }) => {
   // Use authState hook for user state
   // const [authUser, userLoading] = useAuthState(firebase.auth());
   const [user, setUser] = useState(null); // Local state for user data
-  const [faves, setFaves] = useState([]);
+  const [faves, setFaves] = useState(() => {
+    try {
+      const faves = window.localStorage.getItem('faves');
+      return faves ? JSON.parse(faves) : [];
+    } catch (e) {
+      console.error('Could not load faves from localStorage', e);
+      return [];
+    }
+  });
   const [loadingUser, setLoadingUser] = useState(true); // Manage loading state
-  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+  const [settings, setSettings] = useState(() => {
+    try {
+      const settings = window.localStorage.getItem('settings');
+      return settings ? JSON.parse(settings) : DEFAULT_SETTINGS;
+    } catch (e) {
+      console.error('Could not load settings from localStorage', e);
+      return DEFAULT_SETTINGS;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('faves', JSON.stringify(faves));
+    } catch (e) {
+      console.error('Could not save faves to localStorage', e);
+    }
+  }, [faves]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('settings', JSON.stringify(settings));
+    } catch (e) {
+      console.error('Could not save settings to localStorage', e);
+    }
+  }, [settings]);
 
   useEffect(() => {
     // Initialize Firebase
