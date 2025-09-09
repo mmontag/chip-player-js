@@ -136,6 +136,14 @@ export default class Player extends EventEmitter {
     return 0;
   }
 
+  getVoiceNames() {
+    const names = [];
+    for (let i = 0; i < this.getNumVoices(); i++) {
+      names.push(this.getVoiceName(i));
+    }
+    return names;
+  }
+
   /*
   [
     {
@@ -205,7 +213,7 @@ export default class Player extends EventEmitter {
       paramDefs: this.getParamDefs(),
       tempo: this.getTempo(),
       voiceMask: this.getVoiceMask(),
-      voiceNames: [...Array(this.getNumVoices())].map((_, i) => this.getVoiceName(i)),
+      voiceNames: this.getVoiceNames(),
       voiceGroups: this.getVoiceGroups(),
       infoTexts: this.getInfoTexts(),
       isStopped: this.stopped,
