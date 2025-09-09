@@ -93,46 +93,47 @@ export default class Player extends EventEmitter {
   }
 
   getTempo() { // TODO: rename all tempo to speed
-    console.warn('Player.getTempo() not implemented for this player.');
+    console.debug(`Player.getTempo() not implemented for ${this.constructor.name}.`);
     return 1;
   }
 
   setTempo() {
-    console.warn('Player.setTempo() not implemented for this player.');
+    console.debug(`Player.setTempo() not implemented for ${this.constructor.name}.`);
   }
 
   setFadeout(startMs) {
-    console.warn('Player.setFadeout() not implemented for this player.');
+    console.debug(`Player.setFadeout() not implemented for ${this.constructor.name}.`);
   }
 
   getDurationMs() {
-    console.warn('Player.getDurationMs() not implemented for this player.');
+    console.debug(`Player.getDurationMs() not implemented for ${this.constructor.name}.`);
     return 5000;
   }
 
   getPositionMs() {
-    console.warn('Player.getPositionMs() not implemented for this player.');
+    console.debug(`Player.getPositionMs() not implemented for ${this.constructor.name}.`);
     return 0;
   }
 
   seekMs(ms) {
-    console.warn('Player.seekMs() not implemented for this player.');
+    console.debug(`Player.seekMs() not implemented for ${this.constructor.name}.`);
   }
 
   getVoiceName(index) {
-    console.warn('Player.getVoiceName() not implemented for this player.');
+    console.debug(`Player.getVoiceName() not implemented for ${this.constructor.name}.`);
   }
 
   getVoiceMask() {
-    console.warn('Player.getVoiceMask() not implemented for this player.');
+    console.debug(`Player.getVoiceMask() not implemented for ${this.constructor.name}.`);
     return [];
   }
 
   setVoiceMask() {
-    console.warn('Player.setVoiceMask() not implemented for this player.');
+    console.debug(`Player.setVoiceMask() not implemented for ${this.constructor.name}.`);
   }
 
   getNumVoices() {
+    console.debug(`Player.getNumVoices() not implemented for ${this.constructor.name}.`);
     return 0;
   }
 
