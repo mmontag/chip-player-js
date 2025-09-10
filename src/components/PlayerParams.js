@@ -117,7 +117,7 @@ export default class PlayerParams extends React.PureComponent {
             )
           })
           :
-          numVoices > 1 &&
+          numVoices > 0 &&
           <span className='PlayerParams-param PlayerParams-group'>
             <label className="PlayerParams-group-title">
               Voices:
