@@ -203,6 +203,16 @@ export default class Player extends EventEmitter {
     return this.paramDefs;
   }
 
+  getParamValues() {
+    const paramValues = {};
+    if (this.getParameter) {
+      for (const def of this.paramDefs) {
+        paramValues[def.id] = this.getParameter(def.id);
+      }
+    }
+    return paramValues;
+  }
+
   getBasePlayerState() {
     return {
       metadata: this.getMetadata(),
@@ -212,6 +222,7 @@ export default class Player extends EventEmitter {
       numSubtunes: this.getNumSubtunes(),
       subtune: this.getSubtune(),
       paramDefs: this.getParamDefs(),
+      paramValues: this.getParamValues(),
       tempo: this.getTempo(),
       voiceMask: this.getVoiceMask(),
       voiceNames: this.getVoiceNames(),

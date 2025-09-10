@@ -117,6 +117,7 @@ class App extends React.Component {
       tempo: 1,
       voiceMask: Array(MAX_VOICES).fill(true),
       voiceNames: Array(MAX_VOICES).fill(''),
+      voiceGroups: [],
       imageUrl: null,
       infoTexts: [],
       showInfo: false,
@@ -127,6 +128,7 @@ class App extends React.Component {
       directories: {},
       hasPlayer: false,
       paramDefs: [],
+      paramValues: {},
       // Special playable contexts
       localFiles: [],
     };
@@ -252,8 +254,9 @@ class App extends React.Component {
       voiceGroups: 'voiceGroups',
       songUrl: 'url',
       hasPlayer: 'hasPlayer',
-      // TODO: add param values? move to paramStateUpdate?
+      // TODO: Move to a separate paramStateUpdate?
       paramDefs: 'paramDefs',
+      paramValues: 'paramValues',
       infoTexts: 'infoTexts',
     };
     const appState = {};
@@ -511,6 +514,14 @@ class App extends React.Component {
     this.setState({
       tempo: tempo
     });
+  }
+
+  handleParamChange(id, value) {
+    if (!this.sequencer.getPlayer()) return;
+    this.sequencer.getPlayer().setParameter(id, value);
+    this.setState(prevState => ({
+      paramValues: { ...prevState.paramValues, [id]: value },
+    }));
   }
 
   setSpeedRelative(delta) {
@@ -809,18 +820,6 @@ class App extends React.Component {
                       currIdx={currIdx}
                       listing={this.state.localFiles}/>
                   )}/>>
-                  <Route path="/settings" render={() => (
-                    <Settings
-                      ejected={this.state.ejected}
-                      tempo={this.state.tempo}
-                      currentSongNumVoices={this.state.currentSongNumVoices}
-                      voiceMask={this.state.voiceMask}
-                      voiceNames={this.state.voiceNames}
-                      handleSetVoiceMask={this.handleSetVoiceMask}
-                      handleTempoChange={this.handleTempoChange}
-                      sequencer={this.sequencer}
-                      />
-                  )}/>
                   {/* Catch-all route */}
                   <Route render={({history}) => (
                     this.contentAreaRef.current &&
@@ -843,12 +842,15 @@ class App extends React.Component {
                   <Settings
                     ejected={this.state.ejected}
                     tempo={this.state.tempo}
-                    currentSongNumVoices={this.state.currentSongNumVoices}
+                    numVoices={this.state.currentSongNumVoices}
                     voiceMask={this.state.voiceMask}
                     voiceNames={this.state.voiceNames}
                     voiceGroups={this.state.voiceGroups}
-                    handleSetVoiceMask={this.handleSetVoiceMask}
-                    handleTempoChange={this.handleTempoChange}
+                    onVoiceMaskChange={this.handleSetVoiceMask}
+                    onTempoChange={this.handleTempoChange}
+                    paramDefs={this.state.paramDefs}
+                    paramValues={this.state.paramValues}
+                    onParamChange={this.handleParamChange}
                     sequencer={this.sequencer}
                   />
                 </div>

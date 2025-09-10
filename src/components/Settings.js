@@ -13,23 +13,24 @@ const themes = [
   }
 ];
 
-export default memo(Settings);
-
 function Settings(props) {
   const {
     ejected,
     tempo,
-    currentSongNumVoices,
+    numVoices,
     voiceMask,
     voiceNames,
     voiceGroups,
-    handleSetVoiceMask,
-    handleTempoChange,
+    onVoiceMaskChange,
+    onTempoChange,
+    paramDefs,
+    paramValues,
+    onParamChange,
     sequencer,
   } = props;
 
   const { settings, updateSettings } = useContext(UserContext);
-  const theme = settings?.theme; // Extract only what we need
+  const theme = settings?.theme;
 
   const handleThemeChange = useCallback((e) => {
     updateSettings({ theme: e.target.value });
@@ -42,15 +43,16 @@ function Settings(props) {
         <PlayerParams
           ejected={ejected}
           tempo={tempo}
-          numVoices={currentSongNumVoices}
+          numVoices={numVoices}
           voiceMask={voiceMask}
           voiceNames={voiceNames}
           voiceGroups={voiceGroups}
-          handleTempoChange={handleTempoChange}
-          handleSetVoiceMask={handleSetVoiceMask}
-          getParameter={sequencer.getPlayer().getParameter}
-          setParameter={sequencer.getPlayer().setParameter}
-          paramDefs={sequencer.getPlayer().getParamDefs()}/>
+          onTempoChange={onTempoChange}
+          onVoiceMaskChange={onVoiceMaskChange}
+          paramDefs={paramDefs}
+          paramValues={paramValues}
+          onParamChange={onParamChange}
+        />
         :
         <div>(No active player)</div>}
       <h3>Global Settings</h3>
@@ -70,3 +72,5 @@ function Settings(props) {
     </div>
   );
 }
+
+export default memo(Settings);
