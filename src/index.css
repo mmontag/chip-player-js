@@ -325,8 +325,8 @@ body,#root {
 }
 
 .App-main-content-area.settings {
-    width: 360px;
-    min-width: 360px;
+    width: 368px;
+    min-width: 368px;
     flex-grow: 0;
     padding: var(--charH) var(--charW2);
 }
@@ -503,6 +503,13 @@ button.FavoriteButton {
     background: initial;
     padding: 0 var(--charW1);
 }
+button.IconButton {
+    cursor: pointer;
+    color: var(--neutral2);
+    background: initial;
+    padding: 0;
+    margin-left: -8px;
+}
 
 /*.Song-now-playing .Trash-button { background: var(--button); }*/
 .Trash-button {
@@ -557,6 +564,8 @@ button.FavoriteButton {
 .icon-repeat   { width: 16px; mask-image: url(images/repeat.png); }
 .icon-shuffle  { width: 16px; mask-image: url(images/shuffle.png); }
 .icon-chip     { width: 24px; mask-image: url(images/chip.png); }
+.icon-pin-up   { width: 24px; mask-image: url(images/pin-up.png); background-color: var(--neutral2); }
+.icon-pin-down { width: 24px; mask-image: url(images/pin-filled.png); background-color: var(--neutral2); }
 
 .tab-container {
     border-bottom: 1px solid var(--clickable);
