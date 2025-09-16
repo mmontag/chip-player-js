@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react';
+import { debounce } from 'lodash';
 import { getAuth, onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider } from 'firebase/auth';
 // import { useAuthState } from 'react-firebase-hooks/auth'; // Consider using react-firebase-hooks
 // import firebase from 'firebase/app'; // Assuming you have firebase configured
@@ -25,6 +26,7 @@ const UserContext = createContext({
   handleToggleFavorite: () => {},
   settings: {},
   updateSettings: () => {},
+  replaceSettings: () => {},
 });
 
 const DEFAULT_SETTINGS = {
@@ -195,18 +197,28 @@ const UserProvider = ({ children }) => {
     }
   };
 
+  const saveSettingsToFirebase = useMemo(() => {
+    return debounce((user, newSettings) => {
+      if (user) {
+        const userRef = doc(getFirestore(), 'users', user.uid);
+        updateDoc(userRef, { settings: newSettings })
+          .catch((e) => {
+            console.log('Couldn\'t update settings in Firebase.', e);
+          });
+      }
+    }, 1000);
+  }, []);
+
   const updateSettings = useCallback((partialSettings) => {
     const newSettings = { ...settings, ...partialSettings };
     setSettings(newSettings);
+    saveSettingsToFirebase(user, newSettings);
+  }, [user, settings, saveSettingsToFirebase]);
 
-    if (user) {
-      const userRef = doc(getFirestore(), 'users', user.uid);
-      updateDoc(userRef, { settings: newSettings })
-        .catch((e) => {
-          console.log('Couldn\'t update settings in Firebase.', e);
-        });
-    }
-  }, [user, settings]);
+  const replaceSettings = useCallback((newSettings) => {
+    setSettings(newSettings);
+    saveSettingsToFirebase(user, newSettings);
+  }, [user, saveSettingsToFirebase]);
 
   // We need to derive a list of hrefs to use as the play context.
   const favesContext = useMemo(() => {
@@ -225,6 +237,7 @@ const UserProvider = ({ children }) => {
         handleToggleFavorite,
         settings,
         updateSettings,
+        replaceSettings,
       }}>
       {children}
     </UserContext.Provider>
