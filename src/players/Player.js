@@ -204,6 +204,38 @@ export default class Player extends EventEmitter {
     return this.paramDefs;
   }
 
+  getParamDefault(paramId) {
+    const paramDef = this.paramDefs.find(p => p.id === paramId);
+    return paramDef?.defaultValue;
+  }
+
+  resolveParamValue(paramId, transientValue, persistedSettings) {
+    // Priority 1: Transient value discovered by the player during load.
+    if (transientValue !== undefined && transientValue !== null) {
+      return transientValue;
+    }
+
+    // Priority 2: User's persisted ("pinned") setting.
+    const persistedKey = `${this.playerKey}.${paramId}`;
+    if (persistedSettings?.hasOwnProperty(persistedKey)) {
+      return persistedSettings[persistedKey];
+    }
+
+    // Priority 3: Player's hard-coded default.
+    return this.getParamDefault(paramId);
+  }
+
+  resolveParamValues(persistedSettings) {
+    for (const paramDef of this.paramDefs) {
+      const paramId = paramDef.id;
+      const resolvedValue = this.resolveParamValue(paramId, undefined, persistedSettings);
+      if (this.getParameter(paramId) === resolvedValue) continue;
+      if (resolvedValue !== undefined) {
+        this.setParameter(paramId, resolvedValue);
+      }
+    }
+  }
+
   getParamValues() {
     const paramValues = {};
     if (this.getParameter) {
