@@ -28,7 +28,7 @@ export default class GMEPlayer extends Player {
       min: 0.0,
       max: 2.0,
       step: 0.01,
-      defaultValue: 1.0,
+      defaultValue: 0.0,
     },
     {
       id: 'stereoWidth',
@@ -67,7 +67,7 @@ export default class GMEPlayer extends Player {
     this.fileExtensions = fileExtensions;
     this.subtune = 0;
     this.tempo = 1.0;
-    this.params = { subbass: 1 };
+    this.params = {};
     this.voiceMask = []; // GME does not expose a method to get the current voice mask
     this.gmeCtx = null;
 
@@ -80,9 +80,6 @@ export default class GMEPlayer extends Player {
     this.emuPtr = core._malloc(4); // i32
 
     this.subBass = new SubBass(this.sampleRate);
-
-    this.params = {};
-    this.paramDefs.forEach(p => this.setParameter(p.id, p.defaultValue));
   }
 
   processAudioInner(channels) {
@@ -176,17 +173,13 @@ export default class GMEPlayer extends Player {
     return core._gme_start_track(this.gmeCtx, subtune);
   }
 
-  loadData(data, filepath, subtune = 0) {
+  loadData(data, filepath, persistedSettings, subtune = 0) {
     this.subtune = subtune;
     this.fadingOut = false;
     this.seekTargetMs = null;
     this.seekRequestId = null;
     this.currentFileExt = path.extname(filepath);
     this.filepathMeta = Player.metadataFromFilepath(filepath);
-    const formatNeedsBass = filepath.match(
-      /(\.sgc$|\.kss$|\.nsfe?$|\.ay$|Master System|Game Gear)/i
-    );
-    this.params.subbass = formatNeedsBass ? 1 : 0;
 
     const dataPtr = this.copyToHeap(data);
     const err = core._gme_open_data(dataPtr, data.length, this.emuPtr, this.sampleRate);
@@ -200,9 +193,8 @@ export default class GMEPlayer extends Player {
     this.voiceMask = Array(core._gme_voice_count(this.gmeCtx)).fill(true);
 
     core._gme_ignore_silence(this.gmeCtx, 0);
-    core._gme_set_stereo_depth(this.gmeCtx, this.params.stereoWidth);
-    core._gme_disable_echo(this.gmeCtx, this.params.disableEcho ? 1 : 0);
-
+    this.resolveParamValues(persistedSettings);
+    this.setTempo(persistedSettings.tempo || 1);
     this.resume();
     if (this.playSubtune(this.subtune) !== 0) {
       this.stop();

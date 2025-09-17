@@ -198,7 +198,7 @@ class App extends React.Component {
       this.setState({ loadingLocalFiles: false });
     });
 
-    this.sequencer = new Sequencer(players, this.localFilesManager);
+    this.sequencer = new Sequencer(players, this.localFilesManager, () => this.props.userContext.settings);
     this.sequencer.on('sequencerStateUpdate', this.handleSequencerStateUpdate);
     this.sequencer.on('playerError', (message) => this.props.toastContext.enqueueToast(message, ToastLevels.ERROR));
 
@@ -509,19 +509,45 @@ class App extends React.Component {
   handleTempoChange(event) {
     if (!this.sequencer.getPlayer()) return;
 
-    const tempo = parseFloat((event.target ? event.target.value : event)) || 1.0;
-    this.sequencer.getPlayer().setTempo(tempo);
+    const value = parseFloat((event.target ? event.target.value : event)) || 1.0;
+    this.sequencer.getPlayer().setTempo(value);
     this.setState({
-      tempo: tempo
+      tempo: value
     });
+
+    const { settings, updateSettings } = this.props.userContext;
+    const persistedKey = 'tempo';
+    if (settings[persistedKey] != null) {
+      updateSettings({ [persistedKey]: value });
+    }
   }
 
   handleParamChange(id, value) {
     if (!this.sequencer.getPlayer()) return;
-    this.sequencer.getPlayer().setParameter(id, value);
+    const player = this.sequencer.getPlayer();
+    player.setParameter(id, value);
     this.setState(prevState => ({
       paramValues: { ...prevState.paramValues, [id]: value },
     }));
+
+    const { settings, updateSettings } = this.props.userContext;
+    const persistedKey = `${player.playerKey}.${id}`;
+    if (settings[persistedKey] != null) {
+      updateSettings({ [persistedKey]: value });
+    }
+  }
+
+  handlePinParam(persistedKey, currentValue) {
+    const { settings, replaceSettings } = this.props.userContext;
+    const newSettings = { ...settings };
+
+    if (newSettings[persistedKey] != null) {
+      delete newSettings[persistedKey];
+    } else {
+      newSettings[persistedKey] = currentValue;
+    }
+
+    replaceSettings(newSettings);
   }
 
   setSpeedRelative(delta) {
@@ -819,7 +845,7 @@ class App extends React.Component {
                       currContext={currContext}
                       currIdx={currIdx}
                       listing={this.state.localFiles}/>
-                  )}/>>
+                  )}/>
                   {/* Catch-all route */}
                   <Route render={({history}) => (
                     this.contentAreaRef.current &&
@@ -851,6 +877,8 @@ class App extends React.Component {
                     paramDefs={this.state.paramDefs}
                     paramValues={this.state.paramValues}
                     onParamChange={this.handleParamChange}
+                    onPinParam={this.handlePinParam}
+                    persistedSettings={settings}
                     sequencer={this.sequencer}
                   />
                 </div>

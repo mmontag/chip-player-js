@@ -25,7 +25,7 @@ export default class VGMPlayer extends Player {
     this.vgmCtx = this.core._lvgm_init(this.sampleRate);
   }
 
-  loadData(data, filepath) {
+  loadData(data, filepath, persistedSettings) {
     const dataPtr = this.copyToHeap(data);
     const err = this.core._lvgm_load_data(this.vgmCtx, dataPtr, data.byteLength);
     this.core._free(dataPtr);
@@ -58,6 +58,8 @@ export default class VGMPlayer extends Player {
     };
     this.metadata = meta;
 
+    this.resolveParamValues(persistedSettings);
+    this.setTempo(persistedSettings.tempo || 1);
     this.resume();
     this.emit('playerStateUpdate', {
       ...this.getBasePlayerState(),

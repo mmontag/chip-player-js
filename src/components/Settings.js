@@ -26,6 +26,8 @@ function Settings(props) {
     paramDefs,
     paramValues,
     onParamChange,
+    onPinParam,
+    persistedSettings,
     sequencer,
   } = props;
 
@@ -52,6 +54,9 @@ function Settings(props) {
           paramDefs={paramDefs}
           paramValues={paramValues}
           onParamChange={onParamChange}
+          onPinParam={onPinParam}
+          persistedSettings={persistedSettings}
+          playerKey={sequencer?.getPlayer()?.playerKey}
         />
         :
         <div>(No active player)</div>}

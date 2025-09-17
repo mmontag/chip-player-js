@@ -142,7 +142,7 @@ export default class XMPPlayer extends Player {
     this.infoTexts = infoText.length ? [ infoText.join('\n\n') ] : [];
   }
 
-  loadData(data, filename) {
+  loadData(data, filename, persistedSettings) {
     let err;
     this.filepathMeta = Player.metadataFromFilepath(filename);
 
@@ -163,6 +163,8 @@ export default class XMPPlayer extends Player {
 
     this._parseMetadata(filename);
 
+    this.resolveParamValues(persistedSettings);
+    this.setTempo(persistedSettings.tempo || 1);
     this.resume();
     this.emit('playerStateUpdate', {
       ...this.getBasePlayerState(),

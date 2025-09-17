@@ -17,7 +17,7 @@ export default class V2MPlayer extends Player {
     this.buffer = this.core._malloc(this.bufferSize * 8);
   }
 
-  loadData(data, filename) {
+  loadData(data, filename, persistedSettings) {
     const dataPtr = this.copyToHeap(data);
     const err = this.core._v2m_open(dataPtr, data.byteLength, this.sampleRate);
     this.core._free(dataPtr);
@@ -29,6 +29,8 @@ export default class V2MPlayer extends Player {
 
     this.metadata = { title: filename };
 
+    this.resolveParamValues(persistedSettings);
+    this.setTempo(persistedSettings.tempo || 1);
     this.resume();
     this.emit('playerStateUpdate', {
       ...this.getBasePlayerState(),

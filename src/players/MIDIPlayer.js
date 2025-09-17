@@ -296,10 +296,12 @@ export default class MIDIPlayer extends Player {
     }
   }
 
-  async loadData(data, filepath) {
+  async loadData(data, filepath, persistedSettings) {
     this.ensureWebMidiInitialized();
     this.filepathMeta = this.metadataFromFilepath(filepath);
 
+    this.resolveParamValues(persistedSettings);
+    this.setTempo(persistedSettings.tempo || 1);
     const newTransientParams = {};
 
     // Transient params: synthengine, opl3bank, soundfont.

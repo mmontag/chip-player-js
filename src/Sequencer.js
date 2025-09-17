@@ -17,13 +17,14 @@ export const NUM_SHUFFLE_MODES = 2;
 export const SHUFFLE_LABELS = ['Off', 'On '];
 
 export default class Sequencer extends EventEmitter {
-  constructor(players, localFilesManager) {
+  constructor(players, localFilesManager, getSettings) {
     super();
     autoBind(this);
 
     this.player = null;
     this.players = players;
     this.localFilesManager = localFilesManager;
+    this.getSettings = getSettings;
     // this.onSequencerStateUpdate = onSequencerStateUpdate;
     // this.onPlayerError = onError;
 
@@ -253,9 +254,9 @@ export default class Sequencer extends EventEmitter {
   async playSongBuffer(filepath, buffer, subtune = 0) {
     let uint8Array;
     uint8Array = new Uint8Array(buffer);
-    this.player.setTempo(1);
+    const persistedSettings = this.getSettings();
     try {
-      await this.player.loadData(uint8Array, filepath, subtune);
+      await this.player.loadData(uint8Array, filepath, persistedSettings, subtune);
     } catch (e) {
       this.handlePlayerError(`Unable to play ${filepath} (${e.message}).`);
     }

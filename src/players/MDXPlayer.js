@@ -30,7 +30,7 @@ export default class MDXPlayer extends Player {
     this.buffer = this.core._malloc(this.bufferSize * 4); // 2 ch, 16-bit
   }
 
-  loadData(data, filename) {
+  loadData(data, filename, persistedSettings) {
     // MDXPlayer reads song data from the Emscripten filesystem,
     // rather than loading bytes from memory like other players.
     let err;
@@ -67,7 +67,6 @@ export default class MDXPlayer extends Player {
             console.error("mdx_load_file failed. error code: %d", err);
             throw Error('mdx_load_file failed');
           }
-          this.core._mdx_set_speed(this.mdxCtx, this.speed);
 
           // Metadata
           const ptr = this.core._malloc(256);
@@ -77,6 +76,8 @@ export default class MDXPlayer extends Player {
           const title = new TextDecoder("shift-jis").decode(buf.subarray(0, len));
           this.metadata = { title: title || path.basename(filename) };
 
+          this.resolveParamValues(persistedSettings);
+          this.setTempo(persistedSettings.tempo || 1);
           this.resume();
           this.emit('playerStateUpdate', {
             ...this.getBasePlayerState(),

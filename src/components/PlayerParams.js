@@ -63,11 +63,17 @@ export default class PlayerParams extends React.PureComponent {
     onVoiceMaskChange(voiceMask);
   }
 
+  isPinned(persistedKey) {
+    return this.props.persistedSettings?.hasOwnProperty(persistedKey);
+  }
+
   render() {
     const {
       paramDefs,
       paramValues,
       onParamChange,
+      onPinParam,
+      playerKey,
       tempo,
       onTempoChange,
       ejected,
@@ -77,9 +83,17 @@ export default class PlayerParams extends React.PureComponent {
       voiceNames,
     } = this.props;
 
+    const { isPinned } = this;
+
     return (
       <div className='PlayerParams'>
         <span className='PlayerParams-param PlayerParams-group'>
+          <button
+            className="IconButton"
+            title={isPinned('tempo') ? 'Un-pin this parameter' : 'Pin this parameter (retains value between songs)'}
+            onClick={() => onPinParam('tempo', tempo)}>
+            <span className={`inline-icon ${isPinned('tempo') ? 'icon-pin-down' : 'icon-pin-up'}`}/>
+          </button>
           <label htmlFor='tempo' className="PlayerParams-label">
             Speed:{' '}
           </label>
@@ -97,7 +111,7 @@ export default class PlayerParams extends React.PureComponent {
             return (
               <span className='PlayerParams-param PlayerParams-group' key={voiceGroup.name}>
                   <label className="PlayerParams-group-title" title="Sound chip">
-                    {voiceGroup.icon && <span className='inline-icon dim-icon icon-chip'/>}
+                    {voiceGroup.icon && <span className='inline-icon dim-icon icon-chip'/>}{' '}
                     {voiceGroup.name}:
                   </label>
                   <div className="PlayerParams-voiceList">
@@ -146,10 +160,22 @@ export default class PlayerParams extends React.PureComponent {
           if (dependsOn && paramValues[dependsOn.param] !== dependsOn.value) {
             return null;
           }
+
+          const persistedKey = `${playerKey}.${param.id}`;
+          const pinButton = (
+            <button
+              className="IconButton"
+              title={isPinned(persistedKey) ? 'Un-pin this parameter' : 'Pin this parameter (retains value between songs)'}
+              onClick={() => onPinParam(persistedKey, value)}>
+              <span className={`inline-icon ${isPinned(persistedKey) ? 'icon-pin-down' : 'icon-pin-up'}`}/>
+            </button>
+          );
+
           switch (param.type) {
             case 'enum':
               return (
                 <span key={param.id} className='PlayerParams-param'>
+                  {pinButton}
                   <label htmlFor={param.id} title={param.hint} className="PlayerParams-label">
                   {param.label}:{' '}
                 </label>
@@ -170,6 +196,7 @@ export default class PlayerParams extends React.PureComponent {
             case 'number':
               return (
                 <span key={param.id} className='PlayerParams-param'>
+                  {pinButton}
                   <label htmlFor={param.id} title={param.hint} className="PlayerParams-label">
                     {param.label}:{' '}
                   </label>
@@ -186,6 +213,7 @@ export default class PlayerParams extends React.PureComponent {
             case 'toggle':
               return (
                 <span key={param.id} className='PlayerParams-param'>
+                  {pinButton}
                   <input type='checkbox'
                          id={param.id}
                          onChange={(e) => onParamChange(param.id, e.target.checked)}
