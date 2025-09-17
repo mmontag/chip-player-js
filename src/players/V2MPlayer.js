@@ -10,6 +10,7 @@ export default class V2MPlayer extends Player {
     super(...args);
     autoBind(this);
 
+    this.playerKey = 'v2m';
     this.name = 'Farbrausch V2M Player';
     this.speed = 1;
     this.fileExtensions = fileExtensions;

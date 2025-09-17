@@ -29,6 +29,7 @@ export default class Player extends EventEmitter {
   constructor(core, sampleRate, bufferSize=2048, debug=false) {
     super();
 
+    this.playerKey = null; // Should be overridden by subclasses
     this.core = core;
     this.paused = true;
     this.stopped = true;

@@ -20,6 +20,7 @@ export default class MDXPlayer extends Player {
     this.core.FS.mkdirTree(MOUNTPOINT);
     this.core.FS.mount(this.core.FS.filesystems.IDBFS, {}, MOUNTPOINT);
 
+    this.playerKey = 'mdx';
     this.name = 'Sharp X68000 MDX Player';
     this.speed = 1;
     this.mdxCtx = this.core._mdx_create_context();

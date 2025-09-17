@@ -17,6 +17,7 @@ export default class VGMPlayer extends Player {
     super(...args);
     autoBind(this);
 
+    this.playerKey = 'vgm';
     this.name = 'LibVGM Player';
     this.speed = 1;
     this.fileExtensions = fileExtensions;

@@ -42,6 +42,7 @@ export default class XMPPlayer extends Player {
     super(...args);
     autoBind(this);
 
+    this.playerKey = 'xmp';
     this.name = 'XMP Player';
     this.xmpCtx = this.core._xmp_create_context();
     this.infoPtr = this.core._malloc(2048);

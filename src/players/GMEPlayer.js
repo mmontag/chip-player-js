@@ -61,6 +61,7 @@ export default class GMEPlayer extends Player {
 
     core = this.core;
 
+    this.playerKey = 'gme';
     this.name = 'Game Music Emu Player';
     this.paused = false;
     this.fileExtensions = fileExtensions;

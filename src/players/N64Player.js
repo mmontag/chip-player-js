@@ -19,6 +19,7 @@ export default class N64Player extends Player {
     this.core.FS.mkdirTree(MOUNTPOINT);
     this.core.FS.mount(this.core.FS.filesystems.IDBFS, {}, MOUNTPOINT);
 
+    this.playerKey = 'n64';
     this.name = 'N64 Player';
     this.fileExtensions = fileExtensions;
     this.buffer = this.core._malloc(this.bufferSize * 4); // 2 ch, 16-bit

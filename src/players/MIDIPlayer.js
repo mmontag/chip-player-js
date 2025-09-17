@@ -150,6 +150,7 @@ export default class MIDIPlayer extends Player {
     core.FS.mkdir(SOUNDFONT_MOUNTPOINT);
     core.FS.mount(core.FS.filesystems.IDBFS, {}, SOUNDFONT_MOUNTPOINT);
 
+    this.playerKey = 'midi';
     this.name = 'MIDI Player';
     this.fileExtensions = fileExtensions;
     this.activeChannels = [];
