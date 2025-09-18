@@ -181,7 +181,7 @@ export default class PlayerParams extends React.PureComponent {
                 </label>
                   <select
                     id={param.id}
-                    onChange={(e) => onParamChange(param.id, e.target.value)}
+                    onChange={(e) => onParamChange(param.id, parseInt(e.target.value))}
                     value={value}>
                     {param.options.map(optgroup =>
                       <optgroup key={optgroup.label} label={optgroup.label}>
