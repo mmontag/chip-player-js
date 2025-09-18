@@ -16,6 +16,15 @@ export default function Announcements() {
 ╚═══════════════════════════════╝
 `}
       </p>
+      <h3>2025-09-17</h3>
+      <p>
+        Player settings can now be persisted across songs/sessions.<br/>
+        Click the pushpin<span className="inline-icon icon-pin-up"/>to lock values.
+      </p>
+      <h3>2025-08-20</h3>
+      <p>
+        Fixed a longstanding iOS/Safari SoundFont initialization bug.
+      </p>
       <h3>2025-07-16</h3>
       <p>
         Migrated to a new hosting provider. <br/>
