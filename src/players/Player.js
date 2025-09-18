@@ -15,8 +15,6 @@ import EventEmitter from 'events';
 //                (pause) ╰>│ paused │–╯ (unpause)
 //                          └────────┘
 //
-// In the "open" transition, the audioNode is connected.
-// In the "stop" transition, it is disconnected.
 // "stopped" is synonymous with closed/empty.
 //
 export default class Player extends EventEmitter {
