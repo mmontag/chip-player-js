@@ -28,8 +28,9 @@ const fileExtensions = [
   'smf',
 ];
 
-const MIDI_ENGINE_LIBFLUIDLITE = 0;
-const MIDI_ENGINE_LIBADLMIDI = 1;
+// These correspond to synthIds in tinyplayer.c:
+const MIDI_ENGINE_LIBFLUIDLITE = 0; // g_Synths[0] = fluidSynth;
+const MIDI_ENGINE_LIBADLMIDI = 1;   // g_Synths[1] = adlSynth;
 const MIDI_ENGINE_WEBMIDI = 2;
 
 export default class MIDIPlayer extends Player {
