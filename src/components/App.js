@@ -680,8 +680,8 @@ class App extends React.Component {
     this.setState({ localFiles });
   }
 
-  onDrop = (droppedFiles) => {
-    const promises = droppedFiles.map(file => {
+  handleFiles = (files) => {
+    const promises = files.map(file => {
       return new Promise((resolve, reject) => {
         // TODO: refactor, avoid creating new reader/handlers for every dropped file.
         const reader = new FileReader();
@@ -692,7 +692,7 @@ class App extends React.Component {
             // Handle dropped Soundfont
             if (!this.midiPlayer) {
               reject('MIDIPlayer has not been created - unable to load SoundFont.');
-            } else if (droppedFiles.length !== 1) {
+            } else if (files.length !== 1) {
               reject('Soundfonts must be added one at a time, separate from other files.');
             } else {
               const sf2Path = `user/${file.name}`;
@@ -733,6 +733,10 @@ class App extends React.Component {
         .reduce((acc, result) => acc.includes(result.reason) ? acc : [ ...acc, result.reason ], [])
         .forEach((reason, i) => setTimeout(() => this.props.toastContext.enqueueToast(reason, ToastLevels.ERROR), i * 1500));
     });
+  }
+
+  onDrop = (droppedFiles) => {
+    this.handleFiles(droppedFiles);
   };
 
   handleLocalFileDelete = (filePaths) => {
@@ -838,6 +842,7 @@ class App extends React.Component {
                   <Route path="/local" render={() => (
                     <LocalFiles
                       loading={this.state.loadingLocalFiles}
+                      onAddFiles={this.handleFiles}
                       handleShufflePlay={this.handleShufflePlay}
                       onSongClick={this.handleSongClick}
                       onDelete={this.handleLocalFileDelete}

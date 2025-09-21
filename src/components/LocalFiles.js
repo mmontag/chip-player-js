@@ -1,4 +1,4 @@
-import React, { memo, useCallback } from "react";
+import React, { memo, useCallback, useRef } from 'react';
 import { FORMATS } from '../config';
 import bytes from 'bytes';
 
@@ -17,8 +17,10 @@ function LocalFiles(props) {
     currIdx,
     onSongClick,
     onDelete,
+    onAddFiles,
     loading,
   } = props;
+  const fileInputRef = useRef(null);
 
   const handleDelete = useCallback((event) => {
     const href = event.currentTarget.dataset.href;
@@ -30,10 +32,32 @@ function LocalFiles(props) {
     }
   }, [onDelete]);
 
+  const handleAddClick = () => {
+    fileInputRef.current.click();
+  };
+
+  const handleFileChange = (event) => {
+    const files = event.target.files;
+    if (files.length > 0) {
+      onAddFiles([...files]);
+    }
+  };
+
   return (
     <div>
       <h3 className="Browse-topRow">
         Local Files ({listing.length})
+        <button className='add-button box-button' onClick={handleAddClick} title='Add files'>
+          Add Files...
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept={formatList.join(',')}
+          style={{ display: 'none' }}
+          onChange={handleFileChange}
+        />
       </h3>
       {loading ?
         "Loading local files..."
