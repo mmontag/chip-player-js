@@ -43,13 +43,27 @@ function LocalFiles(props) {
     }
   };
 
+  const handleClear = () => {
+    if (window.confirm('Are you sure you want to remove ALL local files?\nThis cannot be undone.')) {
+      onDelete(listing.map(item => item.path));
+    }
+  }
+
   return (
     <div>
       <h3 className="Browse-topRow">
         Local Files ({listing.length})
-        <button className='add-button box-button' onClick={handleAddClick} title='Add files'>
-          Add Files...
-        </button>
+        <div className='button-container'>
+          <button className='box-button' onClick={handleAddClick} title='Add files'>
+            Add Files...
+          </button>
+          {' '}
+          {listing.length > 0 &&
+            <button className='box-button' onClick={handleClear} title='Remove all local files'>
+              Clear
+            </button>
+          }
+        </div>
         <input
           ref={fileInputRef}
           type="file"
