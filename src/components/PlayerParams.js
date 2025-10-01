@@ -183,7 +183,7 @@ export default class PlayerParams extends React.PureComponent {
                     id={param.id}
                     onChange={(e) => {
                       // TODO: make this explicit in the param def
-                      const intVal = parseInt(e.target.value, 10);
+                      const intVal = Number(e.target.value);
                       const value = isNaN(intVal) ? e.target.value : intVal;
                       onParamChange(param.id, value)
                     }}
