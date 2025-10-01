@@ -131,7 +131,10 @@ module.exports = {
           // Process JS with Babel.
           {
             test: /\.(js|jsx|mjs)$/,
-            include: paths.appSrc,
+            include: [
+              paths.appSrc,
+              path.dirname(require.resolve('spessasynth_core/package.json')),
+            ],
             loader: require.resolve('babel-loader'),
             // No "options" here; defined in babel.config.json.
           },

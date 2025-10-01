@@ -30,7 +30,7 @@ import LocalFilesManager from '../LocalFilesManager';
 import Sequencer, { NUM_REPEAT_MODES, NUM_SHUFFLE_MODES, REPEAT_OFF, SHUFFLE_OFF } from '../Sequencer';
 
 import GMEPlayer from '../players/GMEPlayer';
-import MIDIPlayer from '../players/MIDIPlayer';
+import MIDIPlayer from '../players/MIDIPlayer2';
 import V2MPlayer from '../players/V2MPlayer';
 import XMPPlayer from '../players/XMPPlayer';
 import N64Player from '../players/N64Player';
