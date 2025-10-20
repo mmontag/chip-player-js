@@ -1,6 +1,6 @@
 import pianoKeys from '../images/piano-keys.png';
 import Spectrogram from '../Spectrogram';
-import React, {PureComponent} from 'react';
+import React, { Fragment, PureComponent } from 'react';
 
 const SPECTROGRAM_MODES = [
   'Linear FFT', 'Log FFT', 'Constant Q'
@@ -97,20 +97,24 @@ export default class Visualizer extends PureComponent {
       <div className='Visualizer'>
         <h3 className='Visualizer-toggle'>
           Visualizer{' '}
-          <label className='inline'><input onClick={this.handleToggleVisualizer}
-                        type='radio'
-                        value={true}
-                        defaultChecked={this.state.enabled === true}
-                        name='visualizer-enabled'/>On</label>
-          <label className='inline'><input onClick={this.handleToggleVisualizer}
-                        type='radio'
-                        value={false}
-                        defaultChecked={this.state.enabled === false}
-                        name='visualizer-enabled'/>Off</label>
+          <input onClick={this.handleToggleVisualizer}
+                 id='vis-on'
+                 type='radio'
+                 value={true}
+                 defaultChecked={this.state.enabled === true}
+                 name='visualizer-enabled'/>
+          <label htmlFor='vis-on' className='inline'>On</label>
+          <input onClick={this.handleToggleVisualizer}
+                 id='vis-off'
+                 type='radio'
+                 value={false}
+                 defaultChecked={this.state.enabled === false}
+                 name='visualizer-enabled'/>
+          <label htmlFor='vis-off' className='inline'>Off</label>
         </h3>
         <div className='Visualizer-options' style={enabledStyle}>
           <div>
-            Mode:{' '}
+            <span className='VisualizerParams-label'>Mode:</span>
             {
               SPECTROGRAM_MODES.map((mode, i) =>
                 <label key={'m_'+i} className='inline'><input onClick={this.handleModeClick}
@@ -123,41 +127,53 @@ export default class Visualizer extends PureComponent {
           </div>
           {this.state.vizMode === 2 ?
             <div>
-              Weighting:{' '}
+              <span className='VisualizerParams-label'>Weighting:</span>
               {
                 WEIGHTING_MODES.map((mode, i) =>
-                  <label title={mode.description} key={'w_'+i} className='inline'>
+                  <Fragment key={'w_'+i}>
                     <input onClick={this.handleWeightingModeClick}
                            type='radio'
+                           id={'w_'+i}
                            name='weighting-mode'
                            defaultChecked={this.state.weightingMode === i}
-                           value={i}/>{mode.label}</label>
+                           value={i}/>
+                    <label htmlFor={'w_'+i} title={mode.description} className='inline'>
+                    {mode.label}</label>
+                  </Fragment>
                 )
               }
             </div>
             :
             <div>
-              FFT Size:{' '}
+              <span className='VisualizerParams-label'>FFT Size:</span>
               {
                 FFT_SIZES.map((size, i) =>
-                  <label key={'f_'+i} className='inline'><input onClick={this.handleFFTSizeClick}
-                                        type='radio'
-                                        name='fft-size'
-                                        defaultChecked={this.state.fftSize === size}
-                                        value={size}/>{FFT_LABELS[i]}</label>
+                  <Fragment key={'f_'+i}>
+                    <input onClick={this.handleFFTSizeClick}
+                           type='radio'
+                           id={'f_'+i}
+                           name='fft-size'
+                           defaultChecked={this.state.fftSize === size}
+                           value={size}/>
+                    <label htmlFor={'f_'+i} className='inline'>{FFT_LABELS[i]}</label>
+                  </Fragment>
                 )
               }
             </div>
           }
           <div title="Vertical scrolling speed (pixels per frame)">
-            Speed:{' '}
+            <span className='VisualizerParams-label'>Speed:</span>
             {
               SPEEDS.map((speed, i) =>
-                <label key={'s_'+i} className='inline'><input onClick={this.handleSpeedClick}
-                                                              type='radio'
-                                                              name='speed'
-                                                              defaultChecked={this.state.speed === speed}
-                                                              value={speed}/>{SPEED_LABELS[i]}</label>
+                <Fragment key={'s_'+i}>
+                  <input onClick={this.handleSpeedClick}
+                         type='radio'
+                         id={'s_'+i}
+                         name='speed'
+                         defaultChecked={this.state.speed === speed}
+                         value={speed}/>
+                  <label htmlFor={'s_'+i} className='inline'>{SPEED_LABELS[i]}</label>
+                </Fragment>
               )
             }
           </div>

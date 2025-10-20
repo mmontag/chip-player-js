@@ -118,7 +118,7 @@ export const GM_INSTRUMENTS = [
   'Taiko Drum    ',
   'Melodic Tom   ',
   'Synth Drum    ',
-  'Reverse Cymbal',
+  'Reverse Cym   ',
   'Fret Noise    ',
   'Breath Noise  ',
   'Seashore      ',
@@ -130,11 +130,11 @@ export const GM_INSTRUMENTS = [
 ];
 
 export const GM_DRUM_KITS = {
-  0:  'Std Drum Kit  ',
-  8:  'Room Drum Kit ',
-  16: 'Power Drum Kit',
-  24: 'Elec Drum Kit ',
-  25: 'TR808 Drum Kit',
-  32: 'Jazz Drum Kit ',
-  40: 'Brush Drum Kit',
+  0:  'Std Drumkit   ',
+  8:  'Room Drumkit  ',
+  16: 'Power Drumkit ',
+  24: 'Elec Drumkit  ',
+  25: 'TR808 Drumkit ',
+  32: 'Jazz Drumkit  ',
+  40: 'Brush Drumkit ',
 };

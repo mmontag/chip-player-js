@@ -1,19 +1,43 @@
-import React, { memo } from 'react';
+import React, { memo, useCallback, useContext } from 'react';
 import PlayerParams from './PlayerParams';
+import { UserContext } from "./UserProvider";
 
-export default memo(Settings);
+const themes = [
+  {
+    value: 'msdos',
+    label: 'MS-DOS',
+  },
+  {
+    value: 'winamp',
+    label: 'Winamp',
+  }
+];
+
 function Settings(props) {
   const {
     ejected,
     tempo,
-    currentSongNumVoices,
+    numVoices,
     voiceMask,
     voiceNames,
     voiceGroups,
-    handleSetVoiceMask,
-    handleTempoChange,
+    onVoiceMaskChange,
+    onTempoChange,
+    paramDefs,
+    paramValues,
+    onParamChange,
+    onPinParam,
+    persistedSettings,
     sequencer,
   } = props;
+
+  const { settings, updateSettings } = useContext(UserContext);
+  const theme = settings?.theme;
+
+  const handleThemeChange = useCallback((e) => {
+    updateSettings({ theme: e.target.value });
+  }, [updateSettings]);
+
   return (
     <div className='Settings'>
       <h3>{sequencer?.getPlayer()?.name || 'Player'} Settings</h3>
@@ -21,17 +45,37 @@ function Settings(props) {
         <PlayerParams
           ejected={ejected}
           tempo={tempo}
-          numVoices={currentSongNumVoices}
+          numVoices={numVoices}
           voiceMask={voiceMask}
           voiceNames={voiceNames}
           voiceGroups={voiceGroups}
-          handleTempoChange={handleTempoChange}
-          handleSetVoiceMask={handleSetVoiceMask}
-          getParameter={sequencer.getPlayer().getParameter}
-          setParameter={sequencer.getPlayer().setParameter}
-          paramDefs={sequencer.getPlayer().getParamDefs()}/>
+          onTempoChange={onTempoChange}
+          onVoiceMaskChange={onVoiceMaskChange}
+          paramDefs={paramDefs}
+          paramValues={paramValues}
+          onParamChange={onParamChange}
+          onPinParam={onPinParam}
+          persistedSettings={persistedSettings}
+          playerKey={sequencer?.getPlayer()?.playerKey}
+        />
         :
         <div>(No active player)</div>}
+      <h3>Global Settings</h3>
+      <span className='PlayerParams-param'>
+        <label htmlFor='theme' className="PlayerParams-label">
+          Theme:{' '}
+        </label>
+        <select
+          id='theme'
+          onChange={handleThemeChange}
+          value={theme}>
+          {themes.map(option =>
+            <option key={option.value} value={option.value}>{option.label}</option>
+          )}
+        </select>
+      </span>
     </div>
   );
 }
+
+export default memo(Settings);

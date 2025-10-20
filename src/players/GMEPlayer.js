@@ -9,40 +9,15 @@ let core = null;
 const INT16_MAX = 65535;
 // "timesliced" seek in increments to prevent blocking UI/audio callback.
 const TIMESLICED_SEEK_MS_MAP = {
-  '.spc': 5000,
-  '.gym': 10000,
-  '.vgm': 10000,
-  '.vgz': 10000,
+  '.spc': 10000,
 };
 const fileExtensions = [
   'nsf',
   'nsfe',
   'spc',
   'ay',
-  'sgc',
   'gbs',
 ];
-
-/* TODO: move this elsewhere
- * @see https://developers.google.com/web/updates/2015/08/using-requestidlecallback
- */
-window.requestIdleCallback = window.requestIdleCallback ||
-  function (cb) {
-    return setTimeout(function () {
-      var start = Date.now();
-      cb({
-        didTimeout: false,
-        timeRemaining: function () {
-          return Math.max(0, 50 - (Date.now() - start));
-        }
-      });
-    }, 1);
-  };
-
-window.cancelIdleCallback = window.cancelIdleCallback ||
-  function (id) {
-    clearTimeout(id);
-  };
 
 export default class GMEPlayer extends Player {
   paramDefs = [
@@ -53,7 +28,7 @@ export default class GMEPlayer extends Player {
       min: 0.0,
       max: 2.0,
       step: 0.01,
-      defaultValue: 1.0,
+      defaultValue: 0.0,
     },
     {
       id: 'stereoWidth',
@@ -63,7 +38,21 @@ export default class GMEPlayer extends Player {
       max: 1.0,
       step: 0.01,
       defaultValue: 1.0,
-    }
+    },
+    {
+      id: 'disableEcho',
+      label: 'Disable SPC Echo',
+      hint: 'Disable echo effect for Super Nintendo SPC files.',
+      type: 'toggle',
+      defaultValue: false,
+    },
+    {
+      id: 'enableAccuracy',
+      label: 'Accurate SPC Filter',
+      hint: 'Simple low-pass and high-pass filter to better match sound output of the SNES.',
+      type: 'toggle',
+      defaultValue: false,
+    },
   ];
 
   constructor(...args) {
@@ -72,12 +61,13 @@ export default class GMEPlayer extends Player {
 
     core = this.core;
 
+    this.playerKey = 'gme';
     this.name = 'Game Music Emu Player';
     this.paused = false;
     this.fileExtensions = fileExtensions;
     this.subtune = 0;
     this.tempo = 1.0;
-    this.params = { subbass: 1 };
+    this.params = {};
     this.voiceMask = []; // GME does not expose a method to get the current voice mask
     this.gmeCtx = null;
 
@@ -90,9 +80,6 @@ export default class GMEPlayer extends Player {
     this.emuPtr = core._malloc(4); // i32
 
     this.subBass = new SubBass(this.sampleRate);
-
-    this.params = {};
-    this.paramDefs.forEach(p => this.setParameter(p.id, p.defaultValue));
   }
 
   processAudioInner(channels) {
@@ -186,33 +173,28 @@ export default class GMEPlayer extends Player {
     return core._gme_start_track(this.gmeCtx, subtune);
   }
 
-  loadData(data, filepath, subtune = 0) {
+  loadData(data, filepath, persistedSettings, subtune = 0) {
     this.subtune = subtune;
     this.fadingOut = false;
     this.seekTargetMs = null;
     this.seekRequestId = null;
     this.currentFileExt = path.extname(filepath);
     this.filepathMeta = Player.metadataFromFilepath(filepath);
-    const formatNeedsBass = filepath.match(
-      /(\.sgc$|\.kss$|\.nsfe?$|\.ay$|Master System|Game Gear)/i
-    );
-    this.params.subbass = formatNeedsBass ? 1 : 0;
 
-    if (core.ccall(
-      "gme_open_data",
-      "number",
-      ["array", "number", "number", "number"],
-      [data, data.length, this.emuPtr, this.sampleRate]
-    ) !== 0) {
+    const dataPtr = this.copyToHeap(data);
+    const err = core._gme_open_data(dataPtr, data.length, this.emuPtr, this.sampleRate);
+    core._free(dataPtr);
+
+    if (err !== 0) {
       this.stop();
       throw Error('gme_open_data failed');
     }
     this.gmeCtx = core.getValue(this.emuPtr, "i32");
     this.voiceMask = Array(core._gme_voice_count(this.gmeCtx)).fill(true);
 
-    // Enable silence detection
     core._gme_ignore_silence(this.gmeCtx, 0);
-
+    this.resolveParamValues(persistedSettings);
+    this.setTempo(persistedSettings.tempo || 1);
     this.resume();
     if (this.playSubtune(this.subtune) !== 0) {
       this.stop();
@@ -320,8 +302,19 @@ export default class GMEPlayer extends Player {
   setParameter(id, value) {
     switch (id) {
       case 'subbass':
+        this.params[id] = parseFloat(value);
+        break;
       case 'stereoWidth':
         this.params[id] = parseFloat(value);
+        if (this.gmeCtx) core._gme_set_stereo_depth(this.gmeCtx, value);
+        break;
+      case 'disableEcho':
+        this.params[id] = !!value;
+        if (this.gmeCtx) core._gme_disable_echo(this.gmeCtx, value ? 1 : 0);
+        break;
+      case 'enableAccuracy':
+        this.params[id] = !!value;
+        if (this.gmeCtx) core._gme_enable_accuracy(this.gmeCtx, value ? 1 : 0);
         break;
       default:
         console.warn('GMEPlayer has no parameter with id "%s".', id);

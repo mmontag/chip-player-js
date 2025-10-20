@@ -1,5 +1,5 @@
 import Player from "./Player.js";
-import { ensureEmscFileWithData, ensureEmscFileWithUrl } from '../util';
+import { ensureEmscFileWithData, ensureEmscFileWithUrl, pathJoin } from '../util';
 import { CATALOG_PREFIX } from '../config';
 import path from 'path';
 import autoBind from 'auto-bind';
@@ -19,12 +19,15 @@ export default class N64Player extends Player {
     this.core.FS.mkdirTree(MOUNTPOINT);
     this.core.FS.mount(this.core.FS.filesystems.IDBFS, {}, MOUNTPOINT);
 
+    this.playerKey = 'n64';
     this.name = 'N64 Player';
     this.fileExtensions = fileExtensions;
     this.buffer = this.core._malloc(this.bufferSize * 4); // 2 ch, 16-bit
   }
 
   loadData(data, filename) {
+    // N64Player reads song data from the Emscripten filesystem,
+    // rather than loading bytes from memory like other players.
     let err;
     this.filepathMeta = Player.metadataFromFilepath(filename);
 
@@ -35,37 +38,35 @@ export default class N64Player extends Player {
     }
 
     const dir = path.dirname(filename);
-    const fsFilename = path.join(MOUNTPOINT, filename);
+    const fsFilename = pathJoin(MOUNTPOINT, filename);
     const promises = [
       ensureEmscFileWithData(this.core, fsFilename, data),
       ...usflibs.map(usflib => {
-        const fsFilename = path.join(MOUNTPOINT, dir, usflib);
-        const url = CATALOG_PREFIX + path.join(dir, usflib);
+        const fsFilename = pathJoin(MOUNTPOINT, dir, usflib);
+        const url = pathJoin(CATALOG_PREFIX, dir, usflib);
         return ensureEmscFileWithUrl(this.core, fsFilename, url);
       }),
     ];
 
     return Promise.all(promises)
       .then(([fsFilename]) => {
-        this.muteAudioDuringCall(this.audioNode, () => {
-          err = this.core.ccall(
-            'n64_load_file', 'number',
-            ['string', 'number', 'number', 'number'],
-            [fsFilename, this.buffer, this.bufferSize, this.sampleRate],
-          );
+        err = this.core.ccall(
+          'n64_load_file', 'number',
+          ['string', 'number', 'number', 'number'],
+          [fsFilename, this.buffer, this.bufferSize, this.sampleRate],
+        );
 
-          if (err !== 0) {
-            console.error("n64_load_file failed. error code: %d", err);
-            throw Error('n64_load_file failed');
-          }
+        if (err !== 0) {
+          console.error("n64_load_file failed. error code: %d", err);
+          throw Error('n64_load_file failed');
+        }
 
-          this.metadata = { title: filename };
+        this.metadata = { title: filename };
 
-          this.resume();
-          this.emit('playerStateUpdate', {
-            ...this.getBasePlayerState(),
-            isStopped: false,
-          });
+        this.resume();
+        this.emit('playerStateUpdate', {
+          ...this.getBasePlayerState(),
+          isStopped: false,
         });
       });
   }
@@ -113,9 +114,8 @@ export default class N64Player extends Player {
     return !this.isPaused();
   }
 
-  seekMs(seekMs) {
-    // TODO: timesliced seeking
-    this.core._n64_seek_ms(seekMs)
+  seekMs(positionMs) {
+    this.muteAudioDuringCall(this.audioNode, () => this.core._n64_seek_ms(positionMs));
   }
 
   stop() {

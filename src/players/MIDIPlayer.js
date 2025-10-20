@@ -28,8 +28,9 @@ const fileExtensions = [
   'smf',
 ];
 
-const MIDI_ENGINE_LIBFLUIDLITE = 0;
-const MIDI_ENGINE_LIBADLMIDI = 1;
+// These correspond to synthIds in tinyplayer.c:
+const MIDI_ENGINE_LIBFLUIDLITE = 0; // g_Synths[0] = fluidSynth;
+const MIDI_ENGINE_LIBADLMIDI = 1;   // g_Synths[1] = adlSynth;
 const MIDI_ENGINE_WEBMIDI = 2;
 
 export default class MIDIPlayer extends Player {
@@ -134,7 +135,7 @@ export default class MIDIPlayer extends Player {
     {
       id: 'gmreset',
       label: 'GM Reset',
-      hint: 'Send a GM Reset sysex and reset all controllers on all channels.',
+      hint: 'Send a General MIDI Reset sysex and reset all controllers on all channels.',
       type: 'button',
     },
   ];
@@ -150,6 +151,7 @@ export default class MIDIPlayer extends Player {
     core.FS.mkdir(SOUNDFONT_MOUNTPOINT);
     core.FS.mount(core.FS.filesystems.IDBFS, {}, SOUNDFONT_MOUNTPOINT);
 
+    this.playerKey = 'midi';
     this.name = 'MIDI Player';
     this.fileExtensions = fileExtensions;
     this.activeChannels = [];
@@ -295,10 +297,12 @@ export default class MIDIPlayer extends Player {
     }
   }
 
-  async loadData(data, filepath) {
+  async loadData(data, filepath, persistedSettings) {
     this.ensureWebMidiInitialized();
     this.filepathMeta = this.metadataFromFilepath(filepath);
 
+    this.resolveParamValues(persistedSettings);
+    this.setTempo(persistedSettings.tempo || 1);
     const newTransientParams = {};
 
     // Transient params: synthengine, opl3bank, soundfont.

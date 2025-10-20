@@ -40,10 +40,10 @@ The music catalog is created by [scripts/build-catalog.js](scripts/build-catalog
 
 ### Local Development Setup
 
-Prerequisites: yarn, cmake, emsdk.
+Prerequisites: npm, cmake, emsdk.
 
 * Clone the repository. 
-* Run `yarn install`.
+* Run `npm install`.
 
 In building the subprojects, we ultimately invoke `emmake make` instead of `make` to yield an object file that Emscripten can link to in the final build.
 
@@ -62,40 +62,45 @@ If you wish to deploy to your own Github Pages account, change the `"homepage"` 
 
 User account management is provided through Firebase Cloud Firestore. You must obtain your own [Google Firebase](https://console.firebase.google.com/) credentials and update [src/config/firebaseConfig.js](src/config/firebaseConfig.js) with these credentials. This file is not tracked. Without these credentials, Login/Favorites functionality won't work.
 
-#### Subproject: libxmp-lite
+#### External project: libxmp-lite
 
-Our goal is to produce **libxmp/libxmp-lite-stagedir/lib/libxmp-lite.a**.
-Build libxmp (uses GNU make):
+Our goal is to produce **../libxmp/build/libxmp-lite.a** (assumes you have cloned **libxmp** side-by-side with chip-player-js).
+
+A **libxmp** subtree was previously included in this repository, but this is deprecated.
 
 ```sh
-cd chip-player-js/libxmp/        # navigate to libxmp root
+git clone git@github.com:libxmp/libxmp.git
+cd libxmp/
 source ~/src/emsdk/emsdk_env.sh  # load the emscripten environment variables
-autoconf
-emconfigure ./configure
+mkdir build                      # create a build folder for Cmake output
+cd build
+emcmake cmake -DBUILD_LITE -DBUILD_STATIC ..  # or use ccmake (see note below)
 emmake make
 ```
 
-Proceed to build libxmp-lite:
+Optionally, use **ccmake** instead to configure the build.  See screenshot below for recommended build options. We want `BUILD_LITE` and `BUILD_STATIC`.
 
-```sh
-emmake make -f Makefile.lite     # this will have some errors, but they can be ignored
-cd libxmp-lite-stagedir/
-autoconf
-emconfigure ./configure --enable-static --disable-shared
-emmake make
+```
+ccmake -DCMAKE_TOOLCHAIN_FILE="$(dirname $(which emcc))/cmake/Modules/Platform/Emscripten.cmake" ..
 ```
 
-#### Subproject: fluidlite
+![image](https://github.com/user-attachments/assets/1ca9de9c-8123-4619-a691-aff289eb6066)
 
-Our goal is to produce **fluidlite/build/libfluidlite.a**.
+
+#### External project: fluidlite
+
+Our goal is to produce **../fluidlite/build/libfluidlite.a** (**build-chip-core.js** assumes you have cloned FluidLite side-by-side with chip-player-js). A **fluidlite** subtree was previously included in this repository, but this is deprecated and can be ignored.
+
 Build fluidlite (uses Cmake):
 
 ```sh
-cd chip-player-js/fluidlite/     # navigate to fluidlite root
+git clone git@github.com:divideconcept/FluidLite.git
+cd FluidLite/                    # navigate to fluidlite root
 source ~/src/emsdk/emsdk_env.sh  # load the emscripten environment variables
 mkdir build                      # create a build folder for Cmake output
 cd build                         
-emcmake cmake -DDISABLE_SF3=1 .. # Cmake will generate a Makefile by default
+emcmake cmake ..                 # Cmake will generate a Makefile
+                                 # Note: SF3 support is now disabled by default
                                  # Problems here? Try deleting CMake cache files
 emmake make fluidlite-static
 ```
@@ -134,6 +139,30 @@ emmake make
 
 To reconfigure the build-enabled sound chips with CMake UI, run `emcmake ccmake ..` from the build folder. Make desired changes to build flags, then `c` to configure and `g` to generate new Makefile. Then run `emmake make`. Optionally, commit the same changes back to CMakeLists.txt in libvgm parent folder. 
 
+#### External project: game-music-emu
+
+Our goal is to produce **../game-music-emu/build/libgme.a** (assumes you have cloned **game-music-emu** side-by-side with chip-player-js).
+
+A **game-music-emu** subtree was previously included in this repository, but this is deprecated.
+
+```sh
+git clone git@github.com:mmontag/game-music-emu.git
+cd game-music-emu/
+source ~/src/emsdk/emsdk_env.sh  # load the emscripten environment variables
+mkdir build                      # create a build folder for Cmake output
+cd build
+emcmake cmake ..
+emmake make
+```
+
+Optionally, use **ccmake** instead to configure the build.  See screenshot below for recommended build options. We do not want VGM support as this is handled by libvgm.
+
+```
+ccmake -DCMAKE_TOOLCHAIN_FILE="$(dirname $(which emcc))/cmake/Modules/Platform/Emscripten.cmake" ..
+```
+
+![game-music-emu cmake example](https://github.com/user-attachments/assets/1899b5e6-5620-4cf2-b253-672b39212124)
+
 #### WebAssembly build
 
 Once these are in place we can build the parent project.
@@ -141,7 +170,7 @@ Our goal is to produce **public/chip-core.wasm**.
 
 ```sh
 cd chip-player-js/
-yarn run build-chip-core
+npm run build-chip-core
 ```
 
 This will use object files created in the previous steps and link them into chip-core.wasm.
@@ -149,25 +178,25 @@ If you change some C/C++ component of the subprojects, you'll need to redo this 
 Once we have chip-core.wasm, we can proceed to develop JavaScript interactively on localhost:
 
 ```sh
-yarn start
+npm start
 ```
 
 Build the entire project:
 
 ```sh
-yarn build
+npm build
 ```
 
 Or deploy to Github Pages:
 
 ```sh
-yarn deploy
+npm deploy
 ```
 
 Deploy to Github Pages without rebuilding chip-core.wasm: 
 
 ```sh
-yarn deploy-lite
+npm deploy-lite
 ```
 
 ## Related Projects
@@ -227,9 +256,9 @@ The best modern option for playing MIDI is probably using a well-designed GM Sou
 - FluidSynth Lite, supports SF3: https://github.com/divideconcept/FluidLite
 - Compress SF2 to SF3: https://github.com/cognitone/sf2convert
 
-#### SoundFont Credits
+### SoundFont Credits
 
-Diverse and usable GM SoundFonts.
+#### GM SoundFonts
 
 - GeneralUser SF2 sound bank: http://schristiancollins.com/generaluser.php
 - Many excellent piano SoundFonts: https://sites.google.com/site/soundfonts4u
@@ -237,6 +266,11 @@ Diverse and usable GM SoundFonts.
 - NTONYX SoundFont: http://ntonyx.com/sf_f.htm
 - SoundFonts at MuseScore: https://musescore.org/en/handbook/soundfonts-and-sfz-files#list
 - SoundFonts at Woolyss: https://woolyss.com/chipmusic-soundfonts.php
+- Weeds GM3: Rich "Weeds" Nagel, 2010 http://bhservices.us/weeds/Temp/
+
+#### Novelty SoundFonts
+
+- PC Beep: Rich "Weeds" Nagel, 1998
 
 ### Music Archive Sources
 
@@ -264,3 +298,9 @@ Diverse and usable GM SoundFonts.
 A word about licensing: chip-player-js represents the hard work of many individuals because it is built upon several open-source projects. Each of these projects carries their own license restrictions, and chip-player-js as a whole must adhere to the most restrictive licenses among these. Therefore, chip-player-js is *generally* licensed under [GPLv3](LICENSE). 
 
 However, each subdirectory in this project *may* contain additional, more specific license info that pertains to files contained therein. For example, the code under [src/](src) is written by me and is more permissively [MIT licensed](src/LICENSE).
+
+This project is supported by:
+
+<a href="https://m.do.co/c/fb2d6eb51d7b">
+<img src="https://opensource.nyc3.cdn.digitaloceanspaces.com/attribution/assets/SVG/DO_Logo_horizontal_blue.svg" width="170px">
+</a>

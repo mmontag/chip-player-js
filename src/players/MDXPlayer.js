@@ -1,8 +1,9 @@
 import Player from "./Player.js";
-import { ensureEmscFileWithData, ensureEmscFileWithUrl } from '../util';
+import { ensureEmscFileWithData, ensureEmscFileWithUrl, pathJoin } from '../util';
 import { CATALOG_PREFIX } from '../config';
 import path from 'path';
 import autoBind from 'auto-bind';
+import chipImage from '../images/chip.png';
 
 const fileExtensions = [
   'mdx',
@@ -19,6 +20,7 @@ export default class MDXPlayer extends Player {
     this.core.FS.mkdirTree(MOUNTPOINT);
     this.core.FS.mount(this.core.FS.filesystems.IDBFS, {}, MOUNTPOINT);
 
+    this.playerKey = 'mdx';
     this.name = 'Sharp X68000 MDX Player';
     this.speed = 1;
     this.mdxCtx = this.core._mdx_create_context();
@@ -28,12 +30,14 @@ export default class MDXPlayer extends Player {
     this.buffer = this.core._malloc(this.bufferSize * 4); // 2 ch, 16-bit
   }
 
-  loadData(data, filename) {
+  loadData(data, filename, persistedSettings) {
+    // MDXPlayer reads song data from the Emscripten filesystem,
+    // rather than loading bytes from memory like other players.
     let err;
     this.filepathMeta = Player.metadataFromFilepath(filename);
     const dir = path.dirname(filename);
-    const mdxFilename = path.join(MOUNTPOINT, filename);
-    // Preload PDX sample files into Emscripten filesystem.
+    const mdxFilename = pathJoin(MOUNTPOINT, filename);
+    // First, write PDX sample files into Emscripten filesystem.
     return ensureEmscFileWithData(this.core, mdxFilename, data)
       .then(() => {
         const pdx = this.core.ccall(
@@ -42,11 +46,12 @@ export default class MDXPlayer extends Player {
           [this.mdxCtx, mdxFilename],
         );
         if (pdx) {
-          const pdxFilename = path.join(MOUNTPOINT, dir, pdx);
+          const pdxFilename = pathJoin(MOUNTPOINT, dir, pdx);
           // Force upper case in the URL, as the entire MDX archive is upper case.
           // MDX files were authored on old case-insensitive filesystems, but
           // the music server filesystem (and URLs in general) are case-sensitive.
-          const pdxUrl = CATALOG_PREFIX + path.join(dir, pdx.toUpperCase());
+          const pdxUrl = pathJoin(CATALOG_PREFIX, dir, pdx.toUpperCase());
+          // Write MDX file into Emscripten filesystem.
           return ensureEmscFileWithUrl(this.core, pdxFilename, pdxUrl);
         }
       })
@@ -62,7 +67,6 @@ export default class MDXPlayer extends Player {
             console.error("mdx_load_file failed. error code: %d", err);
             throw Error('mdx_load_file failed');
           }
-          this.core._mdx_set_speed(this.mdxCtx, this.speed);
 
           // Metadata
           const ptr = this.core._malloc(256);
@@ -72,6 +76,8 @@ export default class MDXPlayer extends Player {
           const title = new TextDecoder("shift-jis").decode(buf.subarray(0, len));
           this.metadata = { title: title || path.basename(filename) };
 
+          this.resolveParamValues(persistedSettings);
+          this.setTempo(persistedSettings.tempo || 1);
           this.resume();
           this.emit('playerStateUpdate', {
             ...this.getBasePlayerState(),
@@ -139,6 +145,37 @@ export default class MDXPlayer extends Player {
 
   getNumVoices() {
     if (this.mdxCtx) return this.core._mdx_get_tracks(this.mdxCtx);
+  }
+
+  getVoiceGroups() {
+    if (!this.mdxCtx) return [];
+    const voiceGroups = [];
+    const numVoices = this.core._mdx_get_tracks(this.mdxCtx);
+    let currGroup;
+    for (let i = 0; i < numVoices; i++) {
+      const voiceName = this.core.UTF8ToString(this.core._mdx_get_track_name(this.mdxCtx, i));
+      if (i === 0) {
+        currGroup = {
+          name: 'YM2151 (OPM)',
+          icon: chipImage,
+          voices: [],
+        };
+        voiceGroups.push(currGroup);
+      }
+      if (i === 8) {
+        currGroup = {
+          name: numVoices === 9 ? 'OKI MSM6258' : 'Mercury Unit (PCM8)',
+          icon: chipImage,
+          voices: [],
+        };
+        voiceGroups.push(currGroup);
+      }
+      currGroup.voices.push({
+        idx: i,
+        name: voiceName,
+      });
+    }
+    return voiceGroups;
   }
 
   getVoiceMask() {

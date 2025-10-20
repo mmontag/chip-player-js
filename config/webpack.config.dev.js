@@ -197,7 +197,7 @@ module.exports = {
   plugins: [
     new ESLintPlugin({
       context: paths.appSrc,
-      formatter: eslintFormatter,
+      // formatter: eslintFormatter, <-- doesn't show filenames
       eslintPath: require.resolve('eslint'),
     }),
     // Generates an `index.html` file with the <script> injected.

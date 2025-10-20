@@ -1,48 +1,33 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import autoBindReact from 'auto-bind/react';
 import isMobile from 'ismobilejs';
 import clamp from 'lodash/clamp';
 import shuffle from 'lodash/shuffle';
 import path from 'path';
 import queryString from 'querystring';
-import { initializeApp as firebaseInitializeApp } from 'firebase/app';
-import { getAuth, onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider } from 'firebase/auth';
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  updateDoc,
-  setDoc,
-  arrayRemove,
-  arrayUnion
-} from 'firebase/firestore/lite';
 import { NavLink, Route, Switch, withRouter } from 'react-router-dom';
 import Dropzone from 'react-dropzone';
 
 import ChipCore from '../chip-core';
-import firebaseConfig from '../config/firebaseConfig';
 import {
   API_BASE,
   CATALOG_PREFIX,
-  ERROR_FLASH_DURATION_MS,
   MAX_VOICES,
   REPLACE_STATE_ON_SEEK,
-  SOUNDFONT_MOUNTPOINT,
   MAX_SAMPLE_RATE,
   FORMATS,
 } from '../config';
-import { ensureEmscFileWithData, getMetadataUrlForCatalogUrl, titlesFromMetadata, unlockAudioContext } from '../util';
+import {
+  getMetadataUrlForCatalogUrl,
+  pathJoin,
+  titlesFromMetadata,
+  unlockAudioContext
+} from '../util';
 import requestCache from '../RequestCache';
 import LocalFilesManager from '../LocalFilesManager';
 import Sequencer, { NUM_REPEAT_MODES, NUM_SHUFFLE_MODES, REPEAT_OFF, SHUFFLE_OFF } from '../Sequencer';
 
 import GMEPlayer from '../players/GMEPlayer';
-import MIDIPlayer from '../players/MIDIPlayer';
-import V2MPlayer from '../players/V2MPlayer';
-import XMPPlayer from '../players/XMPPlayer';
-import N64Player from '../players/N64Player';
-import MDXPlayer from '../players/MDXPlayer';
-import VGMPlayer from '../players/VGMPlayer';
 
 import AppFooter from './AppFooter';
 import AppHeader from './AppHeader';
@@ -55,6 +40,9 @@ import Toast, { ToastLevels } from './Toast';
 import MessageBox from './MessageBox';
 import Settings from './Settings';
 import LocalFiles from './LocalFiles';
+import { UserContext } from './UserProvider';
+import { ToastContext } from './ToastProvider';
+import Announcements from './Announcements';
 
 const BASE_URL = process.env.PUBLIC_URL || document.location.origin;
 
@@ -65,49 +53,20 @@ class App extends React.Component {
 
     this.attachMediaKeyHandlers();
     this.contentAreaRef = React.createRef();
+    this.listRef = React.createRef(); // react-virtualized List component ref
     this.playContexts = {};
-    this.errorTimer = null;
-    this.midiPlayer = null; // Need a reference to MIDIPlayer to handle SoundFont loading.
     window.ChipPlayer = this;
 
-    // Initialize Firebase
-    const firebaseApp = firebaseInitializeApp(firebaseConfig);
-    const auth = getAuth(firebaseApp);
-    this.db = getFirestore(firebaseApp);
-    onAuthStateChanged(auth, user => {
-      this.setState({ user: user, loadingUser: !!user });
-      if (user) {
-        const docRef = doc(this.db, 'users', user.uid);
-        getDoc(docRef)
-          .then(userSnapshot => {
-            if (!userSnapshot.exists()) {
-              // Create user
-              console.debug('Creating user document', user.uid);
-              setDoc(docRef, {
-                faves: [],
-                settings: {},
-              });
-            } else {
-              // Restore user
-              const data = userSnapshot.data();
-              this.setState({
-                faves: data.faves || [],
-                showPlayerSettings: data.settings ? data.settings.showPlayerSettings : false,
-              });
-            }
-          })
-          .finally(() => {
-            this.setState({ loadingUser: false });
-          });
-      }
-    });
 
     // Initialize audio graph
     // ┌────────────┐      ┌────────────┐      ┌─────────────┐
     // │ playerNode ├─────>│  gainNode  ├─────>│ destination │
     // └────────────┘      └────────────┘      └─────────────┘
+
+    // Smaller buffer for mobile devices. 'interactive' yields 128 samples on iOS/Android.
+    const latencyHint = isMobile.any ? 'interactive' : 'playback';
     let audioCtx = this.audioCtx = window.audioCtx = new (window.AudioContext || window.webkitAudioContext)({
-      latencyHint: 'playback'
+      latencyHint,
     });
 
     // Limit the sample rate if needed
@@ -118,7 +77,7 @@ class App extends React.Component {
         targetRate /= 2;
       }
       audioCtx = this.audioCtx = window.audioCtx = new (window.AudioContext || window.webkitAudioContext)({
-        latencyHint: 'playback',
+        latencyHint,
         sampleRate: targetRate,
       });
     }
@@ -137,11 +96,9 @@ class App extends React.Component {
 
     this.state = {
       loading: true,
-      loadingUser: true,
       loadingLocalFiles: true,
       paused: true,
       ejected: true,
-      toast: {},
       currentSongMetadata: {},
       currentSongNumVoices: 0,
       currentSongNumSubtunes: 0,
@@ -151,12 +108,10 @@ class App extends React.Component {
       tempo: 1,
       voiceMask: Array(MAX_VOICES).fill(true),
       voiceNames: Array(MAX_VOICES).fill(''),
+      voiceGroups: [],
       imageUrl: null,
       infoTexts: [],
       showInfo: false,
-      showToast: false,
-      showPlayerSettings: false,
-      user: null,
       songUrl: null,
       volume: 100,
       repeat: REPEAT_OFF,
@@ -164,8 +119,8 @@ class App extends React.Component {
       directories: {},
       hasPlayer: false,
       paramDefs: [],
+      paramValues: {},
       // Special playable contexts
-      faves: [],
       localFiles: [],
     };
 
@@ -187,10 +142,8 @@ class App extends React.Component {
       });
     } catch (e) {
       // Browser doesn't support WASM (Safari in iOS Simulator)
-      Object.assign(this.state, {
-        toast: { message: 'Error loading player engine. Old browser?', level: ToastLevels.ERROR },
-        loading: false,
-      });
+      this.setState({ loading: false });
+      this.props.toastContext.enqueueToast({ message: 'Error loading player engine. Old browser?', level: ToastLevels.ERROR });
       return;
     }
 
@@ -198,16 +151,11 @@ class App extends React.Component {
     const debug = queryString.parse(window.location.search.substring(1)).debug;
     // Create all the players. Players will set up IDBFS mount points.
     const players = [
-      MIDIPlayer,
       GMEPlayer,
-      XMPPlayer,
-      V2MPlayer,
-      N64Player,
-      MDXPlayer,
-      VGMPlayer,
     ].map(P => new P(this.chipCore, audioCtx.sampleRate, bufferSize, debug));
-    this.midiPlayer = players[0];
-
+    players.forEach(p => {
+      p.audioNode = this.playerNode;
+    });
     // Set up the central audio processing callback. This is where the magic happens.
     playerNode.onaudioprocess = (e) => {
       const channels = [];
@@ -233,16 +181,16 @@ class App extends React.Component {
       this.setState({ loadingLocalFiles: false });
     });
 
-    this.sequencer = new Sequencer(players, this.localFilesManager);
+    this.sequencer = new Sequencer(players, this.localFilesManager, () => this.props.userContext.settings);
     this.sequencer.on('sequencerStateUpdate', this.handleSequencerStateUpdate);
-    this.sequencer.on('playerError', (message) => this.addToast(message, ToastLevels.ERROR));
+    this.sequencer.on('playerError', (message) => this.props.toastContext.enqueueToast(message, ToastLevels.ERROR));
 
     // TODO: Move to separate processUrlParams method.
     const urlParams = queryString.parse(window.location.search.substring(1));
     if (urlParams.play) {
       // Treat play params as "transient command" and strip them after starting playback.
       // See comment in Browse.js for more about why a sticky play param is not a good idea.
-      const play = urlParams.play;
+      const playPath = urlParams.play;
       const subtune = urlParams.subtune ? parseInt(urlParams.subtune, 10) : 0;
       const time = urlParams.t ? parseInt(urlParams.t, 10) : 0;
       delete urlParams.play;
@@ -251,10 +199,12 @@ class App extends React.Component {
       const qs = queryString.stringify(urlParams);
       const search = qs ? `?${qs}` : '';
       // Navigate to song's containing folder. History comes from withRouter().
-      const dirname = path.dirname(play);
+      const dirname = path.dirname(playPath);
       this.fetchDirectory(dirname).then(() => {
-        this.props.history.replace(`/browse/${dirname}${search}`);
-        const index = this.playContexts[dirname].indexOf(play);
+        this.props.history.replace(`${pathJoin('/browse', dirname)}${search}`);
+        // Convert play path to href (context contains full hrefs)
+        const playHref = pathJoin(CATALOG_PREFIX, playPath);
+        const index = this.playContexts[dirname].indexOf(playHref);
 
         this.playContext(this.playContexts[dirname], index, subtune);
 
@@ -287,8 +237,9 @@ class App extends React.Component {
       voiceGroups: 'voiceGroups',
       songUrl: 'url',
       hasPlayer: 'hasPlayer',
-      // TODO: add param values? move to paramStateUpdate?
+      // TODO: Move to a separate paramStateUpdate?
       paramDefs: 'paramDefs',
+      paramValues: 'paramValues',
       infoTexts: 'infoTexts',
     };
     const appState = {};
@@ -299,49 +250,6 @@ class App extends React.Component {
       }
     }
     return appState;
-  }
-
-  handleLogin() {
-    const auth = getAuth();
-    const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider).then(result => {
-      console.log('Firebase auth result:', result);
-    }).catch(error => {
-      console.log('Firebase auth error:', error);
-    });
-  }
-
-  handleLogout() {
-    const auth = getAuth();
-    signOut(auth).then(() => {
-      this.setState({
-        user: null,
-        faves: [],
-      });
-    });
-  }
-
-  handleToggleFavorite(path) {
-    const user = this.state.user;
-    if (user) {
-      const userRef = doc(this.db, 'users', user.uid);
-      let newFaves, favesOp;
-      const oldFaves = this.state.faves;
-      const exists = oldFaves.includes(path);
-      if (exists) {
-        newFaves = oldFaves.filter(fave => fave !== path);
-        favesOp = arrayRemove(path);
-      } else {
-        newFaves = [...oldFaves, path];
-        favesOp = arrayUnion(path);
-      }
-      // Optimistic update
-      this.setState({ faves: newFaves });
-      updateDoc(userRef, { faves: favesOp }).catch((e) => {
-        this.setState({ faves: oldFaves });
-        console.log('Couldn\'t update favorites in Firebase.', e);
-      });
-    }
   }
 
   attachMediaKeyHandlers() {
@@ -466,16 +374,23 @@ class App extends React.Component {
     } else {
       const player = this.sequencer.getPlayer();
       const url = this.sequencer.getCurrUrl();
-      if (url && url !== this.state.songUrl) {
+      // TODO: this is messy. imageUrl comes asynchronously from the /metadata request.
+      //       Title, artist, etc. come synchronously from player.getMetadata().
+      //       ...but these are also emitted with playerStateUpdate.
+      //       It would be better to incorporate imageUrl into playerStateUpdate.
+      if (!url) {
+        this.setState({ imageUrl: null });
+      } else if (url !== this.state.songUrl) {
         const metadataUrl = getMetadataUrlForCatalogUrl(url);
         // TODO: Disabled to support scroll restoration.
         // const filepath = url.replace(CATALOG_PREFIX, '');
         // updateQueryString({ play: filepath, t: undefined });
         // TODO: move fetch metadata to Player when it becomes event emitter
         requestCache.fetchCached(metadataUrl).then(response => {
-          const { imageUrl, infoTexts } = response;
-          const newInfoTexts = [ ...infoTexts, ...this.state.infoTexts ];
-          this.setState({ imageUrl, infoTexts: newInfoTexts });
+          const { imageUrl, infoTexts, md5 } = response;
+          const newInfoTexts = [...this.state.infoTexts, ...infoTexts ];
+          const newShowInfo = this.state.showInfo && newInfoTexts.length > 0;
+          this.setState({ imageUrl, infoTexts: newInfoTexts, md5, showInfo: newShowInfo });
 
           if ('mediaSession' in navigator) {
             // Clear artwork if imageUrl is null.
@@ -506,24 +421,8 @@ class App extends React.Component {
 
       this.setState({
         ...App.mapSequencerStateToAppState(sequencerState),
-        // TODO: sparse state update
-        showInfo: this.state.showInfo && player.getInfoTexts()?.length > 0,
       });
     }
-  }
-
-  addToast(message, level) {
-    this.setState({
-      toast: { message, level },
-      showToast: true,
-    });
-    clearTimeout(this.errorTimer);
-    this.errorTimer = setTimeout(() => this.setState({ showToast: false }), ERROR_FLASH_DURATION_MS);
-  }
-
-  removeToast() {
-    this.setState({ showToast: false });
-    clearTimeout(this.errorTimer);
   }
 
   togglePause() {
@@ -538,21 +437,6 @@ class App extends React.Component {
       }
     }
     this.setState({ paused: paused });
-  }
-
-  toggleSettings() {
-    let showPlayerSettings = !this.state.showPlayerSettings;
-    // Optimistic update
-    this.setState({ showPlayerSettings: showPlayerSettings });
-
-    const user = this.state.user;
-    if (user) {
-      const userRef = doc(this.db, 'users', user.uid);
-      updateDoc(userRef, { settings: { showPlayerSettings: showPlayerSettings } })
-        .catch((e) => {
-          console.log('Couldn\'t update settings in Firebase.', e);
-        });
-    }
   }
 
   handleTimeSliderChange(event) {
@@ -608,11 +492,45 @@ class App extends React.Component {
   handleTempoChange(event) {
     if (!this.sequencer.getPlayer()) return;
 
-    const tempo = parseFloat((event.target ? event.target.value : event)) || 1.0;
-    this.sequencer.getPlayer().setTempo(tempo);
+    const value = parseFloat((event.target ? event.target.value : event)) || 1.0;
+    this.sequencer.getPlayer().setTempo(value);
     this.setState({
-      tempo: tempo
+      tempo: value
     });
+
+    const { settings, updateSettings } = this.props.userContext;
+    const persistedKey = 'tempo';
+    if (settings[persistedKey] != null) {
+      updateSettings({ [persistedKey]: value });
+    }
+  }
+
+  handleParamChange(id, value) {
+    if (!this.sequencer.getPlayer()) return;
+    const player = this.sequencer.getPlayer();
+    player.setParameter(id, value);
+    this.setState(prevState => ({
+      paramValues: { ...prevState.paramValues, [id]: value },
+    }));
+
+    const { settings, updateSettings } = this.props.userContext;
+    const persistedKey = `${player.playerKey}.${id}`;
+    if (settings[persistedKey] != null) {
+      updateSettings({ [persistedKey]: value });
+    }
+  }
+
+  handlePinParam(persistedKey, currentValue) {
+    const { settings, replaceSettings } = this.props.userContext;
+    const newSettings = { ...settings };
+
+    if (newSettings[persistedKey] != null) {
+      delete newSettings[persistedKey];
+    } else {
+      newSettings[persistedKey] = currentValue;
+    }
+
+    replaceSettings(newSettings);
   }
 
   setSpeedRelative(delta) {
@@ -627,16 +545,15 @@ class App extends React.Component {
 
   handleShufflePlay(path) {
     if (path === 'favorites') {
-      this.sequencer.playContext(shuffle(this.state.faves));
+      this.sequencer.playContext(shuffle(this.props.userContext.favesContext));
     } else if (path === 'local') {
       this.sequencer.playContext(shuffle(this.playContexts['local']));
     } else {
       // This is more like a synthetic recursive shuffle.
+      // Response of this API is an array of *paths*.
       fetch(`${API_BASE}/shuffle?path=${encodeURI(path)}&limit=100`)
         .then(response => response.json())
-        .then(json => json.items.map(item =>
-          item.replace('%', '%25').replace('#', '%23').replace(/^\//, '')
-        ))
+        .then(json => json.items.map(this.pathToHref))
         .then(items => this.sequencer.playContext(items));
     }
   }
@@ -679,18 +596,43 @@ class App extends React.Component {
   directoryListingToContext(items) {
     return items
       .filter(item => item.type === 'file')
-      .map(item =>
-        item.path.replace('%', '%25').replace('#', '%23').replace(/^\//, '')
-      );
+      .map(item => this.pathToHref(item.path));
+  }
+
+  pathToHref(path) {
+    return pathJoin(CATALOG_PREFIX, path.replace('%', '%25').replace('#', '%23'));
   }
 
   fetchDirectory(path) {
-    return fetch(`${API_BASE}/browse?path=%2F${encodeURIComponent(path)}`)
+    const slashPath = pathJoin('/', path);
+    return fetch(`${API_BASE}/browse?path=${encodeURIComponent(slashPath)}`)
       .then(response => response.json())
       .then(items => {
         this.playContexts[path] = this.directoryListingToContext(items);
-        // Convert timestamp 1704067200 to ISO date 2024-01-01
-        items.forEach(item => item.mtime = new Date(item.mtime * 1000).toISOString().split('T')[0]);
+        items.forEach(item => {
+          // Convert timestamp 1704067200 to ISO date 2024-01-01
+          item.mtime = new Date(item.mtime * 1000).toISOString().split('T')[0];
+          item.name = item.path.split('/').pop();
+          // XXX: Escape immediately: the escaped URL is considered canonical.
+          //      The URL must be decoded for display from here on out.
+          item.path.replace('%', '%25').replace('#', '%23');
+          if (item.type === 'file')
+            item.href = pathJoin(CATALOG_PREFIX, item.path);
+          else
+            item.href = pathJoin('/browse', item.path);
+        });
+
+        if (path !== '') { // No '..' at top level browse path.
+          // Use substring, not slice, to pass through strings that don't contain any '/'.
+          const parentPath = path.substring(0, path.lastIndexOf('/'));
+          items.unshift({
+            type: 'directory',
+            path: parentPath,
+            href: pathJoin('/browse', parentPath),
+            name: '..',
+          });
+        }
+
         const directories = {
           ...this.state.directories,
           [path]: items,
@@ -702,7 +644,8 @@ class App extends React.Component {
   getCurrentSongLink(withSubtune = false) {
     const url = this.sequencer?.getCurrUrl();
     if (!url) return null;
-    let link = BASE_URL + '/?play=' + encodeURIComponent(url.replace(CATALOG_PREFIX, ''));
+    let link = BASE_URL + '/?play=' +
+      encodeURIComponent(pathJoin('/', url.replace(CATALOG_PREFIX, '')));
     if (withSubtune) {
       const subtune = this.sequencer?.getSubtune();
       if (subtune !== 0) {
@@ -716,35 +659,19 @@ class App extends React.Component {
     const localFiles = this.localFilesManager.readAll();
     // Convert timestamp 1704067200 to ISO date 2024-01-01
     localFiles.forEach(item => item.mtime = new Date(item.mtime * 1000).toISOString().split('T')[0]);
-    this.playContexts['local'] = this.directoryListingToContext(localFiles);
+    this.playContexts['local'] = localFiles.map(item => item.path);
     this.setState({ localFiles });
   }
 
-  onDrop = (droppedFiles) => {
-    const promises = droppedFiles.map(file => {
+  handleFiles = (files) => {
+    const promises = files.map(file => {
       return new Promise((resolve, reject) => {
         // TODO: refactor, avoid creating new reader/handlers for every dropped file.
         const reader = new FileReader();
         reader.onerror = (event) => reject(event.target.error);
         reader.onload = async () => {
           const ext = path.extname(file.name).toLowerCase().substring(1);
-          if (ext === 'sf2') {
-            // Handle dropped Soundfont
-            if (!this.midiPlayer) {
-              reject('MIDIPlayer has not been created - unable to load SoundFont.');
-            } else if (droppedFiles.length !== 1) {
-              reject('Soundfonts must be added one at a time, separate from other files.');
-            } else {
-              const sf2Path = `user/${file.name}`;
-              await ensureEmscFileWithData(this.chipCore, `${SOUNDFONT_MOUNTPOINT}/${sf2Path}`, new Uint8Array(reader.result), /*forceWrite=*/true);
-              this.midiPlayer.updateSoundfontParamDefs();
-              this.midiPlayer.setParameter('soundfont', sf2Path, /*isTransient=*/false);
-              // TODO: emit "paramDefsChanged" from player.
-              // See https://reactjs.org/docs/integrating-with-other-libraries.html#integrating-with-model-layers
-              this.forceUpdate();
-              resolve(0);
-            }
-          } else if (FORMATS.includes(ext)) {
+          if (FORMATS.includes(ext)) {
             // Handle dropped song file
             const songData = reader.result;
             this.localFilesManager.write(path.join('local', file.name), songData);
@@ -771,8 +698,12 @@ class App extends React.Component {
       // Display all rejection reasons with duplicate reasons removed.
       results.filter(result => result.status === 'rejected')
         .reduce((acc, result) => acc.includes(result.reason) ? acc : [ ...acc, result.reason ], [])
-        .forEach((reason, i) => setTimeout(() => this.addToast(reason, ToastLevels.ERROR), i * 1500));
+        .forEach((reason, i) => setTimeout(() => this.props.toastContext.enqueueToast(reason, ToastLevels.ERROR), i * 1500));
     });
+  }
+
+  onDrop = (droppedFiles) => {
+    this.handleFiles(droppedFiles);
   };
 
   handleLocalFileDelete = (filePaths) => {
@@ -798,7 +729,13 @@ class App extends React.Component {
 
   handleCopyLink = (url) => {
     navigator.clipboard.writeText(url);
-    this.addToast('Copied song link to clipboard.', ToastLevels.INFO);
+    this.props.toastContext.enqueueToast('Copied song link to clipboard.', ToastLevels.INFO);
+  }
+
+  handleToggleSettings = (e) => {
+    const { settings, updateSettings } = this.props.userContext;
+    const showPlayerSettings = settings?.showPlayerSettings;
+    updateSettings({ showPlayerSettings: !showPlayerSettings });
   }
 
   render() {
@@ -806,23 +743,21 @@ class App extends React.Component {
     const currContext = this.sequencer?.getCurrContext();
     const currIdx = this.sequencer?.getCurrIdx();
     const search = { search: window.location.search };
+    const { settings } = this.props.userContext;
+    const showPlayerSettings = settings?.showPlayerSettings;
+
     return (
       <Dropzone
         disableClick
-        style={{}}
+        style={{}} // Required to clear Dropzone styles
         onDrop={this.onDrop}>{dropzoneProps => (
         <div className="App">
           <DropMessage dropzoneProps={dropzoneProps}/>
           <MessageBox showInfo={this.state.showInfo}
                       infoTexts={this.state.infoTexts}
                       toggleInfo={this.toggleInfo}/>
-          <Toast handleClose={this.removeToast}
-                 toast={this.state.toast}
-                 showToast={this.state.showToast}/>
-          <AppHeader user={this.state.user}
-                     handleLogout={this.handleLogout}
-                     handleLogin={this.handleLogin}
-                     isPhone={isMobile.phone}/>
+          <Toast/>
+          <AppHeader/>
           <div className="App-main">
             <div className="App-main-inner">
               <div className="tab-container">
@@ -835,34 +770,21 @@ class App extends React.Component {
                 <NavLink className="tab" activeClassName="tab-selected"
                          to={{ pathname: "/local", ...search }}>Local</NavLink>
                 {/* this.sequencer?.players?.map((p, i) => `p${i}:${p.stopped?'off':'on'}`).join(' ') */}
-                <button className={this.state.showPlayerSettings ? 'tab tab-selected' : 'tab'}
-                        style={{ marginLeft: 'auto', marginRight: 0 }}
-                        onClick={this.toggleSettings}>Settings</button>
+                <button className={`tab tab-settings ${showPlayerSettings ? 'tab-selected' : ''}`}
+                        onClick={this.handleToggleSettings}>Settings</button>
               </div>
               <div className="App-main-content-and-settings">
-              <div className="App-main-content-area" ref={this.contentAreaRef}>
+              <div className="App-main-content-area"
+                   ref={this.contentAreaRef}>
                 <Switch>
-                  <Route path="/" exact render={() => (
-                    <Search
-                      currContext={currContext}
-                      currIdx={currIdx}
-                      toggleFavorite={this.handleToggleFavorite}
-                      favorites={this.state.faves}
-                      onSongClick={this.handleSongClick}>
-                      {this.state.loading && <p>Loading player engine...</p>}
-                    </Search>
-                  )}/>
                   <Route path="/favorites" render={() => (
                     <Favorites
-                      user={this.state.user}
-                      loadingUser={this.state.loadingUser}
-                      handleLogin={this.handleLogin}
+                      scrollContainerRef={this.contentAreaRef}
                       handleShufflePlay={this.handleShufflePlay}
                       onSongClick={this.handleSongClick}
                       currContext={currContext}
                       currIdx={currIdx}
-                      toggleFavorite={this.handleToggleFavorite}
-                      favorites={this.state.faves}/>
+                      listRef={this.listRef}/>
                   )}/>
                   <Route path="/browse/:browsePath*" render={({ history, match, location }) => {
                     // Undo the react-router-dom double-encoded % workaround - see DirectoryLink.js
@@ -871,22 +793,23 @@ class App extends React.Component {
                       this.contentAreaRef.current &&
                       <Browse currContext={currContext}
                               currIdx={currIdx}
-                              historyAction={history.action}
+                              history={history}
                               locationKey={location.key}
                               browsePath={browsePath}
                               listing={this.state.directories[browsePath]}
                               playContext={this.playContexts[browsePath]}
                               fetchDirectory={this.fetchDirectory}
-                              handleSongClick={this.handleSongClick}
+                              onSongClick={this.handleSongClick}
                               handleShufflePlay={this.handleShufflePlay}
                               scrollContainerRef={this.contentAreaRef}
-                              favorites={this.state.faves}
-                              toggleFavorite={this.handleToggleFavorite}/>
+                              listRef={this.listRef}
+                      />
                     );
                   }}/>
                   <Route path="/local" render={() => (
                     <LocalFiles
                       loading={this.state.loadingLocalFiles}
+                      onAddFiles={this.handleFiles}
                       handleShufflePlay={this.handleShufflePlay}
                       onSongClick={this.handleSongClick}
                       onDelete={this.handleLocalFileDelete}
@@ -894,32 +817,40 @@ class App extends React.Component {
                       currContext={currContext}
                       currIdx={currIdx}
                       listing={this.state.localFiles}/>
-                  )}/>>
-                  <Route path="/settings" render={() => (
-                    <Settings
-                      ejected={this.state.ejected}
-                      tempo={this.state.tempo}
-                      currentSongNumVoices={this.state.currentSongNumVoices}
-                      voiceMask={this.state.voiceMask}
-                      voiceNames={this.state.voiceNames}
-                      handleSetVoiceMask={this.handleSetVoiceMask}
-                      handleTempoChange={this.handleTempoChange}
-                      sequencer={this.sequencer}
-                      />
+                  )}/>
+                  {/* Catch-all route */}
+                  <Route render={({history}) => (
+                    this.contentAreaRef.current &&
+                    <Search
+                      history={history}
+                      currContext={currContext}
+                      currIdx={currIdx}
+                      onSongClick={this.handleSongClick}
+                      scrollContainerRef={this.contentAreaRef}
+                      listRef={this.listRef}
+                    >
+                      {this.state.loading && <p>Loading player engine...</p>}
+                      <Announcements/>
+                    </Search>
                   )}/>
                 </Switch>
               </div>
-                { this.state.showPlayerSettings &&
+                { showPlayerSettings &&
                 <div className="App-main-content-area settings">
                   <Settings
                     ejected={this.state.ejected}
                     tempo={this.state.tempo}
-                    currentSongNumVoices={this.state.currentSongNumVoices}
+                    numVoices={this.state.currentSongNumVoices}
                     voiceMask={this.state.voiceMask}
                     voiceNames={this.state.voiceNames}
                     voiceGroups={this.state.voiceGroups}
-                    handleSetVoiceMask={this.handleSetVoiceMask}
-                    handleTempoChange={this.handleTempoChange}
+                    onVoiceMaskChange={this.handleSetVoiceMask}
+                    onTempoChange={this.handleTempoChange}
+                    paramDefs={this.state.paramDefs}
+                    paramValues={this.state.paramValues}
+                    onParamChange={this.handleParamChange}
+                    onPinParam={this.handlePinParam}
+                    persistedSettings={settings}
                     sequencer={this.sequencer}
                   />
                 </div>
@@ -938,7 +869,6 @@ class App extends React.Component {
             currentSongNumVoices={this.state.currentSongNumVoices}
             currentSongSubtune={this.state.currentSongSubtune}
             ejected={this.state.ejected}
-            faves={this.state.faves}
             getCurrentSongLink={this.getCurrentSongLink}
             handleCopyLink={this.handleCopyLink}
             handleCycleRepeat={this.handleCycleRepeat}
@@ -946,10 +876,10 @@ class App extends React.Component {
             handleSetVoiceMask={this.handleSetVoiceMask}
             handleTempoChange={this.handleTempoChange}
             handleTimeSliderChange={this.handleTimeSliderChange}
-            handleToggleFavorite={this.handleToggleFavorite}
             handleVolumeChange={this.handleVolumeChange}
             imageUrl={this.state.imageUrl}
             infoTexts={this.state.infoTexts}
+            md5={this.state.md5}
             nextSong={this.nextSong}
             nextSubtune={this.nextSubtune}
             paused={this.state.paused}
@@ -958,14 +888,12 @@ class App extends React.Component {
             repeat={this.state.repeat}
             shuffle={this.state.shuffle}
             sequencer={this.sequencer}
-            showPlayerSettings={this.state.showPlayerSettings}
             songUrl={this.state.songUrl}
             subtitle={subtitle}
             tempo={this.state.tempo}
             title={title}
             toggleInfo={this.toggleInfo}
             togglePause={this.togglePause}
-            toggleSettings={this.toggleSettings}
             voiceNames={this.state.voiceNames}
             voiceMask={this.state.voiceMask}
             volume={this.state.volume}
@@ -976,4 +904,12 @@ class App extends React.Component {
   }
 }
 
-export default withRouter(App);
+// TODO: convert App to a function component and remove this.
+// Inject contexts as props since class components only support a single context.
+const AppWithContext = (props) => {
+  const userContext = useContext(UserContext);
+  const toastContext = useContext(ToastContext);
+  return (<App {...props} userContext={userContext} toastContext={toastContext} />);
+}
+
+export default withRouter(AppWithContext);

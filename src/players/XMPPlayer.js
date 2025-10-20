@@ -12,18 +12,42 @@ const fileExtensions = [
   'xm',  //  Fast Tracker II  1.02, 1.03, 1.04
 ];
 
+// Defines copied from xmp.h
+const XMP_PLAYER_INTERP	= 2;
+const XMP_INTERP_NEAREST = 0;
+const XMP_INTERP_LINEAR	= 1;
+const XMP_INTERP_SPLINE	= 2;
+const XMP_INFO_TIME = 7;
+
 // noinspection PointlessArithmeticExpressionJS
 export default class XMPPlayer extends Player {
+  paramDefs = [
+    {
+      id: 'interpolation',
+      label: 'Interpolation',
+      type: 'enum',
+      options: [{
+        label: 'Interpolation Mode',
+        items: [
+          { label: 'Nearest-neighbor (None)', value: XMP_INTERP_NEAREST },
+          { label: 'Linear', value: XMP_INTERP_LINEAR },
+          { label: 'Spline (Cubic)', value: XMP_INTERP_SPLINE },
+        ],
+      }],
+      defaultValue: XMP_INTERP_LINEAR,
+    },
+  ];
+
   constructor(...args) {
     super(...args);
     autoBind(this);
 
+    this.playerKey = 'xmp';
     this.name = 'XMP Player';
     this.xmpCtx = this.core._xmp_create_context();
     this.infoPtr = this.core._malloc(2048);
     this.fileExtensions = fileExtensions;
-    this.lastBPM = 125;
-    this.tempoScale = this.lastTempoScale = 1; // TODO: rename to speed
+    this.tempoScale = 1; // TODO: rename to speed
     this._positionMs = 0;
     this._durationMs = 1000;
     this.buffer = this.core._malloc(this.bufferSize * 16); // i16
@@ -53,10 +77,9 @@ export default class XMPPlayer extends Player {
     // Get current module BPM
     // see http://xmp.sourceforge.net/libxmp.html#id25
     this.core._xmp_get_frame_info(this.xmpCtx, infoPtr);
-    const bpm = this.core.getValue(infoPtr + 6 * 4, 'i32');
-    this._positionMs = this.core.getValue(infoPtr + 7 * 4, 'i32'); // xmp_frame_info.time
-    this._maybeInjectTempo(bpm);
-
+    this._positionMs = this.core.getValue(infoPtr + XMP_INFO_TIME * 4, 'i32'); // xmp_frame_info.time
+    // const row = this.core.getValue(infoPtr + XMP_INFO_ROW * 4, 'i32'); // xmp_frame_info.row
+    // const frame = this.core.getValue(infoPtr + XMP_INFO_FRAME * 4, 'i32'); // xmp_frame_info.frame
     for (ch = 0; ch < channels.length; ch++) {
       for (i = 0; i < this.bufferSize; i++) {
         channels[ch][i] = this.core.getValue(
@@ -82,7 +105,7 @@ export default class XMPPlayer extends Player {
     const xmp_modulePtr = xmp.getValue(infoPtr + 20, '*');
     meta.title = xmp.UTF8ToString(xmp_modulePtr, 256);
     meta.system = xmp.UTF8ToString(xmp_modulePtr + 64, 256);
-    meta.comment = xmp.UTF8ToString(xmp.getValue(infoPtr + 24, '*'), 512);
+    meta.comment = xmp.UTF8ToString(xmp.getValue(infoPtr + 24, '*'), 2048);
     if (meta.comment) infoText.push('Comment:', meta.comment);
 
     xmp._xmp_get_frame_info(this.xmpCtx, infoPtr);
@@ -115,22 +138,20 @@ export default class XMPPlayer extends Player {
     // Filename fallback
     if (!meta.title) meta.title = this.filepathMeta.title;
 
-    this.lastBPM = meta.initialBPM;
     this.metadata = meta;
     this.infoTexts = infoText.length ? [ infoText.join('\n\n') ] : [];
   }
 
-  loadData(data, filename) {
+  loadData(data, filename, persistedSettings) {
     let err;
     this.filepathMeta = Player.metadataFromFilepath(filename);
 
-    err = this.core.ccall(
-      'xmp_load_module_from_memory', 'number',
-      ['number', 'array', 'number'],
-      [this.xmpCtx, data, data.length]
-    );
+    const dataPtr = this.copyToHeap(data);
+    err = this.core._xmp_load_module_from_memory(this.xmpCtx, dataPtr, data.length);
+    this.core._free(dataPtr);
+
     if (err !== 0) {
-      console.error("xmp_load_module_from_memory failed. error code: %d", err);
+      console.error('xmp_load_module_from_memory failed. error code: %d', err);
       throw Error('xmp_load_module_from_memory failed');
     }
 
@@ -142,6 +163,8 @@ export default class XMPPlayer extends Player {
 
     this._parseMetadata(filename);
 
+    this.resolveParamValues(persistedSettings);
+    this.setTempo(persistedSettings.tempo || 1);
     this.resume();
     this.emit('playerStateUpdate', {
       ...this.getBasePlayerState(),
@@ -168,37 +191,9 @@ export default class XMPPlayer extends Player {
   }
 
   setTempo(val) {
-    if (this.metadata && !this.metadata.initialSpeed) {
-      console.log('Unable to set speed for %s.', this.filepathMeta.title);
-      return;
-    }
+    if (!this.xmpCtx) return;
+    this.core._xmp_set_tempo_factor(this.xmpCtx, 1 / val); // Expects inverse value.
     this.tempoScale = val;
-  }
-
-  _maybeInjectTempo(measuredBPM) {
-    const xmp = this.core;
-    const minBPM = 20;
-    const maxBPM = 255;
-    const estimatedBPM = Math.floor(Math.max(Math.min(this.lastBPM * this.tempoScale, maxBPM), minBPM));
-
-    if (estimatedBPM === measuredBPM) return;
-
-    let targetBPM = this.metadata.initialBPM;
-    if (this.lastTempoScale === this.tempoScale) {  // tempo event received
-      this.lastBPM = measuredBPM;
-      if (this.tempoScale === 1) return;
-      targetBPM = Math.floor(Math.max(Math.min(measuredBPM * this.tempoScale, maxBPM), minBPM));
-    } else {                                        // `Speed` slider changed
-      targetBPM = estimatedBPM;
-      this.lastTempoScale = this.tempoScale;
-    }
-
-    console.log('Injecting %d BPM into libxmp. (Initial: %d)', targetBPM, this.metadata.initialBPM);
-    const xmp_eventPtr = xmp._malloc(8);
-    for (let i = 0; i < 8; i++) xmp.setValue(xmp_eventPtr + i, 0, 'i8');
-    xmp.setValue(xmp_eventPtr + 3, 0x87, 'i8');
-    xmp.setValue(xmp_eventPtr + 4, targetBPM, 'i32');
-    xmp._xmp_inject_event(this.xmpCtx, 0, xmp_eventPtr);
   }
 
   getVoiceName(index) {
@@ -235,5 +230,26 @@ export default class XMPPlayer extends Player {
     this.core._xmp_stop_module(this.xmpCtx);
     console.debug('XMPPlayer.stop()');
     this.emit('playerStateUpdate', { isStopped: true });
+  }
+
+  getParameter(id) {
+    if (!this.xmpCtx) return null;
+    switch (id) {
+      case 'interpolation':
+        return this.core._xmp_get_player(this.xmpCtx, XMP_PLAYER_INTERP);
+      default:
+        console.warn('Unknown parameter id:', id);
+        return null;
+    }
+  }
+
+  setParameter(id, value, isTransient=false) {
+    switch (id) {
+      case 'interpolation':
+        this.core._xmp_set_player(this.xmpCtx, XMP_PLAYER_INTERP, value);
+        break;
+      default:
+        console.warn('Unknown parameter id:', id);
+    }
   }
 }

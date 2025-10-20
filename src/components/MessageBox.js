@@ -9,7 +9,7 @@ function MessageBox(props) {
   } = props;
 
   const [currTextIdx, setCurrTextIdx] = useState(0);
-  const infoText = (infoTexts[currTextIdx] || '').trim();
+  const infoText = (infoTexts[currTextIdx] || '').trim() || 'No information available.';
   const numLines = Math.min(40, infoText.split('\n').length + 6);
 
   useEffect(() => {
@@ -27,10 +27,8 @@ function MessageBox(props) {
   return (<div hidden={!showInfo} className="message-box-outer">
     <div hidden={!showInfo} className="message-box"
          style={{ height: showInfo ? `calc(${numLines} * var(--charH))` : 0 }}>
-      <div className="message-box-inner">
-              <pre style={{ maxHeight: '100%', margin: 0 }}>
-                {infoText}
-              </pre>
+      <div className="message-box-inner info-text">
+        {infoText}
       </div>
       <div className="message-box-footer">
         <button className="box-button message-box-button" onClick={toggleInfo}>Close</button>
@@ -38,11 +36,11 @@ function MessageBox(props) {
           <span>
             <button disabled={currTextIdx === 0}
                     className="box-button message-box-button"
-                    onClick={prevInfo}>&lt;</button>
+                    onClick={prevInfo}><span className="inline-icon icon-back"/></button>
               {' '}
               <button disabled={currTextIdx === infoTexts.length - 1}
                       className="box-button message-box-button"
-                      onClick={nextInfo}>&gt;</button>
+                      onClick={nextInfo}><span className="inline-icon icon-forward"/></button>
           </span>
         )}
       </div>

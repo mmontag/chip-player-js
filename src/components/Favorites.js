@@ -1,81 +1,98 @@
-import React, { memo, useCallback } from "react";
-import FavoriteButton from "./FavoriteButton";
+import React, { memo, useCallback, useContext } from 'react';
+import FavoriteButton from './FavoriteButton';
+import { UserContext } from './UserProvider';
+import VirtualizedList from './VirtualizedList';
+
+const FavoriteRow = (props) => {
+  const {
+    item, onPlay
+  } = props;
+  const { href, mtime } = item;
+  const date = new Date(mtime * 1000).toISOString().split('T')[0];
+  const name = decodeURIComponent(href.split('/').pop());
+
+  return (
+    <>
+      <div className="BrowseList-colName">
+        <FavoriteButton href={href}/>
+        <a onClick={onPlay} href={href}>{name}</a>
+      </div>
+      <div className="BrowseList-colMtime">
+        {date}
+      </div>
+    </>
+  )
+};
 
 export default memo(Favorites);
+
 function Favorites(props) {
   const {
-    favorites,
+    scrollContainerRef,
     currContext,
     currIdx,
     onSongClick,
-    toggleFavorite,
+    handleShufflePlay,
+    listRef,
+  } = props;
+
+  const {
     user,
     loadingUser,
+    faves,
+    favesContext,
     handleLogin,
-    handleShufflePlay,
-  } = props;
+  } = useContext(UserContext);
 
   const handleShufflePlayFavorites = useCallback(() => {
     handleShufflePlay('favorites');
   }, [handleShufflePlay]);
 
-  // Scroll Into View
-  // ----------------
-  // const playingRowRef = useRef(null);
-  //
-  // useEffect(() => {
-  //   if (playingRowRef.current) {
-  //     playingRowRef.current.scrollIntoViewIfNeeded();
-  //   }
-  // });
+  if (loadingUser && faves.length === 0) {
+    return <p>Loading user data...</p>;
+  }
+
+  if (!scrollContainerRef.current) {
+    return <p>Loading...</p>;
+  }
+
+  if (!user && faves.length === 0) {
+    return (
+      <span>
+        You must <a href="#" onClick={handleLogin}>
+        login or signup</a> to save favorites.
+      </span>
+    );
+  }
 
   return (
-    loadingUser ?
-      <p>Loading user data...</p>
-      :
-      <div>
-        <h3 className="Browse-topRow">
-          Favorite Songs ({favorites.length})
-          {favorites.length > 1 &&
-            <button
-              className="box-button"
-              title={`Shuffle all ${favorites.length} favorites`}
-              onClick={handleShufflePlayFavorites}>
-              Shuffle Play
-            </button>}
-        </h3>
-        {user ?
-          favorites.length > 0 ?
-            <div>
-              {
-                favorites.map((href, i) => {
-                  const title = decodeURIComponent(href.split('/').pop());
-                  const isPlaying = currContext === favorites && currIdx === i;
-                  return (
-                    <div className={isPlaying ? 'Song-now-playing' : ''}
-                      // Scroll Into View
-                      // ref={isPlaying ? playingRowRef : null}
-                         key={i}>
-                      <FavoriteButton isFavorite={true}
-                                      toggleFavorite={toggleFavorite}
-                                      href={href}/>
-                      <a onClick={onSongClick(href, favorites, i)} href={href}>{title}</a>
-                    </div>
-                  );
-                })
-              }
-            </div>
-            :
-            <div>
-              You don't have any favorites yet.<br/>
-              Click the &#003; heart icon next to any song to save a favorite.
-            </div>
-          :
-          <span>
-              You must <a href="#" onClick={handleLogin}>
-              login or signup</a> to save favorites.
-            </span>
-        }
-      </div>
+    <VirtualizedList
+      {...{
+        scrollContainerRef,
+        currContext,
+        currIdx,
+        onSongClick,
+        listRef,
+        itemList: faves,
+        songContext: favesContext,
+        rowRenderer: FavoriteRow,
+      }}
+    >
+      <h3 className="Browse-topRow">
+        Favorite Songs ({faves.length})
+        {faves.length > 1 &&
+          <button
+            className="box-button"
+            title={`Shuffle all ${faves.length} favorites`}
+            onClick={handleShufflePlayFavorites}>
+            Shuffle Play
+          </button>}
+      </h3>
+      {faves.length === 0 &&
+        <div style={{ padding: '0 1em' }}>
+          You don't have any favorites yet.<br/>
+          Click the &#003; heart icon next to any song to save a favorite.
+        </div>}
+    </VirtualizedList>
   );
 }

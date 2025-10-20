@@ -1,0 +1,27 @@
+@font-face {
+    font-family: PxPlusChipPlayer;
+    src: url(pxplus_chipplayer.ttf) format('truetype');
+}
+
+:root { --fontPxPlusChipPlayer: 24px/19px PxPlusChipPlayer; }
+
+@font-face {
+    src: url(int10h/pxplus_vga_squarepx.ttf) format('truetype');
+    font-family: Stingray;
+}
+
+:root { --fontStingray: 14px/16px Stingray; }
+
+@font-face {
+    src: url(mm-tahoma-8px.ttf) format('truetype');
+    font-family: TahomaPixel;
+}
+
+:root { --fontTahomaPixel: 16px/16px TahomaPixel, Tahoma; }
+
+@font-face {
+    src: url(Tahoma.woff) format('woff');
+    font-family: Tahoma;
+}
+
+:root { --fontTahoma: 11px/16px Tahoma, Arial, sans-serif; }

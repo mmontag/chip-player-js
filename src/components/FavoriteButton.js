@@ -1,23 +1,31 @@
-import React, { PureComponent } from "react";
-import autoBindReact from 'auto-bind/react';
+import React, { useContext, useCallback } from "react";
+import { UserContext } from './UserProvider';
 
-export default class FavoriteButton extends PureComponent {
-  constructor(props) {
-    super(props);
-    autoBindReact(this);
-  }
+const FavoriteButton = ({ href }) => {
+  const {
+    user,
+    faves,
+    handleToggleFavorite: toggleFavorite,
+  } = useContext(UserContext);
 
-  handleClick() {
-    this.props.toggleFavorite(this.props.href);
-  }
+  const handleClick = useCallback((e) => {
+    if (!user) {
+      // TODO: prompt user with ToastManager.
+      return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+    toggleFavorite(href);
+  }, [toggleFavorite, href, user]);
 
-  render() {
-    const { isFavorite } = this.props;
-    return (
-      <button onClick={this.handleClick}
-              className={'Favorite-button' + (isFavorite ? ' isFavorite' : '')}>
-        &hearts;
-      </button>
-    );
-  }
-}
+  const isFavorite = faves.find(fave => fave.href === href);
+  const className = `FavoriteButton ${isFavorite ? 'isFavorite' : ''}`;
+
+  return (
+    <button onClick={handleClick} className={className} tabIndex="-1">
+      &hearts;
+    </button>
+  );
+};
+
+export default FavoriteButton;

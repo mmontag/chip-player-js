@@ -1,12 +1,9 @@
-import React, { memo, useCallback } from "react";
+import React, { memo, useCallback, useRef } from 'react';
 import { FORMATS } from '../config';
-import trash from '../images/trash.png';
 import bytes from 'bytes';
 
-const formatList = FORMATS.filter(f => f !== 'miniusf').map(f => `.${f}`);
-const splitPoint = Math.floor(formatList.length / 2);
-const formatsLine1 = formatList.slice(0, splitPoint).join(' ');
-const formatsLine2 = formatList.slice(splitPoint).join(' ');
+const formatList = FORMATS.map(f => `.${f}`);
+const formatsLine = formatList.join(' ');
 
 export default memo(LocalFiles);
 
@@ -18,8 +15,10 @@ function LocalFiles(props) {
     currIdx,
     onSongClick,
     onDelete,
+    onAddFiles,
     loading,
   } = props;
+  const fileInputRef = useRef(null);
 
   const handleDelete = useCallback((event) => {
     const href = event.currentTarget.dataset.href;
@@ -31,10 +30,46 @@ function LocalFiles(props) {
     }
   }, [onDelete]);
 
+  const handleAddClick = () => {
+    fileInputRef.current.click();
+  };
+
+  const handleFileChange = (event) => {
+    const files = event.target.files;
+    if (files.length > 0) {
+      onAddFiles([...files]);
+    }
+  };
+
+  const handleClear = () => {
+    if (window.confirm('Are you sure you want to remove ALL local files?\nThis cannot be undone.')) {
+      onDelete(listing.map(item => item.path));
+    }
+  }
+
   return (
     <div>
       <h3 className="Browse-topRow">
         Local Files ({listing.length})
+        <div className='button-container'>
+          <button className='box-button' onClick={handleAddClick} title='Add files'>
+            Add Files...
+          </button>
+          {' '}
+          {listing.length > 0 &&
+            <button className='box-button' onClick={handleClear} title='Remove all local files'>
+              Clear
+            </button>
+          }
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept={formatList.join(',')}
+          style={{ display: 'none' }}
+          onChange={handleFileChange}
+        />
       </h3>
       {loading ?
         "Loading local files..."
@@ -53,8 +88,7 @@ function LocalFiles(props) {
               Supported formats:
             </p>
             <p>
-              {formatsLine1}<br/>
-              {formatsLine2}<br/>
+              {formatsLine}
             </p>
           </div>
           :
@@ -66,8 +100,8 @@ function LocalFiles(props) {
                 const isPlaying = currContext === playContext && currIdx === i;
                 return (
                   <div key={title} className={isPlaying ? 'Song-now-playing BrowseList-row' : 'BrowseList-row'}>
-                    <button className='Trash-button' onClick={handleDelete} data-href={href}>
-                      <img alt='trash' className='fileIcon' src={trash}/>
+                    <button className='Trash-button' title='Delete' onClick={handleDelete} data-href={href}>
+                      <span className='inline-icon icon-trash'/>
                     </button>
                     <div className="BrowseList-colName">
                       <a onClick={onSongClick(href, playContext, i)} href={href}>{title}</a>

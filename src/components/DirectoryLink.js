@@ -1,5 +1,4 @@
-import { Link } from "react-router-dom";
-import folder from "../images/folder.png";
+import { Link, useHistory } from "react-router-dom";
 import * as PropTypes from "prop-types";
 import React, { memo } from "react";
 import queryString from 'querystring';
@@ -13,8 +12,9 @@ function getSearch() {
 export default memo(DirectoryLink);
 
 function DirectoryLink(props) {
+  const history = useHistory();
   const linkClassName = props.dim ? 'DirectoryLink-dim' : null;
-  const folderClassName = props.dim ? 'DirectoryLink-folderIconDim' : 'DirectoryLink-folderIcon';
+  const folderClassName = props.dim ? 'inline-icon dim-icon icon-folder' : 'inline-icon icon-folder';
   // Double encode % because react-router will decode this into history.
   // See https://github.com/ReactTraining/history/issues/505
   // The fix https://github.com/ReactTraining/history/pull/656
@@ -28,14 +28,13 @@ function DirectoryLink(props) {
   if (props.isBackLink) {
     onClick = function goBack(e) {
       e.preventDefault();
-      // history.back();
-      props.history.goBack();
+      history.goBack();
     }
   }
 
   return (
-    <Link to={toObj} className={linkClassName} onClick={onClick}>
-      <img alt='folder' className={folderClassName} src={folder}/>{props.children}
+    <Link to={toObj} className={linkClassName} onClick={onClick} tabIndex="-1">
+      <span className={folderClassName}/>{props.children}
     </Link>
   );
 }

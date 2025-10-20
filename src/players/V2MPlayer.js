@@ -10,18 +10,17 @@ export default class V2MPlayer extends Player {
     super(...args);
     autoBind(this);
 
+    this.playerKey = 'v2m';
     this.name = 'Farbrausch V2M Player';
     this.speed = 1;
     this.fileExtensions = fileExtensions;
     this.buffer = this.core._malloc(this.bufferSize * 8);
   }
 
-  loadData(data, filename) {
-    const err = this.core.ccall(
-      'v2m_open', 'number',
-      ['array', 'number', 'number'],
-      [data, data.byteLength, this.sampleRate]
-    );
+  loadData(data, filename, persistedSettings) {
+    const dataPtr = this.copyToHeap(data);
+    const err = this.core._v2m_open(dataPtr, data.byteLength, this.sampleRate);
+    this.core._free(dataPtr);
 
     if (err !== 0) {
       console.error("v2m_open failed. error code: %d", err);
@@ -30,6 +29,8 @@ export default class V2MPlayer extends Player {
 
     this.metadata = { title: filename };
 
+    this.resolveParamValues(persistedSettings);
+    this.setTempo(persistedSettings.tempo || 1);
     this.resume();
     this.emit('playerStateUpdate', {
       ...this.getBasePlayerState(),

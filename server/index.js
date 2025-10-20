@@ -14,6 +14,7 @@ const URL = require('url');
 const glob = require('glob');
 const path = require('path');
 const http = require('http');
+const crypto = require('crypto');
 const TrieSearch = require('trie-search');
 const { performance } = require('perf_hooks');
 const { sampleSize } = require('lodash');
@@ -28,8 +29,19 @@ const directories = require(DIRECTORIES_PATH);
 const PUBLIC_CATALOG_URL = process.env.DEV ?
   'http://localhost:8000/catalog' :
   'https://gifx.co/music';
+function resolveCatalogRoot(p) {
+  if (!p) return p;
+  const absPath = path.resolve(p);
+  try {
+    return fs.realpathSync(absPath);
+  } catch (e) {
+    return absPath;
+  }
+}
+
+const DEFAULT_LOCAL_CATALOG = resolveCatalogRoot(path.resolve(__dirname, '../catalog'));
 const LOCAL_CATALOG_ROOT = process.env.DEV ?
-  '/Users/montag/Music/Chip Archive' :
+  resolveCatalogRoot(process.env.LOCAL_CATALOG_ROOT || DEFAULT_LOCAL_CATALOG) :
   '/var/www/gifx.co/public_html/music';
 
 const sf2Regex = /SF2=(.+?)\.sf2/;
@@ -154,8 +166,17 @@ const routes = {
     let imageUrl = null;
     let soundfont = null;
     let infoTexts = [];
+    let md5 = null;
     if (params.path) {
       const { dir, name, ext } = path.parse(params.path);
+      if (['.it', '.s3m', '.xm', '.mod'].includes(ext.toLowerCase())) {
+        // Calculate MD5 hash of file.
+        // Used to generate a link for Mod Sample Master.
+        const data = fs.readFileSync(path.join(LOCAL_CATALOG_ROOT, params.path));
+        const hash = crypto.createHash('md5');
+        hash.update(data);
+        md5 = hash.digest('hex');
+      }
 
       // --- MIDI SoundFonts ---
       if (['.mid', '.midi'].includes(ext.toLowerCase())) {
@@ -198,8 +219,16 @@ const routes = {
         infoTexts.push(fs.readFileSync(infoFiles[0], 'utf8'));
       }
 
+      // 2. Try matching same filename for image.
+      const imageFiles = glob.sync(`${LOCAL_CATALOG_ROOT}/${dir}/${name}.{gif,png,jpg,jpeg}`, {nocase: true});
+      if (imageFiles.length > 0) {
+        const imageFile = encodeURI(path.basename(imageFiles[0]));
+        const imageDir = encodeURI(dir);
+        imageUrl = `${PUBLIC_CATALOG_URL}${imageDir}/${imageFile}`;
+      }
+
       const segments = dir.split('/');
-      // 2. Walk up parent directories to find image or text.
+      // 3. Walk up parent directories to find image or text.
       while (segments.length) {
         const dir = segments.join('/');
         if (imageUrl === null) {
@@ -224,6 +253,7 @@ const routes = {
       imageUrl: imageUrl,
       infoTexts: infoTexts,
       soundfont: soundfont,
+      md5: md5,
     };
   },
 };
@@ -232,6 +262,32 @@ http.createServer(async function (req, res) {
   try {
     const url = URL.parse(req.url, true);
     const params = url.query || {};
+
+    if (url.pathname.startsWith('/files/')) {
+      const relative = decodeURIComponent(url.pathname.replace(/^\/files\//, ''));
+      const normalized = path.normalize(relative).replace(/^(\.\.(\/|\\|$))+/, '');
+      const absolutePath = path.resolve(LOCAL_CATALOG_ROOT, normalized);
+      if (!absolutePath.startsWith(LOCAL_CATALOG_ROOT)) {
+        res.writeHead(403, HEADERS);
+        res.end('Access denied');
+        return;
+      }
+      fs.stat(absolutePath, (err, stats) => {
+        if (err || !stats.isFile()) {
+          res.writeHead(404, HEADERS);
+          res.end('File not found');
+          return;
+        }
+        res.writeHead(200, {
+          ...HEADERS,
+          'Content-Type': 'application/octet-stream',
+          'Cache-Control': 'public, max-age=3600',
+        });
+        fs.createReadStream(absolutePath).pipe(res);
+      });
+      return;
+    }
+
     const lastPathComponent = url.pathname.split('/').pop();
     const route = routes[lastPathComponent];
     if (route) {

@@ -74,9 +74,9 @@ MIDIPlayer.prototype.load = function (midiFile, useTrackLoops = false) {
   this.stop();
   this.position = 0;
   this.elapsedTime = 0;
-  const tracks = midiFile.tracks.map((_, i) => midiFile.getTrackEvents(i));
   if (useTrackLoops) {
     console.debug('Processing MIDI track loops...');
+    const tracks = midiFile.tracks.map((_, i) => midiFile.getTrackEvents(i));
     this.events = midiFile.getLoopedEvents(tracks, 2);
   } else {
     this.events = midiFile.getEvents();
