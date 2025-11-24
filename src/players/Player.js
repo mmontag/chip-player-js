@@ -207,6 +207,14 @@ export default class Player extends EventEmitter {
     return paramDef?.defaultValue;
   }
 
+  getParameter(paramId) {
+    return this.params[paramId];
+  }
+
+  setParameter(paramId, value) {
+    this.params[paramId] = value;
+  }
+
   resolveParamValue(paramId, transientValue, persistedSettings) {
     // Priority 1: Transient value discovered by the player during load.
     if (transientValue !== undefined && transientValue !== null) {
