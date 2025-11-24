@@ -63,6 +63,18 @@ export default class PlayerParams extends React.PureComponent {
     onVoiceMaskChange(voiceMask);
   }
 
+  getResetHandler(id, value) {
+    return (e) => {
+      this.props.onParamChange(id, value);
+      e.preventDefault();
+      e.stopPropagation();
+    };
+  }
+
+  resetTempo() {
+    this.props.onTempoChange(1.0);
+  }
+
   isPinned(persistedKey) {
     return this.props.persistedSettings?.hasOwnProperty(persistedKey);
   }
@@ -103,7 +115,11 @@ export default class PlayerParams extends React.PureComponent {
             type='range' value={tempo}
             min='0.3' max='2.0' step='0.05'
             onInput={onTempoChange}
-            onChange={onTempoChange}/>{' '}
+            onChange={onTempoChange}
+            onDoubleClick={this.resetTempo}
+            onContextMenu={this.resetTempo}
+          />
+          {' '}
           {tempo.toFixed(2)}
         </span>
         {voiceGroups.length > 0 ?
@@ -210,6 +226,8 @@ export default class PlayerParams extends React.PureComponent {
                          title={param.hint}
                          min={param.min} max={param.max} step={param.step}
                          onChange={(e) => onParamChange(param.id, parseFloat(e.target.value))}
+                         onDoubleClick={this.getResetHandler(param.id, param.default)}
+                         onContextMenu={this.getResetHandler(param.id, param.default)}
                          value={value}>
                   </input>{' '}
                   {value !== undefined && param.step >= 1 ? value : value.toFixed(2)}
