@@ -34,6 +34,8 @@ const DEFAULT_SETTINGS = {
   theme: 'msdos',
 };
 
+const DEFAULT_MTIME = Math.floor(Date.parse('2024-01-01') / 1000);
+
 /**
  * Convert favorites from list of path strings to list of objects.
  * As of July 2024, the converted objects are not persisted to Firebase.
@@ -51,7 +53,7 @@ function migrateFaves(faves) {
     return faves.map(fave => {
       return typeof fave === 'string' ? {
         href: fave,
-        mtime: Math.floor(Date.parse('2024-01-01') / 1000),
+        mtime: DEFAULT_MTIME,
       } : fave;
     });
   }
