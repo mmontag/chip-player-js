@@ -1,0 +1,21 @@
+{
+  "name": "chip-player-js-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Server for Chip Player JS",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js",
+    "postinstall": "patch-package"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "glob": "^13.0.0",
+    "lodash": "^4.17.21",
+    "patch-package": "^8.0.1",
+    "trie-search": "2.2.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11"
+  }
+}

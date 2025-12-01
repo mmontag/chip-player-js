@@ -1,0 +1,14 @@
+diff --git a/node_modules/trie-search/src/TrieSearch.js b/node_modules/trie-search/src/TrieSearch.js
+index 239f1ca..af4a1f3 100644
+--- a/node_modules/trie-search/src/TrieSearch.js
++++ b/node_modules/trie-search/src/TrieSearch.js
+@@ -106,9 +106,6 @@ TrieSearch.prototype = {
+       if (!val) continue;
+ 
+       val = val.toString();
+-      if (this.options.ignoreCase) {
+-        val = val.toLowerCase();
+-      }
+ 
+       // Given a string like "Björne" this will return ["Björne", "Bjorne"] when using the default
+       // expand regex so that the vowel 'o' still returns the result when searching.
