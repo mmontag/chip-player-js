@@ -48,7 +48,6 @@
     "midievents": "latest",
     "midifile": "^2.0.0",
     "mini-css-extract-plugin": "^0.7.0",
-    "node-unrar-js": "^0.8.1",
     "object-assign": "4.1.1",
     "path-parse": "^1.0.7",
     "postcss-flexbugs-fixes": "3.2.0",
@@ -83,15 +82,12 @@
     "gh-pages": "^6.3.0",
     "glob": "^7.1.2",
     "node-stream-zip": "^1.7.0",
-    "patch-package": "^5.1.1",
-    "postinstall-prepare": "^1.0.1",
     "request": "^2.88.0",
     "request-promise": "^4.2.2",
     "sanitize-filename": "^1.6.1",
     "sqlite": "^3.0.0",
     "sqlite3": "^5.1.4",
     "tmp": "^0.0.33",
-    "trie-search": "1.2.8",
     "unzipper": "^0.9.3",
     "webpack-bundle-analyzer": "^3.3.2",
     "worker-loader": "^2.0.0"
@@ -106,8 +102,6 @@
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
     "deploy-lite": "npm run build-lite; gh-pages -d build",
-    "prepare": "patch-package",
-    "server": "DEV=1 node server/index.js",
     "fixvgm": "node $NODE_DEBUG_OPTION scripts/fixvgm.js"
   },
   "eslintConfig": {
