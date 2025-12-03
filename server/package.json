@@ -9,6 +9,7 @@
     "postinstall": "patch-package"
   },
   "dependencies": {
+    "dotenv": "^16.3.1",
     "express": "^5.1.0",
     "glob": "^13.0.0",
     "lodash": "^4.17.21",
