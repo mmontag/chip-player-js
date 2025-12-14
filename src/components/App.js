@@ -399,6 +399,11 @@ class App extends React.Component {
         this.setState({ imageUrl: null });
       } else if (url !== this.state.songUrl) {
         const metadataUrl = getMetadataUrlForCatalogUrl(url);
+        // XXX: fix this later
+        // if (url.indexOf("%2") > -1 || url.indexOf("#") > -1) {
+        //   console.warn("handleSequencerStateUpdate() url:", url);
+        //   console.warn("handleSequencerStateUpdate() metadataUrl:", metadataUrl);
+        // }
         // TODO: Disabled to support scroll restoration.
         // const filepath = url.replace(CATALOG_PREFIX, '');
         // updateQueryString({ play: filepath, t: undefined });
@@ -632,11 +637,11 @@ class App extends React.Component {
           item.name = item.path.split('/').pop();
           // XXX: Escape immediately: the escaped URL is considered canonical.
           //      The URL must be decoded for display from here on out.
-          item.path.replace('%', '%25').replace('#', '%23');
+          const href = item.path.replace('%', '%25').replace('#', '%23');
           if (item.type === 'file')
-            item.href = pathJoin(CATALOG_PREFIX, item.path);
-          else
-            item.href = pathJoin('/browse', item.path);
+            item.href = pathJoin(CATALOG_PREFIX, href);
+          else // item.type === 'directory'
+            item.href = pathJoin('/browse', href);
         });
 
         if (path !== '') { // No '..' at top level browse path.
