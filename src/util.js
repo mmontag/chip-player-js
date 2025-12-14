@@ -6,6 +6,7 @@ import DirectoryLink from './components/DirectoryLink';
 import { API_BASE, CATALOG_PREFIX } from './config';
 
 const CATALOG_PREFIX_REGEX = /^https?:\/\/[a-z0-9\-.:]+\/(music|catalog)\//;
+const MULTI_SLASH_REGEX = /\/{2,}/g;
 
 export function updateQueryString(newParams) {
   // Merge new params with current query string
@@ -75,7 +76,7 @@ export function pathJoin(...parts) {
 }
 
 export function getFilepathFromUrl(url) {
-  return url.replace(CATALOG_PREFIX, '/');
+  return url.replace(CATALOG_PREFIX, '/').replace(MULTI_SLASH_REGEX, '/');
 }
 
 export function getMetadataUrlForFilepath(filepath) {
