@@ -315,7 +315,7 @@ export default class MIDIPlayer extends Player {
     if (this.getParameter('synthengine') === MIDI_ENGINE_LIBFLUIDLITE) {
       const metadataUrl = getMetadataUrlForFilepath(filepath);
       let useMelodicChannel10 = false;
-      // This will most certainly be cached by a preceding fetch in App.js.
+      // This should be cached by a preceding fetch in App.js.
       const { soundfont: soundfontUrl } = await requestCache.fetchCached(metadataUrl);
       if (soundfontUrl) {
         const soundfontBasename = path.basename(getFilepathFromUrl(soundfontUrl));
