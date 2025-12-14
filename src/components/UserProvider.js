@@ -175,7 +175,9 @@ const UserProvider = ({ children }) => {
       if (existingIdx === -1) {
         // ADD
         const newFave = {
-          href,
+                // XXX: fix this later
+          href, // <-- This is more like a PATH than a URL right now.
+                // And "href" is about where it's used, so makes no sense as a field name.
           mtime: Math.floor(Date.now() / 1000),
         }
         newFaves = [...oldFaves, newFave];
@@ -224,7 +226,18 @@ const UserProvider = ({ children }) => {
 
   // We need to derive a list of hrefs to use as the play context.
   const favesContext = useMemo(() => {
-    return faves.map(fave => fave.href);
+    // XXX: we need to URL encode the "href" here.
+    // The value stored as "href" is a concatenation of catalog root and file path,
+    // e.g.:
+    //
+    //  h††p://gifx.co/music/MIDI/Crystal Waters/100% Pure Love.mid
+    //  |------------------||-------------------------------------|
+    //
+    // This is not a well-formed URL, since the spaces and % (etc.) should be encoded.
+    return faves.map(fave => {
+      const href = fave.href;
+      return href.replace("%", "%25").replace("#", "%23");
+    });
   }, [faves]);
 
   return (

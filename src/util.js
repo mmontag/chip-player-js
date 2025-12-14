@@ -80,6 +80,8 @@ export function getFilepathFromUrl(url) {
 }
 
 export function getMetadataUrlForFilepath(filepath) {
+  // XXX: any time we convert from path to URL, we must encode
+  filepath = filepath.replace('%25', '%').replace('%23', '#');
   return `${API_BASE}/metadata?path=${encodeURIComponent(filepath)}`;
 }
 

@@ -221,6 +221,10 @@ export default class Sequencer extends EventEmitter {
         .then(xhr => xhr.response)
         .then(buffer => {
           this.currUrl = url;
+          // XXX: fix this later
+          // if (url.indexOf("%2") > -1 || url.indexOf("#") > -1) {
+          //   console.warn("playSong() url:", url);
+          // }
           const filepath = url.replace(CATALOG_PREFIX, '');
           this.playSongBuffer(filepath, buffer, subtune)
         })
