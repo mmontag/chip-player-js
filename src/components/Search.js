@@ -125,7 +125,7 @@ export default class Search extends PureComponent {
               return {
                 idx: i,
                 path: path,
-                name: decodeURIComponent(path.substring(path.lastIndexOf('/') + 1)),
+                name: path.substring(path.lastIndexOf('/') + 1),
                 href: pathJoin(CATALOG_PREFIX, path.replace('%', '%25').replace('#', '%23')),
                 type: 'file',
               };
@@ -142,7 +142,7 @@ export default class Search extends PureComponent {
               resultsWithHeadings.push({
                 type: 'directory',
                 href: pathJoin('/browse', heading),
-                name: decodeURIComponent(heading),
+                name: heading,
               });
             }
             resultsWithHeadings.push(item);
