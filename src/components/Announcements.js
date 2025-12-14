@@ -11,10 +11,22 @@ export default function Announcements() {
   return (
     <div className="Announcements" style={{maxWidth: 544 }}>
       <p style={{font: 'var(--fontPxPlusChipPlayer)', whiteSpace: 'pre-wrap'}}>
-{`╔═══════════════════════════════╗
-║     W h a t ' s    N e w      ║
-╚═══════════════════════════════╝
+{`╔═════════════════╗
+║   What's New    ║
+╚═════════════════╝
 `}
+      </p>
+      <h3>2025-12-13</h3>
+      <p>
+        Added <Link to="/browse/keygenmusic.org">Keygenmusic.org</Link> to the catalog. (5085 tunes)<br/>
+        3396 xm,
+        1093 mod,
+        254 it,
+        130 v2m,
+        110 mid,
+        94 s3m,
+        5 nsf,
+        3 spc.
       </p>
       <h3>2025-09-17</h3>
       <p>
@@ -88,6 +100,10 @@ export default function Announcements() {
       <h3>2024-06-25</h3>
       <p>
         Improved voice naming for LibVGM and MDX players. Now grouped by sound chip.
+      </p>
+      <p>══════════════════════════════════</p>
+      <p>
+        Contribute to <a href="https://www.github.com/mmontag/chip-player-js">Chip Player JS on Github</a>!
       </p>
     </div>
   );
