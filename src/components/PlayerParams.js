@@ -226,8 +226,8 @@ export default class PlayerParams extends React.PureComponent {
                          title={param.hint}
                          min={param.min} max={param.max} step={param.step}
                          onChange={(e) => onParamChange(param.id, parseFloat(e.target.value))}
-                         onDoubleClick={this.getResetHandler(param.id, param.default)}
-                         onContextMenu={this.getResetHandler(param.id, param.default)}
+                         onDoubleClick={this.getResetHandler(param.id, param.defaultValue)}
+                         onContextMenu={this.getResetHandler(param.id, param.defaultValue)}
                          value={value}>
                   </input>{' '}
                   {value !== undefined && param.step >= 1 ? value : value.toFixed(2)}
