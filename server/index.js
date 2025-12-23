@@ -26,13 +26,14 @@ const {
   LOCAL_CATALOG_ROOT,
   BROWSE_LOCAL_FILESYSTEM,
 } = process.env;
-
+const hostname = '127.0.0.1';
+const port = process.env.PORT || 8080;
 const browseLocalFilesystem = BROWSE_LOCAL_FILESYSTEM === 'true';
 
 if (!LOCAL_CATALOG_ROOT || !PUBLIC_CATALOG_URL) {
   console.error(`
-    The following variables must be set in your .env file:
-    
+    The following environment variables must be set:
+
     LOCAL_CATALOG_ROOT=/path/to/your/music/archive
     PUBLIC_CATALOG_URL=http://your-website.com/catalog
 
@@ -71,12 +72,14 @@ const time = (performance.now() - start).toFixed(1);
 console.log('Added %s items (%s tokens) to search trie in %s ms.', files.length, trie.size, time);
 
 const app = express();
-app.use((req, res, next) => {
+const router = express.Router();
+
+router.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   next();
 });
 
-app.get('/search', async (req, res) => {
+router.get('/search', async (req, res) => {
   const { limit, query } = req.query;
   const start = performance.now();
   let items = trie.get(query, TrieSearch.UNION_REDUCER) || [];
@@ -97,12 +100,12 @@ app.get('/search', async (req, res) => {
   });
 });
 
-app.get('/total', (req, res) => {
+router.get('/total', (req, res) => {
   res.set('Cache-Control', 'public, max-age=3600');
   res.json({ total: files.length });
 });
 
-app.get('/random', (req, res) => {
+router.get('/random', (req, res) => {
   const limit = parseInt(req.query.limit, 10) || 1;
   const idx = Math.floor(Math.random() * files.length);
   const items = files.slice(idx, idx + limit);
@@ -112,7 +115,7 @@ app.get('/random', (req, res) => {
   });
 });
 
-app.get('/shuffle', (req, res) => {
+router.get('/shuffle', (req, res) => {
   const limit = parseInt(req.query.limit, 10) || 100;
   let path = req.query.path || '';
   let items = catalog;
@@ -145,7 +148,7 @@ app.get('/shuffle', (req, res) => {
     }
   ]
 */
-app.get('/browse', async (req, res) => {
+router.get('/browse', async (req, res) => {
   const { path: reqPath } = req.query;
   res.set('Cache-Control', 'public, max-age=3600');
   if (browseLocalFilesystem) {
@@ -171,7 +174,7 @@ app.get('/browse', async (req, res) => {
   }
 });
 
-app.get('/metadata', async (req, res) => {
+router.get('/metadata', async (req, res) => {
   const { path: reqPath } = req.query;
   let imageUrl = null;
   let soundfont = null;
@@ -268,11 +271,13 @@ app.get('/metadata', async (req, res) => {
   });
 });
 
+app.use('/', router);
+
 app.use((err, req, res, next) => {
   console.error('Error processing request:', req.url, err);
   res.status(500).send('Server error');
 });
 
-app.listen(8080, 'localhost', () => {
-  console.log('Server running at http://localhost:8080/.');
+app.listen(port, hostname, () => {
+  console.log('Server running at http://%s:%s', hostname, port);
 });
