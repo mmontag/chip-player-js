@@ -15,7 +15,8 @@ src/-catalog-tests/
 src/chip-core.js
 server/catalog.json
 server/directories.json
-server/deploy.sh
+deploy-server.sh
+deploy-client.sh
 server/ecosystem.config.js
 catalog
 public/music
