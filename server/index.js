@@ -50,6 +50,14 @@ const catalog = require(CATALOG_PATH);
 const DIRECTORIES_PATH = './directories.json';
 const directories = require(DIRECTORIES_PATH);
 
+// Pre-load index.html template
+const indexFile = path.join(__dirname, 'index.html');
+let indexHtml;
+fs.readFile(indexFile, 'utf8').then(data => {
+  indexHtml = data;
+  console.log('Loaded index.html template.');
+});
+
 const sf2Regex = /SF2=(.+?)\.sf2/;
 
 console.log('Local catalog at %s', LOCAL_CATALOG_ROOT);
@@ -60,16 +68,6 @@ if (!Array.isArray(catalog)) {
   process.exit(1);
 }
 
-const trie = new TrieSearch('file', {
-  indexField: 'id',
-  idFieldOrFunction: 'id',
-  splitOnRegEx: /[^a-zA-Z0-9]|(?<=[a-z])(?=[A-Z])/,
-});
-const start = performance.now();
-const files = catalog.map((file, i) => ({id: i, file: file}));
-trie.addAll(files);
-const time = (performance.now() - start).toFixed(1);
-console.log('Added %s items (%s tokens) to search trie in %s ms.', files.length, trie.size, time);
 
 const app = express();
 const router = express.Router();
@@ -273,6 +271,17 @@ router.get('/metadata', async (req, res) => {
 
 app.use('/', router);
 
+// Handle client-side routing, return all requests to index.html.
+app.get('/{*splat}', (req, res) => {
+  const { title, description, url, image } = getMetaTagsForRequest(req);
+  const html = indexHtml
+    .replace(/__TITLE__/g, title)
+    .replace(/__DESCRIPTION__/g, description)
+    .replace(/__URL__/g, url)
+    .replace(/__IMAGE__/g, image);
+    res.send(html);
+});
+
 app.use((err, req, res, next) => {
   console.error('Error processing request:', req.url, err);
   res.status(500).send('Server error');
@@ -281,3 +290,29 @@ app.use((err, req, res, next) => {
 app.listen(port, hostname, () => {
   console.log('Server running at http://%s:%s', hostname, port);
 });
+
+// Build expensive search trie last, so that routes are validated early.
+const trie = new TrieSearch('file', {
+  indexField: 'id',
+  idFieldOrFunction: 'id',
+  splitOnRegEx: /[^a-zA-Z0-9]|(?<=[a-z])(?=[A-Z])/,
+});
+const start = performance.now();
+const files = catalog.map((file, i) => ({id: i, file: file}));
+trie.addAll(files);
+const time = (performance.now() - start).toFixed(1);
+console.log('Added %s items (%s tokens) to search trie in %s ms.', files.length, trie.size, time);
+
+function getMetaTagsForRequest(req) {
+  const url = `${req.protocol}://${req.hostname}${req.originalUrl}`;
+  const image = 'https://chiptune.app/chip-player.png';
+  // TODO: get title and description from catalog
+  const meta = {
+    title: 'Chip Player JS',
+    description: 'Web-based music player for chiptune formats.',
+    url,
+    image,
+  };
+
+  return meta;
+}
