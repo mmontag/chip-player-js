@@ -3,7 +3,7 @@ set -e # Exit immediately if a command fails.
 
 REMOTE_HOST="your-server.com"
 REMOTE_USER="username"
-REMOTE_DEST_DIR="chip-player-service"
+REMOTE_SERVER_DIR="chip-player-service"
 REMOTE_SSH_HOST="${REMOTE_USER}@${REMOTE_HOST}"
 
 echo "🚀 Deploying server to ${REMOTE_HOST}..."
@@ -14,7 +14,7 @@ rsync -avz --delete \
   --exclude '.env' \
   --exclude '._*' \
   --exclude '.DS_Store' \
-  ./server "${REMOTE_SSH_HOST}:${REMOTE_DEST_DIR}/"
+  ./server/ "${REMOTE_SSH_HOST}:${REMOTE_SERVER_DIR}/"
 
 # 2. Copy index.html to the server directory as a template
 scp ./build/index.html "${REMOTE_SSH_HOST}:${REMOTE_SERVER_DIR}/index.html"
@@ -26,7 +26,7 @@ ssh "${REMOTE_SSH_HOST}" "
   export NVM_DIR=\"\$HOME/.nvm\"
   [ -s \"\$NVM_DIR/nvm.sh\" ] && \\. \"\$NVM_DIR/nvm.sh\"
   echo 'Connected to server, running post-deploy commands...'
-  cd ${REMOTE_DEST_DIR}
+  cd ${REMOTE_SERVER_DIR}
   echo 'Installing/updating production dependencies...'
   npm install --omit=dev --no-fund
   echo 'Reloading pm2 process...'

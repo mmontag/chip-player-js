@@ -7,7 +7,7 @@ REMOTE_SERVER_DIR="chip-player-service"
 REMOTE_STATIC_DIR="/var/www/your-server/public_html"
 REMOTE_SSH_HOST="${REMOTE_USER}@${REMOTE_HOST}"
 
-echo "🚀 Deploying client to ${REMOTE_HOST}..."
+echo "🚀 Deploying client to ${REMOTE_HOST}.."
 
 # 1. Build the client
 npm run build-lite
