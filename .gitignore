@@ -7,6 +7,7 @@ cmake-build-debug/
 *.a
 *.wasm
 *.wasm.map
+*.db
 lib*.js
 libxmp/libxmp-lite-stagedir/
 public/soundfonts/
@@ -15,9 +16,9 @@ src/-catalog-tests/
 src/chip-core.js
 server/catalog.json
 server/directories.json
+server/ecosystem.config.js
 deploy-server.sh
 deploy-client.sh
-server/ecosystem.config.js
 catalog
 public/music
 src/config/firebaseConfig.js
