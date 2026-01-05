@@ -304,14 +304,49 @@ app.listen(port, hostname, () => {
 
 function getMetaTagsForRequest(req) {
   const url = `${req.protocol}://${req.hostname}${req.originalUrl}`;
-  const image = 'https://chiptune.app/chip-player.png';
-  // TODO: get title and description from catalog
-  const meta = {
-    title: 'Chip Player JS',
-    description: 'Web-based music player for chiptune formats.',
+  let image = 'https://chiptune.app/chip-player.png';
+  let title = 'Chip Player JS';
+  let description = 'Web-based music player for chiptune formats.';
+
+  if (db) {
+    // Try to find song info
+    // req.path is like "/Console/Game/Song.mid"
+    // We need to strip leading slash
+    const reqPath = req.path.replace(/^\/+/, '');
+    
+    // Check if it's a file in the DB
+    try {
+      const song = getSongInfoStmt.get(reqPath);
+      if (song) {
+        if (song.title) {
+          title = song.title;
+          if (song.artist) title += ` - ${song.artist}`;
+          else if (song.game) title += ` - ${song.game}`;
+        } else {
+          title = path.basename(reqPath);
+        }
+
+        const parts = [];
+        if (song.game) parts.push(song.game);
+        if (song.system) parts.push(song.system);
+        if (song.copyright) parts.push(song.copyright);
+        if (parts.length > 0) description = parts.join(' · ');
+
+        if (song.image_path) {
+          const parts = song.image_path.split('/');
+          const encodedPath = parts.map(encodeURIComponent).join('/');
+          image = `${PUBLIC_CATALOG_URL}/${encodedPath}`;
+        }
+      }
+    } catch (e) {
+      // Ignore DB errors for meta tags
+    }
+  }
+
+  return {
+    title,
+    description,
     url,
     image,
   };
-
-  return meta;
 }
