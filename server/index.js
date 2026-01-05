@@ -11,14 +11,10 @@
 require('dotenv').config();
 
 const fs = require('fs').promises;
-const { createReadStream } = require('fs');
-const { glob } = require('glob');
 const path = require('path');
-const crypto = require('crypto');
 const express = require('express');
-const TrieSearch = require('trie-search');
 const { performance } = require('perf_hooks');
-const { sampleSize } = require('lodash');
+const Database = require('better-sqlite3');
 
 // --- Configuration ---
 const {
@@ -45,10 +41,15 @@ if (!LOCAL_CATALOG_ROOT || !PUBLIC_CATALOG_URL) {
 // Only used when browsing local filesystem
 const { FORMATS } = browseLocalFilesystem ? require('../src/config/index.js') : [];
 
-const CATALOG_PATH = './catalog.json';
-const catalog = require(CATALOG_PATH);
-const DIRECTORIES_PATH = './directories.json';
-const directories = require(DIRECTORIES_PATH);
+// Initialize DB
+const DB_PATH = path.resolve(__dirname, 'catalog.db');
+let db;
+try {
+  db = new Database(DB_PATH, { readonly: true });
+  console.log(`Connected to database at ${DB_PATH}`);
+} catch (e) {
+  console.warn('Could not connect to database. Ensure you have run "npm run build-music-db".');
+}
 
 // Pre-load index.html template
 const indexFile = path.join(__dirname, 'index.html');
@@ -58,17 +59,6 @@ fs.readFile(indexFile, 'utf8').then(data => {
   console.log('Loaded index.html template.');
 });
 
-const sf2Regex = /SF2=(.+?)\.sf2/;
-
-console.log('Local catalog at %s', LOCAL_CATALOG_ROOT);
-console.log('Found %s entries in %s.', Object.entries(directories).length, DIRECTORIES_PATH);
-
-if (!Array.isArray(catalog)) {
-  console.log('%s must be a json file with root-level array.', CATALOG_PATH);
-  process.exit(1);
-}
-
-
 const app = express();
 const router = express.Router();
 
@@ -77,36 +67,89 @@ router.use((req, res, next) => {
   next();
 });
 
-router.get('/search', async (req, res) => {
-  const { limit, query } = req.query;
+// --- Prepared Statements ---
+const searchStmt = db ? db.prepare(`
+  SELECT path as file, title, artist, game, system 
+  FROM music_fts 
+  WHERE music_fts MATCH ? 
+  ORDER BY rank 
+  LIMIT ?
+`) : null;
+
+// Browse: Get directory ID by path
+const getDirIdStmt = db ? db.prepare('SELECT id FROM directories WHERE path = ?') : null;
+
+// Browse: Get children (subdirectories and files)
+const getDirChildrenStmt = db ? db.prepare(`
+  SELECT name as path, 'directory' as type, sort_order, total_size as size, mtime, count 
+  FROM directories WHERE parent_id = ?
+  UNION ALL
+  SELECT filename as path, 'file' as type, sort_order, file_size as size, mtime, 0 as count
+  FROM music WHERE directory_id = ?
+  ORDER BY sort_order ASC
+`) : null;
+
+// Metadata: Get file info
+const getMetadataStmt = db ? db.prepare(`
+  SELECT m.image_id, m.text_ids, m.soundfont, m.md5, i.path as image_path
+  FROM music m
+  LEFT JOIN images i ON m.image_id = i.id
+  WHERE m.path = ?
+`) : null;
+
+// SEO: Get full song info
+const getSongInfoStmt = db ? db.prepare(`
+  SELECT m.title, m.artist, m.game, m.system, m.copyright, i.path as image_path
+  FROM music m
+  LEFT JOIN images i ON m.image_id = i.id
+  WHERE m.path = ?
+`) : null;
+
+const getTextContentStmt = db ? db.prepare('SELECT content FROM texts WHERE id = ?') : null;
+const getRandomStmt = db ? db.prepare('SELECT path as file FROM music ORDER BY RANDOM() LIMIT ?') : null;
+const getTotalStmt = db ? db.prepare('SELECT COUNT(*) as total FROM music') : null;
+
+// --- Routes ---
+
+router.get('/search', (req, res) => {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
+
+  const { limit = 100, query } = req.query;
   const start = performance.now();
-  let items = trie.get(query, TrieSearch.UNION_REDUCER) || [];
-  const total = items.length;
-  if (limit) items = items.slice(0, parseInt(limit, 10));
-  // Add directory depth to items for sorting
-  items = items.map(item => { item.depth = item.file.split('/').length; return item; });
-  items.sort((a, b) => {
-    if (a.depth !== b.depth) return a.depth - b.depth;
-    return a.file.localeCompare(b.file);
-  });
+  
+  // FTS5 Prefix Search: Append '*' to ALL terms to allow partial matches on any word.
+  // e.g. "moto take" -> "moto* take*"
+  const sanitizedQuery = query.replace(/"/g, '""'); 
+  const ftsQuery = sanitizedQuery.trim().split(/\s+/).map(term => `${term}*`).join(' ');
+
+  let items = [];
+  try {
+    items = searchStmt.all(ftsQuery, limit);
+  } catch (e) {
+    console.error('Search error:', e.message);
+  }
+
   const time = (performance.now() - start).toFixed(1);
-  console.log('Returned %s results in %s ms.', items.length, time);
+  console.log('Returned %s results for "%s" in %s ms.', items.length, query, time);
+  
   res.set('Cache-Control', 'public, max-age=3600');
   res.json({
     items: items,
-    total: total,
+    total: items.length, 
   });
 });
 
 router.get('/total', (req, res) => {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
+  const result = getTotalStmt.get();
   res.set('Cache-Control', 'public, max-age=3600');
-  res.json({ total: files.length });
+  res.json({ total: result.total });
 });
 
 router.get('/random', (req, res) => {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
   const limit = parseInt(req.query.limit, 10) || 1;
-  const idx = Math.floor(Math.random() * files.length);
-  const items = files.slice(idx, idx + limit);
+  const items = getRandomStmt.all(limit);
   res.json({
     items: items,
     total: items.length,
@@ -114,159 +157,127 @@ router.get('/random', (req, res) => {
 });
 
 router.get('/shuffle', (req, res) => {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
+  
   const limit = parseInt(req.query.limit, 10) || 100;
-  let path = req.query.path || '';
-  let items = catalog;
-  if (path) {
-    path = path.replace(/^\/+|\/+$/g, '') + '/';
-    items = catalog.filter(file => file.startsWith(path));
+  let reqPath = req.query.path || '';
+  
+  let items;
+  if (reqPath) {
+    reqPath = reqPath.replace(/^\/+|\/+$/g, ''); 
+    // We need to find all songs under this folder.
+    // Since we store full relative path in 'path', we can use LIKE.
+    const stmt = db.prepare('SELECT path as file FROM music WHERE path LIKE ? OR path = ? ORDER BY RANDOM() LIMIT ?');
+    items = stmt.all(`${reqPath}/%`, reqPath, limit);
+  } else {
+    items = getRandomStmt.all(limit);
   }
-  const sampled = sampleSize(items, limit);
+
   res.json({
-    items: sampled,
-    total: sampled.length,
+    items: items,
+    total: items.length,
   });
 });
 
-/*
-  Example /browse response:
-
-  [
-    {
-      "path": "/Classical MIDI/Balakirev/Islamey – Fantaisie Orientale (G. Giulimondi).mid",
-      "size": 54602,
-      "type": "file",
-      "idx": 0
-    },
-    {
-      "path": "/Classical MIDI/Balakirev/Islamey – Fantaisie Orientale (W. Pepperdine).mid",
-      "size": 213866,
-      "type": "file",
-      "idx": 1
-    }
-  ]
-*/
 router.get('/browse', async (req, res) => {
   const { path: reqPath } = req.query;
   res.set('Cache-Control', 'public, max-age=3600');
+
   if (browseLocalFilesystem) {
-    const files = await fs.readdir(path.join(LOCAL_CATALOG_ROOT, reqPath), { withFileTypes: true });
-    const result = files
-      .filter(file => {
-        // Get lowercase file extension, without the dot
-        const ext = path.extname(file.name).toLowerCase().slice(1);
-        return (file.isDirectory() || (file.isFile() && FORMATS.includes(ext)));
-      })
-      .map((file, i) => {
-        return {
-          path: path.join(reqPath, file.name),
-          size: 999,
-          mtime: 1665174068,
-          type: file.isDirectory() ? 'directory' : 'file',
-          idx: i,
-        }
-      });
-    res.json(result);
+    // Legacy filesystem browsing
+    try {
+      const files = await fs.readdir(path.join(LOCAL_CATALOG_ROOT, reqPath), { withFileTypes: true });
+      const result = files
+        .filter(file => {
+          const ext = path.extname(file.name).toLowerCase().slice(1);
+          return (file.isDirectory() || (file.isFile() && FORMATS.includes(ext)));
+        })
+        .map((file, i) => {
+          return {
+            path: path.join(reqPath, file.name),
+            size: 0, 
+            mtime: 0,
+            type: file.isDirectory() ? 'directory' : 'file',
+            idx: i,
+          }
+        });
+      res.json(result);
+    } catch (e) {
+      res.status(404).json([]);
+    }
   } else {
-    res.json(directories[reqPath]);
+    // Database browsing
+    if (!db) return res.status(503).json({ error: 'Database not available' });
+    
+    const normalizedPath = reqPath ? reqPath.replace(/^\/+|\/+$/g, '') : '';
+    
+    const dirRow = getDirIdStmt.get(normalizedPath);
+    if (dirRow) {
+      const children = getDirChildrenStmt.all(dirRow.id, dirRow.id);
+      
+      const result = children.map((child, idx) => ({
+        path: normalizedPath ? `${normalizedPath}/${child.path}` : child.path,
+        type: child.type,
+        size: child.size,
+        mtime: typeof child.mtime === 'string' ? new Date(child.mtime).getTime() / 1000 : 0, 
+        idx: idx,
+        count: child.count || 0 // Include recursive count for directories
+      }));
+      
+      res.json(result);
+    } else {
+      res.json([]);
+    }
   }
 });
 
-router.get('/metadata', async (req, res) => {
+router.get('/metadata', (req, res) => {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
+  
   const { path: reqPath } = req.query;
-  let imageUrl = null;
-  let soundfont = null;
-  let infoTexts = [];
-  let md5 = null;
-  if (reqPath) {
-    const { dir, name, ext } = path.parse(reqPath);
-    if (['.it', '.s3m', '.xm', '.mod'].includes(ext.toLowerCase())) {
-      // Calculate MD5 hash of file.
-      // Used to generate a link for Mod Sample Master.
-      const data = await fs.readFile(path.join(LOCAL_CATALOG_ROOT, reqPath));
-      const hash = crypto.createHash('md5');
-      hash.update(data);
-      md5 = hash.digest('hex');
+  if (!reqPath) return res.json({});
+
+  const normalizedPath = reqPath.replace(/^\/+/, ''); 
+  const meta = getMetadataStmt.get(normalizedPath);
+
+  if (meta) {
+    // Resolve Text IDs
+    let infoTexts = [];
+    if (meta.text_ids) {
+      try {
+        const ids = JSON.parse(meta.text_ids);
+        infoTexts = ids.map(id => {
+          const row = getTextContentStmt.get(id);
+          return row ? row.content : null;
+        }).filter(t => t !== null);
+      } catch (e) {}
     }
 
-    // --- MIDI SoundFonts ---
-    if (['.mid', '.midi'].includes(ext.toLowerCase())) {
-      // 1. Check the file for SF2 meta text in first 1024 bytes (proprietary tag added by N64 MIDI script).
-      const data = await new Promise((resolve) => {
-        const stream = createReadStream(path.join(LOCAL_CATALOG_ROOT, reqPath), {
-          encoding: 'UTF-8',
-          start: 0,
-          end: 256,
-        });
-        stream.on('data', data => resolve(data.toString()));
-        stream.on('error', () => resolve(null));
-      });
-      const match = data ? data.match(sf2Regex) : null;
-      if (match && match[1]) {
-        soundfont = `${match[1]}.sf2`;
-      } else {
-        // 2. Check for a filename match.
-        let soundfonts = await glob(`${LOCAL_CATALOG_ROOT}/${dir}/${name}.sf2`, { nocase: true });
-        if (soundfonts.length > 0) {
-          soundfont = soundfonts[0];
-        } else {
-          // 3. Check for any .sf2 file in current folder.
-          soundfonts = await glob(`${LOCAL_CATALOG_ROOT}/${dir}/*.sf2`, { nocase: true });
-          if (soundfonts.length > 0) {
-            soundfont = soundfonts[0];
-          }
-        }
-      }
-
-      if (soundfont !== null) {
-        soundfont = `${PUBLIC_CATALOG_URL}/${path.join(dir, path.basename(soundfont))}`;
-      }
+    // Resolve Image URL
+    let imageUrl = null;
+    if (meta.image_path) {
+      const parts = meta.image_path.split('/');
+      const encodedPath = parts.map(encodeURIComponent).join('/');
+      imageUrl = `${PUBLIC_CATALOG_URL}/${encodedPath}`;
     }
 
-    // --- Image and Info Text ---
-    // 1. Try matching same filename for info text.
-    const infoFiles = await glob(`${LOCAL_CATALOG_ROOT}/${dir}/${name}.{text,txt,doc}`, {nocase: true});
-    if (infoFiles.length > 0) {
-      infoTexts.push(await fs.readFile(infoFiles[0], 'utf8'));
+    // Resolve Soundfont URL
+    let soundfont = null;
+    if (meta.soundfont) {
+      const parts = meta.soundfont.split('/');
+      const encodedPath = parts.map(encodeURIComponent).join('/');
+      soundfont = `${PUBLIC_CATALOG_URL}/${encodedPath}`;
     }
 
-    // 2. Try matching same filename for image.
-    const imageFiles = await glob(`${LOCAL_CATALOG_ROOT}/${dir}/${name}.{gif,png,jpg,jpeg}`, {nocase: true});
-    if (imageFiles.length > 0) {
-      const imageFile = encodeURI(path.basename(imageFiles[0]));
-      const imageDir = encodeURI(dir);
-      imageUrl = `${PUBLIC_CATALOG_URL}${imageDir}/${imageFile}`;
-    }
-
-    const segments = dir.split('/');
-    // 3. Walk up parent directories to find image or text.
-    while (segments.length) {
-      const dir = segments.join('/');
-      if (imageUrl === null) {
-        const imageFiles = await glob(`${LOCAL_CATALOG_ROOT}/${dir}/*.{gif,png,jpg,jpeg}`, {nocase: true});
-        if (imageFiles.length > 0) {
-          const imageFile = encodeURI(path.basename(imageFiles[0]));
-          const imageDir = encodeURI(dir);
-          imageUrl = `${PUBLIC_CATALOG_URL}${imageDir}/${imageFile}`;
-        }
-      }
-      if (infoTexts.length === 0) {
-        const infoFiles = await glob(`${LOCAL_CATALOG_ROOT}/${dir}/*.{text,txt,doc}`, {nocase: true});
-        infoTexts.push(...await Promise.all(infoFiles.map(infoFile => fs.readFile(infoFile, 'utf8'))));
-      }
-      if (imageUrl !== null && infoTexts.length > 0) {
-        break;
-      }
-      segments.pop();
-    }
+    res.json({
+      imageUrl: imageUrl,
+      infoTexts: infoTexts,
+      soundfont: soundfont,
+      md5: meta.md5,
+    });
+  } else {
+    res.json({});
   }
-  res.set('Cache-Control', 'public, max-age=3600');
-  res.json({
-    imageUrl: imageUrl,
-    infoTexts: infoTexts,
-    soundfont: soundfont,
-    md5: md5,
-  });
 });
 
 app.use('/', router);
@@ -290,18 +301,6 @@ app.use((err, req, res, next) => {
 app.listen(port, hostname, () => {
   console.log('Server running at http://%s:%s', hostname, port);
 });
-
-// Build expensive search trie last, so that routes are validated early.
-const trie = new TrieSearch('file', {
-  indexField: 'id',
-  idFieldOrFunction: 'id',
-  splitOnRegEx: /[^a-zA-Z0-9]|(?<=[a-z])(?=[A-Z])/,
-});
-const start = performance.now();
-const files = catalog.map((file, i) => ({id: i, file: file}));
-trie.addAll(files);
-const time = (performance.now() - start).toFixed(1);
-console.log('Added %s items (%s tokens) to search trie in %s ms.', files.length, trie.size, time);
 
 function getMetaTagsForRequest(req) {
   const url = `${req.protocol}://${req.hostname}${req.originalUrl}`;
