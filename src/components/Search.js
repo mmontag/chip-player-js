@@ -10,7 +10,7 @@ import FavoriteButton from './FavoriteButton';
 import autoBindReact from 'auto-bind/react';
 import VirtualizedList from './VirtualizedList';
 
-const MAX_RESULTS = 100;
+const MAX_RESULTS = 400;
 const searchResultsCache = {};
 
 function getTotal() {
@@ -120,6 +120,8 @@ export default class Search extends PureComponent {
           const { items, total } = payload;
           // Decorate file items with idx (to match up with song context) and other properties.
           const resultFiles = items
+            // Sort by full file path to group directories together
+            .sort((a, b) => a.file.localeCompare(b.file))
             .map((item, i) => {
               const path = item.file;
               return {
