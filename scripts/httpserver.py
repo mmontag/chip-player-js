@@ -5,6 +5,7 @@ The only reason it's a special script is that it needs to return CORS headers.
 """
 from http.server import HTTPServer, SimpleHTTPRequestHandler, test
 import sys
+import socket
 
 
 class CORSRequestHandler(SimpleHTTPRequestHandler):
@@ -13,5 +14,9 @@ class CORSRequestHandler(SimpleHTTPRequestHandler):
         SimpleHTTPRequestHandler.end_headers(self)
 
 
+class IPv4HTTPServer(HTTPServer):
+    address_family = socket.AF_INET
+
+
 if __name__ == '__main__':
-    test(CORSRequestHandler, HTTPServer, port=int(sys.argv[1]) if len(sys.argv) > 1 else 8000)
+    test(CORSRequestHandler, IPv4HTTPServer, port=int(sys.argv[1]) if len(sys.argv) > 1 else 8000, bind='0.0.0.0')
