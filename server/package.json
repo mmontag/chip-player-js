@@ -5,19 +5,15 @@
   "description": "Server for Chip Player JS",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon index.js",
+    "start": "node --watch index.js",
     "postinstall": "patch-package"
   },
   "dependencies": {
     "better-sqlite3": "^12.5.0",
-    "dotenv": "^16.3.1",
+    "dotenv-flow": "^4.1.0",
     "express": "^5.1.0",
-    "glob": "^13.0.0",
-    "lodash": "^4.17.21",
+    "http-proxy-middleware": "^3.0.0",
     "patch-package": "^8.0.1",
     "trie-search": "2.2.0"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.11"
   }
 }
