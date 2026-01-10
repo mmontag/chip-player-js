@@ -48,7 +48,8 @@ module.exports = {
     // the line below with these two lines if you prefer the stock client:
 
     // dev client:
-    require.resolve('webpack-dev-server/client') + '?/',
+    // require.resolve('webpack-dev-server/client') + '?/',
+    require.resolve('webpack-dev-server/client') + '?ws://localhost:3000/ws',
     require.resolve('webpack/hot/dev-server'),
     // dev client with Error Overlay:
     // require.resolve('react-dev-utils/webpackHotDevClient'),
@@ -204,6 +205,7 @@ module.exports = {
     new HtmlWebpackPlugin({
       inject: true,
       template: paths.appHtml,
+      // filename: 'index.template.html', // to avoid conflict with dev middleware serving index.html
     }),
     // Makes some environment variables available in index.html.
     // The public URL is available as %PUBLIC_URL% in index.html, e.g.:

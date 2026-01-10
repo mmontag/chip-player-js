@@ -206,6 +206,7 @@ module.exports = {
     new HtmlWebpackPlugin({
       inject: true,
       template: paths.appHtml,
+      filename: 'index.template.html', // allow Express to serve index.html dynamically
       minify: {
         removeComments: true,
         collapseWhitespace: false,

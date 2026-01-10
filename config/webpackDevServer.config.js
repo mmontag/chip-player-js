@@ -63,6 +63,14 @@ module.exports = function(proxy, allowedHost) {
     // WebpackDevServer is noisy by default so we emit custom message instead
     // by listening to the compiler events with `compiler.plugin` calls above.
     quiet: true,
+    transportMode: 'ws', // This forces WDS to use native WebSockets
+    // injectClient: false, // Prevents WDS from injecting its own (conflicting) client
+    sockHost: 'localhost',
+    sockPort: '3000',
+    sockPath: '/ws',
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+    },
     // Reportedly, this avoids CPU overload on some systems.
     // https://github.com/facebookincubator/create-react-app/issues/293
     // src/node_modules is not ignored to support absolute imports
@@ -87,7 +95,7 @@ module.exports = function(proxy, allowedHost) {
       // We do this in development to avoid hitting the production cache if
       // it used the same host and port.
       // https://github.com/facebookincubator/create-react-app/issues/2272#issuecomment-302832432
-      app.use(noopServiceWorkerMiddleware());
+      app.use(noopServiceWorkerMiddleware('/'));
 
       // =============================================
       // use proper mime-type for wasm files
