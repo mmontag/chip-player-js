@@ -1,4 +1,5 @@
 .env.local
+.env.production
 .env.*.local
 .idea/
 node_modules/
