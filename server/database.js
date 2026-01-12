@@ -33,10 +33,16 @@ const dbStatements = {
       WHERE m.path = ?
   `),
   getSongInfoStmt: db.prepare(`
-      SELECT m.title, m.artist, m.game, m.system, m.copyright, i.path as image_path
+      SELECT m.song_id, m.title, m.artist, m.game, m.system, m.copyright, i.path as image_path
       FROM music m
                LEFT JOIN images i ON m.image_id = i.id
       WHERE m.path = ?
+  `),
+  getSongImageByIdStmt: db.prepare(`
+      SELECT i.path as image_path
+      FROM music m
+               LEFT JOIN images i ON m.image_id = i.id
+      WHERE m.song_id GLOB ?
   `),
   getTextContentStmt: db.prepare('SELECT content FROM texts WHERE id = ?'),
   getShuffleStmt: db.prepare('SELECT path FROM music WHERE path LIKE ? ORDER BY RANDOM() LIMIT ?'),
