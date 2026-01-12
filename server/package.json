@@ -5,7 +5,7 @@
   "description": "Server for Chip Player JS",
   "main": "index.js",
   "scripts": {
-    "start": "node --watch index.js"
+    "start": "NODE_ENV=development node --watch index.js"
   },
   "dependencies": {
     "better-sqlite3": "^12.5.0",
