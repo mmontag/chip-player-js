@@ -8,118 +8,108 @@
  * Matt Montag · March 2019
  *
  */
-require('dotenv').config();
-
+require('dotenv-flow').config({ path: __dirname });
 const fs = require('fs').promises;
 const path = require('path');
 const express = require('express');
 const { performance } = require('perf_hooks');
-const Database = require('better-sqlite3');
+const { createProxyMiddleware } = require('http-proxy-middleware');
+const { dbStatements } = require('./database.js');
+
+const {
+  searchStmt,
+  getDirIdStmt,
+  getDirChildrenStmt,
+  getMetadataStmt,
+  getTextContentStmt,
+  getShuffleStmt,
+  getTotalStmt,
+  getSongInfoStmt,
+} = dbStatements;
 
 // --- Configuration ---
 const {
-  PUBLIC_CATALOG_URL,
   LOCAL_CATALOG_ROOT,
+  LOCAL_SOUNDFONT_ROOT,
+  LOCAL_CLIENT_BUILD_ROOT,
   BROWSE_LOCAL_FILESYSTEM,
+  NODE_ENV,
 } = process.env;
-const hostname = '127.0.0.1';
+const hostname = '0.0.0.0';
 const port = process.env.PORT || 8080;
 const browseLocalFilesystem = BROWSE_LOCAL_FILESYSTEM === 'true';
+const isDev = NODE_ENV === 'development';
+const WDS_PORT = 3000; // Port where Webpack Dev Server runs
+const indexFilename = 'index.template.html';
 
-if (!LOCAL_CATALOG_ROOT || !PUBLIC_CATALOG_URL) {
-  console.error(`
-    The following environment variables must be set:
-
-    LOCAL_CATALOG_ROOT=/path/to/your/music/archive
-    PUBLIC_CATALOG_URL=http://your-website.com/catalog
-
-    See .env.example for more details.
-  `);
+if (!LOCAL_CATALOG_ROOT || !LOCAL_CLIENT_BUILD_ROOT) {
+  console.error('Missing required environment variables. See .env file for details.');
   process.exit(1);
 }
 
 // Only used when browsing local filesystem
 const { FORMATS } = browseLocalFilesystem ? require('../src/config/index.js') : [];
 
-// Initialize DB
-const DB_PATH = path.resolve(__dirname, 'catalog.db');
-let db;
-try {
-  db = new Database(DB_PATH, { readonly: true });
-  console.log(`Connected to database at ${DB_PATH}`);
-} catch (e) {
-  console.warn('Could not connect to database. Ensure you have run "npm run build-music-db".');
-}
-
-// Pre-load index.html template
-const indexFile = path.join(__dirname, 'index.html');
-let indexHtml;
-fs.readFile(indexFile, 'utf8').then(data => {
-  indexHtml = data;
-  console.log('Loaded index.html template.');
-});
-
 const app = express();
 const router = express.Router();
 
-router.use((req, res, next) => {
+// Pre-load index.html template (Production Only)
+const indexPath = path.join(LOCAL_CLIENT_BUILD_ROOT, indexFilename);
+let indexHtmlProd;
+
+// --- Development Proxy Setup ---
+if (isDev) {
+  console.log(`Running in dev mode (proxy to localhost:${WDS_PORT})`);
+  // Proxy Webpack static assets and Hot Module Replacement
+  const devProxy = createProxyMiddleware({
+    target: `http://localhost:${WDS_PORT}`,
+    changeOrigin: true,
+    ws: true, // Crucial for HMR WebSockets
+    logger: console,
+    pathFilter: (pathname, req) => {
+      return (
+        pathname.startsWith('/static') ||
+        pathname.startsWith('/ws') ||
+        pathname.startsWith('/sockjs-node') ||
+        /\.hot-update\.(json|js)$/.test(pathname)
+      );
+    }
+  });
+
+  app.use(devProxy);
+
+  // Serve static files (handled by Express as fallback to Nginx)
+  // app.use(express.static(path.join(__dirname, LOCAL_CLIENT_BUILD_ROOT)));
+}
+
+// --- Production Asset Pre-loading ---
+if (!isDev) {
+  console.log('Running in production mode.');
+  fs.readFile(indexPath, 'utf8').then(data => {
+    indexHtmlProd = data;
+    console.log(`Loaded ${indexFilename}.`);
+  }).catch(e => {
+    console.warn(`Could not load ${indexPath}. Ensure you have built the app.`);
+  });
+
+}
+
+app.use((req, res, next) => {
+  // Preserve for debugging purposes.
+  // console.log('----', req.url);
   res.header('Access-Control-Allow-Origin', '*');
   next();
 });
 
-// --- Prepared Statements ---
-const searchStmt = db ? db.prepare(`
-  SELECT path as file, title, artist, game, system 
-  FROM music_fts 
-  WHERE music_fts MATCH ? 
-  ORDER BY rank 
-  LIMIT ?
-`) : null;
+// --- API Routes ---
 
-// Browse: Get directory ID by path
-const getDirIdStmt = db ? db.prepare('SELECT id FROM directories WHERE path = ?') : null;
-
-// Browse: Get children (subdirectories and files)
-const getDirChildrenStmt = db ? db.prepare(`
-  SELECT name as path, 'directory' as type, sort_order, total_size as size, mtime, count 
-  FROM directories WHERE parent_id = ?
-  UNION ALL
-  SELECT filename as path, 'file' as type, sort_order, file_size as size, mtime, 0 as count
-  FROM music WHERE directory_id = ?
-  ORDER BY sort_order ASC
-`) : null;
-
-// Metadata: Get file info
-const getMetadataStmt = db ? db.prepare(`
-  SELECT m.image_id, m.text_ids, m.soundfont, m.md5, i.path as image_path
-  FROM music m
-  LEFT JOIN images i ON m.image_id = i.id
-  WHERE m.path = ?
-`) : null;
-
-// SEO: Get full song info
-const getSongInfoStmt = db ? db.prepare(`
-  SELECT m.title, m.artist, m.game, m.system, m.copyright, i.path as image_path
-  FROM music m
-  LEFT JOIN images i ON m.image_id = i.id
-  WHERE m.path = ?
-`) : null;
-
-const getTextContentStmt = db ? db.prepare('SELECT content FROM texts WHERE id = ?') : null;
-const getRandomStmt = db ? db.prepare('SELECT path as file FROM music ORDER BY RANDOM() LIMIT ?') : null;
-const getTotalStmt = db ? db.prepare('SELECT COUNT(*) as total FROM music') : null;
-
-// --- Routes ---
+app.use('/api', router);
 
 router.get('/search', (req, res) => {
-  if (!db) return res.status(503).json({ error: 'Database not available' });
-
   const { limit = 100, query } = req.query;
   const start = performance.now();
-  
-  // FTS5 Prefix Search: Append '*' to ALL terms to allow partial matches on any word.
-  // e.g. "moto take" -> "moto* take*"
-  const sanitizedQuery = query.replace(/"/g, '""'); 
+
+  const sanitizedQuery = query.replace(/"/g, '""');
   const ftsQuery = sanitizedQuery.trim().split(/\s+/).map(term => `${term}*`).join(' ');
 
   let items = [];
@@ -131,25 +121,23 @@ router.get('/search', (req, res) => {
 
   const time = (performance.now() - start).toFixed(1);
   console.log('Returned %s results for "%s" in %s ms.', items.length, query, time);
-  
+
   res.set('Cache-Control', 'public, max-age=3600');
   res.json({
     items: items,
-    total: items.length, 
+    total: items.length,
   });
 });
 
 router.get('/total', (req, res) => {
-  if (!db) return res.status(503).json({ error: 'Database not available' });
   const result = getTotalStmt.get();
   res.set('Cache-Control', 'public, max-age=3600');
   res.json({ total: result.total });
 });
 
 router.get('/random', (req, res) => {
-  if (!db) return res.status(503).json({ error: 'Database not available' });
   const limit = parseInt(req.query.limit, 10) || 1;
-  const items = getRandomStmt.all(limit);
+  const items = getShuffleStmt.all('/%', limit);
   res.json({
     items: items,
     total: items.length,
@@ -157,21 +145,9 @@ router.get('/random', (req, res) => {
 });
 
 router.get('/shuffle', (req, res) => {
-  if (!db) return res.status(503).json({ error: 'Database not available' });
-  
   const limit = parseInt(req.query.limit, 10) || 100;
-  let reqPath = req.query.path || '';
-  
-  let items;
-  if (reqPath) {
-    reqPath = reqPath.replace(/^\/+|\/+$/g, ''); 
-    // We need to find all songs under this folder.
-    // Since we store full relative path in 'path', we can use LIKE.
-    const stmt = db.prepare('SELECT path as file FROM music WHERE path LIKE ? OR path = ? ORDER BY RANDOM() LIMIT ?');
-    items = stmt.all(`${reqPath}/%`, reqPath, limit);
-  } else {
-    items = getRandomStmt.all(limit);
-  }
+  const reqPath = (req.query.path || '').replace(/^\/+|\/+$/g, '');
+  items = getShuffleStmt.pluck().all(`${reqPath}%`, limit);
 
   res.json({
     items: items,
@@ -183,8 +159,8 @@ router.get('/browse', async (req, res) => {
   const { path: reqPath } = req.query;
   res.set('Cache-Control', 'public, max-age=3600');
 
+  let idx = 0;
   if (browseLocalFilesystem) {
-    // Legacy filesystem browsing
     try {
       const files = await fs.readdir(path.join(LOCAL_CATALOG_ROOT, reqPath), { withFileTypes: true });
       const result = files
@@ -195,10 +171,11 @@ router.get('/browse', async (req, res) => {
         .map((file, i) => {
           return {
             path: path.join(reqPath, file.name),
-            size: 0, 
+            size: 0,
             mtime: 0,
             type: file.isDirectory() ? 'directory' : 'file',
-            idx: i,
+            idx: file.isDirectory() ? null : (idx++),
+            count: 0,
           }
         });
       res.json(result);
@@ -206,24 +183,21 @@ router.get('/browse', async (req, res) => {
       res.status(404).json([]);
     }
   } else {
-    // Database browsing
-    if (!db) return res.status(503).json({ error: 'Database not available' });
-    
     const normalizedPath = reqPath ? reqPath.replace(/^\/+|\/+$/g, '') : '';
-    
+
     const dirRow = getDirIdStmt.get(normalizedPath);
     if (dirRow) {
       const children = getDirChildrenStmt.all(dirRow.id, dirRow.id);
-      
-      const result = children.map((child, idx) => ({
+
+      const result = children.map((child) => ({
         path: normalizedPath ? `${normalizedPath}/${child.path}` : child.path,
         type: child.type,
         size: child.size,
-        mtime: typeof child.mtime === 'string' ? new Date(child.mtime).getTime() / 1000 : 0, 
-        idx: idx,
-        count: child.count || 0 // Include recursive count for directories
+        mtime: typeof child.mtime === 'string' ? new Date(child.mtime).getTime() / 1000 : 0,
+        idx: child.type === 'directory' ? null : (idx++),
+        count: child.count || 0
       }));
-      
+
       res.json(result);
     } else {
       res.json([]);
@@ -232,16 +206,13 @@ router.get('/browse', async (req, res) => {
 });
 
 router.get('/metadata', (req, res) => {
-  if (!db) return res.status(503).json({ error: 'Database not available' });
-  
   const { path: reqPath } = req.query;
   if (!reqPath) return res.json({});
 
-  const normalizedPath = reqPath.replace(/^\/+/, ''); 
+  const normalizedPath = reqPath.replace(/^\/+/, '');
   const meta = getMetadataStmt.get(normalizedPath);
 
   if (meta) {
-    // Resolve Text IDs
     let infoTexts = [];
     if (meta.text_ids) {
       try {
@@ -253,20 +224,18 @@ router.get('/metadata', (req, res) => {
       } catch (e) {}
     }
 
-    // Resolve Image URL
     let imageUrl = null;
     if (meta.image_path) {
       const parts = meta.image_path.split('/');
       const encodedPath = parts.map(encodeURIComponent).join('/');
-      imageUrl = `${PUBLIC_CATALOG_URL}/${encodedPath}`;
+      imageUrl = `/catalog/${encodedPath}`;
     }
 
-    // Resolve Soundfont URL
     let soundfont = null;
     if (meta.soundfont) {
       const parts = meta.soundfont.split('/');
       const encodedPath = parts.map(encodeURIComponent).join('/');
-      soundfont = `${PUBLIC_CATALOG_URL}/${encodedPath}`;
+      soundfont = `/catalog/${encodedPath}`;
     }
 
     res.json({
@@ -280,17 +249,41 @@ router.get('/metadata', (req, res) => {
   }
 });
 
-app.use('/', router);
+// Chrome dev tools requests this for the "Workspace" feature.
+app.get('/.well-known/appspecific/com.chrome.devtools.json', (req, res) => res.sendStatus(404));
+
+// Static file fallback - should be handled by Nginx in production
+app.use(express.static(LOCAL_CLIENT_BUILD_ROOT));
+app.use('/catalog', express.static(LOCAL_CATALOG_ROOT));
+app.use('/soundfonts', express.static(LOCAL_SOUNDFONT_ROOT));
 
 // Handle client-side routing, return all requests to index.html.
-app.get('/{*splat}', (req, res) => {
+// This must be the LAST route.
+app.get('/{*splat}', async (req, res) => {
+  let html = indexHtmlProd;
+
+  if (isDev) {
+    try {
+      // Fetch the latest template from Webpack Dev Server
+      const response = await fetch(`http://localhost:${WDS_PORT}/index.html`);
+      html = await response.text();
+    } catch (e) {
+      return res.status(500).send('Webpack Dev Server is not responding. Is it running on port 3000?');
+    }
+  }
+
+  if (!html) {
+    return res.status(404).send(`${indexFilename} not found`);
+  }
+
   const { title, description, url, image } = getMetaTagsForRequest(req);
-  const html = indexHtml
+  const finalHtml = html
     .replace(/__TITLE__/g, title)
     .replace(/__DESCRIPTION__/g, description)
     .replace(/__URL__/g, url)
     .replace(/__IMAGE__/g, image);
-    res.send(html);
+
+  res.send(finalHtml);
 });
 
 app.use((err, req, res, next) => {
@@ -308,13 +301,11 @@ function getMetaTagsForRequest(req) {
   let title = 'Chip Player JS';
   let description = 'Web-based music player for chiptune formats.';
 
-  if (db) {
-    // Try to find song info
-    // req.path is like "/Console/Game/Song.mid"
-    // We need to strip leading slash
-    const reqPath = req.path.replace(/^\/+/, '');
-    
-    // Check if it's a file in the DB
+  // Extract 'play' param from query string
+  const playPath = req.query.play;
+
+  if (playPath) {
+    const reqPath = playPath.replace(/^\/+/, '');
     try {
       const song = getSongInfoStmt.get(reqPath);
       if (song) {
@@ -335,7 +326,7 @@ function getMetaTagsForRequest(req) {
         if (song.image_path) {
           const parts = song.image_path.split('/');
           const encodedPath = parts.map(encodeURIComponent).join('/');
-          image = `${PUBLIC_CATALOG_URL}/${encodedPath}`;
+          image = `/catalog/${encodedPath}`;
         }
       }
     } catch (e) {
