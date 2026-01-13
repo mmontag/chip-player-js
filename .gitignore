@@ -19,8 +19,6 @@ src/chip-core.js
 server/catalog.json
 server/directories.json
 server/ecosystem.config.js
-deploy-server.sh
-deploy-client.sh
 catalog
 public/music
 src/config/firebaseConfig.js
