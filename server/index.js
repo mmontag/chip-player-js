@@ -250,7 +250,8 @@ router.get('/random', (req, res) => {
 
 router.get('/shuffle', (req, res) => {
   const limit = parseInt(req.query.limit, 10) || 100;
-  const reqPath = (req.query.path || '').replace(/^\/+|\/+$/g, '');
+  let reqPath = (req.query.path || '').replace(/^\/+/g, '');
+  if (reqPath !== '') reqPath += '/';
   items = getShuffleStmt.pluck().all(`${reqPath}%`, limit);
 
   res.json({
