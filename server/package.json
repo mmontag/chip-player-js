@@ -11,6 +11,8 @@
     "better-sqlite3": "^12.5.0",
     "dotenv-flow": "^4.1.0",
     "express": "^5.1.0",
-    "http-proxy-middleware": "^3.0.0"
+    "http-proxy-middleware": "^3.0.0",
+    "lru-cache": "^10.0.0",
+    "skia-canvas": "^1.0.1"
   }
 }

@@ -15,6 +15,8 @@ const express = require('express');
 const { performance } = require('perf_hooks');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const { dbStatements } = require('./database.js');
+const { Canvas, loadImage } = require('skia-canvas');
+const { LRUCache } = require('lru-cache');
 
 const {
   searchStmt,
@@ -25,6 +27,7 @@ const {
   getShuffleStmt,
   getTotalStmt,
   getSongInfoStmt,
+  getSongImageByIdStmt,
 } = dbStatements;
 
 // --- Configuration ---
@@ -104,6 +107,107 @@ app.use((req, res, next) => {
 // --- API Routes ---
 
 app.use('/api', router);
+
+// --- Preview Image Cache ---
+const previewCache = new LRUCache({
+  max: 25,
+});
+
+let bgImage = null;
+
+async function getBgImage() {
+  if (bgImage) return bgImage;
+  
+  let bgPath = path.join(LOCAL_CLIENT_BUILD_ROOT, 'chip-player.png');
+  try {
+    await fs.access(bgPath);
+  } catch (e) {
+    // Fallback for development or if build is missing
+    bgPath = path.join(__dirname, '../public/chip-player.png');
+  }
+  
+  bgImage = await loadImage(bgPath);
+  return bgImage;
+}
+
+app.get('/preview', async (req, res) => {
+  const { s: songId } = req.query;
+  if (!songId) {
+    return res.status(400).send('Missing song ID');
+  }
+
+  try {
+    const song = getSongImageByIdStmt.get(`${songId}*`);
+    
+    // Check cache if we have a song image path
+    if (song && song.image_path) {
+      const cachedBuffer = previewCache.get(song.image_path);
+      if (cachedBuffer) {
+        res.set('Content-Type', 'image/png');
+        return res.send(cachedBuffer);
+      }
+    }
+
+    const bg = await getBgImage();
+    const canvas = new Canvas(bg.width, bg.height);
+    const ctx = canvas.getContext('2d');
+    
+    // Draw background
+    ctx.drawImage(bg, 0, 0);
+
+    if (song && song.image_path) {
+      const songImagePath = path.join(LOCAL_CATALOG_ROOT, song.image_path);
+      try {
+        const songImage = await loadImage(songImagePath);
+        
+        // Calculate dimensions to fit 80% of width or height
+        const maxWidth = canvas.width * 0.8;
+        const maxHeight = canvas.height * 0.8;
+        
+        let drawWidth = songImage.width;
+        let drawHeight = songImage.height;
+        
+        const scaleX = maxWidth / drawWidth;
+        const scaleY = maxHeight / drawHeight;
+        const scale = Math.min(scaleX, scaleY);
+        
+        drawWidth *= scale;
+        drawHeight *= scale;
+
+        // Center the image
+        const x = (canvas.width - drawWidth) / 2;
+        const y = (canvas.height - drawHeight) / 2;
+
+        // Draw yellow outline with dropshadow
+        ctx.fillStyle = '#ffff00';
+        ctx.shadowColor = '#000040';
+        ctx.shadowBlur = 60;
+        ctx.shadowOffsetY = 15;
+        const lw = 3;
+        ctx.fillRect(x - lw, y - lw, drawWidth + lw * 2, drawHeight + lw * 2);
+        ctx.fillRect(x - lw, y - lw, drawWidth + lw * 2, drawHeight + lw * 2);
+        ctx.shadowColor = 'transparent';
+
+        ctx.drawImage(songImage, x, y, drawWidth, drawHeight);
+      } catch (e) {
+        console.error('Error loading song image:', e);
+      }
+    }
+
+    const buffer = await canvas.toBuffer('png');
+    
+    // Cache the result if we have a song image path
+    if (song && song.image_path) {
+      previewCache.set(song.image_path, buffer);
+    }
+
+    res.set('Content-Type', 'image/png');
+    res.send(buffer);
+  } catch (e) {
+    console.error('Preview generation error:', e);
+    res.status(500).send('Error generating preview');
+  }
+});
 
 router.get('/search', (req, res) => {
   const { limit = 100, query } = req.query;
@@ -276,12 +380,13 @@ app.get('/{*splat}', async (req, res) => {
     return res.status(404).send(`${indexFilename} not found`);
   }
 
-  const { title, description, url, image } = getMetaTagsForRequest(req);
+  const { title, description, url, image, songId } = getMetaTagsForRequest(req);
+  const previewImage = songId ? `https://chiptune.app/preview?s=${encodeURIComponent(songId)}` : image;
   const finalHtml = html
     .replace(/__TITLE__/g, title)
     .replace(/__DESCRIPTION__/g, description)
     .replace(/__URL__/g, url)
-    .replace(/__IMAGE__/g, image);
+    .replace(/__IMAGE__/g, previewImage);
 
   res.send(finalHtml);
 });
@@ -300,6 +405,7 @@ function getMetaTagsForRequest(req) {
   let image = 'https://chiptune.app/chip-player.png';
   let title = 'Chip Player JS';
   let description = 'Web-based music player for chiptune formats.';
+  let songId = null;
 
   // Extract 'play' param from query string
   const playPath = req.query.play;
@@ -326,8 +432,9 @@ function getMetaTagsForRequest(req) {
         if (song.image_path) {
           const parts = song.image_path.split('/');
           const encodedPath = parts.map(encodeURIComponent).join('/');
-          image = `/catalog/${encodedPath}`;
+          image = `https://chiptune.app/catalog/${encodedPath}`;
         }
+        songId = song.song_id;
       }
     } catch (e) {
       // Ignore DB errors for meta tags
@@ -339,5 +446,6 @@ function getMetaTagsForRequest(req) {
     description,
     url,
     image,
+    songId,
   };
 }
