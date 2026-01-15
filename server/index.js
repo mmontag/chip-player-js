@@ -44,6 +44,8 @@ const browseLocalFilesystem = BROWSE_LOCAL_FILESYSTEM === 'true';
 const isDev = NODE_ENV === 'development';
 const WDS_PORT = 3000; // Port where Webpack Dev Server runs
 const indexFilename = 'index.template.html';
+const chipPlayerPng = 'chip-player-1200x640.png';
+const logoPng = 'chip-player-logo.png';
 
 if (!LOCAL_CATALOG_ROOT || !LOCAL_CLIENT_BUILD_ROOT) {
   console.error('Missing required environment variables. See .env file for details.');
@@ -114,20 +116,33 @@ const previewCache = new LRUCache({
 });
 
 let bgImage = null;
-
 async function getBgImage() {
   if (bgImage) return bgImage;
   
-  let bgPath = path.join(LOCAL_CLIENT_BUILD_ROOT, 'chip-player.png');
+  let bgPath = path.join(LOCAL_CLIENT_BUILD_ROOT, chipPlayerPng);
   try {
     await fs.access(bgPath);
   } catch (e) {
     // Fallback for development or if build is missing
-    bgPath = path.join(__dirname, '../public/chip-player.png');
+    bgPath = path.join(__dirname, `../public/${chipPlayerPng}`);
   }
   
   bgImage = await loadImage(bgPath);
   return bgImage;
+}
+
+let logoImage = null;
+async function getLogoImage() {
+  let logoPath = path.join(LOCAL_CLIENT_BUILD_ROOT, logoPng);
+  try {
+    await fs.access(logoPath);
+  } catch (e) {
+    // Fallback for development or if build is missing
+    logoPath = path.join(__dirname, `../public/${logoPng}`);
+  }
+
+  logoImage = await loadImage(logoPath);
+  return logoImage;
 }
 
 app.get('/preview', async (req, res) => {
@@ -149,6 +164,7 @@ app.get('/preview', async (req, res) => {
     }
 
     const bg = await getBgImage();
+    const logo = await getLogoImage();
     const canvas = new Canvas(bg.width, bg.height);
     const ctx = canvas.getContext('2d');
     
@@ -174,21 +190,30 @@ app.get('/preview', async (req, res) => {
         drawWidth *= scale;
         drawHeight *= scale;
 
-        // Center the image
-        const x = (canvas.width - drawWidth) / 2;
+        const logoWidth = 280;
+        const logoOverlap = 36; // Amount of logo overlapping the song image
+        const offset = logoWidth - logoOverlap;
+
+        // Center the image + logo horizontally
+        const x = (canvas.width - drawWidth - offset) / 2;
         const y = (canvas.height - drawHeight) / 2;
 
+        // Draw semi-transparent overlay
+        ctx.fillStyle = '#00008080';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
         // Draw yellow outline with dropshadow
-        ctx.fillStyle = '#ffff00';
+        ctx.fillStyle = '#ffffff';
         ctx.shadowColor = '#000040';
         ctx.shadowBlur = 60;
         ctx.shadowOffsetY = 15;
-        const lw = 3;
-        ctx.fillRect(x - lw, y - lw, drawWidth + lw * 2, drawHeight + lw * 2);
-        ctx.fillRect(x - lw, y - lw, drawWidth + lw * 2, drawHeight + lw * 2);
+        const lw = 5;
+        ctx.fillRect(x - lw + offset, y - lw, drawWidth + lw * 2, drawHeight + lw * 2);
+        ctx.fillRect(x - lw + offset, y - lw, drawWidth + lw * 2, drawHeight + lw * 2);
         ctx.shadowColor = 'transparent';
 
-        ctx.drawImage(songImage, x, y, drawWidth, drawHeight);
+        ctx.drawImage(songImage, x + offset, y, drawWidth, drawHeight);
+        ctx.drawImage(logo, x, 180, 280, 280);
       } catch (e) {
         console.error('Error loading song image:', e);
       }
