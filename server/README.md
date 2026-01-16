@@ -10,11 +10,11 @@ This directory contains the Node.js API server for Chip Player JS. The server is
     ```
 
 2.  **Environment Variables:**
-    Create a `.env` file in this directory by copying the example:
+    Create a `.env.local` file in this directory by copying the example:
     ```bash
-    cp .env.example .env
+    cp .env .env.local
     ```
-    Then, edit `.env` with your specific paths and URLs:
+    Then, edit `.env.local` with your specific paths and URLs:
     -   `LOCAL_CATALOG_ROOT`: The absolute path to your music archive on the server's filesystem.
     -   `PUBLIC_CATALOG_URL`: The public-facing URL where the music archive is served.
 
@@ -46,22 +46,22 @@ For production, it's recommended to use a process manager like `pm2`.
 
 ## Deployment
 
-A deployment script example is provided in `deploy.example.sh`. This script uses `rsync` to copy the server files and `ssh` to run commands on the remote server.
+A deployment script is provided in the project root: `deploy-server.sh`. This script uses `rsync` to copy the server files and `ssh` to run commands on the remote server. The script reads environment variables from .env and .env.local.
 
-1.  **Create your deployment script:**
+1.  **Copy the base environment variables:**
     ```bash
-    cp deploy.example.sh deploy.sh
+    cp .env .env.local
     ```
 
-2.  **Customize `deploy.sh`:**
-    Edit the script and set your `REMOTE_HOST`, `REMOTE_USER`, and `REMOTE_DEST_DIR`.
+2.  **Customize `env.local`:**
+    Update the environment variables in `.env.local` to match your deployment server settings.
 
 3.  **Make it executable:**
     ```bash
-    chmod +x deploy.sh
+    chmod +x deploy-server.sh
     ```
 
 4.  **Run the deploy script:**
     ```bash
-    ./deploy.sh
+    ./deploy-server.sh
     ```
