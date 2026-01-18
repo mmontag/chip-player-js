@@ -308,7 +308,10 @@ export default class MIDIPlayer extends Player {
     // Transient params: synthengine, opl3bank, soundfont.
     if (this.getParameter('autoengine')) {
       newTransientParams['synthengine'] = this.getSynthengineBasedOnFilename(filepath);
-      newTransientParams['opl3bank'] = this.getOpl3bankBasedOnFilename(filepath);
+      const opl3Bank = this.getOpl3bankBasedOnFilename(filepath);
+      if (opl3Bank != null) {
+        newTransientParams['opl3bank'] = opl3Bank;
+      }
     }
 
     // Load custom Soundfont if present in the metadata response.
@@ -384,7 +387,7 @@ export default class MIDIPlayer extends Player {
     if (opl3def) {
       const opl3banks = opl3def.options[0].items;
       const findBank = (str) => opl3banks.findIndex(bank => bank.label.indexOf(str) > -1);
-      let bankId = opl3def.defaultValue;
+      let bankId = null;
       if (fp.indexOf('[rick]') > -1) {
         bankId = findBank('Descent:: Rick');
       } else if (fp.indexOf('[ham]') > -1) {
@@ -414,7 +417,7 @@ export default class MIDIPlayer extends Player {
       } else if (fp.indexOf('/doom') > -1) {
         bankId = findBank('DOOM');
       }
-      if (bankId > -1) {
+      if (bankId != null) {
         return bankId;
       }
     }
