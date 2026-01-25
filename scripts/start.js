@@ -3,6 +3,7 @@
 // Do this as the first thing so that any code reading it knows the right env.
 process.env.BABEL_ENV = 'development';
 process.env.NODE_ENV = 'development';
+const isSideBySide = process.argv.includes('--side-by-side');
 
 // Makes the script crash on unhandled rejections instead of silently
 // ignoring them. In the future, promise rejections that are not handled will
@@ -85,11 +86,16 @@ choosePort(HOST, DEFAULT_PORT)
       if (err) {
         return console.log(err);
       }
-      if (isInteractive) {
+      if (isInteractive && !isSideBySide) {
         clearConsole();
       }
       console.log(chalk.cyan('Starting the development server...\n'));
-      openBrowser(urls.localUrlForBrowser);
+      if (isSideBySide) {
+        console.log(chalk.cyan('Note: You are running in side-by-side mode.\n'));
+        openBrowser('http://localhost:8080');
+      } else {
+        openBrowser(urls.localUrlForBrowser);
+      }
     });
 
     ['SIGINT', 'SIGTERM'].forEach(function(sig) {

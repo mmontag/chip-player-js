@@ -80,6 +80,7 @@
     "cheerio": "^1.0.0-rc.2",
     "child_process": "^1.0.2",
     "commander": "^14.0.2",
+    "concurrently": "^9.2.1",
     "firebase-admin": "^13.6.0",
     "gh-pages": "^6.3.0",
     "glob": "^7.1.2",
@@ -99,6 +100,7 @@
   },
   "homepage": "https://chiptune.app",
   "scripts": {
+    "dev": "concurrently -n \"client,server\" \"node scripts/start.js --side-by-side\" \"npm run server\"",
     "start": "node scripts/start.js",
     "server": "NODE_ENV=development node --watch server/index.js",
     "build": "npm run build-catalog; npm run build-chip-core; node scripts/build.js",
