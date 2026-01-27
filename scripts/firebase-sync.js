@@ -5,7 +5,7 @@ const Database = require('better-sqlite3');
 const path = require('path');
 
 // --- CONFIGURATION ---
-const DB_FILENAME = 'chipplayer-users.db';
+const DB_FILENAME = '../server/users.db';
 const SNAPSHOT_FILENAME = 'snapshot.json';
 const SERVICE_ACCOUNT_PATH = './untracked/chip-player-js-c57327916be6.json'
 
@@ -50,7 +50,7 @@ async function takeSnapshot() {
     do {
       const result = await auth.listUsers(1000, nextPageToken);
       result.users.forEach(userRecord => {
-        authUsers.set(userRecord.uid, {
+        authUsers.set(userRecord.id, {
           email: userRecord.email,
           displayName: userRecord.displayName,
           photoURL: userRecord.photoURL,
@@ -122,11 +122,12 @@ function ingestSnapshot() {
 
   // Schema
   db.exec(`
-    DROP TABLE IF EXISTS favorites;
     DROP TABLE IF EXISTS users;
+    DROP TABLE IF EXISTS favorites;
+    DROP TABLE IF EXISTS playbacks;
 
     CREATE TABLE users (
-        uid TEXT PRIMARY KEY,
+        id TEXT PRIMARY KEY,
         email TEXT,
         display_name TEXT,
         photo_url TEXT,
@@ -138,30 +139,41 @@ function ingestSnapshot() {
 
     CREATE TABLE favorites (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_uid TEXT,
+        user_id TEXT,
         sort_index INTEGER,
         href TEXT,
         mtime INTEGER,
-        FOREIGN KEY(user_uid) REFERENCES users(uid)
+        FOREIGN KEY(user_id) REFERENCES users(id)
     );
     
-    CREATE INDEX idx_favorites_user ON favorites(user_uid);
+    CREATE TABLE playbacks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT,
+        song_id TEXT,
+        played_at INTEGER,
+        duration_ms INTEGER,
+        FOREIGN KEY(user_id) REFERENCES users(id)
+    );
+    
     CREATE INDEX idx_users_email ON users(email);
+    CREATE INDEX idx_favorites_user ON favorites(user_id);
+    CREATE INDEX idx_playbacks_user ON playbacks(user_id);
+    CREATE INDEX idx_playbacks_song ON playbacks(song_id);
   `);
 
   const insertUser = db.prepare(`
       INSERT INTO users (
-          uid, email, display_name, photo_url, created_at, last_login,
+          id, email, display_name, photo_url, created_at, last_login,
           settings, raw_json
       ) VALUES (
-                   @uid, @email, @displayName, @photoURL, @createdAt, @lastLogin,
+                   @id, @email, @displayName, @photoURL, @createdAt, @lastLogin,
                    @settings, @rawJson
                )
   `);
 
   const insertFave = db.prepare(`
-      INSERT INTO favorites (user_uid, sort_index, href, mtime)
-      VALUES (@uid, @idx, @href, @mtime)
+      INSERT INTO favorites (user_id, sort_index, href, mtime)
+      VALUES (@userId, @idx, @href, @mtime)
   `);
 
   const runTransaction = db.transaction((users) => {
@@ -169,7 +181,7 @@ function ingestSnapshot() {
       const auth = user._auth || {};
 
       insertUser.run({
-        uid: user._id,
+        id: user._id,
         email: auth.email || null,
         displayName: auth.displayName || null,
         photoURL: auth.photoURL || null,
@@ -193,7 +205,7 @@ function ingestSnapshot() {
           }
 
           if (href) {
-            insertFave.run({ uid: user._id, idx: index, href: href, mtime: mtime });
+            insertFave.run({ userId: user._id, idx: index, href: href, mtime: mtime });
           }
         });
       }
@@ -218,14 +230,13 @@ function runSummary() {
   const db = new Database(DB_FILENAME, { readonly: true });
 
   console.log('\n📊 --- TOP 10 USERS BY FAVORITES ---');
-  // Now fetching email/display_name instead of just UID
   const topUsers = db.prepare(`
       SELECT
-          COALESCE(u.email, u.display_name, u.uid) as identifier,
+          COALESCE(u.email, u.display_name, u.id) as identifier,
           COUNT(f.id) as fave_count
       FROM users u
-               LEFT JOIN favorites f ON u.uid = f.user_uid
-      GROUP BY u.uid
+               LEFT JOIN favorites f ON u.id = f.user_id
+      GROUP BY u.id
       ORDER BY fave_count DESC
       LIMIT 10
   `).all();
@@ -261,8 +272,8 @@ function runSummary() {
       FROM (
                SELECT COUNT(f.id) as cnt
                FROM users u
-                        LEFT JOIN favorites f ON u.uid = f.user_uid
-               GROUP BY u.uid
+                        LEFT JOIN favorites f ON u.id = f.user_id
+               GROUP BY u.id
            )
       GROUP BY range
       ORDER BY sort_key ASC
