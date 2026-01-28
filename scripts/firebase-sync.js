@@ -2,10 +2,10 @@ const { Command } = require('commander');
 const fs = require('fs');
 const admin = require('firebase-admin');
 const Database = require('better-sqlite3');
-const path = require('path');
 
 // --- CONFIGURATION ---
 const DB_FILENAME = '../server/users.db';
+const CATALOG_DB_FILENAME = '../server/catalog.db';
 const SNAPSHOT_FILENAME = 'snapshot.json';
 const SERVICE_ACCOUNT_PATH = './untracked/chip-player-js-c57327916be6.json'
 
@@ -120,11 +120,53 @@ function ingestSnapshot() {
   db.pragma('journal_mode = WAL');
   db.pragma('synchronous = NORMAL');
 
+  // Attach Catalog DB for song_id resolution
+  if (fs.existsSync(CATALOG_DB_FILENAME)) {
+    console.log(`💿 Attaching Catalog DB (${CATALOG_DB_FILENAME})...`);
+    db.exec(`ATTACH DATABASE '${CATALOG_DB_FILENAME}' AS catalog`);
+  } else {
+    console.warn(`⚠️ Catalog DB not found at ${CATALOG_DB_FILENAME}. Song IDs will not be resolved.`);
+  }
+
+  console.log('💿 Creating temporary index for fuzzy matching...');
+  try {
+    // Use reverse() function if available (SQLite 3.34.0+)
+    db.exec(`
+        CREATE TEMP TABLE music_reversed AS
+        SELECT song_id, reverse(path) as path_reversed
+        FROM catalog.music;
+
+        CREATE INDEX idx_temp_music_reversed ON music_reversed(path_reversed COLLATE NOCASE);
+    `);
+    console.log('   ✅ Created temporary table with reverse() function.');
+  } catch (e) {
+    console.warn('   ⚠️ reverse() function not available. Falling back to slower method.');
+    // Fallback if reverse() is not available
+    db.exec(`
+        CREATE TEMP TABLE music_reversed (
+            song_id TEXT,
+            path_reversed TEXT
+        );
+    `);
+    const songs = db.prepare('SELECT song_id, path FROM catalog.music').all();
+    const insertReversed = db.prepare('INSERT INTO music_reversed (song_id, path_reversed) VALUES (?, ?)');
+    const populateReversed = db.transaction((songs) => {
+      for (const song of songs) {
+        const reversed = song.path.split('').reverse().join('');
+        insertReversed.run(song.song_id, reversed);
+      }
+    });
+    populateReversed(songs);
+    db.exec('CREATE INDEX idx_temp_music_reversed ON music_reversed(path_reversed COLLATE NOCASE);');
+    console.log('   ✅ Created temporary table with JS fallback.');
+  }
+
   // Schema
   db.exec(`
-    DROP TABLE IF EXISTS users;
-    DROP TABLE IF EXISTS favorites;
     DROP TABLE IF EXISTS playbacks;
+    DROP TABLE IF EXISTS playlists;
+    DROP TABLE IF EXISTS favorites;
+    DROP TABLE IF EXISTS users;
 
     CREATE TABLE users (
         id TEXT PRIMARY KEY,
@@ -137,12 +179,14 @@ function ingestSnapshot() {
         raw_json TEXT
     );
 
-    CREATE TABLE favorites (
+    CREATE TABLE playlists (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id TEXT,
-        sort_index INTEGER,
-        href TEXT,
-        mtime INTEGER,
+        title TEXT,
+        created_at INTEGER,
+        modified_at INTEGER,
+        type TEXT,
+        items TEXT, -- JSON Array
         FOREIGN KEY(user_id) REFERENCES users(id)
     );
     
@@ -156,7 +200,8 @@ function ingestSnapshot() {
     );
     
     CREATE INDEX idx_users_email ON users(email);
-    CREATE INDEX idx_favorites_user ON favorites(user_id);
+    CREATE INDEX idx_playlists_user ON playlists(user_id);
+    CREATE UNIQUE INDEX idx_playlists_user_favorites ON playlists(user_id) WHERE type = 'favorites';
     CREATE INDEX idx_playbacks_user ON playbacks(user_id);
     CREATE INDEX idx_playbacks_song ON playbacks(song_id);
   `);
@@ -171,10 +216,21 @@ function ingestSnapshot() {
                )
   `);
 
-  const insertFave = db.prepare(`
-      INSERT INTO favorites (user_id, sort_index, href, mtime)
-      VALUES (@userId, @idx, @href, @mtime)
+  const insertPlaylist = db.prepare(`
+      INSERT INTO playlists (user_id, title, created_at, modified_at, type, items)
+      VALUES (@userId, @title, @createdAt, @modifiedAt, @type, @items)
   `);
+
+  let lookupSongId = null;
+  let lookupSongIdSuffix = null;
+  try {
+    lookupSongId = db.prepare("SELECT song_id FROM catalog.music WHERE path = ?");
+    lookupSongIdSuffix = db.prepare("SELECT song_id FROM music_reversed WHERE path_reversed LIKE ? LIMIT 1");
+  } catch (e) {
+    console.warn("Could not prepare song lookup statement (catalog attached?)");
+  }
+
+  const stats = { exact: 0, fuzzy: 0, missing: 0 };
 
   const runTransaction = db.transaction((users) => {
     for (const user of users) {
@@ -193,7 +249,10 @@ function ingestSnapshot() {
 
       if (user.faves) {
         const favesList = Array.isArray(user.faves) ? user.faves : Object.values(user.faves);
-        favesList.forEach((item, index) => {
+        const items = [];
+        let maxMtime = 0;
+
+        favesList.forEach((item) => {
           let href = null;
           let mtime = null;
 
@@ -204,10 +263,89 @@ function ingestSnapshot() {
             mtime = item.mtime || null;
           }
 
+
           if (href) {
-            insertFave.run({ userId: user._id, idx: index, href: href, mtime: mtime });
+            if (href.startsWith('http://localhost')) return; // Skip a few odd localhost links
+            let songId = null;
+            if (lookupSongId) {
+                // Strip prefix to get path
+                let relativePath = href.replace('https://gifx.co/music/', '');
+
+                // Fix known renames - repairs about 200 out of 300 broken favorites
+                relativePath = relativePath.replace(/(Perfect Dark \(2000\)\(Rare\)\(Rare\)\/...?) - /, '$1 ');
+                relativePath = relativePath.replace(/(Star Fox 64 \(1997\)\(Nintendo EAD\)\(Nintendo\)\/...?) - /, '$1 ');
+                relativePath = relativePath.replace(/(Legend of Zelda Majora's Mask,The \(2000\)\(Nintendo EAD\)\(Nintendo\)\/...?) - /, '$1 ');
+                relativePath = relativePath.replace(/NSFe_Collection_Part5_PAL Releases of NTSC Games \(Same Name\)/, 'PAL');
+                relativePath = relativePath.replace(/.+Shovel_Knight_Music\.nsf/, 'Contemporary/Virt (Jake Kaufman)/Shovel Knight (2014) - Shovel of Hope.nsfe');
+                relativePath = relativePath.replace(/.+VIRT_-_KEEP_SHREDDING_LITTLE_MAN\.S3M/, 'Contemporary/Virt (Jake Kaufman)/keep shredding little man.s3m');
+
+                // Try exact match first
+                const row = lookupSongId.get(relativePath);
+                if (row) {
+                    songId = row.song_id;
+                    stats.exact++;
+                } else {
+                    // Try fuzzy match
+                    // First, try decoding in case it was encoded
+                    try {
+                        relativePath = decodeURIComponent(relativePath);
+                    } catch (e) {}
+
+                    const parts = relativePath.split('/');
+                    // Remove empty parts if any (e.g. leading slash)
+                    if (parts[0] === '') parts.shift();
+
+                    let found = false;
+                    
+                    // Loop: try full path with wildcard, then remove first component and try again
+                    while (parts.length > 0) {
+                        const suffix = parts.join('/');
+                        if (lookupSongIdSuffix) {
+                            const reversedSuffix = suffix.split('').reverse().join('');
+                            const match = lookupSongIdSuffix.get(`${reversedSuffix}%`);
+                            if (match) {
+                                songId = match.song_id;
+                                stats.fuzzy++;
+                                found = true;
+                                break;
+                            }
+                        }
+                        parts.shift();
+                    }
+                    
+                    if (!found) {
+                        stats.missing++;
+                        console.warn(`- Song not found: ${relativePath}`);
+                    }
+                }
+            }
+
+            // We store the item even if songId is null, to preserve the data.
+            // But ideally we want songId.
+            items.push({ songId, mtime, href });
+            
+            if (mtime && mtime > maxMtime) {
+                maxMtime = mtime;
+            }
           }
         });
+
+        if (items.length > 0) {
+            let createdAt = Date.now();
+            if (auth.creationTime) {
+                const parsed = Date.parse(auth.creationTime);
+                if (!isNaN(parsed)) createdAt = parsed;
+            }
+
+            insertPlaylist.run({
+                userId: user._id,
+                title: 'Favorites',
+                createdAt: createdAt,
+                modifiedAt: maxMtime || createdAt,
+                type: 'favorites',
+                items: JSON.stringify(items)
+            });
+        }
       }
     }
   });
@@ -215,6 +353,10 @@ function ingestSnapshot() {
   console.log(`🚀 Processing ${rawData.length} user records...`);
   runTransaction(rawData);
   console.log('✅ Ingest complete.');
+  console.log('📊 Migration Stats:');
+  console.log(`   Exact matches: ${stats.exact}`);
+  console.log(`   Fuzzy matches: ${stats.fuzzy}`);
+  console.log(`   Missing songs: ${stats.missing}`);
 }
 
 /**
@@ -233,10 +375,10 @@ function runSummary() {
   const topUsers = db.prepare(`
       SELECT
           COALESCE(u.email, u.display_name, u.id) as identifier,
-          COUNT(f.id) as fave_count
+          json_array_length(p.items) as fave_count
       FROM users u
-               LEFT JOIN favorites f ON u.id = f.user_id
-      GROUP BY u.id
+               JOIN playlists p ON u.id = p.user_id
+      WHERE p.type = 'favorites'
       ORDER BY fave_count DESC
       LIMIT 10
   `).all();
@@ -244,8 +386,11 @@ function runSummary() {
 
   console.log('\n⭐ --- TOP 50 MOST FAVORITED SONGS ---');
   const topSongs = db.prepare(`
-      SELECT href, COUNT(*) as count
-      FROM favorites
+      SELECT 
+          json_extract(value, '$.href') as href, 
+          COUNT(*) as count
+      FROM playlists, json_each(playlists.items)
+      WHERE playlists.type = 'favorites'
       GROUP BY href
       ORDER BY count DESC
       LIMIT 50
@@ -270,10 +415,9 @@ function runSummary() {
           COUNT(*) as count,
           MIN(cnt) as sort_key
       FROM (
-               SELECT COUNT(f.id) as cnt
+               SELECT COALESCE(json_array_length(p.items), 0) as cnt
                FROM users u
-                        LEFT JOIN favorites f ON u.id = f.user_id
-               GROUP BY u.id
+                        LEFT JOIN playlists p ON u.id = p.user_id AND p.type = 'favorites'
            )
       GROUP BY range
       ORDER BY sort_key ASC
@@ -289,10 +433,10 @@ function runSummary() {
   const totals = db.prepare(`
       SELECT
               (SELECT COUNT(*) FROM users) as total_users,
-              (SELECT COUNT(*) FROM favorites) as total_faves
+              (SELECT SUM(json_array_length(items)) FROM playlists WHERE type='favorites') as total_faves
   `).get();
 
-  console.log(`\nTotals: ${totals.total_users} Users, ${totals.total_faves} Favorites`);
+  console.log(`\nTotals: ${totals.total_users} Users, ${totals.total_faves || 0} Favorites`);
 }
 
 // --- COMMANDER SETUP ---
