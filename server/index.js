@@ -17,6 +17,7 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 const { dbStatements } = require('./database.js');
 const { Canvas, loadImage } = require('skia-canvas');
 const { LRUCache } = require('lru-cache');
+const authMiddleware = require('./middleware/auth.js');
 
 const {
   searchStmt,
@@ -28,6 +29,10 @@ const {
   getTotalStmt,
   getSongInfoStmt,
   getSongImageByIdStmt,
+
+  getFavoritesStmt,
+  addFavoriteStmt,
+  removeFavoriteStmt,
 } = dbStatements;
 
 // --- Configuration ---
@@ -376,6 +381,65 @@ router.get('/metadata', (req, res) => {
     });
   } else {
     res.json({});
+  }
+});
+
+// Route to get favorites.
+router.get('/user/favorites', authMiddleware, (req, res) => {
+  const row = getFavoritesStmt.get(req.userId);
+  let favorites = [];
+  if (row && row.items) {
+    try {
+      favorites = JSON.parse(row.items);
+    } catch (e) {
+      console.error('Error parsing favorites JSON:', e);
+    }
+  }
+  res.json({
+    favorites,
+  });
+});
+
+// Route to add a favorite. Requires auth middleware.
+router.post('/user/favorites', authMiddleware, express.json(), (req, res) => {
+  const { songId, href } = req.body;
+  if (!songId) {
+    return res.status(400).json({ error: 'Missing songId' });
+  }
+  
+  try {
+    const now = Date.now();
+    addFavoriteStmt.run({
+      userId: req.userId,
+      songId,
+      href: href || null,
+      now
+    });
+    res.json({ success: true });
+  } catch (e) {
+    console.error('Error adding favorite:', e);
+    res.status(500).json({ error: 'Failed to add favorite' });
+  }
+});
+
+// Route to remove a favorite. Requires auth middleware.
+router.delete('/user/favorites/:songId', authMiddleware, (req, res) => {
+  const { songId } = req.params;
+  if (!songId) {
+    return res.status(400).json({ error: 'Missing songId' });
+  }
+
+  try {
+    const now = Date.now();
+    removeFavoriteStmt.run({
+      userId: req.userId,
+      songId,
+      now
+    });
+    res.json({ success: true });
+  } catch (e) {
+    console.error('Error removing favorite:', e);
+    res.status(500).json({ error: 'Failed to remove favorite' });
   }
 });
 
