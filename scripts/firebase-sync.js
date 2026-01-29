@@ -115,20 +115,20 @@ function ingestSnapshot() {
     process.exit(1);
   }
 
-  console.log(`💿 Initializing SQLite (${DB_FILENAME})...`);
+  console.log(`Initializing SQLite (${DB_FILENAME})...`);
   const db = new Database(DB_FILENAME);
   db.pragma('journal_mode = WAL');
   db.pragma('synchronous = NORMAL');
 
   // Attach Catalog DB for song_id resolution
   if (fs.existsSync(CATALOG_DB_FILENAME)) {
-    console.log(`💿 Attaching Catalog DB (${CATALOG_DB_FILENAME})...`);
+    console.log(`Attaching Catalog DB (${CATALOG_DB_FILENAME})...`);
     db.exec(`ATTACH DATABASE '${CATALOG_DB_FILENAME}' AS catalog`);
   } else {
     console.warn(`⚠️ Catalog DB not found at ${CATALOG_DB_FILENAME}. Song IDs will not be resolved.`);
   }
 
-  console.log('💿 Creating temporary index for fuzzy matching...');
+  console.log('Creating temporary index for fuzzy matching...');
   try {
     // Use reverse() function if available (SQLite 3.34.0+)
     db.exec(`
@@ -138,9 +138,9 @@ function ingestSnapshot() {
 
         CREATE INDEX idx_temp_music_reversed ON music_reversed(path_reversed COLLATE NOCASE);
     `);
-    console.log('   ✅ Created temporary table with reverse() function.');
+    console.log('   Created temporary table with reverse() function.');
   } catch (e) {
-    console.warn('   ⚠️ reverse() function not available. Falling back to slower method.');
+    console.warn('   reverse() function not available. Falling back to slower method.');
     // Fallback if reverse() is not available
     db.exec(`
         CREATE TEMP TABLE music_reversed (
@@ -320,9 +320,9 @@ function ingestSnapshot() {
                 }
             }
 
-            // We store the item even if songId is null, to preserve the data.
-            // But ideally we want songId.
-            items.push({ songId, mtime, href });
+            if (songId) {
+              items.push({ songId, mtime });
+            }
             
             if (mtime && mtime > maxMtime) {
                 maxMtime = mtime;
@@ -352,8 +352,8 @@ function ingestSnapshot() {
 
   console.log(`🚀 Processing ${rawData.length} user records...`);
   runTransaction(rawData);
-  console.log('✅ Ingest complete.');
-  console.log('📊 Migration Stats:');
+  console.log('Ingest complete.');
+  console.log('Migration Stats:');
   console.log(`   Exact matches: ${stats.exact}`);
   console.log(`   Fuzzy matches: ${stats.fuzzy}`);
   console.log(`   Missing songs: ${stats.missing}`);
@@ -387,11 +387,11 @@ function runSummary() {
   console.log('\n⭐ --- TOP 50 MOST FAVORITED SONGS ---');
   const topSongs = db.prepare(`
       SELECT 
-          json_extract(value, '$.href') as href, 
+          json_extract(value, '$.songId') as songId, 
           COUNT(*) as count
       FROM playlists, json_each(playlists.items)
       WHERE playlists.type = 'favorites'
-      GROUP BY href
+      GROUP BY songId
       ORDER BY count DESC
       LIMIT 50
   `).all();
