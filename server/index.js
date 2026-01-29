@@ -266,7 +266,7 @@ router.get('/search', (req, res) => {
 router.get('/total', (req, res) => {
   const result = getTotalStmt.get();
   res.set('Cache-Control', 'public, max-age=3600');
-  res.json({ total: result.total });
+  res.json({ total: result.total, unique: result.unique });
 });
 
 router.get('/random', (req, res) => {
