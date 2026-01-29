@@ -130,6 +130,7 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_directories_parent ON directories(parent_id);
   CREATE INDEX IF NOT EXISTS idx_music_directory ON music(directory_id);
   CREATE INDEX IF NOT EXISTS idx_music_sort ON music(sort_order);
+  CREATE INDEX IF NOT EXISTS idx_music_songid ON music(song_id);
   CREATE INDEX IF NOT EXISTS idx_directories_sort ON directories(sort_order);
 `);
 
