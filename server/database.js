@@ -52,7 +52,7 @@ const dbStatements = {
   `),
   getTextContentStmt: db.prepare('SELECT content FROM texts WHERE id = ?'),
   getShuffleStmt: db.prepare('SELECT path FROM music WHERE path LIKE ? ORDER BY RANDOM() LIMIT ?'),
-  getTotalStmt: db.prepare('SELECT COUNT(*) as total FROM music'),
+  getTotalStmt: db.prepare('SELECT COUNT(*) as total, COUNT(DISTINCT song_id) as `unique` FROM music'),
 
   // Users
   getUserStmt: db.prepare('SELECT * FROM users WHERE id = ?'),
@@ -62,7 +62,22 @@ const dbStatements = {
   `),
 
   // Favorites
-  getFavoritesStmt: db.prepare("SELECT items FROM playlists WHERE user_id = ? AND type = 'favorites'"),
+  // TODO: remove hardcoded prefix
+  getFavoritesStmt: db.prepare(`
+      SELECT json_group_array(
+          json_set(
+              je.value,
+              '$.href', CONCAT('https://gifx.co/music/', m.path),
+              '$.title', m.title,
+              '$.artist', m.artist
+          )
+      ) as items
+      FROM user_db.playlists p, json_each(p.items) je
+      LEFT JOIN music m ON m.rowid = (
+          SELECT rowid FROM music WHERE song_id = json_extract(je.value, '$.songId') LIMIT 1
+      )
+      WHERE p.user_id = ? AND p.type = 'favorites' AND song_id IS NOT NULL
+  `),
   
   // Adds a favorite to the JSON array.
   // If the playlist doesn't exist, it creates it.
