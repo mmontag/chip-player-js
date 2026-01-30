@@ -239,6 +239,9 @@ app.get('/preview', async (req, res) => {
   }
 });
 
+/**
+ * Returns: { items: [ { file, title, artist, game, system }, ... ], total }
+ */
 router.get('/search', (req, res) => {
   const { limit = 100, query } = req.query;
   const start = performance.now();
@@ -263,12 +266,18 @@ router.get('/search', (req, res) => {
   });
 });
 
+/**
+ * Returns: { total, unique }
+ */
 router.get('/total', (req, res) => {
   const result = getTotalStmt.get();
   res.set('Cache-Control', 'public, max-age=3600');
   res.json({ total: result.total, unique: result.unique });
 });
 
+/**
+ * Returns: { items: [ path, ... ], total }
+ */
 router.get('/random', (req, res) => {
   const limit = parseInt(req.query.limit, 10) || 1;
   const items = getShuffleStmt.all('/%', limit);
@@ -278,6 +287,9 @@ router.get('/random', (req, res) => {
   });
 });
 
+/**
+ * Returns: { items: [ path, ... ], total }
+ */
 router.get('/shuffle', (req, res) => {
   const limit = parseInt(req.query.limit, 10) || 100;
   let reqPath = (req.query.path || '').replace(/^\/+/g, '');
@@ -290,6 +302,9 @@ router.get('/shuffle', (req, res) => {
   });
 });
 
+/**
+ * Returns: [ { path, type, size, mtime, idx, count }, ... ]
+ */
 router.get('/browse', async (req, res) => {
   const { path: reqPath } = req.query;
   res.set('Cache-Control', 'public, max-age=3600');
@@ -340,6 +355,14 @@ router.get('/browse', async (req, res) => {
   }
 });
 
+/**
+ * Returns: {
+ *   imageUrl: string|null,
+ *   infoTexts: [ string, ... ],
+ *   soundfont: string|null,
+ *   md5: string|null
+ * }
+ */
 router.get('/metadata', (req, res) => {
   const { path: reqPath } = req.query;
   if (!reqPath) return res.json({});
@@ -384,7 +407,9 @@ router.get('/metadata', (req, res) => {
   }
 });
 
-// Route to get favorites.
+/**
+ * Returns: { favorites: [ { songId, href, mtime, title, artist }, ... ] }
+ */
 router.get('/user/favorites', authMiddleware, (req, res) => {
   const row = getFavoritesStmt.get(req.userId);
   let favorites = [];
