@@ -144,9 +144,18 @@ const insertMusicStmt = db.prepare(`
 `);
 
 const insertDirStmt = db.prepare(`
-    INSERT OR REPLACE INTO directories (parent_id, name, path, image_id, text_ids, sort_order, count, total_size, mtime)
+    INSERT INTO directories (parent_id, name, path, image_id, text_ids, sort_order, count, total_size, mtime)
     VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?)
+    ON CONFLICT(path) DO UPDATE SET
+      parent_id = COALESCE(excluded.parent_id, directories.parent_id),
+      name = excluded.name,
+      image_id = excluded.image_id,
+      text_ids = excluded.text_ids,
+      sort_order = excluded.sort_order,
+      mtime = excluded.mtime
 `);
+
+const findDirIdStmt = db.prepare('SELECT id FROM directories WHERE path = ?');
 
 const updateDirStatsStmt = db.prepare('UPDATE directories SET count = ?, total_size = ? WHERE id = ?');
 
@@ -272,6 +281,19 @@ function processDirectory(fullPath, relativePath, parentId = null, parentState =
     const entryFullPath = path.join(fullPath, entry.name);
     const entryRelativePath = path.join(relativePath, entry.name);
     
+    // Filter Logic
+    if (scanRelativeBase) {
+      const rel = entryRelativePath;
+      const filter = scanRelativeBase;
+      let match = false;
+      
+      if (rel === filter) match = true;
+      else if (rel.startsWith(filter + path.sep)) match = true;
+      else if (entry.isDirectory() && filter.startsWith(rel + path.sep)) match = true;
+      
+      if (!match) continue;
+    }
+
     if (entry.isDirectory()) {
       children.push({ type: 'dir', name: entry.name, fullPath: entryFullPath, relativePath: entryRelativePath });
     } else {
@@ -314,7 +336,10 @@ function processDirectory(fullPath, relativePath, parentId = null, parentState =
       parentState.sortOrder || 0,
       dirStat.mtime.toISOString()
     );
-    currentDirId = result.lastInsertRowid;
+
+    // Fetch the ID (needed because ON CONFLICT UPDATE doesn't return reliable lastInsertRowid)
+    const dirRow = findDirIdStmt.get(relativePath);
+    currentDirId = dirRow.id;
   }
 
   // 5. Process Children & Calculate Stats
