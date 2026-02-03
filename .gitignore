@@ -13,7 +13,7 @@ cmake-build-debug/
 lib*.js
 libxmp/libxmp-lite-stagedir/
 public/soundfonts/
-scripts/untracked/
+**/untracked/
 src/-catalog-tests/
 src/chip-core.js
 server/catalog.json
