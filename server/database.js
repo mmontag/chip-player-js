@@ -33,16 +33,25 @@ const dbStatements = {
       ORDER BY type, sort_order
   `),
   getMetadataStmt: db.prepare(`
-      SELECT m.image_id, m.text_ids, m.soundfont, m.md5, i.path as image_path
+      SELECT m.song_id, m.image_id, m.text_ids, m.soundfont, m.md5, i.path as image_path
       FROM music m
                LEFT JOIN images i ON m.image_id = i.id
       WHERE m.path = ?
+      LIMIT 1
   `),
-  getSongInfoStmt: db.prepare(`
-      SELECT m.song_id, m.title, m.artist, m.game, m.system, m.copyright, i.path as image_path
+  getSongByPathStmt: db.prepare(`
+      SELECT m.song_id, m.path, m.title, m.artist, m.game, m.system, m.copyright, i.path as image_path
       FROM music m
                LEFT JOIN images i ON m.image_id = i.id
       WHERE m.path = ?
+      LIMIT 1
+  `),
+  getSongByIdStmt: db.prepare(`
+      SELECT m.song_id, m.path, m.title, m.artist, m.game, m.system, m.copyright, i.path as image_path
+      FROM music m
+               LEFT JOIN images i ON m.image_id = i.id
+      WHERE m.song_id LIKE ?
+      LIMIT 1
   `),
   getSongImageByIdStmt: db.prepare(`
       SELECT i.path as image_path
