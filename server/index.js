@@ -27,7 +27,8 @@ const {
   getTextContentStmt,
   getShuffleStmt,
   getTotalStmt,
-  getSongInfoStmt,
+  getSongByPathStmt,
+  getSongByIdStmt,
   getSongImageByIdStmt,
 
   getFavoritesStmt,
@@ -397,6 +398,7 @@ router.get('/metadata', (req, res) => {
     }
 
     res.json({
+      songId: meta.song_id,
       imageUrl: imageUrl,
       infoTexts: infoTexts,
       soundfont: soundfont,
@@ -495,13 +497,15 @@ app.get('/{*splat}', async (req, res) => {
     return res.status(404).send(`${indexFilename} not found`);
   }
 
-  const { title, description, url, image, songId } = getMetaTagsForRequest(req);
+  const { title, description, url, image, songId, scriptTag } = getHtmlInjectionsForRequest(req);
   const previewImage = songId ? `https://chiptune.app/preview?s=${encodeURIComponent(songId)}` : image;
   const finalHtml = html
     .replace(/__TITLE__/g, title)
     .replace(/__DESCRIPTION__/g, description)
     .replace(/__URL__/g, url)
-    .replace(/__IMAGE__/g, previewImage);
+    .replace(/__IMAGE__/g, previewImage)
+    .replace(/<!--chipConfig-->/g, scriptTag);
+
 
   res.send(finalHtml);
 });
@@ -515,44 +519,55 @@ app.listen(port, hostname, () => {
   console.log('Server running at http://%s:%s', hostname, port);
 });
 
-function getMetaTagsForRequest(req) {
+function getHtmlInjectionsForRequest(req) {
   const url = `${req.protocol}://${req.hostname}${req.originalUrl}`;
+  let song;
   let image = 'https://chiptune.app/chip-player.png';
   let title = 'Chip Player JS';
   let description = 'Web-based music player for chiptune formats.';
   let songId = null;
+  let scriptTag = '';
 
   // Extract 'play' param from query string
-  const playPath = req.query.play;
+  const play = req.query.play;
 
-  if (playPath) {
-    const reqPath = playPath.replace(/^\/+/, '');
-    try {
-      const song = getSongInfoStmt.get(reqPath);
-      if (song) {
-        if (song.title) {
-          title = song.title;
-          if (song.artist) title += ` - ${song.artist}`;
-          else if (song.game) title += ` - ${song.game}`;
-        } else {
-          title = path.basename(reqPath);
-        }
+  if (play) {
+    if (/^[A-Za-z0-9_-]{3,8}$/.test(play)) {
+      // play param is a song ID
+      song = getSongByIdStmt.get(`${play}%`);
+    } else {
+      // play param is a path
+      const reqPath = play.replace(/^\/+/, '');
+      song = getSongByPathStmt.get(reqPath);
+    }
 
-        const parts = [];
-        if (song.game) parts.push(song.game);
-        if (song.system) parts.push(song.system);
-        if (song.copyright) parts.push(song.copyright);
-        if (parts.length > 0) description = parts.join(' · ');
-
-        if (song.image_path) {
-          const parts = song.image_path.split('/');
-          const encodedPath = parts.map(encodeURIComponent).join('/');
-          image = `https://chiptune.app/catalog/${encodedPath}`;
-        }
-        songId = song.song_id;
+    if (song) {
+      const chipConfig = {
+        songId: song.song_id,
+        songPath: song.path,
       }
-    } catch (e) {
-      // Ignore DB errors for meta tags
+      scriptTag = `<script>window.__chipConfig = ${JSON.stringify(chipConfig)};</script>`;
+
+      if (song.title) {
+        title = song.title;
+        if (song.artist) title += ` - ${song.artist}`;
+        else if (song.game) title += ` - ${song.game}`;
+      } else {
+        title = path.basename(reqPath);
+      }
+
+      const parts = [];
+      if (song.game) parts.push(song.game);
+      if (song.system) parts.push(song.system);
+      if (song.copyright) parts.push(song.copyright);
+      if (parts.length > 0) description = parts.join(' · ');
+
+      if (song.image_path) {
+        const parts = song.image_path.split('/');
+        const encodedPath = parts.map(encodeURIComponent).join('/');
+        image = `https://chiptune.app/catalog/${encodedPath}`;
+      }
+      songId = song.song_id;
     }
   }
 
@@ -562,5 +577,6 @@ function getMetaTagsForRequest(req) {
     url,
     image,
     songId,
+    scriptTag,
   };
 }
