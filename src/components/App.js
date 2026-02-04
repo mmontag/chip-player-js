@@ -122,6 +122,7 @@ class App extends React.Component {
       infoTexts: [],
       showInfo: false,
       songUrl: null,
+      songId: null,
       volume: 100,
       repeat: REPEAT_OFF,
       shuffle: SHUFFLE_OFF,
@@ -204,10 +205,10 @@ class App extends React.Component {
 
     // TODO: Move to separate processUrlParams method.
     const urlParams = queryString.parse(window.location.search.substring(1));
-    if (urlParams.play) {
+    if (window.__chipConfig?.songPath) {
       // Treat play params as "transient command" and strip them after starting playback.
       // See comment in Browse.js for more about why a sticky play param is not a good idea.
-      const playPath = urlParams.play;
+      const playPath = window.__chipConfig?.songPath;
       const subtune = urlParams.subtune ? parseInt(urlParams.subtune, 10) : 0;
       const time = urlParams.t ? parseInt(urlParams.t, 10) : 0;
       delete urlParams.play;
@@ -409,10 +410,10 @@ class App extends React.Component {
         // updateQueryString({ play: filepath, t: undefined });
         // TODO: move fetch metadata to Player when it becomes event emitter
         requestCache.fetchCached(metadataUrl).then(response => {
-          const { imageUrl, infoTexts, md5 } = response;
+          const { imageUrl, infoTexts, md5, songId } = response;
           const newInfoTexts = [...this.state.infoTexts, ...infoTexts ];
           const newShowInfo = this.state.showInfo && newInfoTexts.length > 0;
-          this.setState({ imageUrl, infoTexts: newInfoTexts, md5, showInfo: newShowInfo });
+          this.setState({ imageUrl, infoTexts: newInfoTexts, md5, showInfo: newShowInfo, songId });
 
           if ('mediaSession' in navigator) {
             // Clear artwork if imageUrl is null.
@@ -666,8 +667,7 @@ class App extends React.Component {
   getCurrentSongLink(withSubtune = false) {
     const url = this.sequencer?.getCurrUrl();
     if (!url) return null;
-    let link = BASE_URL + '/?play=' +
-      encodeURIComponent(pathJoin('/', url.replace(CATALOG_PREFIX, '')));
+    let link = BASE_URL + '/?play=' + this.state.songId;
     if (withSubtune) {
       const subtune = this.sequencer?.getSubtune();
       if (subtune !== 0) {
