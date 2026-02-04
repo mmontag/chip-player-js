@@ -1,7 +1,7 @@
 // Firebase auth middleware for Express 5
 const { db, dbStatements } = require('../database.js');
 const admin = require('firebase-admin');
-const SERVICE_ACCOUNT_PATH = '../../scripts/untracked/chip-player-js-c57327916be6.json'
+const SERVICE_ACCOUNT_PATH = '../untracked/chip-player-js-c57327916be6.json'
 
 const { getUserStmt, insertUserStmt } = dbStatements;
 

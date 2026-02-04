@@ -13,6 +13,7 @@
     "express": "^5.1.0",
     "http-proxy-middleware": "^3.0.0",
     "lru-cache": "^10.0.0",
-    "skia-canvas": "^1.0.1"
+    "skia-canvas": "^1.0.1",
+    "firebase-admin": "^13.6.0"
   }
 }
