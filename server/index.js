@@ -504,7 +504,7 @@ app.get('/{*splat}', async (req, res) => {
     .replace(/__DESCRIPTION__/g, description)
     .replace(/__URL__/g, url)
     .replace(/__IMAGE__/g, previewImage)
-    .replace(/<!--chipConfig-->/g, scriptTag);
+    .replace(/<chip-config><\/chip-config>/g, scriptTag);
 
 
   res.send(finalHtml);
