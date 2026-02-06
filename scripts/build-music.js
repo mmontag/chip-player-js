@@ -38,6 +38,17 @@ const NUMERIC_COLLATOR = new Intl.Collator(undefined, { numeric: true, sensitivi
 
 // Initialize DB
 const db = new Database(DB_PATH);
+db.pragma('journal_mode = WAL');
+
+process.on('SIGINT', () => {
+  console.log(chalk.yellow('\n\nScript interrupted! Closing database...'));
+  try {
+    db.close();
+  } catch (err) {
+    // ignore
+  }
+  process.exit(0);
+});
 
 if (options.resetDb) {
   if (options.verbose) console.log(chalk.yellow('Resetting database tables...'));
@@ -246,7 +257,7 @@ function getTextId(content) {
 
 // --- Main Recursive Walker ---
 
-function processDirectory(fullPath, relativePath, parentId = null, parentState = {}) {
+async function processDirectory(fullPath, relativePath, parentId = null, parentState = {}) {
   if (limit > 0 && processed >= limit) return { count: 0, size: 0 };
 
   const entries = getSidecarFiles(fullPath);
@@ -351,31 +362,50 @@ function processDirectory(fullPath, relativePath, parentId = null, parentState =
   let recursiveCount = 0;
   let recursiveSize = 0;
 
-  const runTransaction = db.transaction(() => {
-    for (const child of children) {
-      if (limit > 0 && processed >= limit) return;
+  const files = children.filter(c => c.type !== 'dir');
+  const subdirs = children.filter(c => c.type === 'dir');
 
-      if (child.type === 'dir') {
-        const stats = processDirectory(child.fullPath, child.relativePath, currentDirId, { 
-          ...nextParentState, 
-          sortOrder: child.sortOrder 
-        });
-        recursiveCount += stats.count;
-        recursiveSize += stats.size;
-      } else {
+  // Process files in transaction
+  if (files.length > 0) {
+    const runFileTx = db.transaction(() => {
+      let localCount = 0;
+      let localSize = 0;
+      for (const child of files) {
+        if (limit > 0 && processed >= limit) break;
         const fileSize = processFile(child, currentDirId, entries, currentImagePath, currentTextIds);
-        recursiveCount++;
-        recursiveSize += fileSize;
+        localCount++;
+        localSize += fileSize;
       }
-    }
+      return { count: localCount, size: localSize };
+    });
     
-    // Update stats
-    if (!options.dryrun && currentDirId !== null) {
-      updateDirStatsStmt.run(recursiveCount, recursiveSize, currentDirId);
-    }
-  });
-  
-  runTransaction();
+    const stats = runFileTx();
+    recursiveCount += stats.count;
+    recursiveSize += stats.size;
+  }
+
+  // Process directories (async recursion)
+  for (const child of subdirs) {
+    if (limit > 0 && processed >= limit) break;
+    if (child.name.startsWith('.')) continue;
+    if (child.name === 'node_modules') continue;
+    
+    // Yield to event loop to allow SIGINT to fire
+    await new Promise(r => setImmediate(r));
+
+    const stats = await processDirectory(child.fullPath, child.relativePath, currentDirId, { 
+      ...nextParentState, 
+      sortOrder: child.sortOrder 
+    });
+    // console.log(`\rIndexed ${child.relativePath} (${stats.count})\r`);
+    recursiveCount += stats.count;
+    recursiveSize += stats.size;
+  }
+    
+  // Update stats
+  if (!options.dryrun && currentDirId !== null) {
+    updateDirStatsStmt.run(recursiveCount, recursiveSize, currentDirId);
+  }
   
   return { count: recursiveCount, size: recursiveSize };
 }
@@ -495,11 +525,19 @@ function processFile(child, directoryId, dirEntries, dirImagePath, dirTextIds) {
 // Start
 const startTime = Date.now();
 // Start with root
-processDirectory(scanRoot, scanRelativeBase);
+processDirectory(scanRoot, scanRelativeBase)
+  .then(() => {
+    console.log(chalk.green(`\nDone in ${((Date.now() - startTime) / 1000).toFixed(2)}s`));
+    console.log(`Total Processed: ${processed}`);
 
-console.log(chalk.green(`\nDone in ${((Date.now() - startTime) / 1000).toFixed(2)}s`));
-console.log(`Total Processed: ${processed}`);
-
-if (!options.dryrun) {
-  console.log(`Database saved to ${DB_PATH}`);
-}
+    if (!options.dryrun) {
+      console.log(`Database saved to ${DB_PATH}`);
+    }
+  })
+  .catch(err => {
+    console.error(chalk.red('Error during scan:'), err);
+  })
+  .finally(() => {
+    db.pragma('wal_checkpoint(TRUNCATE)'); // Forces all WAL data into the .db file
+    db.close();
+  });
