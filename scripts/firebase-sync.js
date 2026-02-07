@@ -173,8 +173,8 @@ function ingestSnapshot() {
         email TEXT,
         display_name TEXT,
         photo_url TEXT,
-        created_at TEXT,
-        last_login TEXT,
+        created_at INTEGER,
+        last_login INTEGER,
         settings TEXT, -- JSON Object
         raw_json TEXT
     );
@@ -236,13 +236,25 @@ function ingestSnapshot() {
     for (const user of users) {
       const auth = user._auth || {};
 
+      let userCreatedAt = null;
+      if (auth.creationTime) {
+          const parsed = Date.parse(auth.creationTime);
+          if (!isNaN(parsed)) userCreatedAt = Math.floor(parsed / 1000);
+      }
+
+      let userLastLogin = null;
+      if (auth.lastSignInTime) {
+          const parsed = Date.parse(auth.lastSignInTime);
+          if (!isNaN(parsed)) userLastLogin = Math.floor(parsed / 1000);
+      }
+
       insertUser.run({
         id: user._id,
         email: auth.email || null,
         displayName: auth.displayName || null,
         photoURL: auth.photoURL || null,
-        createdAt: auth.creationTime || null,
-        lastLogin: auth.lastSignInTime || null,
+        createdAt: userCreatedAt,
+        lastLogin: userLastLogin,
         settings: user.settings ? JSON.stringify(user.settings) : '{}',
         rawJson: JSON.stringify(user)
       });
@@ -260,9 +272,12 @@ function ingestSnapshot() {
             href = item;
           } else if (item && typeof item === 'object') {
             href = item.href;
-            mtime = item.mtime || null;
+            mtime = item.mtime ? Number(item.mtime) : null;
+            // Normalize to seconds if > 10 billion (approx year 2286 in seconds)
+            if (mtime && mtime > 10000000000) {
+              mtime = Math.floor(mtime / 1000);
+            }
           }
-
 
           if (href) {
             if (href.startsWith('http://localhost')) return; // Skip a few odd localhost links
@@ -331,17 +346,13 @@ function ingestSnapshot() {
         });
 
         if (items.length > 0) {
-            let createdAt = Date.now();
-            if (auth.creationTime) {
-                const parsed = Date.parse(auth.creationTime);
-                if (!isNaN(parsed)) createdAt = parsed;
-            }
+            let playlistCreatedAt = userCreatedAt || Math.floor(Date.now() / 1000);
 
             insertPlaylist.run({
                 userId: user._id,
                 title: 'Favorites',
-                createdAt: createdAt,
-                modifiedAt: maxMtime || createdAt,
+                createdAt: playlistCreatedAt,
+                modifiedAt: maxMtime || playlistCreatedAt,
                 type: 'favorites',
                 items: JSON.stringify(items)
             });
