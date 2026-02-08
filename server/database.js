@@ -4,7 +4,7 @@ const path = require('path');
 // Initialize DB
 // Database error should be fatal; the server can't function without it.
 const CATALOG_DB_PATH = path.resolve(__dirname, 'catalog.db');
-const db = new Database(CATALOG_DB_PATH, { readonly: true });
+const db = new Database(CATALOG_DB_PATH);
 console.log(`Connected to database at ${CATALOG_DB_PATH}`);
 
 // Attach user database
@@ -66,9 +66,15 @@ const dbStatements = {
   // Users
   getUserStmt: db.prepare('SELECT * FROM users WHERE id = ?'),
   insertUserStmt: db.prepare(`
-      INSERT INTO users (id, email, display_name, photo_url, settings)
-      VALUES (?, ?, ?, ?, '{}')
+      INSERT INTO users (id, email, display_name, photo_url, created_at, last_login, settings)
+      VALUES (?, ?, ?, ?, ?, ?, '{}')
   `),
+  updateUserLoginStmt: db.prepare(`UPDATE users SET last_login = ? WHERE id = ?`),
+
+  // Settings
+  getUserSettingsStmt: db.prepare('SELECT settings FROM users WHERE id = ?'),
+  updateUserSettingsStmt: db.prepare(`UPDATE users SET settings = json_patch(settings, ?) WHERE id = ?`),
+  replaceUserSettingsStmt: db.prepare(`UPDATE users SET settings = ? WHERE id = ?`),
 
   // Favorites
   // TODO: remove hardcoded prefix
