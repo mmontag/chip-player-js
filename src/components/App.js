@@ -205,6 +205,7 @@ class App extends React.Component {
 
     // TODO: Move to separate processUrlParams method.
     const urlParams = queryString.parse(window.location.search.substring(1));
+    // The server will read the ?play=... param and inject values in the __chipConfig object.
     if (window.__chipConfig?.songPath) {
       // Treat play params as "transient command" and strip them after starting playback.
       // See comment in Browse.js for more about why a sticky play param is not a good idea.
@@ -638,6 +639,7 @@ class App extends React.Component {
           item.name = item.path.split('/').pop();
           // XXX: Escape immediately: the escaped URL is considered canonical.
           //      The URL must be decoded for display from here on out.
+          // TODO: Replace `href` entirely with `url` field
           const href = item.path.replace('%', '%25').replace('#', '%23');
           if (item.type === 'file')
             item.href = pathJoin(CATALOG_PREFIX, href);
