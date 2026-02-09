@@ -139,6 +139,8 @@ async function getBgImage() {
 
 let logoImage = null;
 async function getLogoImage() {
+  if (logoImage) return logoImage;
+
   let logoPath = path.join(LOCAL_CLIENT_BUILD_ROOT, logoPng);
   try {
     await fs.access(logoPath);
@@ -346,7 +348,8 @@ router.get('/browse', async (req, res) => {
         size: child.size,
         mtime: typeof child.mtime === 'string' ? new Date(child.mtime).getTime() / 1000 : 0,
         idx: child.type === 'directory' ? null : (idx++),
-        count: child.count || 0
+        count: child.count || 0,
+        url: child.type === 'directory' ? null : `/?play=${encodeURIComponent(child.song_id)}`,
       }));
 
       res.json(result);
@@ -520,7 +523,7 @@ app.listen(port, hostname, () => {
 });
 
 function getHtmlInjectionsForRequest(req) {
-  const url = `${req.protocol}://${req.hostname}${req.originalUrl}`;
+  let url = `https://chiptune.app${req.path}`;
   let song;
   let image = 'https://chiptune.app/chip-player.png';
   let title = 'Chip Player JS';
@@ -542,6 +545,9 @@ function getHtmlInjectionsForRequest(req) {
     }
 
     if (song) {
+      // Canonical URL is https://chiptune.app/?play=ABCD1234
+      url = `https://chiptune.app/?play=${encodeURIComponent(song.song_id)}`;
+
       const chipConfig = {
         songId: song.song_id,
         songPath: song.path,
@@ -568,6 +574,13 @@ function getHtmlInjectionsForRequest(req) {
         image = `https://chiptune.app/catalog/${encodedPath}`;
       }
       songId = song.song_id;
+    }
+  } else {
+    if (req.path.startsWith('/browse/')) {
+      // Use up to last 2 path segments for title
+      const pathSegments = req.path.replace(/^\/browse\/+/, '').split('/').filter(s => s);
+      const pathSegment = pathSegments.slice(-2).join('/');
+      title = `Chip Player JS - ${decodeURIComponent(pathSegment)}`;
     }
   }
 

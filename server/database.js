@@ -23,11 +23,11 @@ const dbStatements = {
   `),
   getDirIdStmt: db.prepare('SELECT id FROM directories WHERE path = ?'),
   getDirChildrenStmt: db.prepare(`
-      SELECT name as path, 'directory' as type, sort_order, total_size as size, mtime, count
+      SELECT name as path, NULL as song_id, 'directory' as type, sort_order, total_size as size, mtime, count
       FROM directories
       WHERE parent_id = ?
       UNION ALL
-      SELECT filename as path, 'file' as type, sort_order, file_size as size, mtime, 0 as count
+      SELECT filename as path, song_id, 'file' as type, sort_order, file_size as size, mtime, 0 as count
       FROM music
       WHERE directory_id = ?
       ORDER BY type, sort_order
