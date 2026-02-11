@@ -15,8 +15,9 @@ console.log(`Attached user database at ${USER_DB_PATH}`);
 const dbStatements = {
   // Catalog
   searchStmt: db.prepare(`
-      SELECT path as file, title, artist, game, system
+      SELECT music_fts.path as file, song_id
       FROM music_fts
+      JOIN music m ON m.id = music_fts.rowid
       WHERE music_fts MATCH ?
       ORDER BY rank
       LIMIT ?
@@ -83,8 +84,7 @@ const dbStatements = {
           json_set(
               je.value,
               '$.href', CONCAT('https://gifx.co/music/', m.path),
-              '$.title', m.title,
-              '$.artist', m.artist
+              '$.path', m.path
           )
       ) as items
       FROM user_db.playlists p, json_each(p.items) je
@@ -105,14 +105,20 @@ const dbStatements = {
           modified_at = @now
   `),
 
-  // Removes a favorite from the JSON array by songId.
-  // This uses a subquery to filter the JSON array.
-  removeFavoriteStmt: db.prepare(`
+  addFavoriteByPathStmt: db.prepare(`
+      INSERT INTO playlists (user_id, title, created_at, modified_at, type, items)
+      VALUES (@userId, 'Favorites', @now, @now, 'favorites', json_array(json_object('songId', (SELECT song_id FROM music WHERE path = @path), 'mtime', @now, 'path', @path)))
+      ON CONFLICT(user_id) WHERE type = 'favorites' DO UPDATE SET
+          items = json_insert(items, '$[#]', json_object('songId', (SELECT song_id FROM music WHERE path = @path), 'mtime', @now, 'path', @path)),
+          modified_at = @now
+  `),
+
+  removeFavoriteByPathStmt: db.prepare(`
       UPDATE playlists
       SET items = (
           SELECT json_group_array(value)
           FROM json_each(items)
-          WHERE json_extract(value, '$.songId') != @songId
+          WHERE json_extract(value, '$.path') != @path
       ),
       modified_at = @now
       WHERE user_id = @userId AND type = 'favorites'
