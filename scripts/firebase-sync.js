@@ -9,6 +9,11 @@ const CATALOG_DB_FILENAME = '../server/catalog.db';
 const SNAPSHOT_FILENAME = 'snapshot.json';
 const SERVICE_ACCOUNT_PATH = './untracked/chip-player-js-c57327916be6.json'
 
+const DEFAULT_SETTINGS = {
+  showPlayerSettings: false,
+  theme: 'msdos',
+};
+
 const program = new Command();
 
 program
@@ -248,6 +253,11 @@ function ingestSnapshot() {
           if (!isNaN(parsed)) userLastLogin = Math.floor(parsed / 1000);
       }
 
+      const settings = {
+        ...DEFAULT_SETTINGS,
+        ...(user.settings || {})
+      };
+
       insertUser.run({
         id: user._id,
         email: auth.email || null,
@@ -255,7 +265,7 @@ function ingestSnapshot() {
         photoURL: auth.photoURL || null,
         createdAt: userCreatedAt,
         lastLogin: userLastLogin,
-        settings: user.settings ? JSON.stringify(user.settings) : '{}',
+        settings:JSON.stringify(settings),
         rawJson: JSON.stringify(user)
       });
 
@@ -267,9 +277,11 @@ function ingestSnapshot() {
         favesList.forEach((item) => {
           let href = null;
           let mtime = null;
+          let songPath = null;
 
           if (typeof item === 'string') {
             href = item;
+            mtime = 1704067200; // Default to Jan 1, 2024 if no mtime provided (mtime was added June 26, 2024)
           } else if (item && typeof item === 'object') {
             href = item.href;
             mtime = item.mtime ? Number(item.mtime) : null;
@@ -284,18 +296,18 @@ function ingestSnapshot() {
             let songId = null;
             if (lookupSongId) {
                 // Strip prefix to get path
-                let relativePath = href.replace('https://gifx.co/music/', '');
+                songPath = href.replace('https://gifx.co/music/', '');
 
                 // Fix known renames - repairs about 200 out of 300 broken favorites
-                relativePath = relativePath.replace(/(Perfect Dark \(2000\)\(Rare\)\(Rare\)\/...?) - /, '$1 ');
-                relativePath = relativePath.replace(/(Star Fox 64 \(1997\)\(Nintendo EAD\)\(Nintendo\)\/...?) - /, '$1 ');
-                relativePath = relativePath.replace(/(Legend of Zelda Majora's Mask,The \(2000\)\(Nintendo EAD\)\(Nintendo\)\/...?) - /, '$1 ');
-                relativePath = relativePath.replace(/NSFe_Collection_Part5_PAL Releases of NTSC Games \(Same Name\)/, 'PAL');
-                relativePath = relativePath.replace(/.+Shovel_Knight_Music\.nsf/, 'Contemporary/Virt (Jake Kaufman)/Shovel Knight (2014) - Shovel of Hope.nsfe');
-                relativePath = relativePath.replace(/.+VIRT_-_KEEP_SHREDDING_LITTLE_MAN\.S3M/, 'Contemporary/Virt (Jake Kaufman)/keep shredding little man.s3m');
+                songPath = songPath.replace(/(Perfect Dark \(2000\)\(Rare\)\(Rare\)\/...?) - /, '$1 ');
+                songPath = songPath.replace(/(Star Fox 64 \(1997\)\(Nintendo EAD\)\(Nintendo\)\/...?) - /, '$1 ');
+                songPath = songPath.replace(/(Legend of Zelda Majora's Mask,The \(2000\)\(Nintendo EAD\)\(Nintendo\)\/...?) - /, '$1 ');
+                songPath = songPath.replace(/NSFe_Collection_Part5_PAL Releases of NTSC Games \(Same Name\)/, 'PAL');
+                songPath = songPath.replace(/.+Shovel_Knight_Music\.nsf/, 'Contemporary/Virt (Jake Kaufman)/Shovel Knight (2014) - Shovel of Hope.nsfe');
+                songPath = songPath.replace(/.+VIRT_-_KEEP_SHREDDING_LITTLE_MAN\.S3M/, 'Contemporary/Virt (Jake Kaufman)/keep shredding little man.s3m');
 
                 // Try exact match first
-                const row = lookupSongId.get(relativePath);
+                const row = lookupSongId.get(songPath);
                 if (row) {
                     songId = row.song_id;
                     stats.exact++;
@@ -303,10 +315,10 @@ function ingestSnapshot() {
                     // Try fuzzy match
                     // First, try decoding in case it was encoded
                     try {
-                        relativePath = decodeURIComponent(relativePath);
+                        songPath = decodeURIComponent(songPath);
                     } catch (e) {}
 
-                    const parts = relativePath.split('/');
+                    const parts = songPath.split('/');
                     // Remove empty parts if any (e.g. leading slash)
                     if (parts[0] === '') parts.shift();
 
@@ -330,13 +342,13 @@ function ingestSnapshot() {
                     
                     if (!found) {
                         stats.missing++;
-                        console.warn(`- Song not found: ${relativePath}`);
+                        console.warn(`- Song not found: ${songPath}`);
                     }
                 }
             }
 
             if (songId) {
-              items.push({ songId, mtime });
+              items.push({ songId, path: songPath, mtime });
             }
             
             if (mtime && mtime > maxMtime) {
