@@ -18,6 +18,8 @@ const { dbStatements } = require('./database.js');
 const { Canvas, loadImage } = require('skia-canvas');
 const { LRUCache } = require('lru-cache');
 const authMiddleware = require('./middleware/auth.js');
+const { SettingsSchema, FavoriteSchema } = require('./schemas');
+const { validate } = require('./middleware/validate');
 
 const {
   searchStmt,
@@ -473,6 +475,30 @@ router.delete('/user/favorites/:songId', authMiddleware, (req, res) => {
   }
 });
 
+// Get Settings
+router.get('/user/settings', authMiddleware, (req, res) => {
+  const row = getUserSettingsStmt.get(req.userId);
+  const settings = JSON.parse(row.settings);
+  res.json(settings);
+});
+
+// Update Settings
+router.post(
+  '/user/settings',
+  authMiddleware,
+  express.json({ limit: '10kb' }),
+  validate(SettingsSchema),
+  (req, res) => {
+    const settings = req.body;
+    try {
+      replaceUserSettingsStmt.run(JSON.stringify(settings), req.userId);
+      res.json({ success: true });
+    } catch (e) {
+      console.error('Error updating settings:', e);
+      res.status(500).json({ error: 'Failed to update settings' });
+    }
+});
+
 // Chrome dev tools requests this for the "Workspace" feature.
 app.get('/.well-known/appspecific/com.chrome.devtools.json', (req, res) => res.sendStatus(404));
 
@@ -508,7 +534,6 @@ app.get('/{*splat}', async (req, res) => {
     .replace(/__URL__/g, url)
     .replace(/__IMAGE__/g, previewImage)
     .replace(/<chip-config><\/chip-config>/g, scriptTag);
-
 
   res.send(finalHtml);
 });
