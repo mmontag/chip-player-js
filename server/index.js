@@ -95,6 +95,23 @@ if (isDev) {
   // app.use(express.static(path.join(__dirname, LOCAL_CLIENT_BUILD_ROOT)));
 }
 
+// Prepopulate searchMap for all 1- and 2-letter queries
+console.log('Pre-populating search map for 1- and 2-letter queries...');
+const searchMap = new Map();
+setTimeout(() => {
+  for (let char1 of [...'abcdefghijklmnopqrstuvwxyz']) {
+    const query = char1;
+    const items = searchStmt.all(`${query}*`, 50);
+    searchMap.set(query, items);
+    for (let char2 of [...'abcdefghijklmnopqrstuvwxyz']) {
+      const query = char1 + char2;
+      const items = searchStmt.all(`${query}*`, 50);
+      searchMap.set(query, items);
+    }
+  }
+  console.log(`Done populating search map.`);
+}, 0);
+
 // --- Production Asset Pre-loading ---
 if (!isDev) {
   console.log('Running in production mode.');
@@ -251,14 +268,18 @@ router.get('/search', (req, res) => {
   const { limit = 100, query } = req.query;
   const start = performance.now();
 
-  const sanitizedQuery = query.replace(/"/g, '""');
-  const ftsQuery = sanitizedQuery.trim().split(/\s+/).map(term => `${term}*`).join(' ');
-
   let items = [];
-  try {
-    items = searchStmt.all(ftsQuery, limit);
-  } catch (e) {
-    console.error('Search error:', e.message);
+  const sanitizedQuery = query.replace(/"/g, '""');
+  if (searchMap.has(sanitizedQuery)) {
+    items = searchMap.get(sanitizedQuery);
+  } else {
+    const ftsQuery = sanitizedQuery.trim().split(/\s+/).map(term => `${term}*`).join(' ');
+
+    try {
+      items = searchStmt.all(ftsQuery, limit);
+    } catch (e) {
+      console.error('Search error:', e.message);
+    }
   }
 
   const time = (performance.now() - start).toFixed(1);
