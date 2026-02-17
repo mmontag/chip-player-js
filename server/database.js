@@ -70,7 +70,11 @@ const dbStatements = {
       INSERT INTO users (id, email, display_name, photo_url, created_at, last_login, settings)
       VALUES (?, ?, ?, ?, ?, ?, '{}')
   `),
-  updateUserLoginStmt: db.prepare(`UPDATE users SET last_login = ? WHERE id = ?`),
+  updateUserProfileStmt: db.prepare(`
+      UPDATE users 
+      SET email = ?, display_name = ?, photo_url = ?, last_login = ? 
+      WHERE id = ?
+  `),
 
   // Settings
   getUserSettingsStmt: db.prepare('SELECT settings FROM users WHERE id = ?'),

@@ -3,7 +3,7 @@ const { dbStatements } = require('../database.js');
 const admin = require('firebase-admin');
 const serviceAccount = require('../untracked/chip-player-js-c57327916be6.json');
 
-const { getUserStmt, insertUserStmt, updateUserLoginStmt } = dbStatements;
+const { getUserStmt, insertUserStmt, updateUserProfileStmt } = dbStatements;
 
 const safe = async (promise) => {
   try {
@@ -38,9 +38,15 @@ module.exports = async function authMiddleware(req, res, next) {
     insertUserStmt.run(decodedToken.uid, decodedToken.email, decodedToken.name, decodedToken.picture, now, now);
     console.log(`Created new user: ${(decodedToken.uid)} (${decodedToken.name})`);
   } else {
-    // Update last login time
+    // Update profile and last login time
     const now = Math.floor(Date.now() / 1000);
-    updateUserLoginStmt.run(now, decodedToken.uid);
+    updateUserProfileStmt.run(
+      decodedToken.email,
+      decodedToken.name,
+      decodedToken.picture,
+      now,
+      decodedToken.uid
+    );
   }
 
   // 4. Attach uid to request for the route handler to use
