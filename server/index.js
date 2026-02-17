@@ -462,12 +462,13 @@ router.post(
   express.json({ limit: '10kb' }),
   validate(FavoriteSchema),
   (req, res) => {
-    const { href, mtime } = req.body;
+    const { href, path, mtime } = req.body;
 
     try {
-      const songPath = href
+      let songPath = path || href
         .replace('https://gifx.co/music/', '')
         .replace('http://localhost:8080/catalog/', '');
+      try { songPath = decodeURIComponent(songPath); } catch (e) {}
 
       const song = getSongByPathStmt.get(songPath);
       if (!song) {
@@ -494,13 +495,14 @@ router.post(
   express.json({ limit: '10kb' }),
   validate(FavoriteSchema),
   (req, res) => {
-    const { href } = req.body;
+    const { href, path } = req.body;
 
     try {
       const now = Math.floor(Date.now() / 1000);
-      const songPath = href
+      let songPath = path || href
         .replace('https://gifx.co/music/', '')
         .replace('http://localhost:8080/catalog/', '');
+      try { songPath = decodeURIComponent(songPath); } catch (e) {}
       removeFavoriteByPathStmt.run({
         userId: req.userId,
         path: songPath,

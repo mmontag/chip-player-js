@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const FavoriteSchema = z.object({
   // songId: z.string().length(8), // Enforce that 8-char string length
-  href: z.string(),
+  path: z.string(),
   mtime: z.number().int().nonnegative(), // Unix timestamp in seconds
 });
 
