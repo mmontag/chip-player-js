@@ -34,8 +34,10 @@ const {
   getSongImageByIdStmt,
 
   getFavoritesStmt,
-  addFavoriteStmt,
-  removeFavoriteStmt,
+  addFavoriteByPathStmt,
+  removeFavoriteByPathStmt,
+  getUserSettingsStmt,
+  replaceUserSettingsStmt,
 } = dbStatements;
 
 // --- Configuration ---
@@ -463,13 +465,19 @@ router.post(
     const { href, mtime } = req.body;
 
     try {
-      const path = href
+      const songPath = href
         .replace('https://gifx.co/music/', '')
         .replace('http://localhost:8080/catalog/', '');
+
+      const song = getSongByPathStmt.get(songPath);
+      if (!song) {
+        return res.status(404).json({ error: 'Song not found' });
+      }
+
       // Resolve the path to a song ID on insertion.
       addFavoriteByPathStmt.run({
         userId: req.userId,
-        path,
+        path: songPath,
         now: mtime,
       });
       res.json({ success: true });
@@ -489,13 +497,13 @@ router.post(
     const { href } = req.body;
 
     try {
-      const now = Date.now();
-      const path = href
+      const now = Math.floor(Date.now() / 1000);
+      const songPath = href
         .replace('https://gifx.co/music/', '')
         .replace('http://localhost:8080/catalog/', '');
       removeFavoriteByPathStmt.run({
         userId: req.userId,
-        path,
+        path: songPath,
         now,
       });
       // Get rows affected
