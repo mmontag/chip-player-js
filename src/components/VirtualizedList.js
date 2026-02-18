@@ -43,7 +43,11 @@ function VirtualizedList(props) {
         scrollTop: Math.round(scrollContainerRef.current.scrollTop),
       };
       // console.log('Updating history %s with new state:', history.location.pathname, newState);
-      history.replace(history.location.pathname + history.location.search, newState);
+      history.replace({
+        // Double encode % because react-router will decode into history.
+        pathname: history.location.pathname.replaceAll('%', '%25'),
+        search: history.location.search,
+      }, newState);
     };
   }, [selectedRow, scrollContainerRef, history]);
 
