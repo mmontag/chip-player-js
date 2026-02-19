@@ -1,11 +1,8 @@
 import queryString from 'querystring';
-import React from 'react';
 import path from 'path';
 
-import DirectoryLink from './components/DirectoryLink';
 import { API_BASE, CATALOG_PREFIX } from './config';
 
-const CATALOG_PREFIX_REGEX = /^https?:\/\/[a-z0-9\-.:]+\/(music|catalog)\//;
 const MULTI_SLASH_REGEX = /\/{2,}/g;
 
 export function updateQueryString(newParams) {
@@ -53,15 +50,6 @@ export function allOrNone(...args) {
   return str;
 }
 
-export function pathToLinks(path) {
-  if (!path) return null;
-
-  path = path
-    .replace(CATALOG_PREFIX_REGEX, '/')
-    .split('/').slice(0, -1).join('/');
-  return <DirectoryLink dim to={pathJoin('/browse', path)}>{decodeURI(path)}</DirectoryLink>;
-}
-
 // Preserves leading and trailing slashes.
 export function pathJoin(...parts) {
   const sep = '/';
@@ -76,7 +64,13 @@ export function pathJoin(...parts) {
 }
 
 export function getFilepathFromUrl(url) {
+  if (!url) return null;
   return url.replace(CATALOG_PREFIX, '/').replace(MULTI_SLASH_REGEX, '/');
+}
+
+export function getUrlFromFilepath(filepath) {
+  if (!filepath) return null;
+  return pathJoin(CATALOG_PREFIX, encodeURIComponent(filepath))
 }
 
 export function getMetadataUrlForFilepath(filepath) {
