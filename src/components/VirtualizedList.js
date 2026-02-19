@@ -24,6 +24,11 @@ function VirtualizedList(props) {
   const [selectedRow, setSelectedRow] = useState(0);
   const [rowHeight, setRowHeight] = useState(20);
   const updateHistoryRef = useRef();
+  const selectedRowRef = useRef(selectedRow);
+
+  useEffect(() => {
+    selectedRowRef.current = selectedRow;
+  }, [selectedRow]);
 
   useEffect(() => {
     if (!scrollContainerRef.current) return;
@@ -32,14 +37,13 @@ function VirtualizedList(props) {
     setRowHeight(parseInt(rowHeight, 10));
   }, [scrollContainerRef]);
 
-  // Create a new 'update history' function every time selection changes.
-  // TODO: Use a selectedRowRef instead, so that the callback doesn't have to be updated?
+  // Create a new 'update history' function.
   useEffect(() => {
     updateHistoryRef.current = () => {
       if (!scrollContainerRef.current) return;
       const newState = {
         ...history.location.state,
-        selectedRow,
+        selectedRow: selectedRowRef.current,
         scrollTop: Math.round(scrollContainerRef.current.scrollTop),
       };
       // console.log('Updating history %s with new state:', history.location.pathname, newState);
@@ -49,7 +53,7 @@ function VirtualizedList(props) {
         search: history.location.search,
       }, newState);
     };
-  }, [selectedRow, scrollContainerRef, history]);
+  }, [scrollContainerRef, history]);
 
   useEffect(() => {
     // history.block runs *before* navigation.
