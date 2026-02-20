@@ -2,9 +2,19 @@ import React, { memo, useCallback, useContext } from 'react';
 import TimeSlider from './TimeSlider';
 import VolumeSlider from './VolumeSlider';
 import FavoriteButton from './FavoriteButton';
-import { pathToLinks } from '../util';
 import { REPEAT_LABELS, SHUFFLE_LABELS } from '../Sequencer';
 import { UserContext } from './UserProvider';
+import DirectoryLink from './DirectoryLink';
+import { getUrlFromFilepath, pathJoin } from '../util';
+
+function directoryLinkFromFilepath(filepath) {
+  if (!filepath) return null;
+  const sep = '/';
+
+  filepath = filepath
+    .split(sep).slice(0, -1).join(sep);
+  return <DirectoryLink dim to={pathJoin('/browse', encodeURI(filepath))}>{filepath}</DirectoryLink>;
+}
 
 export default memo(AppFooter);
 function AppFooter(props) {
@@ -20,7 +30,8 @@ function AppFooter(props) {
     paused,
     repeat,
     shuffle,
-    songUrl,
+    songId,
+    songPath,
     subtitle,
     title,
     volume,
@@ -43,10 +54,10 @@ function AppFooter(props) {
 
   const {
     faves,
-    handleToggleFavorite,
   } = useContext(UserContext);
 
-  const pathLinks = pathToLinks(songUrl);
+  const directoryLink = directoryLinkFromFilepath(songPath);
+  const songUrl = getUrlFromFilepath(songPath);
   const subtuneText = `Tune ${currentSongSubtune + 1} of ${currentSongNumSubtunes}`;
 
   const handleToggleInfo = useCallback((e) => {
@@ -91,7 +102,7 @@ function AppFooter(props) {
           </button>
           {currentSongNumSubtunes > 1 &&
             <>
-              {songUrl ?
+              {songPath ?
                 <a style={{ color: 'var(--neutral4)' }}
                    href={getCurrentSongLink(/*subtune=*/true)}
                    title="Copy subtune link to clipboard"
@@ -153,12 +164,13 @@ function AppFooter(props) {
         </div>
         {!ejected &&
           <div className="SongDetails">
-            {faves && songUrl &&
-              <FavoriteButton isFavorite={faves.includes(songUrl)}
-                                toggleFavorite={handleToggleFavorite}
-                                href={songUrl}/>}
+            {faves && songPath &&
+              <FavoriteButton item={{
+                path: songPath,
+                songId: songId,
+              }}/>}
             <div className="SongDetails-title">
-              {songUrl ?
+              {songPath ?
                 <>
                   <a href={getCurrentSongLink()}
                      title="Copy song link to clipboard"
@@ -187,7 +199,7 @@ function AppFooter(props) {
               }
             </div>
             <div className="SongDetails-subtitle">{subtitle}</div>
-            <div className="SongDetails-filepath">{pathLinks}</div>
+            <div className="SongDetails-filepath">{directoryLink}</div>
           </div>}
       </div>
       {imageUrl && <img alt="Cover art" className="AppFooter-art" src={imageUrl}/>}
