@@ -20,7 +20,7 @@ import {
 } from '../config';
 import {
   ensureEmscFileWithData,
-  getMetadataUrlForCatalogUrl,
+  getMetadataUrlForFilepath,
   pathJoin,
   titlesFromMetadata,
   unlockAudioContext
@@ -121,7 +121,7 @@ class App extends React.Component {
       imageUrl: null,
       infoTexts: [],
       showInfo: false,
-      songUrl: null,
+      songPath: null,
       songId: null,
       volume: 100,
       repeat: REPEAT_OFF,
@@ -221,9 +221,7 @@ class App extends React.Component {
       const dirname = path.dirname(playPath);
       this.fetchDirectory(dirname).then(() => {
         this.props.history.replace(`${pathJoin('/browse', dirname)}${search}`);
-        // Convert play path to href (context contains full hrefs)
-        const playHref = pathJoin(CATALOG_PREFIX, playPath);
-        const index = this.playContexts[dirname].indexOf(playHref);
+        const index = this.playContexts[dirname].indexOf(playPath);
 
         this.playContext(this.playContexts[dirname], index, subtune);
 
@@ -254,7 +252,7 @@ class App extends React.Component {
       voiceNames: 'voiceNames',
       voiceMask: 'voiceMask',
       voiceGroups: 'voiceGroups',
-      songUrl: 'url',
+      songPath: 'songPath',
       hasPlayer: 'hasPlayer',
       // TODO: Move to a separate paramStateUpdate?
       paramDefs: 'paramDefs',
@@ -377,7 +375,7 @@ class App extends React.Component {
         currentSongDurationMs: 1,
         currentSongNumSubtunes: 0,
         imageUrl: null,
-        songUrl: null,
+        songPath: null,
       });
       // TODO: Disabled to support scroll restoration.
       // updateQueryString({ play: undefined });
@@ -392,15 +390,15 @@ class App extends React.Component {
       }
     } else {
       const player = this.sequencer.getPlayer();
-      const url = this.sequencer.getCurrUrl();
+      const songPath = this.sequencer.getCurrSongPath();
       // TODO: this is messy. imageUrl comes asynchronously from the /metadata request.
       //       Title, artist, etc. come synchronously from player.getMetadata().
       //       ...but these are also emitted with playerStateUpdate.
       //       It would be better to incorporate imageUrl into playerStateUpdate.
-      if (!url) {
+      if (!songPath) {
         this.setState({ imageUrl: null });
-      } else if (url !== this.state.songUrl) {
-        const metadataUrl = getMetadataUrlForCatalogUrl(url);
+      } else if (songPath !== this.state.songPath) {
+        const metadataUrl = getMetadataUrlForFilepath(songPath);
         // XXX: fix this later
         // if (url.indexOf("%2") > -1 || url.indexOf("#") > -1) {
         //   console.warn("handleSequencerStateUpdate() url:", url);
@@ -577,7 +575,7 @@ class App extends React.Component {
       // Response of this API is an array of *paths*.
       fetch(`${API_BASE}/shuffle?path=${encodeURI(path)}&limit=100`)
         .then(response => response.json())
-        .then(json => json.items.map(this.pathToHref))
+        .then(json => json.items) // paths, e.g. "MIDI/Crystal Waters/100% Pure Love.mid"
         .then(items => this.sequencer.playContext(items));
     }
   }
@@ -620,7 +618,7 @@ class App extends React.Component {
   directoryListingToContext(items) {
     return items
       .filter(item => item.type === 'file')
-      .map(item => this.pathToHref(item.path));
+      .map(item => item.path); // paths, e.g. "MIDI/Crystal Waters/100% Pure Love.mid"
   }
 
   pathToHref(path) {
@@ -667,8 +665,8 @@ class App extends React.Component {
   }
 
   getCurrentSongLink(withSubtune = false) {
-    const url = this.sequencer?.getCurrUrl();
-    if (!url) return null;
+    if (!this.state.songId) return null;
+
     let link = BASE_URL + '/?play=' + this.state.songId;
     if (withSubtune) {
       const subtune = this.sequencer?.getSubtune();
@@ -928,7 +926,8 @@ class App extends React.Component {
             repeat={this.state.repeat}
             shuffle={this.state.shuffle}
             sequencer={this.sequencer}
-            songUrl={this.state.songUrl}
+            songId={this.state.songId}
+            songPath={this.state.songPath}
             subtitle={subtitle}
             tempo={this.state.tempo}
             title={title}
