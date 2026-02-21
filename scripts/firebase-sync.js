@@ -180,8 +180,7 @@ function ingestSnapshot() {
         photo_url TEXT,
         created_at INTEGER,
         last_login INTEGER,
-        settings TEXT, -- JSON Object
-        raw_json TEXT
+        settings TEXT -- JSON Object
     );
 
     CREATE TABLE playlists (
@@ -214,10 +213,10 @@ function ingestSnapshot() {
   const insertUser = db.prepare(`
       INSERT INTO users (
           id, email, display_name, photo_url, created_at, last_login,
-          settings, raw_json
+          settings
       ) VALUES (
                    @id, @email, @displayName, @photoURL, @createdAt, @lastLogin,
-                   @settings, @rawJson
+                   @settings
                )
   `);
 
@@ -265,8 +264,7 @@ function ingestSnapshot() {
         photoURL: auth.photoURL || null,
         createdAt: userCreatedAt,
         lastLogin: userLastLogin,
-        settings:JSON.stringify(settings),
-        rawJson: JSON.stringify(user)
+        settings:JSON.stringify(settings)
       });
 
       if (user.faves) {
@@ -394,7 +392,7 @@ function runSummary() {
 
   const db = new Database(DB_FILENAME, { readonly: true });
 
-  console.log('\n📊 --- TOP 10 USERS BY FAVORITES ---');
+  console.log('\nTOP 10 USERS BY FAVORITES');
   const topUsers = db.prepare(`
       SELECT
           COALESCE(u.email, u.display_name, u.id) as identifier,
@@ -407,20 +405,21 @@ function runSummary() {
   `).all();
   console.table(topUsers);
 
-  console.log('\n⭐ --- TOP 50 MOST FAVORITED SONGS ---');
+  console.log('\nTOP 50 MOST FAVORITED SONGS');
   const topSongs = db.prepare(`
       SELECT 
           json_extract(value, '$.songId') as songId, 
+          json_extract(value, '$.path') as path,
           COUNT(*) as count
       FROM playlists, json_each(playlists.items)
       WHERE playlists.type = 'favorites'
-      GROUP BY songId
+      GROUP BY songId, path
       ORDER BY count DESC
       LIMIT 50
   `).all();
   console.table(topSongs);
 
-  console.log('\n📈 --- FAVORITES DISTRIBUTION ---');
+  console.log('\nFAVORITES DISTRIBUTION');
   const distribution = db.prepare(`
       SELECT
           CASE
