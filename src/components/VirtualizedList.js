@@ -197,7 +197,7 @@ function VirtualizedList(props) {
                       // Song index may differ from item index if there are directories
                       // const songIndex = item.idx;
                       // const isPlaying = currContext === songContext && currIdx === songIndex;
-                      const isPlaying = currContext && currContext[currIdx] === item.href;
+                      const isPlaying = currContext && currContext[currIdx] === item.path;
                       const isSelected = index === scrollToRow;
                       const classNames = ['BrowseList-row'];
                       if (isPlaying) classNames.push('Song-now-playing');
