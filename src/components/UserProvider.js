@@ -1,19 +1,11 @@
 import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react';
+import axios from 'axios';
 import { debounce } from 'lodash';
 import { getAuth, onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider } from 'firebase/auth';
-// import { useAuthState } from 'react-firebase-hooks/auth'; // Consider using react-firebase-hooks
-// import firebase from 'firebase/app'; // Assuming you have firebase configured
 import { initializeApp as firebaseInitializeApp } from 'firebase/app';
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  updateDoc,
-  setDoc,
-  arrayRemove,
-  arrayUnion
-} from 'firebase/firestore/lite';
 import firebaseConfig from '../config/firebaseConfig';
+import { API_BASE, CATALOG_PREFIX } from '../config';
+import { pathJoin } from '../util';
 
 const UserContext = createContext({
   user: null,
@@ -34,41 +26,22 @@ const DEFAULT_SETTINGS = {
   theme: 'msdos',
 };
 
-const DEFAULT_MTIME = Math.floor(Date.parse('2024-01-01') / 1000);
+const getWithAuth = async (user, path) => {
+  if (!user) return;
 
-/**
- * Convert favorites from list of path strings to list of objects.
- * As of July 2024, the converted objects are not persisted to Firebase.
- * Only new favorites are saved to Firebase in the object form.
- *
- * {
- *   href: 'https://web.site/music/game/song.vgm',
- *   date: 1650000000,
- * }
- *
- * @param faves
- */
-function migrateFaves(faves) {
-  if (faves.length > 0) {
-    return faves.map(fave => {
-      return typeof fave === 'string' ? {
-        href: fave,
-        mtime: DEFAULT_MTIME,
-      } : fave;
-    });
-  }
-
-  return faves;
+  const token = await user.getIdToken();
+  return axios.get(path, {
+    headers: { 'Authorization': `Bearer ${token}`, },
+  }).then(res => res.data);
 }
 
-function migrateSettings(settings) {
-  const migratedSettings = { ...settings };
-  Object.keys(DEFAULT_SETTINGS).forEach(key => {
-    if (settings[key] === undefined) {
-      migratedSettings[key] = DEFAULT_SETTINGS[key];
-    }
-  });
-  return migratedSettings;
+const postWithAuth = async (user, path, json) => {
+  if (!user) return;
+
+  const token = await user.getIdToken();
+  return axios.post(path, json, {
+    headers: { 'Authorization': `Bearer ${token}`, },
+  }).then(res => res.data);
 }
 
 const UserProvider = ({ children }) => {
@@ -76,6 +49,7 @@ const UserProvider = ({ children }) => {
   // const [authUser, userLoading] = useAuthState(firebase.auth());
   const [user, setUser] = useState(null); // Local state for user data
   const [faves, setFaves] = useState(() => {
+    // Restore favorites from localStorage.
     try {
       const faves = window.localStorage.getItem('faves');
       return faves ? JSON.parse(faves) : [];
@@ -86,6 +60,7 @@ const UserProvider = ({ children }) => {
   });
   const [loadingUser, setLoadingUser] = useState(true); // Manage loading state
   const [settings, setSettings] = useState(() => {
+    // Restore settings from localStorage.
     try {
       const settings = window.localStorage.getItem('settings');
       return settings ? JSON.parse(settings) : DEFAULT_SETTINGS;
@@ -96,6 +71,18 @@ const UserProvider = ({ children }) => {
   });
 
   useEffect(() => {
+    // Initialize Firebase
+    const firebaseApp = firebaseInitializeApp(firebaseConfig);
+    const auth = getAuth(firebaseApp);
+    onAuthStateChanged(auth, async user => {
+      setUser(user);
+      console.log('Firebase auth state changed, user:', user);
+      setLoadingUser(false);
+    });
+  }, []);
+
+  // Copy favorites to localStorage whenever they change, so they persist across page reloads.
+  useEffect(() => {
     try {
       window.localStorage.setItem('faves', JSON.stringify(faves));
     } catch (e) {
@@ -103,6 +90,7 @@ const UserProvider = ({ children }) => {
     }
   }, [faves]);
 
+  // Copy settings to localStorage whenever they change, so they persist across page reloads.
   useEffect(() => {
     try {
       window.localStorage.setItem('settings', JSON.stringify(settings));
@@ -112,36 +100,22 @@ const UserProvider = ({ children }) => {
   }, [settings]);
 
   useEffect(() => {
-    // Initialize Firebase
-    const firebaseApp = firebaseInitializeApp(firebaseConfig);
-    const auth = getAuth(firebaseApp);
-    const db = getFirestore(firebaseApp);
-    onAuthStateChanged(auth, user => {
-      setUser(user);
-      setLoadingUser(false);
-      if (user) {
-        const docRef = doc(db, 'users', user.uid);
-        getDoc(docRef)
-          .then(userSnapshot => {
-            if (!userSnapshot.exists()) {
-              // Create user
-              console.debug('Creating user document', user.uid);
-              setDoc(docRef, {
-                faves: [],
-                settings: DEFAULT_SETTINGS,
-              });
-            } else {
-              // Restore user
-              const data = userSnapshot.data();
-              const faves = migrateFaves(data.faves || []);
-              setFaves(faves);
-              const settings = migrateSettings(data.settings);
-              setSettings(settings);
-            }
-          });
-      }
-    });
-  }, []);
+    if (!user) return;
+
+    try {
+      getWithAuth(user, `${API_BASE}/user/favorites`).then(favesRes => {
+        setFaves(favesRes.favorites);
+      });
+
+      getWithAuth(user, `${API_BASE}/user/settings`).then(settingsRes => {
+        // Merge server settings with defaults to ensure all keys exist
+        setSettings(prev => ({ ...prev, ...settingsRes }));
+      });
+    } catch (e) {
+      console.error('Error fetching user data:', e);
+    }
+  }, [user]);
+
 
   const handleLogin = async () => {
     const auth = getAuth();
@@ -149,7 +123,6 @@ const UserProvider = ({ children }) => {
     try {
       const result = await signInWithPopup(auth, provider);
       console.log('Firebase auth result:', result);
-      // Update user state based on result
     } catch (error) {
       console.log('Firebase auth error:', error);
     }
@@ -166,34 +139,29 @@ const UserProvider = ({ children }) => {
     }
   };
 
-  const handleToggleFavorite = async (href) => {
+  const handleToggleFavorite = async (path, songId) => {
     if (user) {
-      const userRef = doc(getFirestore(), 'users', user.uid);
-      let newFaves, favesOp;
       const oldFaves = faves;
-      const existingIdx = oldFaves.findLastIndex(f => f === href || f.href === href);
-      if (existingIdx === -1) {
-        // ADD
-        const newFave = {
-                // XXX: fix this later
-          href, // <-- This is more like a PATH than a URL right now.
-                // And "href" is about where it's used, so makes no sense as a field name.
-          mtime: Math.floor(Date.now() / 1000),
-        }
-        newFaves = [...oldFaves, newFave];
-        favesOp = arrayUnion(newFave);
-      } else {
-        // REMOVE
-        // Firebase cannot remove from array by index, only by value.
-        // Remove both the object and href (for legacy favorites).
-        const element = oldFaves[existingIdx];
-        newFaves = oldFaves.toSpliced(existingIdx, 1);
-        favesOp = arrayRemove(element, element.href);
-      }
-      // Optimistic update
+      const isFavorite = faves.find(fave => fave.path === path);
+
+      const fave = {
+        path,
+        songId,
+        href: pathJoin(CATALOG_PREFIX, encodeURIComponent(path)),
+        mtime: Math.floor(Date.now() / 1000),
+      };
+
+      const newFaves = isFavorite
+        ? faves.filter(fave => fave.path !== path)
+        : [...faves, fave];
       setFaves(newFaves);
+
       try {
-        await updateDoc(userRef, { faves: favesOp });
+        if (isFavorite) {
+          await removeFavorite(fave);
+        } else {
+          await addFavorite(fave);
+        }
       } catch (e) {
         setFaves(oldFaves);
         console.log('Couldn\'t update favorites in Firebase.', e);
@@ -201,43 +169,41 @@ const UserProvider = ({ children }) => {
     }
   };
 
-  const saveSettingsToFirebase = useMemo(() => {
+  const addFavorite = useCallback(async (fave) => {
+    return postWithAuth(user, `${API_BASE}/user/favorites/add`, fave);
+  }, [user]);
+
+  const removeFavorite = useCallback(async (fave) => {
+    return postWithAuth(user, `${API_BASE}/user/favorites/remove`, fave);
+  }, [user]);
+
+  const saveSettings = useMemo(() => {
     return debounce((user, newSettings) => {
-      if (user) {
-        const userRef = doc(getFirestore(), 'users', user.uid);
-        updateDoc(userRef, { settings: newSettings })
-          .catch((e) => {
-            console.log('Couldn\'t update settings in Firebase.', e);
-          });
-      }
+      if (!user) return;
+      postWithAuth(user, `${API_BASE}/user/settings`, newSettings)
+        .then(res => {
+          console.log('Saved settings to server:', res);
+        })
+        .catch(e => {
+          console.log('Couldn\'t save settings to server.', e);
+        });
     }, 1000);
   }, []);
 
   const updateSettings = useCallback((partialSettings) => {
     const newSettings = { ...settings, ...partialSettings };
     setSettings(newSettings);
-    saveSettingsToFirebase(user, newSettings);
-  }, [user, settings, saveSettingsToFirebase]);
+    saveSettings(user, newSettings);
+  }, [user, settings, saveSettings]);
 
   const replaceSettings = useCallback((newSettings) => {
     setSettings(newSettings);
-    saveSettingsToFirebase(user, newSettings);
-  }, [user, saveSettingsToFirebase]);
+    saveSettings(user, newSettings);
+  }, [user, saveSettings]);
 
-  // We need to derive a list of hrefs to use as the play context.
+  // We need to derive a list of paths to use as the play context.
   const favesContext = useMemo(() => {
-    // XXX: we need to URL encode the "href" here.
-    // The value stored as "href" is a concatenation of catalog root and file path,
-    // e.g.:
-    //
-    //  h††p://gifx.co/music/MIDI/Crystal Waters/100% Pure Love.mid
-    //  |------------------||-------------------------------------|
-    //
-    // This is not a well-formed URL, since the spaces and % (etc.) should be encoded.
-    return faves.map(fave => {
-      const href = fave.href;
-      return href.replace("%", "%25").replace("#", "%23");
-    });
+    return faves.map(fave => fave.path);
   }, [faves]);
 
   return (
