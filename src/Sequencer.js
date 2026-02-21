@@ -1,9 +1,8 @@
 import promisify from "./promisify-xhr";
-import {CATALOG_PREFIX} from "./config";
 import shuffle from 'lodash/shuffle';
 import EventEmitter from 'events';
 import autoBind from 'auto-bind';
-import { pathJoin } from './util';
+import { getUrlFromFilepath } from './util';
 
 export const REPEAT_OFF = 0;
 export const REPEAT_ALL = 1;
@@ -30,7 +29,7 @@ export default class Sequencer extends EventEmitter {
 
     this.currIdx = 0;
     this.context = null;
-    this.currUrl = null;
+    this.currSongPath = null;
     this.shuffle = SHUFFLE_OFF;
     this.shuffleOrder = [];
     this.songRequest = null;
@@ -56,13 +55,13 @@ export default class Sequencer extends EventEmitter {
     console.debug('Sequencer.handlePlayerStateUpdate(isStopped=%s)', isStopped);
 
     if (isStopped) {
-      this.currUrl = null;
+      this.currSongPath = null;
       if (this.context) {
         this.nextSong();
       }
     } else {
       this.emit('sequencerStateUpdate', {
-        url: this.currUrl,
+        songPath: this.currSongPath,
         hasPlayer: true,
         // TODO: combine isEjected and hasPlayer
         isEjected: false,
@@ -177,21 +176,21 @@ export default class Sequencer extends EventEmitter {
     return this.shuffle ? this.shuffleOrder[this.currIdx] : this.currIdx;
   }
 
-  getCurrUrl() {
-    return this.currUrl;
+  getCurrSongPath() {
+    return this.currSongPath;
   }
 
   getSubtune() {
     return this.player.getSubtune();
   }
 
-  playSong(url, subtune = 0) {
+  playSong(filepath, subtune = 0) {
     if (this.player !== null) {
       this.player.suspend();
     }
 
     // Find a player that can play this filetype
-    const ext = url.split('.').pop().toLowerCase();
+    const ext = filepath.split('.').pop().toLowerCase();
     for (let i = 0; i < this.players.length; i++) {
       if (this.players[i].canPlay(ext)) {
         this.player = this.players[i];
@@ -203,13 +202,14 @@ export default class Sequencer extends EventEmitter {
       return;
     }
 
-    if (url.startsWith('local/')) {
-      const buffer = this.localFilesManager.read(url);
-      this.currUrl = null;
-      this.playSongBuffer(url, buffer, subtune);
+    if (filepath.startsWith('local/')) {
+      const buffer = this.localFilesManager.read(filepath);
+      this.currSongPath = filepath;
+      this.playSongBuffer(filepath, buffer, subtune);
     } else {
       // Normalize url - paths are assumed to live under CATALOG_PREFIX
-      url = url.startsWith('http') ? url : pathJoin(CATALOG_PREFIX, url);
+      const url = filepath.startsWith('http') ?
+        filepath : getUrlFromFilepath(filepath);
 
       // Fetch the song file (cancelable request)
       // Cancel any outstanding request so that playback doesn't happen out of order
@@ -220,39 +220,17 @@ export default class Sequencer extends EventEmitter {
       this.songRequest.send()
         .then(xhr => xhr.response)
         .then(buffer => {
-          this.currUrl = url;
+          this.currSongPath = filepath;
           // XXX: fix this later
           // if (url.indexOf("%2") > -1 || url.indexOf("#") > -1) {
           //   console.warn("playSong() url:", url);
           // }
-          const filepath = url.replace(CATALOG_PREFIX, '');
           this.playSongBuffer(filepath, buffer, subtune)
         })
         .catch(e => {
-          this.handlePlayerError(e.message || `HTTP ${e.status} ${e.statusText} ${url}`);
+          this.handlePlayerError(e.message || `HTTP ${e.status} ${e.statusText} ${filepath}`);
         });
     }
-  }
-
-  playSongFile(filepath, songData) {
-    if (this.player !== null) {
-      this.player.suspend();
-    }
-
-    const ext = filepath.split('.').pop().toLowerCase();
-
-    // Find a player that can play this filetype
-    const player = this.players.find(player => player.canPlay(ext));
-    if (player == null) {
-      this.emit('playerError', `The file format ".${ext}" was not recognized.`);
-      return;
-    } else {
-      this.player = player;
-    }
-
-    this.context = [];
-    this.currUrl = null;
-    this.playSongBuffer(filepath, songData);
   }
 
   async playSongBuffer(filepath, buffer, subtune = 0) {
