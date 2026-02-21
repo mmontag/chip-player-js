@@ -2,9 +2,9 @@
 import React, { Fragment, PureComponent } from 'react';
 import queryString from 'querystring';
 import debounce from 'lodash/debounce';
-import { API_BASE, CATALOG_PREFIX } from '../config';
+import { API_BASE } from '../config';
 import promisify from '../promisify-xhr';
-import { pathJoin } from '../util';
+import { getUrlFromFilepath, pathJoin } from '../util';
 import DirectoryLink from './DirectoryLink';
 import FavoriteButton from './FavoriteButton';
 import autoBindReact from 'auto-bind/react';
@@ -128,11 +128,12 @@ export default class Search extends PureComponent {
                 idx: i,
                 path: path,
                 name: path.substring(path.lastIndexOf('/') + 1),
-                href: pathJoin(CATALOG_PREFIX, path.replace('%', '%25').replace('#', '%23')),
+                href: getUrlFromFilepath(path),
                 type: 'file',
+                songId: item.song_id,
               };
             });
-          const resultsContext = resultFiles.map(item => item.href);
+          const resultsContext = resultFiles.map(item => item.path);
           // Build the results list with interleaved directory headings.
           const resultsWithHeadings = [];
           let currHeading = null;
@@ -191,7 +192,7 @@ export default class Search extends PureComponent {
     } else {
       return (
         <>
-          <FavoriteButton href={item.href}/>
+          <FavoriteButton item={item}/>
           <a onClick={onPlay} href={item.href} tabIndex="-1">{item.name}</a>
         </>
       );

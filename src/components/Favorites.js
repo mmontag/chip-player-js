@@ -7,14 +7,14 @@ const FavoriteRow = (props) => {
   const {
     item, onPlay
   } = props;
-  const { href, mtime } = item;
+  const { href, path, mtime } = item;
   const date = new Date(mtime * 1000).toISOString().split('T')[0];
-  const name = decodeURIComponent(href.split('/').pop());
+  const name = path.split('/').pop();
 
   return (
     <>
       <div className="BrowseList-colName">
-        <FavoriteButton href={href}/>
+        <FavoriteButton item={item}/>
         <a onClick={onPlay} href={href}>{name}</a>
       </div>
       <div className="BrowseList-colMtime">

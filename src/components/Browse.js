@@ -82,7 +82,7 @@ export default class Browse extends React.PureComponent {
         return (
           <>
             <div className="BrowseList-colName">
-              <FavoriteButton href={item.href}/>
+              <FavoriteButton item={item}/>
               <a onClick={onPlay}
                  href={item.url}
                  tabIndex="-1">

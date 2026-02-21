@@ -1,24 +1,26 @@
 import React, { useContext, useCallback } from "react";
 import { UserContext } from './UserProvider';
 
-const FavoriteButton = ({ href }) => {
+const FavoriteButton = ({ item }) => {
   const {
     user,
     faves,
     handleToggleFavorite: toggleFavorite,
   } = useContext(UserContext);
 
+  const { path, songId } = item;
+
   const handleClick = useCallback((e) => {
     if (!user) {
-      // TODO: prompt user with ToastManager.
+      // TODO: prompt user "Login to save favorites" with ToastManager.
       return;
     }
     e.preventDefault();
     e.stopPropagation();
-    toggleFavorite(href);
-  }, [toggleFavorite, href, user]);
+    toggleFavorite(path, songId);
+  }, [toggleFavorite, path, songId, user]);
 
-  const isFavorite = faves.find(fave => fave.href === href);
+  const isFavorite = faves.find(fave => fave.path === path);
   const className = `FavoriteButton ${isFavorite ? 'isFavorite' : ''}`;
 
   return (
