@@ -26,6 +26,11 @@ function VirtualizedList(props) {
   const updateHistoryRef = useRef();
   const selectedRowRef = useRef(selectedRow);
 
+  // Reset selected row when itemList changes (e.g. for Search results)
+  useEffect(() => {
+    setSelectedRow(0);
+  }, [itemList]);
+
   useEffect(() => {
     selectedRowRef.current = selectedRow;
   }, [selectedRow]);
