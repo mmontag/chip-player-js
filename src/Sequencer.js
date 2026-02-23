@@ -190,26 +190,21 @@ export default class Sequencer extends EventEmitter {
     }
 
     // Find a player that can play this filetype
-    const ext = filepath.split('.').pop().toLowerCase();
-    for (let i = 0; i < this.players.length; i++) {
-      if (this.players[i].canPlay(ext)) {
-        this.player = this.players[i];
-        break;
-      }
-    }
-    if (this.player === null) {
+    const ext = filepath.slice(filepath.lastIndexOf('.') + 1).toLowerCase();
+    let player = this.players.find(p => p.canPlay(ext));
+    if (player === null) {
       this.emit('playerError', `The file format ".${ext}" was not recognized.`);
       return;
     }
+    this.player = player;
 
     if (filepath.startsWith('local/')) {
       const buffer = this.localFilesManager.read(filepath);
       this.currSongPath = filepath;
-      this.playSongBuffer(filepath, buffer, subtune);
+      this.playSongBuffer(player, filepath, buffer, subtune);
     } else {
       // Normalize url - paths are assumed to live under CATALOG_PREFIX
-      const url = filepath.startsWith('http') ?
-        filepath : getUrlFromFilepath(filepath);
+      const url = filepath.startsWith('http') ? filepath : getUrlFromFilepath(filepath);
 
       // Fetch the song file (cancelable request)
       // Cancel any outstanding request so that playback doesn't happen out of order
@@ -221,11 +216,7 @@ export default class Sequencer extends EventEmitter {
         .then(xhr => xhr.response)
         .then(buffer => {
           this.currSongPath = filepath;
-          // XXX: fix this later
-          // if (url.indexOf("%2") > -1 || url.indexOf("#") > -1) {
-          //   console.warn("playSong() url:", url);
-          // }
-          this.playSongBuffer(filepath, buffer, subtune)
+          this.playSongBuffer(player, filepath, buffer, subtune)
         })
         .catch(e => {
           this.handlePlayerError(e.message || `HTTP ${e.status} ${e.statusText} ${filepath}`);
@@ -233,16 +224,17 @@ export default class Sequencer extends EventEmitter {
     }
   }
 
-  async playSongBuffer(filepath, buffer, subtune = 0) {
+  async playSongBuffer(player, filepath, buffer, subtune = 0) {
     let uint8Array;
     uint8Array = new Uint8Array(buffer);
     const persistedSettings = this.getSettings();
     try {
-      await this.player.loadData(uint8Array, filepath, persistedSettings, subtune);
+      await player.loadData(uint8Array, filepath, persistedSettings, subtune);
     } catch (e) {
       this.handlePlayerError(`Unable to play ${filepath} (${e.message}).`);
+      return;
     }
-    const numVoices = this.player.getNumVoices();
-    this.player.setVoiceMask([...Array(numVoices)].fill(true));
+    const numVoices = player.getNumVoices();
+    player.setVoiceMask([...Array(numVoices)].fill(true));
   }
 }
