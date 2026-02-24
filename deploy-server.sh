@@ -15,6 +15,7 @@ rsync -avz --delete \
   --exclude '.DS_Store' \
   --exclude '*.local' \
   --exclude 'users.*' \
+  --exclude '.git' \
   ./server/ "${REMOTE_SSH_HOST}:${REMOTE_SERVER_DIR}/"
 
 # 2. SSH into the server to install dependencies and reload the app.
