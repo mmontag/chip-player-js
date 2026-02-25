@@ -209,6 +209,7 @@ if (options.skipUnmodified && !options.force && !options.resetDb) {
 let count = 0;
 let processed = 0;
 let skipped = 0;
+const processedSamples = [];
 
 // --- Helper Functions ---
 
@@ -553,6 +554,15 @@ function processFile(child, directoryId, dirEntries, dirImagePath, dirTextIds) {
   }
 
   processed++;
+  if (processedSamples.length < 5) {
+    processedSamples.push(relativePath);
+  } else if (processed % 5 === 0) {
+    const r = Math.floor(Math.random() * processed);
+    if (r < 5) {
+      processedSamples[r] = relativePath;
+    }
+  }
+
   count++;
   if (!options.verbose && count % 100 === 0) {
     process.stdout.write(`\rProcessed ${count} files (Skipped: ${skipped})...`);
@@ -569,6 +579,11 @@ processDirectory(scanRoot, scanRelativeBase)
     console.log(chalk.green(`\nDone in ${((Date.now() - startTime) / 1000).toFixed(2)}s`));
     console.log(`Total Processed: ${processed}`);
     console.log(`Total Skipped: ${skipped}`);
+
+    if (processedSamples.length > 0) {
+      console.log(chalk.cyan('Sample of processed files:'));
+      processedSamples.forEach(p => console.log(` - ${p}`));
+    }
 
     if (!options.dryrun) {
       console.log(`Database saved to ${DB_PATH}`);
