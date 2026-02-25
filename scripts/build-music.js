@@ -51,6 +51,15 @@ process.on('SIGINT', () => {
   process.exit(0);
 });
 
+// Get initial count
+let initialCount = 0;
+try {
+  const row = db.prepare('SELECT COUNT(*) as count FROM music').get();
+  initialCount = row ? row.count : 0;
+} catch (e) {
+  // Table might not exist yet
+}
+
 if (options.resetDb) {
   if (options.verbose) console.log(chalk.yellow('Resetting database tables...'));
   db.exec(`
@@ -191,16 +200,16 @@ if (!fs.existsSync(scanRoot)) {
 console.log(chalk.green(`Scanning ${scanRoot}...`));
 if (options.dryrun) console.log(chalk.cyan('Dry run mode: Database will not be modified.'));
 
-// Pre-fetch existing files for incremental update
+// Pre-fetch existing files for incremental update and stats
 const existingFiles = new Map();
-if (options.skipUnmodified && !options.force && !options.resetDb) {
+if (!options.resetDb) {
   if (options.verbose) console.log(chalk.cyan('Loading existing file cache...'));
   try {
     const rows = db.prepare('SELECT path, mtime, sort_order FROM music').all();
     for (const row of rows) {
       existingFiles.set(row.path, { mtime: row.mtime, sort_order: row.sort_order });
     }
-    console.log(chalk.cyan(`Loaded ${existingFiles.size} existing entries.`));
+    if (options.verbose) console.log(chalk.cyan(`Loaded ${existingFiles.size} existing entries.`));
   } catch (err) {
     // ignore
   }
@@ -209,6 +218,8 @@ if (options.skipUnmodified && !options.force && !options.resetDb) {
 let count = 0;
 let processed = 0;
 let skipped = 0;
+let addedCount = 0;
+let modifiedCount = 0;
 const processedSamples = [];
 
 // --- Helper Functions ---
@@ -553,6 +564,12 @@ function processFile(child, directoryId, dirEntries, dirImagePath, dirTextIds) {
     );
   }
 
+  if (existingFiles.has(relativePath)) {
+    modifiedCount++;
+  } else {
+    addedCount++;
+  }
+
   processed++;
   if (processedSamples.length < 5) {
     processedSamples.push(relativePath);
@@ -577,8 +594,24 @@ const startTime = Date.now();
 processDirectory(scanRoot, scanRelativeBase)
   .then(() => {
     console.log(chalk.green(`\nDone in ${((Date.now() - startTime) / 1000).toFixed(2)}s`));
-    console.log(`Total Processed: ${processed}`);
-    console.log(`Total Skipped: ${skipped}`);
+    
+    let finalCount = 0;
+    try {
+      const row = db.prepare('SELECT COUNT(*) as count FROM music').get();
+      finalCount = row ? row.count : 0;
+    } catch (e) {}
+
+    const removedCount = initialCount + (options.dryrun ? 0 : addedCount) - finalCount;
+
+    console.log(chalk.gray('───────────────────────────────────────────────────'));
+    console.log('Run Summary');
+    console.log(chalk.gray('───────────────────────────────────────────────────'));
+    console.log(`Total songs before: ${chalk.white(initialCount)}`);
+    console.log(`Added:              ${chalk.green(addedCount)}`);
+    console.log(`Modified:           ${chalk.yellow(modifiedCount)}`);
+    console.log(`Removed:            ${chalk.red(removedCount)}`);
+    console.log(`Total songs after:  ${chalk.white(finalCount)}`);
+    console.log(chalk.gray('───────────────────────────────────────────────────'));
 
     if (processedSamples.length > 0) {
       console.log(chalk.cyan('Sample of processed files:'));
