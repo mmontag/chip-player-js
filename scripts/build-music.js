@@ -18,6 +18,7 @@ program
   .option('-f, --force', 'Force re-process (overwrite existing entries)', false)
   .option('--filter <path>', 'Scan only a specific subdirectory (relative to catalog root)', '')
   .option('-r, --reset-db', 'Delete and recreate the database table', false)
+  .option('--no-skip-unmodified', 'Force reprocessing of unmodified files (checks mtime)')
   .parse(process.argv);
 
 const options = program.opts();
@@ -176,6 +177,8 @@ const insertImageStmt = db.prepare('INSERT INTO images (path) VALUES (?)');
 const findTextStmt = db.prepare('SELECT id FROM texts WHERE hash = ?');
 const insertTextStmt = db.prepare('INSERT INTO texts (hash, content) VALUES (?, ?)');
 
+const updateSortOrderStmt = db.prepare('UPDATE music SET sort_order = ? WHERE path = ?');
+
 // Calculate scan root
 const scanRoot = options.filter ? path.join(CATALOG_DIR, options.filter) : CATALOG_DIR;
 const scanRelativeBase = options.filter || '';
@@ -188,8 +191,24 @@ if (!fs.existsSync(scanRoot)) {
 console.log(chalk.green(`Scanning ${scanRoot}...`));
 if (options.dryrun) console.log(chalk.cyan('Dry run mode: Database will not be modified.'));
 
+// Pre-fetch existing files for incremental update
+const existingFiles = new Map();
+if (options.skipUnmodified && !options.force && !options.resetDb) {
+  if (options.verbose) console.log(chalk.cyan('Loading existing file cache...'));
+  try {
+    const rows = db.prepare('SELECT path, mtime, sort_order FROM music').all();
+    for (const row of rows) {
+      existingFiles.set(row.path, { mtime: row.mtime, sort_order: row.sort_order });
+    }
+    console.log(chalk.cyan(`Loaded ${existingFiles.size} existing entries.`));
+  } catch (err) {
+    // ignore
+  }
+}
+
 let count = 0;
 let processed = 0;
+let skipped = 0;
 
 // --- Helper Functions ---
 
@@ -413,8 +432,28 @@ async function processDirectory(fullPath, relativePath, parentId = null, parentS
 function processFile(child, directoryId, dirEntries, dirImagePath, dirTextIds) {
   const { fullPath, relativePath, name, ext, sortOrder } = child;
   
-  const buffer = fs.readFileSync(fullPath);
   const stat = fs.statSync(fullPath);
+
+  // Check for incremental skip
+  if (options.skipUnmodified && existingFiles.has(relativePath)) {
+    const cached = existingFiles.get(relativePath);
+    if (cached.mtime === stat.mtime.toISOString()) {
+      // File hasn't changed.
+      // Check if sort order needs update
+      if (!options.dryrun && cached.sort_order !== sortOrder) {
+        updateSortOrderStmt.run(sortOrder, relativePath);
+      }
+      
+      skipped++;
+      count++;
+      if (!options.verbose && count % 100 === 0) {
+        process.stdout.write(`\rProcessed ${count} files (Skipped: ${skipped})...`);
+      }
+      return stat.size;
+    }
+  }
+  
+  const buffer = fs.readFileSync(fullPath);
 
   // Semantic Hash
   const digest = crypto.createHash('sha256').update(buffer).digest();
@@ -516,7 +555,7 @@ function processFile(child, directoryId, dirEntries, dirImagePath, dirTextIds) {
   processed++;
   count++;
   if (!options.verbose && count % 100 === 0) {
-    process.stdout.write(`\rProcessed ${count} files...`);
+    process.stdout.write(`\rProcessed ${count} files (Skipped: ${skipped})...`);
   }
   
   return stat.size;
@@ -529,6 +568,7 @@ processDirectory(scanRoot, scanRelativeBase)
   .then(() => {
     console.log(chalk.green(`\nDone in ${((Date.now() - startTime) / 1000).toFixed(2)}s`));
     console.log(`Total Processed: ${processed}`);
+    console.log(`Total Skipped: ${skipped}`);
 
     if (!options.dryrun) {
       console.log(`Database saved to ${DB_PATH}`);
