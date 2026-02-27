@@ -88,7 +88,8 @@ const dbStatements = {
           json_set(
               je.value,
               '$.href', CONCAT('https://gifx.co/music/', m.path),
-              '$.path', m.path
+              '$.path', m.path,
+              '$.size', m.file_size
           )
       ) as items
       FROM user_db.playlists p, json_each(p.items) je
