@@ -221,6 +221,7 @@ let skipped = 0;
 let addedCount = 0;
 let modifiedCount = 0;
 const processedSamples = [];
+const seenPaths = new Set();
 
 // --- Helper Functions ---
 
@@ -461,6 +462,7 @@ function processFile(child, directoryId, dirEntries, dirImagePath, dirTextIds) {
       if (!options.verbose && count % 100 === 0) {
         process.stdout.write(`\rProcessed ${count} files (Skipped: ${skipped})...`);
       }
+      seenPaths.add(relativePath);
       return stat.size;
     }
   }
@@ -570,6 +572,7 @@ function processFile(child, directoryId, dirEntries, dirImagePath, dirTextIds) {
     addedCount++;
   }
 
+  seenPaths.add(relativePath);
   processed++;
   if (processedSamples.length < 5) {
     processedSamples.push(relativePath);
@@ -595,13 +598,49 @@ processDirectory(scanRoot, scanRelativeBase)
   .then(() => {
     console.log(chalk.green(`\nDone in ${((Date.now() - startTime) / 1000).toFixed(2)}s`));
     
-    let finalCount = 0;
-    try {
-      const row = db.prepare('SELECT COUNT(*) as count FROM music').get();
-      finalCount = row ? row.count : 0;
-    } catch (e) {}
+    // Identify deleted files
+    const pathsToDelete = [];
+    if (limit === 0 || processed < limit) {
+      for (const [p] of existingFiles) {
+        if (!seenPaths.has(p)) {
+          // Only delete if it falls within the current scan filter
+          let inScope = true;
+          if (scanRelativeBase) {
+             inScope = p === scanRelativeBase || p.startsWith(scanRelativeBase + path.sep);
+          }
+          
+          if (inScope) {
+             pathsToDelete.push(p);
+          }
+        }
+      }
+    }
 
-    const removedCount = initialCount + (options.dryrun ? 0 : addedCount) - finalCount;
+    if (pathsToDelete.length > 0) {
+      if (options.verbose) console.log(chalk.yellow(`Found ${pathsToDelete.length} orphaned entries...`));
+      
+      if (!options.dryrun) {
+        const deleteStmt = db.prepare('DELETE FROM music WHERE path = ?');
+        const deleteTransaction = db.transaction((paths) => {
+          for (const p of paths) {
+            deleteStmt.run(p);
+          }
+        });
+        deleteTransaction(pathsToDelete);
+      }
+    }
+
+    let finalCount = 0;
+    if (!options.dryrun) {
+      try {
+        const row = db.prepare('SELECT COUNT(*) as count FROM music').get();
+        finalCount = row ? row.count : 0;
+      } catch (e) {}
+    } else {
+      finalCount = initialCount + addedCount - pathsToDelete.length;
+    }
+
+    const removedCount = pathsToDelete.length;
 
     console.log(chalk.gray('───────────────────────────────────────────────────'));
     console.log('Run Summary');
