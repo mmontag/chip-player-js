@@ -13,26 +13,19 @@ const safe = async (promise) => {
   }
 };
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
+// Check if app is already initialized to avoid error
+if (admin.apps.length === 0) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+  });
+}
 
-module.exports = async function authMiddleware(req, res, next) {
-  const token = req.headers.authorization?.split('Bearer ')[1];
-
-  // 1. Verify Token with Firebase
-  const [authErr, decodedToken] = await safe(admin.auth().verifyIdToken(token));
-
-  if (authErr) {
-    console.error('Authentication error:', authErr);
-    res.status(401).send('Unauthorized');
-  }
-
-  // 2. Check if user exists in SQLite
+function syncUser(decodedToken) {
+  // Check if user exists in SQLite
   const user = getUserStmt.get(decodedToken.uid);
 
   if (!user) {
-    // 3. Lazy create: The user is valid in Firebase, but new to SQLite.
+    // Lazy create: The user is valid in Firebase, but new to SQLite.
     // This can happen when a user signs in for the first time.
     const now = Math.floor(Date.now() / 1000);
     insertUserStmt.run(decodedToken.uid, decodedToken.email, decodedToken.name, decodedToken.picture, now, now);
@@ -48,8 +41,50 @@ module.exports = async function authMiddleware(req, res, next) {
       decodedToken.uid
     );
   }
+}
 
-  // 4. Attach uid to request for the route handler to use
+const requireAuth = async (req, res, next) => {
+  const token = req.headers.authorization?.split('Bearer ')[1];
+
+  if (!token) {
+    return res.status(401).send('Unauthorized');
+  }
+
+  // Verify Token with Firebase
+  const [authErr, decodedToken] = await safe(admin.auth().verifyIdToken(token));
+
+  if (authErr) {
+    console.error('Authentication error:', authErr);
+    return res.status(401).send('Unauthorized');
+  }
+
+  syncUser(decodedToken);
+
+  // Attach uid to request for the route handler to use
   req.userId = decodedToken.uid;
   next();
-}
+};
+
+const optionalAuth = async (req, res, next) => {
+  const token = req.headers.authorization?.split('Bearer ')[1];
+
+  if (!token) {
+    req.userId = null;
+    return next();
+  }
+
+  // Verify Token with Firebase
+  const [authErr, decodedToken] = await safe(admin.auth().verifyIdToken(token));
+
+  if (authErr) {
+    // If token is invalid, treat as anonymous
+    req.userId = null;
+    return next();
+  }
+
+  // Attach uid to request for the route handler to use
+  req.userId = decodedToken.uid;
+  next();
+};
+
+module.exports = { requireAuth, optionalAuth };
