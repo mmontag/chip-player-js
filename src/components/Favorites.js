@@ -2,12 +2,13 @@ import React, { memo, useCallback, useContext } from 'react';
 import FavoriteButton from './FavoriteButton';
 import { UserContext } from './UserProvider';
 import VirtualizedList from './VirtualizedList';
+import bytes from 'bytes';
 
 const FavoriteRow = (props) => {
   const {
     item, onPlay
   } = props;
-  const { href, path, mtime } = item;
+  const { href, path, mtime, size } = item;
   const date = new Date(mtime * 1000).toISOString().split('T')[0];
   const name = path.split('/').pop();
 
@@ -19,6 +20,9 @@ const FavoriteRow = (props) => {
       </div>
       <div className="BrowseList-colMtime">
         {date}
+      </div>
+      <div className="BrowseList-colSize">
+        {bytes(size, { unitSeparator: ' ' })}
       </div>
     </>
   )
