@@ -17,8 +17,8 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 const { dbStatements } = require('./database.js');
 const { Canvas, loadImage } = require('skia-canvas');
 const { LRUCache } = require('lru-cache');
-const authMiddleware = require('./middleware/auth.js');
-const { SettingsSchema, FavoriteSchema } = require('./schemas');
+const { requireAuth, optionalAuth } = require('./middleware/auth.js');
+const { SettingsSchema, FavoriteSchema, PlaybackSchema } = require('./schemas');
 const { validate } = require('./middleware/validate');
 
 const {
@@ -38,6 +38,7 @@ const {
   removeFavoriteByPathStmt,
   getUserSettingsStmt,
   replaceUserSettingsStmt,
+  insertPlaybackStmt,
 } = dbStatements;
 
 // --- Configuration ---
@@ -437,10 +438,27 @@ router.get('/metadata', (req, res) => {
   }
 });
 
+router.post('/playback',
+  optionalAuth,
+  express.json({ limit: '10kb' }),
+  validate(PlaybackSchema),
+  (req, res) => {
+  const { songId, durationMs } = req.body;
+
+  try {
+    const now = Math.floor(Date.now() / 1000);
+    insertPlaybackStmt.run(req.userId, songId, now, durationMs);
+    res.json({ success: true });
+  } catch (e) {
+    console.error('Error logging playback:', e);
+    res.status(500).json({ error: 'Failed to log playback' });
+  }
+});
+
 /**
  * Returns: { favorites: [ { songId, href, mtime, title, artist }, ... ] }
  */
-router.get('/user/favorites', authMiddleware, (req, res) => {
+router.get('/user/favorites', requireAuth, (req, res) => {
   const row = getFavoritesStmt.get(req.userId);
   let favorites = [];
   if (row && row.items) {
@@ -458,7 +476,7 @@ router.get('/user/favorites', authMiddleware, (req, res) => {
 // Route to add a favorite. Requires auth middleware.
 router.post(
   '/user/favorites/add',
-  authMiddleware,
+  requireAuth,
   express.json({ limit: '10kb' }),
   validate(FavoriteSchema),
   (req, res) => {
@@ -491,7 +509,7 @@ router.post(
 // Route to remove a favorite. Requires auth middleware.
 router.post(
   '/user/favorites/remove',
-  authMiddleware,
+  requireAuth,
   express.json({ limit: '10kb' }),
   validate(FavoriteSchema),
   (req, res) => {
@@ -522,7 +540,7 @@ router.post(
   });
 
 // Get Settings
-router.get('/user/settings', authMiddleware, (req, res) => {
+router.get('/user/settings', requireAuth, (req, res) => {
   const row = getUserSettingsStmt.get(req.userId);
   const settings = JSON.parse(row.settings);
   res.json(settings);
@@ -531,7 +549,7 @@ router.get('/user/settings', authMiddleware, (req, res) => {
 // Update Settings
 router.post(
   '/user/settings',
-  authMiddleware,
+  requireAuth,
   express.json({ limit: '10kb' }),
   validate(SettingsSchema),
   (req, res) => {

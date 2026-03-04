@@ -16,3 +16,9 @@ export const SettingsSchema = z.object({
 }).catchall(
   z.union([z.string(), z.number(), z.boolean()])
 );
+
+export const PlaybackSchema = z.object({
+  songId: z.string().length(8),
+  userId: z.string().optional(),
+  durationMs: z.number().int().nonnegative().default(0),
+});

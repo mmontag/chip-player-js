@@ -76,7 +76,7 @@ const dbStatements = {
       WHERE id = ?
   `),
   insertPlaybackStmt: db.prepare(`
-      INSERT INTO user_db.playbacks (user_id, song_id, timestamp, duration)
+      INSERT INTO user_db.playbacks (user_id, song_id, played_at, duration_ms)
       VALUES (?, ?, ?, ?)
   `),
 
