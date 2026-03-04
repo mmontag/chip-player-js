@@ -22,6 +22,7 @@ import {
   ensureEmscFileWithData,
   getMetadataUrlForFilepath,
   pathJoin,
+  postWithOptionalAuth,
   titlesFromMetadata,
   unlockAudioContext
 } from '../util';
@@ -413,6 +414,15 @@ class App extends React.Component {
           const newInfoTexts = [...this.state.infoTexts, ...infoTexts ];
           const newShowInfo = this.state.showInfo && newInfoTexts.length > 0;
           this.setState({ imageUrl, infoTexts: newInfoTexts, md5, showInfo: newShowInfo, songId });
+
+          // Playback logging
+          clearTimeout(this.playbackTimer);
+          this.playbackTimer = setTimeout(() => {
+            // If still playing this song after 5 seconds, log a playback.
+            if (this.state.songId === songId) {
+              postWithOptionalAuth(this.props.userContext.user, `${API_BASE}/playback`, { songId, durationMs: 5000 });
+            }
+          }, 5000);
 
           if ('mediaSession' in navigator) {
             // Clear artwork if imageUrl is null.
