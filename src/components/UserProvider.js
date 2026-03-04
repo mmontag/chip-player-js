@@ -1,11 +1,11 @@
 import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react';
-import axios from 'axios';
 import { debounce } from 'lodash';
 import { getAuth, onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider } from 'firebase/auth';
 import { initializeApp as firebaseInitializeApp } from 'firebase/app';
 import firebaseConfig from '../config/firebaseConfig';
 import { API_BASE, CATALOG_PREFIX } from '../config';
 import { pathJoin } from '../util';
+import { getWithAuth, postWithAuth } from '../util';
 
 const UserContext = createContext({
   user: null,
@@ -25,24 +25,6 @@ const DEFAULT_SETTINGS = {
   showPlayerSettings: false,
   theme: 'msdos',
 };
-
-const getWithAuth = async (user, path) => {
-  if (!user) return;
-
-  const token = await user.getIdToken();
-  return axios.get(path, {
-    headers: { 'Authorization': `Bearer ${token}`, },
-  }).then(res => res.data);
-}
-
-const postWithAuth = async (user, path, json) => {
-  if (!user) return;
-
-  const token = await user.getIdToken();
-  return axios.post(path, json, {
-    headers: { 'Authorization': `Bearer ${token}`, },
-  }).then(res => res.data);
-}
 
 const UserProvider = ({ children }) => {
   // Use authState hook for user state

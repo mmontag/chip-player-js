@@ -2,6 +2,7 @@ import queryString from 'querystring';
 import path from 'path';
 
 import { API_BASE, CATALOG_PREFIX } from './config';
+import axios from 'axios';
 
 const MULTI_SLASH_REGEX = /\/{2,}/g;
 
@@ -133,4 +134,31 @@ export function remap(number, fromLeft, fromRight, toLeft, toRight) {
 
 export function remap01(number, toLeft, toRight) {
   return remap(number, 0, 1, toLeft, toRight);
+}
+
+export const getWithAuth = async (user, path) => {
+  if (!user) return;
+
+  const token = await user.getIdToken();
+  return axios.get(path, {
+    headers: { 'Authorization': `Bearer ${token}`, },
+  }).then(res => res.data);
+}
+
+export const postWithAuth = async (user, path, json) => {
+  if (!user) return;
+
+  const token = await user.getIdToken();
+  return axios.post(path, json, {
+    headers: { 'Authorization': `Bearer ${token}`, },
+  }).then(res => res.data);
+}
+
+export const postWithOptionalAuth = async (user, path, json) => {
+  const headers = {};
+  if (user) {
+    const token = await user.getIdToken();
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return axios.post(path, json, { headers }).then(res => res.data);
 }
