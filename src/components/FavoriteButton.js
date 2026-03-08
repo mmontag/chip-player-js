@@ -1,4 +1,4 @@
-import React, { useContext, useCallback } from "react";
+import React, { useContext, useCallback, memo } from "react";
 import { UserContext } from './UserProvider';
 
 const FavoriteButton = ({ item }) => {
@@ -30,4 +30,4 @@ const FavoriteButton = ({ item }) => {
   );
 };
 
-export default FavoriteButton;
+export default memo(FavoriteButton);
