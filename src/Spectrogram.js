@@ -107,6 +107,9 @@ export default class Spectrogram {
   }
 
   isRepeatedFrequencyData(data) {
+    // Disabled on March 8, 2026. It's causing album art to be refetched whenever silence is encountered
+    return false;
+
     // Jitter correction: ignore repeated frequency data in spectrogram
     let isRepeated = true;
     for (let bin = 0; bin < 40; bin += 2) {
