@@ -616,7 +616,8 @@ function getHtmlInjectionsForRequest(req) {
   let song;
   let image = 'https://chiptune.app/chip-player.png';
   let title = 'Chip Player JS';
-  let description = 'Web-based music player for chiptune formats.';
+  let description = 'An online MIDI and VGM music player with SoundFont support. Over 250,000 songs, focused on performance and nostalgia. Play VGM, SPC, NSF, S3M, XM, MOD and more.';
+
   let songId = null;
   let scriptTag = '';
 
