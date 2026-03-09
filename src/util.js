@@ -71,7 +71,9 @@ export function getFilepathFromUrl(url) {
 
 export function getUrlFromFilepath(filepath) {
   if (!filepath) return null;
-  return pathJoin(CATALOG_PREFIX, encodeURIComponent(filepath))
+  // in case it's already encoded
+  try { filepath = decodeURIComponent(filepath); } catch {}
+  return pathJoin(CATALOG_PREFIX, encodeURIComponent(filepath));
 }
 
 export function getMetadataUrlForFilepath(filepath) {
