@@ -98,7 +98,7 @@ const dbStatements = {
       ) as items
       FROM user_db.playlists p, json_each(p.items) je
       LEFT JOIN music m ON m.rowid = (
-          SELECT rowid FROM music WHERE song_id = json_extract(je.value, '$.songId') LIMIT 1
+          SELECT rowid FROM music WHERE song_id = json_extract(je.value, '$.songId') ORDER BY mtime LIMIT 1
       )
       WHERE p.user_id = ? AND p.type = 'favorites' AND song_id IS NOT NULL
   `),
