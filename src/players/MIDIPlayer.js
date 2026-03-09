@@ -6,7 +6,13 @@ import MIDIFilePlayer from './MIDIFilePlayer';
 import Player from './Player';
 import { SOUNDFONTS, SOUNDFONT_MOUNTPOINT, SOUNDFONT_URL_PATH } from '../config';
 import { GM_DRUM_KITS, GM_INSTRUMENTS } from '../gm-patch-map';
-import { ensureEmscFileWithUrl, getFilepathFromUrl, getMetadataUrlForFilepath, remap01 } from '../util';
+import {
+  ensureEmscFileWithUrl,
+  getFilepathFromUrl,
+  getMetadataUrlForFilepath,
+  getUrlFromFilepath,
+  remap01
+} from '../util';
 import requestCache from '../RequestCache';
 import range from 'lodash/range';
 import autoBind from 'auto-bind';
@@ -319,7 +325,8 @@ export default class MIDIPlayer extends Player {
       const metadataUrl = getMetadataUrlForFilepath(filepath);
       let useMelodicChannel10 = false;
       // This should be cached by a preceding fetch in App.js.
-      const { soundfont: soundfontUrl } = await requestCache.fetchCached(metadataUrl);
+      const { soundfont: soundfontPath } = await requestCache.fetchCached(metadataUrl);
+      const soundfontUrl = soundfontPath ? getUrlFromFilepath(soundfontPath) : null;
       if (soundfontUrl) {
         const soundfontBasename = path.basename(getFilepathFromUrl(soundfontUrl));
         const sf2Path = `user/${soundfontBasename}`;

@@ -21,6 +21,7 @@ import {
 import {
   ensureEmscFileWithData,
   getMetadataUrlForFilepath,
+  getUrlFromFilepath,
   pathJoin,
   postWithOptionalAuth,
   titlesFromMetadata,
@@ -410,7 +411,8 @@ class App extends React.Component {
         // updateQueryString({ play: filepath, t: undefined });
         // TODO: move fetch metadata to Player when it becomes event emitter
         requestCache.fetchCached(metadataUrl).then(response => {
-          const { imageUrl, infoTexts, md5, songId } = response;
+          const { imageUrl: imagePath, infoTexts, md5, songId } = response;
+          const imageUrl = imagePath ? getUrlFromFilepath(imagePath) : null;
           const newInfoTexts = [...this.state.infoTexts, ...infoTexts ];
           const newShowInfo = this.state.showInfo && newInfoTexts.length > 0;
           this.setState({ imageUrl, infoTexts: newInfoTexts, md5, showInfo: newShowInfo, songId });

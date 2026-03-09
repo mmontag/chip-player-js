@@ -412,18 +412,17 @@ router.get('/metadata', (req, res) => {
       } catch (e) {}
     }
 
+    // TODO: these should probably be imagePath and soundfontPath, resolved to full URLs on the client.
     let imageUrl = null;
     if (meta.image_path) {
       const parts = meta.image_path.split('/');
-      const encodedPath = parts.map(encodeURIComponent).join('/');
-      imageUrl = `/catalog/${encodedPath}`;
+      imageUrl = parts.map(encodeURIComponent).join('/');
     }
 
     let soundfont = null;
     if (meta.soundfont) {
       const parts = meta.soundfont.split('/');
-      const encodedPath = parts.map(encodeURIComponent).join('/');
-      soundfont = `/catalog/${encodedPath}`;
+      soundfont = parts.map(encodeURIComponent).join('/');
     }
 
     res.json({
