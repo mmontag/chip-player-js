@@ -45,6 +45,29 @@ function MIDIFile(buffer, strictMode) {
           ' size of 25bytes.'
       );
     }
+    
+    // Check for RIFF header
+    var headerView = new DataView(buffer);
+    if (
+      'R' === String.fromCharCode(headerView.getUint8(0)) &&
+      'I' === String.fromCharCode(headerView.getUint8(1)) &&
+      'F' === String.fromCharCode(headerView.getUint8(2)) &&
+      'F' === String.fromCharCode(headerView.getUint8(3))
+    ) {
+      var len = Math.min(buffer.byteLength, 1024);
+      for (var k = 0; k < len - 4; k++) {
+        if (
+          'M' === String.fromCharCode(headerView.getUint8(k)) &&
+          'T' === String.fromCharCode(headerView.getUint8(k + 1)) &&
+          'h' === String.fromCharCode(headerView.getUint8(k + 2)) &&
+          'd' === String.fromCharCode(headerView.getUint8(k + 3))
+        ) {
+          buffer = buffer.slice(k);
+          break;
+        }
+      }
+    }
+
     // Reading header
     this.header = new MIDIFileHeader(buffer, strictMode);
     this.tracks = [];
