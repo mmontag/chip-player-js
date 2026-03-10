@@ -1,6 +1,6 @@
 import debounce from 'lodash/debounce';
 import path from 'path';
-import MIDIFile from 'midifile';
+import MIDIFile from './midi/MIDIFile';
 
 import MIDIFilePlayer from './MIDIFilePlayer';
 import Player from './Player';

@@ -1,6 +1,6 @@
 import autoBind from 'auto-bind';
 
-const MIDIEvents = require('midievents');
+const MIDIEvents = require('./midi/MIDIEvents');
 require('./midi/midi-helpers');
 
 /**
