@@ -1,7 +1,7 @@
 // 'use strict';
 
 // MIDIFileTrack : Read and edit a MIDI track chunk in a given ArrayBuffer
-function MIDIFileTrack(buffer, start) {
+function MIDIFileTrack(buffer, start, strictMode) {
   let a;
   let trackLength;
 
@@ -75,6 +75,7 @@ function MIDIFileTrack(buffer, start) {
     );
     // Trying to find the end of track event
     if (
+      strictMode &&
       !(
         0xff ===
           this.datas.getUint8(MIDIFileTrack.HDR_LENGTH + (trackLength - 3)) &&

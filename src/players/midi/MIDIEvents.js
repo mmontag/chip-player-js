@@ -141,6 +141,13 @@ MIDIEvents.createParser = function midiEventsCreateParser(
         // Read the delta time
         delta: stream.readVarInt(),
       };
+      if (stream.end()) {
+        if (strictMode) {
+          throw new Error('Unexpected end of track at index ' + event.index + '.');
+        } else {
+          return null;
+        }
+      }
       // Read the eventTypeByte
       eventTypeByte = stream.readUint8();
       if (0xf0 === (eventTypeByte & 0xf0)) {
@@ -519,10 +526,8 @@ MIDIEvents.writeToTrack = function midiEventsWriteToTrack(
               7 < events[i].scale
             ) {
               throw new Error(
-                'Event #' +
-                  i +
-                  ':The key signature key must be' +
-                  ' between -7 and 7'
+                'Event #' + i +
+                ': The key signature key must be between -7 and 7'
               );
             }
             if (
@@ -531,7 +536,8 @@ MIDIEvents.writeToTrack = function midiEventsWriteToTrack(
               1 < events[i].scale
             ) {
               throw new Error(
-                'Event #' + i + ':' + 'The key signature scale must be 0 or 1'
+                'Event #' + i +
+                ': The key signature scale must be 0 or 1'
               );
             }
             destination[index++] = events[i].key;

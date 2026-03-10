@@ -5,7 +5,7 @@
 // Dependencies
 var MIDIFileHeader = require('./MIDIFileHeader');
 var MIDIFileTrack = require('./MIDIFileTrack');
-var MIDIEvents = require('midievents');
+var MIDIEvents = require('./MIDIEvents');
 var UTF8 = require('utf-8');
 
 function ensureArrayBuffer(buf) {
