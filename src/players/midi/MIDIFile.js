@@ -1,4 +1,4 @@
-'use strict';
+// 'use strict';
 
 // MIDIFile : Read (and soon edit) a MIDI file in a given ArrayBuffer
 

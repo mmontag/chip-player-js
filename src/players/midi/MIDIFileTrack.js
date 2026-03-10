@@ -1,4 +1,4 @@
-'use strict';
+// 'use strict';
 
 // MIDIFileTrack : Read and edit a MIDI track chunk in a given ArrayBuffer
 function MIDIFileTrack(buffer, start) {

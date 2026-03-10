@@ -1,4 +1,4 @@
-'use strict';
+// 'use strict';
 
 // MIDIFileHeader : Read and edit a MIDI header chunk in a given ArrayBuffer
 function MIDIFileHeader(buffer) {

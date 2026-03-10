@@ -1,4 +1,4 @@
-'use strict';
+// 'use strict';
 
 // MIDIEvents : Read and edit events from various sources (ArrayBuffer, Stream)
 function MIDIEvents() {
