@@ -222,7 +222,7 @@ export default class XMPPlayer extends Player {
   }
 
   seekMs(seekMs) {
-    this.core._xmp_seek_time(this.xmpCtx, seekMs);
+    this.core._xmp_seek_time_frame(this.xmpCtx, seekMs);
   }
 
   stop() {

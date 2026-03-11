@@ -121,6 +121,7 @@ const chipModules = [
       '_xmp_stop_module',
       '_xmp_restart_module',
       '_xmp_seek_time',
+      '_xmp_seek_time_frame', // accurate seeking introduced in libxmp 4.7.0
       '_xmp_channel_mute',
       '_xmp_get_player',
       '_xmp_load_module_from_memory',

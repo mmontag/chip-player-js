@@ -74,7 +74,9 @@ cd libxmp/
 source ~/src/emsdk/emsdk_env.sh  # load the emscripten environment variables
 mkdir build                      # create a build folder for Cmake output
 cd build
-emcmake cmake -DBUILD_LITE -DBUILD_STATIC ..  # or use ccmake (see note below)
+emcmake cmake -DBUILD_LITE=ON -DBUILD_STATIC=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-Os" ..  
+# ...or use ccmake (see note below)
+
 emmake make
 ```
 
