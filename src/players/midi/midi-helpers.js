@@ -1,6 +1,6 @@
-import { EVENT_MIDI, EVENT_MIDI_CONTROLLER } from 'midievents';
-import MIDIEvents from 'midievents';
-import MIDIFile from 'midifile';
+import { EVENT_MIDI, EVENT_MIDI_CONTROLLER } from './MIDIEvents';
+import MIDIEvents from './MIDIEvents';
+import MIDIFile from './MIDIFile';
 
 const CC_102_TRACK_LOOP_START = 102;
 const CC_103_TRACK_LOOP_END = 103;
