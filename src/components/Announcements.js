@@ -16,9 +16,27 @@ export default function Announcements() {
 ╚═════════════════╝
 `}
       </p>
+      <h3>2026-03-11</h3>
+      <p>
+        Fixed MIDI parsing for unusual files (e.g. XMI2MIDI conversions like{' '}
+        <Link to="/browse/Game%20MIDI/Theme%20Hospital%20(PC%E2%88%95DOS,%201997)/">Theme Hospital</Link>{' '}
+        and <Link to="/browse//Game MIDI/Transport Tycoon Deluxe (PC∕DOS, 1995)">Transport Tycoon</Link>).
+      </p>
+      <h3>2026-02-14</h3>
+      <p>
+        Files with special characters (%#?...) no longer break things.
+        Songs now addressed by content hash to reduce the chance of broken links.
+      </p>
+      <h3>2026-01-15</h3>
+      <p>
+        Hosting has been migrated from Github Pages to a real server.
+        Catalog metadata migrated to SQLite. Enables OpenGraph previews for shared links (<span
+        className="inline-icon icon-copy"></span>) such as <a
+        href="https://chiptune.app/?play=FxRGEmqx">https://chiptune.app/?play=FxRGEmqx</a>.
+      </p>
       <h3>2025-12-13</h3>
       <p>
-        Added <Link to="/browse/keygenmusic.org">Keygenmusic.org</Link> to the catalog. (5085 tunes)<br/>
+      Added <Link to="/browse/keygenmusic.org">Keygenmusic.org</Link> to the catalog. (5085 tunes)<br/>
         3396 xm,
         1093 mod,
         254 it,
