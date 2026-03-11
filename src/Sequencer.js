@@ -14,6 +14,7 @@ export const SHUFFLE_OFF = 0;
 export const SHUFFLE_ON = 1;
 export const NUM_SHUFFLE_MODES = 2;
 export const SHUFFLE_LABELS = ['Off', 'On '];
+const ERROR_DELAY_MS = 1000;
 
 export default class Sequencer extends EventEmitter {
   constructor(players, localFilesManager, getSettings) {
@@ -34,6 +35,7 @@ export default class Sequencer extends EventEmitter {
     this.shuffleOrder = [];
     this.songRequest = null;
     this.repeat = REPEAT_OFF;
+    this.playerErrorAdvanceTimer = null;
 
     this.players.forEach(player => {
       player.on('playerStateUpdate', this.handlePlayerStateUpdate);
@@ -43,8 +45,8 @@ export default class Sequencer extends EventEmitter {
 
   handlePlayerError(e) {
     this.emit('playerError', e);
-    if (this.context) {
-      this.nextSong();
+    if (this.context && this.player) {
+      this.playerErrorAdvanceTimer = setTimeout(this.nextSong, ERROR_DELAY_MS);
     } else {
       this.emit('sequencerStateUpdate', { isEjected: true });
     }
@@ -53,6 +55,11 @@ export default class Sequencer extends EventEmitter {
   handlePlayerStateUpdate(playerState) {
     const { isStopped } = playerState;
     console.debug('Sequencer.handlePlayerStateUpdate(isStopped=%s)', isStopped);
+    if (this.playerErrorAdvanceTimer) {
+      console.debug('Cancelling auto-advance due to playerState update.');
+      clearTimeout(this.playerErrorAdvanceTimer);
+      this.playerErrorAdvanceTimer = null;
+    }
 
     if (isStopped) {
       this.currSongPath = null;
