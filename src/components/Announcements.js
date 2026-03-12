@@ -20,7 +20,7 @@ export default function Announcements() {
       <p>
         Fixed MIDI parsing for unusual files (e.g. XMI2MIDI conversions like{' '}
         <Link to="/browse/Game%20MIDI/Theme%20Hospital%20(PC%E2%88%95DOS,%201997)/">Theme Hospital</Link>{' '}
-        and <Link to="/browse//Game MIDI/Transport Tycoon Deluxe (PC∕DOS, 1995)">Transport Tycoon</Link>).
+        and <Link to="/browse/Game MIDI/Transport Tycoon Deluxe (PC∕DOS, 1995)">Transport Tycoon</Link>).
       </p>
       <h3>2026-02-14</h3>
       <p>
