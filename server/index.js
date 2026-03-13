@@ -68,6 +68,7 @@ const { FORMATS } = browseLocalFilesystem ? require('../src/config/index.js') : 
 
 const app = express();
 const router = express.Router();
+app.set('trust proxy', 'loopback'); // Only trust X-Forwarded-For from localhost (Nginx)
 
 // Pre-load index.html template (Production Only)
 const indexPath = path.join(LOCAL_CLIENT_BUILD_ROOT, indexFilename);
@@ -447,7 +448,7 @@ router.post('/playback',
 
   try {
     const now = Math.floor(Date.now() / 1000);
-    insertPlaybackStmt.run(req.userId, songId, now, durationMs);
+    insertPlaybackStmt.run(req.userId, req.ip, songId, now, durationMs);
     res.json({ success: true });
   } catch (e) {
     console.error('Error logging playback:', e);
