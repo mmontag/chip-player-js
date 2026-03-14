@@ -8,7 +8,7 @@ const fileExtensions = [
   'miniusf',
 ];
 const MOUNTPOINT = '/n64';
-const INT16_MAX = Math.pow(2, 16) - 1;
+const INT16_MAX = 32767; // 2^15 - 1
 
 export default class N64Player extends Player {
   constructor(...args) {
@@ -31,7 +31,8 @@ export default class N64Player extends Player {
     let err;
     this.filepathMeta = Player.metadataFromFilepath(filename);
 
-    const miniusfStr = String.fromCharCode.apply(null, data);
+    const decoder = new TextDecoder('latin1');
+    const miniusfStr = decoder.decode(data);
     const usflibs = miniusfStr.match(/_lib=([^\n]+)/).slice(1);
     if (usflibs.length === 0) {
       throw new Error(`No .usflib references found`);
@@ -39,17 +40,17 @@ export default class N64Player extends Player {
 
     const dir = path.dirname(filename);
     const fsFilename = pathJoin(MOUNTPOINT, filename);
-    const promises = [
+    const filePromises = [
       ensureEmscFileWithData(this.core, fsFilename, data),
       ...usflibs.map(usflib => {
-        const fsFilename = pathJoin(MOUNTPOINT, dir, usflib);
+        const fsUsflibFilename = pathJoin(MOUNTPOINT, dir, usflib);
         const url = pathJoin(CATALOG_PREFIX, dir, usflib);
-        return ensureEmscFileWithUrl(this.core, fsFilename, url);
+        return ensureEmscFileWithUrl(this.core, fsUsflibFilename, url);
       }),
     ];
 
-    return Promise.all(promises)
-      .then(([fsFilename]) => {
+    return Promise.all(filePromises)
+      .then(() => {
         err = this.core.ccall(
           'n64_load_file', 'number',
           ['string', 'number', 'number', 'number'],
@@ -57,7 +58,7 @@ export default class N64Player extends Player {
         );
 
         if (err !== 0) {
-          console.error("n64_load_file failed. error code: %d", err);
+          console.error('n64_load_file failed. error code: %d', err);
           throw Error('n64_load_file failed');
         }
 
