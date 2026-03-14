@@ -630,6 +630,25 @@ processDirectory(scanRoot, scanRelativeBase)
       }
     }
 
+    if (!options.dryrun) {
+      let deletedDirs = 0;
+      let changes;
+      const deleteEmptyDirsStmt = db.prepare(`
+        DELETE FROM directories 
+        WHERE NOT EXISTS (SELECT 1 FROM music WHERE directory_id = directories.id) 
+          AND NOT EXISTS (SELECT 1 FROM directories AS child WHERE child.parent_id = directories.id)
+      `);
+      do {
+        const info = deleteEmptyDirsStmt.run();
+        changes = info.changes;
+        deletedDirs += changes;
+      } while (changes > 0);
+
+      if (deletedDirs > 0) {
+        console.log(chalk.yellow(`Removed ${deletedDirs} orphaned directories...`));
+      }
+    }
+
     let finalCount = 0;
     if (!options.dryrun) {
       try {
