@@ -52,7 +52,11 @@ int read_rdram_regs(void* opaque, uint32_t address, uint32_t* value)
     struct ri_controller* ri = (struct ri_controller*)opaque;
     uint32_t reg = rdram_reg(address);
 
-    *value = ri->rdram.regs[reg];
+    if (reg < RDRAM_REGS_COUNT) {
+        *value = ri->rdram.regs[reg];
+    } else {
+        *value = 0;
+    }
 
     return 0;
 }
@@ -62,7 +66,9 @@ int write_rdram_regs(void* opaque, uint32_t address, uint32_t value, uint32_t ma
     struct ri_controller* ri = (struct ri_controller*)opaque;
     uint32_t reg = rdram_reg(address);
 
-    masked_write(&ri->rdram.regs[reg], value, mask);
+    if (reg < RDRAM_REGS_COUNT) {
+        masked_write(&ri->rdram.regs[reg], value, mask);
+    }
 
     return 0;
 }
@@ -93,7 +99,7 @@ int read_rdram_dram_tracked(void* opaque, uint32_t address, uint32_t* value)
     usf_state_t* state = (usf_state_t*) opaque;
     struct ri_controller* ri = &state->g_ri;
     uint32_t addr = rdram_dram_address(address);
-    
+
     if (!bit_array_test(state->barray_ram_written_first, addr))
         bit_array_set(state->barray_ram_read, addr);
 
@@ -107,7 +113,7 @@ int write_rdram_dram_tracked(void* opaque, uint32_t address, uint32_t value, uin
     usf_state_t* state = (usf_state_t*) opaque;
     struct ri_controller* ri = &state->g_ri;
     uint32_t addr = rdram_dram_address(address);
-    
+
     if (mask == 0xFFFFFFFFU && !bit_array_test(state->barray_ram_read, addr))
         bit_array_set(state->barray_ram_written_first, addr);
     

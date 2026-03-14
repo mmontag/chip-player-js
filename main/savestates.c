@@ -118,7 +118,7 @@ static int savestates_load_m64p(usf_state_t * state, unsigned char * ptr, unsign
         return 0;
 
     /* skip MD5 */
-    curr += 32;
+    /* curr += 32; not read again beyond this point */
 
     /* Read the rest of the savestate */
     savestateSize = 16788244;
@@ -355,7 +355,7 @@ static int savestates_load_pj64(usf_state_t * state, unsigned char * ptr, unsign
 
     unsigned char * state_ptr = ptr;
     unsigned int state_size = size;
-	unsigned int count_per_scanline;
+    unsigned int count_per_scanline;
     
     size_t savestateSize;
     unsigned char *savestateData = 0, *curr;
@@ -422,6 +422,8 @@ static int savestates_load_pj64(usf_state_t * state, unsigned char * ptr, unsign
     *((unsigned int*)&buffer[16]) = 0xFFFFFFFF;
 
     load_eventqueue_infos(state, buffer);
+
+    state->cycle_count = state->g_cp0_regs[CP0_COUNT_REG] - state->q.first->data.count;
 
     // FPCR
     state->FCR0 = GETDATA(curr, int);
@@ -596,10 +598,10 @@ static int savestates_load_pj64(usf_state_t * state, unsigned char * ptr, unsign
 
     open_rom_header(state, savestateData, sizeof(m64p_rom_header));
 
-	// Needs the rom header parsed first before the delay can be calculated
-	count_per_scanline = (unsigned int)((float)state->ROM_PARAMS.aidacrate / (float)state->ROM_PARAMS.vilimit) / (state->g_vi.regs[VI_V_SYNC_REG] + 1);
-	state->g_vi.delay = (state->g_vi.regs[VI_V_SYNC_REG] + 1) * count_per_scanline;
-    
+    // Needs the rom header parsed first before the delay can be calculated
+    count_per_scanline = (unsigned int)((float)state->ROM_PARAMS.aidacrate / (float)state->ROM_PARAMS.vilimit) / (state->g_vi.regs[VI_V_SYNC_REG] + 1);
+    state->g_vi.delay = (state->g_vi.regs[VI_V_SYNC_REG] + 1) * count_per_scanline;
+
 #ifdef NEW_DYNAREC
     if (state->r4300emu == CORE_DYNAREC) {
         state->pcaddr = state->last_addr;

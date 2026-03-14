@@ -168,12 +168,11 @@ static int resampler_run_cubic(resampler * r, short ** out_, short * out_end)
         do
         {
             int samplel, sampler;
-            const int16_t* lut;
             
             if ( out >= out_end )
                 break;
 
-            lut = RESAMPLE_LUT + ((phase & 0xfc00) >> 8);
+            const int16_t* lut = RESAMPLE_LUT + ((phase & 0xfc00) >> 8);
             
             samplel = ((inl[0] * lut[0]) >> 15) + ((inl[1] * lut[1]) >> 15)
                     + ((inl[2] * lut[2]) >> 15) + ((inl[3] * lut[3]) >> 15);

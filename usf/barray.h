@@ -3,8 +3,6 @@
 
 #include <stdlib.h>
 
-#define BARRAY_DECORATE USF
-
 #ifdef BARRAY_DECORATE
 #define PASTE(a,b) a ## b
 #define EVALUATE(a,b) PASTE(a,b)
@@ -24,20 +22,20 @@
 
 void * bit_array_create(size_t size);
 void bit_array_destroy(void * array);
-void * bit_array_dup(const void * array);
+void * bit_array_dup(void * array);
 
 void bit_array_reset(void * array);
 
 void bit_array_set(void * array, size_t bit);
 void bit_array_set_range(void * array, size_t bit, size_t count);
 
-int bit_array_test(const void * array, size_t bit);
-int bit_array_test_range(const void * array, size_t bit, size_t count);
+int bit_array_test(void * array, size_t bit);
+int bit_array_test_range(void * array, size_t bit, size_t count);
 
 void bit_array_clear(void * array, size_t bit);
 void bit_array_clear_range(void * array, size_t bit, size_t count);
 
-void bit_array_merge(void * array, const void * source, size_t offset);
-void bit_array_mask(void * array, const void * source, size_t offset);
+void bit_array_merge(void * array, void * source, size_t offset);
+void bit_array_mask(void * array, void * source, size_t offset);
 
 #endif

@@ -16,11 +16,11 @@ void bit_array_destroy(void * array)
 	if (array) free(array);
 }
 
-void * bit_array_dup(const void * array)
+void * bit_array_dup(void * array)
 {
 	if (array)
 	{
-		const size_t * size = (const size_t *) array;
+		size_t * size = (size_t *) array;
 		size_t bsize = ((*size + 7) >> 3) + sizeof(*size);
 		void * ret = malloc(bsize);
 		if (ret) memcpy(ret, array, bsize);
@@ -68,14 +68,14 @@ void bit_array_set_range(void * array, size_t bit, size_t count)
     }
 }
 
-int bit_array_test(const void * array, size_t bit)
+int bit_array_test(void * array, size_t bit)
 {
 	if (array)
 	{
-		const size_t * size = (const size_t *) array;
+		size_t * size = (size_t *) array;
 		if (bit < *size)
 		{
-			const unsigned char * ptr = (const unsigned char *)(size + 1);
+			unsigned char * ptr = (unsigned char *)(size + 1);
 			if (ptr[bit >> 3] & (1U << (bit & 7)))
 			{
 				return 1;
@@ -85,14 +85,14 @@ int bit_array_test(const void * array, size_t bit)
 	return 0;
 }
 
-int bit_array_test_range(const void * array, size_t bit, size_t count)
+int bit_array_test_range(void * array, size_t bit, size_t count)
 {
 	if (array)
 	{
-		const size_t * size = (const size_t *) array;
+		size_t * size = (size_t *) array;
 		if (bit < *size)
 		{
-			const unsigned char * ptr = (const unsigned char *)(size + 1);
+			unsigned char * ptr = (unsigned char *)(size + 1);
 			if ((bit & 7) && (count > 8))
 			{
 				while ((bit < *size) && count && (bit & 7))
@@ -150,12 +150,12 @@ void bit_array_clear_range(void * array, size_t bit, size_t count)
     }
 }
 
-void bit_array_merge(void * dest, const void * source, size_t offset)
+void bit_array_merge(void * dest, void * source, size_t offset)
 {
 	if (dest && source)
 	{
 		size_t * dsize = (size_t *) dest;
-		const size_t * ssize = (const size_t *) source;
+		size_t * ssize = (size_t *) source;
 		size_t soffset = 0;
 		while (offset < *dsize && soffset < *ssize)
 		{
@@ -169,12 +169,12 @@ void bit_array_merge(void * dest, const void * source, size_t offset)
 	}
 }
 
-void bit_array_mask(void * dest, const void * source, size_t offset)
+void bit_array_mask(void * dest, void * source, size_t offset)
 {
 	if (dest && source)
 	{
 		size_t * dsize = (size_t *) dest;
-		const size_t * ssize = (const size_t *) source;
+		size_t * ssize = (size_t *) source;
 		size_t soffset = 0;
 		while (offset < *dsize && soffset < *ssize)
 		{

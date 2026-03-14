@@ -20,6 +20,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#ifdef DYNAREC
+
 #include <stdlib.h>
 
 #include "usf/usf.h"
@@ -58,7 +60,7 @@ void dyna_start(usf_state_t * state, void *code)
   /* It will jump to label 2, restore the base and stack pointers, and exit this function */
   DebugMessage(state, M64MSG_INFO, "R4300: starting 64-bit dynamic recompiler at: %p", code);
 #if defined(__GNUC__) && defined(__x86_64__)
-  asm volatile
+  __asm __volatile
     (" push %%rbx              \n"  /* we must push an even # of registers to keep stack 16-byte aligned */
      " push %%r12              \n"
      " push %%r13              \n"
@@ -108,4 +110,4 @@ void dyna_stop(usf_state_t * state)
     *state->return_address = (unsigned long long) state->save_rip;
   }
 }
-
+#endif

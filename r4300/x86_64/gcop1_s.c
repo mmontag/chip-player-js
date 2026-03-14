@@ -39,6 +39,7 @@
 #include "r4300/instr_counters.h"
 #endif
 
+#ifdef DYNAREC
 void genadd_s(usf_state_t * state)
 {
 #if defined(COUNT_INSTR)
@@ -122,7 +123,7 @@ void gensqrt_s(usf_state_t * state)
    gencheck_cop1_unusable(state);
    mov_xreg64_m64rel(state, RAX, (unsigned long long *)(&state->reg_cop1_simple[state->dst->f.cf.fs]));
    fld_preg64_dword(state, RAX);
-   fsqrt(state);
+   fsqrt_(state);
    mov_xreg64_m64rel(state, RAX, (unsigned long long *)(&state->reg_cop1_simple[state->dst->f.cf.fd]));
    fstp_preg64_dword(state, RAX);
 #endif
@@ -715,4 +716,4 @@ void genc_ngt_s(usf_state_t * state)
    and_m32rel_imm32(state, (unsigned int*)&state->FCR31, ~0x800000); // 11
 #endif
 }
-
+#endif
