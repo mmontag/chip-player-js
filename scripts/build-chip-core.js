@@ -363,9 +363,9 @@ const flags = [
   '-s', 'EXPORTED_RUNTIME_METHODS=[' + runtimeMethods.join(',') + ']',
   '-s', 'ALLOW_MEMORY_GROWTH=1',
   '-s', 'ASSERTIONS=0',      // assertions increase runtime size about 100K
-  '-s', 'STACK_OVERFLOW_CHECK=2',
-  // '-s', 'STACK_SIZE=5MB', // support large VGM and XM files. default is 64KB
-                             // disabled after allocating file data on heap
+  '-flto',                   // Add Link-Time Optimization
+  '-s', 'MALLOC="emmalloc"', // Use the smaller allocator
+  '-s', 'STACK_OVERFLOW_CHECK=0', // Disable runtime stack checks for size
   '-s', 'MODULARIZE=1',
   '-s', 'EXPORT_NAME=CHIP_CORE',
   '-s', 'ENVIRONMENT=web',
@@ -374,7 +374,7 @@ const flags = [
   '-s', 'USE_ES6_IMPORT_META=0',
   '-s', 'WASM_BIGINT',       // support passing 64 bit integers to/from JS
   '-lidbfs.js',
-  '-Os',                     // set to O0 for fast compile during development
+  '-Oz',                     // set to O0 for fast compile during development
   // '-g',                   // include DWARF debug symbols. Increases size ~2.5x
   '-o', jsOutFile,
 

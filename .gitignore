@@ -4,7 +4,7 @@
 .idea/
 node_modules/
 dist/
-build/
+build*/
 cmake-build-debug/
 *.a
 *.wasm
