@@ -62,7 +62,7 @@ export default class N64Player extends Player {
           throw Error('n64_load_file failed');
         }
 
-        this.metadata = { title: filename };
+        this.metadata = { title: path.basename(filename) };
 
         this.resume();
         this.emit('playerStateUpdate', {
