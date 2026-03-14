@@ -46,6 +46,7 @@ export default class Sequencer extends EventEmitter {
   handlePlayerError(e) {
     this.emit('playerError', e);
     if (this.context && this.player) {
+      clearTimeout(this.playerErrorAdvanceTimer);
       this.playerErrorAdvanceTimer = setTimeout(this.nextSong, ERROR_DELAY_MS);
     } else {
       this.emit('sequencerStateUpdate', { isEjected: true });
@@ -238,6 +239,7 @@ export default class Sequencer extends EventEmitter {
     try {
       await player.loadData(uint8Array, filepath, persistedSettings, subtune);
     } catch (e) {
+      console.error(`Unable to play ${filepath}.`, e);
       this.handlePlayerError(`Unable to play ${filepath} (${e.message}).`);
       return;
     }
