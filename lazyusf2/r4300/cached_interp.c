@@ -76,7 +76,7 @@
          update_count(state); \
       } \
       state->last_addr = state->PC->addr; \
-      if (state->next_interupt <= state->g_cp0_regs[CP0_COUNT_REG]) gen_interupt(state); \
+      if (state->cycle_count >=0) gen_interupt(state); \
    } \
    static void osal_fastcall name##_OUT(usf_state_t * state) \
    { \
@@ -108,21 +108,21 @@
          update_count(state); \
       } \
       state->last_addr = state->PC->addr; \
-      if (state->next_interupt <= state->g_cp0_regs[CP0_COUNT_REG]) gen_interupt(state); \
+      if (state->cycle_count >=0) gen_interupt(state); \
    } \
    static void osal_fastcall name##_IDLE(usf_state_t * state) \
    { \
       const int take_jump = (condition); \
-      int skip; \
       if (cop1 && check_cop1_unusable(state)) return; \
       if (take_jump) \
       { \
-         update_count(state); \
-         skip = state->next_interupt - state->g_cp0_regs[CP0_COUNT_REG]; \
-         if (skip > 3) state->g_cp0_regs[CP0_COUNT_REG] += (skip & 0xFFFFFFFC); \
-         else name(state); \
+         if (state->cycle_count < 0) \
+         { \
+            state->g_cp0_regs[CP0_COUNT_REG] -= state->cycle_count; \
+            state->cycle_count = 0; \
+         } \
       } \
-      else name(state); \
+      name(state); \
    }
 
 #define CHECK_MEMORY() \
@@ -154,7 +154,9 @@ static void osal_fastcall FIN_BLOCK(usf_state_t * state)
 Used by dynarec only, check should be unnecessary
 */
     state->PC->ops(state);
+#ifdef DYNAREC
     if (state->r4300emu == CORE_DYNAREC) dyna_jump(state);
+#endif
      }
    else
      {
@@ -176,7 +178,9 @@ Used by dynarec only, check should be unnecessary
     else
       state->PC->ops(state);
     
+#ifdef DYNAREC
     if (state->r4300emu == CORE_DYNAREC) dyna_jump(state);
+#endif
      }
 }
 
@@ -196,8 +200,10 @@ The preceeding update_debugger SHOULD be unnecessary since it should have been
 called before NOTCOMPILED would have been executed
 */
    state->PC->ops(state);
+#ifdef DYNAREC
    if (state->r4300emu == CORE_DYNAREC)
      dyna_jump(state);
+#endif
 }
 
 static void osal_fastcall NOTCOMPILED2(usf_state_t * state)
@@ -537,7 +543,9 @@ void osal_fastcall jump_to_func(usf_state_t * state)
      }
    state->PC=state->actual->block+((addr-state->actual->start)>>2);
    
+#ifdef DYNAREC
    if (state->r4300emu == CORE_DYNAREC) dyna_jump(state);
+#endif
 }
 #undef addr
 

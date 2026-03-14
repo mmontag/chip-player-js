@@ -1,6 +1,6 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *   Mupen64plus-rsp-hle - alist_naudio.c                                  *
- *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
+ *   Mupen64Plus homepage: https://mupen64plus.org/                        *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *   Copyright (C) 2009 Richard Goedeken                                   *
  *   Copyright (C) 2002 Hacktarux                                          *
@@ -108,18 +108,18 @@ static void SETVOL(struct hle_t* hle, uint32_t w1, uint32_t w2)
 {
     uint8_t flags = (w1 >> 16);
 
-    if (flags & 0x4) {
-        if (flags & 0x2) {
+    if (flags & A_VOL) {
+        if (flags & A_LEFT) {
             hle->alist_naudio.vol[0] = w1;
             hle->alist_naudio.dry    = (w2 >> 16);
             hle->alist_naudio.wet    = w2;
         }
-        else {
+        else { /* A_RIGHT */
             hle->alist_naudio.target[1] = w1;
             hle->alist_naudio.rate[1]   = w2;
         }
     }
-    else {
+    else { /* A_RATE */
         hle->alist_naudio.target[0] = w1;
         hle->alist_naudio.rate[0]   = w2;
     }
@@ -134,7 +134,7 @@ static void ENVMIXER(struct hle_t* hle, uint32_t w1, uint32_t w2)
 
     alist_envmix_lin(
             hle,
-            flags & 0x1,
+            flags & A_INIT,
             NAUDIO_DRY_LEFT,
             NAUDIO_DRY_RIGHT,
             NAUDIO_WET_LEFT,
@@ -216,8 +216,8 @@ static void ADPCM(struct hle_t* hle, uint32_t w1, uint32_t w2)
 
     alist_adpcm(
             hle,
-            flags & 0x1,
-            flags & 0x2,
+            flags & A_INIT,
+            flags & A_LOOP,
             false,          /* unsuported by this ucode */
             dmemo,
             dmemi,
@@ -237,7 +237,7 @@ static void RESAMPLE(struct hle_t* hle, uint32_t w1, uint32_t w2)
 
     alist_resample(
             hle,
-            flags & 0x1,
+            flags & A_INIT,
             false,          /* TODO: check which ABI supports it */
             dmemo,
             dmemi,
@@ -263,6 +263,17 @@ static void MP3(struct hle_t* hle, uint32_t w1, uint32_t w2)
     mp3_task(hle, index, address);
 }
 
+static void OVERLOAD(struct hle_t* hle, uint32_t w1, uint32_t w2)
+{
+    /* Overload distortion effect for Conker's Bad Fur Day */
+    /* Also included in Jet Force Gemini microcode */
+    uint16_t dmem = (w1 & 0xfff) + NAUDIO_MAIN;
+    int16_t gain = w2 & 0x7fff;
+    int16_t attenuation = w2 >> 16;
+
+    alist_overload(hle, dmem, NAUDIO_COUNT, gain, attenuation);
+}
+
 /* global functions */
 void alist_process_naudio(struct hle_t* hle)
 {
@@ -285,6 +296,7 @@ void alist_process_naudio(struct hle_t* hle)
     #else
     alist_process(hle, ABI, 0x10);
     #endif
+    rsp_break(hle, SP_STATUS_TASKDONE);
 }
 
 void alist_process_naudio_bk(struct hle_t* hle)
@@ -309,6 +321,7 @@ void alist_process_naudio_bk(struct hle_t* hle)
     #else
     alist_process(hle, ABI, 0x10);
     #endif
+    rsp_break(hle, SP_STATUS_TASKDONE);
 }
 
 void alist_process_naudio_dk(struct hle_t* hle)
@@ -333,12 +346,13 @@ void alist_process_naudio_dk(struct hle_t* hle)
     #else
     alist_process(hle, ABI, 0x10);
     #endif
+    rsp_break(hle, SP_STATUS_TASKDONE);
 }
 
 void alist_process_naudio_mp3(struct hle_t* hle)
 {
     static const acmd_callback_t ABI[0x10] = {
-        UNKNOWN,        ADPCM,          CLEARBUFF,      ENVMIXER,
+        OVERLOAD,       ADPCM,          CLEARBUFF,      ENVMIXER,
         LOADBUFF,       RESAMPLE,       SAVEBUFF,       MP3,
         MP3ADDY,        SETVOL,         DMEMMOVE,       LOADADPCM,
         MIXER,          INTERLEAVE,     NAUDIO_14,      SETLOOP
@@ -346,7 +360,7 @@ void alist_process_naudio_mp3(struct hle_t* hle)
 
     #ifdef DEBUG_INFO
     static const char * ABI_names[0x10] = {
-       "UNKNOWN",      "ADPCM",        "CLEARBUFF",    "ENVMIXER",
+       "OVERLOAD",     "ADPCM",        "CLEARBUFF",    "ENVMIXER",
        "LOADBUFF",     "RESAMPLE",     "SAVEBUFF",     "MP3",
        "MP3ADDY",      "SETVOL",       "DMEMMOVE",     "LOADADPCM",
        "MIXER",        "INTERLEAVE",   "NAUDIO_14",    "SETLOOP"
@@ -356,13 +370,14 @@ void alist_process_naudio_mp3(struct hle_t* hle)
     #else
     alist_process(hle, ABI, 0x10);
     #endif
+    rsp_break(hle, SP_STATUS_TASKDONE);
 }
 
 void alist_process_naudio_cbfd(struct hle_t* hle)
 {
     /* TODO: see what differs from alist_process_naudio_mp3 */
     static const acmd_callback_t ABI[0x10] = {
-        UNKNOWN,        ADPCM,          CLEARBUFF,      ENVMIXER,
+        OVERLOAD,       ADPCM,          CLEARBUFF,      ENVMIXER,
         LOADBUFF,       RESAMPLE,       SAVEBUFF,       MP3,
         MP3ADDY,        SETVOL,         DMEMMOVE,       LOADADPCM,
         MIXER,          INTERLEAVE,     NAUDIO_14,      SETLOOP
@@ -370,7 +385,7 @@ void alist_process_naudio_cbfd(struct hle_t* hle)
 
     #ifdef DEBUG_INFO
     static const char * ABI_names[0x10] = {
-       "UNKNOWN",      "ADPCM",        "CLEARBUFF",    "ENVMIXER",
+       "OVERLOAD",     "ADPCM",        "CLEARBUFF",    "ENVMIXER",
        "LOADBUFF",     "RESAMPLE",     "SAVEBUFF",     "MP3",
        "MP3ADDY",      "SETVOL",       "DMEMMOVE",     "LOADADPCM",
        "MIXER",        "INTERLEAVE",   "NAUDIO_14",    "SETLOOP"
@@ -380,4 +395,5 @@ void alist_process_naudio_cbfd(struct hle_t* hle)
     #else
     alist_process(hle, ABI, 0x10);
     #endif
+    rsp_break(hle, SP_STATUS_TASKDONE);
 }

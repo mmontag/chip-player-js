@@ -58,7 +58,7 @@ void usf_clear(void * state)
     USF_STATE->resampler = resampler_create();
 
 #ifdef DEBUG_INFO
-    USF_STATE->debug_log = 0;
+    USF_STATE->debug_log = NULL;
 #endif
 }
 

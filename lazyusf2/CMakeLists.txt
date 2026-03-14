@@ -1,33 +1,27 @@
-# This CMakeLists.txt is currently only used to load project files for CLion.
-cmake_minimum_required(VERSION 3.10)
-project(lazyusf2)
+cmake_minimum_required(VERSION 3.14)
 
-set(CMAKE_CXX_STANDARD 14)
+project(
+    lazyusf2
+    VERSION 0.1.0
+    DESCRIPTION "N64 sound emulator library"
+    HOMEPAGE_URL "https://bitbucket.org/losnoco/lazyusf2"
+    LANGUAGES C
+)
+set(target lazyusf2)
+add_library(${target} STATIC ${sources})
 
-include_directories(.)
-include_directories(../psflib)
-include_directories(~/src/emsdk/emscripten/1.38.28/system/include)
+target_include_directories(${target} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
-add_executable(lazyusf2
-        _wothke/circular_buffer.h
-        _wothke/n64plug.cpp
+target_compile_definitions(${target} PRIVATE DYNAREC ARCH_MIN_SSE2)
+
+target_sources(${target}
+    PRIVATE
         ai/ai_controller.c
         ai/ai_controller.h
         api/callbacks.c
         api/callbacks.h
-        api/m64p_common.h
-        api/m64p_config.h
-        api/m64p_debugger.h
-        api/m64p_frontend.h
-        api/m64p_plugin.h
-        api/m64p_types.h
-        api/m64p_vidext.h
         debugger/dbg_decoder.c
         debugger/dbg_decoder.h
-        debugger/dbg_decoder_local.h
-        debugger/dbg_print.c
-        debugger/dbg_types.h
-        main/list.h
         main/main.c
         main/main.h
         main/rom.c
@@ -39,7 +33,6 @@ add_executable(lazyusf2
         main/version.h
         memory/memory.c
         memory/memory.h
-        osal/preproc.h
         pi/cart_rom.c
         pi/cart_rom.h
         pi/pi_controller.c
@@ -50,18 +43,12 @@ add_executable(lazyusf2
         r4300/cp0.h
         r4300/cp1.c
         r4300/cp1.h
-        r4300/empty_dynarec.c
         r4300/exception.c
         r4300/exception.h
-        r4300/fpu.h
-        r4300/instr_counters.c
-        r4300/instr_counters.h
         r4300/interupt.c
         r4300/interupt.h
-        r4300/macros.h
         r4300/mi_controller.c
         r4300/mi_controller.h
-        r4300/ops.h
         r4300/pure_interp.c
         r4300/pure_interp.h
         r4300/r4300.c
@@ -85,13 +72,11 @@ add_executable(lazyusf2
         ri/ri_controller.h
         rsp/rsp_core.c
         rsp/rsp_core.h
-        rsp_hle/msvc-compat/our-stdbool.h
         rsp_hle/alist.c
         rsp_hle/alist.h
         rsp_hle/alist_audio.c
         rsp_hle/alist_naudio.c
         rsp_hle/alist_nead.c
-        rsp_hle/arithmetics.h
         rsp_hle/audio.c
         rsp_hle/audio.h
         rsp_hle/cicx105.c
@@ -100,67 +85,21 @@ add_executable(lazyusf2
         rsp_hle/hle.h
         rsp_hle/hle_external.h
         rsp_hle/hle_internal.h
+        rsp_hle/hvqm.c
         rsp_hle/jpeg.c
         rsp_hle/memory.c
         rsp_hle/memory.h
         rsp_hle/mp3.c
         rsp_hle/musyx.c
         rsp_hle/plugin.c
+        rsp_hle/re2.c
         rsp_hle/ucodes.h
-        rsp_lle/vu/cf.h
-        rsp_lle/vu/clamp.h
-        rsp_lle/vu/divrom.h
-        rsp_lle/vu/shuffle.h
-        rsp_lle/vu/vabs.h
-        rsp_lle/vu/vadd.h
-        rsp_lle/vu/vaddc.h
-        rsp_lle/vu/vand.h
-        rsp_lle/vu/vch.h
-        rsp_lle/vu/vcl.h
-        rsp_lle/vu/vcr.h
-        rsp_lle/vu/veq.h
-        rsp_lle/vu/vge.h
-        rsp_lle/vu/vlt.h
-        rsp_lle/vu/vmacf.h
-        rsp_lle/vu/vmacq.h
-        rsp_lle/vu/vmacu.h
-        rsp_lle/vu/vmadh.h
-        rsp_lle/vu/vmadl.h
-        rsp_lle/vu/vmadm.h
-        rsp_lle/vu/vmadn.h
-        rsp_lle/vu/vmov.h
-        rsp_lle/vu/vmrg.h
-        rsp_lle/vu/vmudh.h
-        rsp_lle/vu/vmudl.h
-        rsp_lle/vu/vmudm.h
-        rsp_lle/vu/vmudn.h
-        rsp_lle/vu/vmulf.h
-        rsp_lle/vu/vmulu.h
-        rsp_lle/vu/vnand.h
-        rsp_lle/vu/vne.h
-        rsp_lle/vu/vnop.h
-        rsp_lle/vu/vnor.h
-        rsp_lle/vu/vnxor.h
-        rsp_lle/vu/vor.h
-        rsp_lle/vu/vrcp.h
-        rsp_lle/vu/vrcph.h
-        rsp_lle/vu/vrcpl.h
-        rsp_lle/vu/vrsq.h
-        rsp_lle/vu/vrsqh.h
-        rsp_lle/vu/vrsql.h
-        rsp_lle/vu/vsaw.h
-        rsp_lle/vu/vsub.h
-        rsp_lle/vu/vsubc.h
-        rsp_lle/vu/vu.h
-        rsp_lle/vu/vxor.h
-        rsp_lle/bench.c
+        rsp_lle/rsp.c
         rsp_lle/config.h
-        rsp_lle/disassemble_rsp.c
         rsp_lle/execute.h
         rsp_lle/matrix.h
-        rsp_lle/rsp.c
-        rsp_lle/rsp.h
         rsp_lle/rsp_lle.h
+        rsp_lle/rsp.h
         rsp_lle/su.h
         si/cic.c
         si/cic.h
@@ -172,14 +111,28 @@ add_executable(lazyusf2
         si/pif.h
         si/si_controller.c
         si/si_controller.h
-        test/bench.c
-        test/dumpresampled.c
+        usf/usf.c
+        usf/usf.h
+        usf/usf_internal.h
         usf/barray.c
         usf/barray.h
         usf/resampler.c
         usf/resampler.h
-        usf/usf.c
-        usf/usf.h
-        usf/usf_internal.h
         vi/vi_controller.c
-        vi/vi_controller.h)
+        vi/vi_controller.h
+
+        r4300/x86_64/assemble.c
+        r4300/x86_64/gbc.c
+        r4300/x86_64/gcop0.c
+        r4300/x86_64/gcop1.c
+        r4300/x86_64/gcop1_d.c
+        r4300/x86_64/gcop1_l.c
+        r4300/x86_64/gcop1_s.c
+        r4300/x86_64/gcop1_w.c
+        r4300/x86_64/gr4300.c
+        r4300/x86_64/gregimm.c
+        r4300/x86_64/gspecial.c
+        r4300/x86_64/gtlb.c
+        r4300/x86_64/regcache.c
+        r4300/x86_64/rjump.c
+)

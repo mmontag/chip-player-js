@@ -96,11 +96,13 @@ void TLB_refill_exception(usf_state_t * state, unsigned int address, int w)
    
    state->last_addr = state->PC->addr;
    
+#ifdef DYNAREC
    if (state->r4300emu == CORE_DYNAREC)
      {
     dyna_jump(state);
     if (!state->dyna_interp) state->delay_slot = 0;
      }
+#endif
    
    if (state->r4300emu != CORE_DYNAREC || state->dyna_interp)
      {
@@ -109,6 +111,7 @@ void TLB_refill_exception(usf_state_t * state, unsigned int address, int w)
       {
          state->skip_jump = state->PC->addr;
          state->next_interupt = 0;
+         state->cycle_count = 0;
       }
      }
 }
@@ -131,11 +134,13 @@ void osal_fastcall exception_general(usf_state_t * state)
      }
    generic_jump_to(state, 0x80000180);
    state->last_addr = state->PC->addr;
+#ifdef DYNAREC
    if (state->r4300emu == CORE_DYNAREC)
      {
     dyna_jump(state);
     if (!state->dyna_interp) state->delay_slot = 0;
      }
+#endif
    if (state->r4300emu != CORE_DYNAREC || state->dyna_interp)
      {
     state->dyna_interp = 0;
@@ -143,6 +148,7 @@ void osal_fastcall exception_general(usf_state_t * state)
       {
          state->skip_jump = state->PC->addr;
          state->next_interupt = 0;
+         state->cycle_count = 0;
       }
      }
 }

@@ -281,7 +281,8 @@ int read_rsp_regs2(void* opaque, uint32_t address, uint32_t* value)
     struct rsp_core* sp = (struct rsp_core*)opaque;
     uint32_t reg = rsp_reg2(address);
 
-    *value = sp->regs2[reg];
+    if (reg < SP_REGS2_COUNT)
+        *value = sp->regs2[reg];
 
     return 0;
 }
@@ -291,7 +292,8 @@ int write_rsp_regs2(void* opaque, uint32_t address, uint32_t value, uint32_t mas
     struct rsp_core* sp = (struct rsp_core*)opaque;
     uint32_t reg = rsp_reg2(address);
 
-    masked_write(&sp->regs2[reg], value, mask);
+    if (reg < SP_REGS2_COUNT)
+        masked_write(&sp->regs2[reg], value, mask);
 
     return 0;
 }
@@ -300,20 +302,20 @@ void do_SP_Task(struct rsp_core* sp)
 {
 #ifdef DEBUG_INFO
     if (sp->r4300->state->debug_log)
-      fprintf(sp->r4300->state->debug_log, "RSP Task");
+        fprintf(sp->r4300->state->debug_log, "RSP Task");
 #endif
     uint32_t save_pc = sp->regs2[SP_PC_REG] & ~0xfff;
     if (sp->mem[0xfc0/4] == 1)
     {
 #ifdef DEBUG_INFO
         if (sp->r4300->state->debug_log)
-          fprintf(sp->r4300->state->debug_log, " - DList");
+            fprintf(sp->r4300->state->debug_log, " - DList");
 #endif
         if (sp->dp->dpc_regs[DPC_STATUS_REG] & 0x2) // DP frozen (DK64, BC)
         {
 #ifdef DEBUG_INFO
             if (sp->r4300->state->debug_log)
-              fprintf(sp->r4300->state->debug_log, " - frozen!\n");
+                fprintf(sp->r4300->state->debug_log, " - frozen!\n");
 #endif
             // don't do the task now
             // the task will be done when DP is unfreezed (see update_dpc_status)
@@ -341,7 +343,7 @@ void do_SP_Task(struct rsp_core* sp)
     {
 #ifdef DEBUG_INFO
         if (sp->r4300->state->debug_log)
-          fprintf(sp->r4300->state->debug_log, " - AList");
+            fprintf(sp->r4300->state->debug_log, " - AList");
 #endif
         //audio.processAList();
         sp->regs2[SP_PC_REG] &= 0xfff;
@@ -357,13 +359,12 @@ void do_SP_Task(struct rsp_core* sp)
 #endif
         sp->r4300->mi.regs[MI_INTR_REG] &= ~MI_INTR_SP;
         sp->regs[SP_STATUS_REG] &= ~0x303;
-
     }
     else
     {
 #ifdef DEBUG_INFO
         if (sp->r4300->state->debug_log)
-          fprintf(sp->r4300->state->debug_log, " - Unknown task");
+            fprintf(sp->r4300->state->debug_log, " - Unknown task");
 #endif
         sp->regs2[SP_PC_REG] &= 0xfff;
         real_run_rsp(sp->r4300->state, 0xffffffff);
@@ -383,7 +384,7 @@ void do_SP_Task(struct rsp_core* sp)
     }
 #ifdef DEBUG_INFO
     if (sp->r4300->state->debug_log)
-      fprintf(sp->r4300->state->debug_log, "\n");
+        fprintf(sp->r4300->state->debug_log, "\n");
 #endif
 }
 

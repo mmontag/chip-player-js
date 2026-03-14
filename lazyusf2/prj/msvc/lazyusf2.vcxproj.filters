@@ -90,6 +90,9 @@
     <ClCompile Include="..\..\rsp_hle\hle.c">
       <Filter>rsp_hle\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\rsp_hle\hvqm.c">
+      <Filter>rsp_hle\Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\rsp_hle\jpeg.c">
       <Filter>rsp_hle\Source Files</Filter>
     </ClCompile>
@@ -103,6 +106,9 @@
       <Filter>rsp_hle\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\rsp_hle\plugin.c">
+      <Filter>rsp_hle\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\rsp_hle\re2.c">
       <Filter>rsp_hle\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\rsp_lle\rsp.c">

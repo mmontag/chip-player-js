@@ -77,6 +77,7 @@
 #define RP3 RCX
 #endif
 
+#ifdef DYNAREC
 void jump_start_rel8(usf_state_t *);
 void jump_end_rel8(usf_state_t *);
 void jump_start_rel32(usf_state_t *);
@@ -346,6 +347,12 @@ static inline void test_m32rel_imm32(usf_state_t * state, unsigned int *m32, uns
    put32(state, imm32);
 }
 
+static osal_inline void test_reg32_reg32(usf_state_t * state, unsigned int reg1, unsigned int reg2)
+{
+    put8(state, 0x85);
+    put8(state, 0xC0 | (reg2 << 3) | reg1);
+}
+
 static inline void add_m32rel_xreg32(usf_state_t * state, unsigned int *m32, int xreg32)
 {
    int offset = rel_r15_offset(state, m32, "add_m32rel_xreg32");
@@ -354,6 +361,16 @@ static inline void add_m32rel_xreg32(usf_state_t * state, unsigned int *m32, int
    put8(state, 0x01);
    put8(state, 0x87 | ((xreg32 & 7) << 3));
    put32(state, offset);
+}
+
+static osal_inline void sub_m32rel_xreg32(usf_state_t * state, unsigned int *m32, int xreg32)
+{
+    int offset = rel_r15_offset(state, m32, "sub_m32rel_xreg32");
+
+    put8(state, 0x41 | ((xreg32 & 8) >> 1));
+    put8(state, 0x29);
+    put8(state, 0x87 | ((xreg32 & 7) << 3));
+    put32(state, offset);
 }
 
 static inline void sub_xreg32_m32rel(usf_state_t * state, int xreg32, unsigned int *m32)
@@ -433,6 +450,18 @@ static inline void jp_rj(usf_state_t * state, unsigned char saut)
 {
    put8(state, 0x7A);
    put8(state, saut);
+}
+
+static osal_inline void jns_rj(usf_state_t * state, unsigned char saut)
+{
+    put8(state, 0x79);
+    put8(state, saut);
+}
+
+static osal_inline void js_rj(usf_state_t * state, unsigned char saut)
+{
+    put8(state, 0x78);
+    put8(state, saut);
 }
 
 static inline void je_near_rj(usf_state_t * state, unsigned int saut)
@@ -1163,7 +1192,7 @@ static inline void fmul_preg64_qword(usf_state_t * state, int reg64)
    put8(state, 0x08 + reg64);
 }
 
-static inline void fsqrt(usf_state_t * state)
+static inline void fsqrt_(usf_state_t * state)
 {
    put8(state, 0xD9);
    put8(state, 0xFA);
@@ -1192,6 +1221,7 @@ static inline void ffree_fpreg(usf_state_t * state, int fpreg)
    put8(state, 0xDD);
    put8(state, 0xC0 + fpreg);
 }
+#endif
 
 #endif /* M64P_R4300_ASSEMBLE_H */
 

@@ -13,8 +13,9 @@ unsigned int enable_fifo_full = 0;
 unsigned long length_ms = 0;
 unsigned long fade_ms = 0;
 
-static void * stdio_fopen( const char * path )
+static void * stdio_fopen( void * context, const char * path )
 {
+    (void)context;
     return fopen( path, "rb" );
 }
 
@@ -41,6 +42,7 @@ static long stdio_ftell( void * f )
 static psf_file_callbacks stdio_callbacks =
 {
     "\\/:",
+    NULL,
     stdio_fopen,
     stdio_fread,
     stdio_fseek,
