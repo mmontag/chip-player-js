@@ -254,7 +254,6 @@ const chipModules = [
       '_v2m_close',
     ],
     flags: [
-      '-flto',
       '-fno-asynchronous-unwind-tables',
       '-fno-stack-protector',
       '-ffunction-sections',
@@ -268,7 +267,7 @@ const chipModules = [
     enabled: true,
     sourceFiles: [
       'psflib/libpsflib.a',
-      'lazyusf2/liblazyusf.a',
+      'lazyusf2/build/liblazyusf2.a',
       'lazyusf2/_wothke/n64plug.cpp',
     ],
     exportedFunctions: [

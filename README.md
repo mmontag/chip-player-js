@@ -74,7 +74,7 @@ cd libxmp/
 source ~/src/emsdk/emsdk_env.sh  # load the emscripten environment variables
 mkdir build                      # create a build folder for Cmake output
 cd build
-emcmake cmake -DBUILD_LITE=ON -DBUILD_STATIC=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-Os" ..  
+emcmake cmake -DBUILD_LITE=ON -DBUILD_STATIC=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-Oz -flto" ..  
 # ...or use ccmake (see note below)
 
 emmake make
@@ -109,7 +109,7 @@ emmake make fluidlite-static
 
 #### Subproject: psflib and lazyusf2
 
-Our goal is to produce **psflib/libpsflib.a** and **lazyusf2/liblazyusf.a**. These use a special Emscripten.Makefile (loosely based on [Jeurgen Wothke's webn64 .bat script](https://github.com/wothke/webn64/blob/master/emscripten/makeEmscripten.bat)).
+Our goal is to produce **psflib/libpsflib.a** and **lazyusf2/build/liblazyusf2.a**. Psflib uses a special Emscripten.Makefile (loosely based on [Jeurgen Wothke's webn64 .bat script](https://github.com/wothke/webn64/blob/master/emscripten/makeEmscripten.bat)).
 
 Build psflib:
 
@@ -119,11 +119,15 @@ source ~/src/emsdk/emsdk_env.sh  # load the emscripten environment variables
 emmake make -f Emscripten.Makefile libpsflib.a
 ```
 
-Build liblazyusf:
+Build liblazyusf2:
 
 ```sh
 cd ../lazyusf2/
-emmake make -f Emscripten.Makefile liblazyusf.a
+source ~/src/emsdk/emsdk_env.sh  # load the emscripten environment variables
+mkdir build                      # create a build folder for Cmake output
+cd build
+emcmake cmake ..                 # Cmake will generate a Makefile
+emmake make
 ```
 
 #### Subproject: libvgm
