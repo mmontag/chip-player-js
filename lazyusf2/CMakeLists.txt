@@ -12,7 +12,8 @@ add_library(${target} STATIC ${sources})
 
 target_include_directories(${target} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
-target_compile_definitions(${target} PRIVATE DYNAREC ARCH_MIN_SSE2)
+# Disabled for Emscripten
+#target_compile_definitions(${target} PRIVATE DYNAREC ARCH_MIN_SSE2)
 
 target_sources(${target}
     PRIVATE
@@ -43,6 +44,7 @@ target_sources(${target}
         r4300/cp0.h
         r4300/cp1.c
         r4300/cp1.h
+        r4300/empty_dynarec.c # Added for Emscripten
         r4300/exception.c
         r4300/exception.h
         r4300/interupt.c
