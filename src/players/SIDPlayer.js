@@ -1,0 +1,104 @@
+import Player from "./Player.js";
+import autoBind from 'auto-bind';
+
+const fileExtensions = [
+  'sid', 'mus'
+];
+
+export default class SIDPlayer extends Player {
+  constructor(...args) {
+    super(...args);
+    autoBind(this);
+
+    this.playerKey = 'sid';
+    this.name = 'SID Player';
+    this.speed = 1;
+    this.fileExtensions = fileExtensions;
+    this.bufferL = this.core._malloc(this.bufferSize * 4);
+    this.bufferR = this.core._malloc(this.bufferSize * 4);
+
+    this.core._sid_init(this.sampleRate);
+  }
+
+  loadData(data, filename, persistedSettings) {
+    const dataPtr = this.copyToHeap(data);
+    const err = this.core._sid_load_data(dataPtr, data.byteLength);
+    this.core._free(dataPtr);
+
+    if (err !== 0) {
+      throw Error('Unable to load this file!');
+    }
+
+    this.metadata = { title: filename };
+
+    this.resolveParamValues(persistedSettings);
+    this.setTempo(persistedSettings.tempo || 1);
+    this.resume();
+    this.emit('playerStateUpdate', {
+      ...this.getBasePlayerState(),
+      isStopped: false
+    });
+  }
+
+  processAudioInner(channels) {
+    let i, ch;
+
+    if (this.paused) {
+      for (ch = 0; ch < channels.length; ch++) {
+        channels[ch].fill(0);
+      }
+      return;
+    }
+
+    if (this.lastHeapBuffer !== this.core.HEAP8.buffer) {
+      console.debug('SIDPlayer: Detected HEAP8 buffer change, updating views');
+      this.wasmViewL = new Float32Array(this.core.HEAP8.buffer, this.bufferL, this.bufferSize);
+      this.wasmViewR = new Float32Array(this.core.HEAP8.buffer, this.bufferR, this.bufferSize);
+      this.lastHeapBuffer = this.core.HEAP8.buffer;
+    }
+
+    const samplesWritten = this.core._sid_render(this.bufferL, this.bufferR, this.bufferSize);
+    if (samplesWritten === 0) {
+      this.stop();
+    }
+
+    channels[0].set(this.wasmViewL);
+    channels[1].set(this.wasmViewR);
+  }
+
+  getTempo() {
+    return this.speed;
+  }
+
+  setTempo(val) {
+    this.speed = val;
+    // return this.core._v2m_set_speed(val);
+  }
+
+  getPositionMs() {
+    return this.core._sid_get_position_ms();
+  }
+
+  getDurationMs() {
+    return this.core._sid_get_duration_ms();
+  }
+
+  getMetadata() {
+    return this.metadata;
+  }
+
+  isPlaying() {
+    return !this.isPaused();
+  }
+
+  seekMs(seekMs) {
+    // this.core._v2m_seek_ms(seekMs);
+  }
+
+  stop() {
+    this.suspend();
+    // this.core._v2m_close();
+    console.debug('SIDPlayer.stop()');
+    this.emit('playerStateUpdate', { isStopped: true });
+  }
+}
