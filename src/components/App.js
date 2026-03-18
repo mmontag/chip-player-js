@@ -279,9 +279,9 @@ class App extends React.Component {
       // See https://bugs.chromium.org/p/chromium/issues/detail?id=944538
       //     https://github.com/GoogleChrome/samples/issues/637
       this.mediaSessionAudio = document.createElement('audio');
-      this.mediaSessionAudio.src = BASE_URL + '/5-seconds-of-silence.mp3';
+      this.mediaSessionAudio.src = BASE_URL + '/silence-5sec.mp3';
       this.mediaSessionAudio.loop = true;
-      this.mediaSessionAudio.volume = 0;
+      this.mediaSessionAudio.volume = 0.01;
 
       navigator.mediaSession.setActionHandler('play', () => this.togglePause());
       navigator.mediaSession.setActionHandler('pause', () => this.togglePause());
@@ -341,6 +341,17 @@ class App extends React.Component {
         default:
       }
     });
+  }
+
+  updateMediaSessionPositionState() {
+    if (!('mediaSession' in navigator) || !this.sequencer.getPlayer()) return;
+
+    const positionState = {
+      duration: this.sequencer.getPlayer().getDurationMs() / 1000,
+      position: this.sequencer.getPlayer().getPositionMs() / 1000,
+      playbackRate: this.sequencer.getPlayer().getTempo(),
+    }
+    navigator.mediaSession.setPositionState(positionState);
   }
 
   playContext(context, index = 0, subtune = 0) {
@@ -432,6 +443,7 @@ class App extends React.Component {
               src: imageUrl,
               sizes: '512x512',
             }];
+            this.updateMediaSessionPositionState();
           }
         }).catch(e => {
           this.setState({ imageUrl: null });
@@ -512,6 +524,7 @@ class App extends React.Component {
         this.setState({
           currentSongPositionMs: this.sequencer.getPlayer().getPositionMs(), // Accurate
         });
+        this.updateMediaSessionPositionState();
       }
     }, 100);
   }
@@ -531,6 +544,7 @@ class App extends React.Component {
     this.setState({
       tempo: value
     });
+    this.updateMediaSessionPositionState();
 
     const { settings, updateSettings } = this.props.userContext;
     const persistedKey = 'tempo';
@@ -575,6 +589,7 @@ class App extends React.Component {
     this.setState({
       tempo: tempo
     });
+    this.updateMediaSessionPositionState();
   }
 
   handleShufflePlay(path) {
