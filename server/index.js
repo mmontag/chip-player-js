@@ -85,6 +85,7 @@ if (isDev) {
     logger: console,
     pathFilter: (pathname, req) => {
       return (
+        pathname.endsWith('.mp3') ||
         pathname.endsWith('.wasm') ||
         pathname.startsWith('/static') ||
         pathname.startsWith('/ws') ||
