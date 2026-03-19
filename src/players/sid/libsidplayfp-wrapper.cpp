@@ -131,6 +131,11 @@ int sid_render(float *bufferL, float *bufferR, int length) {
 }
 
 EMSCRIPTEN_KEEPALIVE
+int sid_set_speed(float ratio) {
+  return 0;
+}
+
+EMSCRIPTEN_KEEPALIVE
 int sid_get_position_ms() {
   if (!engine) return 0;
   return (int) engine->timeMs();
@@ -138,7 +143,37 @@ int sid_get_position_ms() {
 
 EMSCRIPTEN_KEEPALIVE
 int sid_get_duration_ms() {
-  return 10000;
+  return 150000; // 2m30s
+}
+
+EMSCRIPTEN_KEEPALIVE
+int sid_set_position_ms(int positionMs) {
+
+  int currentMs = (int) engine->timeMs();
+  int deltaMs = positionMs < currentMs ? positionMs : positionMs - currentMs;
+//  int numChannels = engine->config().playback == SidConfig::MONO ? 1 : 2;
+  int numSamples = (int) (deltaMs * cfg.frequency / 1000.0);
+  numSamples += numSamples % 2;
+
+  printf("positionMs %d, currentMs %d, deltaMs %d, numSamples %d\n",
+          positionMs, currentMs, deltaMs, numSamples);
+//  engine->mute(0, 0, false);
+//  engine->mute(0, 1, false);
+//  engine->mute(0, 2, false);
+
+  if (positionMs < currentMs) {
+    engine->stop(); // Stop playback to reset internal state
+    engine->play(pcmBuf.data(), 16); // ???
+    engine->play(nullptr, numSamples);
+  } else {
+    engine->play(nullptr, numSamples); // Continue playback to advance internal state
+  }
+
+//  engine->mute(0, 0, true);
+//  engine->mute(0, 1, true);
+//  engine->mute(0, 2, true);
+
+  return numSamples;
 }
 
 }

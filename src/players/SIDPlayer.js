@@ -71,8 +71,8 @@ export default class SIDPlayer extends Player {
   }
 
   setTempo(val) {
-    this.speed = val;
-    // return this.core._v2m_set_speed(val);
+    this.speed = this.core._sid_set_speed(val) ? val : this.speed;
+    return this.speed;
   }
 
   getPositionMs() {
@@ -92,7 +92,8 @@ export default class SIDPlayer extends Player {
   }
 
   seekMs(seekMs) {
-    // this.core._v2m_seek_ms(seekMs);
+    console.log('seeking ', seekMs);
+    this.muteAudioDuringCall(this.audioNode, () => this.core._sid_set_position_ms(seekMs));
   }
 
   stop() {
