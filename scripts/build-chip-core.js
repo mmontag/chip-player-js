@@ -326,6 +326,28 @@ const chipModules = [
     ],
     flags: [],
   },
+  {
+    name: 'libsidplayfp',
+    enabled: true,
+    sourceFiles: [
+      '../libsidplayfp/src/.libs/libsidplayfp.a',
+      './src/players/sid/libsidplayfp-wrapper.cpp',
+    ],
+    exportedFunctions: [
+      '_sid_init',
+      '_sid_load_data',
+      '_sid_render',
+      '_sid_get_duration_ms',
+      '_sid_get_position_ms',
+      '_sid_set_position_ms',
+      '_sid_set_voice_mask',
+      // 'sidGetVoiceGroups' through Embind
+    ],
+    flags: [
+      '-I../libsidplayfp/src',
+      '-lembind',
+    ],
+  },
 ];
 
 const compiler = process.env.EMPP_BIN || 'em++';
@@ -370,6 +392,8 @@ const flags = [
   '-s', 'ENVIRONMENT=web',
   '-s', 'USE_ZLIB=1',
   '-s', 'EXPORT_ES6=1',
+  // '-s', 'INITIAL_MEMORY=33554432', // 32MB initial memory; can grow with ALLOW_MEMORY_GROWTH
+  '-s', 'INITIAL_MEMORY=65536000', // 64MB initial memory
   '-s', 'USE_ES6_IMPORT_META=0',
   '-s', 'WASM_BIGINT',       // support passing 64 bit integers to/from JS
   '-lidbfs.js',
