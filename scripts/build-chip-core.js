@@ -341,6 +341,9 @@ const chipModules = [
       '_sid_get_position_ms',
       '_sid_set_position_ms',
       '_sid_set_voice_mask',
+      '_sid_get_num_subtunes',
+      '_sid_get_subtune',
+      '_sid_set_subtune',
       // 'sidGetVoiceGroups' through Embind
     ],
     flags: [

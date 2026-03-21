@@ -167,6 +167,22 @@ void sid_set_voice_mask(unsigned mask) {
   }
 }
 
+EMSCRIPTEN_KEEPALIVE
+int sid_get_num_subtunes() {
+  return (int) currentTune->getInfo()->songs();
+}
+
+EMSCRIPTEN_KEEPALIVE
+int sid_get_subtune() {
+  return (int) currentTune->getInfo()->currentSong() - 1;
+}
+
+EMSCRIPTEN_KEEPALIVE
+void sid_set_subtune(int subtune) {
+  engine->stop();
+  currentTune->selectSong(subtune + 1);
+}
+
 }
 
 struct VoiceGroup {
@@ -178,10 +194,10 @@ EMSCRIPTEN_KEEPALIVE
 std::vector<VoiceGroup> sid_get_voice_groups() {
   std::vector<VoiceGroup> voice_groups;
   for (int i = 0; i < currentTune->getInfo()->sidChips(); i++) {
-    std::string group_name = "SID 6581";
+    std::string group_name = "MOS 6581";
 
     if (currentTune->getInfo()->sidModel(i) == SidTuneInfo::SIDMODEL_8580) {
-      group_name = "SID 8580";
+      group_name = "MOS 8580";
     }
 
     static std::vector<std::string> voice_names = {"Osc 1", "Osc 2", "Osc 3"};
