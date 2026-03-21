@@ -9,7 +9,9 @@
 #include <builders/resid-builder/resid.h>
 
 #include <vector>
+#include <bitset>
 #include <emscripten.h>
+#include <emscripten/bind.h>
 
 sidplayfp *engine = nullptr;
 SidTune *currentTune = nullptr;
