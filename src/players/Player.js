@@ -187,6 +187,8 @@ export default class Player extends EventEmitter {
     return 0;
   }
 
+  playSubtune() {}
+
   getMetadata() {
     return {
       title: null,

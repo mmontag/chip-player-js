@@ -43,17 +43,14 @@ export default class SIDPlayer extends Player {
   }
 
   processAudioInner(channels) {
-    let ch;
-
     if (this.paused) {
-      for (ch = 0; ch < channels.length; ch++) {
-        channels[ch].fill(0);
-      }
+      channels[0].fill(0);
+      channels[1].fill(0);
       return;
     }
 
     if (this.lastHeapBuffer !== this.core.HEAP8.buffer) {
-      console.debug('SIDPlayer: Detected HEAP8 buffer change, updating views');
+      console.debug('SIDPlayer: Detected HEAP8 buffer change, updating views.');
       this.wasmViewL = new Float32Array(this.core.HEAP8.buffer, this.bufferL, this.bufferSize);
       this.wasmViewR = new Float32Array(this.core.HEAP8.buffer, this.bufferR, this.bufferSize);
       this.lastHeapBuffer = this.core.HEAP8.buffer;
@@ -66,6 +63,22 @@ export default class SIDPlayer extends Player {
 
     channels[0].set(this.wasmViewL);
     channels[1].set(this.wasmViewR);
+  }
+
+  getNumSubtunes() {
+    return this.core._sid_get_num_subtunes();
+  }
+
+  getSubtune() {
+    return this.core._sid_get_subtune();
+  }
+
+  playSubtune(subtune) {
+    this.core._sid_set_subtune(subtune);
+    this.emit('playerStateUpdate', {
+      ...this.getBasePlayerState(),
+      isStopped: false,
+    });
   }
 
   getTempo() {
