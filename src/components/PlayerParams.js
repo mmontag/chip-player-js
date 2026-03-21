@@ -125,7 +125,7 @@ export default class PlayerParams extends React.PureComponent {
         {voiceGroups.length > 0 ?
           voiceGroups.map((voiceGroup, i) => {
             return (
-              <span className='PlayerParams-param PlayerParams-group' key={voiceGroup.name}>
+              <span className='PlayerParams-param PlayerParams-group' key={voiceGroup.name+i}>
                   <label className="PlayerParams-group-title" title="Sound chip">
                     {voiceGroup.icon && <span className='inline-icon dim-icon icon-chip'/>}{' '}
                     {voiceGroup.name}:

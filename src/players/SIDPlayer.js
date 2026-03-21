@@ -1,5 +1,6 @@
 import Player from "./Player.js";
 import autoBind from 'auto-bind';
+import { vectorToArray } from '../util';
 
 const fileExtensions = [
   'sid', 'mus'
@@ -31,6 +32,7 @@ export default class SIDPlayer extends Player {
 
     this.metadata = { title: filename };
 
+    this.mask = Array(18).fill(1);
     this.resolveParamValues(persistedSettings);
     this.setTempo(persistedSettings.tempo || 1);
     this.resume();
@@ -41,7 +43,7 @@ export default class SIDPlayer extends Player {
   }
 
   processAudioInner(channels) {
-    let i, ch;
+    let ch;
 
     if (this.paused) {
       for (ch = 0; ch < channels.length; ch++) {
@@ -91,14 +93,35 @@ export default class SIDPlayer extends Player {
     return !this.isPaused();
   }
 
+  getVoiceGroups() {
+    return vectorToArray(this.core.sidGetVoiceGroups()).map((group, g) => ({
+      icon: true,
+      name: group.groupName,
+      voices: vectorToArray(group.voiceNames).map((name, v) => ({ name, idx: g*3+v })),
+    }));
+  }
+
+  getVoiceMask() {
+    return this.mask;
+  }
+
+  setVoiceMask(mask) {
+    this.mask = mask;
+
+    let bitmask = 0;
+    mask.forEach((b, i) => {
+      if (!b) bitmask |= (1 << i);
+    });
+
+    this.core._sid_set_voice_mask(bitmask);
+  }
+
   seekMs(seekMs) {
-    console.log('seeking ', seekMs);
     this.muteAudioDuringCall(this.audioNode, () => this.core._sid_set_position_ms(seekMs));
   }
 
   stop() {
     this.suspend();
-    // this.core._v2m_close();
     console.debug('SIDPlayer.stop()');
     this.emit('playerStateUpdate', { isStopped: true });
   }

@@ -164,3 +164,7 @@ export const postWithOptionalAuth = async (user, path, json) => {
   }
   return axios.post(path, json, { headers }).then(res => res.data);
 }
+
+export const vectorToArray = (vec) => {
+  return new Array(vec.size()).fill(0).map((_, id) => vec.get(id))
+}
