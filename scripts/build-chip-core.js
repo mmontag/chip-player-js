@@ -344,6 +344,7 @@ const chipModules = [
       '_sid_get_num_subtunes',
       '_sid_get_subtune',
       '_sid_set_subtune',
+      '_sid_stop',
       // 'sidGetVoiceGroups' through Embind
     ],
     flags: [

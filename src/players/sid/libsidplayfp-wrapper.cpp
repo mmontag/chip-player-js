@@ -183,6 +183,11 @@ void sid_set_subtune(int subtune) {
   currentTune->selectSong(subtune + 1);
 }
 
+EMSCRIPTEN_KEEPALIVE
+void sid_stop() {
+  engine->stop();
+}
+
 }
 
 struct VoiceGroup {

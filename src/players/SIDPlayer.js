@@ -1,6 +1,7 @@
 import Player from "./Player.js";
 import autoBind from 'auto-bind';
 import { vectorToArray } from '../util';
+import path from 'path';
 
 const fileExtensions = [
   'sid', 'mus'
@@ -30,7 +31,7 @@ export default class SIDPlayer extends Player {
       throw Error('Unable to load this file!');
     }
 
-    this.metadata = { title: filename };
+    this.metadata = { title: path.basename(filename) };
 
     this.mask = Array(18).fill(true);
     this.resolveParamValues(persistedSettings);
@@ -135,6 +136,7 @@ export default class SIDPlayer extends Player {
 
   stop() {
     this.suspend();
+    this.core._sid_stop();
     console.debug('SIDPlayer.stop()');
     this.emit('playerStateUpdate', { isStopped: true });
   }
