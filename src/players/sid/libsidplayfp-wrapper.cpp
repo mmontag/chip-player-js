@@ -105,6 +105,13 @@ int sid_load_data(const uint8_t *data, uint32_t size) {
 }
 
 EMSCRIPTEN_KEEPALIVE
+const char* sid_get_song_md5() {
+  if (!currentTune) return nullptr;
+  // char* is owned by SIDTuneBase
+  return currentTune->createMD5();
+}
+
+EMSCRIPTEN_KEEPALIVE
 int sid_render(float *bufferL, float *bufferR, int length) {
   if (!engine) return 0;
 
@@ -150,6 +157,8 @@ void sid_set_position_ms(int positionMs) {
 
 EMSCRIPTEN_KEEPALIVE
 int sid_get_duration_ms() {
+  // Duration requires the songlengths.md5 database.
+  // Currently implemented in the host layer.
   return 150000; // 2m30s
 }
 
