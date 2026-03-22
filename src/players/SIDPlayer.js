@@ -32,7 +32,7 @@ export default class SIDPlayer extends Player {
 
     this.metadata = { title: filename };
 
-    this.mask = Array(18).fill(1);
+    this.mask = Array(18).fill(true);
     this.resolveParamValues(persistedSettings);
     this.setTempo(persistedSettings.tempo || 1);
     this.resume();

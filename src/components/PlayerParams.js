@@ -137,7 +137,7 @@ export default class PlayerParams extends React.PureComponent {
                         type='checkbox'
                         id={'v_'+i+j}
                         onChange={(e) => this.handleVoiceToggle(e, voice.idx)}
-                        checked={voiceMask[voice.idx]}/>
+                        checked={!!voiceMask[voice.idx]}/>
                       <label htmlFor={'v_'+i+j}>
                         {voice.name}
                       </label></div>
@@ -160,7 +160,7 @@ export default class PlayerParams extends React.PureComponent {
                     type='checkbox'
                     id={'v_'+i}
                     onChange={(e) => this.handleVoiceToggle(e, i)}
-                    checked={voiceMask[i]}/>
+                    checked={!!voiceMask[i]}/>
                   <label htmlFor={'v_'+i}>
                     {voiceNames[i]}
                   </label></div>
@@ -240,7 +240,7 @@ export default class PlayerParams extends React.PureComponent {
                   <input type='checkbox'
                          id={param.id}
                          onChange={(e) => onParamChange(param.id, e.target.checked)}
-                         checked={value}/>
+                         checked={!!value}/>
                   <label htmlFor={param.id} title={param.hint}>
                     {param.label}
                   </label>
