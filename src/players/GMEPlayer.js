@@ -1,8 +1,8 @@
+import autoBind from 'auto-bind';
+import path from 'path';
 import Player from "./Player.js";
 import SubBass from "../effects/SubBass";
-import { allOrNone, remap01 } from '../util';
-import path from 'path';
-import autoBind from 'auto-bind';
+import { allOrNone } from '../util';
 
 let core = null;
 
@@ -33,6 +33,7 @@ export default class GMEPlayer extends Player {
     {
       id: 'stereoWidth',
       label: 'Stereo Width',
+      hint: 'Channel panning for NSF, GBS, and AY files.',
       type: 'number',
       min: 0.0,
       max: 1.0,
@@ -124,16 +125,6 @@ export default class GMEPlayer extends Player {
         for (i = 0; i < this.bufferSize; i++) {
           channels[0][i] *= attenuate;
           channels[1][i] *= attenuate;
-        }
-      }
-
-      if (this.params.stereoWidth < 1) {
-        const width = remap01(this.params.stereoWidth, 0.5, 1);
-        for (i = 0; i < this.bufferSize; i++) {
-          const left = channels[0][i];
-          const right = channels[1][i];
-          channels[0][i] = left * width + right * (1 - width);
-          channels[1][i] = right * width + left * (1 - width);
         }
       }
 

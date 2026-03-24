@@ -237,7 +237,8 @@ export default class Player extends EventEmitter {
     for (const paramDef of this.paramDefs) {
       const paramId = paramDef.id;
       const resolvedValue = this.resolveParamValue(paramId, undefined, persistedSettings);
-      if (this.getParameter(paramId) === resolvedValue) continue;
+      // Reloading the soundfont is expensive.
+      if (paramId === 'soundfont' && this.getParameter(paramId) === resolvedValue) continue;
       if (resolvedValue !== undefined) {
         this.setParameter(paramId, resolvedValue);
       }
