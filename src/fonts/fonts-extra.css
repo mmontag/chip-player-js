@@ -57,13 +57,6 @@
 :root { --fontStingray: 14px/16px Stingray; }
 
 @font-face {
-    src: url(Tahoma.woff) format('woff');
-    font-family: Tahoma;
-}
-
-:root { --fontTahoma: 11px/16px Tahoma, Arial, sans-serif; }
-
-@font-face {
     src: url(pentacom/DeckardsRegular.ttf) format('truetype');
     font-family: DeckardsRegular;
 }

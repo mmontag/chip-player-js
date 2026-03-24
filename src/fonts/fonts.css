@@ -11,3 +11,10 @@
 }
 
 :root { --fontTahomaPixel: 16px/16px TahomaPixel, Tahoma; }
+
+@font-face {
+    src: url(Tahoma.woff) format('woff');
+    font-family: Tahoma;
+}
+
+:root { --fontTahoma: 11px/16px Tahoma, Arial, sans-serif; }
