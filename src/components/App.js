@@ -111,7 +111,6 @@ class App extends React.Component {
       paused: true,
       ejected: true,
       currentSongMetadata: {},
-      currentSongNumVoices: 0,
       currentSongNumSubtunes: 0,
       currentSongSubtune: 0,
       currentSongDurationMs: 1,
@@ -246,7 +245,6 @@ class App extends React.Component {
       paused: 'isPaused',
       currentSongSubtune: 'subtune',
       currentSongMetadata: 'metadata',
-      currentSongNumVoices: 'numVoices',
       currentSongPositionMs: 'positionMs',
       currentSongDurationMs: 'durationMs',
       currentSongNumSubtunes: 'numSubtunes',
@@ -383,7 +381,6 @@ class App extends React.Component {
         ejected: true,
         currentSongSubtune: 0,
         currentSongMetadata: {},
-        currentSongNumVoices: 0,
         currentSongPositionMs: 0,
         currentSongDurationMs: 1,
         currentSongNumSubtunes: 0,
@@ -905,7 +902,6 @@ class App extends React.Component {
                   <Settings
                     ejected={this.state.ejected}
                     tempo={this.state.tempo}
-                    numVoices={this.state.currentSongNumVoices}
                     voiceMask={this.state.voiceMask}
                     voiceNames={this.state.voiceNames}
                     voiceGroups={this.state.voiceGroups}
@@ -931,7 +927,6 @@ class App extends React.Component {
           <AppFooter
             currentSongDurationMs={this.state.currentSongDurationMs}
             currentSongNumSubtunes={this.state.currentSongNumSubtunes}
-            currentSongNumVoices={this.state.currentSongNumVoices}
             currentSongSubtune={this.state.currentSongSubtune}
             ejected={this.state.ejected}
             getCurrentSongLink={this.getCurrentSongLink}
