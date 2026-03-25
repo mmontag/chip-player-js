@@ -131,11 +131,14 @@ if (!isDev) {
 }
 
 app.use((req, res, next) => {
-  // Preserve for debugging purposes.
-  // console.log('----', req.url);
   res.header('Access-Control-Allow-Origin', '*');
   next();
 });
+
+const cache1Hour = (req, res, next) => {
+  res.header('Cache-Control', 'public, max-age=3600');
+  next();
+};
 
 // --- API Routes ---
 
@@ -178,7 +181,7 @@ async function getLogoImage() {
   return logoImage;
 }
 
-app.get('/preview', async (req, res) => {
+app.get('/preview', cache1Hour, async (req, res) => {
   const { s: songId } = req.query;
   if (!songId) {
     return res.status(400).send('Missing song ID');
@@ -191,7 +194,7 @@ app.get('/preview', async (req, res) => {
     if (song && song.image_path) {
       const cachedBuffer = previewCache.get(song.image_path);
       if (cachedBuffer) {
-        res.set('Content-Type', 'image/png');
+        res.header('Content-Type', 'image/png');
         return res.send(cachedBuffer);
       }
     }
@@ -259,7 +262,7 @@ app.get('/preview', async (req, res) => {
       previewCache.set(song.image_path, buffer);
     }
 
-    res.set('Content-Type', 'image/png');
+    res.header('Content-Type', 'image/png');
     res.send(buffer);
   } catch (e) {
     console.error('Preview generation error:', e);
@@ -270,7 +273,7 @@ app.get('/preview', async (req, res) => {
 /**
  * Returns: { items: [ { file, title, artist, game, system }, ... ], total }
  */
-router.get('/search', (req, res) => {
+router.get('/search', cache1Hour, (req, res) => {
   const { limit = 100, query } = req.query;
   const start = performance.now();
 
@@ -291,7 +294,6 @@ router.get('/search', (req, res) => {
   const time = (performance.now() - start).toFixed(1);
   console.log('Returned %s results for "%s" in %s ms.', items.length, query, time);
 
-  res.set('Cache-Control', 'public, max-age=3600');
   res.json({
     items: items,
     total: items.length,
@@ -301,9 +303,8 @@ router.get('/search', (req, res) => {
 /**
  * Returns: { total, unique }
  */
-router.get('/total', (req, res) => {
+router.get('/total', cache1Hour, (req, res) => {
   const result = getTotalStmt.get();
-  res.set('Cache-Control', 'public, max-age=3600');
   res.json({ total: result.total, unique: result.unique });
 });
 
@@ -337,9 +338,8 @@ router.get('/shuffle', (req, res) => {
 /**
  * Returns: [ { path, type, size, mtime, idx, count }, ... ]
  */
-router.get('/browse', async (req, res) => {
+router.get('/browse', cache1Hour, async (req, res) => {
   const { path: reqPath } = req.query;
-  res.set('Cache-Control', 'public, max-age=3600');
 
   let idx = 0;
   if (browseLocalFilesystem) {
@@ -396,7 +396,7 @@ router.get('/browse', async (req, res) => {
  *   md5: string|null
  * }
  */
-router.get('/metadata', (req, res) => {
+router.get('/metadata', cache1Hour, (req, res, next) => {
   const { path: reqPath } = req.query;
   if (!reqPath) return res.json({});
 
@@ -575,7 +575,7 @@ app.use('/soundfonts', express.static(LOCAL_SOUNDFONT_ROOT));
 
 // Handle client-side routing, return all requests to index.html.
 // This must be the LAST route.
-app.get('/{*splat}', async (req, res) => {
+app.get('/{*splat}', cache1Hour, async (req, res) => {
   let html = indexHtmlProd;
 
   if (isDev) {
