@@ -17,7 +17,6 @@ function Settings(props) {
   const {
     ejected,
     tempo,
-    numVoices,
     voiceMask,
     voiceNames,
     voiceGroups,
@@ -45,7 +44,6 @@ function Settings(props) {
         <PlayerParams
           ejected={ejected}
           tempo={tempo}
-          numVoices={numVoices}
           voiceMask={voiceMask}
           voiceNames={voiceNames}
           voiceGroups={voiceGroups}

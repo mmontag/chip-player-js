@@ -90,7 +90,6 @@ export default class PlayerParams extends React.PureComponent {
       onTempoChange,
       ejected,
       voiceGroups,
-      numVoices,
       voiceMask,
       voiceNames,
     } = this.props;
@@ -147,20 +146,20 @@ export default class PlayerParams extends React.PureComponent {
             )
           })
           :
-          numVoices > 0 &&
+          voiceMask.length > 0 &&
           <span className='PlayerParams-param PlayerParams-group'>
             <label className="PlayerParams-group-title">
               Voices:
             </label>
             <div className="PlayerParams-voiceList">
-              {[...Array(numVoices)].map((_, i) => {
+              {voiceMask.map((val, i) => {
                 return (
                   <div key={i} className='App-voice-label'><input
                     title='Alt+click to solo. Alt+click again to unmute all.'
                     type='checkbox'
                     id={'v_'+i}
                     onChange={(e) => this.handleVoiceToggle(e, i)}
-                    checked={!!voiceMask[i]}/>
+                    checked={!!val}/>
                   <label htmlFor={'v_'+i}>
                     {voiceNames[i]}
                   </label></div>
