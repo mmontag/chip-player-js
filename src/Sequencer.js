@@ -1,7 +1,7 @@
-import promisify from "./promisify-xhr";
-import shuffle from 'lodash/shuffle';
-import EventEmitter from 'events';
+import axios from 'axios';
 import autoBind from 'auto-bind';
+import EventEmitter from 'events';
+import shuffle from 'lodash/shuffle';
 import { getUrlFromFilepath } from './util';
 
 export const REPEAT_OFF = 0;
@@ -217,17 +217,18 @@ export default class Sequencer extends EventEmitter {
       // Fetch the song file (cancelable request)
       // Cancel any outstanding request so that playback doesn't happen out of order
       if (this.songRequest) this.songRequest.abort();
-      this.songRequest = promisify(new XMLHttpRequest());
-      this.songRequest.responseType = 'arraybuffer';
-      this.songRequest.open('GET', url);
-      this.songRequest.send()
-        .then(xhr => xhr.response)
-        .then(buffer => {
+      this.songRequest = new AbortController();
+      axios.get(url, {
+          responseType: 'arraybuffer',
+          signal: this.songRequest.signal,
+        })
+        .then(res => {
           this.currSongPath = filepath;
-          this.playSongBuffer(player, filepath, buffer, subtune)
+          this.playSongBuffer(player, filepath, res.data, subtune);
         })
         .catch(e => {
-          this.handlePlayerError(e.message || `HTTP ${e.status} ${e.statusText} ${filepath}`);
+          if (axios.isCancel(e)) return;
+          this.handlePlayerError(`${e.message}: ${filepath}`);
         });
     }
   }
