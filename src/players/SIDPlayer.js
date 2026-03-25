@@ -1,11 +1,21 @@
-import Player from "./Player.js";
+import axios from 'axios';
 import autoBind from 'auto-bind';
-import { vectorToArray } from '../util';
 import path from 'path';
+
+import Player from "./Player.js";
+import { vectorToArray } from '../util';
+import { API_BASE } from '../config';
 
 const fileExtensions = [
   'sid', 'mus'
 ];
+
+// Convert song length to milliseconds. Each song length is of format:
+// mm:ss[.SSS]
+function parseSongLength(length) {
+  const parts = length.split(':');
+  return Math.floor((parseFloat(parts[0]) * 60 + parseFloat(parts[1])) * 1000);
+}
 
 export default class SIDPlayer extends Player {
   constructor(...args) {
@@ -18,11 +28,33 @@ export default class SIDPlayer extends Player {
     this.fileExtensions = fileExtensions;
     this.bufferL = this.core._malloc(this.bufferSize * 4);
     this.bufferR = this.core._malloc(this.bufferSize * 4);
+    this.subtuneDurations = [];
 
     this.core._sid_init(this.sampleRate);
   }
 
-  loadData(data, filename, persistedSettings) {
+  getSidMetadata(md5) {
+    console.log("SIDPlayer: Fetching metadata for SID:", md5);
+    const metadataUrl = `${API_BASE}/hvsc?sidHash=${md5}`;
+    this.subtuneDurations = [];
+
+    axios.get(metadataUrl).then(response => {
+      console.log('SIDPlayer: Got metadata for SID:', response.data);
+      const { lengths, name, author, copyright } = response.data;
+      this.subtuneDurations = lengths.split(' ').map(parseSongLength);
+      this.metadata = {
+        formatted: {
+          title: name,
+          subtitle: `${author} - ${copyright}`,
+        },
+      };
+      this.emit('playerStateUpdate', {
+        ...this.getBasePlayerState()
+      });
+    });
+  }
+
+  loadData(data, filepath, persistedSettings) {
     const dataPtr = this.copyToHeap(data);
     const err = this.core._sid_load_data(dataPtr, data.byteLength);
     this.core._free(dataPtr);
@@ -31,7 +63,11 @@ export default class SIDPlayer extends Player {
       throw Error('Unable to load this file!');
     }
 
-    this.metadata = { title: path.basename(filename) };
+    const ptr = this.core._sid_get_song_md5();
+    const md5 = this.core.UTF8ToString(ptr);
+    this.getSidMetadata(md5);
+
+    this.metadata = { title: path.basename(filepath) };
 
     this.mask = Array(18).fill(true);
     this.resolveParamValues(persistedSettings);
@@ -58,8 +94,11 @@ export default class SIDPlayer extends Player {
     }
 
     const samplesWritten = this.core._sid_render(this.bufferL, this.bufferR, this.bufferSize);
-    if (samplesWritten === 0) {
-      this.stop();
+    if (samplesWritten === 0 || this.getPositionMs() > this.subtuneDurations[this.getSubtune()]) {
+      // TODO: consolidate with GMEPlayer subtune sequencing
+      const subtune = this.getSubtune() + 1;
+      if (subtune >= this.getNumSubtunes()) this.stop();
+      else this.playSubtune(subtune);
     }
 
     channels[0].set(this.wasmViewL);
@@ -87,8 +126,8 @@ export default class SIDPlayer extends Player {
   }
 
   setTempo(val) {
-    this.speed = this.core._sid_set_speed(val) ? val : this.speed;
-    return this.speed;
+    this.core._sid_set_speed(val);
+    this.speed = val;
   }
 
   getPositionMs() {
@@ -96,7 +135,11 @@ export default class SIDPlayer extends Player {
   }
 
   getDurationMs() {
-    return this.core._sid_get_duration_ms();
+    if (this.subtuneDurations.length > 0) {
+      return this.subtuneDurations[this.getSubtune()];
+    } else {
+      return this.core._sid_get_duration_ms();
+    }
   }
 
   getMetadata() {
