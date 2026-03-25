@@ -1,3 +1,4 @@
+import axios from 'axios';
 import React, { useContext } from 'react';
 import autoBindReact from 'auto-bind/react';
 import isMobile from 'ismobilejs';
@@ -27,7 +28,6 @@ import {
   titlesFromMetadata,
   unlockAudioContext
 } from '../util';
-import requestCache from '../RequestCache';
 import LocalFilesManager from '../LocalFilesManager';
 import Sequencer, { NUM_REPEAT_MODES, NUM_SHUFFLE_MODES, REPEAT_OFF, SHUFFLE_OFF } from '../Sequencer';
 
@@ -276,6 +276,7 @@ class App extends React.Component {
       // Limitations of MediaSession: there must always be an active audio element.
       // See https://bugs.chromium.org/p/chromium/issues/detail?id=944538
       //     https://github.com/GoogleChrome/samples/issues/637
+      // Chrome seems to require volume > 0 to enable the session.
       this.mediaSessionAudio = document.createElement('audio');
       this.mediaSessionAudio.src = BASE_URL + '/silence-5sec.mp3';
       this.mediaSessionAudio.loop = true;
@@ -418,8 +419,8 @@ class App extends React.Component {
         // const filepath = url.replace(CATALOG_PREFIX, '');
         // updateQueryString({ play: filepath, t: undefined });
         // TODO: move fetch metadata to Player when it becomes event emitter
-        requestCache.fetchCached(metadataUrl).then(response => {
-          const { imageUrl: imagePath, infoTexts, md5, songId } = response;
+        axios.get(metadataUrl).then(response => {
+          const { imageUrl: imagePath, infoTexts, md5, songId } = response.data;
           const imageUrl = imagePath ? getUrlFromFilepath(imagePath) : null;
           const newInfoTexts = [...this.state.infoTexts, ...infoTexts ];
           const newShowInfo = this.state.showInfo && newInfoTexts.length > 0;
