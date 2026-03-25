@@ -40,6 +40,9 @@ const dbStatements = {
       WHERE m.path = ?
       LIMIT 1
   `),
+  getSidMetadataStmt: db.prepare(`
+      SELECT * FROM hvsc_files WHERE hash = ? LIMIT 1
+  `),
   getSongByPathStmt: db.prepare(`
       SELECT m.song_id, m.path, m.title, m.artist, m.game, m.system, m.copyright, i.path as image_path
       FROM music m

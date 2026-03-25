@@ -26,6 +26,7 @@ const {
   getDirIdStmt,
   getDirChildrenStmt,
   getMetadataStmt,
+  getSidMetadataStmt,
   getTextContentStmt,
   getShuffleStmt,
   getTotalStmt,
@@ -389,6 +390,23 @@ router.get('/browse', cache1Hour, async (req, res) => {
 });
 
 /**
+ * Returns entire row from hvsc_files table or 404 if SID not found.
+ * {
+ *   name: string,
+ *   author: string,
+ *   copyright: string,
+ *   lengths: string
+ * }
+ */
+router.get('/hvsc', cache1Hour, (req, res) => {
+  const { sidHash } = req.query;
+  if (!sidHash) return res.status(500).send('Missing sidHash');
+  const meta = getSidMetadataStmt.get(sidHash);
+  if (!meta) return res.status(404).send('SID not found. Wrong SID hash version?');
+  res.json(meta);
+});
+
+/**
  * Returns: {
  *   imageUrl: string|null,
  *   infoTexts: [ string, ... ],
@@ -570,7 +588,10 @@ app.get('/.well-known/appspecific/com.chrome.devtools.json', (req, res) => res.s
 
 // Static file fallback - should be handled by Nginx in production
 app.use(express.static(LOCAL_CLIENT_BUILD_ROOT));
-app.use('/catalog', express.static(LOCAL_CATALOG_ROOT));
+app.use('/catalog', (req, res, next) => {
+  if (req.path.endsWith('.sid')) res.type('audio/prs.sid');
+  next();
+}, express.static(LOCAL_CATALOG_ROOT));
 app.use('/soundfonts', express.static(LOCAL_SOUNDFONT_ROOT));
 
 // Handle client-side routing, return all requests to index.html.
