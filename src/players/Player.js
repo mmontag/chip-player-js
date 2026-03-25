@@ -118,8 +118,18 @@ export default class Player extends EventEmitter {
     console.debug(`Player.seekMs() not implemented for ${this.constructor.name}.`);
   }
 
+  // Deprecated in favor of getVoiceGroups
   getVoiceName(index) {
-    console.debug(`Player.getVoiceName() not implemented for ${this.constructor.name}.`);
+    return 'Voice ' + (index + 1);
+  }
+
+  // Deprecated in favor of getVoiceGroups
+  getVoiceNames() {
+    const names = [];
+    for (let i = 0; i < this.getVoiceMask().length; i++) {
+      names.push(this.getVoiceName(i));
+    }
+    return names;
   }
 
   getVoiceMask() {
@@ -129,14 +139,6 @@ export default class Player extends EventEmitter {
 
   setVoiceMask() {
     console.debug(`Player.setVoiceMask() not implemented for ${this.constructor.name}.`);
-  }
-
-  getVoiceNames() {
-    const names = [];
-    for (let i = 0; i < this.getVoiceMask().length; i++) {
-      names.push(this.getVoiceName(i));
-    }
-    return names;
   }
 
   /*
