@@ -166,7 +166,7 @@ export default class MIDIPlayer extends Player {
     this.midiFilePlayer = new MIDIFilePlayer({
       // playerStateUpdate is debounced to prevent flooding program change events
       programChangeCb: debounce(() => this.emit('playerStateUpdate', {
-        voiceNames: range(this.getNumVoices()).map(this.getVoiceName)
+        voiceNames: range(this.activeChannels.length).map(this.getVoiceName)
       }), 200),
       output: dummyMidiOutput,
       skipSilence: true,
@@ -468,10 +468,6 @@ export default class MIDIPlayer extends Player {
 
   setTempo(tempo) {
     this.midiFilePlayer.setSpeed(tempo);
-  }
-
-  getNumVoices() {
-    return this.activeChannels.length;
   }
 
   getVoiceName(index) {

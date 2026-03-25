@@ -114,11 +114,6 @@ export default class VGMPlayer extends Player {
       return this.core._lvgm_get_duration_ms(this.vgmCtx);
   }
 
-  getNumVoices() {
-    if (this.vgmCtx)
-      return this.core._lvgm_get_voice_count(this.vgmCtx);
-  }
-
   getVoiceGroups() {
     const voiceGroups = [];
     const numVoices = this.core._lvgm_get_voice_count(this.vgmCtx);

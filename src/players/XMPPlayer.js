@@ -200,10 +200,6 @@ export default class XMPPlayer extends Player {
     return `Ch ${index + 1}`;
   }
 
-  getNumVoices() {
-    return this.metadata.numChannels;
-  }
-
   getPositionMs() {
     return this._positionMs;
   }

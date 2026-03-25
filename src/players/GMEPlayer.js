@@ -260,10 +260,6 @@ export default class GMEPlayer extends Player {
     if (this.gmeCtx) return core.UTF8ToString(core._gme_voice_name(this.gmeCtx, index));
   }
 
-  getNumVoices() {
-    if (this.gmeCtx) return core._gme_voice_count(this.gmeCtx);
-  }
-
   getNumSubtunes() {
     if (this.gmeCtx) return core._gme_track_count(this.gmeCtx);
   }

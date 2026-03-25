@@ -131,14 +131,9 @@ export default class Player extends EventEmitter {
     console.debug(`Player.setVoiceMask() not implemented for ${this.constructor.name}.`);
   }
 
-  getNumVoices() {
-    console.debug(`Player.getNumVoices() not implemented for ${this.constructor.name}.`);
-    return 0;
-  }
-
   getVoiceNames() {
     const names = [];
-    for (let i = 0; i < this.getNumVoices(); i++) {
+    for (let i = 0; i < this.getVoiceMask().length; i++) {
       names.push(this.getVoiceName(i));
     }
     return names;
@@ -260,7 +255,6 @@ export default class Player extends EventEmitter {
       metadata: this.getMetadata(),
       durationMs: this.getDurationMs(),
       positionMs: this.getPositionMs(),
-      numVoices: this.getNumVoices(),
       numSubtunes: this.getNumSubtunes(),
       subtune: this.getSubtune(),
       paramDefs: this.getParamDefs(),
