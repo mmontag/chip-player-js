@@ -9,17 +9,19 @@
  *
  */
 require('dotenv-flow').config({ path: __dirname });
-const fs = require('fs').promises;
-const path = require('path');
+
 const express = require('express');
-const { performance } = require('perf_hooks');
+const fs = require('fs').promises;
 const { createProxyMiddleware } = require('http-proxy-middleware');
-const { dbStatements } = require('./database.js');
-const { Canvas, loadImage } = require('skia-canvas');
 const { LRUCache } = require('lru-cache');
+const path = require('path');
+const { performance } = require('perf_hooks');
+const { Canvas, loadImage } = require('skia-canvas');
+
+const { dbStatements } = require('./database.js');
 const { requireAuth, optionalAuth } = require('./middleware/auth.js');
-const { SettingsSchema, FavoriteSchema, PlaybackSchema } = require('./schemas');
 const { validate } = require('./middleware/validate');
+const { SettingsSchema, FavoriteSchema, PlaybackSchema } = require('./schemas');
 
 const {
   searchStmt,
@@ -138,6 +140,11 @@ app.use((req, res, next) => {
 
 const cache1Hour = (req, res, next) => {
   res.header('Cache-Control', 'public, max-age=3600');
+  next();
+};
+
+const fixSidMimeType = (req, res, next) => {
+  if (req.path.endsWith('.sid')) res.type('audio/prs.sid');
   next();
 };
 
@@ -588,11 +595,8 @@ app.get('/.well-known/appspecific/com.chrome.devtools.json', (req, res) => res.s
 
 // Static file fallback - should be handled by Nginx in production
 app.use(express.static(LOCAL_CLIENT_BUILD_ROOT));
-app.use('/catalog', (req, res, next) => {
-  if (req.path.endsWith('.sid')) res.type('audio/prs.sid');
-  next();
-}, express.static(LOCAL_CATALOG_ROOT));
-app.use('/soundfonts', express.static(LOCAL_SOUNDFONT_ROOT));
+app.use('/catalog', cache1Hour, fixSidMimeType, express.static(LOCAL_CATALOG_ROOT));
+app.use('/soundfonts', cache1Hour, express.static(LOCAL_SOUNDFONT_ROOT));
 
 // Handle client-side routing, return all requests to index.html.
 // This must be the LAST route.
