@@ -1,7 +1,9 @@
+import autoBind from 'auto-bind';
+import axios from 'axios';
 import debounce from 'lodash/debounce';
+import range from 'lodash/range';
 import path from 'path';
 import MIDIFile from './midi/MIDIFile';
-
 import MIDIFilePlayer from './MIDIFilePlayer';
 import Player from './Player';
 import { SOUNDFONTS, SOUNDFONT_MOUNTPOINT, SOUNDFONT_URL_PATH } from '../config';
@@ -13,9 +15,6 @@ import {
   getUrlFromFilepath,
   remap01
 } from '../util';
-import requestCache from '../RequestCache';
-import range from 'lodash/range';
-import autoBind from 'auto-bind';
 
 let core = null;
 
@@ -325,10 +324,10 @@ export default class MIDIPlayer extends Player {
       const metadataUrl = getMetadataUrlForFilepath(filepath);
       let useMelodicChannel10 = false;
       // This should be cached by a preceding fetch in App.js.
-      const { soundfont: soundfontPath } = await requestCache.fetchCached(metadataUrl);
+      const { data: { soundfont: soundfontPath } } = await axios.get(metadataUrl);
       const soundfontUrl = soundfontPath ? getUrlFromFilepath(soundfontPath) : null;
       if (soundfontUrl) {
-        const soundfontBasename = path.basename(getFilepathFromUrl(soundfontUrl));
+        const soundfontBasename = path.basename(soundfontPath);
         const sf2Path = `user/${soundfontBasename}`;
         newTransientParams['soundfont'] = sf2Path;
         if (this.getParameter('soundfont') !== sf2Path) {

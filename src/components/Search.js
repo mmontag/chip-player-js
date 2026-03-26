@@ -3,12 +3,12 @@ import React, { Fragment, PureComponent } from 'react';
 import queryString from 'querystring';
 import debounce from 'lodash/debounce';
 import { API_BASE } from '../config';
-import promisify from '../promisify-xhr';
 import { getUrlFromFilepath, pathJoin } from '../util';
 import DirectoryLink from './DirectoryLink';
 import FavoriteButton from './FavoriteButton';
 import autoBindReact from 'auto-bind/react';
 import VirtualizedList from './VirtualizedList';
+import axios from 'axios';
 
 const MAX_RESULTS = 400;
 const searchResultsCache = {};
@@ -91,33 +91,12 @@ export default class Search extends PureComponent {
       const q = encodeURIComponent(val);
       const url = `${API_BASE}/search?query=${q}&limit=${MAX_RESULTS}`;
       if (this.searchRequest) this.searchRequest.abort();
-      this.searchRequest = promisify(new XMLHttpRequest());
-      this.searchRequest.open('GET', url);
-      this.searchRequest.send()
-        .then(response => {
-          /*
-          Example search response:
-          {
-            "items": [
-              {
-                "id": 609,
-                "file": "Classical MIDI/Bach/Bwv0565 Toccata and Fugue In Dm A.mid",
-                "depth": 3
-              },
-              {
-                "id": 677,
-                "file": "Classical MIDI/Bach/Bwv1046 aSinfonia h.mid",
-                "depth": 3
-              },
-            ],
-            "total": 2
-          }
-          */
-          this.searchRequest = null;
-          return JSON.parse(response.responseText);
+      this.searchRequest = new AbortController();
+      axios.get(url, {
+          signal: this.searchRequest.signal
         })
-        .then((payload) => {
-          const { items, total } = payload;
+        .then(response => {
+          const { items, total } = response.data;
           // Decorate file items with idx (to match up with song context) and other properties.
           const resultFiles = items
             // Sort by full file path to group directories together
