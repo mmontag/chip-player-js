@@ -390,6 +390,8 @@ const flags = [
   '-s', 'ALLOW_MEMORY_GROWTH=1',
   '-s', 'ASSERTIONS=0',      // assertions increase runtime size about 100K
   '-flto',                   // Add Link-Time Optimization
+  '-msimd128',
+  // '-s', 'NO_DISABLE_EXCEPTION_CATCHING',
   '-s', 'MALLOC="emmalloc"', // Use the smaller allocator
   '-s', 'STACK_OVERFLOW_CHECK=0', // Disable runtime stack checks for size
   '-s', 'MODULARIZE=1',
