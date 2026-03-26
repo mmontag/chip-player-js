@@ -2,10 +2,12 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const Database = require('better-sqlite3');
-const { parseMetadata } = require('./metadata-parsers');
 const { Command } = require('commander');
 const chalk = require('chalk');
 const { toArabic } = require('roman-numerals');
+const { FORMATS } = require('../src/config/index');
+const { parseMetadata } = require('./metadata-parsers');
+
 
 const program = new Command();
 
@@ -27,10 +29,7 @@ const limit = parseInt(options.limit);
 // Config
 const CATALOG_DIR = path.resolve(__dirname, '../catalog');
 const DB_PATH = path.resolve(__dirname, '../server/catalog.db');
-const VALID_EXTENSIONS = new Set([
-  '.ay', '.gbs', '.it', '.mdx', '.mid', '.midi', '.miniusf',
-  '.mod', '.nsf', '.nsfe', '.spc', '.s3m', '.v2m', '.vgm', '.vgz', '.xm'
-]);
+const VALID_EXTENSIONS = new Set(FORMATS.map(f => '.'+f));
 
 // Regex for Roman Numeral Sort
 const romanNumeralNineRegex = /\bix\b/i;
@@ -189,15 +188,15 @@ const insertTextStmt = db.prepare('INSERT INTO texts (hash, content) VALUES (?, 
 const updateSortOrderStmt = db.prepare('UPDATE music SET sort_order = ? WHERE path = ?');
 
 // Calculate scan root
-const scanRoot = options.filter ? path.join(CATALOG_DIR, options.filter) : CATALOG_DIR;
+const scanTarget = options.filter ? path.join(CATALOG_DIR, options.filter) : CATALOG_DIR;
 const scanRelativeBase = options.filter || '';
 
-if (!fs.existsSync(scanRoot)) {
-  console.error(chalk.red(`Error: Scan path does not exist: ${scanRoot}`));
+if (!fs.existsSync(scanTarget)) {
+  console.error(chalk.red(`Error: Scan path does not exist: ${scanTarget}`));
   process.exit(1);
 }
 
-console.log(chalk.green(`Scanning ${scanRoot}...`));
+console.log(chalk.green(`Scanning ${scanTarget}...`));
 if (options.dryrun) console.log(chalk.cyan('Dry run mode: Database will not be modified.'));
 
 // Pre-fetch existing files for incremental update and stats
@@ -516,7 +515,7 @@ function processFile(child, directoryId, dirEntries, dirImagePath, dirTextIds) {
       if (dirEntries.find(e => e.name === sfName)) {
         soundfont = path.join(path.dirname(relativePath), sfName);
       }
-    } 
+    }
     
     if (!soundfont) {
       const sfName = findSpecificSidecar(dirEntries, baseName, ['sf2']);
@@ -594,7 +593,7 @@ function processFile(child, directoryId, dirEntries, dirImagePath, dirTextIds) {
 // Start
 const startTime = Date.now();
 // Start with root
-processDirectory(scanRoot, scanRelativeBase)
+processDirectory(CATALOG_DIR, '')
   .then(() => {
     console.log(chalk.green(`\nDone in ${((Date.now() - startTime) / 1000).toFixed(2)}s`));
     
