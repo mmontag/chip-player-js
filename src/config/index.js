@@ -11,7 +11,7 @@ if (process.env.NODE_ENV === 'development') {
 const MAX_SAMPLE_RATE = 48000; // Higher rates are problematic for some players.
 const MAX_VOICES = 64;
 const REPLACE_STATE_ON_SEEK = false;
-const FORMATS =  [
+const FORMATS = [
   'ay',
   'gbs',
   'it',
@@ -20,8 +20,10 @@ const FORMATS =  [
   'midi',
   'miniusf',
   'mod',
+  'mus',
   'nsf',
   'nsfe',
+  'sid',
   'spc',
   's3m',
   'smf',

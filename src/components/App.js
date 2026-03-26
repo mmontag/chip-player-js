@@ -38,6 +38,7 @@ import XMPPlayer from '../players/XMPPlayer';
 import N64Player from '../players/N64Player';
 import MDXPlayer from '../players/MDXPlayer';
 import VGMPlayer from '../players/VGMPlayer';
+import SIDPlayer from '../players/SIDPlayer';
 
 import AppFooter from './AppFooter';
 import AppHeader from './AppHeader';
@@ -169,6 +170,7 @@ class App extends React.Component {
       N64Player,
       MDXPlayer,
       VGMPlayer,
+      SIDPlayer,
     ].map(P => new P(this.chipCore, audioCtx.sampleRate, bufferSize, debug));
     players.forEach(p => {
       p.audioNode = this.playerNode;
