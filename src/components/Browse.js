@@ -67,8 +67,8 @@ export default class Browse extends React.PureComponent {
             <div className="BrowseList-colDir">
               &lt;DIR&gt;
             </div>
-            <div className="BrowseList-colCount" title={`Contains ${item.numChildren} direct child items`}>
-              {item.numChildren}
+            <div className="BrowseList-colCount" title={`Contains ${item.count} direct child items`}>
+              {item.count}
             </div>
             <div className="BrowseList-colMtime">
               {item.mtime}
