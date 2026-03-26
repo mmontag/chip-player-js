@@ -214,8 +214,8 @@ extern int tp_load_soundfont(const char *filename) {
   sprintf(newFileHash, "%s-%ld", filename, (long)filestat.st_ctime);
 
   if (strcmp(newFileHash, g_currentSoundfontFileHash) != 0) {
-    strcpy(g_currentSoundfontFileHash, newFileHash);
     tp_unload_soundfont();
+    strcpy(g_currentSoundfontFileHash, newFileHash);
     return fluid_synth_sfload(g_FluidSynth, filename, 1);
   } else {
     return fluid_synth_get_sfont(g_FluidSynth, 0)->id;
