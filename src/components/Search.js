@@ -1,14 +1,15 @@
 /* eslint import/no-webpack-loader-syntax: off */
 import React, { Fragment, PureComponent } from 'react';
-import queryString from 'querystring';
+import axios from 'redaxios';
+import autoBindReact from 'auto-bind/react';
 import debounce from 'lodash/debounce';
+import queryString from 'querystring';
+
 import { API_BASE } from '../config';
 import { getUrlFromFilepath, pathJoin } from '../util';
 import DirectoryLink from './DirectoryLink';
 import FavoriteButton from './FavoriteButton';
-import autoBindReact from 'auto-bind/react';
 import VirtualizedList from './VirtualizedList';
-import axios from 'redaxios';
 
 const MAX_RESULTS = 400;
 const searchResultsCache = {};
@@ -23,7 +24,7 @@ export default class Search extends PureComponent {
     this.textInput = React.createRef();
 
     this.state = {
-      totalSongs: 0,
+      totalSongs: 300000,
       query: null,
       searching: false,
 
@@ -38,10 +39,29 @@ export default class Search extends PureComponent {
   }
 
   componentDidMount() {
-    const {q} = queryString.parse(window.location.search.substr(1));
+    const { q } = queryString.parse((this.props.location?.search.substr(1) || ''));
     if (q) {
-      this.setState({query: q});
+      this.setState({ query: q });
       this.doSearch(q);
+    }
+  }
+
+  // NOTE: This is not fully vetted
+  componentDidUpdate(prevProps) {
+    // If the route's query string changed (back/forward navigation), sync the input and trigger search.
+    const prevSearch = prevProps.location?.search || '';
+    const currSearch = this.props.location?.search || '';
+    if (prevSearch !== currSearch) {
+      const { q } = queryString.parse(currSearch.replace(/^\?/, ''));
+      if (q) {
+        if (q !== this.state.query) {
+          this.setState({ query: q });
+          this.doSearch(q);
+        }
+      } else if (this.state.query) {
+        // param removed -> clear
+        this.setState({ query: null, searching: false, results: [], resultsContext: [], resultsCount: 0 });
+      }
     }
   }
 
@@ -52,18 +72,21 @@ export default class Search extends PureComponent {
   onSearchInputChange(val, immediate = false) {
     this.setState({query: val});
     // updateQueryString({ q: val ? val.trim() : undefined });
-    const newParams = { q: val ? val.trim() : undefined };
+    const newParams = { q: val ? val : undefined };
     // Merge new params with current query string
     const params = {
-      ...queryString.parse(window.location.search.substr(1)),
+      ...queryString.parse((this.props.location?.search.substr(1) || '')),
       ...newParams,
     };
     // Delete undefined properties
     Object.keys(params).forEach(key => params[key] === undefined && delete params[key]);
     // Object.keys(params).forEach(key => params[key] = decodeURIComponent(params[key]));
     const stateUrl = '?' + queryString.stringify(params).replace(/%20/g, '+');
-    // Update address bar URL
-    this.props.history.replace(stateUrl);
+    // Update address bar URL via react-router history
+    this.props.history.replace({
+      pathname: (this.props.location?.pathname) || '/',
+      search: stateUrl
+    });
 
     if (val.length) {
       if (immediate) {
@@ -139,10 +162,10 @@ export default class Search extends PureComponent {
   }
 
   handleClear() {
-    const urlParams = queryString.parse(window.location.search.substr(1));
+    const urlParams = queryString.parse((this.props.location?.search.substr(1) || ''));
     delete urlParams.q;
     const search = queryString.stringify(urlParams);
-    window.history.replaceState(null, '', search ? `?${search}` : './');
+    this.props.history.replace({ pathname: (this.props.location?.pathname) || '/', search: search ? `?${search}` : '' });
     this.setState({
       query: null,
       searching: false,
@@ -174,8 +197,7 @@ export default class Search extends PureComponent {
   }
 
   render() {
-    const placeholder = this.state.totalSongs ?
-      `${this.state.totalSongs} tunes` : 'Loading catalog...';
+    const placeholder = `${this.state.totalSongs} tunes`;
 
     const {
       onSongClick,

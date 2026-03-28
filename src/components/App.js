@@ -884,10 +884,11 @@ class App extends React.Component {
                       listing={this.state.localFiles}/>
                   )}/>
                   {/* Catch-all route */}
-                  <Route render={({history}) => (
+                  <Route render={({history, location}) => (
                     this.contentAreaRef.current &&
                     <Search
                       history={history}
+                      location={location}
                       currContext={currContext}
                       currIdx={currIdx}
                       onSongClick={this.handleSongClick}
