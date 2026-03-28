@@ -107,7 +107,7 @@ function VirtualizedList(props) {
     const row = history.location.state?.selectedRow || 0;
     setSelectedRow(row);
     // Ensure list is focused after a top-level (Browse, Favorites, etc) navigation.
-    if (listRef) findDOMNode(listRef.current).focus({ preventScroll: true });
+    if (listRef.current) findDOMNode(listRef.current).focus({ preventScroll: true });
     // TODO: pass scroll position and selected row from parent, along with itemList.
     // This can't be sync because 'setSelectedRow' is async.
     setTimeout(() => {
@@ -116,6 +116,8 @@ function VirtualizedList(props) {
     // We only want to run this scroll-restoration effect when location pathname changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [history.location.pathname]);
+
+  if (scrollContainerRef.current == null) return null;
 
   return (
     <div onKeyDown={(e) => {

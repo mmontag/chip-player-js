@@ -885,7 +885,6 @@ class App extends React.Component {
                   )}/>
                   {/* Catch-all route */}
                   <Route render={({history, location}) => (
-                    this.contentAreaRef.current &&
                     <Search
                       history={history}
                       location={location}
