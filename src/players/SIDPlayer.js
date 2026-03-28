@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from 'redaxios';
 import autoBind from 'auto-bind';
 import path from 'path';
 

@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from 'redaxios';
 import React, { useContext } from 'react';
 import autoBindReact from 'auto-bind/react';
 import isMobile from 'ismobilejs';

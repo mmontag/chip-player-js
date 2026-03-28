@@ -8,15 +8,10 @@ import DirectoryLink from './DirectoryLink';
 import FavoriteButton from './FavoriteButton';
 import autoBindReact from 'auto-bind/react';
 import VirtualizedList from './VirtualizedList';
-import axios from 'axios';
+import axios from 'redaxios';
 
 const MAX_RESULTS = 400;
 const searchResultsCache = {};
-
-function getTotal() {
-  return fetch(`${API_BASE}/total`)
-    .then(response => response.json());
-}
 
 export default class Search extends PureComponent {
   constructor(props) {
@@ -37,9 +32,9 @@ export default class Search extends PureComponent {
       resultsCount: 0,
     };
 
-    getTotal()
-      .then(json => this.setState({ totalSongs: json.total }))
-      .catch(_ => this.setState({ totalSongs: 99999 }));
+    axios.get(`${API_BASE}/total`)
+      .then(response => response.data)
+      .then(json => this.setState({ totalSongs: json.total }));
   }
 
   componentDidMount() {

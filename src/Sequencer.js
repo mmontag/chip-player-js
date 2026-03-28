@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from 'redaxios';
 import autoBind from 'auto-bind';
 import EventEmitter from 'events';
 import shuffle from 'lodash/shuffle';
@@ -219,7 +219,7 @@ export default class Sequencer extends EventEmitter {
       if (this.songRequest) this.songRequest.abort();
       this.songRequest = new AbortController();
       axios.get(url, {
-          responseType: 'arraybuffer',
+          responseType: 'arrayBuffer',
           signal: this.songRequest.signal,
         })
         .then(res => {
@@ -227,7 +227,8 @@ export default class Sequencer extends EventEmitter {
           this.playSongBuffer(player, filepath, res.data, subtune);
         })
         .catch(e => {
-          if (axios.isCancel(e)) return;
+          if (e.name === 'AbortError') return;
+          console.error(e);
           this.handlePlayerError(`${e.message}: ${filepath}`);
         });
     }

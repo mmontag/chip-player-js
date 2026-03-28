@@ -1,5 +1,5 @@
 import autoBind from 'auto-bind';
-import axios from 'axios';
+import axios from 'redaxios';
 import debounce from 'lodash/debounce';
 import range from 'lodash/range';
 import path from 'path';

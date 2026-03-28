@@ -2,7 +2,7 @@ import queryString from 'querystring';
 import path from 'path';
 
 import { API_BASE, CATALOG_PREFIX } from './config';
-import axios from 'axios';
+import axios from 'redaxios';
 
 const MULTI_SLASH_REGEX = /\/{2,}/g;
 
