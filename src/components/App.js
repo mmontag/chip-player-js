@@ -9,7 +9,7 @@ import queryString from 'querystring';
 import { NavLink, Route, Switch, withRouter } from 'react-router-dom';
 import Dropzone from 'react-dropzone';
 
-import ChipCore from '../chip-core';
+// import ChipCore from '../chip-core'; // separate chunk in initChipCore
 import {
   API_BASE,
   CATALOG_PREFIX,
@@ -141,6 +141,7 @@ class App extends React.Component {
 
   async initChipCore(audioCtx, playerNode, bufferSize) {
     // Load the chip-core Emscripten runtime
+    const { default: ChipCore } = await import(/* webpackChunkName: "chip-core" */ '../chip-core');
     try {
       this.chipCore = await new ChipCore({
         // Look for .wasm file in web root, not the same location as the app bundle (static/js).
@@ -155,7 +156,7 @@ class App extends React.Component {
     } catch (e) {
       // Browser doesn't support WASM (Safari in iOS Simulator)
       this.setState({ loading: false });
-      this.props.toastContext.enqueueToast({ message: 'Error loading player engine. Old browser?', level: ToastLevels.ERROR });
+      this.props.toastContext.enqueueToast('Error loading player engine. Old browser?', ToastLevels.ERROR);
       return;
     }
 
@@ -894,7 +895,7 @@ class App extends React.Component {
                       scrollContainerRef={this.contentAreaRef}
                       listRef={this.listRef}
                     >
-                      {this.state.loading && <p>Loading player engine...</p>}
+                      {/*{this.state.loading && <p>Loading player engine...</p>}*/}
                       <Announcements/>
                     </Search>
                   )}/>
@@ -921,7 +922,7 @@ class App extends React.Component {
                 }
               </div>
             </div>
-            {!isMobile.phone && !this.state.loading &&
+            {!isMobile.phone && !this.state.loading && !!this.chipCore &&
               <Visualizer audioCtx={this.audioCtx}
                           sourceNode={this.playerNode}
                           chipCore={this.chipCore}
