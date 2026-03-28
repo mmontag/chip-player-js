@@ -613,4 +613,4 @@ MIDIEvents.getRequiredBufferLength = function(events) {
   return bufferLength;
 };
 
-module.exports = MIDIEvents;
+export default MIDIEvents;

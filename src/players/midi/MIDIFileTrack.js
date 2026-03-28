@@ -158,4 +158,4 @@ MIDIFileTrack.prototype.setTrackContent = function(dataView) {
   }
 };
 
-module.exports = MIDIFileTrack;
+export default MIDIFileTrack;

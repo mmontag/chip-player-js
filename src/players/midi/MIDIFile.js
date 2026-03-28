@@ -3,10 +3,10 @@
 // MIDIFile : Read (and soon edit) a MIDI file in a given ArrayBuffer
 
 // Dependencies
-var MIDIFileHeader = require('./MIDIFileHeader');
-var MIDIFileTrack = require('./MIDIFileTrack');
-var MIDIEvents = require('./MIDIEvents');
-var UTF8 = require('utf-8');
+import MIDIFileHeader from './MIDIFileHeader';
+import MIDIFileTrack from './MIDIFileTrack';
+import MIDIEvents from './MIDIEvents';
+import UTF8 from 'utf-8';
 
 function ensureArrayBuffer(buf) {
   if (buf) {
@@ -379,4 +379,5 @@ MIDIFile.prototype.getContent = function() {
 MIDIFile.Header = MIDIFileHeader;
 MIDIFile.Track = MIDIFileTrack;
 
-module.exports = MIDIFile;
+export default MIDIFile;
+

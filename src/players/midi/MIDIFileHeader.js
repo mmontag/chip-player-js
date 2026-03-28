@@ -167,4 +167,4 @@ MIDIFileHeader.prototype.setSMTPEDivision = function(
   this.datas.setUint8(13, ticksPerFrame);
 };
 
-module.exports = MIDIFileHeader;
+export default MIDIFileHeader;

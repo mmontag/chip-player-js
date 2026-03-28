@@ -1,7 +1,5 @@
 import autoBind from 'auto-bind';
-
-const MIDIEvents = require('./midi/MIDIEvents');
-require('./midi/midi-helpers');
+import MIDIEvents from './midi/MIDIEvents';
 
 /**
  * The MIDIFilePlayer is the engine that parses MIDI file data, and fires
