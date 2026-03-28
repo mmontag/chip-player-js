@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowKeyStepper, List, WindowScroller } from 'react-virtualized';
+import ArrowKeyStepper from 'react-virtualized/dist/es/ArrowKeyStepper';
+import List from 'react-virtualized/dist/es/List';
+import WindowScroller from 'react-virtualized/dist/es/WindowScroller';
 import 'react-virtualized/styles.css';
 import { findDOMNode } from 'react-dom';
 import { useHistory } from 'react-router-dom';
