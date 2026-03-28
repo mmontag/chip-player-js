@@ -1,6 +1,6 @@
-import { EVENT_MIDI, EVENT_MIDI_CONTROLLER } from './MIDIEvents';
 import MIDIEvents from './MIDIEvents';
 import MIDIFile from './MIDIFile';
+const { EVENT_MIDI, EVENT_MIDI_CONTROLLER } = MIDIEvents;
 
 const CC_102_TRACK_LOOP_START = 102;
 const CC_103_TRACK_LOOP_END = 103;
@@ -234,3 +234,5 @@ function printTrack(t, events) {
   }
   console.debug(`Track ${t} |${viz.join('')}|`);
 }
+
+export default MIDIFile;

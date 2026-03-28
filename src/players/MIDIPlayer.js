@@ -3,14 +3,13 @@ import axios from 'redaxios';
 import debounce from 'lodash/debounce';
 import range from 'lodash/range';
 import path from 'path';
-import MIDIFile from './midi/MIDIFile';
+import MIDIFile from './midi/midi-helpers';
 import MIDIFilePlayer from './MIDIFilePlayer';
 import Player from './Player';
 import { SOUNDFONTS, SOUNDFONT_MOUNTPOINT, SOUNDFONT_URL_PATH } from '../config';
 import { GM_DRUM_KITS, GM_INSTRUMENTS } from '../gm-patch-map';
 import {
   ensureEmscFileWithUrl,
-  getFilepathFromUrl,
   getMetadataUrlForFilepath,
   getUrlFromFilepath,
   remap01
