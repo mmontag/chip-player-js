@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="msdos"><!-- default theme specified to prevent FOUC -->
 <head>
     <!--<script src="libgme.js"></script>-->
     <meta charset="utf-8">
@@ -46,14 +46,14 @@
     -->
     <!-- Global site tag (gtag.js) - Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=%REACT_APP_GOOGLE_ANALYTICS_ID%"></script>
-    <!--do not remove the line below - used for server hydration-->
-    <chip-config></chip-config>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', '%REACT_APP_GOOGLE_ANALYTICS_ID%');
     </script>
+    <!--do not remove the line below - used for server hydration-->
+    <chip-config></chip-config>
 </head>
 <body>
 <noscript>
