@@ -25,7 +25,7 @@
     "bytes": "latest",
     "case-sensitive-paths-webpack-plugin": "^2.4.0",
     "chalk": "^2.4.1",
-    "chroma-js": "^1.4.0",
+    "core-js": "^3.49.0",
     "css-loader": "0.28.7",
     "directory-tree": "2.2.1",
     "dotenv": "4.0.0",
@@ -64,6 +64,7 @@
     "react-virtual-list": "git+https://github.com/glebcha/react-virtual-list.git#544bc7",
     "react-virtualized": "^9.22.5",
     "react-window": "^1.8.10",
+    "redaxios": "^0.5.1",
     "resolve": "1.6.0",
     "style-loader": "0.19.0",
     "typescript": "^3.5.2",
@@ -113,6 +114,11 @@
     "deploy-lite": "npm run build-lite; gh-pages -d build",
     "fixvgm": "node $NODE_DEBUG_OPTION scripts/fixvgm.js"
   },
+  "browserslist": [
+    "last 2 Chrome versions",
+    "last 2 Firefox versions",
+    "last 2 Safari versions"
+  ],
   "eslintConfig": {
     "extends": "react-app",
     "env": {

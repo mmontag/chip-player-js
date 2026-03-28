@@ -1,18 +1,18 @@
 {
   "plugins": [
     "@babel/plugin-syntax-bigint",
-    "@babel/plugin-transform-optional-chaining"
+    // Required for Webpack 4
+    "@babel/plugin-transform-optional-chaining",
+    "@babel/plugin-transform-class-properties",
+    "@babel/plugin-transform-nullish-coalescing-operator"
   ],
   "presets": [
     [
       "@babel/preset-env",
       {
-//        "useBuiltIns": "entry",
-//        "corejs": "3.8",
-//        "targets": {
-//          "browsers": "defaults, not ie 11, not ie_mob 11"
-//        },
-//        "modules": false
+        "useBuiltIns": "usage",
+        "modules": false,
+        "corejs": "3.49"
       }
     ],
     "@babel/preset-react"
