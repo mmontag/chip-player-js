@@ -1,5 +1,47 @@
 import autoBind from 'auto-bind';
-import chroma from 'chroma-js';
+
+/**
+ * Compact Catmull-Rom Spline RGB Interpolator
+ * Provides C1 continuity (smooth transitions at anchors).
+ */
+const createSplineScale = (hexColors, domain = [0, 255]) => {
+  // Parse hex to [r, g, b]
+  const points = hexColors.map(hex => [
+    parseInt(hex.slice(1, 3), 16),
+    parseInt(hex.slice(3, 5), 16),
+    parseInt(hex.slice(5, 7), 16)
+  ]);
+
+  // Catmull-Rom basis function
+  const interpolate = (t, p0, p1, p2, p3) => {
+    const v0 = (p2 - p0) * 0.5;
+    const v1 = (p3 - p1) * 0.5;
+    const t2 = t * t, t3 = t2 * t;
+    return (2 * p1 - 2 * p2 + v0 + v1) * t3 + (-3 * p1 + 3 * p2 - 2 * v0 - v1) * t2 + v0 * t + p1;
+  };
+
+  return (val) => {
+    // Normalize input to [0, 1] then scale to array range
+    let t = Math.max(0, Math.min(1, (val - domain[0]) / (domain[1] - domain[0])));
+    t *= (points.length - 1);
+
+    const i = Math.floor(t);
+    const localT = t - i;
+
+    // Boundary clamping for tangents
+    const p0 = points[Math.max(0, i - 1)];
+    const p1 = points[i];
+    const p2 = points[Math.min(points.length - 1, i + 1)];
+    const p3 = points[Math.min(points.length - 1, i + 2)];
+
+    const rgb = [0, 1, 2].map(channel => {
+      const v = interpolate(localT, p0[channel], p1[channel], p2[channel], p3[channel]);
+      return Math.round(Math.max(0, Math.min(255, v)));
+    });
+
+    return `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
+  };
+};
 
 const MODE_LINEAR = 0;
 const MODE_LOG = 1;
@@ -7,7 +49,7 @@ const MODE_CONSTANT_Q = 2;
 
 const WEIGHTING_NONE = 0;
 const WEIGHTING_A = 1;
-const colorMap = new chroma.scale([
+const colorMap = createSplineScale([
   '#000000',
   '#0000a0',
   '#6000a0',
@@ -16,7 +58,7 @@ const colorMap = new chroma.scale([
   '#f0b000',
   '#ffffa0',
   '#ffffff',
-]).domain([0, 255]);
+], [0, 255]);
 const _debug = window.location.search.indexOf('debug=true') !== -1;
 let _aWeightingLUT;
 let _calcTime = 0;
@@ -138,7 +180,7 @@ export default class Spectrogram {
     if (this.mode === MODE_LINEAR) {
       analyserNode.getByteFrequencyData(data);
       for (let x = 0; x < bins && x < canvasWidth; ++x) {
-        const style = colorMap(data[x]).hex();
+        const style = colorMap(data[x]);
         const h =     data[x] * hCoeff | 0;
         freqCtx.fillStyle = style;
         freqCtx.fillRect(x, fqHeight - h, 1, h);
@@ -152,7 +194,7 @@ export default class Spectrogram {
         const x =        (Math.log(i + 1) / logmax) * canvasWidth | 0;
         const binWidth = (Math.log(i + 2) / logmax) * canvasWidth - x | 0;
         const h =        (data[i] * hCoeff) | 0;
-        const style =    colorMap(data[i] || 0).hex();
+        const style =    colorMap(data[i] || 0);
         freqCtx.fillStyle = style;
         freqCtx.fillRect(x, fqHeight - h, binWidth, h);
         tempCtx.fillStyle = style;
@@ -168,7 +210,7 @@ export default class Spectrogram {
           const weighting = this.weighting === WEIGHTING_A ? _aWeightingLUT[x] : 1;
           const val = 255 * weighting * dataHeap[x] | 0; //this.core.getValue(this.cqtOutput + x * 4, 'float') | 0;
           const h = val * hCoeff | 0;
-          const style = colorMap(val).hex();
+          const style = colorMap(val);
           freqCtx.fillStyle = style;
           freqCtx.fillRect(x, fqHeight - h, 1, h);
           tempCtx.fillStyle = style;
