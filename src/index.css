@@ -174,18 +174,18 @@ button:disabled { background: var(--neutral1); color: var(--neutral3); }
         background: transparent;
         border: 0;
         border-radius: 0;
-        margin: 0 var(--charW1) 0 0;
+        margin: 0;
         color: var(--clickable);
         white-space: pre;  /* prevent iOS Safari text wrapping */
+        width: calc(var(--charW1) * 4);
     }
 
-    input[type=checkbox]:before         { content: '[ ]'; }
-    input[type=checkbox]:checked:before { content: '[️x]'; }
-
-    input[type=radio]:before            { content: '( )'; }
+    input[type=checkbox]:before         { content: '[ ]'; display: inline-block; }
+    input[type=checkbox]:checked:before { content: '[x]'; }
+    input[type=radio]:before            { content: '( )'; display: inline-block; }
     input[type=radio]:checked:before    { content: '(•)'; }
-  input[type=text]::selection                 { background-color: #FFFFFF; }
-  input[type=text]::-webkit-input-placeholder { color: var(--neutral1) }
+    input[type=text]::selection         { background-color: #FFFFFF; }
+    input[type=text]::-webkit-input-placeholder { color: var(--neutral1) }
 }
 
 [data-theme="msdos"] input[type=text] {
@@ -302,6 +302,8 @@ body,#root {
     flex-direction: row;
     overflow: hidden;
     flex-grow: 1;
+    position: relative;
+    container-type: inline-size; /* for settings panel overlap */
 }
 
 .App-main-content-area {
@@ -329,6 +331,20 @@ body,#root {
     min-width: 368px;
     flex-grow: 0;
     padding: var(--charH) var(--charW2);
+    background: var(--background);
+}
+
+/* on small screens, settings panel overlaps content */
+@container (max-width: 720px) {
+    .App-main-content-area.settings {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        /*border-left: 1px solid var(--clickable);*/
+        outline: 1px solid var(--clickable);
+        box-shadow: var(--background) -9px 0 9px;
+    }
 }
 
 .AppFooter {
