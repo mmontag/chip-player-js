@@ -25,7 +25,7 @@ const FavoriteButton = ({ item }) => {
 
   return (
     <button onClick={handleClick} className={className} tabIndex="-1">
-      &hearts;
+      &hearts;&#xFE0E;{/* Variation Selector-15 (U+FE0E) suppresses emoji */}
     </button>
   );
 };

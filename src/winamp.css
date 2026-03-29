@@ -177,6 +177,14 @@
         /*background: silver; color: black; !* Windows 98 *!*/
     }
 
+    @container (max-width: 720px) {
+        .App-main-content-area.settings {
+            background: var(--background) #0003;
+            box-shadow: var(--background) -9px 0 9px;
+            outline: var(--grooveBorder);
+        }
+    }
+
     .Settings h3 { border-bottom: var(--grooveBorder); padding-bottom: 4px; }
 
     .PlayerParams-param:not(.PlayerParams-group) {
@@ -211,17 +219,14 @@
         &::-webkit-slider-thumb { background: url(images/winamp/handle-mini.png); }
     }
 
-    input[type="text"],
-    input[type="password"],
-    input[type="email"],
+    input[type=text],
+    input[type=password],
+    input[type=email],
     select {
         width: 192px;
         box-shadow: var(--fieldBoxShadow);
         height: var(--formFieldHeight);
         box-sizing: border-box;
-    }
-
-    input[type=text] {
         color: #000;
         background-color: #fff;
         border: 1px solid var(--buttonDark);
@@ -269,7 +274,12 @@
         height: 13px;
         width: 13px;
         box-shadow: var(--fieldBoxShadow);
-        background: #fff
+        background: #fff;
+        appearance: none;
+        margin: 0 6px 0 0;
+        border: none;
+        border-radius: 0;
+        position: relative;
     }
 
     input[type=checkbox]:checked::after {
@@ -280,14 +290,6 @@
         background: url(images/98.css/checkmark.svg);
         bottom: 2px;
         left: 0;
-    }
-
-    input[type=checkbox] {
-        appearance: none;
-        margin: 0 6px 0 0;
-        background: #fff;
-        border: none;
-        position: relative;
     }
 
     input[type=radio]:focus + label,
