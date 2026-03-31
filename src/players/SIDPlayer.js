@@ -10,6 +10,8 @@ const fileExtensions = [
   'sid', 'mus'
 ];
 
+const DEFAULT_SONG_LENGTH_MS = 2.5 * 60 * 1000;
+
 // Convert song length to milliseconds. Each song length is of format:
 // mm:ss[.SSS]
 function parseSongLength(length) {
@@ -36,7 +38,6 @@ export default class SIDPlayer extends Player {
   getSidMetadata(md5) {
     console.log("SIDPlayer: Fetching metadata for SID:", md5);
     const metadataUrl = `${API_BASE}/hvsc?sidHash=${md5}`;
-    this.subtuneDurations = [];
 
     axios.get(metadataUrl).then(response => {
       console.log('SIDPlayer: Got metadata for SID:', response.data);
@@ -58,6 +59,7 @@ export default class SIDPlayer extends Player {
     const dataPtr = this.copyToHeap(data);
     const err = this.core._sid_load_data(dataPtr, data.byteLength);
     this.core._free(dataPtr);
+    this.subtuneDurations = Array(this.getNumSubtunes()).fill(DEFAULT_SONG_LENGTH_MS);
 
     if (err !== 0) {
       throw Error('Unable to load this file!');
@@ -135,11 +137,7 @@ export default class SIDPlayer extends Player {
   }
 
   getDurationMs() {
-    if (this.subtuneDurations.length > 0) {
-      return this.subtuneDurations[this.getSubtune()];
-    } else {
-      return this.core._sid_get_duration_ms();
-    }
+    return this.subtuneDurations[this.getSubtune()];
   }
 
   getMetadata() {
