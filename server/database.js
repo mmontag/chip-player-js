@@ -7,10 +7,13 @@ const CATALOG_DB_PATH = path.resolve(__dirname, 'catalog.db');
 const db = new Database(CATALOG_DB_PATH);
 console.log(`Connected to database at ${CATALOG_DB_PATH}`);
 
-// Attach user database
 const USER_DB_PATH = path.resolve(__dirname, 'users.db');
 db.exec(`ATTACH DATABASE '${USER_DB_PATH}' AS user_db`);
 console.log(`Attached user database at ${USER_DB_PATH}`);
+
+const CSDB_DB_PATH = path.resolve(__dirname, 'csdb.db');
+db.exec(`ATTACH DATABASE '${CSDB_DB_PATH}' AS csdb_db`);
+console.log(`Attached CSdb database at ${CSDB_DB_PATH}`);
 
 const dbStatements = {
   // Catalog
@@ -40,8 +43,11 @@ const dbStatements = {
       WHERE m.path = ?
       LIMIT 1
   `),
-  getSidMetadataStmt: db.prepare(`
+  getSidMetadataByHashStmt: db.prepare(`
       SELECT * FROM hvsc_files WHERE hash = ? LIMIT 1
+  `),
+  getSidMetadataByPathStmt: db.prepare(`
+      SELECT * FROM hvsc_files WHERE fullname = ? LIMIT 1
   `),
   getSongByPathStmt: db.prepare(`
       SELECT m.song_id, m.path, m.title, m.artist, m.game, m.system, m.copyright, i.path as image_path
@@ -50,15 +56,17 @@ const dbStatements = {
       WHERE m.path = ?
       LIMIT 1
   `),
+  // Used to populate meta tags. Favor entries with images
   getSongByIdStmt: db.prepare(`
       SELECT m.song_id, m.path, m.title, m.artist, m.game, m.system, m.copyright, i.path as image_path
       FROM music m
                LEFT JOIN images i ON m.image_id = i.id
       WHERE m.song_id LIKE ?
+      ORDER BY i.path DESC
       LIMIT 1
   `),
   getSongImageByIdStmt: db.prepare(`
-      SELECT i.path as image_path
+      SELECT m.path, i.path as image_path
       FROM music m
                LEFT JOIN images i ON m.image_id = i.id
       WHERE m.song_id GLOB ?
@@ -135,6 +143,13 @@ const dbStatements = {
       modified_at = @now
       WHERE user_id = @userId AND type = 'favorites'
   `),
+
+  getCsdbSidStmt: db.prepare('SELECT xml FROM csdb_db.sids WHERE csdbid = ? LIMIT 1'),
+  insertCsdbSidStmt: db.prepare(`
+      INSERT INTO csdb_db.sids (csdbid, xml, fetched_at)
+      VALUES (@csdbid, @xml, @now)
+  `),
+
 }
 
 module.exports = {

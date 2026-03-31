@@ -8,10 +8,12 @@
     "start": "NODE_ENV=development node --watch index.js"
   },
   "dependencies": {
-    "axios": "^1.13.5",
+    "axios": "1.14.0",
+    "axios-retry": "^4.5.0",
     "better-sqlite3": "^12.5.0",
     "dotenv-flow": "^4.1.0",
     "express": "^5.1.0",
+    "fast-xml-parser": "^5.5.9",
     "firebase-admin": "^13.6.0",
     "googleapis": "^171.4.0",
     "http-proxy-middleware": "^3.0.0",

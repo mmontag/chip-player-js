@@ -17,6 +17,9 @@ const { LRUCache } = require('lru-cache');
 const path = require('path');
 const { performance } = require('perf_hooks');
 const { Canvas, loadImage } = require('skia-canvas');
+const axios = require('axios');
+const axiosRetry = require('axios-retry').default;
+const { XMLParser } = require('fast-xml-parser');
 
 const { dbStatements } = require('./database.js');
 const { requireAuth, optionalAuth } = require('./middleware/auth.js');
@@ -28,7 +31,8 @@ const {
   getDirIdStmt,
   getDirChildrenStmt,
   getMetadataStmt,
-  getSidMetadataStmt,
+  getSidMetadataByHashStmt,
+  getSidMetadataByPathStmt,
   getTextContentStmt,
   getShuffleStmt,
   getTotalStmt,
@@ -42,6 +46,9 @@ const {
   getUserSettingsStmt,
   replaceUserSettingsStmt,
   insertPlaybackStmt,
+
+  getCsdbSidStmt,
+  insertCsdbSidStmt,
 } = dbStatements;
 
 // --- Configuration ---
@@ -199,10 +206,22 @@ app.get('/preview', cache1Hour, async (req, res) => {
 
   try {
     const song = getSongImageByIdStmt.get(`${songId}*`);
-    
+    let imageUrl = null;
+
+    // getting crazy here ···
+    if (song.image_path) {
+      imageUrl = path.join(LOCAL_CATALOG_ROOT, song.image_path);
+    }
+    else if (song.path.endsWith('.sid')) {
+      const sidMeta = getSidMetadataByPathStmt.get('_'+song.path);
+      if (sidMeta) {
+        imageUrl = await getCsdbImageUrl(sidMeta.csdbid);
+      }
+    }
+
     // Check cache if we have a song image path
-    if (song && song.image_path) {
-      const cachedBuffer = previewCache.get(song.image_path);
+    if (song && imageUrl) {
+      const cachedBuffer = previewCache.get(imageUrl);
       if (cachedBuffer) {
         res.header('Content-Type', 'image/png');
         return res.send(cachedBuffer);
@@ -217,10 +236,9 @@ app.get('/preview', cache1Hour, async (req, res) => {
     // Draw background
     ctx.drawImage(bg, 0, 0);
 
-    if (song && song.image_path) {
-      const songImagePath = path.join(LOCAL_CATALOG_ROOT, song.image_path);
+    if (song && imageUrl) {
       try {
-        const songImage = await loadImage(songImagePath);
+        const songImage = await loadImage(imageUrl);
         
         // Calculate dimensions to fit 80% of width or height
         const maxWidth = canvas.width * 0.8;
@@ -268,8 +286,8 @@ app.get('/preview', cache1Hour, async (req, res) => {
     const buffer = await canvas.toBuffer('png');
     
     // Cache the result if we have a song image path
-    if (song && song.image_path) {
-      previewCache.set(song.image_path, buffer);
+    if (song && imageUrl) {
+      previewCache.set(imageUrl, buffer);
     }
 
     res.header('Content-Type', 'image/png');
@@ -407,13 +425,62 @@ router.get('/browse', cache1Hour, async (req, res) => {
  *   lengths: string
  * }
  */
-router.get('/hvsc', cache1Hour, (req, res) => {
+router.get('/hvsc', cache1Hour, async (req, res) => {
   const { sidHash } = req.query;
   if (!sidHash) return res.status(500).send('Missing sidHash');
-  const meta = getSidMetadataStmt.get(sidHash);
+  const meta = getSidMetadataByHashStmt.get(sidHash);
   if (!meta) return res.status(404).send('SID not found. Wrong SID hash version?');
+  meta.image_url = await getCsdbImageUrl(meta.csdbid);
   res.json(meta);
 });
+
+const axiosCsdb = axios.create();
+
+axiosRetry(axiosCsdb, {
+  retries: 3, // Number of retries
+  retryDelay: () => 1000, // Fixed delay
+  retryCondition: (error) => {
+    // Only retry if the status code is 503
+    return error.response?.status === 503;
+  },
+  // Ensure we don't retry on successful responses or other errors
+  shouldResetTimeout: true,
+});
+
+async function getCsdbSidXml(csdbid) {
+  let xml = getCsdbSidStmt.pluck().get(csdbid);
+  if (xml) {
+    console.log(`Found cached CSdb entry for ${csdbid}.`);
+  } else {
+    const csdbUrl = `https://csdb.dk/webservice/?type=sid&id=${csdbid}`;
+    console.log('Fetching CSdb SID URL:', csdbUrl);
+    const response = await axiosCsdb.get(csdbUrl);
+    xml = response.data;
+    const now = Math.floor(Date.now() / 1000);
+    insertCsdbSidStmt.run({ csdbid, xml, now });
+    console.log(`Wrote CSdb entry for ${csdbid}.`);
+  }
+  return xml;
+}
+
+async function getCsdbImageUrl(csdbid) {
+  const releaseDate = (release) => {
+    const month = release.ReleaseMonth || 12;
+    const year = release.ReleaseYear;
+    return year * 100 + month;
+  };
+  const xmlString = await getCsdbSidXml(csdbid);
+  const jsonObj = new XMLParser({ ignoreAttributes: true }).parse(xmlString);
+  let releases = jsonObj.CSDbData?.SID?.UsedIn?.Release;
+
+  if (releases == null) return null;
+
+  if (!Array.isArray(releases)) releases = [releases];
+  const screenshotUrl = releases.sort((a, b) => {
+    return releaseDate(a) - releaseDate(b);
+  }).find(r => r.ScreenShot)?.ScreenShot;
+  if (screenshotUrl && screenshotUrl.includes('csdb.dk')) return screenshotUrl;
+}
 
 /**
  * Returns: {
@@ -650,7 +717,7 @@ function getHtmlInjectionsForRequest(req) {
   let song;
   let image = 'https://chiptune.app/chip-player.png';
   let title = 'Chip Player JS';
-  let description = 'An online MIDI and VGM music player with SoundFont support. Over 250,000 songs, focused on performance and nostalgia. Play VGM, SPC, NSF, S3M, XM, MOD and more.';
+  let description = 'An online MIDI and VGM music player with SoundFont support. Over 300,000 songs, focused on performance and nostalgia. Play VGM, SPC, NSF, S3M, XM, MOD and more.';
 
   let songId = null;
   let scriptTag = '';
@@ -662,6 +729,16 @@ function getHtmlInjectionsForRequest(req) {
     if (/^[A-Za-z0-9_-]{3,8}$/.test(play)) {
       // play param is a song ID
       song = getSongByIdStmt.get(`${play}%`);
+
+      // more HVSC hacks ···
+      if (song.path.endsWith('.sid')) {
+        const sidMeta = getSidMetadataByPathStmt.get('_'+song.path);
+        if (sidMeta) {
+          song.title = sidMeta.name;
+          song.artist = sidMeta.author;
+        }
+      }
+
     } else {
       // play param is a path
       const reqPath = play.replace(/^\/+/, '');
