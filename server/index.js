@@ -601,8 +601,13 @@ app.use('/catalog', cache1Hour, fixSidMimeType, express.static(LOCAL_CATALOG_ROO
 app.use('/soundfonts', cache1Hour, express.static(LOCAL_SOUNDFONT_ROOT));
 
 // Handle client-side routing, return all requests to index.html.
-// This must be the LAST route.
-app.get('/{*splat}', cache1Hour, async (req, res) => {
+const clientRoutes = [
+  '/',
+  '/browse{/*path}',
+  '/favorites',
+  '/local'
+];
+app.get(clientRoutes, cache1Hour, async (req, res) => {
   let html = indexHtmlProd;
 
   if (isDev) {
@@ -631,7 +636,7 @@ app.get('/{*splat}', cache1Hour, async (req, res) => {
   res.send(finalHtml);
 });
 
-app.use((err, req, res, next) => {
+app.use((err, req, res) => {
   console.error('Error processing request:', req.url, err);
   res.status(500).send('Server error');
 });
