@@ -105,10 +105,12 @@ if (isDev) {
 }
 
 // Prepopulate searchMap for all 1- and 2-letter queries
-console.log('Pre-populating search map for 1- and 2-letter queries...');
 const searchMap = new Map();
-setTimeout(() => {
+console.log('Pre-populating search map for 1- and 2-letter queries...');
+(async () => {
   for (let char1 of [...'abcdefghijklmnopqrstuvwxyz']) {
+    await new Promise(resolve => setTimeout(resolve, 100));
+    process.stdout.write(char1);
     const query = char1;
     const items = searchStmt.all(`${query}*`, 50);
     searchMap.set(query, items);
@@ -118,8 +120,8 @@ setTimeout(() => {
       searchMap.set(query, items);
     }
   }
-  console.log(`Done populating search map.`);
-}, 0);
+  console.log(`...Done populating search map.`);
+})();
 
 // --- Production Asset Pre-loading ---
 if (!isDev) {
