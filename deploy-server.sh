@@ -12,10 +12,13 @@ rsync -avz --delete \
   --exclude '/node_modules' \
   --exclude '.env' \
   --exclude '._*' \
+  --exclude '.git' \
   --exclude '.DS_Store' \
   --exclude '*.local' \
   --exclude 'users.*' \
-  --exclude '.git' \
+  --exclude '*.db' \
+  --exclude '*.db-shm' \
+  --exclude '*.db-wal' \
   ./server/ "${REMOTE_SSH_HOST}:${REMOTE_SERVER_DIR}/"
 
 # 2. SSH into the server to install dependencies and reload the app.
