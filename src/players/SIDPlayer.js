@@ -39,19 +39,21 @@ export default class SIDPlayer extends Player {
     console.log("SIDPlayer: Fetching metadata for SID:", md5);
     const metadataUrl = `${API_BASE}/hvsc?sidHash=${md5}`;
 
-    axios.get(metadataUrl).then(response => {
+    axios.get(metadataUrl, {
+      validateStatus: status => status === 404 || (status >= 200 && status < 300)
+    }).then(response => {
+      if (response.status === 404) return;
       console.log('SIDPlayer: Got metadata for SID:', response.data);
-      const { lengths, name, author, copyright } = response.data;
+      const { lengths, name, author, copyright, image_url } = response.data;
       this.subtuneDurations = lengths.split(' ').map(parseSongLength);
       this.metadata = {
+        imageUrl: image_url,
         formatted: {
           title: name,
           subtitle: `${author} - ${copyright}`,
         },
       };
-      this.emit('playerStateUpdate', {
-        ...this.getBasePlayerState()
-      });
+      this.emit('playerStateUpdate', this.getBasePlayerState());
     });
   }
 

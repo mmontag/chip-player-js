@@ -805,7 +805,10 @@ class App extends React.Component {
   }
 
   render() {
-    const { title, subtitle } = titlesFromMetadata(this.state.currentSongMetadata);
+    // TODO: Consolidate imageUrl under metadata.
+    const metadata = this.state.currentSongMetadata;
+    const { title, subtitle } = titlesFromMetadata(metadata);
+    const imageUrl = metadata.imageUrl || this.state.imageUrl;
     const currContext = this.sequencer?.getCurrContext();
     const currIdx = this.sequencer?.getCurrIdx();
     const search = { search: window.location.search };
@@ -941,7 +944,7 @@ class App extends React.Component {
             handleTempoChange={this.handleTempoChange}
             handleTimeSliderChange={this.handleTimeSliderChange}
             handleVolumeChange={this.handleVolumeChange}
-            imageUrl={this.state.imageUrl}
+            imageUrl={imageUrl}
             infoTexts={this.state.infoTexts}
             md5={this.state.md5}
             nextSong={this.nextSong}
