@@ -227,13 +227,12 @@ UINT8 lvgm_load_data(lvgm_player *player, const UINT8 *data, const UINT32 size) 
 
 UINT32 lvgm_get_position_ms(lvgm_player *player) {
   PlayerA* playerA = real(player);
-  // Note: GetCurTime varies with speed. Multiply by speed to get the unscaled position.
-  return UINT32(playerA->GetCurTime(1) * 1000. * playerA->GetPlaybackSpeed());
+  return UINT32(playerA->GetCurTime(PLAYTIME_TIME_FILE) * 1000.);
 }
 
 UINT32 lvgm_get_duration_ms(lvgm_player *player) {
   PlayerA* playerA = real(player);
-  return UINT32(playerA->GetTotalTime(1) * 1000. * playerA->GetPlaybackSpeed());
+  return UINT32(playerA->GetTotalTime(PLAYTIME_TIME_FILE) * 1000.);
 }
 
 UINT8 lvgm_start(lvgm_player *player) {
