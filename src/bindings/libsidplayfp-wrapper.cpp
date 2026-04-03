@@ -20,15 +20,15 @@ SidConfig cfg;
 std::vector<int16_t> pcmBuf;
 
 const uint8_t KERNAL[] = {
-#include "./kernal.inc"
+#include "./c64/kernal.inc"
 };
 
 const uint8_t BASIC[] = {
-#include "./basic.inc"
+#include "./c64/basic.inc"
 };
 
 const uint8_t CHARGEN[] = {
-#include "./chargen.inc"
+#include "./c64/chargen.inc"
 };
 
 extern "C" {

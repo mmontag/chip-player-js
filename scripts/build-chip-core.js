@@ -335,7 +335,7 @@ const chipModules = [
     enabled: true,
     sourceFiles: [
       '../libsidplayfp/src/.libs/libsidplayfp.a',
-      './src/players/sid/libsidplayfp-wrapper.cpp',
+      'src/bindings/libsidplayfp-wrapper.cpp',
     ],
     exportedFunctions: [
       '_sid_init',
