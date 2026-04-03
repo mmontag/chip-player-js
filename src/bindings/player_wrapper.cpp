@@ -1,5 +1,6 @@
 //
 // Created by Matt Montag on 6/18/23.
+// Language: C++11
 //
 #include <cstring>
 #include <vector>
@@ -12,14 +13,14 @@
 #include "../utils/DataLoader.h"
 #include "playerbase.hpp"
 #include "playera.hpp"
-#include "utils/MemoryLoader.h"
+#include "../utils/MemoryLoader.h"
 #include "vgmplayer.hpp"
 #include "s98player.hpp"
 #include "droplayer.hpp"
 #include "gymplayer.hpp"
-#include "emu/SoundEmu.h"
-#include "emu/SoundDevs.h"
-
+#include "../emu/SoundEmu.h"
+#include "../emu/SoundDevs.h"
+#include "../utils/FileLoader.h"
 
 /* C wrapper functions */
 typedef struct lvgm_player lvgm_player;
@@ -51,8 +52,8 @@ const std::map<int, VoiceInfo> deviceToVoiceInfo = { // ------------------------
   {DEVID_K054539,  {8,  0, "PCM"}},
   {DEVID_MIKEY,    {4,  0, "Wave"}},
   {DEVID_NES_APU,  {5,  0, "", {"Pulse 1", "Pulse 2", "Triangle", "Noise",  "DMC"}}},
-  {DEVID_OKIM6258, {1,  0, "PCM"}},
-  {DEVID_OKIM6295, {4,  0, "PCM"}},
+  {DEVID_MSM6258, {1,  0, "PCM"}},
+  {DEVID_MSM6295, {4,  0, "PCM"}},
   {DEVID_POKEY,    {4,  0, "PSG"}},
   {DEVID_QSOUND,   {16, 0, "PCM"}},
   {DEVID_RF5C68,   {8,  0, "PCM"}},
@@ -78,7 +79,7 @@ const std::map<int, VoiceInfo> deviceToVoiceInfo = { // ------------------------
   {DEVID_YM3812,   {9,  0, "FM"}},
   {DEVID_YMF262,   {18, 0, "FM"}},
   {DEVID_YMF271,   {24, 0, "FM"}},
-  {DEVID_YMF278B,  {24, 0}},
+  {DEVID_YMF278B,  {24, 0, "PCM"}},
   {DEVID_YMW258,   {28, 0, "PCM"}},
   {DEVID_YMZ280B,  {8,  0}}};
 
@@ -103,6 +104,9 @@ struct DevIdVoiceName {
 // Vector of voice names (populated after song load)
 std::vector<DevIdVoiceName> voices;
 static char const *meta[8];
+
+// Yamaha OPL4 ROM file path
+static std::string g_yrw801_rom_path;
 
 // Get voice name from deviceToVoiceInfo.at(id).names[v], fall back to voiceInfo[id].type if name is empty
 std::string getVoiceName(const int id, const int v) {
@@ -196,7 +200,7 @@ UINT8 lvgm_load_data(lvgm_player *player, const UINT8 *data, const UINT32 size) 
 
     const VoiceInfo &info = deviceToVoiceInfo.at(pdi.type);
     size_t devVoiceCount = info.count + info.linkedCount;
-    printf("  %s: %d voices\n", devName, (int)devVoiceCount);
+    printf("%s: %d voices\n", devName, (int)devVoiceCount);
     // for each dev voice
     for (int i = 0; i < devVoiceCount; i ++) {
       // get voice name
@@ -365,6 +369,28 @@ UINT64 lvgm_get_voice_mask(lvgm_player *player) {
   }
 
   return mask;
+}
+
+// Specify the absolute file path of the OPL4 wave ROM.
+void lvgm_set_yrw801_rom_path(lvgm_player *player, const char* path) {
+  if (path) g_yrw801_rom_path.assign(path);
+  else return;
+
+  PlayerA *playerA = real(player);
+
+  playerA->SetFileReqCallback([](void* userParam, PlayerBase* engine, const char* fileName) -> DATA_LOADER* {
+    const char* path = g_yrw801_rom_path.c_str();
+    if (strcmp(fileName, "yrw801.rom") == 0) {
+      FILE* f = fopen(path, "rb");
+      if (!f) {
+        fprintf(stderr, "[libvgm player_wrapper.cpp] ERROR: file %s not found .\n", path);
+        return nullptr;
+      }
+      fclose(f);
+      return FileLoader_Init(path);
+    }
+    return nullptr;
+  }, nullptr);
 }
 
 #ifdef __cplusplus
