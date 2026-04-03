@@ -189,17 +189,19 @@ UINT8 lvgm_load_data(lvgm_player *player, const UINT8 *data, const UINT32 size) 
   devOptID = PLR_DEV_ID(DEVID_YMF278B, 0);
   retVal = base->GetDeviceOptions(devOptID, devOpts);
   if (!(retVal & 0x80)) {
+    // emuCore[0] is the YMF278B (PCM), emuCore[1] is the linked YMF262 (OPL3)
+    if (!devOpts.emuCore[1]) {
+      printf("YMF278B detected without OPL3 core. Using MAME OPL3 core.\n");
+      devOpts.emuCore[1] = FCC_MAME;
+    }
     // Some chips require specific core options to enable OPL3 extensions
-    // In player.cpp, this is handled via devOpts.coreOpts
     base->SetDeviceOptions(devOptID, devOpts);
   }
 
   voices.clear();
   chips.clear();
   size_t curDev;
-  int totalVoiceCount = 0;
-  for (curDev = 0; curDev < diList.size(); curDev ++)
-  {
+  for (curDev = 0; curDev < diList.size(); curDev++) {
     const PLR_DEV_INFO& pdi = diList[curDev];
     const char* devName = SndEmu_GetDevName(pdi.type, 1, pdi.devCfg);
 
@@ -334,22 +336,36 @@ void lvgm_set_voice_mask(lvgm_player *player, UINT64 mask) {
   PlayerBase* base = playerA->GetPlayer();
   if (base == nullptr) return;
 
-  size_t bitOffset = 0;
-  // Iterate over chips
-  for (const auto& chip : chips) {
-    UINT32 masks[2] = {0};
-    // Iterate over devices (there will either be 1 or 2, in case of a linked device)
-    for (size_t i = 0; i < chip.voiceCounts.size(); i++) {
-      // Create mask for this device
-      masks[i] |= mask >> bitOffset;
-      // Slide window by number of voices in this device
-      bitOffset += chip.voiceCounts[i];
-      // std::bitset<32> bits(masks[i]); printf("Chip %d: %s (%d voices)\n", (int)chip.idx, bits.to_string().c_str(), (int)chip.voiceCounts[i]);
-    }
-    PLR_MUTE_OPTS muteOpts = {0, masks[0], masks[1]};
-    base->SetDeviceMuting(chip.idx, muteOpts);
-  }
+  // We need the topology to know who the parents are
+  std::vector<PLR_DEV_INFO> diList;
+  base->GetSongDeviceInfo(diList);
 
+  size_t bitOffset = 0;
+  for (const auto& chip : chips) {
+    if (chip.idx >= diList.size()) continue;
+    const PLR_DEV_INFO& pdi = diList[chip.idx];
+
+    // Grab the 32-bit segment of the mask for this specific chip's voices
+    UINT32 channelMask = (UINT32)(mask >> bitOffset);
+    bitOffset += chip.voiceCounts[0];
+
+    if (pdi.parentIdx == (UINT32)-1) {
+      // 1. Root Device (e.g., OPL4 PCM part)
+      // Fetch current options to preserve other settings
+      PLR_DEV_OPTS devOpts;
+      base->GetDeviceOptions(chip.idx, devOpts);
+      devOpts.muteOpts.chnMute[0] = channelMask;
+      base->SetDeviceMuting(chip.idx, devOpts.muteOpts);
+    } else {
+      // 2. Linked Device (e.g., OPL3 FM part)
+      // Redirect these bits to the PARENT'S chnMute[1] slot
+      PLR_DEV_OPTS parentOpts;
+      if (base->GetDeviceOptions(pdi.parentIdx, parentOpts) == 0) {
+        parentOpts.muteOpts.chnMute[1] = channelMask;
+        base->SetDeviceMuting(pdi.parentIdx, parentOpts.muteOpts);
+      }
+    }
+  }
 }
 
 UINT64 lvgm_get_voice_mask(lvgm_player *player) {
