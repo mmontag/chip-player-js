@@ -98,6 +98,7 @@ if (isDev) {
         pathname.endsWith('.mp3') ||
         pathname.endsWith('.wasm') ||
         pathname.startsWith('/static') ||
+        pathname.startsWith('/soundfonts') ||
         pathname.startsWith('/ws') ||
         pathname.startsWith('/sockjs-node') ||
         /\.hot-update\.(json|js)$/.test(pathname)
