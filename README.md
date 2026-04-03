@@ -130,12 +130,15 @@ emcmake cmake ..                 # Cmake will generate a Makefile
 emmake make
 ```
 
-#### Subproject: libvgm
+#### External project: libvgm
 
-Our goal is to produce **libvgm/build/bin/libvgm-emu.a**, **libvgm/build/bin/libvgm-player.a**, and **libvgm/build/bin/libvgm-util.a**.
+Our goal is to produce **../libvgm/build/bin/libvgm-emu.a**, **../libvgm/build/bin/libvgm-player.a**, and **../libvgm/build/bin/libvgm-util.a** (assumes you have cloned **libvgm** side-by-side with chip-player-js.
+
+A **libvgm** subtree was previously included in this repository, but this is deprecated.
 
 ```sh
-cd chip-player-js/libvgm/
+git clone git@github.com:ValleyBell/libvgm.git
+cd libvgm/
 source ~/src/emsdk/emsdk_env.sh  # load the emscripten environment variables
 mkdir build                      # create a build folder for Cmake output
 cd build

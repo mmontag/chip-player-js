@@ -134,9 +134,10 @@ const chipModules = [
     name: 'libvgm',
     enabled: true,
     sourceFiles: [
-      'libvgm/build/bin/libvgm-emu.a',
-      'libvgm/build/bin/libvgm-utils.a',
-      'libvgm/build/bin/libvgm-player.a',
+      '../libvgm/build/bin/libvgm-emu.a',
+      '../libvgm/build/bin/libvgm-utils.a',
+      '../libvgm/build/bin/libvgm-player.a',
+      'src/bindings/libvgm-wrapper.cpp',
     ],
     exportedFunctions: [
       '_lvgm_init',
@@ -155,9 +156,12 @@ const chipModules = [
       '_lvgm_seek_ms',
       '_lvgm_set_playback_speed',
       '_lvgm_get_playback_speed',
+      '_lvgm_set_yrw801_rom_path',
       '_lvgm_reset',
     ],
-    flags: [],
+    flags: [
+      '-I../libvgm',
+    ],
   },
   {
     name: 'fluidlite',
@@ -429,7 +433,7 @@ const flags = [
   '-Wno-c++11-extensions',
   '-Wno-inconsistent-missing-override',
   '-Wno-c++11-narrowing',
-  '-std=c++11',
+  '-std=c++14',
 
   ...moduleFlags,
 ];
