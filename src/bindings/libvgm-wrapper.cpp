@@ -5,22 +5,20 @@
 #include <cstring>
 #include <vector>
 #include <cstdio>
-#include <bitset>
 #include <map>
 #include <string>
 
-#include "../stdtype.h"
-#include "../utils/DataLoader.h"
-#include "playerbase.hpp"
-#include "playera.hpp"
-#include "../utils/MemoryLoader.h"
-#include "vgmplayer.hpp"
-#include "s98player.hpp"
-#include "droplayer.hpp"
-#include "gymplayer.hpp"
-#include "../emu/SoundEmu.h"
-#include "../emu/SoundDevs.h"
-#include "../utils/FileLoader.h"
+#include "stdtype.h"
+#include "emu/SoundEmu.h"
+#include "emu/SoundDevs.h"
+#include "player/playera.hpp"
+#include "player/droplayer.hpp"
+#include "player/gymplayer.hpp"
+#include "player/s98player.hpp"
+#include "player/vgmplayer.hpp"
+#include "utils/FileLoader.h"
+#include "utils/MemoryLoader.h"
+#include "emu/EmuCores.h"
 
 /* C wrapper functions */
 typedef struct lvgm_player lvgm_player;
@@ -187,6 +185,13 @@ UINT8 lvgm_load_data(lvgm_player *player, const UINT8 *data, const UINT32 size) 
       memcpy(devOpts.panOpts.chnPan[1], panPos, sizeof(panPos));
       base->SetDeviceOptions(devOptID, devOpts);
     }
+  }
+  devOptID = PLR_DEV_ID(DEVID_YMF278B, 0);
+  retVal = base->GetDeviceOptions(devOptID, devOpts);
+  if (!(retVal & 0x80)) {
+    // Some chips require specific core options to enable OPL3 extensions
+    // In player.cpp, this is handled via devOpts.coreOpts
+    base->SetDeviceOptions(devOptID, devOpts);
   }
 
   voices.clear();
@@ -387,7 +392,9 @@ void lvgm_set_yrw801_rom_path(lvgm_player *player, const char* path) {
         return nullptr;
       }
       fclose(f);
-      return FileLoader_Init(path);
+      DATA_LOADER* romDLoad = FileLoader_Init(path);
+      DataLoader_Load(romDLoad);
+      return romDLoad;
     }
     return nullptr;
   }, nullptr);
