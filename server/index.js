@@ -101,7 +101,7 @@ if (isDev) {
         pathname.startsWith('/soundfonts') ||
         pathname.startsWith('/ws') ||
         pathname.startsWith('/sockjs-node') ||
-        /\.hot-update\.(json|js)$/.test(pathname)
+        /\.hot-update\.(json|js)(\.map)?$/.test(pathname)
       );
     }
   });
@@ -704,7 +704,7 @@ app.get(clientRoutes, cache1Hour, async (req, res) => {
   res.send(finalHtml);
 });
 
-app.use((err, req, res) => {
+app.use((err, req, res, _next) => {
   console.error('Error processing request:', req.url, err);
   res.status(500).send('Server error');
 });
