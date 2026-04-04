@@ -1,6 +1,8 @@
+import range from 'lodash/range';
+import { SOUNDFONT_MOUNTPOINT, SOUNDFONT_URL_PATH } from '../config';
 import Player from "./Player.js";
 import autoBind from 'auto-bind';
-import { allOrNone } from '../util';
+import { allOrNone, ensureEmscFileWithUrl } from '../util';
 
 const fileExtensions = [
   'vgm',
@@ -11,6 +13,7 @@ const fileExtensions = [
 ];
 
 const INT32_MAX = 0x8000000; // 2147483648
+const YRW801_ROM_PATH = `${SOUNDFONT_MOUNTPOINT}/yrw801.rom`;
 
 export default class VGMPlayer extends Player {
   constructor(...args) {
@@ -23,9 +26,10 @@ export default class VGMPlayer extends Player {
     this.fileExtensions = fileExtensions;
     this.buffer = this.core._malloc(this.bufferSize * 4 * 2);
     this.vgmCtx = this.core._lvgm_init(this.sampleRate);
+    this.core._lvgm_set_yrw801_rom_path(this.vgmCtx, this.core.stringToNewUTF8(YRW801_ROM_PATH));
   }
 
-  loadData(data, filepath, persistedSettings) {
+  async loadData(data, filepath, persistedSettings) {
     const dataPtr = this.copyToHeap(data);
     const err = this.core._lvgm_load_data(this.vgmCtx, dataPtr, data.byteLength);
     this.core._free(dataPtr);
@@ -35,8 +39,6 @@ export default class VGMPlayer extends Player {
       console.error("lvgm_load_data failed. error code: %d", err);
       throw Error('Unable to load this file!');
     }
-
-    this.core._lvgm_start(this.vgmCtx);
 
     const metaPtr = this.core._lvgm_get_metadata(this.vgmCtx);
     const meta = {
@@ -57,6 +59,17 @@ export default class VGMPlayer extends Player {
         allOrNone(' (', meta.date, ')'),
     };
     this.metadata = meta;
+
+    // If OPL4 sound chip is used, load the yrw801.rom.
+    const numVoices = this.core._lvgm_get_voice_count(this.vgmCtx);
+    const hasOpl4 = range(numVoices).some(i =>
+      this.core.UTF8ToString(this.core._lvgm_get_voice_chip_name(this.vgmCtx, i)).includes('OPL4'));
+    if (hasOpl4) {
+      console.debug(`${filepath} uses Yamaha OPL4 chip.`);
+      await ensureEmscFileWithUrl(this.core, YRW801_ROM_PATH, `${SOUNDFONT_URL_PATH}/yrw801.rom`);
+    }
+
+    this.core._lvgm_start(this.vgmCtx);
 
     this.resolveParamValues(persistedSettings);
     this.setTempo(persistedSettings.tempo || 1);
