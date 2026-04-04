@@ -40,6 +40,9 @@ The music catalog is created by [scripts/build-catalog.js](scripts/build-catalog
 
 ### Local Development Setup
 
+[!WARNING]
+This is a difficult project to self host. My instructions are probably out of date. You have been warned.
+
 Prerequisites: npm, cmake, emsdk.
 
 * Clone the repository. 
@@ -169,8 +172,24 @@ Optionally, use **ccmake** instead to configure the build.  See screenshot below
 ```
 ccmake -DCMAKE_TOOLCHAIN_FILE="$(dirname $(which emcc))/cmake/Modules/Platform/Emscripten.cmake" ..
 ```
-
 ![game-music-emu cmake example](https://github.com/user-attachments/assets/1899b5e6-5620-4cf2-b253-672b39212124)
+
+#### External project: libsidplayfp
+
+Our goal is to produce **../libsidplayfp/src/.libs/libsidplayfp.a** (assumes you have cloned **libsidplayfp** side-by-side with chip-player-js).
+
+```sh
+git clone git@github.com:mmontag/libsidplayfp # my libsidplayfp fork
+cd libsidplayfp
+git checkout montag-dev-2.14                  # my modified branch
+git submodule update --init --recursive       # this repo uses submodules
+autoreconf -vfi                               # optional
+make distclean || true                        # optional
+source ~/src/emsdk/emsdk_env.sh               # load the emscripten environment variables
+# this might take a while:
+emconfigure ./configure --host=wasm32-unknown-emscripten --disable-shared --enable-static --disable-debug --without-exsid --without-gcrypt --with-simd=sse4 XA=$(which xa) OD=$(which od) CXXFLAGS="-Oz -flto -msimd128"   LDFLAGS="-Oz -flto -msimd128" 
+emcmake make
+```
 
 #### WebAssembly build
 
