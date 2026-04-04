@@ -20,6 +20,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "types.h"
+#include <emscripten.h> // TODO: Remove
 
 #define V2MPLAYER_SYNC_FUNCTIONS
 
@@ -115,7 +116,7 @@ public:
 
     #endif
 
-#ifdef EMSCRIPTEN
+#ifdef __EMSCRIPTEN__
 	int* GetVoiceMap();
 #endif
     // ------------------------------------------------------------------------------------------------------

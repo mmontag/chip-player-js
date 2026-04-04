@@ -20,7 +20,7 @@
 // Debug scopes
 // --------------------------------------------------------------------------
 
-#if DEBUGSCOPES || defined EMSCRIPTEN
+#if DEBUGSCOPES || defined __EMSCRIPTEN__
 #include "scope.h"
 #define DEBUG_PLOT_OPEN(which, title, rate, w, h) scopeOpen((which), (title), (rate), (w), (h))
 #define DEBUG_PLOT_VAL(which, value) do { float t=value; scopeSubmit((which), &t, 1); } while(0)
@@ -390,7 +390,7 @@ public:
 
     inline float fetch() const
     {
-        return buf[pos];	// EMSCRIPTEN luckily this seems to be properly aligned
+        return buf[pos];	// __EMSCRIPTEN__ luckily this seems to be properly aligned
     }
 
     inline void feed(float v)
@@ -2604,7 +2604,7 @@ extern "C" void synthSetLyrics(void *, const char **) {}
 // --------------------------------------------------------------------------
 // Synth
 // --------------------------------------------------------------------------
-#ifdef EMSCRIPTEN
+#ifdef __EMSCRIPTEN__
 extern uint32_t readUintAt(const uint8_t *buf, int idx);
 #endif
 
@@ -2703,7 +2703,7 @@ struct V2Synth
         compr.init(&instance);
         dcf.init(&instance);
 
-#ifdef EMSCRIPTEN
+#ifdef __EMSCRIPTEN__
 		int buf_size= 1024; // keep in sync with output audio buffer  (see SAMPLE_BUF_SIZE in apadper.cpp!)
 		// just copy the output of the different channels
 		DEBUG_PLOT_OPEN(DEBUG_PLOT_CHAN(&chansw[0], 0), "channel 0", buf_size, 0, 0);
@@ -3283,7 +3283,7 @@ private:
 // C-style interface
 // --------------------------------------------------------------------------
 
-#ifdef EMSCRIPTEN
+#ifdef __EMSCRIPTEN__
 int *getVoiceMap(void *pthis)
 {
     return ((V2Synth *)pthis)->voicemap;

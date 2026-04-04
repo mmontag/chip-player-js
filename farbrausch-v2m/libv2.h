@@ -114,7 +114,7 @@ extern "C"
   // r    : pointer to float variable where right VU is stored
   void synthGetMainVU(void *pthis, float *l, float *r);
 
-#ifdef EMSCRIPTEN 
+#ifdef __EMSCRIPTEN__
   // expose current mapping of voices (64) to available channels (16)
   int *getVoiceMap(void *pthis);
 #endif

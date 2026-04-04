@@ -8,7 +8,7 @@ extern void scopeSubmit(const void *unique_id, const float *data, int nsamples);
 extern void scopeSubmitStrided(const void *unique_id, const float *data, int stride, int nsamples);
 extern void scopeUpdateAll();
 
-#ifdef EMSCRIPTEN
+#ifdef __EMSCRIPTEN__
 extern "C" int scope_activated;
 extern float** get_scope_buffers();
 extern const char** get_scope_titles();

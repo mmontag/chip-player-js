@@ -13,7 +13,6 @@
 
 #include "v2mplayer.h"
 #include "libv2.h"
-#include <emscripten.h> // TODO: Remove
 
 #define GETDELTA(p, w) ((p)[0] + ((p)[w] << 8) + ((p)[2*w] << 16))
 #define UPDATENT(n, v, p, w)  if ((n) < (w)) { (v) = m_state.time + GETDELTA((p), (w)); if ((v) < m_state.nexttime) m_state.nexttime = (v); }
@@ -374,7 +373,7 @@ void V2MPlayer::Stop(uint32_t a_fadetime)
     } else
         m_state.state=PlayerState::OFF;
 }
-#ifdef EMSCRIPTEN
+#ifdef __EMSCRIPTEN__
 int* V2MPlayer::GetVoiceMap()
 {
 	return getVoiceMap(m_synth);

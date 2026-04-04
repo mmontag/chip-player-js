@@ -48,7 +48,7 @@ char          *speechptrs[64];
 
 void sdInit()
 {
-#ifdef EMSCRIPTEN
+#ifdef __EMSCRIPTEN__
 	int l= (smsize + v2soundsize)/sizeof(long)+1;
 	soundmem = (unsigned char*)new long[l];				// avoid alignment issues
 #else
@@ -146,7 +146,7 @@ void sdClose()
     delete v2topics2;
     delete v2gtopics2;
 	
-#ifdef EMSCRIPTEN
+#ifdef __EMSCRIPTEN__
     soundmem= NULL;
     v2vsizes= NULL;
     v2topics2= NULL;

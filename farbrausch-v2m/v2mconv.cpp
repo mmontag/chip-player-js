@@ -58,7 +58,7 @@ static struct _ssbase
 } base;
 
 
-#ifdef EMSCRIPTEN
+#ifdef __EMSCRIPTEN__
 // fix the "unaligned data access" shit
 uint32_t readUint(const uint8_t *buf) {
 	return buf[0]+(buf[1]<<8)+(buf[2]<<16)+(buf[3]<<24);			

@@ -2,7 +2,7 @@
 
 extern "C"
 {
-#ifdef EMSCRIPTEN 
+#ifdef __EMSCRIPTEN__
 	extern int *getVoiceMap(void *pthis);
 #endif
 	

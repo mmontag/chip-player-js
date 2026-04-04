@@ -337,8 +337,8 @@ extern "C" void ronanCBSetSR(syWRonan *ptr, uint32_t sr)
 extern "C" void ronanCBInit(syWRonan *wsptr)
 {
     // convert phoneme table to a usable format
-    register const int8_t *ptr = (const int8_t*)rawphonemes;
-    register int32_t val = 0;
+    const int8_t *ptr = (const int8_t*)rawphonemes;
+    int32_t val = 0;
     for (int f = 0; f < (PTABSIZE/NPHONEMES); f++)
     {
         float *dest = ((float*)phonemes) + f;
