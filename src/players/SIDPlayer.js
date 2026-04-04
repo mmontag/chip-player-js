@@ -74,6 +74,7 @@ export default class SIDPlayer extends Player {
     this.metadata = { title: path.basename(filepath) };
 
     this.mask = Array(18).fill(true);
+    this.core._sid_set_voice_mask(0xff);
     this.resolveParamValues(persistedSettings);
     this.setTempo(persistedSettings.tempo || 1);
     this.resume();
