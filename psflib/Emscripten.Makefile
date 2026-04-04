@@ -4,7 +4,7 @@ CFLAGS = -c -g4 -s USE_ZLIB=1
 OBJS = psflib.o psf2fs.o 
 
 
-OPTS = -O2
+OPTS = -Oz -flto
 
 all: libpsflib.a
 
