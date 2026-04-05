@@ -74,7 +74,7 @@ export default class SIDPlayer extends Player {
     this.metadata = { title: path.basename(filepath) };
 
     this.mask = Array(18).fill(true);
-    this.core._sid_set_voice_mask(0xff);
+    this.core._sid_set_voice_mask(0);
     this.resolveParamValues(persistedSettings);
     this.setTempo(persistedSettings.tempo || 1);
     this.resume();
@@ -91,11 +91,11 @@ export default class SIDPlayer extends Player {
       return;
     }
 
-    if (this.lastHeapBuffer !== this.core.HEAP8.buffer) {
-      console.debug('SIDPlayer: Detected HEAP8 buffer change, updating views.');
-      this.wasmViewL = new Float32Array(this.core.HEAP8.buffer, this.bufferL, this.bufferSize);
-      this.wasmViewR = new Float32Array(this.core.HEAP8.buffer, this.bufferR, this.bufferSize);
-      this.lastHeapBuffer = this.core.HEAP8.buffer;
+    if (this.lastHeapBuffer !== this.core.HEAPU8.buffer) {
+      console.debug('SIDPlayer: Detected HEAPU8 buffer change, updating views.');
+      this.wasmViewL = new Float32Array(this.core.HEAPU8.buffer, this.bufferL, this.bufferSize);
+      this.wasmViewR = new Float32Array(this.core.HEAPU8.buffer, this.bufferR, this.bufferSize);
+      this.lastHeapBuffer = this.core.HEAPU8.buffer;
     }
 
     const samplesWritten = this.core._sid_render(this.bufferL, this.bufferR, this.bufferSize);
