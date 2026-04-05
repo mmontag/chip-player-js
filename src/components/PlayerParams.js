@@ -44,13 +44,18 @@ export default class PlayerParams extends React.PureComponent {
   //   clearInterval(this.timer);
   // }
 
-  handleVoiceToggle(e, index) {
+  handleVoiceToggle(e, index, group) {
     const { onVoiceMaskChange } = this.props;
     if (!onVoiceMaskChange) return;
 
     const voiceMask = [...this.props.voiceMask];
     e = e.nativeEvent || {};
     if (e.altKey || e.shiftKey || e.metaKey) {
+      if (group) {
+        console.log('foo');
+        this.handleVoiceGroupToggle(e, group);
+        return;
+      }
       if (voiceMask.every((enabled, i) => (i === index) === enabled)) {
         voiceMask.fill(true);
       } else {
@@ -60,6 +65,16 @@ export default class PlayerParams extends React.PureComponent {
     } else {
       voiceMask[index] = !voiceMask[index];
     }
+    onVoiceMaskChange(voiceMask);
+  }
+
+  handleVoiceGroupToggle(e, group) {
+    const { onVoiceMaskChange } = this.props;
+    const voiceMask = [...this.props.voiceMask];
+    // New state should be the opposite of current average voice state
+    const numEnabled = group.voices.reduce((acc, cur) => acc + (voiceMask[cur.idx] ? 1 : 0), 0);
+    const newState = numEnabled < (group.voices.length / 2);
+    group.voices.forEach(voice => voiceMask[voice.idx] = newState);
     onVoiceMaskChange(voiceMask);
   }
 
@@ -122,20 +137,20 @@ export default class PlayerParams extends React.PureComponent {
           {tempo.toFixed(2)}
         </span>
         {voiceGroups.length > 0 ?
-          voiceGroups.map((voiceGroup, i) => {
+          voiceGroups.map((group, i) => {
             return (
-              <span className='PlayerParams-param PlayerParams-group' key={voiceGroup.name+i}>
-                  <label className="PlayerParams-group-title" title="Sound chip">
-                    {voiceGroup.icon && <span className='inline-icon dim-icon icon-chip'/>}{' '}
-                    {voiceGroup.name}:
+              <span className='PlayerParams-param PlayerParams-group' key={group.name+i}>
+                  <label className="PlayerParams-group-title" title="Sound chip" onClick={(e) => this.handleVoiceGroupToggle(e, group)}>
+                    {group.icon && <span className='inline-icon dim-icon icon-chip'/>}{' '}
+                    {group.name}:
                   </label>
                   <div className="PlayerParams-voiceList">
-                    {voiceGroup.voices.map((voice, j) => (
+                    {group.voices.map((voice, j) => (
                       <div key={voice.idx} className='App-voice-label'><input
                         title='Alt+click to solo. Alt+click again to unmute all.'
                         type='checkbox'
                         id={'v_'+i+j}
-                        onChange={(e) => this.handleVoiceToggle(e, voice.idx)}
+                        onChange={(e) => this.handleVoiceToggle(e, voice.idx, group)}
                         checked={!!voiceMask[voice.idx]}/>
                       <label htmlFor={'v_'+i+j}>
                         {voice.name}
