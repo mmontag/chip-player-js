@@ -1,10 +1,12 @@
 {
   "plugins": [
     "@babel/plugin-syntax-bigint",
-    // Required for Webpack 4
+    // Required for Webpack 4 :(
     "@babel/plugin-transform-optional-chaining",
     "@babel/plugin-transform-class-properties",
-    "@babel/plugin-transform-nullish-coalescing-operator"
+    "@babel/plugin-transform-nullish-coalescing-operator",
+    "@babel/plugin-proposal-logical-assignment-operators",
+    "@babel/plugin-syntax-import-meta"
   ],
   "presets": [
     [

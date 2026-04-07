@@ -143,7 +143,7 @@ class App extends React.Component {
     // Load the chip-core Emscripten runtime
     const { default: ChipCore } = await import(/* webpackChunkName: "chip-core" */ '../chip-core');
     try {
-      this.chipCore = await new ChipCore({
+      this.chipCore = await ChipCore({
         // Look for .wasm file in web root, not the same location as the app bundle (static/js).
         locateFile: (path, prefix) => {
           if (path.endsWith('.wasm') || path.endsWith('.wast'))
@@ -157,6 +157,7 @@ class App extends React.Component {
       // Browser doesn't support WASM (Safari in iOS Simulator)
       this.setState({ loading: false });
       this.props.toastContext.enqueueToast('Error loading player engine. Old browser?', ToastLevels.ERROR);
+      console.error(e);
       return;
     }
 

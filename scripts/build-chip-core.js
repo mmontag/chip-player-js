@@ -369,6 +369,8 @@ const runtimeMethods = [
   'ALLOC_NORMAL',
   'FS',
   'UTF8ToString',
+  'HEAPU8',
+  'HEAPF32',
   'stringToNewUTF8',
   'ccall',
   'getValue',
@@ -385,10 +387,10 @@ const flags = [
   /*
   Build flags for Emscripten 3.1.39. Last updated July 15, 2024
   */
-  // '--closure', '1',       // causes TypeError: lib.FS.mkdir is not a function
+  // '--closure', '1',          // causes TypeError: lib.FS.mkdir is not a function
   // '--llvm-lto', '3',
   // '--clear-cache',        // sometimes Emscripten cache gets "poisoned"
-  '--no-heap-copy',
+  // '--no-heap-copy',
   '-s', 'EXPORTED_FUNCTIONS=[' + exportedFns.join(',') + ']',
   '-s', 'EXPORTED_RUNTIME_METHODS=[' + runtimeMethods.join(',') + ']',
   '-s', 'ALLOW_MEMORY_GROWTH=1',
@@ -402,10 +404,11 @@ const flags = [
   '-s', 'EXPORT_NAME=CHIP_CORE',
   '-s', 'ENVIRONMENT=web',
   '-s', 'USE_ZLIB=1',
-  '-s', 'EXPORT_ES6=1',
+  '-s', 'EXPORT_ES6=0',
+  // '-s', 'LEGACY_VM_SUPPORT=1',
   // '-s', 'INITIAL_MEMORY=33554432', // 32MB initial memory; can grow with ALLOW_MEMORY_GROWTH
   '-s', 'INITIAL_MEMORY=65536000', // 64MB initial memory
-  '-s', 'USE_ES6_IMPORT_META=0',
+  // '-s', 'USE_ES6_IMPORT_META=0', // unsupported in Emscripten 5
   '-s', 'WASM_BIGINT',       // support passing 64 bit integers to/from JS
   '-lidbfs.js',
   '-Oz',                     // set to O0 for fast compile during development
@@ -433,7 +436,7 @@ const flags = [
   '-Wno-c++11-extensions',
   '-Wno-inconsistent-missing-override',
   '-Wno-c++11-narrowing',
-  '-std=c++14',
+  '-std=c++17',
 
   ...moduleFlags,
 ];
@@ -441,6 +444,7 @@ const flags = [
 console.log('Compiling to %s...', jsOutFile);
 console.log(`Invocation:\n${compiler} ${chalk.blue(flags.join(' '))} ${chalk.gray(sourceFiles.join(' '))}\n`);
 const preJs = `/*eslint-disable*/`;
+const postJs = '\nexport default CHIP_CORE;';
 const args = [].concat(flags, sourceFiles);
 const build_proc = spawn(compiler, args, {stdio: 'inherit'});
 build_proc.on('exit', function (code) {
@@ -454,7 +458,11 @@ build_proc.on('exit', function (code) {
     }
 
     // Don't use --pre-js because it can get stripped out by closure.
-    console.log('Prepending %s: \n%s\n', jsOutFile, preJs.trim());
+    console.log('Prepending %s: %s', jsOutFile, preJs.trim());
     execSync(`cat <<EOF > ${jsOutFile}\n${preJs}\n$(cat ${jsOutFile})\nEOF`);
+    // Emscripten 5 forces import.meta.url in ES6 mode, which Webpack 4 chokes on.
+    // So we turn ES6 off and add the export manually.
+    console.log('Appending %s: %s', jsOutFile, postJs.trim());
+    execSync(`cat <<EOF >> ${jsOutFile}\n${postJs}\nEOF`);
   }
 });
