@@ -104,7 +104,7 @@ cd FluidLite/                    # navigate to fluidlite root
 source ~/src/emsdk/emsdk_env.sh  # load the emscripten environment variables
 mkdir build                      # create a build folder for Cmake output
 cd build                         
-emcmake cmake ..                 # Cmake will generate a Makefile
+emcmake cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-Oz -flto"
                                  # Note: SF3 support is now disabled by default
                                  # Problems here? Try deleting CMake cache files
 emmake make fluidlite-static
