@@ -98,7 +98,6 @@ if (isDev) {
         pathname.endsWith('.mp3') ||
         pathname.endsWith('.wasm') ||
         pathname.startsWith('/static') ||
-        pathname.startsWith('/soundfonts') ||
         pathname.startsWith('/ws') ||
         pathname.startsWith('/sockjs-node') ||
         /\.hot-update\.(json|js)(\.map)?$/.test(pathname)
@@ -671,6 +670,7 @@ app.use('/soundfonts', cache1Hour, express.static(LOCAL_SOUNDFONT_ROOT));
 // Handle client-side routing, return all requests to index.html.
 const clientRoutes = [
   '/',
+  '/index.html',
   '/browse{/*path}',
   '/favorites',
   '/local'
