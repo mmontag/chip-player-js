@@ -63,7 +63,7 @@ export default class VGMPlayer extends Player {
     // If OPL4 sound chip is used, load the yrw801.rom.
     const numVoices = this.core._lvgm_get_voice_count(this.vgmCtx);
     const hasOpl4 = range(numVoices).some(i =>
-      this.core.UTF8ToString(this.core._lvgm_get_voice_chip_name(this.vgmCtx, i)).includes('OPL4'));
+      this.core.UTF8ToString(this.core._lvgm_get_voice_chip_name(this.vgmCtx, i)).includes('YMF278'));
     if (hasOpl4) {
       console.debug(`${filepath} uses Yamaha OPL4 chip.`);
       await ensureEmscFileWithUrl(this.core, YRW801_ROM_PATH, `${SOUNDFONT_URL_PATH}/yrw801.rom`);
@@ -166,6 +166,7 @@ export default class VGMPlayer extends Player {
   }
 
   getVoiceName(index) {
+    // TODO: Add voice chip map like github.com/mmontag/chip-player-js/commit/a698e9b
     if (this.vgmCtx) return this.core.UTF8ToString(this.core._lvgm_get_voice_name(this.vgmCtx, index));
   }
 
