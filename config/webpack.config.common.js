@@ -51,6 +51,13 @@ module.exports = {
             }
           },
           {
+            test: /\.wasm$/,
+            type: 'asset/resource',
+            generator: {
+              filename: 'static/js/[name].[contenthash:4][ext]'
+            }
+          },
+          {
             test: /\.(js|jsx|mjs)$/i,
             include: paths.appSrc,
             loader: require.resolve('babel-loader'),

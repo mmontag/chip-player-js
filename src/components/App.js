@@ -8,7 +8,8 @@ import pathe from 'pathe';
 import { NavLink, Route, Switch, withRouter } from 'react-router-dom';
 import Dropzone from 'react-dropzone';
 
-// import ChipCore from '../chip-core'; // separate chunk in initChipCore
+// import ChipCore from '../chip-core';             // separate chunk in initChipCore
+// import ChipCoreWasm from '../chip-core.wasm';    // found in chip-core.js by Webpack
 import {
   API_BASE,
   CATALOG_PREFIX,
@@ -143,12 +144,7 @@ class App extends React.Component {
     const { default: ChipCore } = await import(/* webpackChunkName: "chip-core" */ '../chip-core');
     try {
       this.chipCore = await ChipCore({
-        // Look for .wasm file in web root, not the same location as the app bundle (static/js).
-        locateFile: (path, prefix) => {
-          if (path.endsWith('.wasm') || path.endsWith('.wast'))
-            return `${BASE_URL}/${path}`;
-          return prefix + path;
-        },
+        // Webpack performs automatic asset relinking on chip-core.wasm
         print: (msg) => console.debug('[stdout] ' + msg),
         printErr: (msg) => console.debug('[stderr] ' + msg),
       });
