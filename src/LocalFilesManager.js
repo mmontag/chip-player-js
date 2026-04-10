@@ -1,4 +1,4 @@
-import path from 'path';
+import pathe from 'pathe';
 import autoBind from 'auto-bind';
 import debounce from 'lodash/debounce';
 
@@ -32,7 +32,7 @@ export default class LocalFilesManager {
       const filesInfo = fileList
         .filter(file => file !== '..' && file !== '.')
         .map((file, idx) => {
-          const fullPath = path.join(this.rootPath, file);
+          const fullPath = pathe.join(this.rootPath, file);
           const {
             size,
             mtime

@@ -1,7 +1,7 @@
 import Player from "./Player.js";
 import { ensureEmscFileWithData, ensureEmscFileWithUrl, pathJoin } from '../util';
 import { CATALOG_PREFIX } from '../config';
-import path from 'path';
+import pathe from 'pathe';
 import autoBind from 'auto-bind';
 import chipImage from '../images/chip.png';
 
@@ -35,7 +35,7 @@ export default class MDXPlayer extends Player {
     // rather than loading bytes from memory like other players.
     let err;
     this.filepathMeta = Player.metadataFromFilepath(filename);
-    const dir = path.dirname(filename);
+    const dir = pathe.dirname(filename);
     const mdxFilename = pathJoin(MOUNTPOINT, filename);
     // First, write PDX sample files into Emscripten filesystem.
     return ensureEmscFileWithData(this.core, mdxFilename, data)
@@ -74,7 +74,7 @@ export default class MDXPlayer extends Player {
           const buf = this.core.HEAPU8.subarray(ptr, ptr + 256);
           const len = buf.indexOf(0);
           const title = new TextDecoder("shift-jis").decode(buf.subarray(0, len));
-          this.metadata = { title: title || path.basename(filename) };
+          this.metadata = { title: title || pathe.basename(filename) };
 
           this.resolveParamValues(persistedSettings);
           this.setTempo(persistedSettings.tempo || 1);

@@ -1,5 +1,4 @@
-import queryString from 'querystring';
-import path from 'path';
+import pathe from 'pathe';
 
 import { API_BASE, CATALOG_PREFIX } from './config';
 import axios from 'redaxios';
@@ -112,7 +111,7 @@ export function ensureEmscFileWithData(emscRuntime, filename, uint8Array, forceW
     return Promise.resolve(filename);
   } else {
     console.debug(`Writing ${filename} to Emscripten file system...`);
-    const dir = path.dirname(filename);
+    const dir = pathe.dirname(filename);
     emscRuntime.FS.mkdirTree(dir);
     emscRuntime.FS.writeFile(filename, uint8Array);
     return new Promise((resolve, reject) => {

@@ -4,7 +4,7 @@ import autoBindReact from 'auto-bind/react';
 import isMobile from 'ismobilejs';
 import clamp from 'lodash/clamp';
 import shuffle from 'lodash/shuffle';
-import path from 'path';
+import pathe from 'pathe';
 import { NavLink, Route, Switch, withRouter } from 'react-router-dom';
 import Dropzone from 'react-dropzone';
 
@@ -225,7 +225,7 @@ class App extends React.Component {
       const qs = urlParams.toString();
       const search = qs ? `?${qs}` : '';
       // Navigate to song's containing folder. History comes from withRouter().
-      const dirname = path.dirname(playPath);
+      const dirname = pathe.dirname(playPath);
       this.fetchDirectory(dirname).then(() => {
         this.props.history.replace(`${pathJoin('/browse', dirname)}${search}`);
         const index = this.playContexts[dirname].indexOf(playPath);
@@ -721,7 +721,7 @@ class App extends React.Component {
         const reader = new FileReader();
         reader.onerror = (event) => reject(event.target.error);
         reader.onload = async () => {
-          const ext = path.extname(file.name).toLowerCase().substring(1);
+          const ext = pathe.extname(file.name).toLowerCase().substring(1);
           if (ext === 'sf2') {
             // Handle dropped Soundfont
             if (!this.midiPlayer) {
@@ -741,7 +741,7 @@ class App extends React.Component {
           } else if (FORMATS.includes(ext)) {
             // Handle dropped song file
             const songData = reader.result;
-            this.localFilesManager.write(path.join('local', file.name), songData);
+            this.localFilesManager.write(pathe.join('local', file.name), songData);
             resolve(1);
           } else {
             reject(`The file format ".${ext}" was not recognized.`);

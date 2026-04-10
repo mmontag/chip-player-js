@@ -1,6 +1,6 @@
 import axios from 'redaxios';
 import autoBind from 'auto-bind';
-import path from 'path';
+import pathe from 'pathe';
 
 import Player from "./Player.js";
 import { vectorToArray } from '../util';
@@ -71,7 +71,7 @@ export default class SIDPlayer extends Player {
     const md5 = this.core.UTF8ToString(ptr);
     this.getSidMetadata(md5);
 
-    this.metadata = { title: path.basename(filepath) };
+    this.metadata = { title: pathe.basename(filepath) };
 
     this.mask = Array(18).fill(true);
     this.core._sid_set_voice_mask(0);

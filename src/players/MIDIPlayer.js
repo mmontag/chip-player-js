@@ -2,7 +2,7 @@ import autoBind from 'auto-bind';
 import axios from 'redaxios';
 import debounce from 'lodash/debounce';
 import range from 'lodash/range';
-import path from 'path';
+import pathe from 'pathe';
 import MIDIFile from './midi/midi-helpers';
 import MIDIFilePlayer from './MIDIFilePlayer';
 import Player from './Player';
@@ -326,7 +326,7 @@ export default class MIDIPlayer extends Player {
       const { data: { soundfont: soundfontPath } } = await axios.get(metadataUrl);
       const soundfontUrl = soundfontPath ? getUrlFromFilepath(soundfontPath) : null;
       if (soundfontUrl) {
-        const soundfontBasename = path.basename(soundfontPath);
+        const soundfontBasename = pathe.basename(soundfontPath);
         const sf2Path = `user/${soundfontBasename}`;
         newTransientParams['soundfont'] = sf2Path;
         if (this.getParameter('soundfont') !== sf2Path) {

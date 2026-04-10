@@ -1,5 +1,5 @@
 import autoBind from 'auto-bind';
-import path from 'path';
+import pathe from 'pathe';
 import Player from "./Player.js";
 import SubBass from "../effects/SubBass";
 import { allOrNone } from '../util';
@@ -169,7 +169,7 @@ export default class GMEPlayer extends Player {
     this.fadingOut = false;
     this.seekTargetMs = null;
     this.seekRequestId = null;
-    this.currentFileExt = path.extname(filepath);
+    this.currentFileExt = pathe.extname(filepath);
     this.filepathMeta = Player.metadataFromFilepath(filepath);
 
     const dataPtr = this.copyToHeap(data);

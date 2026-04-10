@@ -1,7 +1,7 @@
 import Player from "./Player.js";
 import { ensureEmscFileWithData, ensureEmscFileWithUrl, pathJoin } from '../util';
 import { CATALOG_PREFIX } from '../config';
-import path from 'path';
+import pathe from 'pathe';
 import autoBind from 'auto-bind';
 
 const fileExtensions = [
@@ -38,7 +38,7 @@ export default class N64Player extends Player {
       throw new Error(`No .usflib references found`);
     }
 
-    const dir = path.dirname(filename);
+    const dir = pathe.dirname(filename);
     const fsFilename = pathJoin(MOUNTPOINT, filename);
     const filePromises = [
       ensureEmscFileWithData(this.core, fsFilename, data),
@@ -62,7 +62,7 @@ export default class N64Player extends Player {
           throw Error('n64_load_file failed');
         }
 
-        this.metadata = { title: path.basename(filename) };
+        this.metadata = { title: pathe.basename(filename) };
 
         this.resume();
         this.emit('playerStateUpdate', {
