@@ -3,15 +3,14 @@
 const autoprefixer = require('autoprefixer');
 const path = require('path');
 const webpack = require('webpack');
+const { merge } = require('webpack-merge');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
 const InterpolateHtmlPlugin = require('react-dev-utils/InterpolateHtmlPlugin');
-const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
 const getClientEnvironment = require('./env');
 const paths = require('./paths');
-const ESLintPlugin = require('eslint-webpack-plugin');
-const ignoredFiles = require('react-dev-utils/ignoredFiles');
 const noopServiceWorkerMiddleware = require('react-dev-utils/noopServiceWorkerMiddleware');
+const commonConfig = require('./webpack.config.common.js');
 
 // Webpack uses `publicPath` to determine where the app is being served from.
 // In development, we always serve from the root. This makes config easier.
@@ -20,26 +19,17 @@ const publicPath = '/';
 // as %PUBLIC_URL% in `index.html` and `process.env.PUBLIC_URL` in JavaScript.
 // Omit trailing slash as %PUBLIC_PATH%/xyz looks better than %PUBLIC_PATH%xyz.
 const publicUrl = '';
-// Get environment variables to inject into our app.
 const env = getClientEnvironment(publicUrl);
 const protocol = process.env.HTTPS === 'true' ? 'https' : 'http';
 const host = process.env.HOST || '0.0.0.0';
 
-// This is the development configuration.
-// It is focused on developer experience and fast rebuilds.
-// The production configuration is different and lives in a separate file.
-module.exports = {
+module.exports = merge(commonConfig, {
   mode: 'development',
-  //externals: ['fs'],
-  // You may want 'eval' instead if you prefer to see the compiled output in DevTools.
-  // See the discussion in https://github.com/facebookincubator/create-react-app/issues/343.
   devtool: 'cheap-module-source-map',
   // These are the "entry points" to our application.
   // This means they will be the "root" imports that are included in JS bundle.
   // The first two entry points enable "hot" CSS and auto-refreshes for JS.
   entry: [
-    // We ship a few polyfills by default:
-    require.resolve('./polyfills'),
     // Include an alternative client for WebpackDevServer. A client's job is to
     // connect to WebpackDevServer by a socket and get notified about changes.
     // When you save a file, the client will either apply hot updates (in case
@@ -78,39 +68,7 @@ module.exports = {
     devtoolModuleFilenameTemplate: info =>
       path.resolve(info.absoluteResourcePath).replace(/\\/g, '/'),
   },
-  resolve: {
-    // This allows you to set a fallback for where Webpack should look for modules.
-    // We placed these paths second because we want `node_modules` to "win"
-    // if there are any conflicts. This matches Node resolution mechanism.
-    // https://github.com/facebookincubator/create-react-app/issues/253
-    modules: ['node_modules', paths.appNodeModules].concat(
-      // It is guaranteed to exist because we tweak it in `env.js`
-      process.env.NODE_PATH.split(path.delimiter).filter(Boolean)
-    ),
-    // These are the reasonable defaults supported by the Node ecosystem.
-    // We also include JSX as a common component filename extension to support
-    // some tools, although we do not recommend using it, see:
-    // https://github.com/facebookincubator/create-react-app/issues/290
-    // `web` extension prefixes have been added for better support
-    // for React Native Web.
-    extensions: ['.web.js', '.mjs', '.js', '.json', '.web.jsx', '.jsx'],
-    alias: {
-
-      // Support React Native Web
-      // https://www.smashingmagazine.com/2016/08/a-glimpse-into-the-future-with-react-native-for-web/
-      'react-native': 'react-native-web',
-    },
-    plugins: [
-      // Prevents users from importing files from outside of src/ (or node_modules/).
-      // This often causes confusion because we only process files within src/ with babel.
-      // To fix this, we prevent you from importing files out of src/ -- if you'd like to,
-      // please link the files into your node_modules/ and let module-resolution kick in.
-      // Make sure your source files are compiled, as they will not be processed in any way.
-      new ModuleScopePlugin(paths.appSrc, [paths.appPackageJson]),
-    ],
-  },
   module: {
-    strictExportPresence: true,
     rules: [
       // TODO: Disable require.ensure as it's not a standard language feature.
       // We are waiting for https://github.com/facebookincubator/create-react-app/issues/2176.
@@ -121,28 +79,6 @@ module.exports = {
         // match the requirements. When no loader matches it will fall
         // back to the "file" loader at the end of the loader list.
         oneOf: [
-          // "url" loader works like "file" loader except that it embeds assets
-          // smaller than specified limit in bytes as data URLs to avoid requests.
-          // A missing `test` is equivalent to a match.
-          {
-            test: /\.(bmp|gif|jpe?g|png|svg)$/i,
-            type: 'asset',
-            parser: {
-              dataUrlCondition: {
-                maxSize: 10000,
-              },
-            },
-            generator: {
-              filename: 'static/media/[name].[contenthash:8][ext]',
-            }
-          },
-          // Process JS with Babel.
-          {
-            test: /\.(js|jsx|mjs)$/i,
-            include: paths.appSrc,
-            loader: require.resolve('babel-loader'),
-            // No "options" here; defined in babel.config.json.
-          },
           // "postcss" loader applies autoprefixer to our CSS.
           // "css" loader resolves paths in CSS and adds assets as dependencies.
           // "style" loader turns CSS into JS modules that inject <style> tags.
@@ -173,22 +109,6 @@ module.exports = {
               },
             ],
           },
-          // "file" loader makes sure those assets get served by WebpackDevServer.
-          // When you `import` an asset, you get its (virtual) filename.
-          // In production, they would get copied to the `build` folder.
-          // This loader doesn't use a "test" so it will catch all modules
-          // that fall through the other loaders.
-          {
-            // Exclude `js` files to keep "css" loader working as it injects
-            // its runtime that would otherwise processed through "file" loader.
-            // Also exclude `html` and `json` extensions so they get processed
-            // by webpacks internal loaders.
-            exclude: [/\.(js|jsx|mjs)$/i, /\.html$/, /\.json$/i],
-            type: 'asset/resource',
-            generator: {
-              filename: 'static/media/[name].[contenthash:8][ext]',
-            }
-          },
         ],
       },
       // ** STOP ** Are you adding a new loader?
@@ -196,12 +116,6 @@ module.exports = {
     ],
   },
   plugins: [
-    new ESLintPlugin({
-      context: paths.appSrc,
-      // formatter: eslintFormatter, <-- doesn't show filenames
-      eslintPath: require.resolve('eslint'),
-    }),
-    // Generates an `index.html` file with the <script> injected.
     new HtmlWebpackPlugin({
       inject: true,
       template: paths.appHtml, // index.template.html
@@ -222,15 +136,6 @@ module.exports = {
     // a plugin that prints an error when you attempt to do this.
     // See https://github.com/facebookincubator/create-react-app/issues/240
     new CaseSensitivePathsPlugin(),
-    // Moment.js is an extremely popular library that bundles large locale files
-    // by default due to how Webpack interprets its code. This is a practical
-    // solution that requires the user to opt into importing specific locales.
-    // https://github.com/jmblog/how-to-optimize-momentjs-with-webpack
-    // You can remove this if you don't use Moment.js:
-    new webpack.IgnorePlugin({
-      resourceRegExp: /^\.\/locale$/,
-      contextRegExp: /moment$/,
-    }),
   ],
   // Turn off performance hints during development because we don't do any
   // splitting or minification in interest of speed. These warnings become
@@ -299,4 +204,4 @@ module.exports = {
       return middlewares;
     },
   },
-};
+});
