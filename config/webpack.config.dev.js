@@ -6,12 +6,12 @@ const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
 const InterpolateHtmlPlugin = require('react-dev-utils/InterpolateHtmlPlugin');
-const WatchMissingNodeModulesPlugin = require('react-dev-utils/WatchMissingNodeModulesPlugin');
-const eslintFormatter = require('react-dev-utils/eslintFormatter');
 const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
 const getClientEnvironment = require('./env');
 const paths = require('./paths');
 const ESLintPlugin = require('eslint-webpack-plugin');
+const ignoredFiles = require('react-dev-utils/ignoredFiles');
+const noopServiceWorkerMiddleware = require('react-dev-utils/noopServiceWorkerMiddleware');
 
 // Webpack uses `publicPath` to determine where the app is being served from.
 // In development, we always serve from the root. This makes config easier.
@@ -22,6 +22,8 @@ const publicPath = '/';
 const publicUrl = '';
 // Get environment variables to inject into our app.
 const env = getClientEnvironment(publicUrl);
+const protocol = process.env.HTTPS === 'true' ? 'https' : 'http';
+const host = process.env.HOST || '0.0.0.0';
 
 // This is the development configuration.
 // It is focused on developer experience and fast rebuilds.
@@ -49,8 +51,9 @@ module.exports = {
 
     // dev client:
     // require.resolve('webpack-dev-server/client') + '?/',
-    require.resolve('webpack-dev-server/client') + '?ws://localhost:3000/ws',
-    require.resolve('webpack/hot/dev-server'),
+    // TODO: does Express server still work without these 2 lines:
+    // require.resolve('webpack-dev-server/client') + '?ws://localhost:3000/ws',
+    // require.resolve('webpack/hot/dev-server'),
     // dev client with Error Overlay:
     // require.resolve('react-dev-utils/webpackHotDevClient'),
 
@@ -122,16 +125,20 @@ module.exports = {
           // smaller than specified limit in bytes as data URLs to avoid requests.
           // A missing `test` is equivalent to a match.
           {
-            test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/],
-            loader: require.resolve('url-loader'),
-            options: {
-              limit: 10000,
-              name: 'static/media/[name].[hash:8].[ext]',
+            test: /\.(bmp|gif|jpe?g|png|svg)$/i,
+            type: 'asset',
+            parser: {
+              dataUrlCondition: {
+                maxSize: 10000,
+              },
             },
+            generator: {
+              filename: 'static/media/[name].[contenthash:8][ext]',
+            }
           },
           // Process JS with Babel.
           {
-            test: /\.(js|jsx|mjs)$/,
+            test: /\.(js|jsx|mjs)$/i,
             include: paths.appSrc,
             loader: require.resolve('babel-loader'),
             // No "options" here; defined in babel.config.json.
@@ -142,7 +149,7 @@ module.exports = {
           // In production, we use a plugin to extract that CSS to a file, but
           // in development "style" loader enables hot editing of CSS.
           {
-            test: /\.css$/,
+            test: /\.css$/i,
             use: [
               require.resolve('style-loader'),
               {
@@ -154,21 +161,14 @@ module.exports = {
               {
                 loader: require.resolve('postcss-loader'),
                 options: {
-                  // Necessary for external CSS imports to work
-                  // https://github.com/facebookincubator/create-react-app/issues/2677
-                  ident: 'postcss',
-                  plugins: () => [
-                    require('postcss-flexbugs-fixes'),
-                    autoprefixer({
-                      browsers: [
-                        '>1%',
-                        'last 4 versions',
-                        'Firefox ESR',
-                        'not ie < 9', // React doesn't support IE8 anyway
-                      ],
-                      flexbox: 'no-2009',
-                    }),
-                  ],
+                  postcssOptions: {
+                    // Necessary for external CSS imports to work
+                    // https://github.com/facebookincubator/create-react-app/issues/2677
+                    ident: 'postcss',
+                    plugins: [
+                      autoprefixer(),
+                    ],
+                  },
                 },
               },
             ],
@@ -183,11 +183,11 @@ module.exports = {
             // its runtime that would otherwise processed through "file" loader.
             // Also exclude `html` and `json` extensions so they get processed
             // by webpacks internal loaders.
-            exclude: [/\.(js|jsx|mjs)$/, /\.html$/, /\.json$/],
-            loader: require.resolve('file-loader'),
-            options: {
-              name: 'static/media/[name].[hash:8].[ext]',
-            },
+            exclude: [/\.(js|jsx|mjs)$/i, /\.html$/, /\.json$/i],
+            type: 'asset/resource',
+            generator: {
+              filename: 'static/media/[name].[contenthash:8][ext]',
+            }
           },
         ],
       },
@@ -204,7 +204,7 @@ module.exports = {
     // Generates an `index.html` file with the <script> injected.
     new HtmlWebpackPlugin({
       inject: true,
-      template: paths.appHtml,
+      template: paths.appHtml, // index.template.html
       // filename: 'index.template.html', // to avoid conflict with dev middleware serving index.html
     }),
     // Makes some environment variables available in index.html.
@@ -212,42 +212,91 @@ module.exports = {
     // <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico">
     // In development, this will be an empty string.
     new InterpolateHtmlPlugin(HtmlWebpackPlugin, env.raw),
-    // Add module names to factory functions so they appear in browser profiler.
-    new webpack.NamedModulesPlugin(),
     // Makes some environment variables available to the JS code, for example:
     // if (process.env.NODE_ENV === 'development') { ... }. See `./env.js`.
     new webpack.DefinePlugin(env.stringified),
     // This is necessary to emit hot updates (currently CSS only):
-    new webpack.HotModuleReplacementPlugin(),
+    // TODO: verify
+    // new webpack.HotModuleReplacementPlugin(),
     // Watcher doesn't work well if you mistype casing in a path so we use
     // a plugin that prints an error when you attempt to do this.
     // See https://github.com/facebookincubator/create-react-app/issues/240
     new CaseSensitivePathsPlugin(),
-    // If you require a missing module and then `npm install` it, you still have
-    // to restart the development server for Webpack to discover it. This plugin
-    // makes the discovery automatic so you don't have to restart.
-    // See https://github.com/facebookincubator/create-react-app/issues/186
-    new WatchMissingNodeModulesPlugin(paths.appNodeModules),
     // Moment.js is an extremely popular library that bundles large locale files
     // by default due to how Webpack interprets its code. This is a practical
     // solution that requires the user to opt into importing specific locales.
     // https://github.com/jmblog/how-to-optimize-momentjs-with-webpack
     // You can remove this if you don't use Moment.js:
-    new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
+    new webpack.IgnorePlugin({
+      resourceRegExp: /^\.\/locale$/,
+      contextRegExp: /moment$/,
+    }),
   ],
-  // Some libraries import Node modules but don't use them in the browser.
-  // Tell Webpack to provide empty mocks for them so importing them works.
-  node: {
-    dgram: 'empty',
-    fs: 'empty',
-    net: 'empty',
-    tls: 'empty',
-    child_process: 'empty',
-  },
   // Turn off performance hints during development because we don't do any
   // splitting or minification in interest of speed. These warnings become
   // cumbersome.
   performance: {
     hints: false,
+  },
+  devServer: {
+    // `host` and `https` are still valid and are being loaded from your env.
+    host: host,
+    https: protocol === 'https',
+    // Enable gzip compression of generated files.
+    compress: true,
+    // `static` replaces `contentBase` and `watchContentBase`.
+    static: {
+      directory: paths.appPublic,
+      watch: true,
+    },
+    // `hot` enables HMR. It's automatically paired with the HMR plugin.
+    hot: true,
+    // `client` replaces `clientLogLevel` and `overlay`.
+    // The error overlay is now built-in and enabled by default.
+    client: {
+      logging: 'none',
+      overlay: false, // The original config had this as false.
+    },
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+    },
+    // `historyApiFallback` is still valid.
+    historyApiFallback: {
+      disableDotRule: true,
+    },
+    // `allowedHosts` replaces `disableHostCheck` and `public`.
+    allowedHosts: 'all',
+    // proxy,
+    // `setupMiddlewares` replaces the `before` hook.
+    setupMiddlewares: (middlewares, devServer) => {
+      if (!devServer) {
+        throw new Error('webpack-dev-server is not defined');
+      }
+
+      // This service worker file is effectively a 'no-op' that will reset any
+      // previous service worker registered for the same host:port combination.
+      devServer.app.use(noopServiceWorkerMiddleware('/'));
+
+      // =============================================
+      // use proper mime-type for wasm files
+      // =============================================
+      devServer.app.get('*.wasm', (req, res, next) => {
+        let options = {
+          root: paths.appPublic,
+          dotfiles: 'deny',
+          headers: {
+            'Content-Type': 'application/wasm',
+          },
+        };
+
+        res.sendFile(req.url, options, (err) => {
+          if (err) {
+            next(err);
+          }
+        });
+      });
+
+      return middlewares;
+    },
   },
 };

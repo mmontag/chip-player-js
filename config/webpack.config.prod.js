@@ -50,15 +50,14 @@ const getStyleLoaders = (cssOptions, preProcessor) => {
       // package.json
       loader: require.resolve('postcss-loader'),
       options: {
-        // Necessary for external CSS imports to work
-        // https://github.com/facebook/create-react-app/issues/2677
-        ident: 'postcss',
-        plugins: () => [
-          require('postcss-flexbugs-fixes'),
-          autoprefixer({
-            flexbox: 'no-2009',
-          }),
-        ],
+        postcssOptions: {
+          // Necessary for external CSS imports to work
+          // https://github.com/facebook/create-react-app/issues/2677
+          ident: 'postcss',
+          plugins: [
+            autoprefixer(),
+          ],
+        },
         sourceMap: shouldUseSourceMap,
       },
     },
@@ -148,16 +147,20 @@ module.exports = {
           // "url" loader works just like "file" loader but it also embeds
           // assets smaller than specified size as data URLs to avoid requests.
           {
-            test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/],
-            loader: require.resolve('url-loader'),
-            options: {
-              limit: 10000,
-              name: 'static/media/[name].[hash:8].[ext]',
+            test: [/\.(bmp|gif|jpe?g|png|svg)$/i],
+            type: 'asset',
+            parser: {
+              dataUrlCondition: {
+                maxSize: 10000,
+              },
+            },
+            generator: {
+              filename: 'static/media/[name].[contenthash:8][ext]',
             },
           },
           // Process JS with Babel.
           {
-            test: /\.(js|jsx|mjs)$/,
+            test: /\.(js|jsx|mjs)$/i,
             include: paths.appSrc,
             loader: require.resolve('babel-loader'),
             // No "options" here; defined in babel.config.json.
@@ -168,8 +171,8 @@ module.exports = {
           // files. If you use code splitting, async bundles will have their own separate CSS chunk file.
           // By default we support CSS Modules with the extension .module.css
           {
-            test: /\.css$/,
-            exclude: /\.module\.css$/,
+            test: /\.css$/i,
+            exclude: /\.module\.css$/i,
             loader: getStyleLoaders({
               importLoaders: 1,
               sourceMap: shouldUseSourceMap,
@@ -180,15 +183,15 @@ module.exports = {
           // This loader doesn't use a "test" so it will catch all modules
           // that fall through the other loaders.
           {
-            loader: require.resolve('file-loader'),
             // Exclude `js` files to keep "css" loader working as it injects
             // it's runtime that would otherwise processed through "file" loader.
             // Also exclude `html` and `json` extensions so they get processed
             // by webpacks internal loaders.
-            exclude: [/\.(js|jsx|mjs)$/, /\.html$/, /\.json$/],
-            options: {
-              name: 'static/media/[name].[hash:8].[ext]',
-            },
+            exclude: [/\.(js|jsx|mjs)$/, /\.html$/, /\.json$/i],
+            type: 'asset/resource',
+            generator: {
+              filename: 'static/media/[name].[contenthash:8][ext]',
+            }
           },
           // ** STOP ** Are you adding a new loader?
           // Make sure to add the new loader(s) before the "file" loader.
@@ -248,19 +251,12 @@ module.exports = {
     // solution that requires the user to opt into importing specific locales.
     // https://github.com/jmblog/how-to-optimize-momentjs-with-webpack
     // You can remove this if you don't use Moment.js:
-    new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
+    new webpack.IgnorePlugin({
+      resourceRegExp: /^\.\/locale$/,
+      contextRegExp: /moment$/,
+    }),
     // Added Aug 29, 2018 by Montag
     // https://www.npmjs.com/package/webpack-bundle-analyzer
     // new BundleAnalyzerPlugin(),
   ],
-  // Some libraries import Node modules but don't use them in the browser.
-  // Tell Webpack to provide empty mocks for them so importing them works.
-  node: {
-    dgram: 'empty',
-    fs: 'empty',
-    net: 'empty',
-    tls: 'empty',
-    child_process: 'empty',
-    buffer: 'empty',
-  },
 };
