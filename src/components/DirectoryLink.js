@@ -1,12 +1,11 @@
 import { Link, useHistory } from "react-router-dom";
 import * as PropTypes from "prop-types";
 import React, { memo } from "react";
-import queryString from 'querystring';
 
 function getSearch() {
-  const urlParams = queryString.parse(window.location.search.substring(1));
-  delete urlParams.q;
-  return queryString.stringify(urlParams);
+  const urlParams = new URLSearchParams(window.location.search);
+  urlParams.delete('q');
+  return urlParams.toString();
 }
 
 export default memo(DirectoryLink);

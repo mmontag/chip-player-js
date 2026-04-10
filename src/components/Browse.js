@@ -5,7 +5,6 @@ import DirectoryLink from './DirectoryLink';
 import bytes from 'bytes';
 import FavoriteButton from './FavoriteButton';
 import trimEnd from 'lodash/trimEnd';
-import queryString from 'querystring';
 
 
 export default class Browse extends React.PureComponent {
@@ -45,9 +44,9 @@ export default class Browse extends React.PureComponent {
       history,
     } = this.props;
 
-    const urlParams = queryString.parse(window.location.search.slice(1));
-    delete urlParams.q;
-    const search = queryString.stringify(urlParams);
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.delete('q');
+    const search = urlParams.toString();
     // Check if previous page url is the parent directory of current page url.
     const prevPath = trimEnd(history.location.state?.prevPathname, '/');
     const currPath = trimEnd(window.location.pathname, '/');

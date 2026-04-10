@@ -7,16 +7,15 @@ import axios from 'redaxios';
 const MULTI_SLASH_REGEX = /\/{2,}/g;
 
 export function updateQueryString(newParams) {
-  // Merge new params with current query string
-  const params = {
-    ...queryString.parse(window.location.search.substr(1)),
-    ...newParams,
-  };
-  // Delete undefined properties
-  Object.keys(params).forEach(key => params[key] === undefined && delete params[key]);
-  // Object.keys(params).forEach(key => params[key] = decodeURIComponent(params[key]));
-  const stateUrl = '?' + queryString.stringify(params).replace(/%20/g, '+');
-  // Update address bar URL
+  const searchParams = new URLSearchParams(window.location.search);
+  Object.entries(newParams).forEach(([key, value]) => {
+    if (value === undefined) {
+      searchParams.delete(key);
+    } else {
+      searchParams.set(key, value);
+    }
+  });
+  const stateUrl = '?' + searchParams.toString().replace(/%20/g, '+');
   window.history.replaceState(null, '', stateUrl);
 }
 

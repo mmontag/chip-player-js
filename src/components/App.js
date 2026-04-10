@@ -5,7 +5,6 @@ import isMobile from 'ismobilejs';
 import clamp from 'lodash/clamp';
 import shuffle from 'lodash/shuffle';
 import path from 'path';
-import queryString from 'querystring';
 import { NavLink, Route, Switch, withRouter } from 'react-router-dom';
 import Dropzone from 'react-dropzone';
 
@@ -162,7 +161,8 @@ class App extends React.Component {
     }
 
     // Get debug from location.search
-    const debug = queryString.parse(window.location.search.substring(1)).debug;
+    const searchParams = new URLSearchParams(window.location.search);
+    const debug = searchParams.get('debug');
     // Create all the players. Players will set up IDBFS mount points.
     const players = [
       MIDIPlayer,
@@ -209,18 +209,20 @@ class App extends React.Component {
     this.sequencer.on('playerError', (message) => this.props.toastContext.enqueueToast(message, ToastLevels.ERROR));
 
     // TODO: Move to separate processUrlParams method.
-    const urlParams = queryString.parse(window.location.search.substring(1));
+    const urlParams = new URLSearchParams(window.location.search);
     // The server will read the ?play=... param and inject values in the __chipConfig object.
     if (window.__chipConfig?.songPath) {
       // Treat play params as "transient command" and strip them after starting playback.
       // See comment in Browse.js for more about why a sticky play param is not a good idea.
       const playPath = window.__chipConfig?.songPath;
-      const subtune = urlParams.subtune ? parseInt(urlParams.subtune, 10) : 0;
-      const time = urlParams.t ? parseInt(urlParams.t, 10) : 0;
-      delete urlParams.play;
-      delete urlParams.subtune;
-      delete urlParams.t;
-      const qs = queryString.stringify(urlParams);
+      const subtuneParam = urlParams.get('subtune');
+      const subtune = subtuneParam ? parseInt(subtuneParam, 10) : 0;
+      const tParam = urlParams.get('t');
+      const time = tParam ? parseInt(tParam, 10) : 0;
+      urlParams.delete('play');
+      urlParams.delete('subtune');
+      urlParams.delete('t');
+      const qs = urlParams.toString();
       const search = qs ? `?${qs}` : '';
       // Navigate to song's containing folder. History comes from withRouter().
       const dirname = path.dirname(playPath);
@@ -496,11 +498,9 @@ class App extends React.Component {
     this.seekRelativeInner(seekMs);
 
     if (REPLACE_STATE_ON_SEEK) {
-      const urlParams = {
-        ...queryString.parse(window.location.search.substr(1)),
-        t: seekMs,
-      };
-      const stateUrl = '?' + queryString.stringify(urlParams)
+      const urlParams = new URLSearchParams(window.location.search);
+      urlParams.set('t', seekMs);
+      const stateUrl = '?' + urlParams.toString()
         .replace(/%20/g, '+')
         .replace(/%2F/g, '/');
       window.history.replaceState(null, '', stateUrl);

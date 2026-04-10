@@ -3,7 +3,6 @@ import React, { Fragment, PureComponent } from 'react';
 import axios from 'redaxios';
 import autoBindReact from 'auto-bind/react';
 import debounce from 'lodash/debounce';
-import queryString from 'querystring';
 
 import { API_BASE } from '../config';
 import { getUrlFromFilepath, pathJoin } from '../util';
@@ -39,7 +38,7 @@ export default class Search extends PureComponent {
   }
 
   componentDidMount() {
-    const { q } = queryString.parse((this.props.location?.search.substr(1) || ''));
+    const q = new URLSearchParams(this.props.location?.search || '').get('q');
     if (q) {
       this.setState({ query: q });
       this.doSearch(q);
@@ -52,7 +51,7 @@ export default class Search extends PureComponent {
     const prevSearch = prevProps.location?.search || '';
     const currSearch = this.props.location?.search || '';
     if (prevSearch !== currSearch) {
-      const { q } = queryString.parse(currSearch.replace(/^\?/, ''));
+      const q = new URLSearchParams(currSearch).get('q');
       if (q) {
         if (q !== this.state.query) {
           this.setState({ query: q });
@@ -72,16 +71,14 @@ export default class Search extends PureComponent {
   onSearchInputChange(val, immediate = false) {
     this.setState({query: val});
     // updateQueryString({ q: val ? val.trim() : undefined });
-    const newParams = { q: val ? val : undefined };
-    // Merge new params with current query string
-    const params = {
-      ...queryString.parse((this.props.location?.search.substr(1) || '')),
-      ...newParams,
-    };
-    // Delete undefined properties
-    Object.keys(params).forEach(key => params[key] === undefined && delete params[key]);
-    // Object.keys(params).forEach(key => params[key] = decodeURIComponent(params[key]));
-    const stateUrl = '?' + queryString.stringify(params).replace(/%20/g, '+');
+
+    const params = new URLSearchParams(this.props.location?.search || '');
+    if (val) {
+      params.set('q', val);
+    } else {
+      params.delete('q');
+    }
+    const stateUrl = '?' + params.toString().replace(/%20/g, '+');
     // Update address bar URL via react-router history
     this.props.history.replace({
       pathname: (this.props.location?.pathname) || '/',
@@ -162,9 +159,9 @@ export default class Search extends PureComponent {
   }
 
   handleClear() {
-    const urlParams = queryString.parse((this.props.location?.search.substr(1) || ''));
-    delete urlParams.q;
-    const search = queryString.stringify(urlParams);
+    const urlParams = new URLSearchParams(this.props.location?.search || '');
+    urlParams.delete('q');
+    const search = urlParams.toString();
     this.props.history.replace({ pathname: (this.props.location?.pathname) || '/', search: search ? `?${search}` : '' });
     this.setState({
       query: null,
