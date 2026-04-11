@@ -8,6 +8,7 @@ const eslintFormatter = require('react-dev-utils/eslintFormatter');
 const paths = require('./paths');
 
 module.exports = {
+  entry: [paths.appIndexJs],
   resolve: {
     // This allows you to set a fallback for where Webpack should look for modules.
     // We placed these paths second because we want `node_modules` to "win"
