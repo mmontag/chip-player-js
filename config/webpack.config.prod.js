@@ -11,6 +11,7 @@ const InterpolateHtmlPlugin = require('react-dev-utils/InterpolateHtmlPlugin');
 const paths = require('./paths');
 const getClientEnvironment = require('./env');
 const commonConfig = require('./webpack.config.common.js');
+const PreloadWebpackPlugin = require('@vue/preload-webpack-plugin');
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 // Webpack uses `publicPath` to determine where the app is being served from.
@@ -142,6 +143,23 @@ module.exports = merge(commonConfig, {
         minifyJS: true,
         minifyCSS: true,
         minifyURLs: true,
+      },
+    }),
+    new PreloadWebpackPlugin({
+      rel: 'preload',
+      include: 'allAssets',
+      fileWhitelist: [
+        /chip-core.+wasm$/,
+        /pxplus.+ttf$/,
+      ],
+      as(entry) {
+        if (entry.endsWith('.css')) return 'style';
+        if (entry.endsWith('.ttf')) return 'font';
+        if (entry.endsWith('.wasm')) return 'fetch';
+        return 'script';
+      },
+      attributes: {
+        crossorigin: 'anonymous',
       },
     }),
     // Makes some environment variables available in index.html.

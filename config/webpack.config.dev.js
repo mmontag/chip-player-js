@@ -5,6 +5,7 @@ const path = require('path');
 const webpack = require('webpack');
 const { merge } = require('webpack-merge');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const PreloadWebpackPlugin = require('@vue/preload-webpack-plugin');
 const CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
 const InterpolateHtmlPlugin = require('react-dev-utils/InterpolateHtmlPlugin');
 const getClientEnvironment = require('./env');
@@ -93,9 +94,25 @@ module.exports = merge(commonConfig, {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      inject: true,
+      inject: 'head',
       template: paths.appHtml, // index.template.html
-      // filename: 'index.template.html', // to avoid conflict with dev middleware serving index.html
+    }),
+    new PreloadWebpackPlugin({
+      rel: 'preload',
+      include: 'allAssets',
+      fileWhitelist: [
+        /chip-core.+wasm$/,
+        /pxplus.+ttf$/,
+      ],
+      as(entry) {
+        if (entry.endsWith('.css')) return 'style';
+        if (entry.endsWith('.ttf')) return 'font';
+        if (entry.endsWith('.wasm')) return 'fetch';
+        return 'script';
+      },
+      attributes: {
+        crossorigin: 'anonymous',
+      },
     }),
     // Makes some environment variables available in index.html.
     // The public URL is available as %PUBLIC_URL% in index.html, e.g.:
