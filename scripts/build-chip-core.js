@@ -384,9 +384,9 @@ const sourceFiles = [].concat(...chipModules.filter(m => m.enabled).map(m => m.s
 const moduleFlags = [].concat(...chipModules.filter(m => m.enabled).map(m => m.flags));
 
 const flags = [
-  /*
-  Build flags for Emscripten 3.1.39. Last updated July 15, 2024
-  */
+  /**
+   * Build flags for Emscripten 5. Last updated Apr 11, 2026.
+   */
   // '--closure', '1',          // causes TypeError: lib.FS.mkdir is not a function
   // '--llvm-lto', '3',
   // '--clear-cache',        // sometimes Emscripten cache gets "poisoned"
@@ -411,23 +411,14 @@ const flags = [
   '-s', 'WASM_BIGINT',       // support passing 64 bit integers to/from JS
   '-lidbfs.js',
   '-Oz',                     // set to O0 for fast compile during development
-  // '-g',                   // include DWARF debug symbols. Increases size ~2.5x
   '-o', jsOutFile,
-
-  /*
-   WASM Source Maps
-
-   These source maps require local fileserver running at chip-player-js root
-   to expose C/C++ source files to browser; i.e. $ python -m http.server 9000
-   Subproject static libraries must also be compiled with the emcc flags:
-    `-g4 --source-map-base http://localhost:9000`.
-   See lazyusf2/Makefile (for liblazyusf.a).
-  */
-  // '-g4',                     // include debug information
-  // '--source-map-base', 'http://localhost:9000/',
-
-  /*
-  Warnings/misc.
+  /**
+   * WASM Source Maps
+   */
+  // '-g',                      // include DWARF debug symbols. Increases size ~2.5x
+  // '-gsource-map=inline',
+  /**
+   * Warnings/misc.
    */
   '-Qunused-arguments',
   '-Wno-deprecated',
