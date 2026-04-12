@@ -31,8 +31,7 @@ export default class SIDPlayer extends Player {
     this.bufferL = this.core._malloc(this.bufferSize * 4);
     this.bufferR = this.core._malloc(this.bufferSize * 4);
     this.subtuneDurations = [];
-
-    this.core._sid_init(this.sampleRate);
+    this.initialized = false;
   }
 
   getSidMetadata(md5) {
@@ -58,6 +57,11 @@ export default class SIDPlayer extends Player {
   }
 
   loadData(data, filepath, persistedSettings) {
+    if (!this.initialized) {
+      this.core._sid_init(this.sampleRate);
+      this.initialized = true;
+    }
+
     const dataPtr = this.copyToHeap(data);
     const err = this.core._sid_load_data(dataPtr, data.byteLength);
     this.core._free(dataPtr);
