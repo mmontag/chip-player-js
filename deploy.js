@@ -49,7 +49,7 @@ const tasks = {
         'rsync',
         '-avz',
         './server/catalog.*',
-        './server/csdb.*',
+        // './server/csdb.*',
         `"${REMOTE_SSH_HOST}:${REMOTE_SERVER_DIR}/"`
       ].join(' \\\n  '));
 

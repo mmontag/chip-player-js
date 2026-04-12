@@ -64,7 +64,8 @@ function MIDIPlayer(options) {
   this.channelProgramNums = [];
   this.textInfo = [];
 
-  window.addEventListener('unload', this.stop);
+  // Disabled due to "Page prevented back/forward cache restoration".
+  // window.addEventListener('unload', this.stop);
 }
 
 // Parsing all tracks and add their events in a single event queue
