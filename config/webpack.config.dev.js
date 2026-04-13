@@ -110,10 +110,26 @@ module.exports = merge(commonConfig, {
         if (entry.endsWith('.wasm')) return 'fetch';
         return 'script';
       },
-      attributes: {
-        crossorigin: 'anonymous',
-      },
     }),
+    {
+      // Custom "Fixer" Plugin
+      apply: (compiler) => {
+        compiler.hooks.compilation.tap('FixWasmPreload', (compilation) => {
+          HtmlWebpackPlugin.getHooks(compilation).alterAssetTags.tap('FixWasmPreload', (data) => {
+            // Preload tags are usually injected into the 'meta' or 'head' tags
+            // depending on the version, but they're always in assetTags
+            const tags = [...data.assetTags.scripts, ...data.assetTags.styles, ...data.assetTags.meta];
+
+            tags.forEach(tag => {
+              if (tag.attributes && tag.attributes.rel === 'preload' && tag.attributes.as === 'fetch') {
+                tag.attributes.crossorigin = '';
+              }
+            });
+            return data;
+          });
+        });
+      },
+    },
     // Makes some environment variables available in index.html.
     // The public URL is available as %PUBLIC_URL% in index.html, e.g.:
     // <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico">
