@@ -38,6 +38,38 @@ if (!REMOTE_SSH_HOST || !REMOTE_SERVER_DIR) {
   process.exit(1);
 }
 
+const purgeCloudflare = async () => {
+  const zoneId = process.env.CLOUDFLARE_ZONE_ID;
+  const apiToken = process.env.CLOUDFLARE_API_TOKEN;
+
+  if (!zoneId || !apiToken) return;
+
+  console.log(chalk.magenta('Triggering Cloudflare Purge...'));
+
+  const res = await fetch(`https://api.cloudflare.com/client/v4/zones/${zoneId}/purge_cache`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiToken}`,
+      'Content-Type': 'application/json'
+    },
+    // Purging only the HTML is safer and faster than "Purge Everything"
+    body: JSON.stringify({ files: ['https://chiptune.app/'] })
+  });
+
+  if (res.ok) {
+    console.log(chalk.green('Purge successful.'));
+  } else {
+    // Cloudflare returns errors in the JSON body
+    const errorData = await res.json().catch(() => ({}));
+    const detailedError = errorData.errors?.map(e => e.message).join(', ') || res.statusText;
+
+    console.error(
+      chalk.red(`Purge failed [${res.status}]:`),
+      detailedError
+    );
+  }
+};
+
 // 2. Deployment Tasks
 const tasks = {
   catalog: {
@@ -109,13 +141,16 @@ const tasks = {
       console.log(chalk.blue('Syncing build directory...'));
       runCommand([
         'rsync',
-        '-avz',
-        '--delete',
+        '-vz', // Don't preserve timestamps
         "--exclude '._*'",
         "--exclude '.DS_Store'",
         './build/',
         `"${REMOTE_SSH_HOST}:${REMOTE_STATIC_DIR}/"`
       ].join(' \\\n  '));
+
+      console.log(chalk.blue('Pruning assets older than 30 days...'));
+      const pruneCmd = `find ${REMOTE_STATIC_DIR} -type f -mtime +30 ! -delete`;
+      runCommand(`ssh ${REMOTE_SSH_HOST} "${pruneCmd}"`);
     }
   }
 };
@@ -192,6 +227,8 @@ async function run() {
     }
 
     reloadServer();
+
+    await purgeCloudflare();
 
     const status = process.env.DRY_RUN === 'true' ? 'simulation' : 'process';
     console.log(chalk.green(`\nDeployment ${status} finished.`));
