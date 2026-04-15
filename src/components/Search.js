@@ -69,7 +69,7 @@ export default class Search extends PureComponent {
   }
 
   onSearchInputChange(val, immediate = false) {
-    this.setState({query: val});
+    this.setState({ query: val });
     // updateQueryString({ q: val ? val.trim() : undefined });
 
     const params = new URLSearchParams(this.props.location?.search || '');
@@ -162,7 +162,10 @@ export default class Search extends PureComponent {
     const urlParams = new URLSearchParams(this.props.location?.search || '');
     urlParams.delete('q');
     const search = urlParams.toString();
-    this.props.history.replace({ pathname: (this.props.location?.pathname) || '/', search: search ? `?${search}` : '' });
+    this.props.history.replace({
+      pathname: (this.props.location?.pathname) || '/',
+      search: search ? `?${search}` : ''
+    });
     this.setState({
       query: null,
       searching: false,
@@ -174,7 +177,7 @@ export default class Search extends PureComponent {
   }
 
   showEmptyState() {
-    this.setState({searching: false, results: []})
+    this.setState({ searching: false, results: [] })
   }
 
   renderResultItem(props) {
@@ -205,46 +208,46 @@ export default class Search extends PureComponent {
     } = this.props;
 
     return (
-        <>
-          <VirtualizedList
-            currContext={currContext}
-            currIdx={currIdx}
-            onSongClick={onSongClick}
-            itemList={this.state.results}
-            songContext={this.state.resultsContext}
-            rowRenderer={this.renderResultItem}
-            isSorted={false}
-            scrollContainerRef={scrollContainerRef}
-            listRef={listRef}
-          >
-            <h3 className="Browse-topRow">
-              <label className="Search-label">Search:{' '}
-                <input type="text"
-                       placeholder={placeholder}
-                       spellCheck="false"
-                       autoComplete="off"
-                       autoCorrect="false"
-                       autoCapitalize="none"
-                       autoFocus
-                       ref={this.textInput}
-                       className="Search-input"
-                       value={this.state.totalSongs ? this.state.query || '' : ''}
-                       onChange={this.onChange}/>
-                {
-                  this.state.searching &&
-                  <Fragment>
-                    <button className="Search-clearButton" onClick={this.handleClear}/>
-                    {' '}
-                    <span className="Search-resultsLabel">
-                        {this.state.resultsCount} result{this.state.resultsCount !== 1 && 's'}
-                      </span>
-                  </Fragment>
-                }
-              </label>
-            </h3>
-          </VirtualizedList>
-          {this.state.searching || this.props.children}
-        </>
+      <>
+        <h3 className="Browse-topRow">
+          <label className="Search-label">Search:{' '}
+            <input type="text"
+                   placeholder={placeholder}
+                   spellCheck="false"
+                   autoComplete="off"
+                   autoCorrect="false"
+                   autoCapitalize="none"
+                   autoFocus
+                   ref={this.textInput}
+                   className="Search-input"
+                   value={this.state.totalSongs ? this.state.query || '' : ''}
+                   onChange={this.onChange}/>
+            {
+              this.state.searching &&
+              <Fragment>
+                <button className="Search-clearButton" onClick={this.handleClear}/>
+                {' '}
+                <span className="Search-resultsLabel">
+                      {this.state.resultsCount} result{this.state.resultsCount !== 1 && 's'}
+                    </span>
+              </Fragment>
+            }
+          </label>
+        </h3>
+        <VirtualizedList
+          currContext={currContext}
+          currIdx={currIdx}
+          onSongClick={onSongClick}
+          itemList={this.state.results}
+          songContext={this.state.resultsContext}
+          rowRenderer={this.renderResultItem}
+          isSorted={false}
+          scrollContainerRef={scrollContainerRef}
+          listRef={listRef}
+        >
+        </VirtualizedList>
+        {this.state.searching || this.props.children}
+      </>
     );
   }
 }
