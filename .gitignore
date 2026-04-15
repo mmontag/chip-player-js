@@ -1,6 +1,4 @@
-.env.local
-.env.production
-.env.*.local
+.env.*
 .idea/
 node_modules/
 dist/
