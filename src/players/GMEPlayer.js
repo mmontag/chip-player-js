@@ -92,13 +92,13 @@ export default class GMEPlayer extends Player {
       return;
     }
 
-    if (this.getPositionMs() >= this.getDurationMs() && this.fadingOut === false) {
+    if (!this.looping && this.getPositionMs() >= this.getDurationMs() && this.fadingOut === false) {
       console.log('Fading out at %d ms.', this.getPositionMs());
       this.setFadeout(this.getPositionMs());
       this.fadingOut = true;
     }
 
-    if (core._gme_track_ended(this.gmeCtx) !== 1) {
+    if (core._gme_track_ended(this.gmeCtx) !== 1 || this.looping) {
       core._gme_play(this.gmeCtx, this.bufferSize * 2, this.buffer);
 
       for (ch = 0; ch < channels.length; ch++) {
@@ -386,5 +386,12 @@ export default class GMEPlayer extends Player {
     this.gmeCtx = null;
     console.debug('GMEPlayer.stop()');
     this.emit('playerStateUpdate', { isStopped: true });
+  }
+
+  setLooping(looping) {
+    this.looping = looping;
+    this.fadingOut = false;
+    // Turn fade off by setting it very far in the future
+    if (this.gmeCtx) core._gme_set_fade(this.gmeCtx, 200000000, 4000);
   }
 }

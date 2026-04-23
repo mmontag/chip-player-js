@@ -42,6 +42,7 @@ export default class Player extends EventEmitter {
     this.paramDefs = [];
     this.params = {};
     this.infoTexts = [];
+    this.looping = false; // infinite looping mode (vs. normal mode where it stops at end of song)
   }
 
   /**
@@ -269,6 +270,10 @@ export default class Player extends EventEmitter {
       isStopped: this.stopped,
       isPaused: this.paused,
     };
+  }
+
+  setLooping(looping) {
+    this.looping = looping;
   }
 
   suspend() {

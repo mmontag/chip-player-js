@@ -121,6 +121,7 @@ export default class Sequencer extends EventEmitter {
 
   setRepeat(repeat) {
     this.repeat = repeat;
+    if (this.player) this.player.setLooping(repeat === REPEAT_ONE);
   }
 
   advanceSong(direction) {
@@ -205,6 +206,7 @@ export default class Sequencer extends EventEmitter {
       return;
     }
     this.player = player;
+    this.player.setLooping(this.repeat === REPEAT_ONE);
 
     if (filepath.startsWith('local/')) {
       const buffer = this.localFilesManager.read(filepath);
