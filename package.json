@@ -92,7 +92,7 @@
     "request-promise": "^4.2.2",
     "roman-numerals": "^0.3.2",
     "sanitize-filename": "^1.6.1",
-    "sqlite3": "^5.1.4",
+    "sqlite3": "^6.0.1",
     "table": "^6.9.0",
     "tmp": "^0.0.33",
     "unzipper": "^0.9.3",
