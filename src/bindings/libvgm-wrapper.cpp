@@ -106,6 +106,9 @@ static char const *meta[8];
 // Yamaha OPL4 ROM file path
 static std::string g_yrw801_rom_path;
 
+// Enhanced stereo for mono chips
+static bool g_enhanced_stereo;
+
 // Get voice name from deviceToVoiceInfo.at(id).names[v], fall back to voiceInfo[id].type if name is empty
 std::string getVoiceName(const int id, const int v) {
   const auto& info = deviceToVoiceInfo.at(id);
@@ -113,6 +116,57 @@ std::string getVoiceName(const int id, const int v) {
     return info.names[v];
   } else {
     return info.type + " " + std::to_string(v + 1);
+  }
+}
+
+// TODO: add some way to turn it off. "enabled" argument?
+static void configure_enhanced_stereo(PlayerBase* base, bool stereoEnabled) {
+  if (!base) return;
+  PLR_DEV_OPTS devOpts{};
+  UINT32 devOptID;
+  UINT8 retVal;
+
+  static const INT16 monoPanPos3[3] = {-0x80, +0x80, 0x00};
+  static const INT16 stereoPanPos3[3] = { 0, 0, 0 };
+
+  static const INT16 monoPanPos14[14] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+  static const INT16 stereoPanPos14[14] = {
+    -0x100, +0x100, -0x80, +0x80, -0x40, +0x40, -0xC0, +0xC0, 0x00,
+    -0x60, +0x60, 0x00, -0xC0, +0xC0};
+
+  const INT16* panPos3 = stereoEnabled ? stereoPanPos3 : monoPanPos3;
+  const INT16* panPos14 = stereoEnabled ? stereoPanPos14 : monoPanPos14;
+  const size_t panPos3Bytes = sizeof(INT16) * 3;
+  const size_t panPos14Bytes = sizeof(INT16) * 14;
+
+  // 14-channel panning
+  devOptID = PLR_DEV_ID(DEVID_YM2413, 0);
+  retVal = base->GetDeviceOptions(devOptID, devOpts);
+  if (! (retVal & 0x80))
+  {
+    memcpy(devOpts.panOpts.chnPan[0], panPos14, panPos14Bytes);
+    base->SetDeviceOptions(devOptID, devOpts);
+  }
+
+  // 3-channel panning
+  devOptID = PLR_DEV_ID(DEVID_AY8910, 0);
+  retVal = base->GetDeviceOptions(devOptID, devOpts);
+  if (! (retVal & 0x80))
+  {
+    memcpy(devOpts.panOpts.chnPan[0], panPos3, panPos3Bytes);
+    base->SetDeviceOptions(devOptID, devOpts);
+  }
+
+  // 3-channel panning
+  for (auto deviceId : { DEVID_YM2203, DEVID_YM2608 }) {
+    devOptID = PLR_DEV_ID(deviceId, 0);
+    retVal = base->GetDeviceOptions(devOptID, devOpts);
+    if (! (retVal & 0x80))
+    {
+      // Set pan for SSG channels (linked device)
+      memcpy(devOpts.panOpts.chnPan[1], panPos3, panPos3Bytes);
+      base->SetDeviceOptions(devOptID, devOpts);
+    }
   }
 }
 
@@ -145,6 +199,8 @@ lvgm_player* lvgm_init(UINT32 sample_rate) {
 UINT8 lvgm_load_data(lvgm_player *player, const UINT8 *data, const UINT32 size) {
   PlayerA *playerA = real(player);
   UINT8 retVal;
+  PLR_DEV_OPTS devOpts{};
+  UINT32 devOptID;
 
   DATA_LOADER *dLoad = MemoryLoader_Init(data, size);
   DataLoader_Load(dLoad);
@@ -155,37 +211,8 @@ UINT8 lvgm_load_data(lvgm_player *player, const UINT8 *data, const UINT32 size) 
   base->GetSongDeviceInfo(diList);
 
   // Enhanced stereo panning
-  PLR_DEV_OPTS devOpts{};
-  UINT32 devOptID;
-  devOptID = PLR_DEV_ID(DEVID_YM2413, 0);
-  retVal = base->GetDeviceOptions(devOptID, devOpts);
-  if (! (retVal & 0x80))
-  {
-    static const INT16 panPos[14] = {
-      -0x100, +0x100, -0x80, +0x80, -0x40, +0x40, -0xC0, +0xC0, 0x00,
-      -0x60, +0x60, 0x00, -0xC0, +0xC0};
-    memcpy(devOpts.panOpts.chnPan[0], panPos, sizeof(panPos));
-    base->SetDeviceOptions(devOptID, devOpts);
-  }
-  devOptID = PLR_DEV_ID(DEVID_AY8910, 0);
-  retVal = base->GetDeviceOptions(devOptID, devOpts);
-  if (! (retVal & 0x80))
-  {
-    static const INT16 panPos[3] = {-0x80, +0x80, 0x00};
-    memcpy(devOpts.panOpts.chnPan[0], panPos, sizeof(panPos));
-    base->SetDeviceOptions(devOptID, devOpts);
-  }
-  for (auto deviceId : { DEVID_YM2203, DEVID_YM2608 }) {
-    devOptID = PLR_DEV_ID(deviceId, 0);
-    retVal = base->GetDeviceOptions(devOptID, devOpts);
-    if (! (retVal & 0x80))
-    {
-      static const INT16 panPos[3] = {-0x80, +0x80, 0x00};
-      // Set pan for SSG channels (linked device)
-      memcpy(devOpts.panOpts.chnPan[1], panPos, sizeof(panPos));
-      base->SetDeviceOptions(devOptID, devOpts);
-    }
-  }
+  configure_enhanced_stereo(base, g_enhanced_stereo);
+
   devOptID = PLR_DEV_ID(DEVID_YMF278B, 0);
   retVal = base->GetDeviceOptions(devOptID, devOpts);
   if (!(retVal & 0x80)) {
@@ -413,6 +440,18 @@ void lvgm_set_yrw801_rom_path(lvgm_player *player, const char* path) {
     }
     return nullptr;
   }, nullptr);
+}
+
+void lvgm_set_enhanced_stereo(lvgm_player *player, const bool enable) {
+  if (g_enhanced_stereo != enable) {
+    g_enhanced_stereo = enable;
+
+    PlayerA *playerA = real(player);
+    PlayerBase* base = playerA->GetPlayer();
+    if (base) {
+      configure_enhanced_stereo(base, enable);
+    }
+  }
 }
 
 #ifdef __cplusplus

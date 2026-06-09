@@ -157,6 +157,7 @@ const chipModules = [
       '_lvgm_set_playback_speed',
       '_lvgm_get_playback_speed',
       '_lvgm_set_yrw801_rom_path',
+      '_lvgm_set_enhanced_stereo',
       '_lvgm_reset',
     ],
     flags: [
