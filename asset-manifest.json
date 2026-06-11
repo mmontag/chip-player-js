@@ -1,8 +1,14 @@
 {
-  "main.css": "/static/css/main.adb71321.css",
-  "main.js": "/static/js/main.ce501066.js",
-  "main.css.map": "/static/css/main.adb71321.css.map",
-  "main.js.map": "/static/js/main.ce501066.js.map",
-  "index.html": "/index.html",
-  "static/media/index.css": "/static/media/radio-dot.b7fe09fe.svg"
+  "main.js": "/static/js/main.937b.js",
+  "main.css": "/static/css/main.1e29.css",
+  "chip-core.js": "/static/js/chip-core.32fc.chunk.js",
+  "static/js/chip-core.wasm": "/static/js/chip-core.cfd4.wasm",
+  "static/media/mm-tahoma-8px.ttf": "/static/media/mm-tahoma-8px.1679.ttf",
+  "static/media/Tahoma.woff": "/static/media/Tahoma.e33e.woff",
+  "static/media/pxplus_chipplayer.ttf": "/static/media/pxplus_chipplayer.2875.ttf",
+  "index.template.html": "/index.template.html",
+  "static/media/javascript,__webpack_public_path__ = __webpack_base_uri__ = htmlWebpackPluginPublicPath;": "/static/media/1feff74faaf0efc6a044.1fef",
+  "main.937b.js.map": "/static/js/main.937b.js.map",
+  "main.1e29.css.map": "/static/css/main.1e29.css.map",
+  "chip-core.32fc.chunk.js.map": "/static/js/chip-core.32fc.chunk.js.map"
 }
