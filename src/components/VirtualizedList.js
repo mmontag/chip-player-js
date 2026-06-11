@@ -28,6 +28,28 @@ function VirtualizedList(props) {
   const updateHistoryRef = useRef();
   const selectedRowRef = useRef(selectedRow);
 
+  /* --- Added by Antigravity */
+  const prevPathnameRef = useRef(history.location.pathname);
+  const prevItemListRef = useRef(itemList);
+  const lastScrolledRowRef = useRef(null);
+
+  let scrollToIndex = undefined;
+  const pathnameChanged = history.location.pathname !== prevPathnameRef.current;
+
+  if (pathnameChanged) {
+    prevPathnameRef.current = history.location.pathname;
+    prevItemListRef.current = itemList;
+    lastScrolledRowRef.current = null;
+  } else if (itemList !== prevItemListRef.current) {
+    scrollToIndex = 0;
+    lastScrolledRowRef.current = 0;
+    prevItemListRef.current = itemList;
+  } else if (selectedRow !== lastScrolledRowRef.current) {
+    scrollToIndex = selectedRow;
+    lastScrolledRowRef.current = selectedRow;
+  }
+  /* --- */
+
   // Reset selected row when itemList changes (e.g. for Search results)
   useEffect(() => {
     setSelectedRow(0);
@@ -125,7 +147,7 @@ function VirtualizedList(props) {
       if (e.target.tagName === 'INPUT') return;
       if (!e.repeat && (e.key === 'Enter' || e.key === 'Return')) {
         if (e.target.tagName === 'BUTTON') return;
-        const index = listRef.current.props.scrollToIndex;
+        const index = selectedRow;
         listRef.current.scrollToRow(index);
         onActivate(index)(e);
       } else if (e.key === 'Backspace') {
@@ -190,7 +212,7 @@ function VirtualizedList(props) {
                     onRowsRendered={({ startIndex, stopIndex }) => {
                       onSectionRendered({ rowStartIndex: startIndex, rowStopIndex: stopIndex })
                     }}
-                    scrollToIndex={scrollToRow}
+                    scrollToIndex={scrollToIndex}
                     scrollToAlignment="auto"
                     autoHeight
                     height={height || 0}
