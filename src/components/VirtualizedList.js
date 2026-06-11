@@ -50,11 +50,6 @@ function VirtualizedList(props) {
   }
   /* --- */
 
-  // Reset selected row when itemList changes (e.g. for Search results)
-  useEffect(() => {
-    setSelectedRow(0);
-  }, [itemList]);
-
   useEffect(() => {
     selectedRowRef.current = selectedRow;
   }, [selectedRow]);
@@ -190,7 +185,11 @@ function VirtualizedList(props) {
         onScroll={({ scrollTop }) => {
           listRef.current.scrollToPosition(scrollTop);
           // Focus problems https://github.com/bvaughn/react-virtualized/issues/776
-          findDOMNode(listRef.current).focus({ preventScroll: true });
+          const activeEl = document.activeElement;
+          const isUserInput = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
+          if (!isUserInput) {
+            findDOMNode(listRef.current).focus({ preventScroll: true });
+          }
         }}
       >
         {({ height, registerChild, onChildScroll, scrollTop }) => (
