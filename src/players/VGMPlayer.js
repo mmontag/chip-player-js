@@ -16,6 +16,16 @@ const INT32_MAX = 0x8000000; // 2147483648
 const YRW801_ROM_PATH = `${SOUNDFONT_MOUNTPOINT}/yrw801.rom`;
 
 export default class VGMPlayer extends Player {
+  paramDefs = [
+    {
+      id: 'enhancedStereo',
+      label: 'Enhanced Stereo',
+      type: 'toggle',
+      hint: 'Enable stereo panning for YM2413, AY8910, YM2203, and YM2608.',
+      defaultValue: true,
+    },
+  ];
+
   constructor(...args) {
     super(...args);
     autoBind(this);
@@ -199,5 +209,15 @@ export default class VGMPlayer extends Player {
     if (this.vgmCtx) this.core._lvgm_stop(this.vgmCtx);
     console.debug('VGMPlayer.stop()');
     this.emit('playerStateUpdate', { isStopped: true });
+  }
+
+  setParameter(id, value) {
+    switch (id) {
+      case 'enhancedStereo':
+        this.params[id] = !!value;
+        if (this.vgmCtx) this.core._lvgm_set_enhanced_stereo(this.vgmCtx, 0);
+        break;
+      default:
+    }
   }
 }
