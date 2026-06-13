@@ -69,7 +69,7 @@ const std::map<int, VoiceInfo> deviceToVoiceInfo = { // ------------------------
   {DEVID_Y8950,    {15, 0, "", {"FM 1",    "FM 2",    "FM 3",     "FM 4",   "FM 5",   "FM 6",  "FM 7",  "FM 8",  "FM 9", "FM Drum 1", "FM Drum 2", "FM Drum 3", "FM Drum 4", "FM Drum 5", "PCM"}}},
   {DEVID_YM2151,   {8,  0, "FM"}},
   {DEVID_YM2203,   {3,  3, "", {"FM 1",    "FM 2",    "FM 3",     "PSG 1",  "PSG 2",  "PSG 3"}}},
-  {DEVID_YM2413,   {6,  3, "", {"FM 1",    "FM 2",    "FM 3",     "FM 4",   "FM 5",   "FM 6", "PSG 1", "PSG 2", "PSG 3"}}},
+  {DEVID_YM2413,   {14, 0, "", {"FM 1",    "FM 2",    "FM 3",     "FM 4",   "FM 5",   "FM 6", "FM 7", "FM 8", "FM 9", "Bass Drum", "Snare Drum", "Tom", "Top Cymbal", "Hi-Hat"}}},
   {DEVID_YM2608,   {13, 3, "", {"FM 1",    "FM 2",    "FM 3",     "FM 4",   "FM 5",   "FM 6", "Bass Drum", "Snare Drum", "Cymbal", "Hi-Hat", "Tom", "Rimshot", "PCM", "PSG 1", "PSG 2", "PSG 3"}}},
   {DEVID_YM2610,   {13, 3, "", {"FM 1",    "FM 2",    "FM 3",     "FM 4",   "FM 5",   "FM 6", "PCM 1", "PCM 2", "PCM 3", "PCM 4", "PCM 5", "PCM 6", "PCM 7", "PSG 1", "PSG 2", "PSG 3"}}},
   {DEVID_YM2612,   {7,  0, "", {"FM 1",    "FM 2",    "FM 3",     "FM 4",   "FM 5",   "FM 6", "PCM"}}},
@@ -77,7 +77,12 @@ const std::map<int, VoiceInfo> deviceToVoiceInfo = { // ------------------------
   {DEVID_YM3812,   {9,  0, "FM"}},
   {DEVID_YMF262,   {18, 0, "FM"}},
   {DEVID_YMF271,   {24, 0, "FM"}},
-  {DEVID_YMF278B,  {24, 0, "PCM"}},
+  {DEVID_YMF278B,  {24, 18, "", {
+    "PCM 1", "PCM 2", "PCM 3", "PCM 4", "PCM 5", "PCM 6", "PCM 7", "PCM 8",
+    "PCM 9", "PCM 10", "PCM 11", "PCM 12", "PCM 13", "PCM 14", "PCM 15", "PCM 16",
+    "PCM 17", "PCM 18", "PCM 19", "PCM 20", "PCM 21", "PCM 22", "PCM 23", "PCM 24",
+    "FM 1", "FM 2", "FM 3", "FM 4", "FM 5", "FM 6", "FM 7", "FM 8", "FM 9",
+    "FM 10", "FM 11", "FM 12", "FM 13", "FM 14", "FM 15", "FM 16", "FM 17", "FM 18"}}},
   {DEVID_YMW258,   {28, 0, "PCM"}},
   {DEVID_YMZ280B,  {8,  0}}};
 
@@ -230,6 +235,9 @@ UINT8 lvgm_load_data(lvgm_player *player, const UINT8 *data, const UINT32 size) 
   size_t curDev;
   for (curDev = 0; curDev < diList.size(); curDev++) {
     const PLR_DEV_INFO& pdi = diList[curDev];
+    if (pdi.parentIdx != (UINT32)-1) {
+      continue;
+    }
     const char* devName = SndEmu_GetDevName(pdi.type, 1, pdi.devCfg);
 
     const VoiceInfo &info = deviceToVoiceInfo.at(pdi.type);
@@ -363,34 +371,21 @@ void lvgm_set_voice_mask(lvgm_player *player, UINT64 mask) {
   PlayerBase* base = playerA->GetPlayer();
   if (base == nullptr) return;
 
-  // We need the topology to know who the parents are
-  std::vector<PLR_DEV_INFO> diList;
-  base->GetSongDeviceInfo(diList);
-
   size_t bitOffset = 0;
   for (const auto& chip : chips) {
-    if (chip.idx >= diList.size()) continue;
-    const PLR_DEV_INFO& pdi = diList[chip.idx];
+    PLR_DEV_OPTS devOpts;
+    if (base->GetDeviceOptions(chip.idx, devOpts) == 0) {
+      // 1. Primary device channels
+      devOpts.muteOpts.chnMute[0] = (UINT32)(mask >> bitOffset);
+      bitOffset += chip.voiceCounts[0];
 
-    // Grab the 32-bit segment of the mask for this specific chip's voices
-    UINT32 channelMask = (UINT32)(mask >> bitOffset);
-    bitOffset += chip.voiceCounts[0];
-
-    if (pdi.parentIdx == (UINT32)-1) {
-      // 1. Root Device (e.g., OPL4 PCM part)
-      // Fetch current options to preserve other settings
-      PLR_DEV_OPTS devOpts;
-      base->GetDeviceOptions(chip.idx, devOpts);
-      devOpts.muteOpts.chnMute[0] = channelMask;
-      base->SetDeviceMuting(chip.idx, devOpts.muteOpts);
-    } else {
-      // 2. Linked Device (e.g., OPL3 FM part)
-      // Redirect these bits to the PARENT'S chnMute[1] slot
-      PLR_DEV_OPTS parentOpts;
-      if (base->GetDeviceOptions(pdi.parentIdx, parentOpts) == 0) {
-        parentOpts.muteOpts.chnMute[1] = channelMask;
-        base->SetDeviceMuting(pdi.parentIdx, parentOpts.muteOpts);
+      // 2. Linked device channels (if any)
+      if (chip.voiceCounts.size() > 1) {
+        devOpts.muteOpts.chnMute[1] = (UINT32)(mask >> bitOffset);
+        bitOffset += chip.voiceCounts[1];
       }
+
+      base->SetDeviceMuting(chip.idx, devOpts.muteOpts);
     }
   }
 }
