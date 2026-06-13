@@ -21,7 +21,7 @@ export default class VGMPlayer extends Player {
       id: 'enhancedStereo',
       label: 'Enhanced Stereo (for Mono Chips)',
       type: 'toggle',
-      hint: 'Enable stereo panning for YM2413, AY8910, YM2203, and YM2608.',
+      hint: 'Enable stereo panning for Sega PSG, YM2413, AY8910, YM2203, and YM2608.',
       defaultValue: true,
     },
   ];

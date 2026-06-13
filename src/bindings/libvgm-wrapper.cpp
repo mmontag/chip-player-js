@@ -133,46 +133,74 @@ static void configure_enhanced_stereo(PlayerBase* base, bool stereoEnabled) {
   UINT32 devOptID;
   UINT8 retVal;
 
-  static const INT16 monoPanPos3[3] = { 0, 0, 0 };
-  static const INT16 stereoPanPos3[3] = {-0x80, +0x80, 0x00};
+  static constexpr INT16 monoPanPos3[3] = { 0, 0, 0 };
+  static constexpr INT16 stereoPanPos3[3] = {-0x80, +0x80, 0};
 
-  static const INT16 monoPanPos14[14] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-  static const INT16 stereoPanPos14[14] = {
+  static constexpr INT16 monoPanPos4[4] = { 0, 0, 0, 0 };
+  static constexpr INT16 stereoPanPos4[4] = {-0x80, +0x80, 0, 0};
+
+  static constexpr INT16 monoPanPos5[5] = { 0, 0, 0, 0, 0 };
+  static constexpr INT16 stereoPanPos5[5] = {-0x80, +0x80, 0, 0, 0};
+
+  static constexpr INT16 monoPanPos14[14] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+  static constexpr INT16 stereoPanPos14[14] = {
     -0x100, +0x100, -0x80, +0x80, -0x40, +0x40, -0xC0, +0xC0, 0x00,
     -0x60, +0x60, 0x00, -0xC0, +0xC0};
 
   const INT16* panPos3 = stereoEnabled ? stereoPanPos3 : monoPanPos3;
+  const INT16* panPos4 = stereoEnabled ? stereoPanPos4 : monoPanPos4;
+  const INT16* panPos5 = stereoEnabled ? stereoPanPos5 : monoPanPos5;
   const INT16* panPos14 = stereoEnabled ? stereoPanPos14 : monoPanPos14;
-  const size_t panPos3Bytes = sizeof(INT16) * 3;
-  const size_t panPos14Bytes = sizeof(INT16) * 14;
 
-  // 14-channel panning
-  devOptID = PLR_DEV_ID(DEVID_YM2413, 0);
-  retVal = base->GetDeviceOptions(devOptID, devOpts);
-  if (! (retVal & 0x80))
-  {
-    memcpy(devOpts.panOpts.chnPan[0], panPos14, panPos14Bytes);
-    base->SetDeviceOptions(devOptID, devOpts);
-  }
+  for (int instance = 0; instance < 2; instance++) {
+    // 3-channel panning (AY8910)
+    for (auto deviceId : { DEVID_AY8910 }) {
+      devOptID = PLR_DEV_ID(deviceId, instance);
+      retVal = base->GetDeviceOptions(devOptID, devOpts);
+      if (!(retVal & 0x80)) {
+        memcpy(devOpts.panOpts.chnPan[0], panPos3, sizeof(INT16) * 3);
+        base->SetDeviceOptions(devOptID, devOpts);
+      }
+    }
 
-  // 3-channel panning
-  devOptID = PLR_DEV_ID(DEVID_AY8910, 0);
-  retVal = base->GetDeviceOptions(devOptID, devOpts);
-  if (! (retVal & 0x80))
-  {
-    memcpy(devOpts.panOpts.chnPan[0], panPos3, panPos3Bytes);
-    base->SetDeviceOptions(devOptID, devOpts);
-  }
+    // 3-channel panning for SSG channels (linked devices of OPN chips)
+    for (auto deviceId : { DEVID_YM2203, DEVID_YM2608, DEVID_YM2610 }) {
+      devOptID = PLR_DEV_ID(deviceId, instance);
+      retVal = base->GetDeviceOptions(devOptID, devOpts);
+      if (!(retVal & 0x80)) { //      v--- linked device
+        memcpy(devOpts.panOpts.chnPan[1], panPos3, sizeof(INT16) * 3);
+        base->SetDeviceOptions(devOptID, devOpts);
+      }
+    }
 
-  // 3-channel panning
-  for (auto deviceId : { DEVID_YM2203, DEVID_YM2608 }) {
-    devOptID = PLR_DEV_ID(deviceId, 0);
-    retVal = base->GetDeviceOptions(devOptID, devOpts);
-    if (! (retVal & 0x80))
-    {
-      // Set pan for SSG channels (linked device)
-      memcpy(devOpts.panOpts.chnPan[1], panPos3, panPos3Bytes);
-      base->SetDeviceOptions(devOptID, devOpts);
+    // 4-channel panning (SN76496 / Sega PSG)
+    for (auto deviceId : { DEVID_SN76496 }) {
+      devOptID = PLR_DEV_ID(DEVID_SN76496, instance);
+      retVal = base->GetDeviceOptions(devOptID, devOpts);
+      if (!(retVal & 0x80)) {
+        memcpy(devOpts.panOpts.chnPan[0], panPos4, sizeof(INT16) * 4);
+        base->SetDeviceOptions(devOptID, devOpts);
+      }
+    }
+
+    // 5-channel panning (NES APU)
+    for (auto deviceId : { DEVID_NES_APU }) {
+      devOptID = PLR_DEV_ID(deviceId, instance);
+      retVal = base->GetDeviceOptions(devOptID, devOpts);
+      if (!(retVal & 0x80)) {
+        memcpy(devOpts.panOpts.chnPan[0], panPos5, sizeof(INT16) * 5);
+        base->SetDeviceOptions(devOptID, devOpts);
+      }
+    }
+
+    // 14-channel panning (YM2413)
+    for (auto deviceId : {DEVID_YM2413}) {
+      devOptID = PLR_DEV_ID(deviceId, instance);
+      retVal = base->GetDeviceOptions(devOptID, devOpts);
+      if (!(retVal & 0x80)) {
+        memcpy(devOpts.panOpts.chnPan[0], panPos14, sizeof(INT16) * 14);
+        base->SetDeviceOptions(devOptID, devOpts);
+      }
     }
   }
 }
@@ -230,6 +258,18 @@ UINT8 lvgm_load_data(lvgm_player *player, const UINT8 *data, const UINT32 size) 
     }
     // Some chips require specific core options to enable OPL3 extensions
     base->SetDeviceOptions(devOptID, devOpts);
+  }
+
+  // Force Maxim core for SN76496 (Sega PSG) to enable channel panning
+  for (int instance = 0; instance < 2; instance++) {
+    devOptID = PLR_DEV_ID(DEVID_SN76496, instance);
+    retVal = base->GetDeviceOptions(devOptID, devOpts);
+    if (!(retVal & 0x80)) {
+      if (!devOpts.emuCore[0]) {
+        devOpts.emuCore[0] = FCC_MAXM;
+        base->SetDeviceOptions(devOptID, devOpts);
+      }
+    }
   }
 
   voices.clear();
