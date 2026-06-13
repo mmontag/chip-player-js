@@ -126,8 +126,8 @@ static void configure_enhanced_stereo(PlayerBase* base, bool stereoEnabled) {
   UINT32 devOptID;
   UINT8 retVal;
 
-  static const INT16 monoPanPos3[3] = {-0x80, +0x80, 0x00};
-  static const INT16 stereoPanPos3[3] = { 0, 0, 0 };
+  static const INT16 monoPanPos3[3] = { 0, 0, 0 };
+  static const INT16 stereoPanPos3[3] = {-0x80, +0x80, 0x00};
 
   static const INT16 monoPanPos14[14] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
   static const INT16 stereoPanPos14[14] = {
