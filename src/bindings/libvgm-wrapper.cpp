@@ -205,6 +205,36 @@ static void configure_enhanced_stereo(PlayerBase* base, bool stereoEnabled) {
   }
 }
 
+std::string getNiceChipName(UINT8 type, const char* devName) {
+  switch (type) {
+    case DEVID_YM2151:    return "Yamaha YM2151 (OPM)";
+    case DEVID_YM2612:    return "Yamaha YM2612 (OPN2)";
+    case DEVID_YM2413:    return "Yamaha YM2413 (OPLL/VRC7)";
+    case DEVID_YM2203:    return "Yamaha YM2203 (OPN)";
+    case DEVID_YM2608:    return "Yamaha YM2608 (OPNA)";
+    case DEVID_YM2610:    return "Yamaha YM2610 (OPNB)";
+    case DEVID_YMF262:    return "Yamaha YMF262 (OPL3)";
+    case DEVID_YM3812:    return "Yamaha YM3812 (OPL2)";
+    case DEVID_YM3526:    return "Yamaha YM3526 (OPL)";
+    case DEVID_YMF271:    return "Yamaha YMF271 (OPX)";
+    case DEVID_YMW258:    return "Yamaha YMW258 (GEW-8/MultiPCM)";
+    case DEVID_YMF278B:   return "Yamaha YMF278B (OPL4)";
+    case DEVID_Y8950:     return "Yamaha Y8950 (MSX-Audio)";
+    case DEVID_AY8910:    return "AY-3-8910 (PSG)";
+    case DEVID_SN76496:   return "SN76496 (Sega PSG)";
+    case DEVID_NES_APU:   return "Ricoh 2A03 (NES APU)";
+    case DEVID_VBOY_VSU:  return "Virtual Boy VSU";
+    case DEVID_C6280:     return "Hudson C6280";
+    case DEVID_C352:      return "Namco C352";
+    case DEVID_C140:      return "Namco C140";
+    case DEVID_C219:      return "Namco C219";
+    case DEVID_K051649:   return "Konami K051649";
+    case DEVID_K053260:   return "Konami K053260";
+    case DEVID_K054539:   return "Konami K054539";
+    default:              return devName;
+  }
+}
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -280,7 +310,8 @@ UINT8 lvgm_load_data(lvgm_player *player, const UINT8 *data, const UINT32 size) 
     if (pdi.parentIdx != (UINT32)-1) {
       continue;
     }
-    const char* devName = SndEmu_GetDevName(pdi.type, 1, pdi.devCfg);
+    const char* rawDevName = SndEmu_GetDevName(pdi.type, 1, pdi.devCfg);
+    std::string devName = getNiceChipName(pdi.type, rawDevName);
 
     const VoiceInfo &info = deviceToVoiceInfo.at(pdi.type);
 
