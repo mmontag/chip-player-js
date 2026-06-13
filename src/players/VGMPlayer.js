@@ -19,7 +19,7 @@ export default class VGMPlayer extends Player {
   paramDefs = [
     {
       id: 'enhancedStereo',
-      label: 'Enhanced Stereo',
+      label: 'Enhanced Stereo (for Mono Chips)',
       type: 'toggle',
       hint: 'Enable stereo panning for YM2413, AY8910, YM2203, and YM2608.',
       defaultValue: true,
@@ -214,8 +214,9 @@ export default class VGMPlayer extends Player {
   setParameter(id, value) {
     switch (id) {
       case 'enhancedStereo':
-        this.params[id] = !!value;
-        if (this.vgmCtx) this.core._lvgm_set_enhanced_stereo(this.vgmCtx, 0);
+        value = !!value;
+        this.params[id] = value;
+        if (this.vgmCtx) this.core._lvgm_set_enhanced_stereo(this.vgmCtx, value);
         break;
       default:
     }
