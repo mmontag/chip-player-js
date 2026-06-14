@@ -13,8 +13,8 @@ set(CMAKE_CXX_STANDARD 14)
 #add_subdirectory(libvgm)
 
 add_library(chip-core
-    src/players/sid/libsidplayfp-wrapper.cpp
-    src/libvgm-wrapper.cpp
+    src/bindings/libsidplayfp-wrapper.cpp
+    src/bindings/libvgm-wrapper.cpp
 )
 
 target_include_directories(chip-core
