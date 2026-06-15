@@ -53,7 +53,22 @@ const purgeCloudflare = async () => {
       'Content-Type': 'application/json'
     },
     // Purging only the HTML is safer and faster than "Purge Everything"
-    body: JSON.stringify({ files: ['https://chiptune.app/'] })
+    body: JSON.stringify({
+      files: [
+        'https://chiptune.app',
+        'https://chiptune.app/',
+        'https://chiptune.app/index.html',
+        'https://chiptune.app/browse',
+        'https://chiptune.app/favorites',
+        'https://chiptune.app/local'
+      ],
+      // ...or purge everything by prefix:
+      // prefixes: [
+      //   'chiptune.app/browse'
+      // ]
+      // ...or nuke everything:
+      // purge_everything: true
+    })
   });
 
   if (res.ok) {

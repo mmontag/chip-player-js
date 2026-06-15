@@ -16,7 +16,7 @@ export default function Announcements() {
 ╚═════════════════╝
 `}
       </p>
-      <h3>2026-06-14</h3>
+      <h3>2026-06-15</h3>
       <p>
         ——— <a target="webring" href="https://sephlow.net/chiptune"><b>Chiptune Webring</b></a> ———<br/>
         [ <a target="webring" href="https://sephlow.net/chiptune?action=previous">prev</a> •{' '}
