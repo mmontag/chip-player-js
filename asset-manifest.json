@@ -1,14 +1,14 @@
 {
-  "main.js": "/static/js/main.937b.js",
+  "main.js": "/static/js/main.67e4.js",
   "main.css": "/static/css/main.1e29.css",
-  "chip-core.js": "/static/js/chip-core.32fc.chunk.js",
-  "static/js/chip-core.wasm": "/static/js/chip-core.cfd4.wasm",
+  "chip-core.js": "/static/js/chip-core.2ae7.chunk.js",
+  "static/js/chip-core.wasm": "/static/js/chip-core.3e91.wasm",
   "static/media/mm-tahoma-8px.ttf": "/static/media/mm-tahoma-8px.1679.ttf",
   "static/media/Tahoma.woff": "/static/media/Tahoma.e33e.woff",
   "static/media/pxplus_chipplayer.ttf": "/static/media/pxplus_chipplayer.2875.ttf",
   "index.template.html": "/index.template.html",
   "static/media/javascript,__webpack_public_path__ = __webpack_base_uri__ = htmlWebpackPluginPublicPath;": "/static/media/1feff74faaf0efc6a044.1fef",
-  "main.937b.js.map": "/static/js/main.937b.js.map",
+  "main.67e4.js.map": "/static/js/main.67e4.js.map",
   "main.1e29.css.map": "/static/css/main.1e29.css.map",
-  "chip-core.32fc.chunk.js.map": "/static/js/chip-core.32fc.chunk.js.map"
+  "chip-core.2ae7.chunk.js.map": "/static/js/chip-core.2ae7.chunk.js.map"
 }
