@@ -1,6 +1,6 @@
 //
 // Created by Matt Montag on 6/18/23.
-// Language: C++11
+// Language: C++14
 //
 #include <cstring>
 #include <vector>
@@ -32,11 +32,11 @@ struct VoiceInfo {
   size_t linkedCount = 0; // Channel count of linked device (e.g. YM2203 OPN linked device = AY8910 with 3 channels)
   std::string type = "Ch"; // Default name prefix
   std::vector<std::string> names = {};
-  std::string suffix = "";
-  std::string linkedSuffix = "";
+  std::string suffix;
+  std::string linkedSuffix;
 };
 
-const std::map<int, VoiceInfo> deviceToVoiceInfo = { // --------------------------------------------------
+const std::map<int, VoiceInfo> deviceToVoiceInfo = {
   {DEVID_32X_PWM,  {1,  0, "", {"PWM"}}},
   {DEVID_AY8910,   {3,  0}},
   {DEVID_C140,     {24, 0, "PCM"}},
@@ -52,8 +52,8 @@ const std::map<int, VoiceInfo> deviceToVoiceInfo = { // ------------------------
   {DEVID_K054539,  {8,  0, "PCM"}},
   {DEVID_MIKEY,    {4,  0, "Wave"}},
   {DEVID_NES_APU,  {5,  0, "", {"Pulse 1", "Pulse 2", "Triangle", "Noise",  "DMC"}}},
-  {DEVID_MSM6258, {1,  0, "PCM"}},
-  {DEVID_MSM6295, {4,  0, "PCM"}},
+  {DEVID_MSM6258,  {1,  0, "PCM"}},
+  {DEVID_MSM6295,  {4,  0, "PCM"}},
   {DEVID_POKEY,    {4,  0, "PSG"}},
   {DEVID_QSOUND,   {16, 0, "PCM"}},
   {DEVID_RF5C68,   {8,  0, "PCM"}},
@@ -126,7 +126,6 @@ std::string getVoiceName(const int id, const int v) {
   }
 }
 
-// TODO: add some way to turn it off. "enabled" argument?
 static void configure_enhanced_stereo(PlayerBase* base, bool stereoEnabled) {
   if (!base) return;
   PLR_DEV_OPTS devOpts{};
@@ -335,7 +334,6 @@ UINT8 lvgm_load_data(lvgm_player *player, const UINT8 *data, const UINT32 size) 
 
   // Reset muting masks to 0 (unmuted) for all channels of active chips in the new song
   for (const auto& chip : chips) {
-    PLR_DEV_OPTS devOpts;
     if (base->GetDeviceOptions(chip.idx, devOpts) == 0) {
       devOpts.muteOpts.chnMute[chip.linkedIdx] = 0;
       base->SetDeviceMuting(chip.idx, devOpts.muteOpts);
