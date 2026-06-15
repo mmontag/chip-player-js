@@ -16,6 +16,13 @@ export default function Announcements() {
 ╚═════════════════╝
 `}
       </p>
+      <h3>2026-06-14</h3>
+      <p>
+        ——— <a target="webring" href="https://sephlow.net/chiptune"><b>Chiptune Webring</b></a> ———<br/>
+        [ <a target="webring" href="https://sephlow.net/chiptune?action=previous">prev</a> •{' '}
+        <a target="webring" href="https://sephlow.net/chiptune?action=random">random</a> •{' '}
+        <a target="webring" href="https://sephlow.net/chiptune?action=next">next</a> ]
+      </p>
       <h3>2026-03-27</h3>
       <p>
       Commodore 64 SID has arrived with 60708 songs from the amazing HVSC (<Link to="/browse/High Voltage SID Collection">High Voltage SID Collection</Link>). <Link to="/?q=2SID">2SID</Link> and <Link to="/?q=3SID">3SID</Link> are supported.
