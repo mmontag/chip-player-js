@@ -141,7 +141,8 @@ const tasks = {
       console.log(chalk.blue('Syncing build directory...'));
       runCommand([
         'rsync',
-        '-vz', // Don't preserve timestamps
+        '-avz',
+        '--no-times', // Don't preserve timestamps
         "--exclude '._*'",
         "--exclude '.DS_Store'",
         './build/',
