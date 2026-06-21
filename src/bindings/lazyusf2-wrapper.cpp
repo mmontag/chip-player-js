@@ -90,9 +90,8 @@ const psf_file_callbacks psf_file_system = {
 // --- Config Defaults ---
 
 static const unsigned int cfg_deflength = 170000;
-static const unsigned int cfg_deffade = 10000;
+static const unsigned int cfg_deffade = 1000;
 static const unsigned int cfg_suppressopeningsilence = 1;
-static const unsigned int cfg_suppressendsilence = 0;
 static const unsigned int cfg_endsilenceseconds = 3;
 static const unsigned int cfg_resample = 1;
 static const unsigned int cfg_hle_audio = 1;
@@ -209,8 +208,6 @@ class input_usf {
   double startsilence = 0;
   int song_len = 0, fade_len = 0;
   int tag_song_ms = 0, tag_fade_ms = 0;
-
-  circular_buffer<int16_t> m_buffer;
 
 public:
   int32_t sample_rate = 44100;
