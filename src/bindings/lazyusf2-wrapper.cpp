@@ -214,6 +214,7 @@ class input_usf {
 
 public:
   int32_t sample_rate = 44100;
+  bool indefinite_playback = false; // ignores track duration (song_len) for looping tracks.
 
   input_usf() = default;
 
@@ -418,6 +419,10 @@ int32_t n64_render_audio(int16_t *output_buffer, uint16_t outSize) {
 
 void n64_seek_ms(int msec) {
   g_input_usf.decode_seek((double)msec / 1000.0);
+}
+
+void n64_set_indefinite_playback(bool enabled) {
+  g_input_usf.indefinite_playback = enabled;
 }
 
 void n64_shutdown() {
