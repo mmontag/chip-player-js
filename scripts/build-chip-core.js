@@ -273,7 +273,7 @@ const chipModules = [
     sourceFiles: [
       'psflib/libpsflib.a',
       'lazyusf2/build/liblazyusf2.a',
-      'lazyusf2/_wothke/n64plug.cpp',
+      'src/bindings/lazyusf2-wrapper.cpp',
     ],
     exportedFunctions: [
       '_n64_load_file',

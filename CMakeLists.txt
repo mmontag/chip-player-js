@@ -15,11 +15,14 @@ set(CMAKE_CXX_STANDARD 14)
 add_library(chip-core
     src/bindings/libsidplayfp-wrapper.cpp
     src/bindings/libvgm-wrapper.cpp
+    src/bindings/lazyusf2-wrapper.cpp
 )
 
 target_include_directories(chip-core
     PRIVATE
     ../libsidplayfp/src
     ../libvgm
+    psflib
+    lazyusf2
     "$ENV{EMSDK}/upstream/emscripten/system/include"
 )
