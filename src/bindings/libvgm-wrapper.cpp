@@ -115,6 +115,7 @@ static std::string g_yrw801_rom_path;
 
 // Enhanced stereo for mono chips
 static bool g_enhanced_stereo;
+static bool g_indefinite_playback = false;
 
 // Get voice name from deviceToVoiceInfo.at(id).names[v], fall back to voiceInfo[id].type if name is empty
 std::string getVoiceName(const int id, const int v) {
@@ -250,7 +251,7 @@ lvgm_player* lvgm_init(UINT32 sample_rate) {
   {
     PlayerA::Config pCfg = player->GetConfiguration();
     pCfg.masterVol = 0x800; // ? no idea. 0x1000 seemed too loud
-    pCfg.loopCount = 2;
+    pCfg.loopCount = g_indefinite_playback ? 0 : 2;
     pCfg.fadeSmpls = sample_rate * 4;	// fade over 4 seconds
     pCfg.endSilenceSmpls = sample_rate / 2;	// 0.5 seconds of silence at the end
     pCfg.pbSpeed = 1.0;
@@ -345,12 +346,42 @@ UINT8 lvgm_load_data(lvgm_player *player, const UINT8 *data, const UINT32 size) 
 
 UINT32 lvgm_get_position_ms(lvgm_player *player) {
   PlayerA* playerA = real(player);
-  return UINT32(playerA->GetCurTime(PLAYTIME_TIME_FILE) * 1000.);
+  return UINT32(playerA->GetCurTime(PLAYTIME_TIME_FILE | PLAYTIME_LOOP_INCL) * 1000.);
 }
 
 UINT32 lvgm_get_duration_ms(lvgm_player *player) {
   PlayerA* playerA = real(player);
-  return UINT32(playerA->GetTotalTime(PLAYTIME_TIME_FILE) * 1000.);
+  PlayerBase* base = playerA->GetPlayer();
+  if (base == nullptr)
+    return 0;
+
+  double secs = base->Tick2Second(base->GetTotalPlayTicks(2));
+  if (secs >= 0.0) {
+    if (base->GetLoopTicks() > 0) {
+      secs += base->Sample2Second(playerA->GetFadeSamples());
+    }
+    secs += base->Sample2Second(playerA->GetEndSilenceSamples());
+  } else {
+    secs = base->Tick2Second(base->GetTotalPlayTicks(1));
+  }
+
+  secs *= playerA->GetPlaybackSpeed();
+  return UINT32(secs * 1000.);
+}
+
+void lvgm_set_indefinite_playback(lvgm_player *player, uint8_t enabled) {
+  PlayerA* playerA = real(player);
+  g_indefinite_playback = (enabled != 0);
+  playerA->SetLoopCount(g_indefinite_playback ? 0 : 2);
+  if (!g_indefinite_playback) {
+    if (playerA->GetPlayer() != nullptr && playerA->GetCurLoop() >= 2) {
+      playerA->FadeOut();
+    }
+  }
+}
+
+uint8_t lvgm_get_indefinite_playback() {
+  return g_indefinite_playback ? 1 : 0;
 }
 
 UINT8 lvgm_start(lvgm_player *player) {
