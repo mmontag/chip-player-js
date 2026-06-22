@@ -1,3 +1,5 @@
+// ReSharper disable CppDFAConstantConditions
+// ReSharper disable CppDFAConstantFunctionResult
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wshadow"
 
@@ -208,10 +210,12 @@ class input_usf {
   double startsilence = 0;
   int song_len = 0, fade_len = 0;
   int tag_song_ms = 0, tag_fade_ms = 0;
+  int fade_start_pos = 0;
+  bool song_loops = false;
 
 public:
-  int32_t sample_rate = 44100;
-  bool indefinite_playback = false; // ignores track duration (song_len) for looping tracks.
+  volatile int32_t sample_rate = 44100;
+  volatile bool indefinite_playback = false; // ignores track duration (song_len) for looping tracks.
 
   input_usf() = default;
 
@@ -307,12 +311,13 @@ public:
     }
 
     calcfade();
+    fade_start_pos = song_len;
     return 0;
   }
 
   int decode_run(int16_t *output_buffer, uint16_t size) {
     if (eof || !m_state || !m_state->emu_state) return -1;
-    if (tag_song_ms && sample_rate && data_written >= (song_len + fade_len)) return -1;
+    if (tag_song_ms && sample_rate && data_written >= (fade_start_pos + fade_len)) return -1;
 
     uint32_t written = 0;
     if (remainder) {
@@ -337,14 +342,20 @@ public:
     data_written += (int)written;
     int d_end = data_written;
 
-    if (tag_song_ms && d_end > song_len) {
+    if (data_written < song_len) {
+      fade_start_pos = song_len;
+    } else if (indefinite_playback && song_loops) {
+      fade_start_pos = data_written;
+    }
+
+    if (tag_song_ms && d_end > fade_start_pos) {
       for (int n = d_start; n < d_end; ++n) {
-        if (n > song_len) {
+        if (n > fade_start_pos) {
           int offset = (n - d_start) * 2;
-          if (n > song_len + fade_len) {
+          if (n > fade_start_pos + fade_len) {
             output_buffer[offset] = output_buffer[offset+1] = 0;
           } else {
-            double factor = (double)(song_len + fade_len - n) / (double)fade_len;
+            double factor = (double)(fade_start_pos + fade_len - n) / (double)fade_len;
             output_buffer[offset] = (int16_t)(output_buffer[offset] * factor);
             output_buffer[offset+1] = (int16_t)(output_buffer[offset+1] * factor);
           }
@@ -388,6 +399,7 @@ private:
     if (sample_rate <= 0) return;
     song_len = (int)((double)tag_song_ms * sample_rate / 1000.0);
     fade_len = (int)((double)tag_fade_ms * sample_rate / 1000.0);
+    song_loops = (tag_fade_ms > 0);
   }
 };
 
@@ -411,7 +423,7 @@ int32_t n64_get_position_ms() {
 }
 
 int32_t n64_render_audio(int16_t *output_buffer, uint16_t outSize) {
-  return (int32_t)g_input_usf.decode_run(output_buffer, outSize);
+  return g_input_usf.decode_run(output_buffer, outSize);
 }
 
 void n64_seek_ms(int msec) {
@@ -420,6 +432,10 @@ void n64_seek_ms(int msec) {
 
 void n64_set_indefinite_playback(bool enabled) {
   g_input_usf.indefinite_playback = enabled;
+}
+
+bool n64_get_indefinite_playback() {
+  return g_input_usf.indefinite_playback;
 }
 
 void n64_shutdown() {
