@@ -281,6 +281,8 @@ const chipModules = [
       '_n64_get_position_ms',
       '_n64_seek_ms',
       '_n64_render_audio',
+      '_n64_set_indefinite_playback',
+      '_n64_get_indefinite_playback',
       '_n64_shutdown',
     ],
     flags: [

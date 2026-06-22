@@ -11,6 +11,16 @@ const MOUNTPOINT = '/n64';
 const INT16_MAX = 32767; // 2^15 - 1
 
 export default class N64Player extends Player {
+  paramDefs = [
+    {
+      id: 'indefinitePlayback',
+      label: 'Indefinite Playback',
+      type: 'toggle',
+      hint: 'Ignore track length metadata for looping tracks and loop indefinitely.',
+      defaultValue: false,
+    },
+  ];
+
   constructor(...args) {
     super(...args);
     autoBind(this);
@@ -25,7 +35,7 @@ export default class N64Player extends Player {
     this.buffer = this.core._malloc(this.bufferSize * 4); // 2 ch, 16-bit
   }
 
-  loadData(data, filename) {
+  loadData(data, filename, persistedSettings) {
     // N64Player reads song data from the Emscripten filesystem,
     // rather than loading bytes from memory like other players.
     let err;
@@ -62,6 +72,7 @@ export default class N64Player extends Player {
           throw Error('n64_load_file failed');
         }
 
+        this.resolveParamValues(persistedSettings);
         this.metadata = { title: pathe.basename(filename) };
 
         this.resume();
@@ -117,6 +128,17 @@ export default class N64Player extends Player {
 
   seekMs(positionMs) {
     this.muteAudioDuringCall(this.audioNode, () => this.core._n64_seek_ms(positionMs));
+  }
+
+  setParameter(id, value) {
+    switch (id) {
+      case 'indefinitePlayback':
+        value = !!value;
+        this.params[id] = value;
+        this.core._n64_set_indefinite_playback(value);
+        break;
+      default:
+    }
   }
 
   stop() {
