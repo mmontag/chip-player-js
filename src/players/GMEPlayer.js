@@ -93,7 +93,7 @@ export default class GMEPlayer extends Player {
     this.fadingOut = false;
     this.fadeStartMs = null;
     this.fadeFinished = false;
-    this.fadeDurationMs = 4000;
+    this.fadeDurationMs = 5000;
   }
 
   processAudioInner(channels) {
@@ -121,8 +121,11 @@ export default class GMEPlayer extends Player {
       let fadeFactor = 1.0;
       if (this.fadingOut && this.fadeStartMs !== null) {
         const elapsed = this.getPositionMs() - this.fadeStartMs;
-        fadeFactor = Math.max(0, 1 - elapsed / this.fadeDurationMs);
-        if (fadeFactor === 0) {
+        const threshold = 0.025;
+        fadeFactor = Math.pow(threshold, elapsed / this.fadeDurationMs);
+        if (fadeFactor > 1.0) fadeFactor = 1.0;
+        if (fadeFactor <= threshold) {
+          fadeFactor = 0;
           this.fadeFinished = true;
         }
       }
