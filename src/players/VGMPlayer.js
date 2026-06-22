@@ -24,6 +24,13 @@ export default class VGMPlayer extends Player {
       hint: 'Enable stereo panning for Sega PSG, YM2413, AY8910, YM2203, and YM2608.',
       defaultValue: true,
     },
+    {
+      id: 'indefinitePlayback',
+      label: 'Indefinite Playback',
+      type: 'toggle',
+      hint: 'Ignore track length metadata for looping tracks and loop indefinitely.',
+      defaultValue: false,
+    },
   ];
 
   constructor(...args) {
@@ -217,6 +224,11 @@ export default class VGMPlayer extends Player {
         value = !!value;
         this.params[id] = value;
         if (this.vgmCtx) this.core._lvgm_set_enhanced_stereo(this.vgmCtx, value);
+        break;
+      case 'indefinitePlayback':
+        value = !!value;
+        this.params[id] = value;
+        if (this.vgmCtx) this.core._lvgm_set_indefinite_playback(this.vgmCtx, value);
         break;
       default:
     }
