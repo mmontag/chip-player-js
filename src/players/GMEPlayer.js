@@ -54,6 +54,13 @@ export default class GMEPlayer extends Player {
       type: 'toggle',
       defaultValue: false,
     },
+    {
+      id: 'indefinitePlayback',
+      label: 'Indefinite Playback',
+      type: 'toggle',
+      hint: 'Ignore track length metadata for looping tracks and loop indefinitely.',
+      defaultValue: false,
+    },
   ];
 
   constructor(...args) {
@@ -81,6 +88,12 @@ export default class GMEPlayer extends Player {
     this.emuPtr = core._malloc(4); // i32
 
     this.subBass = new SubBass(this.sampleRate);
+
+    // JS-based fade state
+    this.fadingOut = false;
+    this.fadeStartMs = null;
+    this.fadeFinished = false;
+    this.fadeDurationMs = 4000;
   }
 
   processAudioInner(channels) {
@@ -92,22 +105,35 @@ export default class GMEPlayer extends Player {
       return;
     }
 
-    if (!this.looping && this.getPositionMs() >= this.getDurationMs() && this.fadingOut === false) {
-      console.log('Fading out at %d ms.', this.getPositionMs());
-      this.setFadeout(this.getPositionMs());
+    const playIndefinitely = !!this.params.indefinitePlayback;
+
+    if (!playIndefinitely && this.getDurationMs() > 0 && this.getPositionMs() >= this.getDurationMs() && this.fadingOut === false) {
+      console.log('[GMEPlayer] Starting JS fadeout at %d ms.', this.getPositionMs());
+      this.fadeStartMs = this.getPositionMs();
       this.fadingOut = true;
     }
 
-    if (core._gme_track_ended(this.gmeCtx) !== 1 || this.looping) {
+    const trackEnded = core._gme_track_ended(this.gmeCtx) === 1 || this.fadeFinished;
+
+    if (!trackEnded) {
       core._gme_play(this.gmeCtx, this.bufferSize * 2, this.buffer);
+
+      let fadeFactor = 1.0;
+      if (this.fadingOut && this.fadeStartMs !== null) {
+        const elapsed = this.getPositionMs() - this.fadeStartMs;
+        fadeFactor = Math.max(0, 1 - elapsed / this.fadeDurationMs);
+        if (fadeFactor === 0) {
+          this.fadeFinished = true;
+        }
+      }
 
       for (ch = 0; ch < channels.length; ch++) {
         for (i = 0; i < this.bufferSize; i++) {
-          channels[ch][i] = core.getValue(this.buffer +
+          channels[ch][i] = (core.getValue(this.buffer +
             // Interleaved channel format
             i * 2 * 2 +             // frame offset   * bytes per sample * num channels +
             ch * 2,                 // chhannel offset * bytes per sample
-            'i16') / INT16_MAX;     // convert int16 to float
+            'i16') / INT16_MAX) * fadeFactor;     // convert int16 to float and apply fadeFactor
         }
       }
 
@@ -142,8 +168,7 @@ export default class GMEPlayer extends Player {
       if (this.subtune >= core._gme_track_count(this.gmeCtx) || this.playSubtune(this.subtune) !== 0) {
         this.suspend();
         console.debug(
-          'GMEPlayer.gmeAudioProcess(): _gme_track_ended == %s and subtune (%s) > _gme_track_count (%s).',
-          core._gme_track_ended(this.gmeCtx),
+          'GMEPlayer.gmeAudioProcess(): track ended and subtune (%s) > _gme_track_count (%s).',
           this.subtune,
           core._gme_track_count(this.gmeCtx)
         );
@@ -154,6 +179,8 @@ export default class GMEPlayer extends Player {
 
   playSubtune(subtune) {
     this.fadingOut = false;
+    this.fadeStartMs = null;
+    this.fadeFinished = false;
     this.subtune = subtune;
     this.metadata = this._parseMetadata(subtune);
     console.debug('GMEPlayer.playSubtune(subtune=%s)', subtune);
@@ -161,12 +188,18 @@ export default class GMEPlayer extends Player {
       ...this.getBasePlayerState(),
       isStopped: false,
     });
-    return core._gme_start_track(this.gmeCtx, subtune);
+    const res = core._gme_start_track(this.gmeCtx, subtune);
+    if (this.gmeCtx) {
+      core._gme_set_fade(this.gmeCtx, 200000000);
+    }
+    return res;
   }
 
   loadData(data, filepath, persistedSettings, subtune = 0) {
     this.subtune = subtune;
     this.fadingOut = false;
+    this.fadeStartMs = null;
+    this.fadeFinished = false;
     this.seekTargetMs = null;
     this.seekRequestId = null;
     this.currentFileExt = pathe.extname(filepath);
@@ -274,7 +307,7 @@ export default class GMEPlayer extends Player {
   }
 
   getDurationMs() {
-    if (this.gmeCtx) return this.metadata.play_length;
+    if (this.gmeCtx && this.metadata) return this.metadata.play_length;
     return 0;
   }
 
@@ -303,6 +336,21 @@ export default class GMEPlayer extends Player {
         this.params[id] = !!value;
         if (this.gmeCtx) core._gme_enable_accuracy(this.gmeCtx, value ? 1 : 0);
         break;
+      case 'indefinitePlayback':
+        value = !!value;
+        this.params[id] = value;
+        if (value) {
+          this.fadingOut = false;
+          this.fadeStartMs = null;
+          this.fadeFinished = false;
+        } else {
+          if (this.getDurationMs() > 0 && this.getPositionMs() >= this.getDurationMs() && this.fadingOut === false) {
+            console.log('[GMEPlayer] Starting JS fadeout via setParameter at', this.getPositionMs());
+            this.fadeStartMs = this.getPositionMs();
+            this.fadingOut = true;
+          }
+        }
+        break;
       default:
         console.warn('GMEPlayer has no parameter with id "%s".', id);
     }
@@ -322,7 +370,7 @@ export default class GMEPlayer extends Player {
   }
 
   setFadeout(startMs) {
-    if (this.gmeCtx) core._gme_set_fade(this.gmeCtx, startMs, 4000);
+    // JS-based fade is used in processAudioInner instead
   }
 
   getVoiceMask() {
@@ -363,6 +411,9 @@ export default class GMEPlayer extends Player {
 
   seekMs(positionMs) {
     if (this.gmeCtx) {
+      this.fadingOut = false;
+      this.fadeStartMs = null;
+      this.fadeFinished = false;
       if (TIMESLICED_SEEK_MS_MAP[this.currentFileExt]) {
         cancelIdleCallback(this.seekRequestId);
         this.seekTargetMs = positionMs;
@@ -388,10 +439,4 @@ export default class GMEPlayer extends Player {
     this.emit('playerStateUpdate', { isStopped: true });
   }
 
-  setLooping(looping) {
-    this.looping = looping;
-    this.fadingOut = false;
-    // Turn fade off by setting it very far in the future
-    if (this.gmeCtx) core._gme_set_fade(this.gmeCtx, 200000000, 4000);
-  }
 }
