@@ -102,7 +102,7 @@
     "webpack": "^5.106.0",
     "webpack-bundle-analyzer": "^3.3.2",
     "webpack-cli": "^5.1.4",
-    "webpack-dev-server": "^4.15.2",
+    "webpack-dev-server": "^5.2.5",
     "webpack-manifest-plugin": "^5.0.1",
     "workbox-webpack-plugin": "^6.6.0"
   },
