@@ -31,9 +31,14 @@ const CATALOG_DIR = path.resolve(__dirname, '../catalog');
 const DB_PATH = path.resolve(__dirname, '../server/catalog.db');
 const VALID_EXTENSIONS = new Set(FORMATS.map(f => '.'+f));
 
-// Regex for Roman Numeral Sort
-const romanNumeralNineRegex = /\bix\b/i;
-const romanNumeralRegex = /\b([IVXLC]+|[ivxlc]+)([-.,) ]|$)/; 
+// Regex
+const ROMAN_NUMERAL_NINE_REGEX = /\bix\b/i;
+const ROMAN_NUMERAL_REGEX = /\b([IVXLC]+|[ivxlc]+)([-.,) ]|$)/;
+const FRONT_ART_REGEX = /(front|cover)/i;
+const IMAGE_EXT_REGEX = /\.(gif|png|jpg|jpeg)$/i;
+const TEXT_EXT_REGEX = /\.(text|txt|doc)$/i;
+const SF2_REGEX = /SF2=(.+?)\.sf2/;
+
 const NUMERIC_COLLATOR = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
 
 // Initialize DB
@@ -226,7 +231,7 @@ const seenPaths = new Set();
 
 function replaceRomanWithArabic(str) {
   try {
-    return str.replace(romanNumeralRegex, (_, match) => String(toArabic(match)).padStart(4, '0'));
+    return str.replace(ROMAN_NUMERAL_REGEX, (_, match) => String(toArabic(match)).padStart(4, '0'));
   } catch (e) {
     return str;
   }
@@ -246,14 +251,21 @@ function getSidecarFiles(dirPath) {
   }
 }
 
-function findImageInEntries(entries, dirPath) {
-  const img = entries.find(e => e.isFile() && /\.(gif|png|jpg|jpeg)$/i.test(e.name));
+function findArt(entries, dirPath) {
+  // Prioritize "front" images
+  const frontImg = entries.find(e => e.isFile() && FRONT_ART_REGEX.test(e.name) && IMAGE_EXT_REGEX.test(e.name));
+  if (frontImg) {
+    return path.join(dirPath, frontImg.name);
+  }
+
+  // Fallback to any image
+  const img = entries.find(e => e.isFile() && IMAGE_EXT_REGEX.test(e.name));
   return img ? path.join(dirPath, img.name) : null;
 }
 
 function findTextInEntries(entries, fullPath) {
   return entries
-    .filter(e => e.isFile() && /\.(text|txt|doc)$/i.test(e.name))
+    .filter(e => e.isFile() && TEXT_EXT_REGEX.test(e.name))
     .map(e => path.join(fullPath, e.name));
 }
 
@@ -294,7 +306,7 @@ async function processDirectory(fullPath, relativePath, parentId = null, parentS
   const entries = getSidecarFiles(fullPath);
   
   // 1. Resolve Directory-Level Metadata (Inheritance)
-  let currentImagePath = findImageInEntries(entries, relativePath); 
+  let currentImagePath = findArt(entries, relativePath); 
   if (!currentImagePath) currentImagePath = parentState.inheritedImagePath || null;
   
   const currentImageId = !options.dryrun ? getImageId(currentImagePath) : null;
@@ -348,7 +360,7 @@ async function processDirectory(fullPath, relativePath, parentId = null, parentS
 
   // 3. Calculate Sort Order
   const arabicMap = {};
-  const needsRomanNumeralSort = children.some(item => item.name.match(romanNumeralNineRegex));
+  const needsRomanNumeralSort = children.some(item => item.name.match(ROMAN_NUMERAL_NINE_REGEX));
   
   if (needsRomanNumeralSort) {
     children.forEach(item => arabicMap[item.name] = replaceRomanWithArabic(item.name));
@@ -506,9 +518,8 @@ function processFile(child, directoryId, dirEntries, dirImagePath, dirTextIds) {
   // 3. Soundfont (MIDI only)
   let soundfont = null;
   if (extension === 'mid' || extension === 'midi') {
-    const sf2Regex = /SF2=(.+?)\.sf2/;
     const header = buffer.subarray(0, 1024).toString('utf8'); 
-    const match = header.match(sf2Regex);
+    const match = header.match(SF2_REGEX);
     
     if (match && match[1]) {
       const sfName = match[1] + '.sf2';
