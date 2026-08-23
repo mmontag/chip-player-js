@@ -16,6 +16,36 @@ export default function Announcements() {
 ╚═════════════════╝
 `}
       </p>
+      <h3>2026-08-20</h3>
+      <p>
+        2400 piano recordings transcribed with <a href="https://github.com/yujia-yan/transkun" target="_blank">Transkun V2</a>.
+      </p>
+      <p>
+        <Link to="/browse/MIDI/Radiohead/Christopher%20O'Riley%20plays%20Radiohead%20-%20True%20Love%20Waits">Radiohead</Link> -{' '}
+        <Link to="/browse/MIDI/Bruce%20Hornsby%20&%20The%20Range/Solo%20Concerts%20(Vanguard,%202014)">Bruce Hornsby</Link> -{' '}
+        <Link to="/?q=pascal+roge">Pascal Rogé</Link> -{' '}
+        <Link to="/?q=idil+biret">Idil Biret</Link> -{' '}
+        <Link to="/?q=larrocha">Alicia de Larrocha</Link> -{' '}
+        <Link to="/?q=ashkenazy">Vladimir Ashkenazy</Link>
+      </p>
+      <p>
+        Composers:{' '}
+        <Link to="/browse/Classical%20MIDI/Bach">Bach</Link> -{' '}
+        <Link to="/browse/Classical%20MIDI/Beethoven">Beethoven</Link> -{' '}
+        <Link to="/browse/Classical%20MIDI/Chopin">Chopin</Link> -{' '}
+        <Link to="/browse/Classical%20MIDI/Debussy">Debussy</Link> -{' '}
+        <Link to="/browse/Classical%20MIDI/Gershwin">Gershwin</Link> -{' '}
+        <Link to="/browse/Classical%20MIDI/Glass">Glass</Link> -{' '}
+        <Link to="/browse/Classical%20MIDI/Griffes">Griffes</Link> -{' '}
+        <Link to="/browse/Classical%20MIDI/Kapustin">Kapustin</Link> -{' '}
+        <Link to="/browse/Classical%20MIDI/Ornstein">Ornstein</Link> -{' '}
+        <Link to="/browse/Classical%20MIDI/Poulenc">Poulenc</Link> -{' '}
+        <Link to="/browse/Classical%20MIDI/Prokofiev">Prokofiev</Link> -{' '}
+        <Link to="/browse/Classical%20MIDI/Rachmaninoff">Rachmaninoff</Link> -{' '}
+        <Link to="/browse/Classical%20MIDI/Ravel">Ravel</Link> -{' '}
+        <Link to="/browse/Classical%20MIDI/Satie">Satie</Link> -{' '}
+        <Link to="/browse/Classical%20MIDI/Scriabin">Scriabin</Link>
+      </p>
       <h3>2026-06-15</h3>
       <p>
         ——— <a target="webring" href="https://sephlow.net/chiptune"><b>Chiptune Webring</b></a> ———<br/>
