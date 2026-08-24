@@ -19,6 +19,10 @@
     "http-proxy-middleware": "^3.0.0",
     "lru-cache": "^10.0.0",
     "skia-canvas": "^1.0.1",
-    "zod": "^4.3.6"
+    "zod": "^4.3.6",
+    "table": "^6.9.0",
+    "glob": "^7.1.2",
+    "commander": "^14.0.2",
+    "chalk": "^4.1.2"
   }
 }
