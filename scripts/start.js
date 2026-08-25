@@ -74,6 +74,9 @@ choosePort(HOST, DEFAULT_PORT)
     const serverConfig = {
       host: HOST,
       port,
+      client: {
+        overlay: false,
+      },
     };
     const devServer = new WebpackDevServer(serverConfig, compiler);
     // Launch WebpackDevServer.
