@@ -51,6 +51,7 @@ import Toast, { ToastLevels } from './Toast';
 import MessageBox from './MessageBox';
 import Settings from './Settings';
 import LocalFiles from './LocalFiles';
+import TopCharts from './TopCharts';
 import { UserContext } from './UserProvider';
 import { ToastContext } from './ToastProvider';
 import Announcements from './Announcements';
@@ -592,11 +593,13 @@ class App extends React.Component {
     this.updateMediaSessionPositionState();
   }
 
-  handleShufflePlay(path) {
+  handleShufflePlay(path, customContext) {
     if (path === 'favorites') {
       this.sequencer.playContext(shuffle(this.props.userContext.favesContext));
     } else if (path === 'local') {
       this.sequencer.playContext(shuffle(this.playContexts['local']));
+    } else if (path === 'top') {
+      this.sequencer.playContext(shuffle(customContext || this.playContexts['top'] || []));
     } else {
       // This is more like a synthetic recursive shuffle.
       // Response of this API is an array of *paths*.
@@ -837,6 +840,8 @@ class App extends React.Component {
                          to={{ pathname: "/favorites", ...search }}>Favorites</NavLink>
                 <NavLink className="tab" activeClassName="tab-selected"
                          to={{ pathname: "/local", ...search }}>Local</NavLink>
+                <NavLink className="tab" activeClassName="tab-selected"
+                         to={{ pathname: "/top", ...search }}>Top</NavLink>
                 {/* this.sequencer?.players?.map((p, i) => `p${i}:${p.stopped?'off':'on'}`).join(' ') */}
                 <button className={`tab tab-settings ${showPlayerSettings ? 'tab-selected' : ''}`}
                         onClick={this.handleToggleSettings}>Settings</button>
@@ -845,6 +850,14 @@ class App extends React.Component {
               <div className="App-main-content-area"
                    ref={this.contentAreaRef}>
                 <Switch>
+                  <Route path="/top" render={() => (
+                    <TopCharts
+                      scrollContainerRef={this.contentAreaRef}
+                      handleShufflePlay={this.handleShufflePlay}
+                      onSongClick={this.handleSongClick}
+                      currContext={currContext}
+                      currIdx={currIdx}/>
+                  )}/>
                   <Route path="/favorites" render={() => (
                     <Favorites
                       scrollContainerRef={this.contentAreaRef}
