@@ -9,6 +9,7 @@ console.log(`Connected to database at ${CATALOG_DB_PATH}`);
 
 const USER_DB_PATH = path.resolve(__dirname, 'users.db');
 db.exec(`ATTACH DATABASE '${USER_DB_PATH}' AS user_db`);
+db.exec(`CREATE INDEX IF NOT EXISTS user_db.idx_playbacks_played_at ON playbacks(played_at)`);
 console.log(`Attached user database at ${USER_DB_PATH}`);
 
 const CSDB_DB_PATH = path.resolve(__dirname, 'csdb.db');
@@ -150,6 +151,48 @@ const dbStatements = {
       VALUES (@csdbid, @xml, @now)
   `),
 
+  // Top Charts
+  getGlobalTopStmt: db.prepare(`
+      SELECT
+        top.song_id,
+        top.plays,
+        m.path,
+        m.file_size,
+        m.mtime
+      FROM (
+        SELECT song_id, COUNT(*) as plays
+        FROM user_db.playbacks
+        WHERE played_at >= ?
+        GROUP BY song_id
+        ORDER BY plays DESC
+        LIMIT ?
+      ) top
+      JOIN music m ON m.rowid = (
+        SELECT rowid FROM music WHERE song_id = top.song_id ORDER BY mtime LIMIT 1
+      )
+      LIMIT ?
+  `),
+
+  getUserTopStmt: db.prepare(`
+      SELECT
+        top.song_id,
+        top.plays,
+        m.path,
+        m.file_size,
+        m.mtime
+      FROM (
+        SELECT song_id, COUNT(*) as plays
+        FROM user_db.playbacks
+        WHERE user_id = ? AND played_at >= ?
+        GROUP BY song_id
+        ORDER BY plays DESC
+        LIMIT ?
+      ) top
+      JOIN music m ON m.rowid = (
+        SELECT rowid FROM music WHERE song_id = top.song_id ORDER BY mtime LIMIT 1
+      )
+      LIMIT ?
+  `),
 }
 
 module.exports = {
