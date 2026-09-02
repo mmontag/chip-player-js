@@ -330,49 +330,47 @@ async function processDirectory(fullPath, relativePath, parentId = null, parentS
   }
 
   // 2. Identify Children for Sorting
-  const children = [];
+  const allChildren = [];
   for (const entry of entries) {
     const entryFullPath = path.join(fullPath, entry.name);
     const entryRelativePath = path.join(relativePath, entry.name);
-    
-    // Filter Logic
-    if (scanRelativeBase) {
-      const rel = entryRelativePath;
-      const filter = scanRelativeBase;
-      let match = false;
-      
-      if (rel === filter) match = true;
-      else if (rel.startsWith(filter + path.sep)) match = true;
-      else if (entry.isDirectory() && filter.startsWith(rel + path.sep)) match = true;
-      
-      if (!match) continue;
-    }
 
     if (entry.isDirectory()) {
-      children.push({ type: 'dir', name: entry.name, fullPath: entryFullPath, relativePath: entryRelativePath });
+      allChildren.push({ type: 'dir', name: entry.name, fullPath: entryFullPath, relativePath: entryRelativePath });
     } else {
       const ext = path.extname(entry.name).toLowerCase();
       if (VALID_EXTENSIONS.has(ext)) {
-        children.push({ type: 'file', name: entry.name, fullPath: entryFullPath, relativePath: entryRelativePath, ext });
+        allChildren.push({ type: 'file', name: entry.name, fullPath: entryFullPath, relativePath: entryRelativePath, ext });
       }
     }
   }
 
   // 3. Calculate Sort Order
   const arabicMap = {};
-  const needsRomanNumeralSort = children.some(item => item.name.match(ROMAN_NUMERAL_NINE_REGEX));
+  const needsRomanNumeralSort = allChildren.some(item => item.name.match(ROMAN_NUMERAL_NINE_REGEX));
   
   if (needsRomanNumeralSort) {
-    children.forEach(item => arabicMap[item.name] = replaceRomanWithArabic(item.name));
+    allChildren.forEach(item => arabicMap[item.name] = replaceRomanWithArabic(item.name));
   }
 
-  children.sort((a, b) => {
+  allChildren.sort((a, b) => {
     const strA = needsRomanNumeralSort ? arabicMap[a.name] : a.name;
     const strB = needsRomanNumeralSort ? arabicMap[b.name] : b.name;
     return NUMERIC_COLLATOR.compare(strA, strB);
   });
 
-  children.forEach((item, idx) => item.sortOrder = idx);
+  allChildren.forEach((item, idx) => item.sortOrder = idx);
+
+  // Filter children for processing
+  const children = allChildren.filter(item => {
+    if (!scanRelativeBase) return true;
+    const rel = item.relativePath;
+    const filter = scanRelativeBase;
+    if (rel === filter) return true;
+    if (rel.startsWith(filter + path.sep)) return true;
+    if (item.type === 'dir' && filter.startsWith(rel + path.sep)) return true;
+    return false;
+  });
 
   // 4. Save Directory Entry (Initial)
   let currentDirId = null;
@@ -445,8 +443,11 @@ async function processDirectory(fullPath, relativePath, parentId = null, parentS
     recursiveSize += stats.size;
   }
     
-  // Update stats
-  if (!options.dryrun && currentDirId !== null) {
+  // Update stats (skip if this directory is an ancestor of a filtered scan)
+  const isFilterAncestor = Boolean(scanRelativeBase && (
+    relativePath === '' || scanRelativeBase.startsWith(relativePath + path.sep)
+  ));
+  if (!options.dryrun && currentDirId !== null && !isFilterAncestor) {
     updateDirStatsStmt.run(recursiveCount, recursiveSize, currentDirId);
   }
   
