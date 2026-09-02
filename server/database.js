@@ -35,7 +35,7 @@ const dbStatements = {
       SELECT filename as path, song_id, 'file' as type, sort_order, file_size as size, mtime, 0 as count
       FROM music
       WHERE directory_id = ?
-      ORDER BY type, sort_order, path
+      ORDER BY type, sort_order, path COLLATE NOCASE
   `),
   getMetadataStmt: db.prepare(`
       SELECT m.song_id, m.image_id, m.text_ids, m.soundfont, m.md5, i.path as image_path
