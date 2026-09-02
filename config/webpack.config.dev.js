@@ -164,7 +164,7 @@ module.exports = merge(commonConfig, {
       watch: true,
     },
     // `hot` enables HMR. It's automatically paired with the HMR plugin.
-    hot: true,
+    hot: false,
     // `client` replaces `clientLogLevel` and `overlay`.
     // The error overlay is now built-in and enabled by default.
     client: {
