@@ -466,6 +466,13 @@ button.box-button.AppFooter-back { padding: 0 var(--charW1); }
 .BrowseList-colCount { flex-shrink : 0; margin-left: var(--charW1); width: calc(var(--charW1) * 5); text-align: right; }
 .BrowseList-colMtime { text-align: right; text-transform: uppercase; white-space: nowrap; min-width: calc(var(--charW1) * 12); }
 .BrowseList-colSize { text-align: right; text-transform: uppercase; white-space: nowrap; min-width: calc(var(--charW1) * 10); }
+.BrowseList-colRank { width: calc(var(--charW1) * 4); min-width: calc(var(--charW1) * 4); text-align: right; margin-right: var(--charW1); color: var(--neutral2); flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.BrowseList-colPlays { text-align: right; margin-left: var(--charW1); margin-right: var(--charW1); white-space: nowrap; color: var(--neutral2); flex-shrink: 0; font-variant-numeric: tabular-nums; }
+
+.TopCharts-tabs { display: flex; gap: var(--charW1); }
+.TopCharts-section { margin-bottom: var(--charH); }
+.TopCharts-sectionTitle { margin: 0; color: var(--neutral3); }
+.box-button.active { background: var(--selected); box-shadow: none; color: var(--neutral4); }
 
 .DirectoryLink-dim { color: var(--neutral2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
