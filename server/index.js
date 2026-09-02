@@ -49,6 +49,9 @@ const {
 
   getCsdbSidStmt,
   insertCsdbSidStmt,
+
+  getGlobalTopStmt,
+  getUserTopStmt,
 } = dbStatements;
 
 // --- Configuration ---
@@ -551,6 +554,49 @@ router.post('/playback',
   }
 });
 
+const topCache = new LRUCache({
+  max: 10,
+  ttl: 1000 * 60 * 60, // 60 minutes
+});
+
+/**
+ * Returns: { items: [ { song_id, plays, title, artist, game, system, path, file_size, mtime }, ... ], total }
+ */
+router.get('/top', optionalAuth, (req, res) => {
+  const scope = req.query.scope || 'global';
+  const range = req.query.range || 'all';
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 100);
+
+  const now = Math.floor(Date.now() / 1000);
+  const sinceTimestamp = range === 'month' ? now - 30 * 24 * 60 * 60 : 0;
+  const overFetch = limit + 50;
+
+  if (scope === 'user') {
+    if (!req.userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const items = getUserTopStmt.all(req.userId, sinceTimestamp, overFetch, limit);
+    return res.json({
+      items,
+      total: items.length,
+    });
+  }
+
+  const cacheKey = `${range}-${limit}`;
+  const cached = topCache.get(cacheKey);
+  if (cached) {
+    return res.json(cached);
+  }
+
+  const items = getGlobalTopStmt.all(sinceTimestamp, overFetch, limit);
+  const responseData = {
+    items,
+    total: items.length,
+  };
+  topCache.set(cacheKey, responseData);
+  return res.json(responseData);
+});
+
 /**
  * Returns: { favorites: [ { songId, href, mtime, title, artist }, ... ] }
  */
@@ -673,6 +719,7 @@ const clientRoutes = [
   '/index.html',
   '/browse{/*path}',
   '/favorites',
+  '/top',
   '/local'
 ];
 app.get(clientRoutes, cache1Hour, async (req, res) => {
@@ -778,7 +825,9 @@ function getHtmlInjectionsForRequest(req) {
       songId = song.song_id;
     }
   } else {
-    if (req.path.startsWith('/browse/')) {
+    if (req.path === '/top') {
+      title = 'Chip Player JS - Top Charts';
+    } else if (req.path.startsWith('/browse/')) {
       // Use up to last 2 path segments for title
       const pathSegments = req.path.replace(/^\/browse\/+/, '').split('/').filter(s => s);
       const pathSegment = pathSegments.slice(-2).join('/');
