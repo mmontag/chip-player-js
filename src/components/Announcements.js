@@ -16,6 +16,10 @@ export default function Announcements() {
 ╚═════════════════╝
 `}
       </p>
+      <h3>2026-09-02</h3>
+      <p>
+        Explore your top tracks and global trends in the new <Link to="/top">Top Charts</Link> tab.
+      </p>
       <h3>2026-08-20</h3>
       <p>
         2400 piano recordings transcribed with <a href="https://github.com/yujia-yan/transkun" target="_blank">Transkun V2</a>.
