@@ -52,6 +52,7 @@ const {
 
   getGlobalTopStmt,
   getUserTopStmt,
+  getTopFavoritesStmt,
 } = dbStatements;
 
 // --- Configuration ---
@@ -563,6 +564,7 @@ const topCache = new LRUCache({
  * Returns: { items: [ { song_id, plays, title, artist, game, system, path, file_size, mtime }, ... ], total }
  */
 router.get('/top', optionalAuth, (req, res) => {
+  const metric = req.query.metric || 'plays';
   const scope = req.query.scope || 'global';
   const range = req.query.range || 'all';
   const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 100);
@@ -570,6 +572,22 @@ router.get('/top', optionalAuth, (req, res) => {
   const now = Math.floor(Date.now() / 1000);
   const sinceTimestamp = range === 'month' ? now - 30 * 24 * 60 * 60 : 0;
   const overFetch = limit + 50;
+
+  if (metric === 'favorites') {
+    const cacheKey = `favorites-${limit}`;
+    const cached = topCache.get(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+
+    const items = getTopFavoritesStmt.all(overFetch, limit);
+    const responseData = {
+      items,
+      total: items.length,
+    };
+    topCache.set(cacheKey, responseData);
+    return res.json(responseData);
+  }
 
   if (scope === 'user') {
     if (!req.userId) {
