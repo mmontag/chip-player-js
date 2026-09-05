@@ -193,6 +193,30 @@ const dbStatements = {
       )
       LIMIT ?
   `),
+
+  getTopFavoritesStmt: db.prepare(`
+      SELECT
+        top.song_id,
+        top.favorites as count,
+        top.favorites as plays,
+        m.path,
+        m.file_size,
+        m.mtime
+      FROM (
+        SELECT
+          json_extract(je.value, '$.songId') as song_id,
+          COUNT(DISTINCT p.user_id) as favorites
+        FROM user_db.playlists p, json_each(p.items) je
+        WHERE p.type = 'favorites' AND json_extract(je.value, '$.songId') IS NOT NULL
+        GROUP BY song_id
+        ORDER BY favorites DESC
+        LIMIT ?
+      ) top
+      JOIN music m ON m.rowid = (
+        SELECT rowid FROM music WHERE song_id = top.song_id ORDER BY mtime LIMIT 1
+      )
+      LIMIT ?
+  `),
 }
 
 module.exports = {
