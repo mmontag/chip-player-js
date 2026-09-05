@@ -5,6 +5,12 @@ import { UserContext } from './UserProvider';
 import { API_BASE, CATALOG_PREFIX } from '../config';
 import { getWithAuth, pathJoin } from '../util';
 
+const NUM_MY_TOP_MONTH = 10;
+const NUM_MY_TOP_ALL_TIME = 50;
+const NUM_GLOBAL_TOP_MONTH = 10;
+const NUM_GLOBAL_TOP_ALL_TIME = 100;
+const NUM_GLOBAL_TOP_FAVORITES = 100;
+
 function getRollingMonthDateRange() {
   const end = new Date();
   const start = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
@@ -43,6 +49,9 @@ function TopCharts(props) {
   const [globalTopAllTime, setGlobalTopAllTime] = useState([]);
   const [loadingGlobalAllTime, setLoadingGlobalAllTime] = useState(true);
 
+  const [globalTopFavorites, setGlobalTopFavorites] = useState([]);
+  const [loadingGlobalFavorites, setLoadingGlobalFavorites] = useState(true);
+
   const [myTopMonth, setMyTopMonth] = useState([]);
   const [loadingMyMonth, setLoadingMyMonth] = useState(false);
 
@@ -56,8 +65,9 @@ function TopCharts(props) {
     let isCancelled = false;
     setLoadingGlobalMonth(true);
     setLoadingGlobalAllTime(true);
+    setLoadingGlobalFavorites(true);
 
-    axios.get(`${API_BASE}/top?scope=global&range=month&limit=10`)
+    axios.get(`${API_BASE}/top?scope=global&range=month&limit=${NUM_GLOBAL_TOP_MONTH}`)
       .then(res => {
         if (!isCancelled) {
           setGlobalTopMonth(res.data.items || []);
@@ -71,7 +81,7 @@ function TopCharts(props) {
         }
       });
 
-    axios.get(`${API_BASE}/top?scope=global&range=all&limit=100`)
+    axios.get(`${API_BASE}/top?scope=global&range=all&limit=${NUM_GLOBAL_TOP_ALL_TIME}`)
       .then(res => {
         if (!isCancelled) {
           setGlobalTopAllTime(res.data.items || []);
@@ -82,6 +92,20 @@ function TopCharts(props) {
         if (!isCancelled) {
           console.error('Error fetching global top all-time:', e);
           setLoadingGlobalAllTime(false);
+        }
+      });
+
+    axios.get(`${API_BASE}/top?metric=favorites&limit=${NUM_GLOBAL_TOP_FAVORITES}`)
+      .then(res => {
+        if (!isCancelled) {
+          setGlobalTopFavorites(res.data.items || []);
+          setLoadingGlobalFavorites(false);
+        }
+      })
+      .catch(e => {
+        if (!isCancelled) {
+          console.error('Error fetching global top favorites:', e);
+          setLoadingGlobalFavorites(false);
         }
       });
 
@@ -105,7 +129,7 @@ function TopCharts(props) {
     setLoadingMyMonth(true);
     setLoadingMyAllTime(true);
 
-    getWithAuth(user, `${API_BASE}/top?scope=user&range=month&limit=10`)
+    getWithAuth(user, `${API_BASE}/top?scope=user&range=month&limit=${NUM_MY_TOP_MONTH}`)
       .then(res => {
         if (!isCancelled) {
           setMyTopMonth(res?.items || []);
@@ -119,7 +143,7 @@ function TopCharts(props) {
         }
       });
 
-    getWithAuth(user, `${API_BASE}/top?scope=user&range=all&limit=100`)
+    getWithAuth(user, `${API_BASE}/top?scope=user&range=all&limit=${NUM_MY_TOP_ALL_TIME}`)
       .then(res => {
         if (!isCancelled) {
           setMyTopAllTime(res?.items || []);
@@ -142,15 +166,15 @@ function TopCharts(props) {
     if (user && activeTab === 'my') {
       return [
         {
-          key: 'my-top-10-month',
-          title: `My Top 10 - Last 30 Days (${monthDateRange})`,
+          key: 'my-top-month',
+          title: `My Top ${NUM_MY_TOP_MONTH} - Last 30 Days (${monthDateRange})`,
           items: myTopMonth,
           loading: loadingMyMonth,
           emptyMessage: 'No plays recorded in the last 30 days.',
         },
         {
-          key: 'my-top-100-all-time',
-          title: 'My Top 100 All-Time',
+          key: 'my-top-all-time',
+          title: `My Top ${NUM_MY_TOP_ALL_TIME} All-Time`,
           items: myTopAllTime,
           loading: loadingMyAllTime,
           emptyMessage: 'No plays recorded yet.',
@@ -160,21 +184,29 @@ function TopCharts(props) {
 
     return [
       {
-        key: 'global-top-10-month',
-        title: `Global Top 10 - Last 30 Days (${monthDateRange})`,
+        key: 'global-top-month',
+        title: `Global Top ${NUM_GLOBAL_TOP_MONTH} - Last 30 Days (${monthDateRange})`,
         items: globalTopMonth,
         loading: loadingGlobalMonth,
         emptyMessage: 'No plays recorded in the last 30 days.',
       },
       {
-        key: 'global-top-100-all-time',
-        title: 'Global Top 100 All-Time',
+        key: 'global-top-all-time',
+        title: `Global Top ${NUM_GLOBAL_TOP_ALL_TIME} All-Time`,
         items: globalTopAllTime,
         loading: loadingGlobalAllTime,
         emptyMessage: 'No plays recorded yet.',
       },
+      {
+        key: 'global-top-favorites',
+        title: `Global Top ${NUM_GLOBAL_TOP_FAVORITES} Most Favorited Tracks`,
+        metric: 'favorites',
+        items: globalTopFavorites,
+        loading: loadingGlobalFavorites,
+        emptyMessage: 'No favorites recorded yet.',
+      },
     ];
-  }, [user, activeTab, myTopMonth, myTopAllTime, globalTopMonth, globalTopAllTime, loadingMyMonth, loadingMyAllTime, loadingGlobalMonth, loadingGlobalAllTime, monthDateRange]);
+  }, [user, activeTab, myTopMonth, myTopAllTime, globalTopMonth, globalTopAllTime, globalTopFavorites, loadingMyMonth, loadingMyAllTime, loadingGlobalMonth, loadingGlobalAllTime, loadingGlobalFavorites, monthDateRange]);
 
   // Compute decorated sections and unified context across all visible sections
   const { decoratedSections, topContext } = useMemo(() => {
@@ -261,9 +293,9 @@ function TopCharts(props) {
           </h4>
 
           {section.loading && section.items.length === 0 ? (
-            <div style={{ padding: '0.5em 0' }}>Loading...</div>
+            <div>Loading...</div>
           ) : section.items.length === 0 ? (
-            <div style={{ padding: '0.5em 0', color: 'var(--neutral2)' }}>
+            <div>
               {section.emptyMessage}
             </div>
           ) : (
@@ -295,8 +327,15 @@ function TopCharts(props) {
                         {item.name}
                       </a>
                     </div>
-                    <div className="BrowseList-colPlays" title={`${item.plays} plays`}>
-                      {item.plays} {item.plays === 1 ? 'play' : 'plays'}
+                    <div
+                      className="BrowseList-colPlays"
+                      title={section.metric === 'favorites' ? `${item.count} favorites` : `${item.plays} plays`}
+                    >
+                      {section.metric === 'favorites' ? (
+                        `${item.count} ${item.count === 1 ? 'favorite' : 'favorites'}`
+                      ) : (
+                        `${item.plays} ${item.plays === 1 ? 'play' : 'plays'}`
+                      )}
                     </div>
                   </div>
                 );
