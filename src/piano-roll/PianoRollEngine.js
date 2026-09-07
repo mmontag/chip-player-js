@@ -188,64 +188,33 @@ export default class PianoRollEngine {
     return colors[track % colors.length];
   }
 
-  drawVerticalRibbon(ctx, bends, startMs, endMs, yStart, yEnd, rootPitch, drawW, offset, minPitch, maxPitch, laneWidth, xOffset, gap) {
+  drawBend(ctx, bends, startMs, endMs, timeStart, timeEnd, rootPitch, lineWidth, isVertical, minPitch, maxPitch, laneSize, pitchOffset) {
     const N = bends.length;
-    if (N === 0) return;
+    if (N <= 1) return;
     const duration = Math.max(1, endMs - startMs);
 
+    ctx.lineWidth = lineWidth;
+    ctx.lineCap = (this.config && this.config.NOTE_CORNER_RADIUS === 0) ? 'butt' : 'round';
+    ctx.lineJoin = 'round';
     ctx.beginPath();
     for (let i = 0; i < N; i++) {
       const b = bends[i];
       const ratio = Math.max(0, Math.min(1, (b.timeMs - startMs) / duration));
-      const y = yStart + ratio * (yEnd - yStart);
+      const timeCoord = timeStart + ratio * (timeEnd - timeStart);
       const p = Math.max(minPitch, Math.min(maxPitch, rootPitch + b.semitoneOffset));
-      const x = xOffset + (p - minPitch) * laneWidth + gap / 2 - offset;
+      const pitchCoord = isVertical
+        ? pitchOffset + (p - minPitch) * laneSize + laneSize / 2
+        : pitchOffset + (maxPitch - p) * laneSize + laneSize / 2;
+
+      const x = isVertical ? pitchCoord : timeCoord;
+      const y = isVertical ? timeCoord : pitchCoord;
       if (i === 0) {
         ctx.moveTo(x, y);
       } else {
         ctx.lineTo(x, y);
       }
     }
-    for (let i = N - 1; i >= 0; i--) {
-      const b = bends[i];
-      const ratio = Math.max(0, Math.min(1, (b.timeMs - startMs) / duration));
-      const y = yStart + ratio * (yEnd - yStart);
-      const p = Math.max(minPitch, Math.min(maxPitch, rootPitch + b.semitoneOffset));
-      const x = xOffset + (p - minPitch) * laneWidth + gap / 2 - offset + drawW;
-      ctx.lineTo(x, y);
-    }
-    ctx.closePath();
-    ctx.fill();
-  }
-
-  drawHorizontalRibbon(ctx, bends, startMs, endMs, xStart, xEnd, rootPitch, drawH, offset, minPitch, maxPitch, laneHeight, yOffset, gap) {
-    const N = bends.length;
-    if (N === 0) return;
-    const duration = Math.max(1, endMs - startMs);
-
-    ctx.beginPath();
-    for (let i = 0; i < N; i++) {
-      const b = bends[i];
-      const ratio = Math.max(0, Math.min(1, (b.timeMs - startMs) / duration));
-      const x = xStart + ratio * (xEnd - xStart);
-      const p = Math.max(minPitch, Math.min(maxPitch, rootPitch + b.semitoneOffset));
-      const y = yOffset + (maxPitch - p) * laneHeight + gap / 2 - offset;
-      if (i === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-      }
-    }
-    for (let i = N - 1; i >= 0; i--) {
-      const b = bends[i];
-      const ratio = Math.max(0, Math.min(1, (b.timeMs - startMs) / duration));
-      const x = xStart + ratio * (xEnd - xStart);
-      const p = Math.max(minPitch, Math.min(maxPitch, rootPitch + b.semitoneOffset));
-      const y = yOffset + (maxPitch - p) * laneHeight + gap / 2 - offset + drawH;
-      ctx.lineTo(x, y);
-    }
-    ctx.closePath();
-    ctx.fill();
+    ctx.stroke();
   }
 
   render(timestamp) {
@@ -552,18 +521,20 @@ export default class PianoRollEngine {
           if (hasSustain) {
             ctx.globalAlpha = baseAlpha * sustainOpacity;
             ctx.fillStyle = baseColor;
+            ctx.strokeStyle = baseColor;
             const susStartCoord = isTimeDecreasingCoord ? keyPos : keyPos + keyDim;
             const susEndCoord = isTimeDecreasingCoord ? sustainPos : sustainPos + sustainDim;
             if (sustainHasBends) {
-              this.drawVerticalRibbon(ctx, note.sustainBends, note.endMs, note.sustainEndMs, susStartCoord, susEndCoord, note.pitch, drawW, offset, minPitch, maxPitch, laneWidth, xOffset, gap);
+              this.drawBend(ctx, note.sustainBends, note.endMs, note.sustainEndMs, susStartCoord, susEndCoord, note.pitch, drawW, true, minPitch, maxPitch, laneWidth, xOffset);
             } else {
               drawRect(drawX, sustainPos, drawW, sustainDim, sustainRadii);
             }
 
             if (isSustainSounding && isGlowEnabled && !isMuted) {
               ctx.fillStyle = glowColor;
+              ctx.strokeStyle = glowColor;
               if (sustainHasBends) {
-                this.drawVerticalRibbon(ctx, note.sustainBends, note.endMs, note.sustainEndMs, susStartCoord, susEndCoord, note.pitch, drawW, offset, minPitch, maxPitch, laneWidth, xOffset, gap);
+                this.drawBend(ctx, note.sustainBends, note.endMs, note.sustainEndMs, susStartCoord, susEndCoord, note.pitch, drawW, true, minPitch, maxPitch, laneWidth, xOffset);
               } else {
                 drawRect(drawX, sustainPos, drawW, sustainDim, sustainRadii);
               }
@@ -573,18 +544,20 @@ export default class PianoRollEngine {
           // 2. Draw key-held portion
           ctx.globalAlpha = baseAlpha;
           ctx.fillStyle = baseColor;
+          ctx.strokeStyle = baseColor;
           const keyStartCoord = cStart;
           const keyEndCoord = isTimeDecreasingCoord ? keyPos : keyPos + keyDim;
           if (keyHasBends) {
-            this.drawVerticalRibbon(ctx, note.bends, note.startMs, note.endMs, keyStartCoord, keyEndCoord, note.pitch, drawW, offset, minPitch, maxPitch, laneWidth, xOffset, gap);
+            this.drawBend(ctx, note.bends, note.startMs, note.endMs, keyStartCoord, keyEndCoord, note.pitch, drawW, true, minPitch, maxPitch, laneWidth, xOffset);
           } else {
             drawRect(drawX, keyPos, drawW, keyDim, keyRadii);
           }
 
           if (isKeySounding && isGlowEnabled && !isMuted) {
             ctx.fillStyle = glowColor;
+            ctx.strokeStyle = glowColor;
             if (keyHasBends) {
-              this.drawVerticalRibbon(ctx, note.bends, note.startMs, note.endMs, keyStartCoord, keyEndCoord, note.pitch, drawW, offset, minPitch, maxPitch, laneWidth, xOffset, gap);
+              this.drawBend(ctx, note.bends, note.startMs, note.endMs, keyStartCoord, keyEndCoord, note.pitch, drawW, true, minPitch, maxPitch, laneWidth, xOffset);
             } else {
               drawRect(drawX, keyPos, drawW, keyDim, keyRadii);
             }
@@ -612,18 +585,20 @@ export default class PianoRollEngine {
           if (hasSustain) {
             ctx.globalAlpha = baseAlpha * sustainOpacity;
             ctx.fillStyle = baseColor;
+            ctx.strokeStyle = baseColor;
             const susStartCoord = isTimeDecreasingCoord ? keyPos : keyPos + keyDim;
             const susEndCoord = isTimeDecreasingCoord ? sustainPos : sustainPos + sustainDim;
             if (sustainHasBends) {
-              this.drawHorizontalRibbon(ctx, note.sustainBends, note.endMs, note.sustainEndMs, susStartCoord, susEndCoord, note.pitch, drawH, offset, minPitch, maxPitch, laneHeight, yOffset, gap);
+              this.drawBend(ctx, note.sustainBends, note.endMs, note.sustainEndMs, susStartCoord, susEndCoord, note.pitch, drawH, false, minPitch, maxPitch, laneHeight, yOffset);
             } else {
               drawRect(sustainPos, drawY, sustainDim, drawH, sustainRadii);
             }
 
             if (isSustainSounding && isGlowEnabled && !isMuted) {
               ctx.fillStyle = glowColor;
+              ctx.strokeStyle = glowColor;
               if (sustainHasBends) {
-                this.drawHorizontalRibbon(ctx, note.sustainBends, note.endMs, note.sustainEndMs, susStartCoord, susEndCoord, note.pitch, drawH, offset, minPitch, maxPitch, laneHeight, yOffset, gap);
+                this.drawBend(ctx, note.sustainBends, note.endMs, note.sustainEndMs, susStartCoord, susEndCoord, note.pitch, drawH, false, minPitch, maxPitch, laneHeight, yOffset);
               } else {
                 drawRect(sustainPos, drawY, sustainDim, drawH, sustainRadii);
               }
@@ -633,18 +608,20 @@ export default class PianoRollEngine {
           // 2. Draw key-held portion
           ctx.globalAlpha = baseAlpha;
           ctx.fillStyle = baseColor;
+          ctx.strokeStyle = baseColor;
           const keyStartCoord = cStart;
           const keyEndCoord = isTimeDecreasingCoord ? keyPos : keyPos + keyDim;
           if (keyHasBends) {
-            this.drawHorizontalRibbon(ctx, note.bends, note.startMs, note.endMs, keyStartCoord, keyEndCoord, note.pitch, drawH, offset, minPitch, maxPitch, laneHeight, yOffset, gap);
+            this.drawBend(ctx, note.bends, note.startMs, note.endMs, keyStartCoord, keyEndCoord, note.pitch, drawH, false, minPitch, maxPitch, laneHeight, yOffset);
           } else {
             drawRect(keyPos, drawY, keyDim, drawH, keyRadii);
           }
 
           if (isKeySounding && isGlowEnabled && !isMuted) {
             ctx.fillStyle = glowColor;
+            ctx.strokeStyle = glowColor;
             if (keyHasBends) {
-              this.drawHorizontalRibbon(ctx, note.bends, note.startMs, note.endMs, keyStartCoord, keyEndCoord, note.pitch, drawH, offset, minPitch, maxPitch, laneHeight, yOffset, gap);
+              this.drawBend(ctx, note.bends, note.startMs, note.endMs, keyStartCoord, keyEndCoord, note.pitch, drawH, false, minPitch, maxPitch, laneHeight, yOffset);
             } else {
               drawRect(keyPos, drawY, keyDim, drawH, keyRadii);
             }
