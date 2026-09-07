@@ -25,10 +25,10 @@ export const PIANO_ROLL_CONFIG = {
   // Sync position of the playhead line:
   // Options: 'top', 'center', 'bottom', 'left', 'right', or a normalized number (0.0 to 1.0).
   // Default 'top' matches the Spectrogram's waterfall behavior.
-  SYNC_POSITION: 0.5,
+  SYNC_POSITION: 'center',
 
   // Offset in pixels for the playhead from the top/left edge when SYNC_POSITION is 'top' or 'left'.
-  PLAYHEAD_OFFSET_PX: 2,
+  PLAYHEAD_OFFSET_PX: 0,
 
   // Time Zoom:
   // - 'fixed': Constant scrolling speed in pixels per second.
@@ -66,8 +66,8 @@ export const PIANO_ROLL_CONFIG = {
   OCTAVE_LINE_COLOR: 'rgba(255, 255, 255, 0.22)',
 
   // Playhead line styling:
-  PLAYHEAD_COLOR: '#ff3366',
-  PLAYHEAD_LINE_WIDTH: 2,
+  PLAYHEAD_COLOR: '#ffff00',
+  PLAYHEAD_LINE_WIDTH: 1,
 
   // 16 distinct, high-contrast colors for MIDI channels 0 to 15:
   CHANNEL_COLORS: [
@@ -97,10 +97,6 @@ export const PIANO_ROLL_CONFIG = {
     '#6366f1', '#d97706', '#22c55e', '#eab308'
   ],
 
-  // Top-left overlay list showing channels/tracks:
-  SHOW_TRACK_CHANNEL_LIST: true,
-  LIST_MODE: 'channel', // 'channel' or 'track'
-
   // Note appearance:
   SHOW_NOTE_NAMES: false, // Display note names (e.g. C#4) on notes if box size permits
   NOTE_MIN_LENGTH_PX: 3,  // Minimum length in pixels to ensure very brief notes remain visible
@@ -108,7 +104,7 @@ export const PIANO_ROLL_CONFIG = {
   NOTE_GAP_PX: 1,         // Gap between adjacent notes horizontally/vertically
   ACTIVE_NOTE_GLOW: true, // Brightness boost for actively sounding notes at the playhead
   ACTIVE_NOTE_GLOW_OPACITY: 0.8, // Opacity of the brightness boost overlay for actively sounding notes (0.0 to 1.0)
-  ACTIVE_NOTE_FATTEN: 4,  // Extra width in pixels for actively sounding notes
+  ACTIVE_NOTE_FATTEN: 2,  // Extra width in pixels for actively sounding notes
   ACTIVE_NOTE_DECAY_MS: 640, // Duration in ms for active note highlight/grow fade-out (fixed decay)
   ACTIVE_NOTE_EASING: 'ease-out', // Fade-out easing: 'linear', 'ease-out', 'ease-in', 'cubic', 'sine', 'exponential'
   MUTED_OPACITY: 0.15,    // Opacity for notes on muted channels

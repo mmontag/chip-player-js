@@ -281,21 +281,21 @@ export default class PianoRollEngine {
       }
 
       ctx.fillStyle = config.BLACK_KEY_LANE_TINT;
-      ctx.beginPath();
       for (let p = minPitch; p <= maxPitch; p++) {
-        const laneX = xOffset + (p - minPitch) * laneWidth;
+        const laneX = Math.round(xOffset + (p - minPitch) * laneWidth);
         if (isBlackKey(p)) {
-          ctx.fillRect(laneX, 0, laneWidth, height);
-        }
-        // Octave lines on C notes
-        if (p % 12 === 0) {
-          ctx.moveTo(laneX, 0);
-          ctx.lineTo(laneX, height);
+          const nextLaneX = Math.round(xOffset + (p + 1 - minPitch) * laneWidth);
+          ctx.fillRect(laneX, 0, nextLaneX - laneX, height);
         }
       }
-      ctx.strokeStyle = config.OCTAVE_LINE_COLOR;
-      ctx.lineWidth = 1;
-      ctx.stroke();
+
+      ctx.fillStyle = config.OCTAVE_LINE_COLOR;
+      for (let p = minPitch; p <= maxPitch; p++) {
+        if (p % 12 === 0) {
+          const laneX = Math.round(xOffset + (p - minPitch) * laneWidth);
+          ctx.fillRect(laneX, 0, 1, height);
+        }
+      }
     } else {
       // Horizontal orientation: pitches along Y axis (low at bottom, high at top)
       let laneHeight;
@@ -309,20 +309,21 @@ export default class PianoRollEngine {
       }
 
       ctx.fillStyle = config.BLACK_KEY_LANE_TINT;
-      ctx.beginPath();
       for (let p = minPitch; p <= maxPitch; p++) {
-        const laneY = yOffset + (maxPitch - p) * laneHeight;
+        const laneY = Math.round(yOffset + (maxPitch - p) * laneHeight);
         if (isBlackKey(p)) {
-          ctx.fillRect(0, laneY, width, laneHeight);
-        }
-        if (p % 12 === 0) {
-          ctx.moveTo(0, laneY);
-          ctx.lineTo(width, laneY);
+          const nextLaneY = Math.round(yOffset + (maxPitch - p + 1) * laneHeight);
+          ctx.fillRect(0, laneY, width, nextLaneY - laneY);
         }
       }
-      ctx.strokeStyle = config.OCTAVE_LINE_COLOR;
-      ctx.lineWidth = 1;
-      ctx.stroke();
+
+      ctx.fillStyle = config.OCTAVE_LINE_COLOR;
+      for (let p = minPitch; p <= maxPitch; p++) {
+        if (p % 12 === 0) {
+          const laneY = Math.round(yOffset + (maxPitch - p) * laneHeight);
+          ctx.fillRect(0, laneY, width, 1);
+        }
+      }
     }
 
     // 2. Visible time window calculation
@@ -677,16 +678,13 @@ export default class PianoRollEngine {
       }
     }
 
-    ctx.strokeStyle = config.PLAYHEAD_COLOR;
-    ctx.lineWidth = config.PLAYHEAD_LINE_WIDTH;
-    ctx.beginPath();
+    const lineWidth = Math.max(1, Math.round(config.PLAYHEAD_LINE_WIDTH || 1));
+    const lineCoord = Math.floor(actualPlayheadCoord);
+    ctx.fillStyle = config.PLAYHEAD_COLOR;
     if (isVertical) {
-      ctx.moveTo(0, actualPlayheadCoord);
-      ctx.lineTo(width, actualPlayheadCoord);
+      ctx.fillRect(0, lineCoord, width, lineWidth);
     } else {
-      ctx.moveTo(actualPlayheadCoord, 0);
-      ctx.lineTo(actualPlayheadCoord, height);
+      ctx.fillRect(lineCoord, 0, lineWidth, height);
     }
-    ctx.stroke();
   }
 }
