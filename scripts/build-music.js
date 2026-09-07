@@ -20,7 +20,7 @@ program
   .option('-f, --force', 'Force re-process (overwrite existing entries)', false)
   .option('--filter <path>', 'Scan only a specific subdirectory (relative to catalog root)', '')
   .option('-r, --reset-db', 'Delete and recreate the database table', false)
-  .option('--no-skip-unmodified', 'Force reprocessing of unmodified files (checks mtime)')
+  .option('-n, --no-skip-unmodified', 'Force reprocessing of unmodified files (checks mtime)')
   .parse(process.argv);
 
 const options = program.opts();
