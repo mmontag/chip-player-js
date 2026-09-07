@@ -1,4 +1,4 @@
-import { PIANO_ROLL_CONFIG } from './config';
+import { PIANO_ROLL_CONFIG, getDecayIntensity } from './config';
 import { findFirstVisibleNoteIndex, getNoteName, getNotePitchOffsetAt, isBlackKey } from './midi-parser';
 
 export default class PianoRollEngine {
@@ -427,9 +427,9 @@ export default class PianoRollEngine {
         ? config.ACTIVE_NOTE_GLOW_OPACITY
         : (typeof config.ACTIVE_NOTE_GLOW === 'number' ? config.ACTIVE_NOTE_GLOW : 0.4);
       const isGlowEnabled = config.ACTIVE_NOTE_GLOW !== false && glowOpacity > 0;
-      const glowColor = `rgba(255, 255, 255, ${glowOpacity})`;
       const fattenPx = Math.max(0, config.ACTIVE_NOTE_FATTEN || 0);
-      const fattenOffset = Math.floor(fattenPx / 2);
+      const decayMs = typeof config.ACTIVE_NOTE_DECAY_MS === 'number' ? config.ACTIVE_NOTE_DECAY_MS : 250;
+      const decayEasing = config.ACTIVE_NOTE_EASING || 'linear';
 
       for (let i = startIndex; i < notes.length; i++) {
         const note = notes[i];
@@ -450,11 +450,36 @@ export default class PianoRollEngine {
           isMuted = true;
         }
 
-        const isKeySounding = note.startMs <= currentTimeMs && currentTimeMs <= note.endMs;
-        const isSustainSounding = hasSustain && currentTimeMs > note.endMs && currentTimeMs <= note.sustainEndMs;
-        const isNoteActive = (isKeySounding || isSustainSounding) && !isMuted;
-        const fatten = isNoteActive ? fattenPx : 0;
-        const offset = isNoteActive ? fattenOffset : 0;
+        let keyHasGlow = false;
+        let sustainHasGlow = false;
+        let currentGlowOpacity = 0;
+        let fatten = 0;
+
+        if (!isMuted) {
+          if (decayMs > 0) {
+            const elapsedMs = currentTimeMs - note.startMs;
+            if (elapsedMs >= 0 && elapsedMs < decayMs) {
+              const intensity = getDecayIntensity(elapsedMs / decayMs, decayEasing);
+              fatten = fattenPx * intensity;
+              currentGlowOpacity = glowOpacity * intensity;
+              const hasGlow = isGlowEnabled && currentGlowOpacity > 0.001;
+              keyHasGlow = hasGlow;
+              sustainHasGlow = hasGlow;
+            }
+          } else {
+            const isKeySounding = note.startMs <= currentTimeMs && currentTimeMs <= note.endMs;
+            const isSustainSounding = hasSustain && currentTimeMs > note.endMs && currentTimeMs <= note.sustainEndMs;
+            if (isKeySounding || isSustainSounding) {
+              fatten = fattenPx;
+              currentGlowOpacity = glowOpacity;
+              keyHasGlow = isKeySounding && isGlowEnabled;
+              sustainHasGlow = isSustainSounding && isGlowEnabled;
+            }
+          }
+        }
+
+        const offset = fatten / 2;
+        const glowColor = currentGlowOpacity > 0 ? `rgba(255, 255, 255, ${currentGlowOpacity})` : null;
 
         // Base color
         const baseColor = config.COLOR_BY === 'track'
@@ -530,7 +555,7 @@ export default class PianoRollEngine {
               drawRect(drawX, sustainPos, drawW, sustainDim, sustainRadii);
             }
 
-            if (isSustainSounding && isGlowEnabled && !isMuted) {
+            if (sustainHasGlow) {
               ctx.fillStyle = glowColor;
               ctx.strokeStyle = glowColor;
               if (sustainHasBends) {
@@ -553,7 +578,7 @@ export default class PianoRollEngine {
             drawRect(drawX, keyPos, drawW, keyDim, keyRadii);
           }
 
-          if (isKeySounding && isGlowEnabled && !isMuted) {
+          if (keyHasGlow) {
             ctx.fillStyle = glowColor;
             ctx.strokeStyle = glowColor;
             if (keyHasBends) {
@@ -594,7 +619,7 @@ export default class PianoRollEngine {
               drawRect(sustainPos, drawY, sustainDim, drawH, sustainRadii);
             }
 
-            if (isSustainSounding && isGlowEnabled && !isMuted) {
+            if (sustainHasGlow) {
               ctx.fillStyle = glowColor;
               ctx.strokeStyle = glowColor;
               if (sustainHasBends) {
@@ -617,7 +642,7 @@ export default class PianoRollEngine {
             drawRect(keyPos, drawY, keyDim, drawH, keyRadii);
           }
 
-          if (isKeySounding && isGlowEnabled && !isMuted) {
+          if (keyHasGlow) {
             ctx.fillStyle = glowColor;
             ctx.strokeStyle = glowColor;
             if (keyHasBends) {

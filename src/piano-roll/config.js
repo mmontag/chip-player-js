@@ -104,12 +104,38 @@ export const PIANO_ROLL_CONFIG = {
   // Note appearance:
   SHOW_NOTE_NAMES: false, // Display note names (e.g. C#4) on notes if box size permits
   NOTE_MIN_LENGTH_PX: 3,  // Minimum length in pixels to ensure very brief notes remain visible
-  NOTE_CORNER_RADIUS: 2,  // Border radius for drawn notes
+  NOTE_CORNER_RADIUS: 3,  // Border radius for drawn notes
   NOTE_GAP_PX: 1,         // Gap between adjacent notes horizontally/vertically
   ACTIVE_NOTE_GLOW: true, // Brightness boost for actively sounding notes at the playhead
-  ACTIVE_NOTE_GLOW_OPACITY: 0.4, // Opacity of the brightness boost overlay for actively sounding notes (0.0 to 1.0)
-  ACTIVE_NOTE_FATTEN: 2,  // Extra width in pixels for actively sounding notes
+  ACTIVE_NOTE_GLOW_OPACITY: 0.8, // Opacity of the brightness boost overlay for actively sounding notes (0.0 to 1.0)
+  ACTIVE_NOTE_FATTEN: 4,  // Extra width in pixels for actively sounding notes
+  ACTIVE_NOTE_DECAY_MS: 640, // Duration in ms for active note highlight/grow fade-out (fixed decay)
+  ACTIVE_NOTE_EASING: 'ease-out', // Fade-out easing: 'linear', 'ease-out', 'ease-in', 'cubic', 'sine', 'exponential'
   MUTED_OPACITY: 0.15,    // Opacity for notes on muted channels
   SUSTAIN_OPACITY: 0.5,   // Opacity for the portion of a note held by the sustain pedal (CC 64)
   ENABLE_PITCH_BEND: true, // Visualize MIDI pitch bends as continuous ribbons
 };
+
+export const DECAY_EASINGS = {
+  'linear': (t) => 1 - t,
+  'ease-out': (t) => (1 - t) * (1 - t),
+  'quad-out': (t) => (1 - t) * (1 - t),
+  'ease-in': (t) => 1 - t * t,
+  'quad-in': (t) => 1 - t * t,
+  'cubic': (t) => Math.pow(1 - t, 3),
+  'cubic-out': (t) => Math.pow(1 - t, 3),
+  'sine': (t) => Math.cos(t * Math.PI * 0.5),
+  'sine-out': (t) => Math.cos(t * Math.PI * 0.5),
+  'exponential': (t) => (Math.exp(-4 * t) - Math.exp(-4)) / (1 - Math.exp(-4)),
+  'exp-out': (t) => (Math.exp(-4 * t) - Math.exp(-4)) / (1 - Math.exp(-4)),
+};
+
+export function getDecayIntensity(progress, easing = 'linear') {
+  const t = Math.max(0, Math.min(1, progress));
+  if (typeof easing === 'function') {
+    return Math.max(0, Math.min(1, easing(t)));
+  }
+  const fn = DECAY_EASINGS[easing] || DECAY_EASINGS.linear;
+  return Math.max(0, Math.min(1, fn(t)));
+}
+
