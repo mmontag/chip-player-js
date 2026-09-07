@@ -394,6 +394,14 @@ export default class PianoRollEngine {
         }
       };
 
+      const glowOpacity = typeof config.ACTIVE_NOTE_GLOW_OPACITY === 'number'
+        ? config.ACTIVE_NOTE_GLOW_OPACITY
+        : (typeof config.ACTIVE_NOTE_GLOW === 'number' ? config.ACTIVE_NOTE_GLOW : 0.4);
+      const isGlowEnabled = config.ACTIVE_NOTE_GLOW !== false && glowOpacity > 0;
+      const glowColor = `rgba(255, 255, 255, ${glowOpacity})`;
+      const fattenPx = Math.max(0, config.ACTIVE_NOTE_FATTEN || 0);
+      const fattenOffset = Math.floor(fattenPx / 2);
+
       for (let i = startIndex; i < notes.length; i++) {
         const note = notes[i];
         if (note.startMs > maxVisibleMs) break;
@@ -415,6 +423,9 @@ export default class PianoRollEngine {
 
         const isKeySounding = note.startMs <= currentTimeMs && currentTimeMs <= note.endMs;
         const isSustainSounding = hasSustain && currentTimeMs > note.endMs && currentTimeMs <= note.sustainEndMs;
+        const isNoteActive = (isKeySounding || isSustainSounding) && !isMuted;
+        const fatten = isNoteActive ? fattenPx : 0;
+        const offset = isNoteActive ? fattenOffset : 0;
 
         // Base color
         const baseColor = config.COLOR_BY === 'track'
@@ -470,69 +481,73 @@ export default class PianoRollEngine {
           const pitch = Math.max(minPitch, Math.min(maxPitch, note.pitch));
           const noteX = xOffset + (pitch - minPitch) * laneWidth + gap / 2;
           const noteW = Math.max(1, laneWidth - gap);
+          const drawX = noteX - offset;
+          const drawW = noteW + fatten;
 
           // 1. Draw sustained portion at 50% opacity
           if (hasSustain) {
             ctx.globalAlpha = baseAlpha * sustainOpacity;
             ctx.fillStyle = baseColor;
-            drawRect(noteX, sustainPos, noteW, sustainDim, sustainRadii);
+            drawRect(drawX, sustainPos, drawW, sustainDim, sustainRadii);
 
-            if (isSustainSounding && config.ACTIVE_NOTE_GLOW && !isMuted) {
-              ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-              drawRect(noteX, sustainPos, noteW, sustainDim, sustainRadii);
+            if (isSustainSounding && isGlowEnabled && !isMuted) {
+              ctx.fillStyle = glowColor;
+              drawRect(drawX, sustainPos, drawW, sustainDim, sustainRadii);
             }
           }
 
           // 2. Draw key-held portion
           ctx.globalAlpha = baseAlpha;
           ctx.fillStyle = baseColor;
-          drawRect(noteX, keyPos, noteW, keyDim, keyRadii);
+          drawRect(drawX, keyPos, drawW, keyDim, keyRadii);
 
-          if (isKeySounding && config.ACTIVE_NOTE_GLOW && !isMuted) {
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-            drawRect(noteX, keyPos, noteW, keyDim, keyRadii);
+          if (isKeySounding && isGlowEnabled && !isMuted) {
+            ctx.fillStyle = glowColor;
+            drawRect(drawX, keyPos, drawW, keyDim, keyRadii);
           }
 
-          if (config.SHOW_NOTE_NAMES && !isMuted && noteW >= 12 && keyDim >= 10) {
+          if (config.SHOW_NOTE_NAMES && !isMuted && drawW >= 12 && keyDim >= 10) {
             ctx.fillStyle = '#ffffff';
             ctx.font = '9px monospace';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(getNoteName(note.pitch), noteX + noteW / 2, keyPos + keyDim / 2);
+            ctx.fillText(getNoteName(note.pitch), drawX + drawW / 2, keyPos + keyDim / 2);
           }
         } else {
           const pitch = Math.max(minPitch, Math.min(maxPitch, note.pitch));
           const noteY = yOffset + (maxPitch - pitch) * laneHeight + gap / 2;
           const noteH = Math.max(1, laneHeight - gap);
+          const drawY = noteY - offset;
+          const drawH = noteH + fatten;
 
           // 1. Draw sustained portion at 50% opacity
           if (hasSustain) {
             ctx.globalAlpha = baseAlpha * sustainOpacity;
             ctx.fillStyle = baseColor;
-            drawRect(sustainPos, noteY, sustainDim, noteH, sustainRadii);
+            drawRect(sustainPos, drawY, sustainDim, drawH, sustainRadii);
 
-            if (isSustainSounding && config.ACTIVE_NOTE_GLOW && !isMuted) {
-              ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-              drawRect(sustainPos, noteY, sustainDim, noteH, sustainRadii);
+            if (isSustainSounding && isGlowEnabled && !isMuted) {
+              ctx.fillStyle = glowColor;
+              drawRect(sustainPos, drawY, sustainDim, drawH, sustainRadii);
             }
           }
 
           // 2. Draw key-held portion
           ctx.globalAlpha = baseAlpha;
           ctx.fillStyle = baseColor;
-          drawRect(keyPos, noteY, keyDim, noteH, keyRadii);
+          drawRect(keyPos, drawY, keyDim, drawH, keyRadii);
 
-          if (isKeySounding && config.ACTIVE_NOTE_GLOW && !isMuted) {
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-            drawRect(keyPos, noteY, keyDim, noteH, keyRadii);
+          if (isKeySounding && isGlowEnabled && !isMuted) {
+            ctx.fillStyle = glowColor;
+            drawRect(keyPos, drawY, keyDim, drawH, keyRadii);
           }
 
-          if (config.SHOW_NOTE_NAMES && !isMuted && keyDim >= 12 && noteH >= 10) {
+          if (config.SHOW_NOTE_NAMES && !isMuted && keyDim >= 12 && drawH >= 10) {
             ctx.fillStyle = '#ffffff';
             ctx.font = '9px monospace';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(getNoteName(note.pitch), keyPos + keyDim / 2, noteY + noteH / 2);
+            ctx.fillText(getNoteName(note.pitch), keyPos + keyDim / 2, drawY + drawH / 2);
           }
         }
       }

@@ -25,7 +25,7 @@ export const PIANO_ROLL_CONFIG = {
   // Sync position of the playhead line:
   // Options: 'top', 'center', 'bottom', 'left', 'right', or a normalized number (0.0 to 1.0).
   // Default 'top' matches the Spectrogram's waterfall behavior.
-  SYNC_POSITION: 'top',
+  SYNC_POSITION: 0.5,
 
   // Offset in pixels for the playhead from the top/left edge when SYNC_POSITION is 'top' or 'left'.
   PLAYHEAD_OFFSET_PX: 2,
@@ -107,6 +107,8 @@ export const PIANO_ROLL_CONFIG = {
   NOTE_CORNER_RADIUS: 2,  // Border radius for drawn notes
   NOTE_GAP_PX: 1,         // Gap between adjacent notes horizontally/vertically
   ACTIVE_NOTE_GLOW: true, // Brightness boost for actively sounding notes at the playhead
+  ACTIVE_NOTE_GLOW_OPACITY: 0.4, // Opacity of the brightness boost overlay for actively sounding notes (0.0 to 1.0)
+  ACTIVE_NOTE_FATTEN: 2,  // Extra width in pixels for actively sounding notes
   MUTED_OPACITY: 0.15,    // Opacity for notes on muted channels
   SUSTAIN_OPACITY: 0.5,   // Opacity for the portion of a note held by the sustain pedal (CC 64)
 };
