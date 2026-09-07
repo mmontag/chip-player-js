@@ -179,9 +179,8 @@ export default class PianoRollVisualizer extends PureComponent {
       <div
         className="PianoRoll-container"
         style={{
-          position: 'relative',
           width,
-          height,
+          minHeight: height,
           backgroundColor: PIANO_ROLL_CONFIG.BACKGROUND_COLOR,
           overflow: 'hidden',
           ...style,
@@ -192,7 +191,6 @@ export default class PianoRollVisualizer extends PureComponent {
           width={width}
           height={height}
           className="PianoRoll-canvas"
-          style={{ display: 'block' }}
         />
 
         {showOverlay && (

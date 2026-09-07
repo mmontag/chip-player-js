@@ -251,7 +251,7 @@ export default class Visualizer extends PureComponent {
             paused={this.state.enabled ? this.props.paused : true}
             voiceMask={this.props.voiceMask}
             style={{
-              display: (this.state.enabled && activeVisType === 'piano-roll') ? 'block' : 'none',
+              display: (this.state.enabled && activeVisType === 'piano-roll') ? 'flex' : 'none',
               width: VIS_WIDTH,
               boxSizing: 'border-box',
             }}

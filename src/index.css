@@ -547,19 +547,26 @@ button.IconButton {
 @media screen and (max-width: 600px) { .Visualizer-toggle { display: none; } }
 .Visualizer-analyzer { display: block; image-rendering: pixelated; }
 .Visualizer-spectrogram { display: block; flex-grow: 1; flex-shrink: 0; min-height: 800px; image-rendering: pixelated; }
-.Visualizer-analyzer, .Visualizer-spectrogram {
+.Visualizer-analyzer, .Visualizer-spectrogram, .PianoRoll-container {
     margin-left: 1px; /* Don't cover the right border of App-main-inner */
 }
 
 .PianoRoll-container {
-    display: block;
+    position: relative;
+    display: flex;
+    flex-direction: column;
     flex-grow: 1;
     flex-shrink: 0;
     min-height: 800px;
-    margin-left: 1px;
 }
 .PianoRoll-canvas {
     display: block;
+    flex-grow: 1;
+    flex-shrink: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 800px;
+    image-rendering: pixelated;
 }
 .PianoRoll-overlay {
     position: absolute;
@@ -840,7 +847,7 @@ button.IconButton {
 
 @media (max-resolution: 1dppx) {
   /* ensure crisp icons at 1:1 native resolution, smooth images otherwise */
-  img, .Visualizer-overlay, .Visualizer-analyzer, .Visualizer-spectrogram, .inline-icon {
+  img, .Visualizer-overlay, .Visualizer-analyzer, .Visualizer-spectrogram, .PianoRoll-canvas, .inline-icon {
       image-rendering: pixelated;
   }
 }
