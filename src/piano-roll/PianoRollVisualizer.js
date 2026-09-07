@@ -26,6 +26,8 @@ export default class PianoRollVisualizer extends PureComponent {
     if (this.canvasRef.current) {
       this.engine = new PianoRollEngine(this.canvasRef.current, {
         getCurrentPositionMs: this.props.getCurrentPositionMs,
+        getPlaybackRate: this.props.getPlaybackRate,
+        getAudioLatencyMs: this.props.getAudioLatencyMs,
         isPaused: this.props.paused,
       });
 
@@ -45,6 +47,18 @@ export default class PianoRollVisualizer extends PureComponent {
 
   componentDidUpdate(prevProps, prevState) {
     if (!this.engine) return;
+
+    if (prevProps.getCurrentPositionMs !== this.props.getCurrentPositionMs) {
+      this.engine.getCurrentPositionMs = this.props.getCurrentPositionMs;
+    }
+
+    if (prevProps.getPlaybackRate !== this.props.getPlaybackRate) {
+      this.engine.getPlaybackRate = this.props.getPlaybackRate;
+    }
+
+    if (prevProps.getAudioLatencyMs !== this.props.getAudioLatencyMs) {
+      this.engine.getAudioLatencyMsCallback = this.props.getAudioLatencyMs;
+    }
 
     if (prevProps.midiData !== this.props.midiData) {
       this.loadMidi(this.props.midiData);

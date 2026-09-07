@@ -109,6 +109,16 @@ export default class Visualizer extends PureComponent {
     this.setState({ userVisType: e.target.value });
   };
 
+  getAudioLatencyMs = () => {
+    const { audioCtx, sourceNode } = this.props;
+    if (!audioCtx) return 0;
+    const bufferSize = sourceNode?.bufferSize || 2048;
+    const sampleRate = audioCtx.sampleRate || 44100;
+    const bufferLatency = bufferSize / sampleRate;
+    const outputLatency = (typeof audioCtx.outputLatency === 'number' ? audioCtx.outputLatency : (audioCtx.baseLatency || 0));
+    return (bufferLatency + outputLatency) * 1000;
+  };
+
   render() {
     const isMidi = this.isCurrentSongMidi();
     const activeVisType = isMidi ? (this.state.userVisType || 'piano-roll') : 'spectrogram';
@@ -248,6 +258,8 @@ export default class Visualizer extends PureComponent {
             height={800}
             midiData={this.props.midiData}
             getCurrentPositionMs={this.props.getCurrentPositionMs}
+            getPlaybackRate={this.props.getPlaybackRate}
+            getAudioLatencyMs={this.getAudioLatencyMs}
             paused={this.state.enabled ? this.props.paused : true}
             voiceMask={this.props.voiceMask}
             style={{

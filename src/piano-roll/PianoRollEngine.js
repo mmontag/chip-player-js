@@ -14,13 +14,17 @@ export default class PianoRollEngine {
     this.maxNoteDurationMs = 30000;
 
     this.getCurrentPositionMs = options.getCurrentPositionMs || (() => 0);
+    this.getPlaybackRate = options.getPlaybackRate || (() => 1.0);
+    this.getAudioLatencyMsCallback = options.getAudioLatencyMs;
     this.isPaused = options.isPaused !== undefined ? options.isPaused : true;
     this.hiddenChannels = new Set();
     this.hiddenTracks = new Set();
     this.voiceMask = null; // array of booleans if controlled externally by Settings
 
     this.animFrameId = null;
-    this.lastRenderTimeMs = -1;
+    this.lastFrameTime = 0;
+    this.lastRawPos = -1;
+    this.smoothPos = 0;
     this.isDirty = true;
 
     this.onFrame = this.onFrame.bind(this);
@@ -45,6 +49,9 @@ export default class PianoRollEngine {
       this.durationMs = parsedMidi.durationMs || 0;
       this.maxNoteDurationMs = parsedMidi.maxNoteDurationMs || 30000;
     }
+    this.lastFrameTime = 0;
+    this.lastRawPos = -1;
+    this.smoothPos = 0;
     this.isDirty = true;
     this.render();
     if (!this.isPaused) {
@@ -98,6 +105,7 @@ export default class PianoRollEngine {
 
   start() {
     if (this.animFrameId === null) {
+      this.lastFrameTime = 0;
       this.animFrameId = requestAnimationFrame(this.onFrame);
     }
   }
@@ -107,19 +115,67 @@ export default class PianoRollEngine {
       cancelAnimationFrame(this.animFrameId);
       this.animFrameId = null;
     }
+    this.lastFrameTime = 0;
   }
 
   destroy() {
     this.stop();
   }
 
-  onFrame() {
+  onFrame(timestamp) {
     if (!this.isPaused) {
-      this.render();
       this.animFrameId = requestAnimationFrame(this.onFrame);
+      this.render(timestamp);
     } else {
       this.animFrameId = null;
     }
+  }
+
+  getAudioLatencyMs() {
+    if (typeof this.getAudioLatencyMsCallback === 'function') {
+      const ms = this.getAudioLatencyMsCallback();
+      if (typeof ms === 'number' && !isNaN(ms)) return ms;
+    }
+    return 0;
+  }
+
+  getSmoothPositionMs(timestamp) {
+    const rawPos = Math.max(0, this.getCurrentPositionMs() || 0);
+    const now = (typeof timestamp === 'number' && timestamp > 0) ? timestamp : performance.now();
+    const speed = (this.getPlaybackRate ? this.getPlaybackRate() : 1.0) || 1.0;
+    const latencyOffset = this.getAudioLatencyMs();
+
+    if (this.isPaused) {
+      this.smoothPos = rawPos;
+      this.lastFrameTime = now;
+      this.lastRawPos = rawPos;
+      return Math.max(0, rawPos - latencyOffset);
+    }
+
+    if (this.lastFrameTime === 0) {
+      this.smoothPos = rawPos;
+      this.lastFrameTime = now;
+      this.lastRawPos = rawPos;
+      return Math.max(0, rawPos - latencyOffset);
+    }
+
+    const dt = Math.max(0, Math.min(now - this.lastFrameTime, 100));
+    this.lastFrameTime = now;
+
+    // Advance smooth position by elapsed frame time scaled by playback speed
+    this.smoothPos += dt * speed;
+
+    // Check for seek, rewind, or loop
+    const discrepancy = rawPos - this.smoothPos;
+    if (rawPos < this.lastRawPos || Math.abs(discrepancy) > 150) {
+      this.smoothPos = rawPos;
+    } else if (rawPos !== this.lastRawPos) {
+      // Audio buffer updated: gently correct any drift (15% per buffer update)
+      this.smoothPos += discrepancy * 0.15;
+    }
+
+    this.lastRawPos = rawPos;
+    return Math.max(0, this.smoothPos - latencyOffset);
   }
 
   getChannelColor(channel) {
@@ -132,13 +188,13 @@ export default class PianoRollEngine {
     return colors[track % colors.length];
   }
 
-  render() {
+  render(timestamp) {
     const { canvas, ctx, config } = this;
     const width = canvas.width;
     const height = canvas.height;
     if (width === 0 || height === 0) return;
 
-    const currentTimeMs = Math.max(0, this.getCurrentPositionMs() || 0);
+    const currentTimeMs = this.getSmoothPositionMs(timestamp);
 
     const isVertical = config.ORIENTATION === 'vertical';
     const isTopToBottom = config.DIRECTION === 'top-to-bottom';
@@ -196,6 +252,7 @@ export default class PianoRollEngine {
       }
 
       ctx.fillStyle = config.BLACK_KEY_LANE_TINT;
+      ctx.beginPath();
       for (let p = minPitch; p <= maxPitch; p++) {
         const laneX = xOffset + (p - minPitch) * laneWidth;
         if (isBlackKey(p)) {
@@ -203,14 +260,13 @@ export default class PianoRollEngine {
         }
         // Octave lines on C notes
         if (p % 12 === 0) {
-          ctx.strokeStyle = config.OCTAVE_LINE_COLOR;
-          ctx.lineWidth = 1;
-          ctx.beginPath();
           ctx.moveTo(laneX, 0);
           ctx.lineTo(laneX, height);
-          ctx.stroke();
         }
       }
+      ctx.strokeStyle = config.OCTAVE_LINE_COLOR;
+      ctx.lineWidth = 1;
+      ctx.stroke();
     } else {
       // Horizontal orientation: pitches along Y axis (low at bottom, high at top)
       let laneHeight;
@@ -224,20 +280,20 @@ export default class PianoRollEngine {
       }
 
       ctx.fillStyle = config.BLACK_KEY_LANE_TINT;
+      ctx.beginPath();
       for (let p = minPitch; p <= maxPitch; p++) {
         const laneY = yOffset + (maxPitch - p) * laneHeight;
         if (isBlackKey(p)) {
           ctx.fillRect(0, laneY, width, laneHeight);
         }
         if (p % 12 === 0) {
-          ctx.strokeStyle = config.OCTAVE_LINE_COLOR;
-          ctx.lineWidth = 1;
-          ctx.beginPath();
           ctx.moveTo(0, laneY);
           ctx.lineTo(width, laneY);
-          ctx.stroke();
         }
       }
+      ctx.strokeStyle = config.OCTAVE_LINE_COLOR;
+      ctx.lineWidth = 1;
+      ctx.stroke();
     }
 
     // 2. Visible time window calculation
@@ -417,7 +473,6 @@ export default class PianoRollEngine {
 
           // 1. Draw sustained portion at 50% opacity
           if (hasSustain) {
-            ctx.save();
             ctx.globalAlpha = baseAlpha * sustainOpacity;
             ctx.fillStyle = baseColor;
             drawRect(noteX, sustainPos, noteW, sustainDim, sustainRadii);
@@ -426,11 +481,9 @@ export default class PianoRollEngine {
               ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
               drawRect(noteX, sustainPos, noteW, sustainDim, sustainRadii);
             }
-            ctx.restore();
           }
 
           // 2. Draw key-held portion
-          ctx.save();
           ctx.globalAlpha = baseAlpha;
           ctx.fillStyle = baseColor;
           drawRect(noteX, keyPos, noteW, keyDim, keyRadii);
@@ -447,7 +500,6 @@ export default class PianoRollEngine {
             ctx.textBaseline = 'middle';
             ctx.fillText(getNoteName(note.pitch), noteX + noteW / 2, keyPos + keyDim / 2);
           }
-          ctx.restore();
         } else {
           const pitch = Math.max(minPitch, Math.min(maxPitch, note.pitch));
           const noteY = yOffset + (maxPitch - pitch) * laneHeight + gap / 2;
@@ -455,7 +507,6 @@ export default class PianoRollEngine {
 
           // 1. Draw sustained portion at 50% opacity
           if (hasSustain) {
-            ctx.save();
             ctx.globalAlpha = baseAlpha * sustainOpacity;
             ctx.fillStyle = baseColor;
             drawRect(sustainPos, noteY, sustainDim, noteH, sustainRadii);
@@ -464,11 +515,9 @@ export default class PianoRollEngine {
               ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
               drawRect(sustainPos, noteY, sustainDim, noteH, sustainRadii);
             }
-            ctx.restore();
           }
 
           // 2. Draw key-held portion
-          ctx.save();
           ctx.globalAlpha = baseAlpha;
           ctx.fillStyle = baseColor;
           drawRect(keyPos, noteY, keyDim, noteH, keyRadii);
@@ -485,9 +534,9 @@ export default class PianoRollEngine {
             ctx.textBaseline = 'middle';
             ctx.fillText(getNoteName(note.pitch), keyPos + keyDim / 2, noteY + noteH / 2);
           }
-          ctx.restore();
         }
       }
+      ctx.globalAlpha = 1.0;
     }
 
     // 4. Draw playhead line

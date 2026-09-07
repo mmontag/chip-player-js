@@ -953,6 +953,7 @@ class App extends React.Component {
                               : null
                           }
                           getCurrentPositionMs={() => this.sequencer?.getPlayer()?.getPositionMs() || 0}
+                          getPlaybackRate={() => this.sequencer?.getPlayer()?.getTempo?.() || 1.0}
                           voiceMask={this.state.voiceMask}
                           sequencer={this.sequencer}/>}
           </div>
