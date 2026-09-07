@@ -117,6 +117,7 @@ class App extends React.Component {
       currentSongSubtune: 0,
       currentSongDurationMs: 1,
       currentSongPositionMs: 0,
+      currentSongBuffer: null,
       tempo: 1,
       voiceMask: Array(MAX_VOICES).fill(true),
       voiceNames: Array(MAX_VOICES).fill(''),
@@ -251,6 +252,7 @@ class App extends React.Component {
       currentSongPositionMs: 'positionMs',
       currentSongDurationMs: 'durationMs',
       currentSongNumSubtunes: 'numSubtunes',
+      currentSongBuffer: 'songBuffer',
       tempo: 'tempo',
       voiceNames: 'voiceNames',
       voiceMask: 'voiceMask',
@@ -390,6 +392,7 @@ class App extends React.Component {
         currentSongPositionMs: 0,
         currentSongDurationMs: 1,
         currentSongNumSubtunes: 0,
+        currentSongBuffer: null,
         imageUrl: null,
         songPath: null,
       });
@@ -941,7 +944,17 @@ class App extends React.Component {
               <Visualizer audioCtx={this.audioCtx}
                           sourceNode={this.playerNode}
                           chipCore={this.chipCore}
-                          paused={this.state.ejected || this.state.paused}/>}
+                          paused={this.state.ejected || this.state.paused}
+                          songPath={this.state.songPath}
+                          midiData={
+                            ((this.state.songPath && /\.(mid|midi|smf)$/i.test(this.state.songPath)) ||
+                             this.sequencer?.getPlayer()?.fileExtensions?.includes('mid'))
+                              ? (this.state.currentSongBuffer || this.sequencer?.getCurrSongBuffer())
+                              : null
+                          }
+                          getCurrentPositionMs={() => this.sequencer?.getPlayer()?.getPositionMs() || 0}
+                          voiceMask={this.state.voiceMask}
+                          sequencer={this.sequencer}/>}
           </div>
           <AppFooter
             currentSongDurationMs={this.state.currentSongDurationMs}

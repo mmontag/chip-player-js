@@ -36,6 +36,7 @@ export default class Sequencer extends EventEmitter {
     this.songRequest = null;
     this.repeat = REPEAT_OFF;
     this.playerErrorAdvanceTimer = null;
+    this.currSongBuffer = null;
 
     this.players.forEach(player => {
       player.on('playerStateUpdate', this.handlePlayerStateUpdate);
@@ -64,12 +65,14 @@ export default class Sequencer extends EventEmitter {
 
     if (isStopped) {
       this.currSongPath = null;
+      this.currSongBuffer = null;
       if (this.context) {
         this.nextSong();
       }
     } else {
       this.emit('sequencerStateUpdate', {
         songPath: this.currSongPath,
+        songBuffer: this.currSongBuffer,
         hasPlayer: true,
         // TODO: combine isEjected and hasPlayer
         isEjected: false,
@@ -189,11 +192,16 @@ export default class Sequencer extends EventEmitter {
     return this.currSongPath;
   }
 
+  getCurrSongBuffer() {
+    return this.currSongBuffer;
+  }
+
   getSubtune() {
     return this.player.getSubtune();
   }
 
   playSong(filepath, subtune = 0) {
+    this.currSongBuffer = null;
     if (this.player !== null) {
       this.player.suspend();
     }
@@ -237,6 +245,7 @@ export default class Sequencer extends EventEmitter {
   }
 
   async playSongBuffer(player, filepath, buffer, subtune = 0) {
+    this.currSongBuffer = buffer;
     let uint8Array;
     uint8Array = new Uint8Array(buffer);
     const persistedSettings = this.getSettings();

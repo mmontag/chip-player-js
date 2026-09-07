@@ -551,6 +551,105 @@ button.IconButton {
     margin-left: 1px; /* Don't cover the right border of App-main-inner */
 }
 
+.PianoRoll-container {
+    display: block;
+    flex-grow: 1;
+    flex-shrink: 0;
+    min-height: 800px;
+    margin-left: 1px;
+}
+.PianoRoll-canvas {
+    display: block;
+}
+.PianoRoll-overlay {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    max-width: 220px;
+    max-height: calc(100% - 16px);
+    background: rgba(10, 10, 10, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 11px;
+    color: #ddd;
+    backdrop-filter: blur(4px);
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    user-select: none;
+}
+.PianoRoll-overlay-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 8px;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.07);
+    font-weight: bold;
+}
+.PianoRoll-overlay-body {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.PianoRoll-overlay-mode-select {
+    display: flex;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.PianoRoll-mode-btn {
+    flex: 1;
+    padding: 4px 0;
+    background: transparent;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    font-size: 10px;
+    font-family: inherit;
+}
+.PianoRoll-mode-btn.active {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.12);
+    font-weight: bold;
+}
+.PianoRoll-overlay-list {
+    max-height: 280px;
+    overflow-y: auto;
+    padding: 4px 0;
+}
+.PianoRoll-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 8px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.1s ease;
+}
+.PianoRoll-item:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+.PianoRoll-item.muted {
+    opacity: 0.4;
+    text-decoration: line-through;
+}
+.PianoRoll-item-swatch {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+.PianoRoll-item-num {
+    color: #888;
+    font-size: 10px;
+    flex-shrink: 0;
+}
+.PianoRoll-item-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 140px;
+}
+
 .TimeSlider { flex-grow: 1; margin: var(--charH) 0; }
 .TimeSlider-labels, .VolumeSlider-labels { display: flex; justify-content: space-between; gap: var(--charW2); }
 
