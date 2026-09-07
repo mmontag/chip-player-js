@@ -111,4 +111,5 @@ export const PIANO_ROLL_CONFIG = {
   ACTIVE_NOTE_FATTEN: 2,  // Extra width in pixels for actively sounding notes
   MUTED_OPACITY: 0.15,    // Opacity for notes on muted channels
   SUSTAIN_OPACITY: 0.5,   // Opacity for the portion of a note held by the sustain pedal (CC 64)
+  ENABLE_PITCH_BEND: true, // Visualize MIDI pitch bends as continuous ribbons
 };
