@@ -59,11 +59,11 @@ export const PIANO_ROLL_CONFIG = {
   COLOR_BY: 'channel',
 
   // Background and lane styling:
-  BACKGROUND_COLOR: '#000000',
-  BLACK_KEY_LANE_TINT: 'rgba(255, 255, 255, 0.05)', // 5% tint for black keys (C#, D#, F#, G#, A#)
+  BACKGROUND_COLOR: '#222',
+  BLACK_KEY_LANE_TINT: 'rgba(0, 0, 0, 0.2)',
   WHITE_KEY_LANE_COLOR: '#000000',
   GRID_LINE_COLOR: 'rgba(255, 255, 255, 0.08)',
-  OCTAVE_LINE_COLOR: 'rgba(255, 255, 255, 0.22)',
+  OCTAVE_LINE_COLOR: 'rgba(255, 255, 255, 0.1)',
 
   // Playhead line styling:
   PLAYHEAD_COLOR: '#ffff00',
@@ -104,7 +104,7 @@ export const PIANO_ROLL_CONFIG = {
   NOTE_GAP_PX: 1,         // Gap between adjacent notes horizontally/vertically
   ACTIVE_NOTE_GLOW: true, // Brightness boost for actively sounding notes at the playhead
   ACTIVE_NOTE_GLOW_OPACITY: 0.8, // Opacity of the brightness boost overlay for actively sounding notes (0.0 to 1.0)
-  ACTIVE_NOTE_FATTEN: 2,  // Extra width in pixels for actively sounding notes
+  ACTIVE_NOTE_FATTEN: 3,  // Extra width in pixels for actively sounding notes
   ACTIVE_NOTE_DECAY_MS: 640, // Duration in ms for active note highlight/grow fade-out (fixed decay)
   ACTIVE_NOTE_EASING: 'ease-out', // Fade-out easing: 'linear', 'ease-out', 'ease-in', 'cubic', 'sine', 'exponential'
   MUTED_OPACITY: 0.15,    // Opacity for notes on muted channels
