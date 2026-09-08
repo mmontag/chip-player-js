@@ -35,7 +35,6 @@ export default class Visualizer extends PureComponent {
       fftSize: 2048,
       speed: 2,
       enabled: false,
-      userVisType: null, // null = auto (Piano Roll for MIDI, Spectrogram for others)
     };
 
     this.freqCanvasRef = React.createRef();
@@ -67,9 +66,8 @@ export default class Visualizer extends PureComponent {
 
   componentDidUpdate(prevProps) {
     const isMidi = this.isCurrentSongMidi();
-    const activeVisType = isMidi ? (this.state.userVisType || 'piano-roll') : 'spectrogram';
 
-    if (activeVisType === 'spectrogram') {
+    if (!isMidi) {
       this.spectrogram.setPaused(this.state.enabled ? this.props.paused : true);
     } else {
       this.spectrogram.setPaused(true);
@@ -105,10 +103,6 @@ export default class Visualizer extends PureComponent {
     this.setState({enabled: enabled});
   };
 
-  handleVisTypeChange = (e) => {
-    this.setState({ userVisType: e.target.value });
-  };
-
   getAudioLatencyMs = () => {
     const { audioCtx, sourceNode } = this.props;
     if (!audioCtx) return 0;
@@ -121,7 +115,6 @@ export default class Visualizer extends PureComponent {
 
   render() {
     const isMidi = this.isCurrentSongMidi();
-    const activeVisType = isMidi ? (this.state.userVisType || 'piano-roll') : 'spectrogram';
 
     const enabledStyle = {
       display: this.state.enabled ? 'block' : 'none',
@@ -130,7 +123,7 @@ export default class Visualizer extends PureComponent {
     };
 
     const specStyle = {
-      display: (this.state.enabled && activeVisType === 'spectrogram') ? 'block' : 'none',
+      display: (this.state.enabled && !isMidi) ? 'block' : 'none',
       width: VIS_WIDTH,
       boxSizing: 'border-box',
     };
@@ -154,102 +147,74 @@ export default class Visualizer extends PureComponent {
                  name='visualizer-enabled'/>
           <label htmlFor='vis-off' className='inline'>Off</label>
         </h3>
-        <div className='Visualizer-options' style={enabledStyle}>
-          {isMidi && (
+        {!isMidi && (
+          <div className='Visualizer-options' style={enabledStyle}>
             <div>
-              <span className='VisualizerParams-label'>Visualizer:</span>
-              <label className='inline'>
-                <input
-                  type='radio'
-                  name='vis-type'
-                  value='piano-roll'
-                  checked={activeVisType === 'piano-roll'}
-                  onChange={this.handleVisTypeChange}
-                />
-                Piano Roll
-              </label>
-              <label className='inline'>
-                <input
-                  type='radio'
-                  name='vis-type'
-                  value='spectrogram'
-                  checked={activeVisType === 'spectrogram'}
-                  onChange={this.handleVisTypeChange}
-                />
-                Spectrogram
-              </label>
-            </div>
-          )}
-
-          {activeVisType === 'spectrogram' && (
-            <>
-              <div>
-                <span className='VisualizerParams-label'>Mode:</span>
-                {
-                  SPECTROGRAM_MODES.map((mode, i) =>
-                    <label key={'m_'+i} className='inline'><input onClick={this.handleModeClick}
-                                          type='radio'
-                                          name='spectrogram-mode'
-                                          defaultChecked={this.state.vizMode === i}
-                                          value={i}/>{mode}</label>
-                  )
-                }
-              </div>
-              {this.state.vizMode === 2 ?
-                <div>
-                  <span className='VisualizerParams-label'>Weighting:</span>
-                  {
-                    WEIGHTING_MODES.map((mode, i) =>
-                      <Fragment key={'w_'+i}>
-                        <input onClick={this.handleWeightingModeClick}
-                               type='radio'
-                               id={'w_'+i}
-                               name='weighting-mode'
-                               defaultChecked={this.state.weightingMode === i}
-                               value={i}/>
-                        <label htmlFor={'w_'+i} title={mode.description} className='inline'>
-                        {mode.label}</label>
-                      </Fragment>
-                    )
-                  }
-                </div>
-                :
-                <div>
-                  <span className='VisualizerParams-label'>FFT Size:</span>
-                  {
-                    FFT_SIZES.map((size, i) =>
-                      <Fragment key={'f_'+i}>
-                        <input onClick={this.handleFFTSizeClick}
-                               type='radio'
-                               id={'f_'+i}
-                               name='fft-size'
-                               defaultChecked={this.state.fftSize === size}
-                               value={size}/>
-                        <label htmlFor={'f_'+i} className='inline'>{FFT_LABELS[i]}</label>
-                      </Fragment>
-                    )
-                  }
-                </div>
+              <span className='VisualizerParams-label'>Mode:</span>
+              {
+                SPECTROGRAM_MODES.map((mode, i) =>
+                  <label key={'m_'+i} className='inline'><input onClick={this.handleModeClick}
+                                        type='radio'
+                                        name='spectrogram-mode'
+                                        defaultChecked={this.state.vizMode === i}
+                                        value={i}/>{mode}</label>
+                )
               }
-              <div title="Vertical scrolling speed (pixels per frame)">
-                <span className='VisualizerParams-label'>Speed:</span>
+            </div>
+            {this.state.vizMode === 2 ?
+              <div>
+                <span className='VisualizerParams-label'>Weighting:</span>
                 {
-                  SPEEDS.map((speed, i) =>
-                    <Fragment key={'s_'+i}>
-                      <input onClick={this.handleSpeedClick}
+                  WEIGHTING_MODES.map((mode, i) =>
+                    <Fragment key={'w_'+i}>
+                      <input onClick={this.handleWeightingModeClick}
                              type='radio'
-                             id={'s_'+i}
-                             name='speed'
-                             defaultChecked={this.state.speed === speed}
-                             value={speed}/>
-                      <label htmlFor={'s_'+i} className='inline'>{SPEED_LABELS[i]}</label>
+                             id={'w_'+i}
+                             name='weighting-mode'
+                             defaultChecked={this.state.weightingMode === i}
+                             value={i}/>
+                      <label htmlFor={'w_'+i} title={mode.description} className='inline'>
+                      {mode.label}</label>
                     </Fragment>
                   )
                 }
               </div>
-            </>
-          )}
-        </div>
+              :
+              <div>
+                <span className='VisualizerParams-label'>FFT Size:</span>
+                {
+                  FFT_SIZES.map((size, i) =>
+                    <Fragment key={'f_'+i}>
+                      <input onClick={this.handleFFTSizeClick}
+                             type='radio'
+                             id={'f_'+i}
+                             name='fft-size'
+                             defaultChecked={this.state.fftSize === size}
+                             value={size}/>
+                      <label htmlFor={'f_'+i} className='inline'>{FFT_LABELS[i]}</label>
+                    </Fragment>
+                  )
+                }
+              </div>
+            }
+            <div title="Vertical scrolling speed (pixels per frame)">
+              <span className='VisualizerParams-label'>Speed:</span>
+              {
+                SPEEDS.map((speed, i) =>
+                  <Fragment key={'s_'+i}>
+                    <input onClick={this.handleSpeedClick}
+                           type='radio'
+                           id={'s_'+i}
+                           name='speed'
+                           defaultChecked={this.state.speed === speed}
+                           value={speed}/>
+                    <label htmlFor={'s_'+i} className='inline'>{SPEED_LABELS[i]}</label>
+                  </Fragment>
+                )
+              }
+            </div>
+          </div>
+        )}
 
         {/* Piano Roll visualizer for MIDI files */}
         {isMidi && (
@@ -263,7 +228,7 @@ export default class Visualizer extends PureComponent {
             paused={this.state.enabled ? this.props.paused : true}
             voiceMask={this.props.voiceMask}
             style={{
-              display: (this.state.enabled && activeVisType === 'piano-roll') ? 'flex' : 'none',
+              display: this.state.enabled ? 'flex' : 'none',
               width: VIS_WIDTH,
               boxSizing: 'border-box',
             }}
@@ -280,7 +245,7 @@ export default class Visualizer extends PureComponent {
              ref={this.pianoKeysRef}
              alt='Piano keys'
              style={{
-               display: (this.state.enabled && activeVisType === 'spectrogram' && this.state.vizMode === 2) ? 'block' : 'none',
+               display: (this.state.enabled && !isMidi && this.state.vizMode === 2) ? 'block' : 'none',
                width: VIS_WIDTH,
              }}/>
       </div>

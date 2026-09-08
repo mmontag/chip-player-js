@@ -552,6 +552,7 @@ button.IconButton {
 }
 
 .PianoRoll-container {
+    margin-top: var(--charH);
     position: relative;
     display: flex;
     flex-direction: column;
