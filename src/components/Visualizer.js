@@ -220,7 +220,6 @@ export default class Visualizer extends PureComponent {
         {isMidi && (
           <PianoRollVisualizer
             width={VIS_WIDTH}
-            height={800}
             midiData={this.props.midiData}
             getCurrentPositionMs={this.props.getCurrentPositionMs}
             getPlaybackRate={this.props.getPlaybackRate}

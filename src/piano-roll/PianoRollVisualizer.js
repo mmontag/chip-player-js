@@ -9,9 +9,16 @@ export default class PianoRollVisualizer extends PureComponent {
     super(props);
     autoBind(this);
 
+    this.containerRef = React.createRef();
     this.canvasRef = React.createRef();
     this.engine = null;
     this.currentBuffer = null;
+    this.resizeObserver = null;
+
+    this.state = {
+      width: props.width || 448,
+      height: props.height || 400,
+    };
   }
 
   componentDidMount() {
@@ -34,6 +41,23 @@ export default class PianoRollVisualizer extends PureComponent {
       if (!this.props.paused) {
         this.engine.start();
       }
+    }
+
+    if (this.containerRef.current && typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          const { width, height } = entry.contentRect;
+          const w = Math.floor(width);
+          const h = Math.floor(height);
+          if (w > 0 && h > 0 && (w !== this.state.width || h !== this.state.height)) {
+            this.setState({ width: w, height: h });
+            if (this.engine) {
+              this.engine.resize(w, h);
+            }
+          }
+        }
+      });
+      this.resizeObserver.observe(this.containerRef.current);
     }
   }
 
@@ -66,12 +90,19 @@ export default class PianoRollVisualizer extends PureComponent {
       this.engine.setVoiceMask(this.props.voiceMask);
     }
 
-    if (prevProps.width !== this.props.width || prevProps.height !== this.props.height) {
-      this.engine.resize(this.props.width, this.props.height);
+    if (prevProps.width && this.props.width && prevProps.width !== this.props.width) {
+      if (this.props.width !== this.state.width) {
+        this.setState({ width: this.props.width });
+        this.engine.resize(this.props.width, this.state.height);
+      }
     }
   }
 
   componentWillUnmount() {
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
+    }
     if (this.engine) {
       this.engine.destroy();
       this.engine = null;
@@ -101,16 +132,16 @@ export default class PianoRollVisualizer extends PureComponent {
   }
 
   render() {
-    const { width = 448, height = 800, style = {} } = this.props;
+    const { width, height } = this.state;
+    const { style = {} } = this.props;
 
     return (
       <div
+        ref={this.containerRef}
         className="PianoRoll-container"
         style={{
-          width,
-          minHeight: height,
+          width: this.props.width || '100%',
           backgroundColor: PIANO_ROLL_CONFIG.BACKGROUND_COLOR,
-          overflow: 'hidden',
           ...style,
         }}
       >
