@@ -819,6 +819,7 @@ class App extends React.Component {
     const search = { search: window.location.search };
     const { settings } = this.props.userContext;
     const showPlayerSettings = settings?.showPlayerSettings;
+    const showVisualizer = settings?.showVisualizer;
 
     return (
       <Dropzone
@@ -955,7 +956,8 @@ class App extends React.Component {
                           getCurrentPositionMs={() => this.sequencer?.getPlayer()?.getPositionMs() || 0}
                           getPlaybackRate={() => this.sequencer?.getPlayer()?.getTempo?.() || 1.0}
                           voiceMask={this.state.voiceMask}
-                          sequencer={this.sequencer}/>}
+                          sequencer={this.sequencer}
+                          visible={Boolean(showVisualizer)}/>}
           </div>
           <AppFooter
             currentSongDurationMs={this.state.currentSongDurationMs}

@@ -3,7 +3,13 @@ import { Link } from 'react-router-dom';
 import { UserContext } from './UserProvider';
 
 const AppHeader = () => {
-  const { user, handleLogout, handleLogin } = useContext(UserContext);
+  const { user, handleLogout, handleLogin, settings, updateSettings } = useContext(UserContext);
+  const showVisualizer = settings?.showVisualizer;
+
+  const handleToggleVisualizer = (e) => {
+    const enabled = e.target.value === 'true';
+    updateSettings({ showVisualizer: enabled });
+  };
 
   return (
     <header className="AppHeader">
@@ -25,8 +31,25 @@ const AppHeader = () => {
       <a href="https://twitter.com/messages/compose?recipient_id=587634572" target="_blank" rel="noopener noreferrer">
         Feedback
       </a>
+      <h3 className="Visualizer-toggle">
+        Visualizer{' '}
+        <input onChange={handleToggleVisualizer}
+               id="vis-on"
+               type="radio"
+               value="true"
+               checked={showVisualizer === true}
+               name="visualizer-enabled"/>
+        <label htmlFor="vis-on" className="inline">On</label>
+        <input onChange={handleToggleVisualizer}
+               id="vis-off"
+               type="radio"
+               value="false"
+               checked={showVisualizer === false}
+               name="visualizer-enabled"/>
+        <label htmlFor="vis-off" className="inline">Off</label>
+      </h3>
     </header>
   );
-}
+};
 
 export default AppHeader;

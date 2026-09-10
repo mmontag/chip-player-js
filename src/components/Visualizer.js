@@ -34,7 +34,6 @@ export default class Visualizer extends PureComponent {
       weightingMode: 1,
       fftSize: 2048,
       speed: 2,
-      enabled: false,
     };
 
     this.freqCanvasRef = React.createRef();
@@ -54,6 +53,11 @@ export default class Visualizer extends PureComponent {
     this.spectrogram.setMode(this.state.vizMode);
     this.spectrogram.setWeighting(this.state.weightingMode);
     this.spectrogram.setSpeed(this.state.speed);
+
+    const isMidi = this.isCurrentSongMidi();
+    if (!isMidi) {
+      this.spectrogram.setPaused(this.props.visible ? this.props.paused : true);
+    }
   }
 
   isCurrentSongMidi() {
@@ -68,7 +72,7 @@ export default class Visualizer extends PureComponent {
     const isMidi = this.isCurrentSongMidi();
 
     if (!isMidi) {
-      this.spectrogram.setPaused(this.state.enabled ? this.props.paused : true);
+      this.spectrogram.setPaused(this.props.visible ? this.props.paused : true);
     } else {
       this.spectrogram.setPaused(true);
     }
@@ -98,11 +102,6 @@ export default class Visualizer extends PureComponent {
     this.spectrogram.setSpeed(speed);
   };
 
-  handleToggleVisualizer = (e) => {
-    const enabled = e.target.value === 'true';
-    this.setState({enabled: enabled});
-  };
-
   getAudioLatencyMs = () => {
     const { audioCtx, sourceNode } = this.props;
     if (!audioCtx) return 0;
@@ -116,39 +115,16 @@ export default class Visualizer extends PureComponent {
   render() {
     const isMidi = this.isCurrentSongMidi();
 
-    const enabledStyle = {
-      display: this.state.enabled ? 'block' : 'none',
-      width: VIS_WIDTH,
-      boxSizing: 'border-box',
-    };
-
     const specStyle = {
-      display: (this.state.enabled && !isMidi) ? 'block' : 'none',
+      display: !isMidi ? 'block' : 'none',
       width: VIS_WIDTH,
       boxSizing: 'border-box',
     };
 
     return (
-      <div className='Visualizer'>
-        <h3 className='Visualizer-toggle'>
-          Visualizer{' '}
-          <input onClick={this.handleToggleVisualizer}
-                 id='vis-on'
-                 type='radio'
-                 value={true}
-                 defaultChecked={this.state.enabled === true}
-                 name='visualizer-enabled'/>
-          <label htmlFor='vis-on' className='inline'>On</label>
-          <input onClick={this.handleToggleVisualizer}
-                 id='vis-off'
-                 type='radio'
-                 value={false}
-                 defaultChecked={this.state.enabled === false}
-                 name='visualizer-enabled'/>
-          <label htmlFor='vis-off' className='inline'>Off</label>
-        </h3>
+      <div className='Visualizer' style={{ display: this.props.visible ? 'flex' : 'none' }}>
         {!isMidi && (
-          <div className='Visualizer-options' style={enabledStyle}>
+          <div className='Visualizer-options' style={{ width: VIS_WIDTH, boxSizing: 'border-box' }}>
             <div>
               <span className='VisualizerParams-label'>Mode:</span>
               {
@@ -224,10 +200,10 @@ export default class Visualizer extends PureComponent {
             getCurrentPositionMs={this.props.getCurrentPositionMs}
             getPlaybackRate={this.props.getPlaybackRate}
             getAudioLatencyMs={this.getAudioLatencyMs}
-            paused={this.state.enabled ? this.props.paused : true}
+            paused={this.props.visible ? this.props.paused : true}
             voiceMask={this.props.voiceMask}
             style={{
-              display: this.state.enabled ? 'flex' : 'none',
+              display: 'flex',
               width: VIS_WIDTH,
               boxSizing: 'border-box',
             }}
@@ -244,7 +220,7 @@ export default class Visualizer extends PureComponent {
              ref={this.pianoKeysRef}
              alt='Piano keys'
              style={{
-               display: (this.state.enabled && !isMidi && this.state.vizMode === 2) ? 'block' : 'none',
+               display: (!isMidi && this.state.vizMode === 2) ? 'block' : 'none',
                width: VIS_WIDTH,
              }}/>
       </div>

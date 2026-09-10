@@ -13,6 +13,7 @@ const UserContext = createContext({
   faves: [],
   favesContext: [],
   showPlayerSettings: false,
+  showVisualizer: false,
   handleLogin: () => {},
   handleLogout: () => {},
   handleToggleFavorite: () => {},
@@ -23,6 +24,7 @@ const UserContext = createContext({
 
 const DEFAULT_SETTINGS = {
   showPlayerSettings: false,
+  showVisualizer: false,
   theme: 'msdos',
 };
 
