@@ -158,13 +158,12 @@ export default class MIDIPlayer extends Player {
     this.playerKey = 'midi';
     this.name = 'MIDI Player';
     this.fileExtensions = fileExtensions;
-    this.activeChannels = [];
     this.buffer = core._malloc(this.bufferSize * 4 * 2); // f32 * 2 channels
     this.filepathMeta = {};
     this.midiFilePlayer = new MIDIFilePlayer({
       // playerStateUpdate is debounced to prevent flooding program change events
       programChangeCb: debounce(() => this.emit('playerStateUpdate', {
-        voiceNames: range(this.activeChannels.length).map(this.getVoiceName)
+        voiceNames: range(16).map(ch => this.getVoiceName(ch))
       }), 200),
       output: dummyMidiOutput,
       skipSilence: true,
@@ -364,11 +363,6 @@ export default class MIDIPlayer extends Player {
     this.midiFilePlayer.load(midiFile, useTrackLoops);
     this.midiFilePlayer.play(() => this.emit('playerStateUpdate', { isStopped: true }));
 
-    this.activeChannels = [];
-    for (let i = 0; i < 16; i++) {
-      if (this.midiFilePlayer.getChannelInUse(i)) this.activeChannels.push(i);
-    }
-
     this.resume();
     this.emit('playerStateUpdate', {
       ...this.getBasePlayerState(),
@@ -468,19 +462,18 @@ export default class MIDIPlayer extends Player {
     this.midiFilePlayer.setSpeed(tempo);
   }
 
-  getVoiceName(index) {
-    const ch = this.activeChannels[index];
+  getVoiceName(ch) {
+    if (!this.midiFilePlayer.getChannelInUse(ch)) return '--';
     const pgm = this.midiFilePlayer.channelProgramNums[ch];
-    return ch === 9 ? (GM_DRUM_KITS[pgm] || GM_DRUM_KITS[0]) : GM_INSTRUMENTS[pgm]
+    return ch === 9 ? (GM_DRUM_KITS[pgm] || GM_DRUM_KITS[0]) : GM_INSTRUMENTS[pgm];
   }
 
   getVoiceMask() {
-    return this.activeChannels.map(ch => this.midiFilePlayer.channelMask[ch]);
+    return [...this.midiFilePlayer.channelMask];
   }
 
   setVoiceMask(voiceMask) {
-    voiceMask.forEach((isEnabled, i) => {
-      const ch = this.activeChannels[i];
+    voiceMask.forEach((isEnabled, ch) => {
       this.midiFilePlayer.setChannelMute(ch, !isEnabled);
     });
   }

@@ -499,7 +499,7 @@ MIDIPlayer.prototype.summarizeMidiEvents = function () {
     const event = this.events[j];
     switch (event.subtype) {
       case MIDIEvents.EVENT_MIDI_NOTE_ON:
-        channelsInUse[event.channel] = 1;
+        if (event.param2 > 0) channelsInUse[event.channel] = 1;
         break;
       case MIDIEvents.EVENT_MIDI_PROGRAM_CHANGE:
         if (!channelProgramNums[event.channel]) this.handleProgramChange(event.channel, event.param1);
