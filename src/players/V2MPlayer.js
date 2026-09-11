@@ -50,7 +50,8 @@ export default class V2MPlayer extends Player {
 
     const samplesWritten = this.core._v2m_write_audio(this.buffer, this.bufferSize);
     if (samplesWritten === 0) {
-      this.stop();
+      this.handleSongEnd();
+      return;
     }
 
     for (ch = 0; ch < channels.length; ch++) {

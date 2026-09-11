@@ -166,21 +166,25 @@ export default class GMEPlayer extends Player {
         }
       }
     } else {
-      this.subtune++;
+      const nextSubtune = this.subtune + 1;
 
-      if (this.subtune >= core._gme_track_count(this.gmeCtx) || this.playSubtune(this.subtune) !== 0) {
-        this.suspend();
-        console.debug(
-          'GMEPlayer.gmeAudioProcess(): track ended and subtune (%s) > _gme_track_count (%s).',
-          this.subtune,
-          core._gme_track_count(this.gmeCtx)
-        );
-        this.emit('playerStateUpdate', { isStopped: true });
+      if (nextSubtune >= core._gme_track_count(this.gmeCtx)) {
+        this.handleSongEnd();
+        return;
+      } else {
+        this.handleSongEnd(() => {
+          if (this.playSubtune(nextSubtune) !== 0) {
+            this.stop();
+          }
+        });
+        return;
       }
     }
   }
 
   playSubtune(subtune) {
+    this.silenceSamplesRemaining = 0;
+    this.onSilenceEnd = null;
     this.fadingOut = false;
     this.fadeStartMs = null;
     this.fadeFinished = false;

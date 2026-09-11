@@ -67,7 +67,8 @@ export default class XMPPlayer extends Player {
 
     err = this.core._xmp_play_buffer(this.xmpCtx, this.buffer, this.bufferSize * 4, 1);
     if (err === -1) {
-      this.stop();
+      this.handleSongEnd();
+      return;
     } else if (err !== 0) {
       this.suspend();
       console.error("xmp_play_buffer failed. error code: %d", err);

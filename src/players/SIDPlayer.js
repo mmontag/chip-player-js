@@ -106,8 +106,13 @@ export default class SIDPlayer extends Player {
     if (samplesWritten === 0 || this.getPositionMs() > this.subtuneDurations[this.getSubtune()]) {
       // TODO: consolidate with GMEPlayer subtune sequencing
       const subtune = this.getSubtune() + 1;
-      if (subtune >= this.getNumSubtunes()) this.stop();
-      else this.playSubtune(subtune);
+      if (subtune >= this.getNumSubtunes()) {
+        this.handleSongEnd();
+        return;
+      } else {
+        this.handleSongEnd(() => this.playSubtune(subtune));
+        return;
+      }
     }
 
     channels[0].set(this.wasmViewL);
@@ -123,6 +128,8 @@ export default class SIDPlayer extends Player {
   }
 
   playSubtune(subtune) {
+    this.silenceSamplesRemaining = 0;
+    this.onSilenceEnd = null;
     this.core._sid_set_subtune(subtune);
     this.emit('playerStateUpdate', {
       ...this.getBasePlayerState(),

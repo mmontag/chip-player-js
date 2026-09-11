@@ -95,7 +95,8 @@ export default class N64Player extends Player {
 
     const samplesWritten = this.core._n64_render_audio(this.buffer, this.bufferSize);
     if (samplesWritten <= 0) {
-      this.stop();
+      this.handleSongEnd();
+      return;
     }
 
     for (ch = 0; ch < channels.length; ch++) {

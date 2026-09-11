@@ -109,7 +109,8 @@ export default class VGMPlayer extends Player {
 
     const samplesWritten = this.core._lvgm_render(this.vgmCtx, this.buffer, this.bufferSize);
     if (samplesWritten === 0) {
-      this.stop();
+      this.handleSongEnd();
+      return;
     }
 
     for (ch = 0; ch < channels.length; ch++) {

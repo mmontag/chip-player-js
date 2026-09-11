@@ -99,7 +99,8 @@ export default class MDXPlayer extends Player {
 
     const next = this.core._mdx_calc_sample(this.mdxCtx, this.buffer, this.bufferSize);
     if (next === 0) {
-      this.stop();
+      this.handleSongEnd();
+      return;
     }
 
     for (ch = 0; ch < channels.length; ch++) {
