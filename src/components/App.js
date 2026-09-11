@@ -172,16 +172,21 @@ class App extends React.Component {
       VGMPlayer,
       SIDPlayer,
     ].map(P => new P(this.chipCore, audioCtx.sampleRate, bufferSize, debug));
+    const initialSilence = this.props.userContext?.settings?.silenceDuration ?? -1;
     players.forEach(p => {
       p.audioNode = this.playerNode;
+      p.setSilenceDuration(initialSilence);
     });
+    this.players = players;
     this.midiPlayer = players[0];
 
     // Set up the central audio processing callback. This is where the magic happens.
     playerNode.onaudioprocess = (e) => {
       const channels = [];
       for (let i = 0; i < e.outputBuffer.numberOfChannels; i++) {
-        channels.push(e.outputBuffer.getChannelData(i));
+        const chData = e.outputBuffer.getChannelData(i);
+        chData.fill(0);
+        channels.push(chData);
       }
       for (let player of players) {
         if (player.stopped) continue;
@@ -241,6 +246,14 @@ class App extends React.Component {
     }
 
     this.setState({ loading: false });
+  }
+
+  componentDidUpdate(prevProps) {
+    const prevSilence = prevProps.userContext?.settings?.silenceDuration;
+    const currSilence = this.props.userContext?.settings?.silenceDuration;
+    if (prevSilence !== currSilence && this.players) {
+      this.players.forEach(p => p.setSilenceDuration(currSilence ?? -1));
+    }
   }
 
   static mapSequencerStateToAppState(sequencerState) {

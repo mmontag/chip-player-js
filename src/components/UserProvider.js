@@ -26,6 +26,7 @@ const DEFAULT_SETTINGS = {
   showPlayerSettings: false,
   showVisualizer: false,
   theme: 'msdos',
+  silenceDuration: -1,
 };
 
 const UserProvider = ({ children }) => {

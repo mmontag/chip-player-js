@@ -13,6 +13,15 @@ const themes = [
   }
 ];
 
+const silenceOptions = [
+  { value: -1, label: 'None' },
+  { value: 0, label: '0 seconds (Gapless)' },
+  { value: 1, label: '1 second' },
+  { value: 2, label: '2 seconds' },
+  { value: 3, label: '3 seconds' },
+  { value: 5, label: '5 seconds' },
+];
+
 function Settings(props) {
   const {
     ejected,
@@ -32,9 +41,14 @@ function Settings(props) {
 
   const { settings, updateSettings } = useContext(UserContext);
   const theme = settings?.theme;
+  const silenceDuration = settings?.silenceDuration ?? -1;
 
   const handleThemeChange = useCallback((e) => {
     updateSettings({ theme: e.target.value });
+  }, [updateSettings]);
+
+  const handleSilenceDurationChange = useCallback((e) => {
+    updateSettings({ silenceDuration: Number(e.target.value) });
   }, [updateSettings]);
 
   return (
@@ -60,7 +74,7 @@ function Settings(props) {
         <div>(No active player)</div>}
       <h3>Global Settings</h3>
       <span className='PlayerParams-param'>
-        <label htmlFor='theme' className="PlayerParams-label">
+        <label htmlFor='theme' className="PlayerParams-label-wide">
           Theme:{' '}
         </label>
         <select
@@ -68,6 +82,19 @@ function Settings(props) {
           onChange={handleThemeChange}
           value={theme}>
           {themes.map(option =>
+            <option key={option.value} value={option.value}>{option.label}</option>
+          )}
+        </select>
+      </span>
+      <span className='PlayerParams-param'>
+        <label htmlFor='silenceDuration' title='Silence between songs' className="PlayerParams-label-wide">
+          Insert Silence:{' '}
+        </label>
+        <select
+          id='silenceDuration'
+          onChange={handleSilenceDurationChange}
+          value={silenceDuration}>
+          {silenceOptions.map(option =>
             <option key={option.value} value={option.value}>{option.label}</option>
           )}
         </select>
