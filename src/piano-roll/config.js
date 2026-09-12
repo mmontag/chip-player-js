@@ -25,7 +25,7 @@ export const PIANO_ROLL_CONFIG = {
   // Sync position of the playhead line:
   // Options: 'top', 'center', 'bottom', 'left', 'right', or a normalized number (0.0 to 1.0).
   // Default 'top' matches the Spectrogram's waterfall behavior.
-  SYNC_POSITION: 'center',
+  SYNC_POSITION: 'bottom',
 
   // Offset in pixels for the playhead from the top/left edge when SYNC_POSITION is 'top' or 'left'.
   PLAYHEAD_OFFSET_PX: 0,
@@ -110,6 +110,15 @@ export const PIANO_ROLL_CONFIG = {
   MUTED_OPACITY: 0.15,    // Opacity for notes on muted channels
   SUSTAIN_OPACITY: 0.5,   // Opacity for the portion of a note held by the sustain pedal (CC 64)
   ENABLE_PITCH_BEND: true, // Visualize MIDI pitch bends as continuous ribbons
+  // Piano Keyboard settings:
+  SHOW_KEYBOARD: true, // Display interactive piano keyboard under the playhead
+  KEYBOARD_ASPECT_RATIO: 0.125, // Height-to-width ratio of the 88-key keyboard (0.125 * 440px = 55px)
+  KEYBOARD_BLACK_KEY_HEIGHT_RATIO: 0.6, // Height of black keys as a fraction of white key height
+  KEYBOARD_WHITE_KEY_COLOR: '#ffffff', // Rest fill color for white keys
+  KEYBOARD_BLACK_KEY_COLOR: '#111111', // Rest fill color for black keys
+  KEYBOARD_STROKE_COLOR: '#444444', // 1-pixel stroke between white keys and bottom border
+  KEYBOARD_BLACK_KEY_STROKE_COLOR: '#000000', // Outline stroke for black keys
+  KEYBOARD_SUSTAIN_ILLUMINATION: true, // Illuminate keys held by sustain pedal at sustain opacity
 };
 
 export const DECAY_EASINGS = {

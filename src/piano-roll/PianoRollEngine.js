@@ -1,5 +1,5 @@
-import { PIANO_ROLL_CONFIG, getDecayIntensity } from './config';
-import { findFirstVisibleNoteIndex, getNoteName, getNotePitchOffsetAt, isBlackKey } from './midi-parser';
+import { PIANO_ROLL_CONFIG, getDecayIntensity } from './config.js';
+import { findFirstVisibleNoteIndex, getNoteName, getNotePitchOffsetAt, isBlackKey } from './midi-parser.js';
 
 export default class PianoRollEngine {
   constructor(canvas, options = {}) {
@@ -26,6 +26,10 @@ export default class PianoRollEngine {
     this.lastRawPos = -1;
     this.smoothPos = 0;
     this.isDirty = true;
+
+    this.keyboardCanvas = null;
+    this.keyboardGeometry = null;
+    this.keyboardCacheKey = '';
 
     this.onFrame = this.onFrame.bind(this);
     this.render = this.render.bind(this);
@@ -90,6 +94,7 @@ export default class PianoRollEngine {
 
   updateConfig(newConfig) {
     this.config = { ...this.config, ...newConfig };
+    this.keyboardCacheKey = '';
     this.isDirty = true;
     this.render();
   }
@@ -98,6 +103,7 @@ export default class PianoRollEngine {
     if (this.canvas.width !== width || this.canvas.height !== height) {
       this.canvas.width = width;
       this.canvas.height = height;
+      this.keyboardCacheKey = '';
       this.isDirty = true;
       this.render();
     }
@@ -120,6 +126,9 @@ export default class PianoRollEngine {
 
   destroy() {
     this.stop();
+    this.keyboardCanvas = null;
+    this.keyboardGeometry = null;
+    this.keyboardCacheKey = '';
   }
 
   onFrame(timestamp) {
@@ -217,6 +226,180 @@ export default class PianoRollEngine {
     ctx.stroke();
   }
 
+  ensureKeyboardCache(width, height, isVertical, pitchOffset, laneSize, totalPitchDimension, minPitch, maxPitch) {
+    const { config } = this;
+    const aspectRatio = config.KEYBOARD_ASPECT_RATIO || 0.125;
+    const keyboardSize = Math.max(1, Math.round(totalPitchDimension * aspectRatio));
+    const blackKeyHeightRatio = config.KEYBOARD_BLACK_KEY_HEIGHT_RATIO || 0.6;
+    const blackKeyLength = Math.max(1, Math.round(keyboardSize * blackKeyHeightRatio));
+
+    const cacheKey = `${width}_${height}_${isVertical}_${keyboardSize}_${pitchOffset}_${laneSize}_${totalPitchDimension}_${minPitch}_${maxPitch}_${blackKeyLength}_${config.KEYBOARD_WHITE_KEY_COLOR}_${config.KEYBOARD_BLACK_KEY_COLOR}_${config.KEYBOARD_STROKE_COLOR}_${config.KEYBOARD_BLACK_KEY_STROKE_COLOR}`;
+
+    if (this.keyboardCacheKey === cacheKey && this.keyboardCanvas && this.keyboardGeometry) {
+      return this.keyboardGeometry;
+    }
+
+    const whitePitches = [];
+    const blackKeys = {};
+    const whiteKeys = {};
+    let whiteDividers = [];
+
+    if (!this.keyboardCanvas) {
+      this.keyboardCanvas = document.createElement('canvas');
+    }
+
+    if (isVertical) {
+      // 1. Vertical mode: pitch along X axis (left to right, A0 to C8)
+      const bkThickness = Math.max(3, Math.round(laneSize * 1.1));
+      for (let p = minPitch; p <= maxPitch; p++) {
+        if (isBlackKey(p)) {
+          const laneCenter = pitchOffset + (p - minPitch) * laneSize + laneSize / 2;
+          const bkX = Math.floor(laneCenter - bkThickness / 2);
+          blackKeys[p] = {
+            pitch: p,
+            x: bkX,
+            w: bkThickness,
+            h: blackKeyLength,
+          };
+        } else {
+          whitePitches.push(p);
+        }
+      }
+
+      const numWhite = whitePitches.length;
+      whiteDividers = [];
+      for (let i = 0; i <= numWhite; i++) {
+        whiteDividers.push(Math.round(pitchOffset + (i * totalPitchDimension) / numWhite));
+      }
+
+      for (let i = 0; i < numWhite; i++) {
+        const p = whitePitches[i];
+        const xStart = whiteDividers[i];
+        const xEnd = whiteDividers[i + 1];
+        whiteKeys[p] = {
+          pitch: p,
+          x: xStart,
+          w: Math.max(1, xEnd - xStart),
+        };
+      }
+
+      this.keyboardCanvas.width = width;
+      this.keyboardCanvas.height = keyboardSize;
+      const kCtx = this.keyboardCanvas.getContext('2d', { alpha: false });
+
+      kCtx.fillStyle = config.BACKGROUND_COLOR;
+      kCtx.fillRect(0, 0, width, keyboardSize);
+
+      // Step 1: Base paint white rect
+      kCtx.fillStyle = config.KEYBOARD_WHITE_KEY_COLOR || '#ffffff';
+      kCtx.fillRect(pitchOffset, 0, totalPitchDimension, keyboardSize);
+
+      // Step 2: Full-height vertical divider lines
+      kCtx.fillStyle = config.KEYBOARD_STROKE_COLOR || '#444444';
+      for (let i = 1; i < numWhite; i++) {
+        const strokeX = whiteDividers[i] - 1;
+        kCtx.fillRect(strokeX, 0, 1, keyboardSize);
+      }
+      kCtx.fillRect(Math.max(0, pitchOffset), 0, 1, keyboardSize);
+      kCtx.fillRect(pitchOffset + totalPitchDimension - 1, 0, 1, keyboardSize);
+      kCtx.fillRect(pitchOffset, keyboardSize - 1, totalPitchDimension, 1);
+
+      // Step 3: Black keys on top
+      kCtx.fillStyle = config.KEYBOARD_BLACK_KEY_COLOR || '#111111';
+      for (const p in blackKeys) {
+        const bk = blackKeys[p];
+        kCtx.fillRect(bk.x, 0, bk.w, bk.h);
+      }
+
+      kCtx.strokeStyle = config.KEYBOARD_BLACK_KEY_STROKE_COLOR || '#000000';
+      kCtx.lineWidth = 1;
+      for (const p in blackKeys) {
+        const bk = blackKeys[p];
+        kCtx.strokeRect(bk.x + 0.5, 0.5, bk.w - 1, bk.h - 1);
+      }
+    } else {
+      // 2. Horizontal mode (rotated 90 deg CCW): pitch along Y axis (top to bottom, C8 at top, A0 at bottom)
+      const bkThickness = Math.max(3, Math.round(laneSize * 1.1));
+      for (let p = maxPitch; p >= minPitch; p--) {
+        if (isBlackKey(p)) {
+          const laneCenter = pitchOffset + (maxPitch - p) * laneSize + laneSize / 2;
+          const bkY = Math.floor(laneCenter - bkThickness / 2);
+          blackKeys[p] = {
+            pitch: p,
+            y: bkY,
+            w: blackKeyLength,
+            h: bkThickness,
+          };
+        } else {
+          whitePitches.push(p);
+        }
+      }
+
+      const numWhite = whitePitches.length;
+      whiteDividers = [];
+      for (let i = 0; i <= numWhite; i++) {
+        whiteDividers.push(Math.round(pitchOffset + (i * totalPitchDimension) / numWhite));
+      }
+
+      for (let i = 0; i < numWhite; i++) {
+        const p = whitePitches[i];
+        const yStart = whiteDividers[i];
+        const yEnd = whiteDividers[i + 1];
+        whiteKeys[p] = {
+          pitch: p,
+          y: yStart,
+          h: Math.max(1, yEnd - yStart),
+        };
+      }
+
+      this.keyboardCanvas.width = keyboardSize;
+      this.keyboardCanvas.height = height;
+      const kCtx = this.keyboardCanvas.getContext('2d', { alpha: false });
+
+      kCtx.fillStyle = config.BACKGROUND_COLOR;
+      kCtx.fillRect(0, 0, keyboardSize, height);
+
+      // Step 1: Base paint white rect
+      kCtx.fillStyle = config.KEYBOARD_WHITE_KEY_COLOR || '#ffffff';
+      kCtx.fillRect(0, pitchOffset, keyboardSize, totalPitchDimension);
+
+      // Step 2: Full-width horizontal divider lines
+      kCtx.fillStyle = config.KEYBOARD_STROKE_COLOR || '#444444';
+      for (let i = 1; i < numWhite; i++) {
+        const strokeY = whiteDividers[i] - 1;
+        kCtx.fillRect(0, strokeY, keyboardSize, 1);
+      }
+      kCtx.fillRect(0, Math.max(0, pitchOffset), keyboardSize, 1);
+      kCtx.fillRect(0, pitchOffset + totalPitchDimension - 1, keyboardSize, 1);
+      kCtx.fillRect(0, pitchOffset, 1, totalPitchDimension);
+
+      // Step 3: Black keys on top (attached to right edge of keyboardCanvas)
+      kCtx.fillStyle = config.KEYBOARD_BLACK_KEY_COLOR || '#111111';
+      for (const p in blackKeys) {
+        const bk = blackKeys[p];
+        kCtx.fillRect(keyboardSize - bk.w, bk.y, bk.w, bk.h);
+      }
+
+      kCtx.strokeStyle = config.KEYBOARD_BLACK_KEY_STROKE_COLOR || '#000000';
+      kCtx.lineWidth = 1;
+      for (const p in blackKeys) {
+        const bk = blackKeys[p];
+        kCtx.strokeRect(keyboardSize - bk.w + 0.5, bk.y + 0.5, bk.w - 1, bk.h - 1);
+      }
+    }
+
+    this.keyboardCacheKey = cacheKey;
+    this.keyboardGeometry = {
+      keyboardSize,
+      blackKeyLength,
+      whiteKeys,
+      blackKeys,
+      whiteDividers,
+    };
+
+    return this.keyboardGeometry;
+  }
+
   render(timestamp) {
     const { canvas, ctx, config } = this;
     const width = canvas.width;
@@ -235,6 +418,39 @@ export default class PianoRollEngine {
     const maxPitch = noteRange === 128 ? 127 : 108; // 108 is C8
     const pitchCount = maxPitch - minPitch + 1;
 
+    let laneSize = 0;
+    let pitchOffset = 0;
+    let totalPitchDimension = isVertical ? width : height;
+    if (isVertical) {
+      if (config.PITCH_ZOOM_MODE === 'fill') {
+        laneSize = width / pitchCount;
+        totalPitchDimension = width;
+      } else {
+        laneSize = config.PIXELS_PER_NOTE;
+        totalPitchDimension = pitchCount * laneSize;
+        pitchOffset = Math.max(0, Math.floor((width - totalPitchDimension) / 2));
+      }
+    } else {
+      if (config.PITCH_ZOOM_MODE === 'fill') {
+        laneSize = height / pitchCount;
+        totalPitchDimension = height;
+      } else {
+        laneSize = config.PIXELS_PER_NOTE;
+        totalPitchDimension = pitchCount * laneSize;
+        pitchOffset = Math.max(0, Math.floor((height - totalPitchDimension) / 2));
+      }
+    }
+
+    const laneWidth = laneSize;
+    const xOffset = pitchOffset;
+    const laneHeight = laneSize;
+    const yOffset = pitchOffset;
+
+    const isKeyboardVisible = config.SHOW_KEYBOARD !== false;
+    const keyboardSize = isKeyboardVisible
+      ? Math.max(1, Math.round(totalPitchDimension * (config.KEYBOARD_ASPECT_RATIO || 0.125)))
+      : 0;
+
     // Time scaling (pixels per millisecond)
     let pxPerMs;
     if (config.TIME_ZOOM_MODE === 'fit-song' && this.durationMs > 0) {
@@ -248,11 +464,11 @@ export default class PianoRollEngine {
     const timeDimension = isVertical ? height : width;
     let playheadCoord;
     if (config.SYNC_POSITION === 'top' || config.SYNC_POSITION === 'left') {
-      playheadCoord = config.PLAYHEAD_OFFSET_PX || 2;
+      playheadCoord = (config.PLAYHEAD_OFFSET_PX || 2) + (!isVertical && isKeyboardVisible ? keyboardSize : 0);
     } else if (config.SYNC_POSITION === 'center') {
       playheadCoord = Math.floor(timeDimension / 2);
     } else if (config.SYNC_POSITION === 'bottom' || config.SYNC_POSITION === 'right') {
-      playheadCoord = timeDimension - (config.PLAYHEAD_OFFSET_PX || 2);
+      playheadCoord = timeDimension - (config.PLAYHEAD_OFFSET_PX || 2) - (isVertical && isKeyboardVisible ? keyboardSize : 0);
     } else if (typeof config.SYNC_POSITION === 'number') {
       playheadCoord = Math.floor(timeDimension * config.SYNC_POSITION);
     } else {
@@ -270,21 +486,11 @@ export default class PianoRollEngine {
 
     // 1. Draw pitch lanes (background grid)
     if (isVertical) {
-      let laneWidth;
-      let xOffset = 0;
-      if (config.PITCH_ZOOM_MODE === 'fill') {
-        laneWidth = width / pitchCount;
-      } else {
-        laneWidth = config.PIXELS_PER_NOTE;
-        const totalPitchWidth = pitchCount * laneWidth;
-        xOffset = Math.max(0, Math.floor((width - totalPitchWidth) / 2));
-      }
-
       ctx.fillStyle = config.BLACK_KEY_LANE_TINT;
       for (let p = minPitch; p <= maxPitch; p++) {
-        const laneX = Math.round(xOffset + (p - minPitch) * laneWidth);
+        const laneX = Math.round(pitchOffset + (p - minPitch) * laneSize);
         if (isBlackKey(p)) {
-          const nextLaneX = Math.round(xOffset + (p + 1 - minPitch) * laneWidth);
+          const nextLaneX = Math.round(pitchOffset + (p + 1 - minPitch) * laneSize);
           ctx.fillRect(laneX, 0, nextLaneX - laneX, height);
         }
       }
@@ -292,27 +498,16 @@ export default class PianoRollEngine {
       ctx.fillStyle = config.OCTAVE_LINE_COLOR;
       for (let p = minPitch; p <= maxPitch; p++) {
         if (p % 12 === 0) {
-          const laneX = Math.round(xOffset + (p - minPitch) * laneWidth);
+          const laneX = Math.round(pitchOffset + (p - minPitch) * laneSize);
           ctx.fillRect(laneX, 0, 1, height);
         }
       }
     } else {
-      // Horizontal orientation: pitches along Y axis (low at bottom, high at top)
-      let laneHeight;
-      let yOffset = 0;
-      if (config.PITCH_ZOOM_MODE === 'fill') {
-        laneHeight = height / pitchCount;
-      } else {
-        laneHeight = config.PIXELS_PER_NOTE;
-        const totalPitchHeight = pitchCount * laneHeight;
-        yOffset = Math.max(0, Math.floor((height - totalPitchHeight) / 2));
-      }
-
       ctx.fillStyle = config.BLACK_KEY_LANE_TINT;
       for (let p = minPitch; p <= maxPitch; p++) {
-        const laneY = Math.round(yOffset + (maxPitch - p) * laneHeight);
+        const laneY = Math.round(pitchOffset + (maxPitch - p) * laneSize);
         if (isBlackKey(p)) {
-          const nextLaneY = Math.round(yOffset + (maxPitch - p + 1) * laneHeight);
+          const nextLaneY = Math.round(pitchOffset + (maxPitch - p + 1) * laneSize);
           ctx.fillRect(0, laneY, width, nextLaneY - laneY);
         }
       }
@@ -320,7 +515,7 @@ export default class PianoRollEngine {
       ctx.fillStyle = config.OCTAVE_LINE_COLOR;
       for (let p = minPitch; p <= maxPitch; p++) {
         if (p % 12 === 0) {
-          const laneY = Math.round(yOffset + (maxPitch - p) * laneHeight);
+          const laneY = Math.round(pitchOffset + (maxPitch - p) * laneSize);
           ctx.fillRect(0, laneY, width, 1);
         }
       }
@@ -346,11 +541,11 @@ export default class PianoRollEngine {
       } else {
         // Horizontal
         if (config.DIRECTION === 'right-to-left') {
-          minVisibleMs = currentTimeMs - (width - playheadCoord) / pxPerMs;
-          maxVisibleMs = currentTimeMs + playheadCoord / pxPerMs;
-        } else {
           minVisibleMs = currentTimeMs - playheadCoord / pxPerMs;
           maxVisibleMs = currentTimeMs + (width - playheadCoord) / pxPerMs;
+        } else {
+          minVisibleMs = currentTimeMs - (width - playheadCoord) / pxPerMs;
+          maxVisibleMs = currentTimeMs + playheadCoord / pxPerMs;
         }
       }
     } else {
@@ -360,6 +555,7 @@ export default class PianoRollEngine {
     }
 
     // 3. Draw notes
+    const activeKeys = new Map();
     const notes = this.notes;
     if (notes.length > 0) {
       const startIndex = findFirstVisibleNoteIndex(notes, minVisibleMs, this.maxNoteDurationMs);
@@ -367,26 +563,6 @@ export default class PianoRollEngine {
       const cornerRadius = config.NOTE_CORNER_RADIUS;
       const gap = config.NOTE_GAP_PX;
       const sustainOpacity = config.SUSTAIN_OPACITY !== undefined ? config.SUSTAIN_OPACITY : 0.5;
-
-      // Pitch lane dimensions
-      let laneWidth, xOffset, laneHeight, yOffset;
-      if (isVertical) {
-        laneWidth = config.PITCH_ZOOM_MODE === 'fill'
-          ? width / pitchCount
-          : config.PIXELS_PER_NOTE;
-        const totalPitchWidth = pitchCount * laneWidth;
-        xOffset = config.PITCH_ZOOM_MODE === 'fill'
-          ? 0
-          : Math.max(0, Math.floor((width - totalPitchWidth) / 2));
-      } else {
-        laneHeight = config.PITCH_ZOOM_MODE === 'fill'
-          ? height / pitchCount
-          : config.PIXELS_PER_NOTE;
-        const totalPitchHeight = pitchCount * laneHeight;
-        yOffset = config.PITCH_ZOOM_MODE === 'fill'
-          ? 0
-          : Math.max(0, Math.floor((height - totalPitchHeight) / 2));
-      }
 
       // Time to canvas coordinate mapping
       const getTimeCoord = (timeMs) => {
@@ -397,8 +573,8 @@ export default class PianoRollEngine {
               : playheadCoord - (currentTimeMs - timeMs) * pxPerMs;
           } else {
             return config.DIRECTION === 'right-to-left'
-              ? playheadCoord + (currentTimeMs - timeMs) * pxPerMs
-              : playheadCoord - (currentTimeMs - timeMs) * pxPerMs;
+              ? playheadCoord - (currentTimeMs - timeMs) * pxPerMs
+              : playheadCoord + (currentTimeMs - timeMs) * pxPerMs;
           }
         } else {
           // Paginated
@@ -407,7 +583,9 @@ export default class PianoRollEngine {
               ? (timeMs - pageStartMs) * pxPerMs
               : height - (timeMs - pageStartMs) * pxPerMs;
           } else {
-            return (timeMs - pageStartMs) * pxPerMs;
+            return config.DIRECTION === 'right-to-left'
+              ? width - (timeMs - pageStartMs) * pxPerMs
+              : (timeMs - pageStartMs) * pxPerMs;
           }
         }
       };
@@ -488,6 +666,29 @@ export default class PianoRollEngine {
           : this.getChannelColor(note.channel);
 
         const baseAlpha = isMuted ? config.MUTED_OPACITY : 1.0;
+
+        // Track sounding notes for piano keyboard illumination
+        if (!isMuted && isKeyboardVisible && note.startMs <= currentTimeMs && noteEndMs >= currentTimeMs) {
+          const isKeySounding = currentTimeMs <= note.endMs;
+          const isSustainSounding = hasSustain && currentTimeMs > note.endMs && currentTimeMs <= note.sustainEndMs;
+          const useSustain = config.KEYBOARD_SUSTAIN_ILLUMINATION !== false;
+          if (isKeySounding || (isSustainSounding && useSustain)) {
+            const bendOffset = (config.ENABLE_PITCH_BEND !== false && note.bends && note.bends.length > 1)
+              ? getNotePitchOffsetAt(note.bends, currentTimeMs)
+              : 0;
+            const currentPitch = Math.round(note.pitch + bendOffset);
+            if (currentPitch >= minPitch && currentPitch <= maxPitch) {
+              const existing = activeKeys.get(currentPitch);
+              if (!existing || (!existing.isKey && isKeySounding)) {
+                activeKeys.set(currentPitch, {
+                  color: baseColor,
+                  isKey: isKeySounding,
+                  isSustain: !isKeySounding && isSustainSounding,
+                });
+              }
+            }
+          }
+        }
 
         const cStart = getTimeCoord(note.startMs);
         const cEnd = getTimeCoord(note.endMs);
@@ -669,17 +870,107 @@ export default class PianoRollEngine {
       ctx.globalAlpha = 1.0;
     }
 
-    // 4. Draw playhead line
+    // 4. Draw piano keyboard and playhead line
     let actualPlayheadCoord = playheadCoord;
     if (!isContinuous) {
       actualPlayheadCoord = (currentTimeMs - pageStartMs) * pxPerMs;
       if (!isTopToBottom && isVertical) {
         actualPlayheadCoord = height - actualPlayheadCoord;
+      } else if (!isVertical && config.DIRECTION === 'right-to-left') {
+        actualPlayheadCoord = width - actualPlayheadCoord;
       }
     }
 
     const lineWidth = Math.max(1, Math.round(config.PLAYHEAD_LINE_WIDTH || 1));
     const lineCoord = Math.floor(actualPlayheadCoord);
+
+    if (isKeyboardVisible) {
+      const geo = this.ensureKeyboardCache(width, height, isVertical, pitchOffset, laneSize, totalPitchDimension, minPitch, maxPitch);
+      if (geo && this.keyboardCanvas) {
+        if (isVertical) {
+          const keyboardY = lineCoord + lineWidth;
+
+          // Draw cached base layer
+          ctx.drawImage(this.keyboardCanvas, 0, keyboardY);
+
+          // Draw illuminated active keys
+          if (activeKeys.size > 0) {
+            const blackKeysToRedraw = new Set();
+
+            // 1. Draw active white keys as full-height rectangles
+            for (const [pitch, info] of activeKeys) {
+              const wk = geo.whiteKeys[pitch];
+              if (wk) {
+                ctx.globalAlpha = info.isSustain ? (config.SUSTAIN_OPACITY || 0.5) : 1.0;
+                ctx.fillStyle = info.color;
+                ctx.fillRect(wk.x, keyboardY, Math.max(1, wk.w - 1), keyboardSize);
+
+                // Mark adjacent black keys to be redrawn on top
+                if (geo.blackKeys[pitch - 1]) blackKeysToRedraw.add(pitch - 1);
+                if (geo.blackKeys[pitch + 1]) blackKeysToRedraw.add(pitch + 1);
+              } else if (geo.blackKeys[pitch]) {
+                blackKeysToRedraw.add(pitch);
+              }
+            }
+
+            // 2. Paint black keys on top (active in note color, idle in black)
+            for (const bkPitch of blackKeysToRedraw) {
+              const bk = geo.blackKeys[bkPitch];
+              const activeInfo = activeKeys.get(bkPitch);
+              ctx.globalAlpha = (activeInfo && activeInfo.isSustain) ? (config.SUSTAIN_OPACITY || 0.5) : 1.0;
+              ctx.fillStyle = activeInfo ? activeInfo.color : (config.KEYBOARD_BLACK_KEY_COLOR || '#111111');
+              ctx.fillRect(bk.x, keyboardY, bk.w, bk.h);
+              ctx.strokeStyle = config.KEYBOARD_BLACK_KEY_STROKE_COLOR || '#000000';
+              ctx.lineWidth = 1;
+              ctx.strokeRect(bk.x + 0.5, keyboardY + 0.5, bk.w - 1, bk.h - 1);
+            }
+            ctx.globalAlpha = 1.0;
+          }
+        } else {
+          // Horizontal orientation: keyboard rotated 90 deg CCW, displayed to the left of the playhead
+          const keyboardX = lineCoord - keyboardSize;
+
+          // Draw cached base layer
+          ctx.drawImage(this.keyboardCanvas, keyboardX, 0);
+
+          // Draw illuminated active keys
+          if (activeKeys.size > 0) {
+            const blackKeysToRedraw = new Set();
+
+            // 1. Draw active white keys as full-width rectangles
+            for (const [pitch, info] of activeKeys) {
+              const wk = geo.whiteKeys[pitch];
+              if (wk) {
+                ctx.globalAlpha = info.isSustain ? (config.SUSTAIN_OPACITY || 0.5) : 1.0;
+                ctx.fillStyle = info.color;
+                ctx.fillRect(keyboardX, wk.y, keyboardSize, Math.max(1, wk.h - 1));
+
+                // Mark adjacent black keys to be redrawn on top
+                if (geo.blackKeys[pitch - 1]) blackKeysToRedraw.add(pitch - 1);
+                if (geo.blackKeys[pitch + 1]) blackKeysToRedraw.add(pitch + 1);
+              } else if (geo.blackKeys[pitch]) {
+                blackKeysToRedraw.add(pitch);
+              }
+            }
+
+            // 2. Paint black keys on top (attached to right edge of keyboard, touching playhead)
+            for (const bkPitch of blackKeysToRedraw) {
+              const bk = geo.blackKeys[bkPitch];
+              const activeInfo = activeKeys.get(bkPitch);
+              const bkX = keyboardX + keyboardSize - bk.w;
+              ctx.globalAlpha = (activeInfo && activeInfo.isSustain) ? (config.SUSTAIN_OPACITY || 0.5) : 1.0;
+              ctx.fillStyle = activeInfo ? activeInfo.color : (config.KEYBOARD_BLACK_KEY_COLOR || '#111111');
+              ctx.fillRect(bkX, bk.y, bk.w, bk.h);
+              ctx.strokeStyle = config.KEYBOARD_BLACK_KEY_STROKE_COLOR || '#000000';
+              ctx.lineWidth = 1;
+              ctx.strokeRect(bkX + 0.5, bk.y + 0.5, bk.w - 1, bk.h - 1);
+            }
+            ctx.globalAlpha = 1.0;
+          }
+        }
+      }
+    }
+
     ctx.fillStyle = config.PLAYHEAD_COLOR;
     if (isVertical) {
       ctx.fillRect(0, lineCoord, width, lineWidth);
