@@ -11,7 +11,7 @@ export const PIANO_ROLL_CONFIG = {
   // Orientation:
   // - 'vertical': Pitch runs across the width, time runs along the height.
   // - 'horizontal': Pitch runs along the height, time runs across the width.
-  ORIENTATION: 'vertical',
+  ORIENTATION: 'horizontal',
 
   // Direction:
   // - 'forward': Standard flow towards the playhead (top-to-bottom in vertical, right-to-left in horizontal).
@@ -19,11 +19,13 @@ export const PIANO_ROLL_CONFIG = {
   DIRECTION: 'forward',
 
   // Sync position of the playhead line:
-  // Options: 'top', 'center', 'bottom', 'left', 'right', or a normalized number (0.0 to 1.0).
-  // Default 'top' matches the Spectrogram's waterfall behavior.
-  SYNC_POSITION: 'bottom',
+  // Options: 'start', 'middle', 'end', or a normalized number (0.0 to 1.0).
+  // - 'end': Notes flow towards the playhead (bottom in vertical forward, left in horizontal forward).
+  // - 'middle': Centered in the viewport.
+  // - 'start': Notes flow away from the playhead (top in vertical forward, right in horizontal forward).
+  SYNC_POSITION: 'end',
 
-  // Offset in pixels for the playhead from the top/left edge when SYNC_POSITION is 'top' or 'left'.
+  // Offset in pixels for the playhead from the viewport boundary when SYNC_POSITION is 'start' or 'end'.
   PLAYHEAD_OFFSET_PX: 0,
 
   // Time Zoom:
@@ -38,7 +40,7 @@ export const PIANO_ROLL_CONFIG = {
   // Pitch Zoom:
   // - 'fill': Evenly scale notes across the pitch axis to fill the viewport dimensions.
   // - 'fixed': Use a fixed number of pixels per note lane (PIXELS_PER_NOTE).
-  PITCH_ZOOM_MODE: 'fixed',
+  PITCH_ZOOM_MODE: 'fill',
 
   // Pixels per note lane when PITCH_ZOOM_MODE is 'fixed'.
   // 5px * 88 notes = 440px (neatly fits 448px visualizer width with 4px margin).

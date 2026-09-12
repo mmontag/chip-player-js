@@ -462,17 +462,57 @@ export default class PianoRollEngine {
 
     // Playhead calculation
     const timeDimension = isVertical ? height : width;
-    let playheadCoord;
-    if (config.SYNC_POSITION === 'top' || config.SYNC_POSITION === 'left') {
-      playheadCoord = (config.PLAYHEAD_OFFSET_PX || 2) + (!isVertical && isKeyboardVisible ? keyboardSize : 0);
-    } else if (config.SYNC_POSITION === 'center') {
-      playheadCoord = Math.floor(timeDimension / 2);
-    } else if (config.SYNC_POSITION === 'bottom' || config.SYNC_POSITION === 'right') {
-      playheadCoord = timeDimension - (config.PLAYHEAD_OFFSET_PX || 2) - (isVertical && isKeyboardVisible ? keyboardSize : 0);
-    } else if (typeof config.SYNC_POSITION === 'number') {
-      playheadCoord = Math.floor(timeDimension * config.SYNC_POSITION);
+    const lineWidth = Math.max(1, Math.round(config.PLAYHEAD_LINE_WIDTH || 1));
+    const offset = typeof config.PLAYHEAD_OFFSET_PX === 'number' ? config.PLAYHEAD_OFFSET_PX : 2;
+
+    // Resolve sync position target: 'start', 'middle', or 'end'
+    // Legacy support: 'top', 'bottom', 'left', 'right', 'center'
+    let syncMode = config.SYNC_POSITION;
+    if (syncMode === 'center') syncMode = 'middle';
+    else if (syncMode === 'bottom') syncMode = isVertical ? (isForward ? 'end' : 'start') : 'end';
+    else if (syncMode === 'top') syncMode = isVertical ? (isForward ? 'start' : 'end') : 'start';
+    else if (syncMode === 'left') syncMode = !isVertical ? (isForward ? 'end' : 'start') : 'end';
+    else if (syncMode === 'right') syncMode = !isVertical ? (isForward ? 'start' : 'end') : 'start';
+
+    // Start position coordinate (where notes originate)
+    let coordStart;
+    // End position coordinate (destination where notes strike the playhead/keyboard)
+    let coordEnd;
+
+    if (isVertical) {
+      if (isForward) {
+        // Forward vertical: notes flow top -> bottom
+        coordStart = offset;
+        coordEnd = height - offset - lineWidth - (isKeyboardVisible ? keyboardSize : 0);
+      } else {
+        // Reverse vertical: notes flow bottom -> top
+        coordStart = height - offset - lineWidth;
+        coordEnd = offset + (isKeyboardVisible ? keyboardSize : 0);
+      }
     } else {
-      playheadCoord = config.PLAYHEAD_OFFSET_PX || 2;
+      if (isForward) {
+        // Forward horizontal: notes flow right -> left
+        coordStart = width - offset - lineWidth;
+        coordEnd = offset + (isKeyboardVisible ? keyboardSize : 0);
+      } else {
+        // Reverse horizontal: notes flow left -> right
+        coordStart = offset;
+        coordEnd = width - offset - lineWidth - (isKeyboardVisible ? keyboardSize : 0);
+      }
+    }
+
+    let playheadCoord;
+    if (syncMode === 'end') {
+      playheadCoord = coordEnd;
+    } else if (syncMode === 'middle') {
+      playheadCoord = Math.floor(timeDimension / 2);
+    } else if (syncMode === 'start') {
+      playheadCoord = coordStart;
+    } else if (typeof syncMode === 'number') {
+      // Interpolate between start (0.0) and end (1.0)
+      playheadCoord = Math.round(coordStart + syncMode * (coordEnd - coordStart));
+    } else {
+      playheadCoord = coordEnd;
     }
 
     // Page-based time for paginated animation behavior
@@ -881,7 +921,6 @@ export default class PianoRollEngine {
       }
     }
 
-    const lineWidth = Math.max(1, Math.round(config.PLAYHEAD_LINE_WIDTH || 1));
     const lineCoord = Math.floor(actualPlayheadCoord);
 
     if (isKeyboardVisible) {
