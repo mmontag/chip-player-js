@@ -409,7 +409,7 @@ export default class PianoRollEngine {
     const currentTimeMs = this.getSmoothPositionMs(timestamp);
 
     const isVertical = config.ORIENTATION === 'vertical';
-    const isTopToBottom = config.DIRECTION === 'top-to-bottom';
+    const isForward = config.DIRECTION !== 'reverse' && config.DIRECTION !== 'bottom-to-top' && config.DIRECTION !== 'left-to-right';
     const isContinuous = config.ANIMATION_BEHAVIOR === 'continuous';
 
     // Pitch parameters
@@ -527,23 +527,23 @@ export default class PianoRollEngine {
 
     if (isContinuous) {
       if (isVertical) {
-        if (isTopToBottom) {
-          // Playhead at top, notes cascade downward.
-          // Note Y = playheadCoord + (currentTimeMs - note.startMs) * pxPerMs.
-          // Note is visible when Note Y_trailing <= height AND Note Y_leading >= 0.
+        if (isForward) {
+          // Top to bottom: notes cascade downward towards playhead
           minVisibleMs = currentTimeMs - (height - playheadCoord) / pxPerMs;
           maxVisibleMs = currentTimeMs + playheadCoord / pxPerMs;
         } else {
-          // Bottom to top
+          // Bottom to top: notes scroll upward
           minVisibleMs = currentTimeMs - playheadCoord / pxPerMs;
           maxVisibleMs = currentTimeMs + (height - playheadCoord) / pxPerMs;
         }
       } else {
         // Horizontal
-        if (config.DIRECTION === 'right-to-left') {
+        if (isForward) {
+          // Right to left: notes flow leftward towards playhead
           minVisibleMs = currentTimeMs - playheadCoord / pxPerMs;
           maxVisibleMs = currentTimeMs + (width - playheadCoord) / pxPerMs;
         } else {
+          // Left to right
           minVisibleMs = currentTimeMs - (width - playheadCoord) / pxPerMs;
           maxVisibleMs = currentTimeMs + playheadCoord / pxPerMs;
         }
@@ -568,22 +568,22 @@ export default class PianoRollEngine {
       const getTimeCoord = (timeMs) => {
         if (isContinuous) {
           if (isVertical) {
-            return isTopToBottom
+            return isForward
               ? playheadCoord + (currentTimeMs - timeMs) * pxPerMs
               : playheadCoord - (currentTimeMs - timeMs) * pxPerMs;
           } else {
-            return config.DIRECTION === 'right-to-left'
+            return isForward
               ? playheadCoord - (currentTimeMs - timeMs) * pxPerMs
               : playheadCoord + (currentTimeMs - timeMs) * pxPerMs;
           }
         } else {
           // Paginated
           if (isVertical) {
-            return isTopToBottom
+            return isForward
               ? (timeMs - pageStartMs) * pxPerMs
               : height - (timeMs - pageStartMs) * pxPerMs;
           } else {
-            return config.DIRECTION === 'right-to-left'
+            return isForward
               ? width - (timeMs - pageStartMs) * pxPerMs
               : (timeMs - pageStartMs) * pxPerMs;
           }
@@ -874,9 +874,9 @@ export default class PianoRollEngine {
     let actualPlayheadCoord = playheadCoord;
     if (!isContinuous) {
       actualPlayheadCoord = (currentTimeMs - pageStartMs) * pxPerMs;
-      if (!isTopToBottom && isVertical) {
+      if (!isForward && isVertical) {
         actualPlayheadCoord = height - actualPlayheadCoord;
-      } else if (!isVertical && config.DIRECTION === 'right-to-left') {
+      } else if (!isVertical && isForward) {
         actualPlayheadCoord = width - actualPlayheadCoord;
       }
     }

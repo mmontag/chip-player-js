@@ -14,13 +14,9 @@ export const PIANO_ROLL_CONFIG = {
   ORIENTATION: 'vertical',
 
   // Direction:
-  // In vertical orientation:
-  // - 'top-to-bottom': Waterfall style. Playhead is at the top, notes cascade downwards.
-  // - 'bottom-to-top': Notes scroll upwards towards or past the playhead.
-  // In horizontal orientation:
-  // - 'left-to-right': Time flows from left to right.
-  // - 'right-to-left': Time flows from right to left.
-  DIRECTION: 'top-to-bottom',
+  // - 'forward': Standard flow towards the playhead (top-to-bottom in vertical, right-to-left in horizontal).
+  // - 'reverse': Reverse flow (bottom-to-top in vertical, left-to-right in horizontal).
+  DIRECTION: 'forward',
 
   // Sync position of the playhead line:
   // Options: 'top', 'center', 'bottom', 'left', 'right', or a normalized number (0.0 to 1.0).
