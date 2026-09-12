@@ -47,6 +47,7 @@ export default class Player extends EventEmitter {
     this.silenceSamplesRemaining = 0;
     this.onSilenceEnd = null;
     this.trailingSilenceSamples = 0;
+    this.durationMs = 0;
   }
 
   /**
@@ -261,9 +262,10 @@ export default class Player extends EventEmitter {
   }
 
   getBasePlayerState() {
+    this.durationMs = this.getDurationMs() || 0;
     return {
       metadata: this.getMetadata(),
-      durationMs: this.getDurationMs(),
+      durationMs: this.durationMs,
       positionMs: this.getPositionMs(),
       numSubtunes: this.getNumSubtunes(),
       subtune: this.getSubtune(),
@@ -350,25 +352,33 @@ export default class Player extends EventEmitter {
       for (let ch = 0; ch < output.length; ch++) {
         output[ch].fill(0);
       }
-    } else if (this.silenceDuration >= 0 && !this.paused && output.length > 0) {
-      const threshold = 0.001; // -60 dB
-      let isSilent = true;
-      const left = output[0];
-      const right = output[1] || output[0];
-      const len = left.length;
-      for (let i = 0; i < len; i++) {
-        if (Math.abs(left[i]) > threshold || Math.abs(right[i]) > threshold) {
-          isSilent = false;
-          break;
-        }
-      }
-      this.trailingSilenceSamples = isSilent ? (this.trailingSilenceSamples + this.bufferSize) : 0;
-
-      // Only activate early cutoff within the last 5 seconds of songs with known duration
-      const duration = this.getDurationMs();
+    } else if (this.silenceDuration >= 0 && !this.paused && !this.looping && !this.fadingOut && output.length > 0) {
+      const duration = this.durationMs;
       const position = this.getPositionMs();
-      if (duration > 0 && position >= (duration - 5000)) {
-        if (this.trailingSilenceSamples >= (0.4 * this.sampleRate)) {
+
+      if (duration > 0) {
+        const inFinalFiveSeconds = position >= (duration - 5000);
+        if (inFinalFiveSeconds) {
+          const threshold = 0.001; // -60 dB
+          let isSilent = true;
+          const left = output[0];
+          const right = output[1] || output[0];
+          const len = left.length;
+          for (let i = 0; i < len; i++) {
+            if (Math.abs(left[i]) > threshold || Math.abs(right[i]) > threshold) {
+              isSilent = false;
+              break;
+            }
+          }
+          this.trailingSilenceSamples = isSilent ? (this.trailingSilenceSamples + this.bufferSize) : 0;
+        } else {
+          this.trailingSilenceSamples = 0;
+        }
+
+        const reachedEarlySilence = inFinalFiveSeconds && this.trailingSilenceSamples >= (0.4 * this.sampleRate);
+        const reachedDuration = position >= duration;
+
+        if (reachedEarlySilence || reachedDuration) {
           this.handleSongEnd();
           for (let ch = 0; ch < output.length; ch++) {
             output[ch].fill(0);
