@@ -363,7 +363,7 @@ class App extends React.Component {
   updateMediaSessionPositionState() {
     if (!('mediaSession' in navigator) || !this.sequencer.getPlayer()) return;
 
-    const duration = this.sequencer.getPlayer().getDurationMs();
+    const duration = this.state.currentSongDurationMs || 0;
     const position = this.sequencer.getPlayer().getPositionMs();
     const positionState = {
       duration: duration / 1000,
