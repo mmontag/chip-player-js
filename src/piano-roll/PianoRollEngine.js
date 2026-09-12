@@ -372,19 +372,20 @@ export default class PianoRollEngine {
       kCtx.fillRect(0, Math.max(0, pitchOffset), keyboardSize, 1);
       kCtx.fillRect(0, pitchOffset + totalPitchDimension - 1, keyboardSize, 1);
       kCtx.fillRect(0, pitchOffset, 1, totalPitchDimension);
+      kCtx.fillRect(keyboardSize - 1, pitchOffset, 1, totalPitchDimension);
 
-      // Step 3: Black keys on top (attached to right edge of keyboardCanvas)
+      // Step 3: Black keys on top (attached to left edge of keyboardCanvas)
       kCtx.fillStyle = config.KEYBOARD_BLACK_KEY_COLOR || '#111111';
       for (const p in blackKeys) {
         const bk = blackKeys[p];
-        kCtx.fillRect(keyboardSize - bk.w, bk.y, bk.w, bk.h);
+        kCtx.fillRect(0, bk.y, bk.w, bk.h);
       }
 
       kCtx.strokeStyle = config.KEYBOARD_BLACK_KEY_STROKE_COLOR || '#000000';
       kCtx.lineWidth = 1;
       for (const p in blackKeys) {
         const bk = blackKeys[p];
-        kCtx.strokeRect(keyboardSize - bk.w + 0.5, bk.y + 0.5, bk.w - 1, bk.h - 1);
+        kCtx.strokeRect(0.5, bk.y + 0.5, bk.w - 1, bk.h - 1);
       }
     }
 
@@ -992,11 +993,11 @@ export default class PianoRollEngine {
               }
             }
 
-            // 2. Paint black keys on top (attached to right edge of keyboard, touching playhead)
+            // 2. Paint black keys on top (attached to left edge of keyboard)
             for (const bkPitch of blackKeysToRedraw) {
               const bk = geo.blackKeys[bkPitch];
               const activeInfo = activeKeys.get(bkPitch);
-              const bkX = keyboardX + keyboardSize - bk.w;
+              const bkX = keyboardX;
               ctx.globalAlpha = (activeInfo && activeInfo.isSustain) ? (config.SUSTAIN_OPACITY || 0.5) : 1.0;
               ctx.fillStyle = activeInfo ? activeInfo.color : (config.KEYBOARD_BLACK_KEY_COLOR || '#111111');
               ctx.fillRect(bkX, bk.y, bk.w, bk.h);
