@@ -669,11 +669,26 @@ export default class PianoRollEngine {
             const currentPitch = Math.round(note.pitch + bendOffset);
             if (currentPitch >= minPitch && currentPitch <= maxPitch) {
               const existing = activeKeys.get(currentPitch);
-              if (!existing || (!existing.isKey && isKeySounding)) {
+              let shouldReplace = false;
+              if (!existing) {
+                shouldReplace = true;
+              } else if (isKeySounding && !existing.isKey) {
+                // Key-held always beats sustained
+                shouldReplace = true;
+              } else if (isKeySounding && existing.isKey) {
+                // Later key-held note beats earlier key-held note
+                shouldReplace = note.startMs >= existing.startMs;
+              } else if (existing.isSustain) {
+                // Notes that start later have priority over earlier sustained notes
+                shouldReplace = note.startMs >= existing.startMs;
+              }
+
+              if (shouldReplace) {
                 activeKeys.set(currentPitch, {
                   color: baseColor,
                   isKey: isKeySounding,
                   isSustain: !isKeySounding && isSustainSounding,
+                  startMs: note.startMs,
                 });
               }
             }
