@@ -46,10 +46,6 @@ export const PIANO_ROLL_CONFIG = {
   // 5px * 88 notes = 440px (neatly fits 448px visualizer width with 4px margin).
   PIXELS_PER_NOTE: 5,
 
-  // Pitch range:
-  // - 88: Standard piano keyboard range (MIDI notes 21 [A0] to 108 [C8]).
-  // - 128: Full MIDI note range (MIDI notes 0 [C-1] to 127 [G9]).
-  NOTE_RANGE: 88,
 
   // Color mode:
   // - 'channel': Notes are colored by MIDI channel (0-15).
@@ -64,7 +60,7 @@ export const PIANO_ROLL_CONFIG = {
   OCTAVE_LINE_COLOR: 'rgba(255, 255, 255, 0.1)',
 
   // Playhead line styling:
-  PLAYHEAD_COLOR: '#ffff00',
+  PLAYHEAD_COLOR: '#ffff0000',
   PLAYHEAD_LINE_WIDTH: 1,
 
   // 16 distinct, high-contrast colors for MIDI channels 0 to 15:

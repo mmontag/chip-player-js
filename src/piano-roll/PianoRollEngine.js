@@ -197,7 +197,7 @@ export default class PianoRollEngine {
     return colors[track % colors.length];
   }
 
-  drawBend(ctx, bends, startMs, endMs, timeStart, timeEnd, rootPitch, lineWidth, isVertical, minPitch, maxPitch, pitchOffset, totalPitchDimension, unitScale) {
+  drawBend(ctx, bends, startMs, endMs, timeStart, timeEnd, rootPitch, lineWidth, isVertical, minPitch, maxPitch, pitchOffset, totalPitchDimension, pitchSlots) {
     const N = bends.length;
     if (N <= 1) return;
     const duration = Math.max(1, endMs - startMs);
@@ -211,8 +211,16 @@ export default class PianoRollEngine {
       const ratio = Math.max(0, Math.min(1, (b.timeMs - startMs) / duration));
       const timeCoord = timeStart + ratio * (timeEnd - timeStart);
       const p = Math.max(minPitch, Math.min(maxPitch, rootPitch + b.semitoneOffset));
-      const u = p - minPitch;
-      const pitchCenter = (u + 0.5) * unitScale;
+      const pBase = Math.floor(p);
+      const frac = p - pBase;
+      const slot0 = pitchSlots[pBase];
+      const c0 = slot0.start + slot0.width / 2;
+      let pitchCenter = c0;
+      if (frac > 0 && pBase < maxPitch) {
+        const slot1 = pitchSlots[pBase + 1];
+        const c1 = slot1.start + slot1.width / 2;
+        pitchCenter = c0 + frac * (c1 - c0);
+      }
       const pitchCoord = isVertical
         ? pitchOffset + pitchCenter
         : pitchOffset + totalPitchDimension - pitchCenter;
@@ -228,12 +236,12 @@ export default class PianoRollEngine {
     ctx.stroke();
   }
 
-  ensureKeyboardCache(totalPitchDimension, keyboardSize, noteRange, minPitch, maxPitch, pitchSlots, unitScale) {
+  ensureKeyboardCache(totalPitchDimension, keyboardSize, pitchSlots, unitScale) {
     const { config } = this;
     const blackKeyHeightRatio = config.KEYBOARD_BLACK_KEY_HEIGHT_RATIO || 0.6;
     const blackKeyLength = Math.max(1, Math.round(keyboardSize * blackKeyHeightRatio));
 
-    const cacheKey = `${totalPitchDimension}_${keyboardSize}_${noteRange}_${blackKeyLength}_${config.KEYBOARD_WHITE_KEY_COLOR}_${config.KEYBOARD_BLACK_KEY_COLOR}_${config.KEYBOARD_STROKE_COLOR}_${config.KEYBOARD_BLACK_KEY_STROKE_COLOR}`;
+    const cacheKey = `${totalPitchDimension}_${keyboardSize}_${blackKeyLength}_${config.KEYBOARD_WHITE_KEY_COLOR}_${config.KEYBOARD_BLACK_KEY_COLOR}_${config.KEYBOARD_STROKE_COLOR}_${config.KEYBOARD_BLACK_KEY_STROKE_COLOR}`;
 
     if (this.keyboardCacheKey === cacheKey && this.keyboardCanvas && this.keyboardGeometry) {
       return this.keyboardGeometry;
@@ -250,8 +258,9 @@ export default class PianoRollEngine {
     kCtx.fillStyle = config.KEYBOARD_WHITE_KEY_COLOR || '#ffffff';
     kCtx.fillRect(0, 0, totalPitchDimension, keyboardSize);
 
-    // Compute white key front dividers and black keys
-    const is88 = noteRange !== 128;
+    // Compute white key front dividers and black keys (strictly 88 keys: A0 [21] to C8 [108])
+    const minPitch = 21;
+    const maxPitch = 108;
     const whitePitches = [];
     const blackKeys = {};
     const whiteKeys = {};
@@ -269,27 +278,10 @@ export default class PianoRollEngine {
       }
     }
 
+    // All 52 white keys have identical front width: 12/7 units each
     const whiteDividers = [];
-    if (is88) {
-      // 88-key piano keyboard layout:
-      // A0, B0: units 0 to 3, divider between them at 1.5
-      whiteDividers.push(0);
-      whiteDividers.push(Math.round(1.5 * unitScale));
-      whiteDividers.push(Math.round(3.0 * unitScale));
-      // 7 octaves C1 to B7: each spans 12 units with 7 white keys of width 12/7
-      for (let k = 0; k < 7; k++) {
-        const uOct = 3 + 12 * k;
-        for (let i = 1; i <= 7; i++) {
-          whiteDividers.push(Math.round((uOct + i * (12 / 7)) * unitScale));
-        }
-      }
-      whiteDividers.push(totalPitchDimension);
-    } else {
-      // 128-key layout fallback
-      const numWhite = whitePitches.length;
-      for (let i = 0; i <= numWhite; i++) {
-        whiteDividers.push(Math.round((i * totalPitchDimension) / numWhite));
-      }
+    for (let i = 0; i <= 52; i++) {
+      whiteDividers.push(Math.round(i * (12 / 7) * unitScale));
     }
 
     const numWhiteKeys = whitePitches.length;
@@ -353,12 +345,10 @@ export default class PianoRollEngine {
     const isForward = config.DIRECTION !== 'reverse' && config.DIRECTION !== 'bottom-to-top' && config.DIRECTION !== 'left-to-right';
     const isContinuous = config.ANIMATION_BEHAVIOR === 'continuous';
 
-    // Pitch parameters
-    const noteRange = config.NOTE_RANGE === 128 ? 128 : 88;
-    const is88 = noteRange !== 128;
-    const minPitch = is88 ? 21 : 0; // 21 is A0
-    const maxPitch = is88 ? 108 : 127; // 108 is C8
-    const totalUnits = is88 ? (87 + 12 / 7) : 128;
+    // Pitch parameters (strictly 88 keys: MIDI 21 [A0] to 108 [C8])
+    const minPitch = 21; // A0
+    const maxPitch = 108; // C8
+    const totalUnits = 624 / 7; // 52 white keys * 12/7 units per key
 
     let totalPitchDimension = isVertical ? width : height;
     let unitScale;
@@ -372,16 +362,30 @@ export default class PianoRollEngine {
       pitchOffset = Math.max(0, Math.floor(((isVertical ? width : height) - totalPitchDimension) / 2));
     }
 
-    // Precompute pixel slots for all pitches (A0..B7 each 1 unit, C8 is 12/7 units)
+    // Precompute pixel slots for all 88 pitches
     const pitchSlots = [];
     for (let p = minPitch; p <= maxPitch; p++) {
       let uStart, uEnd;
-      if (is88) {
-        uStart = p - 21;
-        uEnd = (p === 108) ? (87 + 12 / 7) : (uStart + 1);
+      if (p === 21) {
+        // A0: straight outer left edge, width 10/7 units
+        uStart = 0;
+        uEnd = 10 / 7;
+      } else if (p === 22) {
+        // A#0: black key, width 1 unit
+        uStart = 10 / 7;
+        uEnd = 17 / 7;
+      } else if (p === 23) {
+        // B0: white key, width 1 unit
+        uStart = 17 / 7;
+        uEnd = 24 / 7;
+      } else if (p === 108) {
+        // C8: lone white key, width 12/7 units
+        uStart = 24 / 7 + 84;
+        uEnd = uStart + 12 / 7;
       } else {
-        uStart = p;
-        uEnd = p + 1;
+        // Octaves 1..7 (C1..B7, 84 keys): each semitone is 1 unit
+        uStart = 24 / 7 + (p - 24);
+        uEnd = uStart + 1;
       }
       const pxStart = Math.round(uStart * unitScale);
       const pxEnd = Math.round(uEnd * unitScale);
@@ -739,7 +743,7 @@ export default class PianoRollEngine {
             const susStartCoord = isTimeDecreasingCoord ? keyPos : keyPos + keyDim;
             const susEndCoord = isTimeDecreasingCoord ? sustainPos : sustainPos + sustainDim;
             if (sustainHasBends) {
-              this.drawBend(ctx, note.sustainBends, note.endMs, note.sustainEndMs, susStartCoord, susEndCoord, note.pitch, drawW, true, minPitch, maxPitch, pitchOffset, totalPitchDimension, unitScale);
+              this.drawBend(ctx, note.sustainBends, note.endMs, note.sustainEndMs, susStartCoord, susEndCoord, note.pitch, drawW, true, minPitch, maxPitch, pitchOffset, totalPitchDimension, pitchSlots);
             } else {
               drawRect(drawX, sustainPos, drawW, sustainDim, sustainRadii);
             }
@@ -748,7 +752,7 @@ export default class PianoRollEngine {
               ctx.fillStyle = glowColor;
               ctx.strokeStyle = glowColor;
               if (sustainHasBends) {
-                this.drawBend(ctx, note.sustainBends, note.endMs, note.sustainEndMs, susStartCoord, susEndCoord, note.pitch, drawW, true, minPitch, maxPitch, pitchOffset, totalPitchDimension, unitScale);
+                this.drawBend(ctx, note.sustainBends, note.endMs, note.sustainEndMs, susStartCoord, susEndCoord, note.pitch, drawW, true, minPitch, maxPitch, pitchOffset, totalPitchDimension, pitchSlots);
               } else {
                 drawRect(drawX, sustainPos, drawW, sustainDim, sustainRadii);
               }
@@ -762,7 +766,7 @@ export default class PianoRollEngine {
           const keyStartCoord = cStart;
           const keyEndCoord = isTimeDecreasingCoord ? keyPos : keyPos + keyDim;
           if (keyHasBends) {
-            this.drawBend(ctx, note.bends, note.startMs, note.endMs, keyStartCoord, keyEndCoord, note.pitch, drawW, true, minPitch, maxPitch, pitchOffset, totalPitchDimension, unitScale);
+            this.drawBend(ctx, note.bends, note.startMs, note.endMs, keyStartCoord, keyEndCoord, note.pitch, drawW, true, minPitch, maxPitch, pitchOffset, totalPitchDimension, pitchSlots);
           } else {
             drawRect(drawX, keyPos, drawW, keyDim, keyRadii);
           }
@@ -771,7 +775,7 @@ export default class PianoRollEngine {
             ctx.fillStyle = glowColor;
             ctx.strokeStyle = glowColor;
             if (keyHasBends) {
-              this.drawBend(ctx, note.bends, note.startMs, note.endMs, keyStartCoord, keyEndCoord, note.pitch, drawW, true, minPitch, maxPitch, pitchOffset, totalPitchDimension, unitScale);
+              this.drawBend(ctx, note.bends, note.startMs, note.endMs, keyStartCoord, keyEndCoord, note.pitch, drawW, true, minPitch, maxPitch, pitchOffset, totalPitchDimension, pitchSlots);
             } else {
               drawRect(drawX, keyPos, drawW, keyDim, keyRadii);
             }
@@ -805,7 +809,7 @@ export default class PianoRollEngine {
             const susStartCoord = isTimeDecreasingCoord ? keyPos : keyPos + keyDim;
             const susEndCoord = isTimeDecreasingCoord ? sustainPos : sustainPos + sustainDim;
             if (sustainHasBends) {
-              this.drawBend(ctx, note.sustainBends, note.endMs, note.sustainEndMs, susStartCoord, susEndCoord, note.pitch, drawH, false, minPitch, maxPitch, pitchOffset, totalPitchDimension, unitScale);
+              this.drawBend(ctx, note.sustainBends, note.endMs, note.sustainEndMs, susStartCoord, susEndCoord, note.pitch, drawH, false, minPitch, maxPitch, pitchOffset, totalPitchDimension, pitchSlots);
             } else {
               drawRect(sustainPos, drawY, sustainDim, drawH, sustainRadii);
             }
@@ -814,7 +818,7 @@ export default class PianoRollEngine {
               ctx.fillStyle = glowColor;
               ctx.strokeStyle = glowColor;
               if (sustainHasBends) {
-                this.drawBend(ctx, note.sustainBends, note.endMs, note.sustainEndMs, susStartCoord, susEndCoord, note.pitch, drawH, false, minPitch, maxPitch, pitchOffset, totalPitchDimension, unitScale);
+                this.drawBend(ctx, note.sustainBends, note.endMs, note.sustainEndMs, susStartCoord, susEndCoord, note.pitch, drawH, false, minPitch, maxPitch, pitchOffset, totalPitchDimension, pitchSlots);
               } else {
                 drawRect(sustainPos, drawY, sustainDim, drawH, sustainRadii);
               }
@@ -828,7 +832,7 @@ export default class PianoRollEngine {
           const keyStartCoord = cStart;
           const keyEndCoord = isTimeDecreasingCoord ? keyPos : keyPos + keyDim;
           if (keyHasBends) {
-            this.drawBend(ctx, note.bends, note.startMs, note.endMs, keyStartCoord, keyEndCoord, note.pitch, drawH, false, minPitch, maxPitch, pitchOffset, totalPitchDimension, unitScale);
+            this.drawBend(ctx, note.bends, note.startMs, note.endMs, keyStartCoord, keyEndCoord, note.pitch, drawH, false, minPitch, maxPitch, pitchOffset, totalPitchDimension, pitchSlots);
           } else {
             drawRect(keyPos, drawY, keyDim, drawH, keyRadii);
           }
@@ -837,7 +841,7 @@ export default class PianoRollEngine {
             ctx.fillStyle = glowColor;
             ctx.strokeStyle = glowColor;
             if (keyHasBends) {
-              this.drawBend(ctx, note.bends, note.startMs, note.endMs, keyStartCoord, keyEndCoord, note.pitch, drawH, false, minPitch, maxPitch, pitchOffset, totalPitchDimension, unitScale);
+              this.drawBend(ctx, note.bends, note.startMs, note.endMs, keyStartCoord, keyEndCoord, note.pitch, drawH, false, minPitch, maxPitch, pitchOffset, totalPitchDimension, pitchSlots);
             } else {
               drawRect(keyPos, drawY, keyDim, drawH, keyRadii);
             }
@@ -874,7 +878,7 @@ export default class PianoRollEngine {
     const lineCoord = Math.floor(actualPlayheadCoord);
 
     if (isKeyboardVisible) {
-      const geo = this.ensureKeyboardCache(totalPitchDimension, keyboardSize, noteRange, minPitch, maxPitch, pitchSlots, unitScale);
+      const geo = this.ensureKeyboardCache(totalPitchDimension, keyboardSize, pitchSlots, unitScale);
       if (geo && this.keyboardCanvas) {
         ctx.save();
         if (isVertical) {
