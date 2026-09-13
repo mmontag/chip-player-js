@@ -40,7 +40,7 @@ export const PIANO_ROLL_CONFIG = {
   // Pitch Zoom:
   // - 'fill': Evenly scale notes across the pitch axis to fill the viewport dimensions.
   // - 'fixed': Use a fixed number of pixels per note lane (PIXELS_PER_NOTE).
-  PITCH_ZOOM_MODE: 'fixed',
+  PITCH_ZOOM_MODE: 'fill',
 
   // Pixels per note lane when PITCH_ZOOM_MODE is 'fixed'.
   // 5px * 88 notes = 440px (neatly fits 448px visualizer width with 4px margin).
