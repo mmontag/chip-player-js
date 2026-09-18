@@ -477,7 +477,7 @@ button.box-button.AppFooter-back { padding: 0 var(--charW1); }
 .DirectoryLink-dim { color: var(--neutral2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .PlayerParams h3 { margin-top: 0; }
-.PlayerParams-param { display: flex; flex-wrap: wrap; align-items: center; }
+.PlayerParams-param { display: flex; align-items: center; }
 .PlayerParams-param input { margin-right: var(--charW1); flex-shrink: 0; }
 .PlayerParams-group-title { width: 100%; }
 .PlayerParams-voiceList {
@@ -489,7 +489,7 @@ button.box-button.AppFooter-back { padding: 0 var(--charW1); }
 }
 .PlayerParams-label { flex-shrink: 0; width: calc(var(--charW1) * 14); margin-right: var(--charW1); }
 .PlayerParams-label-wide { flex-shrink: 0; width: calc(var(--charW1) * 16); margin-right: var(--charW1); }
-.PlayerParams-group { margin-bottom: var(--charH); }
+.PlayerParams-group { margin-bottom: var(--charH); flex-wrap: wrap; }
 
 .SongDetails {
     display: grid;
