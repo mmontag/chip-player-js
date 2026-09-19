@@ -28,6 +28,7 @@ export default class PianoRollVisualizer extends PureComponent {
         getPlaybackRate: this.props.getPlaybackRate,
         getAudioLatencyMs: this.props.getAudioLatencyMs,
         isPaused: this.props.paused,
+        ORIENTATION: this.props.theaterMode ? 'horizontal' : 'vertical',
       });
 
       if (this.props.voiceMask) {
@@ -90,7 +91,13 @@ export default class PianoRollVisualizer extends PureComponent {
       this.engine.setVoiceMask(this.props.voiceMask);
     }
 
-    if (prevProps.width && this.props.width && prevProps.width !== this.props.width) {
+    if (prevProps.theaterMode !== this.props.theaterMode) {
+      this.engine.updateConfig({
+        ORIENTATION: this.props.theaterMode ? 'horizontal' : 'vertical',
+      });
+    }
+
+    if (typeof this.props.width === 'number' && prevProps.width !== this.props.width) {
       if (this.props.width !== this.state.width) {
         this.setState({ width: this.props.width });
         this.engine.resize(this.props.width, this.state.height);
@@ -133,14 +140,14 @@ export default class PianoRollVisualizer extends PureComponent {
 
   render() {
     const { width, height } = this.state;
-    const { style = {} } = this.props;
+    const { style = {}, theaterMode, onToggleTheaterMode } = this.props;
 
     return (
       <div
         ref={this.containerRef}
-        className="PianoRoll-container"
+        className={`PianoRoll-container ${theaterMode ? 'theater' : 'normal'}`}
         style={{
-          width: this.props.width || '100%',
+          width: theaterMode ? '100%' : (this.props.width || '100%'),
           backgroundColor: PIANO_ROLL_CONFIG.BACKGROUND_COLOR,
           ...style,
         }}
@@ -151,6 +158,16 @@ export default class PianoRollVisualizer extends PureComponent {
           height={height}
           className="PianoRoll-canvas"
         />
+        {onToggleTheaterMode && (
+          <button
+            type="button"
+            className="box-button PianoRoll-theater-toggle"
+            onClick={onToggleTheaterMode}
+            title={theaterMode ? 'Exit theater mode' : 'Theater mode'}
+          >
+            {theaterMode ? '→[]←' : '[←→]'}
+          </button>
+        )}
       </div>
     );
   }

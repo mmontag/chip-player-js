@@ -11,7 +11,7 @@ export const PIANO_ROLL_CONFIG = {
   // Orientation:
   // - 'vertical': Pitch runs across the width, time runs along the height.
   // - 'horizontal': Pitch runs along the height, time runs across the width.
-  ORIENTATION: 'horizontal',
+  ORIENTATION: 'vertical',
 
   // Direction:
   // - 'forward': Standard flow towards the playhead (top-to-bottom in vertical, right-to-left in horizontal).
@@ -106,7 +106,7 @@ export const PIANO_ROLL_CONFIG = {
   ENABLE_PITCH_BEND: true, // Visualize MIDI pitch bends as continuous ribbons
   // Piano Keyboard settings:
   SHOW_KEYBOARD: true, // Display interactive piano keyboard under the playhead
-  KEYBOARD_ASPECT_RATIO: 0.125, // Height-to-width ratio of the 88-key keyboard (0.125 * 440px = 55px)
+  KEYBOARD_ASPECT_RATIO: 0.11, // Height-to-width ratio of the 88-key keyboard (0.125 * 440px = 55px)
   KEYBOARD_BLACK_KEY_HEIGHT_RATIO: 0.6, // Height of black keys as a fraction of white key height
   KEYBOARD_WHITE_KEY_COLOR: '#ffffff', // Rest fill color for white keys
   KEYBOARD_BLACK_KEY_COLOR: '#111111', // Rest fill color for black keys

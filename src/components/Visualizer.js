@@ -195,16 +195,18 @@ export default class Visualizer extends PureComponent {
         {/* Piano Roll visualizer for MIDI files */}
         {isMidi && (
           <PianoRollVisualizer
-            width={VIS_WIDTH}
+            width={this.props.theaterMode ? '100%' : VIS_WIDTH}
             midiData={this.props.midiData}
             getCurrentPositionMs={this.props.getCurrentPositionMs}
             getPlaybackRate={this.props.getPlaybackRate}
             getAudioLatencyMs={this.getAudioLatencyMs}
             paused={this.props.visible ? this.props.paused : true}
             voiceMask={this.props.voiceMask}
+            theaterMode={this.props.theaterMode}
+            onToggleTheaterMode={this.props.onToggleTheaterMode}
             style={{
               display: 'flex',
-              width: VIS_WIDTH,
+              width: this.props.theaterMode ? '100%' : VIS_WIDTH,
               boxSizing: 'border-box',
             }}
           />
