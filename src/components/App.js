@@ -136,6 +136,7 @@ class App extends React.Component {
       paramValues: {},
       // Special playable contexts
       localFiles: [],
+      theaterMode: false,
     };
 
     this.initChipCore(audioCtx, playerNode, bufferSize);
@@ -254,6 +255,11 @@ class App extends React.Component {
     if (prevSilence !== currSilence && this.players) {
       this.players.forEach(p => p.setSilenceDuration(currSilence ?? -1));
     }
+
+    if (prevProps.location?.pathname !== this.props.location?.pathname && this.state.theaterMode) {
+      const { updateSettings } = this.props.userContext;
+      updateSettings({ showVisualizer: false });
+    }
   }
 
   static mapSequencerStateToAppState(sequencerState) {
@@ -316,6 +322,10 @@ class App extends React.Component {
 
       switch (e.key) {
         case 'Escape':
+          if (this.state.theaterMode) {
+            this.setState({ theaterMode: false });
+            e.preventDefault();
+          }
           this.setState({ showInfo: false });
           e.target.blur();
           break;
@@ -822,6 +832,12 @@ class App extends React.Component {
     updateSettings({ showPlayerSettings: !showPlayerSettings });
   }
 
+  handleToggleTheaterMode = () => {
+    this.setState(prevState => ({
+      theaterMode: !prevState.theaterMode,
+    }));
+  }
+
   render() {
     // TODO: Consolidate imageUrl under metadata.
     const metadata = this.state.currentSongMetadata;
@@ -833,6 +849,12 @@ class App extends React.Component {
     const { settings } = this.props.userContext;
     const showPlayerSettings = settings?.showPlayerSettings;
     const showVisualizer = settings?.showVisualizer;
+    const midiData = (
+      (this.state.songPath && /\.(mid|midi|smf)$/i.test(this.state.songPath)) ||
+      this.sequencer?.getPlayer()?.fileExtensions?.includes('mid')
+    ) ? (this.state.currentSongBuffer || this.sequencer?.getCurrSongBuffer()) : null;
+    const isMidi = Boolean(midiData);
+    const activeTheaterMode = Boolean(isMidi && this.state.theaterMode && showVisualizer);
 
     return (
       <Dropzone
@@ -846,7 +868,7 @@ class App extends React.Component {
                       toggleInfo={this.toggleInfo}/>
           <Toast/>
           <AppHeader/>
-          <div className="App-main">
+          <div className={`App-main ${activeTheaterMode ? 'theater-mode' : ''} ${showPlayerSettings ? 'has-settings' : ''}`}>
             <div className="App-main-inner">
               <div className="tab-container">
                 <NavLink className="tab" activeClassName="tab-selected" to={{ pathname: "/", ...search }}
@@ -960,17 +982,14 @@ class App extends React.Component {
                           chipCore={this.chipCore}
                           paused={this.state.ejected || this.state.paused}
                           songPath={this.state.songPath}
-                          midiData={
-                            ((this.state.songPath && /\.(mid|midi|smf)$/i.test(this.state.songPath)) ||
-                             this.sequencer?.getPlayer()?.fileExtensions?.includes('mid'))
-                              ? (this.state.currentSongBuffer || this.sequencer?.getCurrSongBuffer())
-                              : null
-                          }
+                          midiData={midiData}
                           getCurrentPositionMs={() => this.sequencer?.getPlayer()?.getPositionMs() || 0}
                           getPlaybackRate={() => this.sequencer?.getPlayer()?.getTempo?.() || 1.0}
                           voiceMask={this.state.voiceMask}
                           sequencer={this.sequencer}
-                          visible={Boolean(showVisualizer)}/>}
+                          visible={Boolean(showVisualizer)}
+                          theaterMode={activeTheaterMode}
+                          onToggleTheaterMode={this.handleToggleTheaterMode}/>}
           </div>
           <AppFooter
             currentSongDurationMs={this.state.currentSongDurationMs}

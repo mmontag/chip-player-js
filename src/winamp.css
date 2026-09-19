@@ -20,6 +20,7 @@
     --neutral4:        #fff;
     --clickable:       #0f0;
     --slider:          #fa0;
+    --border:          #7571b5;
 
     --background:      linear-gradient(45deg, var(--darkerPurple) 0%, var(--darkPurple) 35%, var(--darkerPurple) 100%);
     --selected:        #0000c6;
@@ -168,6 +169,17 @@
         & > div { display: flex; align-items: center; height: var(--formFieldHeight); }
     }
     .Visualizer-overlay { top: 92px; }
+    .App-main.theater-mode .Visualizer {
+        top: 22px;
+    }
+    .App-main.theater-mode.has-settings .Visualizer {
+        right: 333px;
+    }
+    @media screen and (max-width: 720px) {
+        .App-main.theater-mode.has-settings .Visualizer {
+            right: 0;
+        }
+    }
 
     .App-main-content-area.settings {
         background: #0003; color: var(--whiteAlpha75);
