@@ -1,6 +1,6 @@
 import { PIANO_ROLL_CONFIG, getDecayIntensity } from './config.js';
 import { findFirstVisibleNoteIndex, getNoteName, getNotePitchOffsetAt, isBlackKey } from './midi-parser.js';
-import { detectChord, isAtonalInstrument } from './chord-detector.js';
+import { isAtonalInstrument, ChordIntegrator } from './chord-detector.js';
 
 export default class PianoRollEngine {
   constructor(canvas, options = {}) {
@@ -20,6 +20,7 @@ export default class PianoRollEngine {
     this.isPaused = options.isPaused !== undefined ? options.isPaused : true;
     this.onChordChange = options.onChordChange || null;
     this.currentChord = '';
+    this.chordIntegrator = new ChordIntegrator(this.config);
     this.hiddenChannels = new Set();
     this.hiddenTracks = new Set();
     this.voiceMask = null; // array of booleans if controlled externally by Settings
@@ -56,6 +57,7 @@ export default class PianoRollEngine {
       this.durationMs = parsedMidi.durationMs || 0;
       this.maxNoteDurationMs = parsedMidi.maxNoteDurationMs || 30000;
     }
+    this.chordIntegrator.reset();
     this.lastFrameTime = 0;
     this.lastRawPos = -1;
     this.smoothPos = 0;
@@ -132,6 +134,7 @@ export default class PianoRollEngine {
     this.keyboardCanvas = null;
     this.keyboardGeometry = null;
     this.keyboardCacheKey = '';
+    this.chordIntegrator.reset();
     if (this.currentChord !== '') {
       this.currentChord = '';
       if (this.onChordChange) this.onChordChange('');
@@ -998,11 +1001,9 @@ export default class PianoRollEngine {
       ctx.fillRect(lineCoord, 0, lineWidth, height);
     }
 
-    // 5. Harmonic Analysis (Chord Detection)
+    // 5. Harmonic Analysis (Chord Detection with Leaky Integrator)
     if (config.SHOW_HARMONIC_ANALYSIS !== false) {
-      const minNotes = config.HARMONIC_ANALYSIS_MIN_NOTES !== undefined ? config.HARMONIC_ANALYSIS_MIN_NOTES : 2;
-      const excludeAtonal = config.HARMONIC_ANALYSIS_EXCLUDE_ATONAL !== false;
-      const detected = detectChord(soundingNotes, { minNotes, excludeAtonal });
+      const detected = this.chordIntegrator.update(soundingNotes, currentTimeMs, config);
       if (detected !== this.currentChord) {
         this.currentChord = detected;
         if (this.onChordChange) {
@@ -1011,6 +1012,7 @@ export default class PianoRollEngine {
       }
     } else if (this.currentChord !== '') {
       this.currentChord = '';
+      this.chordIntegrator.reset();
       if (this.onChordChange) {
         this.onChordChange('');
       }

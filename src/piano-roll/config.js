@@ -117,6 +117,11 @@ export const PIANO_ROLL_CONFIG = {
   SHOW_HARMONIC_ANALYSIS: true, // Display detected chord label in the visualizer
   HARMONIC_ANALYSIS_MIN_NOTES: 2, // Minimum distinct pitch classes required to detect a chord
   HARMONIC_ANALYSIS_EXCLUDE_ATONAL: true, // Exclude atonal instruments (synth toms, taiko drum, woodblock, SFX)
+  HARMONIC_LEAKY_INTEGRATOR: true, // Enable leaky integrator for temporal chord integration & arpeggio recognition
+  HARMONIC_DECAY_MS: 600, // Time constant in ms for pitch class decay (higher = longer echoic memory)
+  HARMONIC_ACTIVATION_THRESHOLD: 0.15, // Minimum activation level (0.0 to 1.0) for a pitch class to be included
+  HARMONIC_BASS_DECAY_MS: 1000, // Memory time constant in ms for bass notes (supports stride piano and broken bass)
+  HARMONIC_CHANGE_THRESHOLD_MS: 50, // Minimum persistence in ms to register a chord change (suppresses transient flicker)
 };
 
 export const DECAY_EASINGS = {

@@ -342,8 +342,9 @@ export function detectChord(soundingNotes, options = {}) {
 
   const minNotes = options.minNotes !== undefined ? options.minNotes : 2;
   const excludeAtonal = options.excludeAtonal !== false;
+  const weights = options.weights || null;
 
-  let bassPitch = Infinity;
+  let bassPitch = typeof options.bassPitch === 'number' ? options.bassPitch : Infinity;
   let pitchClassesMask = 0;
   const uniquePcs = [];
 
@@ -356,7 +357,7 @@ export function detectChord(soundingNotes, options = {}) {
     // Exclude atonal instruments (channel 9 drums, atonal GM patches, sound effects)
     if (excludeAtonal && isAtonalInstrument(item)) continue;
 
-    if (pitch < bassPitch) {
+    if (options.bassPitch === undefined && pitch < bassPitch) {
       bassPitch = pitch;
     }
 
@@ -376,7 +377,7 @@ export function detectChord(soundingNotes, options = {}) {
     return '';
   }
 
-  const bassPc = bassPitch % 12;
+  const bassPc = bassPitch !== Infinity ? (((Math.round(bassPitch) % 12) + 12) % 12) : -1;
 
   let bestScore = -Infinity;
   let bestRoot = -1;
@@ -418,26 +419,61 @@ export function detectChord(soundingNotes, options = {}) {
       let score = tmpl.priority;
 
       // Reward matching required and optional tones
-      score += tmpl.required.length * 6;
-      const matchedOptional = actualIntervalMask & tmpl.optionalMask;
-      score += popcount(matchedOptional) * 4;
+      if (weights) {
+        let reqWeight = 0;
+        for (let r = 0; r < tmpl.required.length; r++) {
+          const pc = (root + tmpl.required[r]) % 12;
+          reqWeight += weights[pc] !== undefined ? weights[pc] : 1;
+        }
+        score += reqWeight * 6;
 
-      // Penalize extra unaccounted notes
-      const extraMask = actualIntervalMask & ~tmpl.allowedMask;
-      const extraCount = popcount(extraMask);
-      score -= extraCount * 30;
+        let optWeight = 0;
+        if (tmpl.optional) {
+          for (let o = 0; o < tmpl.optional.length; o++) {
+            const optInterval = tmpl.optional[o];
+            if ((actualIntervalMask & (1 << optInterval)) !== 0) {
+              const pc = (root + optInterval) % 12;
+              optWeight += weights[pc] !== undefined ? weights[pc] : 1;
+            }
+          }
+        }
+        score += optWeight * 4;
+
+        // Penalize extra unaccounted notes weighted by their energy
+        let extraPenalty = 0;
+        for (let pIdx = 0; pIdx < uniquePcs.length; pIdx++) {
+          const pc = uniquePcs[pIdx];
+          const interval = (pc - root + 12) % 12;
+          if ((tmpl.allowedMask & (1 << interval)) === 0) {
+            const w = weights[pc] !== undefined ? weights[pc] : 1;
+            extraPenalty += 30 * w;
+          }
+        }
+        score -= extraPenalty;
+      } else {
+        score += tmpl.required.length * 6;
+        const matchedOptional = actualIntervalMask & tmpl.optionalMask;
+        score += popcount(matchedOptional) * 4;
+
+        const extraMask = actualIntervalMask & ~tmpl.allowedMask;
+        const extraCount = popcount(extraMask);
+        score -= extraCount * 30;
+      }
 
       // Bass note heuristics:
-      if (root === bassPc) {
-        // Root position chord is acoustically most prominent
-        score += 25;
-      } else {
-        // Inversion: check if the bass note is an allowable chord tone
-        const bassInterval = (bassPc - root + 12) % 12;
-        if ((tmpl.allowedMask & (1 << bassInterval)) !== 0) {
-          score -= 15; // Standard inversion (e.g. 3rd, 5th, or 7th in bass)
+      if (bassPc >= 0) {
+        const bassWeight = weights ? (weights[bassPc] !== undefined ? weights[bassPc] : 1) : 1;
+        if (root === bassPc) {
+          // Root position chord is acoustically most prominent
+          score += 25 * bassWeight;
         } else {
-          score -= 35; // Foreign bass note penalty
+          // Inversion: check if the bass note is an allowable chord tone
+          const bassInterval = (bassPc - root + 12) % 12;
+          if ((tmpl.allowedMask & (1 << bassInterval)) !== 0) {
+            score -= 15 * bassWeight; // Standard inversion (e.g. 3rd, 5th, or 7th in bass)
+          } else {
+            score -= 35 * bassWeight; // Foreign bass note penalty
+          }
         }
       }
 
@@ -458,10 +494,185 @@ export function detectChord(soundingNotes, options = {}) {
 
   // Slash chord / inversion handling:
   // If the lowest sounding pitch class is not the chord root, append /Bass
-  if (bestRoot !== bassPc) {
+  if (bassPc >= 0 && bestRoot !== bassPc) {
     const bassName = NOTE_NAMES[bassPc];
     return `${chordName}/${bassName}`;
   }
 
   return chordName;
+}
+
+/**
+ * Stateful Leaky Integrator for temporal chord recognition.
+ * Accumulates pitch class activations over time with exponential decay,
+ * allowing arpeggios, stride bass, and broken chords to be smoothly recognized,
+ * while debouncing transient passing notes to prevent display flicker.
+ */
+export class ChordIntegrator {
+  constructor(config = {}) {
+    this.config = config;
+    this.pitchActivations = new Float32Array(12);
+    this.bassPitch = Infinity;
+    this.bassWeight = 0;
+    this.lastTimeMs = -1;
+    this.currentChord = '';
+    this.pendingChord = null;
+    this.pendingChordTimeMs = 0;
+  }
+
+  reset() {
+    this.pitchActivations.fill(0);
+    this.bassPitch = Infinity;
+    this.bassWeight = 0;
+    this.lastTimeMs = -1;
+    this.currentChord = '';
+    this.pendingChord = null;
+    this.pendingChordTimeMs = 0;
+  }
+
+  update(soundingNotes, currentTimeMs, config = {}) {
+    const isLeakyEnabled = config.HARMONIC_LEAKY_INTEGRATOR !== false;
+    const minNotes = config.HARMONIC_ANALYSIS_MIN_NOTES !== undefined ? config.HARMONIC_ANALYSIS_MIN_NOTES : 2;
+    const excludeAtonal = config.HARMONIC_ANALYSIS_EXCLUDE_ATONAL !== false;
+
+    // If leaky integrator is disabled, perform instantaneous detection directly
+    if (!isLeakyEnabled) {
+      this.reset();
+      const detected = detectChord(soundingNotes, { minNotes, excludeAtonal });
+      this.currentChord = detected;
+      return detected;
+    }
+
+    const decayMs = config.HARMONIC_DECAY_MS || 600;
+    const bassDecayMs = config.HARMONIC_BASS_DECAY_MS || 1000;
+    const threshold = config.HARMONIC_ACTIVATION_THRESHOLD !== undefined ? config.HARMONIC_ACTIVATION_THRESHOLD : 0.15;
+    const changeThresholdMs = config.HARMONIC_CHANGE_THRESHOLD_MS !== undefined ? config.HARMONIC_CHANGE_THRESHOLD_MS : 50;
+
+    // Handle seeking, time jumps, or initial frame
+    const dt = this.lastTimeMs >= 0 ? currentTimeMs - this.lastTimeMs : 0;
+    if (this.lastTimeMs < 0 || dt < 0 || dt > 1500) {
+      // Discontinuity detected: reset leaky memory
+      this.pitchActivations.fill(0);
+      this.bassPitch = Infinity;
+      this.bassWeight = 0;
+      this.pendingChord = null;
+    } else if (dt > 0) {
+      // 1. Decay pitch activations
+      const decayFactor = Math.exp(-dt / decayMs);
+      for (let i = 0; i < 12; i++) {
+        this.pitchActivations[i] *= decayFactor;
+        if (this.pitchActivations[i] < 0.001) {
+          this.pitchActivations[i] = 0;
+        }
+      }
+
+      // 2. Decay bass memory
+      if (this.bassPitch !== Infinity) {
+        const bassDecayFactor = Math.exp(-dt / bassDecayMs);
+        this.bassWeight *= bassDecayFactor;
+        if (this.bassWeight < 0.05) {
+          this.bassPitch = Infinity;
+          this.bassWeight = 0;
+        }
+      }
+    }
+    this.lastTimeMs = currentTimeMs;
+
+    // 3. Inject energy from actively sounding notes
+    let lowestSoundingPitch = Infinity;
+
+    if (soundingNotes && soundingNotes.length > 0) {
+      for (let i = 0; i < soundingNotes.length; i++) {
+        const note = soundingNotes[i];
+        if (excludeAtonal && isAtonalInstrument(note)) continue;
+
+        const pitch = typeof note === 'number' ? note : note.pitch;
+        if (typeof pitch !== 'number' || isNaN(pitch) || pitch < 0) continue;
+
+        const pc = ((Math.round(pitch) % 12) + 12) % 12;
+        const velocity = (typeof note === 'object' && typeof note.velocity === 'number')
+          ? note.velocity
+          : 100;
+        const weight = Math.max(0.5, Math.min(1.0, velocity / 127));
+
+        this.pitchActivations[pc] = Math.max(this.pitchActivations[pc], weight);
+
+        if (pitch < lowestSoundingPitch) {
+          lowestSoundingPitch = pitch;
+        }
+      }
+    }
+
+    // Update bass memory if new notes are sounding
+    if (lowestSoundingPitch !== Infinity) {
+      if (
+        this.bassPitch === Infinity ||
+        lowestSoundingPitch <= this.bassPitch ||
+        this.bassWeight < 0.35 ||
+        (dt > 0 && currentTimeMs - this.bassTimeMs > (bassDecayMs * 0.6) && lowestSoundingPitch < 60)
+      ) {
+        this.bassPitch = lowestSoundingPitch;
+        this.bassWeight = 1.0;
+        this.bassTimeMs = currentTimeMs;
+      }
+    }
+
+    // 4. Gather active pitch classes above threshold
+    const activeNotes = [];
+    const activeWeights = [];
+
+    for (let pc = 0; pc < 12; pc++) {
+      const act = this.pitchActivations[pc];
+      if (act >= threshold) {
+        activeNotes.push({
+          pitch: 60 + pc,
+          weight: act,
+        });
+        activeWeights[pc] = act;
+      } else {
+        activeWeights[pc] = 0;
+      }
+    }
+
+    // Determine effective bass pitch:
+    let effectiveBassPitch = this.bassPitch;
+    if (effectiveBassPitch === Infinity || this.bassWeight < threshold) {
+      for (let pc = 0; pc < 12; pc++) {
+        if (this.pitchActivations[pc] >= threshold) {
+          effectiveBassPitch = 60 + pc;
+          break;
+        }
+      }
+    }
+
+    // Run chord detection on active pitch classes with weights
+    const rawChord = detectChord(activeNotes, {
+      minNotes,
+      weights: activeWeights,
+      bassPitch: effectiveBassPitch,
+      excludeAtonal: false,
+    });
+
+    // 5. Chord Stability / Debounce (Hysteresis)
+    if (changeThresholdMs <= 0 || !this.currentChord || dt === 0) {
+      this.currentChord = rawChord;
+      this.pendingChord = null;
+      return rawChord;
+    }
+
+    if (rawChord === this.currentChord) {
+      this.pendingChord = null;
+      return this.currentChord;
+    }
+
+    if (this.pendingChord !== rawChord) {
+      this.pendingChord = rawChord;
+      this.pendingChordTimeMs = currentTimeMs;
+    } else if (currentTimeMs - this.pendingChordTimeMs >= changeThresholdMs) {
+      this.currentChord = rawChord;
+      this.pendingChord = null;
+    }
+
+    return this.currentChord;
+  }
 }
