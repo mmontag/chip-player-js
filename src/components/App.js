@@ -514,6 +514,18 @@ class App extends React.Component {
     this.setState({ paused: paused });
   }
 
+  handleAuditionChord(pitches, isNoteOn) {
+    if (this.audioCtx && this.audioCtx.state === 'suspended') {
+      this.audioCtx.resume();
+    }
+    if (!this.midiPlayer) return;
+    if (isNoteOn) {
+      this.midiPlayer.auditionNoteOn(pitches);
+    } else {
+      this.midiPlayer.auditionNoteOff(pitches);
+    }
+  }
+
   handleTimeSliderChange(event) {
     if (!this.sequencer.getPlayer()) return;
 
@@ -989,7 +1001,8 @@ class App extends React.Component {
                           sequencer={this.sequencer}
                           visible={Boolean(showVisualizer)}
                           theaterMode={activeTheaterMode}
-                          onToggleTheaterMode={this.handleToggleTheaterMode}/>}
+                          onToggleTheaterMode={this.handleToggleTheaterMode}
+                          onAuditionChord={this.handleAuditionChord}/>}
           </div>
           <AppFooter
             currentSongDurationMs={this.state.currentSongDurationMs}

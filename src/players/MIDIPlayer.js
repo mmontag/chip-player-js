@@ -210,6 +210,10 @@ export default class MIDIPlayer extends Player {
     // They are reset when another song is loaded.
     this.transientParams = {};
     this.paramDefs.filter(p => p.id !== 'soundfont').forEach(p => this.setParameter(p.id, p.defaultValue));
+    this.activeAuditionPitches = [];
+    this.auditionTailTimeout = null;
+    this._wasStoppedBeforeAudition = false;
+    this.auditionChannel = 15;
   }
 
   handleFileSystemReady() {
@@ -434,9 +438,92 @@ export default class MIDIPlayer extends Player {
   }
 
   stop() {
+    if (this.auditionTailTimeout) {
+      clearTimeout(this.auditionTailTimeout);
+      this.auditionTailTimeout = null;
+    }
+    this.activeAuditionPitches = [];
+    this._wasStoppedBeforeAudition = false;
+    if (this.midiFilePlayer) {
+      this.midiFilePlayer.isAuditioning = false;
+    }
     this.suspend();
     console.debug('MIDIPlayer.stop()');
     this.emit('playerStateUpdate', { isStopped: true });
+  }
+
+  getAuditionChannel() {
+    const candidates = [15, 14, 13, 12, 11, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+    const unused = candidates.find(ch => !this.midiFilePlayer?.channelsInUse[ch]);
+    return unused !== undefined ? unused : 15;
+  }
+
+  auditionNoteOn(pitches) {
+    if (!pitches || !pitches.length) return;
+    const synth = this.midiFilePlayer?.synth;
+    if (!synth) return;
+
+    if (this.auditionTailTimeout) {
+      clearTimeout(this.auditionTailTimeout);
+      this.auditionTailTimeout = null;
+    }
+
+    if (this.activeAuditionPitches?.length) {
+      this.auditionNoteOff(this.activeAuditionPitches);
+    }
+
+    const ch = this.getAuditionChannel();
+    this.auditionChannel = ch;
+    this.activeAuditionPitches = [...pitches];
+
+    if (this.stopped) {
+      this._wasStoppedBeforeAudition = true;
+      this.stopped = false;
+    }
+    if (this.midiFilePlayer) {
+      this.midiFilePlayer.isAuditioning = true;
+      this.midiFilePlayer.setChannelMute(ch, false);
+    }
+
+    synth.programChange(ch, 0); // Acoustic Grand Piano
+    synth.controlChange(ch, 7, 100); // Channel Volume
+    synth.controlChange(ch, 11, 127); // Expression
+    synth.controlChange(ch, 10, 64); // Pan Center
+    synth.controlChange(ch, 64, 0); // Sustain off
+    synth.pitchBend(ch, 8192); // Pitch bend center
+
+    for (const pitch of pitches) {
+      synth.noteOn(ch, pitch, 90);
+    }
+  }
+
+  auditionNoteOff(pitches) {
+    const synth = this.midiFilePlayer?.synth;
+    const ch = this.auditionChannel ?? 15;
+    if (synth && pitches && pitches.length) {
+      for (const pitch of pitches) {
+        synth.noteOff(ch, pitch);
+      }
+    }
+    this.activeAuditionPitches = [];
+
+    if (this._wasStoppedBeforeAudition) {
+      if (this.auditionTailTimeout) {
+        clearTimeout(this.auditionTailTimeout);
+      }
+      this.auditionTailTimeout = setTimeout(() => {
+        this.auditionTailTimeout = null;
+        if (this._wasStoppedBeforeAudition && !this.activeAuditionPitches.length) {
+          this.stopped = true;
+          this._wasStoppedBeforeAudition = false;
+          if (this.midiFilePlayer) {
+            this.midiFilePlayer.isAuditioning = false;
+          }
+        }
+      }, 1500);
+    } else if (this.midiFilePlayer) {
+      this.midiFilePlayer.isAuditioning = false;
+    }
   }
 
   togglePause() {

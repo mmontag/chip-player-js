@@ -3,6 +3,7 @@ import autoBind from 'auto-bind';
 import PianoRollEngine from './PianoRollEngine';
 import { parseMidiData } from './midi-parser';
 import { PIANO_ROLL_CONFIG } from './config';
+import { getChordPitches } from './chord-detector';
 
 export default class PianoRollVisualizer extends PureComponent {
   constructor(props) {
@@ -15,6 +16,8 @@ export default class PianoRollVisualizer extends PureComponent {
     this.engine = null;
     this.currentBuffer = null;
     this.resizeObserver = null;
+    this.currentChord = '';
+    this.auditionedPitches = null;
 
     this.state = {
       width: props.width || 448,
@@ -31,6 +34,7 @@ export default class PianoRollVisualizer extends PureComponent {
         isPaused: this.props.paused,
         ORIENTATION: this.props.theaterMode ? 'horizontal' : 'vertical',
         onChordChange: (chord) => {
+          this.currentChord = chord;
           if (this.chordLabelRef.current) {
             this.chordLabelRef.current.textContent = chord;
           }
@@ -152,6 +156,7 @@ export default class PianoRollVisualizer extends PureComponent {
   }
 
   componentWillUnmount() {
+    this.stopChordAudition();
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
       this.resizeObserver = null;
@@ -162,6 +167,56 @@ export default class PianoRollVisualizer extends PureComponent {
     }
     if (this.chordLabelRef.current) {
       this.chordLabelRef.current.textContent = '';
+    }
+  }
+
+  handleChordMouseDown(e) {
+    if (e.button !== 0) return;
+    this.startChordAudition();
+  }
+
+  handleChordMouseUp() {
+    this.stopChordAudition();
+  }
+
+  handleChordTouchStart(e) {
+    if (e.cancelable) e.preventDefault();
+    this.startChordAudition();
+  }
+
+  handleChordTouchEnd(e) {
+    if (e.cancelable) e.preventDefault();
+    this.stopChordAudition();
+  }
+
+  startChordAudition() {
+    const chord = this.currentChord || (this.chordLabelRef.current ? this.chordLabelRef.current.textContent : '');
+    if (!chord) return;
+    const pitches = getChordPitches(chord);
+    if (!pitches || !pitches.length) return;
+
+    if (this.auditionedPitches && this.auditionedPitches.length) {
+      this.stopChordAudition();
+    }
+
+    this.auditionedPitches = pitches;
+    if (this.props.onAuditionChord) {
+      this.props.onAuditionChord(pitches, true);
+    }
+    if (typeof window !== 'undefined') {
+      window.addEventListener('mouseup', this.handleChordMouseUp);
+    }
+  }
+
+  stopChordAudition() {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('mouseup', this.handleChordMouseUp);
+    }
+    if (this.auditionedPitches && this.auditionedPitches.length) {
+      if (this.props.onAuditionChord) {
+        this.props.onAuditionChord(this.auditionedPitches, false);
+      }
+      this.auditionedPitches = null;
     }
   }
 
@@ -223,12 +278,19 @@ export default class PianoRollVisualizer extends PureComponent {
         )}
         <div
           ref={this.chordLabelRef}
+          onMouseDown={this.handleChordMouseDown}
+          onMouseUp={this.handleChordMouseUp}
+          onMouseLeave={this.handleChordMouseUp}
+          onTouchStart={this.handleChordTouchStart}
+          onTouchEnd={this.handleChordTouchEnd}
+          onTouchCancel={this.handleChordTouchEnd}
           style={{
             position: 'absolute',
             bottom: chordLabelBottom,
             right: 'var(--charW2)',
             color: '#ffffff',
-            pointerEvents: 'none',
+            pointerEvents: 'auto',
+            cursor: 'pointer',
             userSelect: 'none',
           }}
         />

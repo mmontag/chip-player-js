@@ -63,6 +63,7 @@ function MIDIPlayer(options) {
   this.channelMask = [];
   this.channelProgramNums = [];
   this.textInfo = [];
+  this.isAuditioning = false;
 
   // Disabled due to "Page prevented back/forward cache restoration".
   // window.addEventListener('unload', this.stop);
@@ -217,7 +218,7 @@ MIDIPlayer.prototype.processPlaySynth = function (buffer, bufferSize) {
     bytesWritten += batchSize;
   }
 
-  if (this.position >= this.events.length) {
+  if (!this.isAuditioning && this.position >= this.events.length) {
     // Last MIDI event has been processed.
     // Continue synthesis until silence is detected.
     // This allows voices with a long release tail to complete.

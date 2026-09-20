@@ -204,6 +204,7 @@ export default class Visualizer extends PureComponent {
             voiceMask={this.props.voiceMask}
             theaterMode={this.props.theaterMode}
             onToggleTheaterMode={this.props.onToggleTheaterMode}
+            onAuditionChord={this.props.onAuditionChord}
             style={{
               display: 'flex',
               width: this.props.theaterMode ? '100%' : VIS_WIDTH,

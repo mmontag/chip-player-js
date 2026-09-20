@@ -788,3 +788,82 @@ export class ChordIntegrator {
     return this.currentChord;
   }
 }
+
+const NOTE_TO_SEMITONE = {
+  'C': 0, 'B#': 0, 'B♯': 0,
+  'C#': 1, 'C♯': 1, 'Db': 1, 'D♭': 1,
+  'D': 2,
+  'D#': 3, 'D♯': 3, 'Eb': 3, 'E♭': 3,
+  'E': 4, 'Fb': 4, 'F♭': 4,
+  'F': 5, 'E#': 5, 'E♯': 5,
+  'F#': 6, 'F♯': 6, 'Gb': 6, 'G♭': 6,
+  'G': 7,
+  'G#': 8, 'G♯': 8, 'Ab': 8, 'A♭': 8,
+  'A': 9,
+  'A#': 10, 'A♯': 10, 'Bb': 10, 'B♭': 10,
+  'B': 11, 'Cb': 11, 'C♭': 11,
+};
+
+/**
+ * Converts a chord name (e.g. 'Cmaj7', 'Am/G', 'G7(♭9)') into an array of MIDI pitch numbers
+ * voiced specifically for acoustic piano auditioning.
+ *
+ * @param {string} chordName - Detected chord string
+ * @returns {number[]} Array of MIDI note numbers in ascending order
+ */
+export function getChordPitches(chordName) {
+  if (!chordName || typeof chordName !== 'string') return [];
+  const parts = chordName.split('/');
+  const chordPart = parts[0].trim();
+  const slashBass = parts.length > 1 ? parts[1].trim() : null;
+
+  let rootPitchClass = -1;
+  let quality = '';
+  if (chordPart.length >= 2 && NOTE_TO_SEMITONE[chordPart.slice(0, 2)] !== undefined) {
+    rootPitchClass = NOTE_TO_SEMITONE[chordPart.slice(0, 2)];
+    quality = chordPart.slice(2);
+  } else if (chordPart.length >= 1 && NOTE_TO_SEMITONE[chordPart.slice(0, 1)] !== undefined) {
+    rootPitchClass = NOTE_TO_SEMITONE[chordPart.slice(0, 1)];
+    quality = chordPart.slice(1);
+  } else {
+    return [];
+  }
+
+  let bassPitchClass = rootPitchClass;
+  if (slashBass && NOTE_TO_SEMITONE[slashBass] !== undefined) {
+    bassPitchClass = NOTE_TO_SEMITONE[slashBass];
+  }
+
+  const tmpl = CHORD_TEMPLATES.find(t => t.quality === quality);
+  let intervals = tmpl ? [...tmpl.required] : [0, 4, 7];
+  if (tmpl && tmpl.optional) {
+    if (tmpl.optional.includes(7) && !intervals.includes(6) && !intervals.includes(8) && !tmpl.quality.includes('13')) {
+      intervals.push(7);
+    }
+    if ((tmpl.quality.includes('13') || tmpl.quality === '6/9') && tmpl.optional.includes(2)) {
+      intervals.push(2);
+    }
+  }
+
+  // Bass note: Octave 2-3 (between E2 (40) and Eb3 (51))
+  let bass = 36 + bassPitchClass;
+  if (bass < 40) bass += 12;
+
+  // Right hand root around C4 (between F3 (53) and E4 (64)):
+  let rhRoot = 60 + rootPitchClass;
+  if (rhRoot >= 65) rhRoot -= 12;
+
+  const extensionIntervals = tmpl && tmpl.extensionIntervals ? tmpl.extensionIntervals : [];
+  const chordPitches = [];
+
+  // Right hand chord tones:
+  for (const iv of intervals) {
+    let semitonesAboveRoot = iv;
+    if (extensionIntervals.includes(iv) || (iv === 2 && tmpl && (tmpl.quality.includes('13') || tmpl.quality.includes('9')))) {
+      semitonesAboveRoot += 12;
+    }
+    chordPitches.push(rhRoot + semitonesAboveRoot);
+  }
+
+  return Array.from(new Set([bass, ...chordPitches])).sort((a, b) => a - b);
+}
