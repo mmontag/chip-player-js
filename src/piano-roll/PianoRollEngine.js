@@ -340,6 +340,26 @@ export default class PianoRollEngine {
     return this.keyboardGeometry;
   }
 
+  getKeyboardHeight() {
+    const { config, canvas } = this;
+    const isKeyboardVisible = config.SHOW_KEYBOARD !== false;
+    if (!isKeyboardVisible) return 0;
+
+    const isVertical = config.ORIENTATION === 'vertical';
+    const isForward = config.DIRECTION !== 'reverse' && config.DIRECTION !== 'bottom-to-top' && config.DIRECTION !== 'left-to-right';
+    if (!isVertical || !isForward) return 0;
+
+    const totalUnits = 624 / 7;
+    let totalPitchDimension = canvas.width;
+    if (config.PITCH_ZOOM_MODE !== 'fill') {
+      const unitScale = config.PIXELS_PER_NOTE || 5;
+      totalPitchDimension = Math.round(totalUnits * unitScale);
+    }
+    const offset = typeof config.PLAYHEAD_OFFSET_PX === 'number' ? config.PLAYHEAD_OFFSET_PX : 2;
+    const keyboardSize = Math.max(1, Math.round(totalPitchDimension * (config.KEYBOARD_ASPECT_RATIO || 0.125)));
+    return keyboardSize + offset;
+  }
+
   render(timestamp) {
     const { canvas, ctx, config } = this;
     const width = canvas.width;

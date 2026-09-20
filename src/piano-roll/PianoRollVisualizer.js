@@ -48,6 +48,8 @@ export default class PianoRollVisualizer extends PureComponent {
       if (!this.props.paused) {
         this.engine.start();
       }
+
+      this.updateChordLabelPosition();
     }
 
     if (this.containerRef.current && typeof ResizeObserver !== 'undefined') {
@@ -115,6 +117,38 @@ export default class PianoRollVisualizer extends PureComponent {
         this.setState({ width: this.props.width });
       }
     }
+
+    this.updateChordLabelPosition();
+  }
+
+  getKeyboardHeight() {
+    if (this.engine) {
+      return this.engine.getKeyboardHeight();
+    }
+    const isVertical = !this.props.theaterMode;
+    const isKeyboardVisible = PIANO_ROLL_CONFIG.SHOW_KEYBOARD !== false;
+    const isForward = PIANO_ROLL_CONFIG.DIRECTION !== 'reverse' && PIANO_ROLL_CONFIG.DIRECTION !== 'bottom-to-top' && PIANO_ROLL_CONFIG.DIRECTION !== 'left-to-right';
+    if (!isVertical || !isKeyboardVisible || !isForward) return 0;
+
+    const width = this.state.width || this.props.width || 448;
+    let totalPitchDimension = width;
+    if (PIANO_ROLL_CONFIG.PITCH_ZOOM_MODE !== 'fill') {
+      const totalUnits = 624 / 7;
+      const unitScale = PIANO_ROLL_CONFIG.PIXELS_PER_NOTE || 5;
+      totalPitchDimension = Math.round(totalUnits * unitScale);
+    }
+    const offset = typeof PIANO_ROLL_CONFIG.PLAYHEAD_OFFSET_PX === 'number' ? PIANO_ROLL_CONFIG.PLAYHEAD_OFFSET_PX : 2;
+    const keyboardSize = Math.max(1, Math.round(totalPitchDimension * (PIANO_ROLL_CONFIG.KEYBOARD_ASPECT_RATIO || 0.125)));
+    return keyboardSize + offset;
+  }
+
+  updateChordLabelPosition() {
+    if (this.chordLabelRef.current) {
+      const keyboardHeight = this.getKeyboardHeight();
+      this.chordLabelRef.current.style.bottom = keyboardHeight > 0
+        ? `calc(var(--charH) + ${keyboardHeight}px)`
+        : 'var(--charH)';
+    }
   }
 
   componentWillUnmount() {
@@ -156,6 +190,10 @@ export default class PianoRollVisualizer extends PureComponent {
   render() {
     const { width, height } = this.state;
     const { style = {}, theaterMode, onToggleTheaterMode } = this.props;
+    const keyboardHeight = this.getKeyboardHeight();
+    const chordLabelBottom = keyboardHeight > 0
+      ? `calc(var(--charH) + ${keyboardHeight}px)`
+      : 'var(--charH)';
 
     return (
       <div
@@ -187,7 +225,7 @@ export default class PianoRollVisualizer extends PureComponent {
           ref={this.chordLabelRef}
           style={{
             position: 'absolute',
-            bottom: 'var(--charH)',
+            bottom: chordLabelBottom,
             right: 'var(--charW2)',
             color: '#ffffff',
             pointerEvents: 'none',
