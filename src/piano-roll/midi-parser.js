@@ -25,10 +25,10 @@ const CC_ALL_SOUND_OFF = 120;
 const CC_RESET_ALL_CONTROLLERS = 121;
 const CC_ALL_NOTES_OFF = 123;
 
-const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+const NOTE_NAMES = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'];
 
 /**
- * Returns a human-readable note name with octave (e.g. 60 -> "C4", 61 -> "C#4").
+ * Returns a human-readable note name with octave (e.g. 60 -> "C4", 61 -> "C♯4").
  */
 export function getNoteName(pitch) {
   const note = NOTE_NAMES[pitch % 12];
@@ -37,7 +37,7 @@ export function getNoteName(pitch) {
 }
 
 /**
- * Returns true if pitch corresponds to a black piano key (C#, D#, F#, G#, A#).
+ * Returns true if pitch corresponds to a black piano key (C♯, D♯, F♯, G♯, A♯).
  */
 export function isBlackKey(pitch) {
   const semitone = pitch % 12;

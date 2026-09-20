@@ -1,7 +1,7 @@
 // Chord Detection and Harmonic Analysis for Piano Roll
 // Evaluates actively sounding MIDI notes using interval scoring with jazz heuristics.
 
-export const NOTE_NAMES = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
+export const NOTE_NAMES = ['C', 'C♯', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'A♭', 'A', 'B♭', 'B'];
 
 /**
  * Predefined chord templates covering triads, 6ths, 7ths, 9ths, 11ths, 13ths, and suspensions.
@@ -31,7 +31,7 @@ export const CHORD_TEMPLATES = [
     priority: 88,
   },
   {
-    quality: '7(b13)',
+    quality: '7(♭13)',
     required: [0, 4, 10, 8], // 1, 3, b7, b13
     optional: [2],           // 9
     avoid: [1, 7, 9, 11],
@@ -54,14 +54,14 @@ export const CHORD_TEMPLATES = [
     priority: 84,
   },
   {
-    quality: 'maj7(#11)',
+    quality: 'maj7(♯11)',
     required: [0, 4, 11, 6], // 1, 3, 7, #11
     optional: [7, 2, 9],     // 5, 9, 13
     avoid: [1, 3, 5, 8, 10],
     priority: 84,
   },
   {
-    quality: '7(#11)',
+    quality: '7(♯11)',
     required: [0, 4, 10, 6], // 1, 3, b7, #11
     optional: [7, 2, 9],     // 5, 9, 13
     avoid: [1, 3, 5, 8, 11],
@@ -98,14 +98,14 @@ export const CHORD_TEMPLATES = [
     priority: 78,
   },
   {
-    quality: '7(b9)',
+    quality: '7(♭9)',
     required: [0, 4, 10, 1], // 1, 3, b7, b9
     optional: [7],           // 5
     avoid: [2, 3, 8, 9, 11],
     priority: 79,
   },
   {
-    quality: '7(#9)',
+    quality: '7(♯9)',
     required: [0, 4, 10, 3], // 1, 3, b7, #9 (Hendrix chord)
     optional: [7],           // 5
     avoid: [1, 2, 8, 9, 11],
@@ -156,7 +156,7 @@ export const CHORD_TEMPLATES = [
     priority: 62,
   },
   {
-    quality: 'm7b5',         // Half-diminished
+    quality: 'm7♭5',         // Half-diminished
     required: [0, 3, 6, 10], // 1, b3, b5, b7
     optional: [],
     avoid: [1, 2, 4, 7, 9, 11],
@@ -177,14 +177,14 @@ export const CHORD_TEMPLATES = [
     priority: 64,
   },
   {
-    quality: '7#5',
+    quality: '7♯5',
     required: [0, 4, 8, 10], // 1, 3, #5, b7
     optional: [],
     avoid: [1, 2, 7, 9, 11],
     priority: 65,
   },
   {
-    quality: 'maj7#5',
+    quality: 'maj7♯5',
     required: [0, 4, 8, 11], // 1, 3, #5, 7
     optional: [],
     avoid: [1, 2, 7, 9, 10],
