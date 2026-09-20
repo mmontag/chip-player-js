@@ -690,18 +690,14 @@ export default class PianoRollEngine {
 
         // Collect sounding notes for harmonic analysis (exclude atonal instruments)
         if ((isKeySounding || isSustainSounding) && config.SHOW_HARMONIC_ANALYSIS !== false) {
-          const trackMeta = this.tracks[note.track];
-          const channelMeta = this.channels[note.channel];
-          const program = note.program !== undefined ? note.program : (channelMeta ? channelMeta.program : undefined);
-          const instrumentName = channelMeta ? channelMeta.instrumentName : (trackMeta ? trackMeta.instrumentName : '');
-          const trackName = trackMeta ? trackMeta.name : '';
+          const program = note.program !== undefined
+            ? note.program
+            : (this.channels[note.channel] ? this.channels[note.channel].program : undefined);
           const excludeAtonal = config.HARMONIC_ANALYSIS_EXCLUDE_ATONAL !== false;
 
           const noteObj = {
             channel: note.channel,
             program,
-            instrumentName,
-            trackName,
           };
 
           if (!excludeAtonal || !isAtonalInstrument(noteObj)) {

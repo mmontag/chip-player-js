@@ -299,12 +299,11 @@ export const ATONAL_GM_PROGRAMS = new Set([
   127, // Gunshot
 ]);
 
-export const ATONAL_NAME_REGEX = /\b(synth\s*toms?|synth\s*drums?|taiko|woodblocks?|melodic\s*toms?|reverse\s*cymbal|tinkle\s*bell|agogo|fret\s*noise|breath\s*noise|seashore|bird\s*tweet|helicopter|applause|gunshot)\b/i;
-
 /**
- * Checks whether an instrument or note represents an atonal / percussion sound.
+ * Checks whether an instrument or note represents an atonal / percussion sound based on
+ * MIDI channel (channel 9 standard drums) or General MIDI program number.
  *
- * @param {Object} note Note or instrument metadata
+ * @param {Object} note Note metadata with { channel, program }
  * @returns {boolean}
  */
 export function isAtonalInstrument(note) {
@@ -313,9 +312,6 @@ export function isAtonalInstrument(note) {
   if (note.channel === 9) return true;
   // Atonal General MIDI program numbers
   if (typeof note.program === 'number' && ATONAL_GM_PROGRAMS.has(note.program)) return true;
-  // Atonal instrument or track names
-  if (typeof note.instrumentName === 'string' && ATONAL_NAME_REGEX.test(note.instrumentName)) return true;
-  if (typeof note.trackName === 'string' && ATONAL_NAME_REGEX.test(note.trackName)) return true;
   return false;
 }
 
