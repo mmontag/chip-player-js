@@ -105,8 +105,8 @@ export default class PianoRollEngine {
       this.canvas.height = height;
       this.keyboardCacheKey = '';
       this.isDirty = true;
-      this.render();
     }
+    this.render();
   }
 
   start() {

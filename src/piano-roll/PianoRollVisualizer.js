@@ -62,11 +62,18 @@ export default class PianoRollVisualizer extends PureComponent {
     }
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps, prevState) {
     if (!this.engine) return;
+
+    if (prevState && (prevState.width !== this.state.width || prevState.height !== this.state.height)) {
+      this.engine.resize(this.state.width, this.state.height);
+    }
 
     if (prevProps.getCurrentPositionMs !== this.props.getCurrentPositionMs) {
       this.engine.getCurrentPositionMs = this.props.getCurrentPositionMs;
+      if (this.props.paused) {
+        this.engine.render();
+      }
     }
 
     if (prevProps.getPlaybackRate !== this.props.getPlaybackRate) {
@@ -100,7 +107,6 @@ export default class PianoRollVisualizer extends PureComponent {
     if (typeof this.props.width === 'number' && prevProps.width !== this.props.width) {
       if (this.props.width !== this.state.width) {
         this.setState({ width: this.props.width });
-        this.engine.resize(this.props.width, this.state.height);
       }
     }
   }
