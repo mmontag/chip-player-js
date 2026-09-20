@@ -113,6 +113,9 @@ export const PIANO_ROLL_CONFIG = {
   KEYBOARD_STROKE_COLOR: '#444444', // 1-pixel stroke between white keys and bottom border
   KEYBOARD_BLACK_KEY_STROKE_COLOR: '#000000', // Outline stroke for black keys
   KEYBOARD_SUSTAIN_ILLUMINATION: true, // Illuminate keys held by sustain pedal at sustain opacity
+  // Harmonic Analysis settings:
+  SHOW_HARMONIC_ANALYSIS: true, // Display detected chord label in the visualizer
+  HARMONIC_ANALYSIS_MIN_NOTES: 2, // Minimum distinct pitch classes required to detect a chord
 };
 
 export const DECAY_EASINGS = {

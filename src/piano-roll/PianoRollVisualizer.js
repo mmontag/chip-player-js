@@ -11,6 +11,7 @@ export default class PianoRollVisualizer extends PureComponent {
 
     this.containerRef = React.createRef();
     this.canvasRef = React.createRef();
+    this.chordLabelRef = React.createRef();
     this.engine = null;
     this.currentBuffer = null;
     this.resizeObserver = null;
@@ -29,6 +30,11 @@ export default class PianoRollVisualizer extends PureComponent {
         getAudioLatencyMs: this.props.getAudioLatencyMs,
         isPaused: this.props.paused,
         ORIENTATION: this.props.theaterMode ? 'horizontal' : 'vertical',
+        onChordChange: (chord) => {
+          if (this.chordLabelRef.current) {
+            this.chordLabelRef.current.textContent = chord;
+          }
+        },
       });
 
       if (this.props.voiceMask) {
@@ -120,6 +126,9 @@ export default class PianoRollVisualizer extends PureComponent {
       this.engine.destroy();
       this.engine = null;
     }
+    if (this.chordLabelRef.current) {
+      this.chordLabelRef.current.textContent = '';
+    }
   }
 
   loadMidi(buffer) {
@@ -174,6 +183,17 @@ export default class PianoRollVisualizer extends PureComponent {
             {theaterMode ? '→[]←' : '[←→]'}
           </button>
         )}
+        <div
+          ref={this.chordLabelRef}
+          style={{
+            position: 'absolute',
+            bottom: 'var(--charH)',
+            right: 'var(--charW2)',
+            color: '#ffffff',
+            pointerEvents: 'none',
+            userSelect: 'none',
+          }}
+        />
       </div>
     );
   }

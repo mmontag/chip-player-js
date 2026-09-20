@@ -1,5 +1,6 @@
 import { PIANO_ROLL_CONFIG, getDecayIntensity } from './config.js';
 import { findFirstVisibleNoteIndex, getNoteName, getNotePitchOffsetAt, isBlackKey } from './midi-parser.js';
+import { detectChord } from './chord-detector.js';
 
 export default class PianoRollEngine {
   constructor(canvas, options = {}) {
@@ -17,6 +18,8 @@ export default class PianoRollEngine {
     this.getPlaybackRate = options.getPlaybackRate || (() => 1.0);
     this.getAudioLatencyMsCallback = options.getAudioLatencyMs;
     this.isPaused = options.isPaused !== undefined ? options.isPaused : true;
+    this.onChordChange = options.onChordChange || null;
+    this.currentChord = '';
     this.hiddenChannels = new Set();
     this.hiddenTracks = new Set();
     this.voiceMask = null; // array of booleans if controlled externally by Settings
@@ -129,6 +132,10 @@ export default class PianoRollEngine {
     this.keyboardCanvas = null;
     this.keyboardGeometry = null;
     this.keyboardCacheKey = '';
+    if (this.currentChord !== '') {
+      this.currentChord = '';
+      if (this.onChordChange) this.onChordChange('');
+    }
   }
 
   onFrame(timestamp) {
@@ -546,6 +553,7 @@ export default class PianoRollEngine {
 
     // 3. Draw notes
     const activeKeys = new Map();
+    const soundingNotes = [];
     const notes = this.notes;
     if (notes.length > 0) {
       const startIndex = findFirstVisibleNoteIndex(notes, minVisibleMs, this.maxNoteDurationMs);
@@ -657,40 +665,47 @@ export default class PianoRollEngine {
 
         const baseAlpha = isMuted ? config.MUTED_OPACITY : 1.0;
 
-        // Track sounding notes for piano keyboard illumination
-        if (!isMuted && isKeyboardVisible && note.startMs <= currentTimeMs && noteEndMs >= currentTimeMs) {
-          const isKeySounding = currentTimeMs <= note.endMs;
-          const isSustainSounding = hasSustain && currentTimeMs > note.endMs && currentTimeMs <= note.sustainEndMs;
-          const useSustain = config.KEYBOARD_SUSTAIN_ILLUMINATION !== false;
-          if (isKeySounding || (isSustainSounding && useSustain)) {
-            const bendOffset = (config.ENABLE_PITCH_BEND !== false && note.bends && note.bends.length > 1)
-              ? getNotePitchOffsetAt(note.bends, currentTimeMs)
-              : 0;
-            const currentPitch = Math.round(note.pitch + bendOffset);
-            if (currentPitch >= minPitch && currentPitch <= maxPitch) {
-              const existing = activeKeys.get(currentPitch);
-              let shouldReplace = false;
-              if (!existing) {
-                shouldReplace = true;
-              } else if (isKeySounding && !existing.isKey) {
-                // Key-held always beats sustained
-                shouldReplace = true;
-              } else if (isKeySounding && existing.isKey) {
-                // Later key-held note beats earlier key-held note
-                shouldReplace = note.startMs >= existing.startMs;
-              } else if (existing.isSustain) {
-                // Notes that start later have priority over earlier sustained notes
-                shouldReplace = note.startMs >= existing.startMs;
-              }
+        const isKeySounding = !isMuted && note.startMs <= currentTimeMs && currentTimeMs <= note.endMs;
+        const isSustainSounding = !isMuted && hasSustain && currentTimeMs > note.endMs && currentTimeMs <= note.sustainEndMs;
 
-              if (shouldReplace) {
-                activeKeys.set(currentPitch, {
-                  color: baseColor,
-                  isKey: isKeySounding,
-                  isSustain: !isKeySounding && isSustainSounding,
-                  startMs: note.startMs,
-                });
-              }
+        // Collect sounding notes for harmonic analysis (exclude GM drums / channel 9)
+        if ((isKeySounding || isSustainSounding) && note.channel !== 9 && config.SHOW_HARMONIC_ANALYSIS !== false) {
+          const bendOffset = (config.ENABLE_PITCH_BEND !== false && note.bends && note.bends.length > 1)
+            ? getNotePitchOffsetAt(note.bends, currentTimeMs)
+            : 0;
+          const currentPitch = Math.round(note.pitch + bendOffset);
+          soundingNotes.push({ pitch: currentPitch, channel: note.channel });
+        }
+
+        // Track sounding notes for piano keyboard illumination
+        if (isKeyboardVisible && (isKeySounding || (isSustainSounding && config.KEYBOARD_SUSTAIN_ILLUMINATION !== false))) {
+          const bendOffset = (config.ENABLE_PITCH_BEND !== false && note.bends && note.bends.length > 1)
+            ? getNotePitchOffsetAt(note.bends, currentTimeMs)
+            : 0;
+          const currentPitch = Math.round(note.pitch + bendOffset);
+          if (currentPitch >= minPitch && currentPitch <= maxPitch) {
+            const existing = activeKeys.get(currentPitch);
+            let shouldReplace = false;
+            if (!existing) {
+              shouldReplace = true;
+            } else if (isKeySounding && !existing.isKey) {
+              // Key-held always beats sustained
+              shouldReplace = true;
+            } else if (isKeySounding && existing.isKey) {
+              // Later key-held note beats earlier key-held note
+              shouldReplace = note.startMs >= existing.startMs;
+            } else if (existing.isSustain) {
+              // Notes that start later have priority over earlier sustained notes
+              shouldReplace = note.startMs >= existing.startMs;
+            }
+
+            if (shouldReplace) {
+              activeKeys.set(currentPitch, {
+                color: baseColor,
+                isKey: isKeySounding,
+                isSustain: !isKeySounding && isSustainSounding,
+                startMs: note.startMs,
+              });
             }
           }
         }
@@ -948,6 +963,23 @@ export default class PianoRollEngine {
       ctx.fillRect(0, lineCoord, width, lineWidth);
     } else {
       ctx.fillRect(lineCoord, 0, lineWidth, height);
+    }
+
+    // 5. Harmonic Analysis (Chord Detection)
+    if (config.SHOW_HARMONIC_ANALYSIS !== false) {
+      const minNotes = config.HARMONIC_ANALYSIS_MIN_NOTES !== undefined ? config.HARMONIC_ANALYSIS_MIN_NOTES : 2;
+      const detected = detectChord(soundingNotes, { minNotes });
+      if (detected !== this.currentChord) {
+        this.currentChord = detected;
+        if (this.onChordChange) {
+          this.onChordChange(detected);
+        }
+      }
+    } else if (this.currentChord !== '') {
+      this.currentChord = '';
+      if (this.onChordChange) {
+        this.onChordChange('');
+      }
     }
   }
 }
