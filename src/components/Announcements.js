@@ -16,6 +16,10 @@ export default function Announcements() {
 ╚═════════════════╝
 `}
       </p>
+      <h3>2026-09-20</h3>
+      <p>
+        Added a piano roll visualizer for MIDI files. Includes harmonic analysis and a "wide screen" mode.
+      </p>
       <h3>2026-09-02</h3>
       <p>
         Explore your top tracks and global trends in the new <Link to="/top">Top Charts</Link> tab.
