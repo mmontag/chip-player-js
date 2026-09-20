@@ -941,7 +941,7 @@ export default class PianoRollEngine {
       }
     }
 
-    const lineCoord = Math.floor(actualPlayheadCoord);
+    const lineCoord = Math.ceil(actualPlayheadCoord);
 
     if (isKeyboardVisible) {
       const geo = this.ensureKeyboardCache(totalPitchDimension, keyboardSize, pitchSlots, unitScale);
@@ -966,7 +966,7 @@ export default class PianoRollEngine {
             if (wk) {
               ctx.globalAlpha = info.isSustain ? (config.SUSTAIN_OPACITY || 0.5) : 1.0;
               ctx.fillStyle = info.color;
-              ctx.fillRect(wk.x, 0, wk.w, keyboardSize);
+              ctx.fillRect(wk.x, 0, wk.w, keyboardSize - 1);
 
               // Mark adjacent black keys to be redrawn on top
               if (geo.blackKeys[pitch - 1]) blackKeysToRedraw.add(pitch - 1);
