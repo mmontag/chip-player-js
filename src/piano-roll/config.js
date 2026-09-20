@@ -122,6 +122,9 @@ export const PIANO_ROLL_CONFIG = {
   HARMONIC_ACTIVATION_THRESHOLD: 0.15, // Minimum activation level (0.0 to 1.0) for a pitch class to be included
   HARMONIC_BASS_DECAY_MS: 1000, // Memory time constant in ms for bass notes (supports stride piano and broken bass)
   HARMONIC_CHANGE_THRESHOLD_MS: 50, // Minimum persistence in ms to register a chord change (suppresses transient flicker)
+  HARMONIC_ALLOW_EXTENSIONS: true, // Master toggle for 9th, 11th, 13th, and add9 chord extensions
+  HARMONIC_EXTENSION_THRESHOLD: 0.5, // Resistance to detecting extensions (0.0 = eager jazz, 1.0 = strict triads/7ths)
+  HARMONIC_EXTENSION_MIN_WEIGHT: 0.6, // Minimum activation level (0.0 to 1.0) required for extension notes in leaky memory
 };
 
 export const DECAY_EASINGS = {

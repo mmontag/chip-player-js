@@ -14,28 +14,36 @@ export const CHORD_TEMPLATES = [
     required: [0, 4, 10, 9], // 1, 3, b7, 13
     optional: [7, 2],        // 5, 9
     avoid: [1, 3, 8, 11],
-    priority: 88,
+    priority: 80,
+    isExtension: true,
+    extensionIntervals: [9],
   },
   {
     quality: 'maj13',
     required: [0, 4, 11, 9], // 1, 3, 7, 13
     optional: [7, 2],        // 5, 9
     avoid: [1, 3, 8, 10],
-    priority: 88,
+    priority: 80,
+    isExtension: true,
+    extensionIntervals: [9],
   },
   {
     quality: 'm13',
     required: [0, 3, 10, 9], // 1, b3, b7, 13
     optional: [7, 2],        // 5, 9
     avoid: [1, 4, 8, 11],
-    priority: 88,
+    priority: 80,
+    isExtension: true,
+    extensionIntervals: [9],
   },
   {
     quality: '7(♭13)',
     required: [0, 4, 10, 8], // 1, 3, b7, b13
     optional: [2],           // 9
     avoid: [1, 7, 9, 11],
-    priority: 86,
+    priority: 78,
+    isExtension: true,
+    extensionIntervals: [8],
   },
 
   // --- 11th Chords ---
@@ -44,28 +52,36 @@ export const CHORD_TEMPLATES = [
     required: [0, 10, 2, 5], // 1, b7, 9, 11 (3 omitted in dominant 11)
     optional: [7, 4],        // 5, 3
     avoid: [1, 8, 9, 11],
-    priority: 82,
+    priority: 76,
+    isExtension: true,
+    extensionIntervals: [2, 5],
   },
   {
     quality: 'm11',
     required: [0, 3, 10, 5], // 1, b3, b7, 11
     optional: [7, 2],        // 5, 9
     avoid: [1, 4, 8, 9, 11],
-    priority: 84,
+    priority: 76,
+    isExtension: true,
+    extensionIntervals: [5],
   },
   {
     quality: 'maj7(♯11)',
     required: [0, 4, 11, 6], // 1, 3, 7, #11
     optional: [7, 2, 9],     // 5, 9, 13
     avoid: [1, 3, 5, 8, 10],
-    priority: 84,
+    priority: 76,
+    isExtension: true,
+    extensionIntervals: [6],
   },
   {
     quality: '7(♯11)',
     required: [0, 4, 10, 6], // 1, 3, b7, #11
     optional: [7, 2, 9],     // 5, 9, 13
     avoid: [1, 3, 5, 8, 11],
-    priority: 84,
+    priority: 76,
+    isExtension: true,
+    extensionIntervals: [6],
   },
 
   // --- 9th Chords ---
@@ -74,56 +90,72 @@ export const CHORD_TEMPLATES = [
     required: [0, 4, 10, 2], // 1, 3, b7, 9
     optional: [7],           // 5 (omitted 5th common in jazz)
     avoid: [1, 3, 8, 9, 11],
-    priority: 78,
+    priority: 72,
+    isExtension: true,
+    extensionIntervals: [2],
   },
   {
     quality: 'maj9',
     required: [0, 4, 11, 2], // 1, 3, 7, 9
     optional: [7],           // 5
     avoid: [1, 3, 8, 9, 10],
-    priority: 78,
+    priority: 72,
+    isExtension: true,
+    extensionIntervals: [2],
   },
   {
     quality: 'm9',
     required: [0, 3, 10, 2], // 1, b3, b7, 9
     optional: [7],           // 5
     avoid: [1, 4, 8, 9, 11],
-    priority: 78,
+    priority: 72,
+    isExtension: true,
+    extensionIntervals: [2],
   },
   {
     quality: 'm(maj9)',
     required: [0, 3, 11, 2], // 1, b3, 7, 9
     optional: [7],           // 5
     avoid: [1, 4, 8, 9, 10],
-    priority: 78,
+    priority: 72,
+    isExtension: true,
+    extensionIntervals: [2],
   },
   {
     quality: '7(♭9)',
     required: [0, 4, 10, 1], // 1, 3, b7, b9
     optional: [7],           // 5
     avoid: [2, 3, 8, 9, 11],
-    priority: 79,
+    priority: 74,
+    isExtension: true,
+    extensionIntervals: [1],
   },
   {
     quality: '7(♯9)',
     required: [0, 4, 10, 3], // 1, 3, b7, #9 (Hendrix chord)
     optional: [7],           // 5
     avoid: [1, 2, 8, 9, 11],
-    priority: 79,
+    priority: 74,
+    isExtension: true,
+    extensionIntervals: [3],
   },
   {
     quality: 'add9',
     required: [0, 4, 2],     // 1, 3, 9 (no 7th)
     optional: [7],           // 5
     avoid: [1, 3, 10, 11],
-    priority: 68,
+    priority: 44,
+    isExtension: true,
+    extensionIntervals: [2],
   },
   {
     quality: 'm(add9)',
     required: [0, 3, 2],     // 1, b3, 9 (no 7th)
     optional: [7],           // 5
     avoid: [1, 4, 10, 11],
-    priority: 68,
+    priority: 44,
+    isExtension: true,
+    extensionIntervals: [2],
   },
 
   // --- 7th Chords ---
@@ -131,28 +163,32 @@ export const CHORD_TEMPLATES = [
     quality: '7',
     required: [0, 4, 10],    // 1, 3, b7
     optional: [7],           // 5
-    avoid: [1, 2, 3, 9, 11],
+    avoid: [1, 3, 11],
+    tensions: [2, 9],
     priority: 62,
   },
   {
     quality: 'maj7',
     required: [0, 4, 11],    // 1, 3, 7
     optional: [7],           // 5
-    avoid: [1, 2, 3, 9, 10],
+    avoid: [1, 3, 5, 10],
+    tensions: [2, 9],
     priority: 62,
   },
   {
     quality: 'm7',
     required: [0, 3, 10],    // 1, b3, b7
     optional: [7],           // 5
-    avoid: [1, 2, 4, 9, 11],
+    avoid: [1, 4, 11],
+    tensions: [2, 5, 9],
     priority: 62,
   },
   {
     quality: 'm(maj7)',
     required: [0, 3, 11],    // 1, b3, 7
     optional: [7],           // 5
-    avoid: [1, 2, 4, 9, 10],
+    avoid: [1, 4, 10],
+    tensions: [2, 9],
     priority: 62,
   },
   {
@@ -196,22 +232,30 @@ export const CHORD_TEMPLATES = [
     quality: '6',
     required: [0, 4, 9],     // 1, 3, 6
     optional: [7],           // 5
-    avoid: [1, 2, 3, 10, 11],
-    priority: 58,
+    avoid: [1, 3, 10, 11],
+    tensions: [2],
+    priority: 44,
+    isExtension: true,
+    extensionIntervals: [9],
   },
   {
     quality: 'm6',
     required: [0, 3, 9],     // 1, b3, 6
     optional: [7],           // 5
-    avoid: [1, 2, 4, 10, 11],
-    priority: 58,
+    avoid: [1, 4, 10, 11],
+    tensions: [2],
+    priority: 44,
+    isExtension: true,
+    extensionIntervals: [9],
   },
   {
     quality: '6/9',
     required: [0, 4, 9, 2],  // 1, 3, 6, 9
     optional: [7],           // 5
     avoid: [1, 3, 10, 11],
-    priority: 74,
+    priority: 64,
+    isExtension: true,
+    extensionIntervals: [2],
   },
 
   // --- Triads ---
@@ -219,14 +263,16 @@ export const CHORD_TEMPLATES = [
     quality: '',             // Major triad
     required: [0, 4],        // 1, 3
     optional: [7],           // 5
-    avoid: [1, 2, 3, 5, 6, 8, 9, 10, 11],
+    avoid: [1, 3, 5, 8],
+    tensions: [2, 9],
     priority: 42,
   },
   {
     quality: 'm',            // Minor triad
     required: [0, 3],        // 1, b3
     optional: [7],           // 5
-    avoid: [1, 2, 4, 5, 6, 8, 9, 10, 11],
+    avoid: [1, 4, 6, 8],
+    tensions: [2, 5, 9],
     priority: 42,
   },
   {
@@ -266,11 +312,12 @@ export const CHORD_TEMPLATES = [
   },
 ];
 
-// Precompute 12-bit masks for required, optional, and allowed intervals
+// Precompute 12-bit masks for required, optional, allowed intervals, and compatible tensions
 for (const tmpl of CHORD_TEMPLATES) {
   tmpl.requiredMask = tmpl.required.reduce((m, i) => m | (1 << i), 0);
   tmpl.optionalMask = (tmpl.optional || []).reduce((m, i) => m | (1 << i), 0);
   tmpl.allowedMask = tmpl.requiredMask | tmpl.optionalMask;
+  tmpl.tensionMask = (tmpl.tensions || []).reduce((m, i) => m | (1 << i), 0);
 }
 
 /**
@@ -335,7 +382,10 @@ function popcount(n) {
  * @param {Object} [options]
  * @param {number} [options.minNotes=2] Minimum distinct pitch classes required to form a chord
  * @param {boolean} [options.excludeAtonal=true] Whether to exclude atonal instruments
- * @returns {string} e.g. "C", "Dm7", "G7(b9)", "Cmaj13", "F/G", or ""
+ * @param {boolean} [options.allowExtensions=true] Whether to detect 9th, 11th, 13th, and add9 extensions
+ * @param {number} [options.extensionThreshold=0.5] Resistance to detecting extensions (0.0=eager, 1.0=strict)
+ * @param {number} [options.extensionMinWeight=0.6] Minimum activation weight for extension notes
+ * @returns {string} e.g. "C", "Dm7", "G7(♭9)", "Cmaj13", "F/G", or ""
  */
 export function detectChord(soundingNotes, options = {}) {
   if (!soundingNotes || soundingNotes.length === 0) return '';
@@ -343,6 +393,9 @@ export function detectChord(soundingNotes, options = {}) {
   const minNotes = options.minNotes !== undefined ? options.minNotes : 2;
   const excludeAtonal = options.excludeAtonal !== false;
   const weights = options.weights || null;
+  const allowExtensions = options.allowExtensions !== false;
+  const extensionThreshold = typeof options.extensionThreshold === 'number' ? options.extensionThreshold : 0.5;
+  const extensionMinWeight = typeof options.extensionMinWeight === 'number' ? options.extensionMinWeight : 0.6;
 
   let bassPitch = typeof options.bassPitch === 'number' ? options.bassPitch : Infinity;
   let pitchClassesMask = 0;
@@ -398,6 +451,25 @@ export function detectChord(soundingNotes, options = {}) {
     for (let tIdx = 0; tIdx < CHORD_TEMPLATES.length; tIdx++) {
       const tmpl = CHORD_TEMPLATES[tIdx];
 
+      // Extension restrictions:
+      if (tmpl.isExtension) {
+        if (!allowExtensions) continue;
+
+        // If weights are provided, extension intervals must meet minimum activation weight
+        if (weights && tmpl.extensionIntervals) {
+          let extensionMet = true;
+          for (let e = 0; e < tmpl.extensionIntervals.length; e++) {
+            const extPc = (root + tmpl.extensionIntervals[e]) % 12;
+            const w = weights[extPc] !== undefined ? weights[extPc] : 1;
+            if (w < extensionMinWeight) {
+              extensionMet = false;
+              break;
+            }
+          }
+          if (!extensionMet) continue;
+        }
+      }
+
       // Check if all required intervals are present
       if ((actualIntervalMask & tmpl.requiredMask) !== tmpl.requiredMask) {
         continue;
@@ -417,6 +489,11 @@ export function detectChord(soundingNotes, options = {}) {
 
       // Calculate score
       let score = tmpl.priority;
+
+      // Penalize extended chords according to extensionThreshold (simplicity preference)
+      if (tmpl.isExtension) {
+        score -= extensionThreshold * 40;
+      }
 
       // Reward matching required and optional tones
       if (weights) {
@@ -446,7 +523,12 @@ export function detectChord(soundingNotes, options = {}) {
           const interval = (pc - root + 12) % 12;
           if ((tmpl.allowedMask & (1 << interval)) === 0) {
             const w = weights[pc] !== undefined ? weights[pc] : 1;
-            extraPenalty += 30 * w;
+            if (tmpl.tensionMask && (tmpl.tensionMask & (1 << interval)) !== 0) {
+              // Compatible melodic tension receives a mild penalty instead of full clash penalty
+              extraPenalty += (6 + 10 * extensionThreshold) * w;
+            } else {
+              extraPenalty += 30 * w;
+            }
           }
         }
         score -= extraPenalty;
@@ -455,9 +537,19 @@ export function detectChord(soundingNotes, options = {}) {
         const matchedOptional = actualIntervalMask & tmpl.optionalMask;
         score += popcount(matchedOptional) * 4;
 
-        const extraMask = actualIntervalMask & ~tmpl.allowedMask;
-        const extraCount = popcount(extraMask);
-        score -= extraCount * 30;
+        let extraPenalty = 0;
+        for (let pIdx = 0; pIdx < uniquePcs.length; pIdx++) {
+          const pc = uniquePcs[pIdx];
+          const interval = (pc - root + 12) % 12;
+          if ((tmpl.allowedMask & (1 << interval)) === 0) {
+            if (tmpl.tensionMask && (tmpl.tensionMask & (1 << interval)) !== 0) {
+              extraPenalty += (6 + 10 * extensionThreshold);
+            } else {
+              extraPenalty += 30;
+            }
+          }
+        }
+        score -= extraPenalty;
       }
 
       // Bass note heuristics:
@@ -474,6 +566,14 @@ export function detectChord(soundingNotes, options = {}) {
           } else {
             score -= 35 * bassWeight; // Foreign bass note penalty
           }
+        }
+      }
+
+      if (weights) {
+        const rootWeight = weights[root] !== undefined ? weights[root] : 1;
+        if (rootWeight < 0.6 && root !== bassPc) {
+          // A decaying or soft note cannot act as the root of an inverted / slash chord
+          score -= (1.0 - rootWeight) * 50;
         }
       }
 
@@ -534,11 +634,20 @@ export class ChordIntegrator {
     const isLeakyEnabled = config.HARMONIC_LEAKY_INTEGRATOR !== false;
     const minNotes = config.HARMONIC_ANALYSIS_MIN_NOTES !== undefined ? config.HARMONIC_ANALYSIS_MIN_NOTES : 2;
     const excludeAtonal = config.HARMONIC_ANALYSIS_EXCLUDE_ATONAL !== false;
+    const allowExtensions = config.HARMONIC_ALLOW_EXTENSIONS !== false;
+    const extensionThreshold = typeof config.HARMONIC_EXTENSION_THRESHOLD === 'number' ? config.HARMONIC_EXTENSION_THRESHOLD : 0.5;
+    const extensionMinWeight = typeof config.HARMONIC_EXTENSION_MIN_WEIGHT === 'number' ? config.HARMONIC_EXTENSION_MIN_WEIGHT : 0.6;
 
     // If leaky integrator is disabled, perform instantaneous detection directly
     if (!isLeakyEnabled) {
       this.reset();
-      const detected = detectChord(soundingNotes, { minNotes, excludeAtonal });
+      const detected = detectChord(soundingNotes, {
+        minNotes,
+        excludeAtonal,
+        allowExtensions,
+        extensionThreshold,
+        extensionMinWeight,
+      });
       this.currentChord = detected;
       return detected;
     }
@@ -651,6 +760,9 @@ export class ChordIntegrator {
       weights: activeWeights,
       bassPitch: effectiveBassPitch,
       excludeAtonal: false,
+      allowExtensions,
+      extensionThreshold,
+      extensionMinWeight,
     });
 
     // 5. Chord Stability / Debounce (Hysteresis)
