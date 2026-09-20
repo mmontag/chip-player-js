@@ -125,6 +125,10 @@ export const PIANO_ROLL_CONFIG = {
   HARMONIC_ALLOW_EXTENSIONS: true, // Master toggle for 9th, 11th, 13th, and add9 chord extensions
   HARMONIC_EXTENSION_THRESHOLD: 0.5, // Resistance to detecting extensions (0.0 = eager jazz, 1.0 = strict triads/7ths)
   HARMONIC_EXTENSION_MIN_WEIGHT: 0.6, // Minimum activation level (0.0 to 1.0) required for extension notes in leaky memory
+  HARMONIC_FLUSH_ON_CHORD: true, // Flush non-sounding memory notes when >= 3 notes sound simultaneously
+  HARMONIC_PRESERVE_STRIDE_BASS: true, // Protect low bass note (< 60) in stride patterns from being flushed
+  HARMONIC_FLUSH_ON_ONSET_SURGE: true, // Reset bass note and flush memory on coordinated multi-note attacks (>= 2 onsets)
+  HARMONIC_FLUSH_SEMITONE_CLASH: true, // Extinguish decaying memory notes 1 semitone away from newly arrived notes
 };
 
 export const DECAY_EASINGS = {

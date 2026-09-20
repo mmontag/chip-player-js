@@ -618,6 +618,8 @@ export class ChordIntegrator {
     this.currentChord = '';
     this.pendingChord = null;
     this.pendingChordTimeMs = 0;
+    this.prevSoundingPitches = new Set();
+    this.prevSoundingCount = 0;
   }
 
   reset() {
@@ -628,6 +630,8 @@ export class ChordIntegrator {
     this.currentChord = '';
     this.pendingChord = null;
     this.pendingChordTimeMs = 0;
+    this.prevSoundingPitches = new Set();
+    this.prevSoundingCount = 0;
   }
 
   update(soundingNotes, currentTimeMs, config = {}) {
@@ -637,6 +641,9 @@ export class ChordIntegrator {
     const allowExtensions = config.HARMONIC_ALLOW_EXTENSIONS !== false;
     const extensionThreshold = typeof config.HARMONIC_EXTENSION_THRESHOLD === 'number' ? config.HARMONIC_EXTENSION_THRESHOLD : 0.5;
     const extensionMinWeight = typeof config.HARMONIC_EXTENSION_MIN_WEIGHT === 'number' ? config.HARMONIC_EXTENSION_MIN_WEIGHT : 0.6;
+    const flushOnChord = config.HARMONIC_FLUSH_ON_CHORD !== false;
+    const preserveStrideBass = config.HARMONIC_PRESERVE_STRIDE_BASS !== false;
+    const flushOnOnsetSurge = config.HARMONIC_FLUSH_ON_ONSET_SURGE !== false;
 
     // If leaky integrator is disabled, perform instantaneous detection directly
     if (!isLeakyEnabled) {
@@ -665,6 +672,8 @@ export class ChordIntegrator {
       this.bassPitch = Infinity;
       this.bassWeight = 0;
       this.pendingChord = null;
+      this.prevSoundingPitches.clear();
+      this.prevSoundingCount = 0;
     } else if (dt > 0) {
       // 1. Decay pitch activations
       const decayFactor = Math.exp(-dt / decayMs);
@@ -687,9 +696,72 @@ export class ChordIntegrator {
     }
     this.lastTimeMs = currentTimeMs;
 
-    // 3. Inject energy from actively sounding notes
+    // 3. Inspect actively sounding notes and detect onsets
+    const soundingPcs = new Set();
     let lowestSoundingPitch = Infinity;
+    const currentSoundingPitches = new Set();
+    const newOnsetPitchClasses = new Set();
+    let activeCount = 0;
 
+    if (soundingNotes && soundingNotes.length > 0) {
+      for (let i = 0; i < soundingNotes.length; i++) {
+        const note = soundingNotes[i];
+        if (excludeAtonal && isAtonalInstrument(note)) continue;
+
+        const pitch = typeof note === 'number' ? note : note.pitch;
+        if (typeof pitch !== 'number' || isNaN(pitch) || pitch < 0) continue;
+
+        const roundedPitch = Math.round(pitch);
+        const pc = ((roundedPitch % 12) + 12) % 12;
+        soundingPcs.add(pc);
+        currentSoundingPitches.add(roundedPitch);
+        activeCount++;
+
+        if (!this.prevSoundingPitches.has(roundedPitch)) {
+          newOnsetPitchClasses.add(pc);
+        }
+
+        if (pitch < lowestSoundingPitch) {
+          lowestSoundingPitch = pitch;
+        }
+      }
+    }
+
+    // Check for active stride bass (only valid if previous event was sparse < 3 notes, e.g. single bass note)
+    const hasActiveStrideBass = preserveStrideBass &&
+      this.prevSoundingCount < 3 &&
+      this.bassPitch < 60 &&
+      this.bassPitch < lowestSoundingPitch &&
+      this.bassWeight > 0.3;
+
+    // Smart Flushing Heuristic A: Onset Surge (Coordinated block chord arrival)
+    if (flushOnOnsetSurge && newOnsetPitchClasses.size >= 2 && soundingPcs.size >= 3) {
+      if (!hasActiveStrideBass || lowestSoundingPitch < 60) {
+        this.bassPitch = lowestSoundingPitch;
+        this.bassWeight = 1.0;
+        this.bassTimeMs = currentTimeMs;
+      }
+    }
+
+    // Smart Flushing Heuristic B: Sufficient Sounding Harmony Flush
+    // When >= 3 notes are actively sounding right now, flush non-sounding ghost notes
+    if (flushOnChord && soundingPcs.size >= 3) {
+      const bassPc = (this.bassPitch !== Infinity && this.bassPitch >= 0)
+        ? ((Math.round(this.bassPitch) % 12) + 12) % 12
+        : -1;
+
+      for (let pc = 0; pc < 12; pc++) {
+        if (!soundingPcs.has(pc)) {
+          if (hasActiveStrideBass && pc === bassPc) {
+            // Retain active low stride bass note
+          } else {
+            this.pitchActivations[pc] = 0;
+          }
+        }
+      }
+    }
+
+    // 4. Inject energy from actively sounding notes
     if (soundingNotes && soundingNotes.length > 0) {
       for (let i = 0; i < soundingNotes.length; i++) {
         const note = soundingNotes[i];
@@ -705,19 +777,16 @@ export class ChordIntegrator {
         const weight = Math.max(0.5, Math.min(1.0, velocity / 127));
 
         this.pitchActivations[pc] = Math.max(this.pitchActivations[pc], weight);
-
-        if (pitch < lowestSoundingPitch) {
-          lowestSoundingPitch = pitch;
-        }
       }
     }
 
-    // Update bass memory if new notes are sounding
+    // Update bass memory for non-surge cases
     if (lowestSoundingPitch !== Infinity) {
       if (
         this.bassPitch === Infinity ||
         lowestSoundingPitch <= this.bassPitch ||
         this.bassWeight < 0.35 ||
+        (!hasActiveStrideBass && lowestSoundingPitch < 60) ||
         (dt > 0 && currentTimeMs - this.bassTimeMs > (bassDecayMs * 0.6) && lowestSoundingPitch < 60)
       ) {
         this.bassPitch = lowestSoundingPitch;
@@ -725,6 +794,9 @@ export class ChordIntegrator {
         this.bassTimeMs = currentTimeMs;
       }
     }
+
+    this.prevSoundingPitches = currentSoundingPitches;
+    this.prevSoundingCount = activeCount;
 
     // 4. Gather active pitch classes above threshold
     const activeNotes = [];
