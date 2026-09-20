@@ -1,6 +1,6 @@
 import { PIANO_ROLL_CONFIG, getDecayIntensity } from './config.js';
 import { findFirstVisibleNoteIndex, getNoteName, getNotePitchOffsetAt, isBlackKey } from './midi-parser.js';
-import { detectChord } from './chord-detector.js';
+import { detectChord, isAtonalInstrument } from './chord-detector.js';
 
 export default class PianoRollEngine {
   constructor(canvas, options = {}) {
@@ -688,13 +688,30 @@ export default class PianoRollEngine {
         const isKeySounding = !isMuted && note.startMs <= currentTimeMs && currentTimeMs <= note.endMs;
         const isSustainSounding = !isMuted && hasSustain && currentTimeMs > note.endMs && currentTimeMs <= note.sustainEndMs;
 
-        // Collect sounding notes for harmonic analysis (exclude GM drums / channel 9)
-        if ((isKeySounding || isSustainSounding) && note.channel !== 9 && config.SHOW_HARMONIC_ANALYSIS !== false) {
-          const bendOffset = (config.ENABLE_PITCH_BEND !== false && note.bends && note.bends.length > 1)
-            ? getNotePitchOffsetAt(note.bends, currentTimeMs)
-            : 0;
-          const currentPitch = Math.round(note.pitch + bendOffset);
-          soundingNotes.push({ pitch: currentPitch, channel: note.channel });
+        // Collect sounding notes for harmonic analysis (exclude atonal instruments)
+        if ((isKeySounding || isSustainSounding) && config.SHOW_HARMONIC_ANALYSIS !== false) {
+          const trackMeta = this.tracks[note.track];
+          const channelMeta = this.channels[note.channel];
+          const program = note.program !== undefined ? note.program : (channelMeta ? channelMeta.program : undefined);
+          const instrumentName = channelMeta ? channelMeta.instrumentName : (trackMeta ? trackMeta.instrumentName : '');
+          const trackName = trackMeta ? trackMeta.name : '';
+          const excludeAtonal = config.HARMONIC_ANALYSIS_EXCLUDE_ATONAL !== false;
+
+          const noteObj = {
+            channel: note.channel,
+            program,
+            instrumentName,
+            trackName,
+          };
+
+          if (!excludeAtonal || !isAtonalInstrument(noteObj)) {
+            const bendOffset = (config.ENABLE_PITCH_BEND !== false && note.bends && note.bends.length > 1)
+              ? getNotePitchOffsetAt(note.bends, currentTimeMs)
+              : 0;
+            const currentPitch = Math.round(note.pitch + bendOffset);
+            noteObj.pitch = currentPitch;
+            soundingNotes.push(noteObj);
+          }
         }
 
         // Track sounding notes for piano keyboard illumination
@@ -988,7 +1005,8 @@ export default class PianoRollEngine {
     // 5. Harmonic Analysis (Chord Detection)
     if (config.SHOW_HARMONIC_ANALYSIS !== false) {
       const minNotes = config.HARMONIC_ANALYSIS_MIN_NOTES !== undefined ? config.HARMONIC_ANALYSIS_MIN_NOTES : 2;
-      const detected = detectChord(soundingNotes, { minNotes });
+      const excludeAtonal = config.HARMONIC_ANALYSIS_EXCLUDE_ATONAL !== false;
+      const detected = detectChord(soundingNotes, { minNotes, excludeAtonal });
       if (detected !== this.currentChord) {
         this.currentChord = detected;
         if (this.onChordChange) {

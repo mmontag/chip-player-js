@@ -234,6 +234,7 @@ export function parseMidiData(buffer) {
         velocity: param2,
         track,
         channel,
+        program: channelPrograms[channel],
         startMs: playTime,
         endMs: null,
         sustainEndMs: null,

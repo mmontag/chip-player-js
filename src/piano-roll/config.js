@@ -116,6 +116,7 @@ export const PIANO_ROLL_CONFIG = {
   // Harmonic Analysis settings:
   SHOW_HARMONIC_ANALYSIS: true, // Display detected chord label in the visualizer
   HARMONIC_ANALYSIS_MIN_NOTES: 2, // Minimum distinct pitch classes required to detect a chord
+  HARMONIC_ANALYSIS_EXCLUDE_ATONAL: true, // Exclude atonal instruments (synth toms, taiko drum, woodblock, SFX)
 };
 
 export const DECAY_EASINGS = {

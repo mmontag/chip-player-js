@@ -274,6 +274,52 @@ for (const tmpl of CHORD_TEMPLATES) {
 }
 
 /**
+ * General MIDI program numbers (0-indexed) for atonal instruments:
+ * - Percussive: Tinkle Bell (112), Agogo (113), Woodblock (115), Taiko Drum (116),
+ *   Melodic Tom (117), Synth Drum / Synth Tom (118), Reverse Cymbal (119).
+ *   (Note: Steel Drums [114] is pitched/tonal and intentionally omitted).
+ * - Sound Effects: Guitar Fret Noise (120), Breath Noise (121), Seashore (122),
+ *   Bird Tweet (123), Telephone Ring (124), Helicopter (125), Applause (126), Gunshot (127).
+ */
+export const ATONAL_GM_PROGRAMS = new Set([
+  112, // Tinkle Bell
+  113, // Agogo
+  115, // Woodblock
+  116, // Taiko Drum
+  117, // Melodic Tom
+  118, // Synth Drum (Synth Tom)
+  119, // Reverse Cymbal
+  120, // Guitar Fret Noise
+  121, // Breath Noise
+  122, // Seashore
+  123, // Bird Tweet
+  124, // Telephone Ring
+  125, // Helicopter
+  126, // Applause
+  127, // Gunshot
+]);
+
+export const ATONAL_NAME_REGEX = /\b(synth\s*toms?|synth\s*drums?|taiko|woodblocks?|melodic\s*toms?|reverse\s*cymbal|tinkle\s*bell|agogo|fret\s*noise|breath\s*noise|seashore|bird\s*tweet|helicopter|applause|gunshot)\b/i;
+
+/**
+ * Checks whether an instrument or note represents an atonal / percussion sound.
+ *
+ * @param {Object} note Note or instrument metadata
+ * @returns {boolean}
+ */
+export function isAtonalInstrument(note) {
+  if (!note || typeof note !== 'object') return false;
+  // General MIDI channel 9 is standard percussion / drums
+  if (note.channel === 9) return true;
+  // Atonal General MIDI program numbers
+  if (typeof note.program === 'number' && ATONAL_GM_PROGRAMS.has(note.program)) return true;
+  // Atonal instrument or track names
+  if (typeof note.instrumentName === 'string' && ATONAL_NAME_REGEX.test(note.instrumentName)) return true;
+  if (typeof note.trackName === 'string' && ATONAL_NAME_REGEX.test(note.trackName)) return true;
+  return false;
+}
+
+/**
  * Returns the number of set bits (1s) in a 32-bit integer.
  */
 function popcount(n) {
@@ -292,12 +338,14 @@ function popcount(n) {
  * @param {Array<number|Object>} soundingNotes Array of MIDI pitch numbers or note objects with {pitch, channel}
  * @param {Object} [options]
  * @param {number} [options.minNotes=2] Minimum distinct pitch classes required to form a chord
+ * @param {boolean} [options.excludeAtonal=true] Whether to exclude atonal instruments
  * @returns {string} e.g. "C", "Dm7", "G7(b9)", "Cmaj13", "F/G", or ""
  */
 export function detectChord(soundingNotes, options = {}) {
   if (!soundingNotes || soundingNotes.length === 0) return '';
 
   const minNotes = options.minNotes !== undefined ? options.minNotes : 2;
+  const excludeAtonal = options.excludeAtonal !== false;
 
   let bassPitch = Infinity;
   let pitchClassesMask = 0;
@@ -306,11 +354,11 @@ export function detectChord(soundingNotes, options = {}) {
   for (let i = 0; i < soundingNotes.length; i++) {
     const item = soundingNotes[i];
     const pitch = typeof item === 'number' ? item : item.pitch;
-    const channel = typeof item === 'object' ? item.channel : -1;
 
-    // Exclude General MIDI channel 9 (percussion/drums)
-    if (channel === 9) continue;
     if (typeof pitch !== 'number' || isNaN(pitch) || pitch < 0) continue;
+
+    // Exclude atonal instruments (channel 9 drums, atonal GM patches, sound effects)
+    if (excludeAtonal && isAtonalInstrument(item)) continue;
 
     if (pitch < bassPitch) {
       bassPitch = pitch;
