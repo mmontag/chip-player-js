@@ -218,7 +218,7 @@ MIDIPlayer.prototype.processPlaySynth = function (buffer, bufferSize) {
     bytesWritten += batchSize;
   }
 
-  if (!this.isAuditioning && this.position >= this.events.length) {
+  if (!this.paused && !this.isAuditioning && this.position >= this.events.length) {
     // Last MIDI event has been processed.
     // Continue synthesis until silence is detected.
     // This allows voices with a long release tail to complete.
