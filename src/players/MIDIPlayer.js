@@ -68,7 +68,7 @@ export default class MIDIPlayer extends Player {
     {
       id: 'scmodel',
       label: 'Sound Canvas Model',
-      hint: 'Which module to emulate. Switching models boots the emulated device, which takes a moment.',
+      hint: 'Which module to emulate. Switching models boots the emulated device, which takes a moment. The CM-64 is an MT-32 family device: it plays General MIDI files with the wrong instruments.',
       type: 'enum',
       options: [{
         label: 'Sound Canvas',
