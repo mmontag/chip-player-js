@@ -1,5 +1,6 @@
 import React from 'react';
 import autoBindReact from 'auto-bind/react';
+import { CHANNEL_COLORS } from '../piano-roll/config';
 
 export default class PlayerParams extends React.PureComponent {
   constructor(props) {
@@ -110,6 +111,7 @@ export default class PlayerParams extends React.PureComponent {
     } = this.props;
 
     const { isPinned } = this;
+    const isMidi = playerKey === 'midi';
 
     return (
       <div className='PlayerParams'>
@@ -164,19 +166,32 @@ export default class PlayerParams extends React.PureComponent {
           voiceMask.length > 0 &&
           <span className='PlayerParams-param PlayerParams-group'>
             <label className="PlayerParams-group-title">
-              Voices:
+              { isMidi ? 'Channels' : 'Voices' }:
             </label>
             <div className="PlayerParams-voiceList">
               {voiceMask.map((val, i) => {
+                const name = voiceNames[i];
+                if (isMidi && (!name || name.trim() === '--')) {
+                  return null;
+                }
+                const color = CHANNEL_COLORS[i % CHANNEL_COLORS.length];
+                const displayName = name ? name.trim() : '';
                 return (
-                  <div key={i} className='App-voice-label'><input
+                  <div key={i} className='App-voice-label' title={displayName}><input
                     title='Alt+click to solo. Alt+click again to unmute all.'
                     type='checkbox'
                     id={'v_'+i}
                     onChange={(e) => this.handleVoiceToggle(e, i)}
                     checked={!!val}/>
                   <label htmlFor={'v_'+i}>
-                    {voiceNames[i]}
+                    {isMidi ? (
+                      <>
+                        <span className="PlayerParams-color-chip" style={{ color }}>■</span>
+                        {displayName}
+                      </>
+                    ) : (
+                      name
+                    )}
                   </label></div>
                 )
               })}
