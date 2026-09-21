@@ -8,6 +8,10 @@ const path = require('path');
  * Compile the C libraries with emscripten.
  */
 
+// Gearmulator checkout that provides 88emu; side-by-side with chip-player-js by default.
+const emu88Root = process.env.EMU88_ROOT || '../gearmulator';
+const emu88Build = process.env.EMU88_BUILD || 'build-wasm';
+
 const chipModules = [
   {
     name: 'visualizer',
@@ -25,7 +29,7 @@ const chipModules = [
     flags: [],
   },
   {
-    // TODO: decouple from libADLMIDI and fluidlite,
+    // TODO: decouple from libADLMIDI, fluidlite and 88emu,
     //       see also ../src/players/MIDIPlayer.js:207.
     name: 'player',
     enabled: true,
@@ -66,6 +70,7 @@ const chipModules = [
       '_tp_panic',
       '_tp_panic_channel',
       '_tp_reset',
+      '_tp_sysex',
     ],
     flags: [],
   },
@@ -195,6 +200,30 @@ const chipModules = [
       '_fluid_synth_get_active_voice_count',
     ],
     flags: [],
+  },
+  {
+    // Sound Canvas hardware emulation (gearmulator 88emu), the third engine of the
+    // tiny player, driven over 88lib's C interface. See "External project: gearmulator 88emu"
+    // in the README for building lib88emu.a.
+    name: '88emu',
+    enabled: true,
+    sourceFiles: [
+      `${emu88Root}/${emu88Build}/source/ronaldo/88emu/88lib/lib88emu.a`,
+    ],
+    exportedFunctions: [
+      '_tp_sc_set_rom_path',
+      '_tp_sc_available',
+      '_tp_sc_describe_roms',
+      '_tp_sc_open',
+      '_tp_sc_close',
+      '_tp_sc_port_count',
+      '_tp_sc_set_port',
+    ],
+    flags: [
+      `-I${emu88Root}/source/ronaldo/88emu`,
+      '-s', 'STACK_SIZE=2097152',   // the boards need far more than the 64KB default
+      '-s', 'ALLOW_TABLE_GROWTH=1', // their DSP programs are compiled to wasm functions at run time
+    ],
   },
   {
     name: 'libADLMIDI',

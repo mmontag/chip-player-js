@@ -21,6 +21,10 @@ MIDIEvents.EVENT_META_LYRICS = 0x05;
 MIDIEvents.EVENT_META_MARKER = 0x06;
 MIDIEvents.EVENT_META_CUE_POINT = 0x07;
 MIDIEvents.EVENT_META_MIDI_CHANNEL_PREFIX = 0x20;
+// Selects the physical MIDI output a track plays into. Multi-port files use it
+// to address more than 16 channels (the SC-88 family has two inputs, the SC-8850
+// four). Parsed by the default meta branch, so the value is event.data[0].
+MIDIEvents.EVENT_META_MIDI_PORT = 0x21;
 MIDIEvents.EVENT_META_END_OF_TRACK = 0x2f;
 MIDIEvents.EVENT_META_SET_TEMPO = 0x51;
 MIDIEvents.EVENT_META_SMTPE_OFFSET = 0x54;
