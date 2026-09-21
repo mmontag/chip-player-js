@@ -194,7 +194,7 @@ emcmake make
 
 #### External project: gearmulator 88emu
 
-[88emu](https://github.com/dsp56300/gearmulator) emulates the hardware of the Sound Canvas modules (SC-88, SC-88VL, SC-88Pro, SC-8850): the original firmware runs on emulated CPUs and sound chips. It is the third MIDI synth engine, next to FluidLite and libADLMIDI.
+[88emu](https://github.com/dsp56300/gearmulator) emulates the hardware of the Sound Canvas modules (SC-55, SC-55mkII, SC-88, SC-88VL, SC-88Pro, SC-8850) and of the CM-64 (CM-32L + CM-32P): the original firmware runs on emulated CPUs and sound chips. It is the third MIDI synth engine, next to FluidLite and libADLMIDI.
 
 Our goal is to produce **../gearmulator/build-wasm/source/ronaldo/88emu/88lib/lib88emu.a** (assumes you have cloned **gearmulator** side-by-side with chip-player-js). This is 88lib with everything it depends on in one archive; chip-player-js talks to it through its C interface, `88lib/c_interface.h`, from [src/tinyplayer.c](src/tinyplayer.c).
 
@@ -227,12 +227,17 @@ The engine needs the ROM images of the device it emulates. They are copyrighted 
 
 For local development, put the images in a folder, point `LOCAL_SC_ROM_ROOT` in **server/.env.local** at it and the Node.js server serves them at `http://localhost:8080/sc-roms`. 88emu identifies an image by its content, not its name; the names only have to match the per-model lists in `SC_DEVICES` ([src/config/index.js](src/config/index.js)):
 
-| Model    | Files                                                                                     |
-|----------|-------------------------------------------------------------------------------------------|
-| SC-88    | ControlROMSC88.bin, PCM_IC_325.bin, PCM_IC_326.bin, PCM_IC_327.bin, PCM_IC_328.bin         |
-| SC-88VL  | ControlROMSC88VL.bin and the same four PCM images                                          |
-| SC-88Pro | sc88pro.bin, sc88pro_wave_a.bin, sc88pro_wave_b.bin, sc88pro_wave_c.bin                    |
-| SC-8850  | 8850CPU.bin, 8850.bin, 8850Flash.bin, 8850Wave.bin                                         |
+| Model     | Files |
+|-----------|-------|
+| SC-55     | sc55mk1_internal.bin, sc55mk1_program.bin, sc55mk1_wave0.bin, sc55mk1_wave1.bin, sc55mk1_wave2.bin |
+| SC-55mkII | sc55mk2_internal.bin, sc55mk2_program.bin, sc55mk2_wave0.bin, sc55mk2_wave1.bin |
+| SC-88     | ControlROMSC88.bin, PCM_IC_325.bin, PCM_IC_326.bin, PCM_IC_327.bin, PCM_IC_328.bin |
+| SC-88VL   | ControlROMSC88VL.bin and the same four PCM images |
+| SC-88Pro  | sc88pro.bin, sc88pro_wave_a.bin, sc88pro_wave_b.bin, sc88pro_wave_c.bin |
+| SC-8850   | 8850CPU.bin, 8850.bin, 8850Flash.bin, 8850Wave.bin |
+| CM-64     | cm32l_control.bin, cm32l_wave.bin, cm32l_reverb.bin, cm32p_program.bin, cm32p_wave0.bin, cm32p_wave1.bin, cm32p_wave2.bin |
+
+The CM-64 is a CM-32L (the MT-32 family) and a CM-32P in one case. It is not a General MIDI device: it is for music written for the MT-32 and plays GM files with the wrong instruments.
 
 #### WebAssembly build
 

@@ -13,8 +13,17 @@ if (process.env.NODE_ENV === 'development') {
 // Sound Canvas (88emu). The emulator identifies ROM images by content, so the file
 // names are free; SC_DEVICES only says what to download from SC_ROM_URL_PATH for each model.
 const SC_ROM_MOUNTPOINT = '/sc-roms';
-// `value` is an emu88Lib::DeviceModel.
+// `value` is an emu88_device_id (emu88Lib::DeviceModel). In presentation order; the newer
+// entries use the file names 88emu itself suggests.
 const SC_DEVICES = [
+  {
+    label: 'SC-55', value: 5,
+    roms: ['sc55mk1_internal.bin', 'sc55mk1_program.bin', 'sc55mk1_wave0.bin', 'sc55mk1_wave1.bin', 'sc55mk1_wave2.bin'],
+  },
+  {
+    label: 'SC-55mkII', value: 4,
+    roms: ['sc55mk2_internal.bin', 'sc55mk2_program.bin', 'sc55mk2_wave0.bin', 'sc55mk2_wave1.bin'],
+  },
   {
     label: 'SC-88', value: 0,
     roms: ['ControlROMSC88.bin', 'PCM_IC_325.bin', 'PCM_IC_326.bin', 'PCM_IC_327.bin', 'PCM_IC_328.bin'],
@@ -30,6 +39,14 @@ const SC_DEVICES = [
   {
     label: 'SC-8850', value: 3,
     roms: ['8850CPU.bin', '8850.bin', '8850Flash.bin', '8850Wave.bin'],
+  },
+  {
+    // A CM-32L (the MT-32 family: not General MIDI) and a CM-32P in one case.
+    label: 'CM-64 (MT-32 family, experimental)', value: 17,
+    roms: [
+      'cm32l_control.bin', 'cm32l_wave.bin', 'cm32l_reverb.bin',
+      'cm32p_program.bin', 'cm32p_wave0.bin', 'cm32p_wave1.bin', 'cm32p_wave2.bin',
+    ],
   },
 ];
 
