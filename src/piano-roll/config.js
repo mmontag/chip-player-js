@@ -1,6 +1,26 @@
 // Configuration constants for the Piano Roll Visualizer.
 // All variable behaviors and appearance settings are specified here for easy editing.
 
+// 16 distinct, high-contrast colors for MIDI channels 0 to 15:
+export const CHANNEL_COLORS = [
+  "#FFE600",
+  "#FF0044",
+  "#0088FF",
+  "#009952",
+  "#00D5D8",
+  "#FF9900",
+  "#7A1BD2",
+  "#FF75CA",
+  "#00FF88",
+  "#808080",
+  "#1A00FF",
+  "#FF4A00",
+  "#00BFA5",
+  "#D500F9",
+  "#9EEA00",
+  "#A00020",
+];
+
 export const PIANO_ROLL_CONFIG = {
   // Animation behavior:
   // - 'continuous': Notes scroll smoothly past a stationary playhead line.
@@ -64,24 +84,7 @@ export const PIANO_ROLL_CONFIG = {
   PLAYHEAD_LINE_WIDTH: 1,
 
   // 16 distinct, high-contrast colors for MIDI channels 0 to 15:
-  CHANNEL_COLORS: [
-    '#38bdf8', // Ch 1: Sky Blue
-    '#ec4899', // Ch 2: Pink
-    '#10b981', // Ch 3: Emerald Green
-    '#f59e0b', // Ch 4: Amber / Warm Gold
-    '#8b5cf6', // Ch 5: Violet / Purple
-    '#06b6d4', // Ch 6: Cyan
-    '#ef4444', // Ch 7: Red
-    '#84cc16', // Ch 8: Lime Green
-    '#f97316', // Ch 9: Orange
-    '#a855f7', // Ch 10: Percussion / Drums (Lavender/Purple)
-    '#14b8a6', // Ch 11: Teal
-    '#e11d48', // Ch 12: Rose
-    '#6366f1', // Ch 13: Indigo
-    '#d97706', // Ch 14: Dark Amber
-    '#22c55e', // Ch 15: Bright Green
-    '#eab308', // Ch 16: Yellow
-  ],
+  CHANNEL_COLORS,
 
   // Track colors for fallback or when COLOR_BY is 'track':
   TRACK_COLORS: [
