@@ -6,7 +6,14 @@ import pathe from 'pathe';
 import MIDIFile from './midi/midi-helpers';
 import MIDIFilePlayer from './MIDIFilePlayer';
 import Player from './Player';
-import { SOUNDFONTS, SOUNDFONT_MOUNTPOINT, SOUNDFONT_URL_PATH } from '../config';
+import {
+  SC_DEVICES,
+  SC_ROM_MOUNTPOINT,
+  SC_ROM_URL_PATH,
+  SOUNDFONTS,
+  SOUNDFONT_MOUNTPOINT,
+  SOUNDFONT_URL_PATH,
+} from '../config';
 import { GM_DRUM_KITS, GM_INSTRUMENTS } from '../gm-patch-map';
 import {
   ensureEmscFileWithUrl,
@@ -36,6 +43,10 @@ const fileExtensions = [
 const MIDI_ENGINE_LIBFLUIDLITE = 0; // g_Synths[0] = fluidSynth;
 const MIDI_ENGINE_LIBADLMIDI = 1;   // g_Synths[1] = adlSynth;
 const MIDI_ENGINE_WEBMIDI = 2;
+// Sound Canvas hardware emulation (88emu). g_Synths[2] = scSynth: the
+// tinyplayer index is not the param value, which Web MIDI had already taken.
+const MIDI_ENGINE_SOUNDCANVAS = 3;
+const TP_ENGINE_SOUNDCANVAS = 2;
 
 export default class MIDIPlayer extends Player {
   paramDefs = [
@@ -49,9 +60,25 @@ export default class MIDIPlayer extends Player {
           { label: 'SoundFont (libFluidLite)', value: MIDI_ENGINE_LIBFLUIDLITE },
           { label: 'Adlib/OPL3 FM (libADLMIDI)', value: MIDI_ENGINE_LIBADLMIDI },
           { label: 'MIDI Device (Web MIDI)', value: MIDI_ENGINE_WEBMIDI },
+          { label: 'Sound Canvas (88emu)', value: MIDI_ENGINE_SOUNDCANVAS },
         ],
       }],
       defaultValue: 0,
+    },
+    {
+      id: 'scmodel',
+      label: 'Sound Canvas Model',
+      hint: 'Which module to emulate. Switching models boots the emulated device, which takes a moment.',
+      type: 'enum',
+      options: [{
+        label: 'Sound Canvas',
+        items: SC_DEVICES.map(({ label, value }) => ({ label, value })),
+      }],
+      defaultValue: 2, // SC-88Pro
+      dependsOn: {
+        param: 'synthengine',
+        value: MIDI_ENGINE_SOUNDCANVAS,
+      },
     },
     {
       id: 'soundfont',
@@ -151,9 +178,31 @@ export default class MIDIPlayer extends Player {
     core = this.core;
     core._tp_init(this.sampleRate);
 
+    // The Sound Canvas engine is only offered where somebody hosts the ROM images.
+    this.hasSoundCanvas = !!SC_ROM_URL_PATH;
+    if (!this.hasSoundCanvas) {
+      this.paramDefs = this.paramDefs
+        .filter(paramDef => paramDef.id !== 'scmodel')
+        .map(paramDef => paramDef.id !== 'synthengine' ? paramDef : {
+          ...paramDef,
+          options: paramDef.options.map(group => ({
+            ...group,
+            items: group.items.filter(item => item.value !== MIDI_ENGINE_SOUNDCANVAS),
+          })),
+        });
+    }
+
     // Initialize Soundfont filesystem
     core.FS.mkdir(SOUNDFONT_MOUNTPOINT);
     core.FS.mount(core.FS.filesystems.IDBFS, {}, SOUNDFONT_MOUNTPOINT);
+    // Sound Canvas ROM dumps, kept in IndexedDB like the Soundfonts.
+    core.FS.mkdir(SC_ROM_MOUNTPOINT);
+    core.FS.mount(core.FS.filesystems.IDBFS, {}, SC_ROM_MOUNTPOINT);
+    this.scModel = null;       // model that is powered on
+    this.scPendingModel = null; // model whose ROMs are being fetched
+    this.scStatus = null;
+    // The engine in effect - params['synthengine'] can be overridden by a transient value.
+    this.activeEngine = MIDI_ENGINE_LIBFLUIDLITE;
 
     this.playerKey = 'midi';
     this.name = 'MIDI Player';
@@ -185,6 +234,9 @@ export default class MIDIPlayer extends Player {
         render: core._tp_render,
         reset: core._tp_reset,
         getValue: core.getValue,
+        // Hardware synths only (MIDIFilePlayer.setHardwareSynth).
+        setPort: port => core._tp_sc_set_port(port),
+        sysex: this.sendSysex,
       },
     });
 
@@ -222,8 +274,76 @@ export default class MIDIPlayer extends Player {
     this.updateSoundfontParamDefs();
   }
 
+  // Complete SysEx message, 0xF0 ... 0xF7, to the current synth.
+  sendSysex(bytes) {
+    const ptr = core._malloc(bytes.length);
+    core.HEAPU8.set(bytes, ptr);
+    core._tp_sysex(ptr, bytes.length);
+    core._free(ptr);
+  }
+
+  // Powers on an emulated Sound Canvas: fetches its ROM dumps into the
+  // Emscripten file system (once; they persist in IndexedDB), then boots it.
+  // The model is passed explicitly rather than read back through
+  // getParameter(), which still returns the outgoing value during setParameter().
+  async ensureSoundCanvas(model) {
+    if (this.scModel === model || this.scPendingModel === model) return;
+    const device = SC_DEVICES.find(d => d.value === model);
+    if (!device) return;
+    this.scPendingModel = model;
+    try {
+      this.setSoundCanvasStatus(`Loading ${device.label} ROMs…`);
+      for (const rom of device.roms) {
+        await ensureEmscFileWithUrl(core, `${SC_ROM_MOUNTPOINT}/${rom}`, `${SC_ROM_URL_PATH}/${rom}`);
+      }
+      // A newer selection superseded this one while the ROMs were downloading.
+      if (this.scPendingModel !== model) return;
+
+      this.setSoundCanvasStatus(`Booting ${device.label}…`);
+      // Let the status paint: the boot blocks this thread for a second or three.
+      await new Promise(resolve => setTimeout(resolve, 50));
+      if (this.scPendingModel !== model) return;
+
+      const romPath = core.stringToNewUTF8(SC_ROM_MOUNTPOINT);
+      core._tp_sc_set_rom_path(romPath);
+      core._free(romPath);
+      const rc = core._tp_sc_open(model);
+      if (rc !== 0) {
+        // -4: EMU88_RC_MISSING_ROMS
+        console.warn(core.UTF8ToString(core._tp_sc_describe_roms(model)));
+        throw new Error(rc === -4 ? 'ROM images are missing or not recognized (see console)' : `error ${rc}`);
+      }
+      this.scModel = model;
+      this.setSoundCanvasStatus(null);
+      // Play the song from the top: the module was not there for its setup SysEx.
+      if (this.activeEngine === MIDI_ENGINE_SOUNDCANVAS && !this.stopped) {
+        this.midiFilePlayer.reset();
+        this.midiFilePlayer.setPosition(0);
+      }
+    } catch (e) {
+      console.error('Sound Canvas:', e);
+      this.scModel = null;
+      this.setSoundCanvasStatus(`${device.label} failed to start: ${e.message}`);
+    } finally {
+      if (this.scPendingModel === model) this.scPendingModel = null;
+    }
+  }
+
+  setSoundCanvasStatus(text) {
+    this.scStatus = text;
+    // Booting can outlive the song that asked for it.
+    if (!this.stopped) this.emit('playerStateUpdate', { infoTexts: this.getInfoTexts() });
+  }
+
   processAudioInner(channels) {
     const useWebMIDI = this.params['synthengine'] === MIDI_ENGINE_WEBMIDI;
+
+    // Hold the song until the emulated Sound Canvas is powered on; it would
+    // otherwise play inaudibly through the ROM download.
+    if (this.activeEngine === MIDI_ENGINE_SOUNDCANVAS && this.scModel === null) {
+      for (let ch = 0; ch < channels.length; ch++) channels[ch].fill(0);
+      return;
+    }
 
     // No early return or zero-fill during pause.
     // Notes are allowed to ring out, and the MIDI synth behaves more like external hardware.
@@ -571,7 +691,8 @@ export default class MIDIPlayer extends Player {
   }
 
   getInfoTexts() {
-    return [this.midiFilePlayer.textInfo.join('\n')].filter(text => text !== '');
+    // Sound Canvas power-on progress goes first, while there is any.
+    return [this.scStatus, this.midiFilePlayer.textInfo.join('\n')].filter(text => text);
   }
 
   getParameter(id) {
@@ -633,11 +754,26 @@ export default class MIDIPlayer extends Player {
       case 'synthengine':
         value = parseInt(value, 10);
         this.midiFilePlayer.panic();
+        // A pinned Sound Canvas setting can outlive the engine being available.
+        if (value === MIDI_ENGINE_SOUNDCANVAS && !this.hasSoundCanvas) value = MIDI_ENGINE_LIBFLUIDLITE;
+        this.activeEngine = value;
+        this.midiFilePlayer.setHardwareSynth(value === MIDI_ENGINE_SOUNDCANVAS);
         if (value === MIDI_ENGINE_WEBMIDI) {
           this.midiFilePlayer.setUseWebMIDI(true);
+        } else if (value === MIDI_ENGINE_SOUNDCANVAS && this.hasSoundCanvas) {
+          this.midiFilePlayer.setUseWebMIDI(false);
+          core._tp_set_synth_engine(TP_ENGINE_SOUNDCANVAS);
+          this.ensureSoundCanvas(parseInt(this.getParameter('scmodel'), 10));
         } else {
           this.midiFilePlayer.setUseWebMIDI(false);
           core._tp_set_synth_engine(value);
+        }
+        break;
+      case 'scmodel':
+        value = parseInt(value, 10);
+        if (this.activeEngine === MIDI_ENGINE_SOUNDCANVAS) {
+          this.midiFilePlayer.panic();
+          this.ensureSoundCanvas(value);
         }
         break;
       case 'soundfont':

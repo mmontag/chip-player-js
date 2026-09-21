@@ -57,6 +57,9 @@ function MIDIPlayer(options) {
   this.events = [];
   this.paused = true;
   this.useWebMIDI = false;
+  // The synth is an emulated hardware module (see setHardwareSynth).
+  this.hardwareSynth = false;
+  this.trackPorts = {};
   this.sampleRate = options.sampleRate || 44100;
 
   this.channelsInUse = [];
@@ -82,6 +85,29 @@ MIDIPlayer.prototype.load = function (midiFile, useTrackLoops = false) {
     this.events = midiFile.getEvents();
   }
   this.summarizeMidiEvents();
+  this.buildTrackPortMap();
+};
+
+// Maps track index -> MIDI port, from each track's `midi_port` meta event.
+//
+// This is how a file addresses more than 16 channels: the port is a property
+// of the track, not of the message, so a note on channel 1 of port 1 is a
+// different part from channel 1 of port 0. Only a hardware synth acts on it;
+// everything else sees all ports folded onto one, as before.
+MIDIPlayer.prototype.buildTrackPortMap = function () {
+  this.trackPorts = {};
+  for (const event of this.events) {
+    if (event.type === MIDIEvents.EVENT_META &&
+        event.subtype === MIDIEvents.EVENT_META_MIDI_PORT &&
+        event.data && event.data.length &&
+        event.track !== undefined) {
+      this.trackPorts[event.track] = event.data[0];
+    }
+  }
+};
+
+MIDIPlayer.prototype.getEventPort = function (event) {
+  return this.trackPorts[event.track] || 0;
 };
 
 MIDIPlayer.prototype.doSkipSilence = function () {
@@ -148,7 +174,10 @@ MIDIPlayer.prototype.play = function (endCallback) {
     this.reset();
 
     this.lastProcessPlayTimestamp = performance.now();
-    if (this.skipSilence) {
+    // A hardware synth plays the file as written: the lead-in is where the song
+    // resets the module and sets its parts up over SysEx, and the module needs
+    // that time to act on it.
+    if (this.skipSilence && !(this.hardwareSynth && !this.useWebMIDI)) {
       this.doSkipSilence();
     }
 
@@ -178,6 +207,13 @@ MIDIPlayer.prototype.processPlaySynth = function (buffer, bufferSize) {
            this.events[pos] && this.elapsedTime >= this.events[pos].playTime;
            pos++) {
         event = this.events[pos];
+        if (this.hardwareSynth) {
+          synth.setPort(this.getEventPort(event));
+          if (event.type === MIDIEvents.EVENT_SYSEX || event.type === MIDIEvents.EVENT_DIVSYSEX) {
+            synth.sysex([event.type, ...event.data]);
+            continue;
+          }
+        }
         switch (event.subtype) {
           case MIDIEvents.EVENT_MIDI_NOTE_ON:
             if (!this.channelMask[event.channel]) break;
@@ -398,6 +434,13 @@ MIDIPlayer.prototype.setSpeed = function (speed) {
 MIDIPlayer.prototype.setPositionSynth = function (eventList) {
   const synth = this.synth;
   eventList.forEach(event => {
+    if (this.hardwareSynth) {
+      synth.setPort(this.getEventPort(event));
+      if (event.type === MIDIEvents.EVENT_SYSEX || event.type === MIDIEvents.EVENT_DIVSYSEX) {
+        synth.sysex([event.type, ...event.data]);
+        return;
+      }
+    }
     switch (event.subtype) {
       case MIDIEvents.EVENT_MIDI_PROGRAM_CHANGE:
         // handleProgramChange() is called in setPosition()
@@ -447,11 +490,18 @@ MIDIPlayer.prototype.setPosition = function (ms) {
     pos = 0;
   }
 
+  // Channel state is per port on a hardware synth, which also needs the SysEx
+  // that set it up - in order, and ahead of the channel messages.
+  const hardware = this.hardwareSynth && !this.useWebMIDI;
+  const sysexList = [];
   while (this.events[pos] && this.events[pos].playTime < ms) {
     const event = this.events[pos];
-    if (event.subtype === MIDIEvents.EVENT_MIDI_PROGRAM_CHANGE) {
+    const port = hardware ? this.getEventPort(event) : 0;
+    if (hardware && (event.type === MIDIEvents.EVENT_SYSEX || event.type === MIDIEvents.EVENT_DIVSYSEX)) {
+      sysexList.push(event);
+    } else if (event.subtype === MIDIEvents.EVENT_MIDI_PROGRAM_CHANGE) {
       this.handleProgramChange(event.channel, event.param1);
-      eventMap[`${event.subtype}-${event.channel}`] = event;
+      eventMap[`${port}-${event.subtype}-${event.channel}`] = event;
     } else if (event.subtype === MIDIEvents.EVENT_MIDI_CONTROLLER) {
       // These controllers (RPN, NRPN, Data Entry) must be sequenced in order
       if (SEQUENCED_CONTROLLERS.includes(event.param1)) {
@@ -459,13 +509,13 @@ MIDIPlayer.prototype.setPosition = function (ms) {
         eventList.push(event);
       } else {
         // All others, we only care about the last event
-        eventMap[`${event.subtype}-${event.channel}-${event.param1}`] = event;
+        eventMap[`${port}-${event.subtype}-${event.channel}-${event.param1}`] = event;
       }
     }
     pos++;
   }
 
-  eventList = Object.values(eventMap).concat(eventList);
+  eventList = sysexList.concat(Object.values(eventMap), eventList);
 
   if (this.useWebMIDI) {
     this.setPositionWebMidi(ms, eventList);
@@ -531,6 +581,13 @@ MIDIPlayer.prototype.setChannelMute = function (ch, isMuted) {
     this.send([(MIDIEvents.EVENT_MIDI_CONTROLLER << 4) + ch, CC_ALL_SOUND_OFF, 0], timestamp);
     this.synth.panicChannel(ch);
   }
+};
+
+// An emulated hardware module behind the synth interface, as opposed to a
+// softsynth: it takes SysEx (synth.sysex) and has several MIDI inputs
+// (synth.setPort), and it is played like the real thing - see play().
+MIDIPlayer.prototype.setHardwareSynth = function (hardwareSynth) {
+  this.hardwareSynth = hardwareSynth;
 };
 
 MIDIPlayer.prototype.setUseWebMIDI = function (useWebMIDI) {

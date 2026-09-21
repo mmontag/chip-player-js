@@ -59,6 +59,7 @@ const {
 const {
   LOCAL_CATALOG_ROOT,
   LOCAL_SOUNDFONT_ROOT,
+  LOCAL_SC_ROM_ROOT,
   LOCAL_CLIENT_BUILD_ROOT,
   BROWSE_LOCAL_FILESYSTEM,
   NODE_ENV,
@@ -730,6 +731,7 @@ app.get('/.well-known/appspecific/com.chrome.devtools.json', (req, res) => res.s
 app.use(express.static(LOCAL_CLIENT_BUILD_ROOT));
 app.use('/catalog', cache1Hour, fixSidMimeType, express.static(LOCAL_CATALOG_ROOT));
 app.use('/soundfonts', cache1Hour, express.static(LOCAL_SOUNDFONT_ROOT));
+app.use('/sc-roms', cache1Hour, express.static(LOCAL_SC_ROM_ROOT));
 
 // Handle client-side routing, return all requests to index.html.
 const clientRoutes = [

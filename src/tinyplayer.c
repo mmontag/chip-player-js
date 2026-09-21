@@ -1,7 +1,7 @@
 //
 // TinyPlayer
 //
-// Uses synth engines from libFluidSynth and libADLMIDI.
+// Uses synth engines from libFluidSynth, libADLMIDI and 88emu.
 // Created by Matt Montag on 9/4/18.
 //
 #include <math.h>
@@ -11,6 +11,7 @@
 
 #include "../fluidlite/include/fluidlite.h"
 #include "../libADLMIDI/include/adlmidi.h"
+#include "88lib/c_interface.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,10 +48,11 @@ typedef struct Synth {
   void (*panic)();
   void (*panicChannel)(int channel);
   void (*reset)();
+  void (*sysex)(const unsigned char *data, int length); // NULL: synth ignores SysEx
 } Synth;
 
 int g_synthId = 0;
-static const int NUM_SYNTHS = 2;
+static const int NUM_SYNTHS = 3;
 Synth g_Synths[NUM_SYNTHS];
 Synth g_synth;
 
@@ -129,6 +131,116 @@ void adlReset() {
 Synth adlSynth = {adlNoteOn, adlNoteOff, adlProgramChange, adlPitchBend, adlControlChange,
                   adlChannelPressure, adlRender, adlPanic, adlPanicChannel, adlReset};
 
+// Sound Canvas (88emu) *********************************
+//
+// A hardware emulation rather than a softsynth, which shows in three places:
+//   * It takes raw MIDI wire bytes, SysEx included - the boards pace their own
+//     input through a sub-MCU at 31250 baud.
+//   * It has more than one MIDI input (two DINs on the SC-88 family, four USB
+//     cables on the SC-8850); g_scPort selects where the next bytes arrive.
+//   * It needs ROMs and it boots. tp_sc_open() finds the dumps by content under
+//     tp_sc_set_rom_path() and runs the firmware past its power-on intro before
+//     it returns; with no device open the synth renders silence.
+emu88_context g_scContext = NULL;
+int g_scPort = 0;
+
+void scSend(const unsigned char *data, int length, int port) {
+  // Nothing arrives while no device is open; a port past the device's last wraps around.
+  emu88_parse_stream_on_port(g_scContext, port, data, length);
+}
+void scSend3(int status, int channel, int a, int b) {
+  const unsigned char msg[3] = {(unsigned char)(status | (channel & 15)), (unsigned char)(a & 127), (unsigned char)(b & 127)};
+  scSend(msg, (status == 0xC0 || status == 0xD0) ? 2 : 3, g_scPort);
+}
+void scNoteOn(int channel, int key, int velocity) {
+  scSend3(0x90, channel, key, velocity);
+}
+void scNoteOff(int channel, int key) {
+  scSend3(0x80, channel, key, 0);
+}
+void scProgramChange(int channel, int program) {
+  scSend3(0xC0, channel, program, 0);
+}
+void scPitchBend(int channel, int value) {
+  scSend3(0xE0, channel, value & 127, (value >> 7) & 127);
+}
+void scControlChange(int channel, int control, int value) {
+  scSend3(0xB0, channel, control, value);
+}
+void scChannelPressure(int channel, int value) {
+  scSend3(0xD0, channel, value, 0);
+}
+void scRender(float *buffer, int samples) {
+  // Silence while no device is open.
+  emu88_render_float(g_scContext, buffer, samples / 2);
+}
+void scPanicChannelOnPort(int channel, int port) {
+  const unsigned char msg[9] = {
+    (unsigned char)(0xB0 | channel), 64, 0,   // sustain pedal off
+    (unsigned char)(0xB0 | channel), 120, 0,  // all sound off
+    (unsigned char)(0xB0 | channel), 123, 0,  // all notes off
+  };
+  scSend(msg, sizeof(msg), port);
+}
+void scPanic() {
+  // Every input, not just the current one - notes can be sounding on any of them.
+  const int ports = emu88_get_midi_port_count(g_scContext);
+  for (int port = 0; port < ports; port++)
+    for (int channel = 0; channel < 16; channel++)
+      scPanicChannelOnPort(channel, port);
+}
+void scPanicChannel(int channel) {
+  scPanicChannelOnPort(channel & 15, g_scPort);
+}
+void scReset() {
+  // GM System On. The device's own GS reset is left to the song, which is
+  // where a GS file expects to control it.
+  const unsigned char gmReset[6] = {0xF0, 0x7E, 0x7F, 0x09, 0x01, 0xF7};
+  scSend(gmReset, sizeof(gmReset), 0);
+}
+void scSysex(const unsigned char *data, int length) {
+  scSend(data, length, g_scPort);
+}
+Synth scSynth = {scNoteOn, scNoteOff, scProgramChange, scPitchBend, scControlChange,
+                 scChannelPressure, scRender, scPanic, scPanicChannel, scReset, scSysex};
+
+// Folder in the Emscripten file system that holds the ROM dumps.
+extern int tp_sc_set_rom_path(const char *path) {
+  return emu88_set_rom_path(path);
+}
+// Whether every ROM `model` (an emu88_device_id) needs was found.
+extern int tp_sc_available(int model) {
+  return emu88_is_device_available(model);
+}
+// The ROMs `model` needs, as text for the user.
+extern const char *tp_sc_describe_roms(int model) {
+  static char text[4096];
+  emu88_describe_device_roms(model, text, sizeof(text));
+  return text;
+}
+// Powers `model` on, replacing the current device. Blocks while the firmware
+// boots (a second or three). Returns an emu88_return_code: 0, or negative
+// (-4: ROMs missing).
+extern int tp_sc_open(int model) {
+  if (!g_scContext) g_scContext = emu88_create_context();
+  emu88_close_synth(g_scContext);
+  g_scPort = 0;
+  const int rc = emu88_select_device(g_scContext, model);
+  if (rc != EMU88_RC_OK) return rc;
+  emu88_set_stereo_output_samplerate(g_scContext, g_SampleRate);
+  return emu88_open_synth(g_scContext);
+}
+extern void tp_sc_close() {
+  emu88_close_synth(g_scContext);
+}
+extern int tp_sc_port_count() {
+  return emu88_get_midi_port_count(g_scContext);
+}
+// MIDI input the following events arrive on (a track's `midi_port` meta).
+extern void tp_sc_set_port(int port) {
+  g_scPort = port < 0 ? 0 : port;
+}
+
 // TODO: separate wrapper for each synth?
 // Don't want multiple synth C APIs exposed to JavaScript
 extern void tp_note_on(int channel, int key, int velocity) {
@@ -161,6 +273,10 @@ extern void tp_panic_channel(int channel) {
 extern void tp_reset() {
   g_synth.reset();
 };
+// Complete SysEx message, 0xF0 ... 0xF7. Ignored by synths that take none.
+extern void tp_sysex(const unsigned char *data, int length) {
+  if (g_synth.sysex) g_synth.sysex(data, length);
+}
 
 // TODO: this will be midi_synth_init
 extern void tp_init(int sampleRate) {
@@ -193,6 +309,7 @@ extern void tp_init(int sampleRate) {
 
   g_Synths[0] = fluidSynth;
   g_Synths[1] = adlSynth;
+  g_Synths[2] = scSynth;
   g_synth = g_Synths[0];
 }
 
@@ -269,7 +386,7 @@ extern int tp_set_bank(int bank) {
 
 extern int tp_set_synth_engine(int synthId) {
   if (g_synthId == synthId) return 0;
-  if (synthId < 0 || synthId > NUM_SYNTHS) return -1;
+  if (synthId < 0 || synthId >= NUM_SYNTHS) return -1;
   g_synth.panic();
   g_synthId = synthId;
   g_synth = g_Synths[g_synthId];
