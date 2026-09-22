@@ -306,6 +306,11 @@ export default class MIDIPlayer extends Player {
   }
 
   async loadData(data, filepath, persistedSettings) {
+    if (this.midiFilePlayer) {
+      this.midiFilePlayer.stop();
+      this.midiFilePlayer.position = 0;
+      this.midiFilePlayer.elapsedTime = 0;
+    }
     this.ensureWebMidiInitialized();
     this.filepathMeta = this.metadataFromFilepath(filepath);
 
