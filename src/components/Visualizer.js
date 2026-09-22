@@ -200,6 +200,7 @@ export default class Visualizer extends PureComponent {
             getCurrentPositionMs={this.props.getCurrentPositionMs}
             getPlaybackRate={this.props.getPlaybackRate}
             getAudioLatencyMs={this.getAudioLatencyMs}
+            getIsPlaying={this.props.getIsPlaying}
             paused={this.props.visible ? this.props.paused : true}
             voiceMask={this.props.voiceMask}
             theaterMode={this.props.theaterMode}

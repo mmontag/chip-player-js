@@ -31,6 +31,7 @@ export default class PianoRollVisualizer extends PureComponent {
         getCurrentPositionMs: this.props.getCurrentPositionMs,
         getPlaybackRate: this.props.getPlaybackRate,
         getAudioLatencyMs: this.props.getAudioLatencyMs,
+        getIsPlaying: this.props.getIsPlaying,
         isPaused: this.props.paused,
         ORIENTATION: this.props.theaterMode ? 'horizontal' : 'vertical',
         onChordChange: (chord) => {
@@ -83,7 +84,7 @@ export default class PianoRollVisualizer extends PureComponent {
 
     if (prevProps.getCurrentPositionMs !== this.props.getCurrentPositionMs) {
       this.engine.getCurrentPositionMs = this.props.getCurrentPositionMs;
-      if (this.props.paused) {
+      if (this.props.paused || this.engine.animFrameId === null) {
         this.engine.render();
       }
     }
@@ -94,6 +95,10 @@ export default class PianoRollVisualizer extends PureComponent {
 
     if (prevProps.getAudioLatencyMs !== this.props.getAudioLatencyMs) {
       this.engine.getAudioLatencyMsCallback = this.props.getAudioLatencyMs;
+    }
+
+    if (prevProps.getIsPlaying !== this.props.getIsPlaying) {
+      this.engine.getIsPlaying = this.props.getIsPlaying;
     }
 
     if (prevProps.midiData !== this.props.midiData) {

@@ -997,6 +997,7 @@ class App extends React.Component {
                           midiData={midiData}
                           getCurrentPositionMs={() => this.sequencer?.getPlayer()?.getPositionMs() || 0}
                           getPlaybackRate={() => this.sequencer?.getPlayer()?.getTempo?.() || 1.0}
+                          getIsPlaying={() => this.sequencer?.getPlayer()?.isPlaying() ?? false}
                           voiceMask={this.state.voiceMask}
                           sequencer={this.sequencer}
                           visible={Boolean(showVisualizer)}

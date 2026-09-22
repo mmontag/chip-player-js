@@ -17,6 +17,7 @@ export default class PianoRollEngine {
     this.getCurrentPositionMs = options.getCurrentPositionMs || (() => 0);
     this.getPlaybackRate = options.getPlaybackRate || (() => 1.0);
     this.getAudioLatencyMsCallback = options.getAudioLatencyMs;
+    this.getIsPlaying = options.getIsPlaying || null;
     this.isPaused = options.isPaused !== undefined ? options.isPaused : true;
     this.onChordChange = options.onChordChange || null;
     this.currentChord = '';
@@ -142,12 +143,19 @@ export default class PianoRollEngine {
   }
 
   onFrame(timestamp) {
-    if (!this.isPaused) {
-      this.animFrameId = requestAnimationFrame(this.onFrame);
-      this.render(timestamp);
-    } else {
+    if (this.isPaused) {
       this.animFrameId = null;
+      return;
     }
+
+    if (this.getIsPlaying && !this.getIsPlaying()) {
+      this.animFrameId = null;
+      this.render(timestamp);
+      return;
+    }
+
+    this.animFrameId = requestAnimationFrame(this.onFrame);
+    this.render(timestamp);
   }
 
   getAudioLatencyMs() {
@@ -163,15 +171,9 @@ export default class PianoRollEngine {
     const now = (typeof timestamp === 'number' && timestamp > 0) ? timestamp : performance.now();
     const speed = (this.getPlaybackRate ? this.getPlaybackRate() : 1.0) || 1.0;
     const latencyOffset = this.getAudioLatencyMs();
+    const isStopped = this.isPaused || (this.getIsPlaying && !this.getIsPlaying());
 
-    if (this.isPaused) {
-      this.smoothPos = rawPos;
-      this.lastFrameTime = now;
-      this.lastRawPos = rawPos;
-      return Math.max(0, rawPos - latencyOffset);
-    }
-
-    if (this.lastFrameTime === 0) {
+    if (isStopped || this.lastFrameTime === 0) {
       this.smoothPos = rawPos;
       this.lastFrameTime = now;
       this.lastRawPos = rawPos;
@@ -184,9 +186,14 @@ export default class PianoRollEngine {
     // Advance smooth position by elapsed frame time scaled by playback speed
     this.smoothPos += dt * speed;
 
+    // Smooth position should never run past the audio generation horizon (rawPos)
+    if (this.smoothPos > rawPos) {
+      this.smoothPos = rawPos;
+    }
+
     // Check for seek, rewind, or loop
     const discrepancy = rawPos - this.smoothPos;
-    if (rawPos < this.lastRawPos || Math.abs(discrepancy) > 150) {
+    if (rawPos < this.lastRawPos || discrepancy > 150) {
       this.smoothPos = rawPos;
     } else if (rawPos !== this.lastRawPos) {
       // Audio buffer updated: gently correct any drift (15% per buffer update)
