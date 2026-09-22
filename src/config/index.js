@@ -1,12 +1,54 @@
 let API_BASE = 'https://chiptune.app/api';
 let CATALOG_PREFIX = 'https://gifx.co/music';
 let SOUNDFONT_URL_PATH = 'https://gifx.co/soundfonts';
+let SC_ROM_URL_PATH = '';
 
 if (process.env.NODE_ENV === 'development') {
   API_BASE = 'http://localhost:8080/api'; // npm run server - Node.js server on port 8080
   CATALOG_PREFIX = 'http://localhost:8080/catalog';
   SOUNDFONT_URL_PATH = 'http://localhost:8080/soundfonts';
+  SC_ROM_URL_PATH = 'http://localhost:8080/sc-roms'; // LOCAL_SC_ROM_ROOT in server/.env.local
 }
+
+// Sound Canvas (88emu). The emulator identifies ROM images by content, so the file
+// names are free; SC_DEVICES only says what to download from SC_ROM_URL_PATH for each model.
+const SC_ROM_MOUNTPOINT = '/sc-roms';
+// `value` is an emu88_device_id (emu88Lib::DeviceModel). In presentation order; the newer
+// entries use the file names 88emu itself suggests.
+const SC_DEVICES = [
+  {
+    label: 'SC-55', value: 5,
+    roms: ['sc55mk1_internal.bin', 'sc55mk1_program.bin', 'sc55mk1_wave0.bin', 'sc55mk1_wave1.bin', 'sc55mk1_wave2.bin'],
+  },
+  {
+    label: 'SC-55mkII', value: 4,
+    roms: ['sc55mk2_internal.bin', 'sc55mk2_program.bin', 'sc55mk2_wave0.bin', 'sc55mk2_wave1.bin'],
+  },
+  {
+    label: 'SC-88', value: 0,
+    roms: ['ControlROMSC88.bin', 'PCM_IC_325.bin', 'PCM_IC_326.bin', 'PCM_IC_327.bin', 'PCM_IC_328.bin'],
+  },
+  {
+    label: 'SC-88VL', value: 1,
+    roms: ['ControlROMSC88VL.bin', 'PCM_IC_325.bin', 'PCM_IC_326.bin', 'PCM_IC_327.bin', 'PCM_IC_328.bin'],
+  },
+  {
+    label: 'SC-88Pro', value: 2,
+    roms: ['sc88pro.bin', 'sc88pro_wave_a.bin', 'sc88pro_wave_b.bin', 'sc88pro_wave_c.bin'],
+  },
+  {
+    label: 'SC-8850', value: 3,
+    roms: ['8850CPU.bin', '8850.bin', '8850Flash.bin', '8850Wave.bin'],
+  },
+  {
+    // A CM-32L (the MT-32 family: not General MIDI) and a CM-32P in one case.
+    label: 'CM-64 (MT-32 family, experimental)', value: 17,
+    roms: [
+      'cm32l_control.bin', 'cm32l_wave.bin', 'cm32l_reverb.bin',
+      'cm32p_program.bin', 'cm32p_wave0.bin', 'cm32p_wave1.bin', 'cm32p_wave2.bin',
+    ],
+  },
+];
 
 const MAX_SAMPLE_RATE = 48000; // Higher rates are problematic for some players.
 const MAX_VOICES = 64;
@@ -109,6 +151,9 @@ module.exports = {
   MAX_SAMPLE_RATE,
   MAX_VOICES,
   REPLACE_STATE_ON_SEEK,
+  SC_DEVICES,
+  SC_ROM_MOUNTPOINT,
+  SC_ROM_URL_PATH,
   SOUNDFONT_MOUNTPOINT,
   SOUNDFONT_URL_PATH,
   SOUNDFONTS,

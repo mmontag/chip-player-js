@@ -12,6 +12,7 @@ Play online: [Chip Player JS](https://mmontag.github.io/chip-player-js). Feature
 - Simple music management (at least the ability to save favorites) like Winamp/Spotify
 - High-quality MIDI playback with JS wavetable synthesis
     * Bonus: user-selectable soundbanks
+    * Bonus: Sound Canvas hardware emulation ([88emu](#external-project-gearmulator-88emu)), where its ROMs are hosted
 - Track sequencer with player controls and shuffle mode
 - Media key support in Chrome
 - High performance
@@ -190,6 +191,53 @@ source ~/src/emsdk/emsdk_env.sh               # load the emscripten environment 
 emconfigure ./configure --host=wasm32-unknown-emscripten --disable-shared --enable-static --disable-debug --without-exsid --without-gcrypt --with-simd=sse4 XA=$(which xa) OD=$(which od) CXXFLAGS="-Oz -flto -msimd128"   LDFLAGS="-Oz -flto -msimd128" 
 emcmake make
 ```
+
+#### External project: gearmulator 88emu
+
+[88emu](https://github.com/dsp56300/gearmulator) emulates the hardware of the Sound Canvas modules (SC-55, SC-55mkII, SC-88, SC-88VL, SC-88Pro, SC-8850) and of the CM-64 (CM-32L + CM-32P): the original firmware runs on emulated CPUs and sound chips. It is the third MIDI synth engine, next to FluidLite and libADLMIDI.
+
+Our goal is to produce **../gearmulator/build-wasm/source/ronaldo/88emu/88lib/lib88emu.a** (assumes you have cloned **gearmulator** side-by-side with chip-player-js). This is 88lib with everything it depends on in one archive; chip-player-js talks to it through its C interface, `88lib/c_interface.h`, from [src/tinyplayer.c](src/tinyplayer.c).
+
+```sh
+git clone https://github.com/dsp56300/gearmulator
+cd gearmulator
+git submodule update --init --recursive       # this repo uses submodules
+source ~/src/emsdk/emsdk_env.sh               # load the emscripten environment variables
+emcmake cmake -S . -B build-wasm -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF \
+  -Dgearmulator_BUILD_JUCEPLUGIN=OFF -Dgearmulator_SYNTH_88EMU=ON \
+  -Dgearmulator_SYNTH_OSIRUS=OFF -Dgearmulator_SYNTH_OSTIRUS=OFF -Dgearmulator_SYNTH_VAVRA=OFF \
+  -Dgearmulator_SYNTH_XENIA=OFF -Dgearmulator_SYNTH_NODALRED2X=OFF -Dgearmulator_SYNTH_JE8086=OFF
+cmake --build build-wasm --target 88emu_bundle
+```
+
+A gearmulator checkout somewhere else, or another build folder, is named with `EMU88_ROOT` and `EMU88_BUILD` when building chip-core:
+
+```sh
+EMU88_ROOT=~/src/gearmulator EMU88_BUILD=build-wasm npm run build-chip-core
+```
+
+Things to know:
+
+* Because of 88emu, chip-core is linked with a 2 MB stack (the boards overflow the 64 KB default) and with `ALLOW_TABLE_GROWTH`: the emulated DSPs (XP, LSP) recompile their programs to small WebAssembly modules at run time, which roughly doubles the speed. It adds about 1.3 MB to chip-core.wasm.
+* Powering a device on boots its firmware, which blocks for a second or so. A MIDI file is played as written: the silence at its start is not skipped, because that is where a GS song resets the module and sets its parts up over SysEx, and SysEx and the `midi_port` of each track (two ports on the SC-88 family, four on the SC-8850) are passed on.
+
+##### Sound Canvas ROMs
+
+The engine needs the ROM images of the device it emulates. They are copyrighted and are **not** part of this repository or of gearmulator. They are hosted the same way as the Soundfonts: the client downloads them from `SC_ROM_URL_PATH` ([src/config/index.js](src/config/index.js)) the first time a model is selected and keeps them in IndexedDB. While `SC_ROM_URL_PATH` is empty, which it is for production builds, the engine is not offered.
+
+For local development, put the images in a folder, point `LOCAL_SC_ROM_ROOT` in **server/.env.local** at it and the Node.js server serves them at `http://localhost:8080/sc-roms`. 88emu identifies an image by its content, not its name; the names only have to match the per-model lists in `SC_DEVICES` ([src/config/index.js](src/config/index.js)):
+
+| Model     | Files |
+|-----------|-------|
+| SC-55     | sc55mk1_internal.bin, sc55mk1_program.bin, sc55mk1_wave0.bin, sc55mk1_wave1.bin, sc55mk1_wave2.bin |
+| SC-55mkII | sc55mk2_internal.bin, sc55mk2_program.bin, sc55mk2_wave0.bin, sc55mk2_wave1.bin |
+| SC-88     | ControlROMSC88.bin, PCM_IC_325.bin, PCM_IC_326.bin, PCM_IC_327.bin, PCM_IC_328.bin |
+| SC-88VL   | ControlROMSC88VL.bin and the same four PCM images |
+| SC-88Pro  | sc88pro.bin, sc88pro_wave_a.bin, sc88pro_wave_b.bin, sc88pro_wave_c.bin |
+| SC-8850   | 8850CPU.bin, 8850.bin, 8850Flash.bin, 8850Wave.bin |
+| CM-64     | cm32l_control.bin, cm32l_wave.bin, cm32l_reverb.bin, cm32p_program.bin, cm32p_wave0.bin, cm32p_wave1.bin, cm32p_wave2.bin |
+
+The CM-64 is a CM-32L (the MT-32 family) and a CM-32P in one case. It is not a General MIDI device: it is for music written for the MT-32 and plays GM files with the wrong instruments.
 
 #### WebAssembly build
 
