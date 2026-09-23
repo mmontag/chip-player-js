@@ -490,9 +490,10 @@ button.box-button.AppFooter-back { padding: 0 var(--charW1); }
     max-width: calc(var(--charW1) * 60);
 }
 .PlayerParams-label { flex-shrink: 0; width: calc(var(--charW1) * 14); margin-right: var(--charW1); }
-.PlayerParams-color-chip { margin-left: -8px; padding: 0 4px; text-shadow: 3px 3px #000; }
+.PlayerParams-color-chip { margin-left: calc(var(--charW1) * -1); padding: 0 4px; text-shadow: 3px 3px #000; }
 .PlayerParams-label-wide { flex-shrink: 0; width: calc(var(--charW1) * 16); margin-right: var(--charW1); }
 .PlayerParams-group { margin-bottom: var(--charH); flex-wrap: wrap; }
+.PlayerParams .box-button { margin-right: var(--charW1); }
 
 .SongDetails {
     display: grid;

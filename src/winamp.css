@@ -205,6 +205,7 @@
     }
     .PlayerParams-param input[type=range] { margin-right: 6px; }
     .PlayerParams-group-title { height: var(--formFieldHeight); display: flex; align-items: center; }
+    .PlayerParams .box-button { margin-top: 4px; }
 
     .App-voice-label {
         width: 90px;

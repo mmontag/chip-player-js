@@ -142,6 +142,16 @@ export default class MIDIPlayer extends Player {
       hint: 'Send a General MIDI Reset sysex and reset all controllers on all channels.',
       type: 'button',
     },
+    {
+      id: 'clearusersoundfonts',
+      label: 'Clear User Soundfonts',
+      hint: 'Delete all uploaded user SoundFonts.',
+      type: 'button',
+      dependsOn: {
+        param: 'synthengine',
+        value: MIDI_ENGINE_LIBFLUIDLITE,
+      },
+    },
   ];
 
   constructor(...args) {
@@ -601,6 +611,34 @@ export default class MIDIPlayer extends Player {
     });
   }
 
+  clearUserSoundfonts() {
+    const userSoundfontPath = `${SOUNDFONT_MOUNTPOINT}/user`;
+    if (core.FS.analyzePath(userSoundfontPath).exists) {
+      const files = core.FS.readdir(userSoundfontPath).filter(f => f !== '.' && f !== '..');
+      for (const file of files) {
+        core.FS.unlink(`${userSoundfontPath}/${file}`);
+      }
+      core.FS.syncfs(false, (err) => {
+        if (err) {
+          console.error('Error synchronizing soundfonts to indexeddb.', err);
+        } else {
+          console.debug('Synchronized soundfonts to indexeddb.');
+        }
+      });
+    }
+
+    this.updateSoundfontParamDefs();
+
+    if (this.getParameter('soundfont')?.startsWith('user/')) {
+      this.setParameter('soundfont', this.getParamDefault('soundfont'));
+    }
+
+    this.emit('playerStateUpdate', {
+      paramDefs: this.getParamDefs(),
+      paramValues: this.getParamValues(),
+    });
+  }
+
   setTransientParameter(id, value) {
     if (value == null) {
       // Unset the transient parameter.
@@ -676,6 +714,9 @@ export default class MIDIPlayer extends Player {
         break;
       case 'gmreset':
         this.midiFilePlayer.reset();
+        break;
+      case 'clearusersoundfonts':
+        this.clearUserSoundfonts();
         break;
       default:
         console.warn('MIDIPlayer has no parameter with id "%s".', id);
