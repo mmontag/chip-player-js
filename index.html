@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Redirecting...</title>
+    <script type="text/javascript">
+        // 1. Strip the old subfolder path (/chip-player-js) from the pathname
+        var oldRepoPath = "/chip-player-js";
+        var currentPath = window.location.pathname;
+
+        if (currentPath.startsWith(oldRepoPath)) {
+            currentPath = currentPath.substring(oldRepoPath.length);
+        }
+
+        // 2. Assemble the clean destination path
+        var newHost = "https://chiptune.app";
+        var destination = newHost + currentPath + window.location.search + window.location.hash;
+
+        // 3. Trigger immediate execution
+        window.location.replace(destination);
+    </script>
+</head>
+<body>
+</body>
+</html>
