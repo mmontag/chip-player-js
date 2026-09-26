@@ -39,6 +39,7 @@ const MIDI_STRATEGIES = {
   internal: (buf, relPath) => parseMidiInternal(buf),
   filepath: (buf, relPath) => guessMetadataFromPath(relPath),
   'roland-smf': (buf, relPath) => parseMidiRolandSmf(buf, relPath),
+  rolandSmf: (buf, relPath) => parseMidiRolandSmf(buf, relPath),
   roland: (buf, relPath) => parseMidiRolandSmf(buf, relPath),
   routed: (buf, relPath) => parseMidiRouted(buf, relPath),
 };
@@ -52,7 +53,7 @@ function parseMidiRouted(buf, relPath) {
     for (const rule of MIDI_STRATEGY_MAP) {
       if (rule.pattern.test(relPath)) {
         if (rule.strategy === 'filepath') return guessMetadataFromPath(relPath);
-        if (rule.strategy === 'roland-smf' || rule.strategy === 'roland') return parseMidiRolandSmf(buf, relPath);
+        if (rule.strategy === 'roland-smf' || rule.strategy === 'rolandSmf' || rule.strategy === 'roland') return parseMidiRolandSmf(buf, relPath);
         if (rule.strategy === 'internal') {
           const meta = parseMidiInternal(buf);
           const pathMeta = guessMetadataFromPath(relPath);
@@ -195,7 +196,7 @@ function parseMidiRolandSmf(buf, relPath) {
     }
   }
 
-  // 2. Fallback to filepath stuff for album and artist
+  // 2. Extract album and single-artist candidate from directory name
   let dName = dirName.replace(/^[A-Z0-9]+-[A-Z0-9]+\s*-\s*/i, '').trim();
   while (true) {
     const m = dName.match(/\s*\(([^()]+|\([^()]*\))*\)$/);
@@ -204,16 +205,37 @@ function parseMidiRolandSmf(buf, relPath) {
   }
   const album = dName;
 
-  if (!artist) {
+  let dirArtist = null;
+  if (/featuring Joe Hisaishi/i.test(album)) {
+    dirArtist = 'Joe Hisaishi';
+  } else {
     const mCol = album.match(/^(.+?)\s+(?:Collection|Works|Best(?:\s+Collection)?|Complete Best|Super Classics)(?:\s+.*|$)/i);
     if (mCol) {
       const candidate = mCol[1].trim();
-      const isGeneric = /^(?:standard\s*jazz|classic\s*orchestral|japanese\s*fusion|french\s*pops|theme\s*park|classical\s*guitar|techno\s*trax|movie\s*themes|the\s*cabaret\s*sounds)/i.test(candidate);
-      if (!isGeneric) artist = candidate;
+      const isGeneric = /^(?:standard\s*jazz|classic\s*orchestral|japanese\s*fusion|french\s*pops|theme\s*park|classical\s*guitar|techno\s*trax|movie\s*themes|the\s*cabaret\s*sounds|fusion\s*&|.*film|.*funk)/i.test(candidate);
+      if (!isGeneric) dirArtist = candidate;
     } else if (/^(?:Jamiroquai|Lenny Kravitz)$/i.test(album)) {
-      artist = album;
+      dirArtist = album;
     } else if (album.startsWith('Yes - ')) {
-      artist = 'Yes';
+      dirArtist = 'Yes';
+    }
+  }
+
+  // If a single-artist disk was detected from directory name:
+  // Prefer the clean English/Latin directory artist over Japanese sidecar text or sidecar typos
+  if (dirArtist) {
+    if (!artist) {
+      artist = dirArtist;
+    } else if (/[\u3000-\u30ff\u4e00-\u9faf]/.test(artist)) {
+      // Sidecar artist was in Japanese (Katakana or Kanji)
+      artist = dirArtist;
+    } else {
+      // Check for typo in Latin sidecar artist (e.g. 'Led Zepperin' vs 'Led Zeppelin', 'John Williamas他')
+      const normDir = dirArtist.toLowerCase().replace(/[^a-z]/g, '');
+      const normSide = artist.toLowerCase().replace(/[^a-z]/g, '');
+      if (normSide.startsWith(normDir.substring(0, 4)) && normDir.length >= 5) {
+        artist = dirArtist;
+      }
     }
   }
 
@@ -399,15 +421,19 @@ function guessMetadataFromPath(relPath) {
         if (!m) break;
         album = album.substring(0, m.index).trim();
       }
-      const mCol = album.match(/^(.+?)\s+(?:Collection|Works|Best(?:\s+Collection)?|Complete Best|Super Classics)(?:\s+.*|$)/i);
-      if (mCol) {
-        const candidate = mCol[1].trim();
-        const isGeneric = /^(?:standard\s*jazz|classic\s*orchestral|japanese\s*fusion|french\s*pops|theme\s*park|classical\s*guitar|techno\s*trax|movie\s*themes|the\s*cabaret\s*sounds)/i.test(candidate);
-        if (!isGeneric) artist = candidate;
-      } else if (/^(?:Jamiroquai|Lenny Kravitz)$/i.test(album)) {
-        artist = album;
-      } else if (album.startsWith('Yes - ')) {
-        artist = 'Yes';
+      if (/featuring Joe Hisaishi/i.test(album)) {
+        artist = 'Joe Hisaishi';
+      } else {
+        const mCol = album.match(/^(.+?)\s+(?:Collection|Works|Best(?:\s+Collection)?|Complete Best|Super Classics)(?:\s+.*|$)/i);
+        if (mCol) {
+          const candidate = mCol[1].trim();
+          const isGeneric = /^(?:standard\s*jazz|classic\s*orchestral|japanese\s*fusion|french\s*pops|theme\s*park|classical\s*guitar|techno\s*trax|movie\s*themes|the\s*cabaret\s*sounds|fusion\s*&|.*film|.*funk)/i.test(candidate);
+          if (!isGeneric) artist = candidate;
+        } else if (/^(?:Jamiroquai|Lenny Kravitz)$/i.test(album)) {
+          artist = album;
+        } else if (album.startsWith('Yes - ')) {
+          artist = 'Yes';
+        }
       }
     }
   } else if (rootDir === 'Game MIDI') {
