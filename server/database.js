@@ -145,8 +145,8 @@ const dbStatements = {
       WHERE user_id = @userId AND type = 'favorites'
   `),
 
-  getCsdbSidStmt: db.prepare('SELECT xml FROM csdb_db.sids WHERE csdbid = ? LIMIT 1'),
-  insertCsdbSidStmt: db.prepare(`
+  getCsdbXmlStmt: db.prepare('SELECT xml FROM csdb_db.sids WHERE csdbid = ? LIMIT 1'),
+  insertCsdbXmlStmt: db.prepare(`
       INSERT INTO csdb_db.sids (csdbid, xml, fetched_at)
       VALUES (@csdbid, @xml, @now)
   `),
