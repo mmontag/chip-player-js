@@ -31,6 +31,16 @@ function cleanString(str) {
  * Detects Shift-JIS vs Latin-1 (Binary)
  */
 function decodeBuffer(buf) {
+  // If buffer has non-ASCII bytes and is valid UTF-8, prefer UTF-8
+  try {
+    const hasHighByte = buf.some(b => b >= 0x80);
+    if (hasHighByte) {
+      return new TextDecoder('utf-8', { fatal: true }).decode(buf);
+    }
+  } catch (e) {
+    // Not valid UTF-8, proceed to Shift-JIS or Latin-1
+  }
+
   if (isShiftJIS(buf)) {
     try {
       return new TextDecoder('shift-jis').decode(buf);

@@ -489,7 +489,7 @@ function processFile(child, directoryId, dirEntries, dirImagePath, dirTextIds) {
   // Metadata
   const meta = parseMetadata(buffer, extension, relativePath);
   const title = meta.title || path.basename(name, ext);
-  const system = meta.system || detectSystemFromPath(relativePath);
+  const system = meta.system !== undefined ? meta.system : detectSystemFromPath(relativePath);
 
   // --- Sidecar Resolution for File ---
   

@@ -7,6 +7,8 @@
  * - 'routed': Auto-routing based on MIDI_STRATEGY_MAP with intelligent fallbacks
  */
 
+const fs = require('fs');
+const path = require('path');
 const { cleanString, decodeBuffer } = require('./metadata-utils');
 
 /**
@@ -22,6 +24,9 @@ const MIDI_STRATEGY_MAP = [
   { pattern: /^Battle of the Bits\//i, strategy: 'filepath' },
   { pattern: /^MIDI Datasets\//i, strategy: 'filepath' },
 
+  // Purpose-built strategy for Roland SMF (sidecar parsing + filepath fallback)
+  { pattern: /^Roland SMF MIDI Disks\//i, strategy: 'roland-smf' },
+
   // Collections with cryptic 8.3 BBS filenames where Track 0 has rich sequence names
   { pattern: /^OnlyMIDIs\//i, strategy: 'internal' },
   { pattern: /^Sound Canvas MIDI Collection\//i, strategy: 'internal' },
@@ -33,6 +38,8 @@ const MIDI_STRATEGY_MAP = [
 const MIDI_STRATEGIES = {
   internal: (buf, relPath) => parseMidiInternal(buf),
   filepath: (buf, relPath) => guessMetadataFromPath(relPath),
+  'roland-smf': (buf, relPath) => parseMidiRolandSmf(buf, relPath),
+  roland: (buf, relPath) => parseMidiRolandSmf(buf, relPath),
   routed: (buf, relPath) => parseMidiRouted(buf, relPath),
 };
 
@@ -45,6 +52,7 @@ function parseMidiRouted(buf, relPath) {
     for (const rule of MIDI_STRATEGY_MAP) {
       if (rule.pattern.test(relPath)) {
         if (rule.strategy === 'filepath') return guessMetadataFromPath(relPath);
+        if (rule.strategy === 'roland-smf' || rule.strategy === 'roland') return parseMidiRolandSmf(buf, relPath);
         if (rule.strategy === 'internal') {
           const meta = parseMidiInternal(buf);
           const pathMeta = guessMetadataFromPath(relPath);
@@ -93,6 +101,148 @@ function parseMidiWithStrategy(buf, relPath = null, strategy = null) {
 
 function parseMIDI(buf, relPath = null, strategy = null) {
   return parseMidiWithStrategy(buf, relPath, strategy);
+}
+
+// --- Strategy: Roland SMF (Sidecar Parser with Filepath Fallback) ---
+
+/**
+ * Strategy: 'roland-smf'
+ * Roland SMF MIDI Disks strategy:
+ * - Checks for track-matching .DOC sidecars (Shift-JIS encoded with 【アーティスト】, 【作曲者名】, 【曲名】).
+ * - Checks for 'Original Directory.txt' DOS directory listings with "Title / Artist".
+ * - Falls back to filepath heuristics (clean album title and single-artist collection detection).
+ * - Ensures sequencing studios (Music Brains, Team-khy, Idecs, Tone Factory) and release years are never used as artist.
+ */
+function parseMidiRolandSmf(buf, relPath) {
+  const meta = parseMidiInternal(buf);
+  meta.system = null;
+  meta.game = null;
+
+  if (!relPath) return meta;
+
+  // Resolve directory and filename
+  let fullPath = relPath;
+  if (!path.isAbsolute(fullPath)) {
+    if (fs.existsSync(fullPath)) {
+      fullPath = path.resolve(fullPath);
+    } else if (fs.existsSync(path.resolve('./catalog', relPath))) {
+      fullPath = path.resolve('./catalog', relPath);
+    } else if (fs.existsSync(path.resolve(__dirname, '../catalog', relPath))) {
+      fullPath = path.resolve(__dirname, '../catalog', relPath);
+    }
+  }
+
+  const dirPath = path.dirname(fullPath);
+  const dirName = path.basename(dirPath);
+  const fileName = path.basename(relPath);
+  const ext = path.extname(fileName);
+  const rawBase = path.basename(fileName, ext);
+
+  // Extract file code (e.g. "L8010_01" from "L8010_01 - Never an Absolution.MID" or "S1004_02")
+  const hyphenIdx = rawBase.indexOf(' - ');
+  const fileCode = (hyphenIdx !== -1 ? rawBase.substring(0, hyphenIdx) : rawBase).trim().toUpperCase();
+  const filenameTitle = hyphenIdx !== -1 ? rawBase.substring(hyphenIdx + 3).trim() : rawBase;
+
+  let artist = null;
+  let sidecarTitle = null;
+
+  // 1. Check sidecar files if directory exists on disk
+  if (fs.existsSync(dirPath)) {
+    const dirFiles = fs.readdirSync(dirPath);
+
+    // 1a. Try matching .DOC sidecar (e.g. L8010_01.DOC)
+    const docName = dirFiles.find(f => {
+      const fBase = path.basename(f, path.extname(f)).toUpperCase();
+      return fBase === fileCode && f.toLowerCase().endsWith('.doc');
+    });
+
+    if (docName) {
+      const docBuf = fs.readFileSync(path.join(dirPath, docName));
+      const docContent = decodeBuffer(docBuf);
+
+      const artistM = docContent.match(/【[ \t\u3000]*アーティスト[ \t\u3000]*】([^\r\n]+)/);
+      const composerM = docContent.match(/【[ \t\u3000]*作曲者名[ \t\u3000]*】([^\r\n]+)/);
+      const titleM = docContent.match(/【[ \t\u3000]*曲名[ \t\u3000]*】([^\r\n]+)/);
+
+      if (titleM && titleM[1].trim()) {
+        sidecarTitle = titleM[1].trim();
+      }
+
+      if (artistM && artistM[1].trim() && artistM[1].trim().toUpperCase() !== 'N/S') {
+        artist = artistM[1].trim();
+      } else if (composerM && composerM[1].trim() && composerM[1].trim().toUpperCase() !== 'N/S') {
+        artist = composerM[1].trim();
+      }
+    }
+
+    // 1b. Try Original Directory.txt sidecar
+    if (!artist) {
+      const origTxt = dirFiles.find(f => f.toLowerCase() === 'original directory.txt');
+      if (origTxt) {
+        const txtBuf = fs.readFileSync(path.join(dirPath, origTxt));
+        const content = decodeBuffer(txtBuf);
+        const lines = content.split(/[\r\n]+/);
+        for (const line of lines) {
+          if (line.toUpperCase().includes(fileCode)) {
+            const slashIdx = line.indexOf('/');
+            if (slashIdx !== -1) {
+              artist = line.substring(slashIdx + 1).trim();
+            }
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  // 2. Fallback to filepath stuff for album and artist
+  let dName = dirName.replace(/^[A-Z0-9]+-[A-Z0-9]+\s*-\s*/i, '').trim();
+  while (true) {
+    const m = dName.match(/\s*\(([^()]+|\([^()]*\))*\)$/);
+    if (!m) break;
+    dName = dName.substring(0, m.index).trim();
+  }
+  const album = dName;
+
+  if (!artist) {
+    const mCol = album.match(/^(.+?)\s+(?:Collection|Works|Best(?:\s+Collection)?|Complete Best|Super Classics)(?:\s+.*|$)/i);
+    if (mCol) {
+      const candidate = mCol[1].trim();
+      const isGeneric = /^(?:standard\s*jazz|classic\s*orchestral|japanese\s*fusion|french\s*pops|theme\s*park|classical\s*guitar|techno\s*trax|movie\s*themes|the\s*cabaret\s*sounds)/i.test(candidate);
+      if (!isGeneric) artist = candidate;
+    } else if (/^(?:Jamiroquai|Lenny Kravitz)$/i.test(album)) {
+      artist = album;
+    } else if (album.startsWith('Yes - ')) {
+      artist = 'Yes';
+    }
+  }
+
+  // Sanity check: Ensure artist is never a sequencer studio or release year
+  if (artist) {
+    artist = artist.replace(/^["'“”]+|["'“”]+$/g, '').trim();
+    if (/^(?:Music Brains|Team-khy|Idecs|Tone Factory)$/i.test(artist) || /^\d{4}$/.test(artist)) {
+      artist = null;
+    }
+  }
+  if (meta.artist) {
+    if (/^(?:Music Brains|Team-khy|Idecs|Tone Factory)$/i.test(meta.artist) || /^\d{4}$/.test(meta.artist)) {
+      meta.artist = null;
+    }
+  }
+
+  // 3. Resolve title
+  // Prefer internal SMF title if valid and not just the file code
+  let chosenTitle = meta.title;
+  if (!chosenTitle || chosenTitle.toUpperCase() === fileCode) {
+    chosenTitle = filenameTitle || sidecarTitle;
+  }
+  meta.title = chosenTitle;
+
+  meta.artist = artist || meta.artist || null;
+  meta.game = null;
+  meta.system = null;
+
+  return meta;
 }
 
 // --- Title Redundancy Helper ---
@@ -240,11 +390,25 @@ function guessMetadataFromPath(relPath) {
       artist = album;
     }
   } else if (rootDir === 'Roland SMF MIDI Disks') {
+    system = null;
+    game = null;
     if (candidateDirs.length > 0) {
-      const dir = candidateDirs[0];
-      const match = dir.match(/\(([^)]+)\)$/);
-      if (match) artist = match[1].trim();
-      game = dir;
+      let album = candidateDirs[0].replace(/^[A-Z0-9]+-[A-Z0-9]+\s*-\s*/i, '').trim();
+      while (true) {
+        const m = album.match(/\s*\(([^()]+|\([^()]*\))*\)$/);
+        if (!m) break;
+        album = album.substring(0, m.index).trim();
+      }
+      const mCol = album.match(/^(.+?)\s+(?:Collection|Works|Best(?:\s+Collection)?|Complete Best|Super Classics)(?:\s+.*|$)/i);
+      if (mCol) {
+        const candidate = mCol[1].trim();
+        const isGeneric = /^(?:standard\s*jazz|classic\s*orchestral|japanese\s*fusion|french\s*pops|theme\s*park|classical\s*guitar|techno\s*trax|movie\s*themes|the\s*cabaret\s*sounds)/i.test(candidate);
+        if (!isGeneric) artist = candidate;
+      } else if (/^(?:Jamiroquai|Lenny Kravitz)$/i.test(album)) {
+        artist = album;
+      } else if (album.startsWith('Yes - ')) {
+        artist = 'Yes';
+      }
     }
   } else if (rootDir === 'Game MIDI') {
     // Anything in Game MIDI uses the top child directory (skipping category folders like - Arranged - and - Soundtrack -)
@@ -668,6 +832,7 @@ module.exports = {
   parseMidiWithStrategy,
   parseMidiRouted,
   parseMidiInternal,
+  parseMidiRolandSmf,
   guessMetadataFromPath,
   extractMidiTitleAndArtist,
 };
