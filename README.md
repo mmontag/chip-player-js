@@ -51,7 +51,19 @@ This requires two SQLite dump files located in the `scripts/` directory:
 - `scripts/hvsc_files_sqlite.sql`: High Voltage SID Collection database dump (`hvsc_files` table).
 - `scripts/sid_release_map_sqlite.sql`: SID to CSdb release mapping dump (`sid_release_map` table).
 
-These files are untracked due to their size. `build-music.js` will automatically import them when:
+These files are untracked due to their size. They originate from the MySQL database dumps maintained by [DeepSID](https://github.com/Chordian/deepsid) (available in [DeepSID_Database.zip](https://chordian.net/files/deepsid/DeepSID_Database.zip), which contains `files.sql` and `release_map.sql`).
+
+To generate the SQLite files, download the zip and convert the MySQL dumps using [`scripts/mysql2sqlite`](scripts/mysql2sqlite):
+
+```sh
+curl -O https://chordian.net/files/deepsid/DeepSID_Database.zip
+unzip DeepSID_Database.zip
+
+./scripts/mysql2sqlite files.sql > scripts/hvsc_files_sqlite.sql
+./scripts/mysql2sqlite release_map.sql > scripts/sid_release_map_sqlite.sql
+```
+
+`build-music.js` will automatically import them when:
 - Creating a new database (`server/catalog.db`)
 - Resetting the database (`node scripts/build-music.js -r` or `--reset-db`)
 - Triggered explicitly (`node scripts/build-music.js --import-hvsc`)
