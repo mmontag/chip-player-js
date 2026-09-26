@@ -25,7 +25,7 @@ const MIDI_STRATEGY_MAP = [
   { pattern: /^MIDI Datasets\//i, strategy: 'filepath' },
 
   // Purpose-built strategy for Roland SMF (sidecar parsing + filepath fallback)
-  { pattern: /^Roland SMF MIDI Disks\//i, strategy: 'roland-smf' },
+  { pattern: /^Roland SMF MIDI Disks\//i, strategy: 'rolandSmf' },
 
   // Collections with cryptic 8.3 BBS filenames where Track 0 has rich sequence names
   { pattern: /^OnlyMIDIs\//i, strategy: 'internal' },
@@ -33,64 +33,53 @@ const MIDI_STRATEGY_MAP = [
   { pattern: /^Tune 1000 SMF MIDI Disks\//i, strategy: 'internal' },
 ];
 
+/**
+ * Default MIDI metadata parsing strategy used when no pattern in MIDI_STRATEGY_MAP matches.
+ */
+const DEFAULT_MIDI_STRATEGY = 'filepath';
+
 // --- Strategy Routing & Dispatch ---
 
 const MIDI_STRATEGIES = {
-  internal: (buf, relPath) => parseMidiInternal(buf),
+  internal: (buf, relPath) => {
+    const meta = parseMidiInternal(buf);
+    if (relPath) {
+      const pathMeta = guessMetadataFromPath(relPath);
+      if (!meta.title) meta.title = pathMeta.title;
+      if (!meta.artist && pathMeta.artist) meta.artist = pathMeta.artist;
+      if (!meta.game && pathMeta.game) meta.game = pathMeta.game;
+      if (pathMeta.game && isGameTitleRedundant(meta.title, pathMeta.game)) {
+        meta.title = pathMeta.title;
+      }
+    }
+    return meta;
+  },
   filepath: (buf, relPath) => guessMetadataFromPath(relPath),
-  'roland-smf': (buf, relPath) => parseMidiRolandSmf(buf, relPath),
   rolandSmf: (buf, relPath) => parseMidiRolandSmf(buf, relPath),
+  'roland-smf': (buf, relPath) => parseMidiRolandSmf(buf, relPath), // backward compatibility alias
   roland: (buf, relPath) => parseMidiRolandSmf(buf, relPath),
   routed: (buf, relPath) => parseMidiRouted(buf, relPath),
 };
 
 /**
  * Strategy 3: Routed / Auto strategy.
- * Checks MIDI_STRATEGY_MAP; falls back to internal with filepath fallback.
+ * Evaluates MIDI_STRATEGY_MAP; falls back to DEFAULT_MIDI_STRATEGY ('filepath').
  */
 function parseMidiRouted(buf, relPath) {
   if (relPath) {
     for (const rule of MIDI_STRATEGY_MAP) {
       if (rule.pattern.test(relPath)) {
-        if (rule.strategy === 'filepath') return guessMetadataFromPath(relPath);
-        if (rule.strategy === 'roland-smf' || rule.strategy === 'rolandSmf' || rule.strategy === 'roland') return parseMidiRolandSmf(buf, relPath);
-        if (rule.strategy === 'internal') {
-          const meta = parseMidiInternal(buf);
-          const pathMeta = guessMetadataFromPath(relPath);
-          if (!meta.title) meta.title = pathMeta.title;
-          if (!meta.artist && pathMeta.artist) meta.artist = pathMeta.artist;
-          if (!meta.game && pathMeta.game) meta.game = pathMeta.game;
-          return meta;
-        }
+        const strat = MIDI_STRATEGIES[rule.strategy];
+        if (strat) return strat(buf, relPath);
       }
     }
+    // Default fallback when no route matches
+    const defaultStrat = MIDI_STRATEGIES[DEFAULT_MIDI_STRATEGY];
+    if (defaultStrat) return defaultStrat(buf, relPath);
   }
 
-  // Default fallback: Try internal Track 0/1 first; fallback to filepath if no title found
-  const internalMeta = parseMidiInternal(buf);
-  if (internalMeta.title) {
-    if (relPath) {
-      const pathMeta = guessMetadataFromPath(relPath);
-      if (!internalMeta.artist && pathMeta.artist) internalMeta.artist = pathMeta.artist;
-      if (!internalMeta.game && pathMeta.game) internalMeta.game = pathMeta.game;
-      if (internalMeta.system === 'MIDI' && pathMeta.system !== 'MIDI') internalMeta.system = pathMeta.system;
-
-      // If internal title merely repeats the game title identically, prefer distinct filename
-      if (pathMeta.game && isGameTitleRedundant(internalMeta.title, pathMeta.game)) {
-        internalMeta.title = pathMeta.title;
-      }
-    }
-    return internalMeta;
-  }
-
-  // If internal found no title, use filepath
-  if (relPath) {
-    const pathMeta = guessMetadataFromPath(relPath);
-    if (internalMeta.copyright) pathMeta.copyright = internalMeta.copyright;
-    return pathMeta;
-  }
-
-  return internalMeta;
+  // Fallback when no relPath is provided
+  return parseMidiInternal(buf);
 }
 
 function parseMidiWithStrategy(buf, relPath = null, strategy = null) {
@@ -853,6 +842,7 @@ function fallbackScanMIDI(buf) {
 
 module.exports = {
   MIDI_STRATEGY_MAP,
+  DEFAULT_MIDI_STRATEGY,
   MIDI_STRATEGIES,
   parseMIDI,
   parseMidiWithStrategy,

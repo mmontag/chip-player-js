@@ -28,7 +28,7 @@ const program = new Command();
 program
   .name('spot-check-midi')
   .description('Spot-checks MIDI metadata parsing strategies across the catalog.')
-  .option('-s, --strategy <name>', 'Strategy to test: compare, routed, internal, filepath, roland-smf', 'compare')
+  .option('-s, --strategy <name>', 'Strategy to test: compare, routed, internal, filepath, rolandSmf', 'compare')
   .option('-p, --prefix <path>', 'Catalog directory prefix/filter (e.g. OnlyMIDIs, MIDI)', '')
   .option('-l, --limit <number>', 'Number of files to check', '30')
   .option('--seed <number>', 'Random seed for deterministic sampling', '12345')
