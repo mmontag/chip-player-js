@@ -487,7 +487,7 @@ function processFile(child, directoryId, dirEntries, dirImagePath, dirTextIds) {
   const extension = ext.substring(1);
 
   // Metadata
-  const meta = parseMetadata(buffer, extension);
+  const meta = parseMetadata(buffer, extension, relativePath);
   const title = meta.title || path.basename(name, ext);
   const system = meta.system || detectSystemFromPath(relativePath);
 
