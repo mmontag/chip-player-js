@@ -21,6 +21,8 @@ program
   .option('--filter <path>', 'Scan only a specific subdirectory (relative to catalog root)', '')
   .option('-r, --reset-db', 'Delete and recreate the database table', false)
   .option('-n, --no-skip-unmodified', 'Force reprocessing of unmodified files (checks mtime)')
+  .option('--import-hvsc', 'Import HVSC catalog tables (hvsc_files, sid_release_map)', false)
+  .option('--hvsc-only', 'Only import HVSC tables and exit without scanning music files', false)
   .parse(process.argv);
 
 const options = program.opts();
@@ -41,7 +43,17 @@ const SF2_REGEX = /SF2=(.+?)\.sf2/;
 
 const NUMERIC_COLLATOR = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
 
+function tableExists(database, tableName) {
+  try {
+    const row = database.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?").get(tableName);
+    return Boolean(row);
+  } catch (e) {
+    return false;
+  }
+}
+
 // Initialize DB
+const dbExists = fs.existsSync(DB_PATH);
 const db = new Database(DB_PATH);
 db.pragma('journal_mode = WAL');
 
@@ -72,6 +84,8 @@ if (options.resetDb) {
     DROP TABLE IF EXISTS images;
     DROP TABLE IF EXISTS texts;
     DROP TABLE IF EXISTS music_fts;
+    DROP TABLE IF EXISTS hvsc_files;
+    DROP TABLE IF EXISTS sid_release_map;
   `);
 }
 
@@ -158,6 +172,64 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_music_songid ON music(song_id);
   CREATE INDEX IF NOT EXISTS idx_directories_sort ON directories(sort_order);
 `);
+
+function importHvscCatalog(targetDb, opts = {}) {
+  const hvscSqlPath = path.resolve(__dirname, 'hvsc_files_sqlite.sql');
+  const sidMapSqlPath = path.resolve(__dirname, 'sid_release_map_sqlite.sql');
+
+  if (!fs.existsSync(hvscSqlPath) || !fs.existsSync(sidMapSqlPath)) {
+    console.warn(chalk.yellow('HVSC SQL dump files not found in scripts directory; skipping HVSC import.'));
+    return;
+  }
+
+  console.log(chalk.cyan('Importing HVSC catalog tables (hvsc_files, sid_release_map)...'));
+
+  // Drop existing tables before re-importing
+  targetDb.exec(`
+    DROP TABLE IF EXISTS hvsc_files;
+    DROP TABLE IF EXISTS sid_release_map;
+  `);
+
+  // 1. Import hvsc_files
+  let hvscSql = fs.readFileSync(hvscSqlPath, 'utf8');
+  hvscSql = hvscSql.replace(/^PRAGMA\s+[^;]+;\s*/gmi, '');
+  hvscSql = hvscSql.replace(/,[\s\t]*ADD\s+PRIMARY\s+KEY[\s\S]*?END TRANSACTION;/i, 'END TRANSACTION;');
+  targetDb.exec(hvscSql);
+
+  // 2. Ensure hvsc_files indexes exist
+  targetDb.exec(`
+    CREATE INDEX IF NOT EXISTS hvsc_files_fullname_index ON hvsc_files (fullname);
+    CREATE INDEX IF NOT EXISTS hvsc_files_hash_index ON hvsc_files (hash);
+  `);
+
+  // 3. Import sid_release_map
+  let sidMapSql = fs.readFileSync(sidMapSqlPath, 'utf8');
+  sidMapSql = sidMapSql.replace(/^PRAGMA\s+[^;]+;\s*/gmi, '');
+  targetDb.exec(sidMapSql);
+
+  // Restore WAL mode in case imported pragmas altered journal mode
+  targetDb.pragma('journal_mode = WAL');
+
+  const hvscCount = targetDb.prepare('SELECT COUNT(*) as count FROM hvsc_files').get()?.count || 0;
+  const sidMapCount = targetDb.prepare('SELECT COUNT(*) as count FROM sid_release_map').get()?.count || 0;
+  console.log(chalk.green(`✔ HVSC catalog imported (${hvscCount.toLocaleString()} files, ${sidMapCount.toLocaleString()} release mappings).`));
+}
+
+const shouldImportHvsc = options.importHvsc || options.hvscOnly || options.resetDb || !dbExists || !tableExists(db, 'hvsc_files');
+if (shouldImportHvsc) {
+  if (options.dryrun) {
+    console.log(chalk.cyan('Dry run mode: Skipping HVSC catalog import.'));
+  } else {
+    importHvscCatalog(db, options);
+  }
+}
+
+if (options.hvscOnly) {
+  console.log(chalk.green('Done. Checkpointing WAL...'));
+  db.pragma('wal_checkpoint(TRUNCATE)');
+  db.close();
+  process.exit(0);
+}
 
 // Statements
 const insertMusicStmt = db.prepare(`
@@ -698,3 +770,7 @@ processDirectory(CATALOG_DIR, '')
     db.pragma('wal_checkpoint(TRUNCATE)'); // Forces all WAL data into the .db file
     db.close();
   });
+
+module.exports = {
+  importHvscCatalog,
+};
