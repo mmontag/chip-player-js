@@ -178,11 +178,12 @@ ccmake -DCMAKE_TOOLCHAIN_FILE="$(dirname $(which emcc))/cmake/Modules/Platform/E
 
 Our goal is to produce **../libsidplayfp/src/.libs/libsidplayfp.a** (assumes you have cloned **libsidplayfp** side-by-side with chip-player-js).
 
+Prerequisites: `xa` (6502 cross-assembler) is needed if driver binaries need to be regenerated (`brew install xa` on macOS or `apt install xa65` on Linux).
+
 ```sh
-git clone git@github.com:mmontag/libsidplayfp # my libsidplayfp fork
+git clone --recurse-submodules -b montag-dev-2.14 https://github.com/mmontag/libsidplayfp.git
 cd libsidplayfp
-git checkout montag-dev-2.14                  # my modified branch
-git submodule update --init --recursive       # this repo uses submodules
+# In an existing clone: git checkout montag-dev-2.14 && git submodule update --init --recursive
 autoreconf -vfi                               # optional
 make distclean || true                        # optional
 source ~/src/emsdk/emsdk_env.sh               # load the emscripten environment variables
