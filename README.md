@@ -36,7 +36,30 @@ The C/C++ code is compiled by [scripts/build-chip-core.js](scripts/build-chip-co
 * **tinyplayer.c**: a super light MIDI file reader/player
 * **showcqtbar.c**: a modified [FFMPEG plugin](https://github.com/mfcc64/html5-showcqtbar) providing lovely [constant Q](https://en.wikipedia.org/wiki/Constant-Q_transform#Comparison_with_the_Fourier_transform) spectrum analysis for the visualizer.
 
-The music catalog is created by [scripts/build-catalog.js](scripts/build-catalog.js). **This script looks for a ./catalog folder to build a music index.** This location is untracked, so put a symlink here that points to your local music archive. TODO: Document the corresponding public location (`CATALOG_PREFIX`).
+The music catalog is indexed by [scripts/build-music.js](scripts/build-music.js) into `server/catalog.db` (SQLite). **This script looks for a `./catalog` folder to build a music index.** This location is untracked, so put a symlink here that points to your local music archive:
+
+```sh
+ln -s /path/to/music/archive catalog
+node scripts/build-music.js
+```
+
+#### HVSC and CSdb SQL Dumps
+
+For Commodore 64 SID files, the server looks up SID files by hash and path to query CSdb and HVSC for STIL metadata, tune lengths, and release cover artwork.
+
+This requires two SQLite dump files located in the `scripts/` directory:
+- `scripts/hvsc_files_sqlite.sql`: High Voltage SID Collection database dump (`hvsc_files` table).
+- `scripts/sid_release_map_sqlite.sql`: SID to CSdb release mapping dump (`sid_release_map` table).
+
+These files are untracked due to their size. `build-music.js` will automatically import them when:
+- Creating a new database (`server/catalog.db`)
+- Resetting the database (`node scripts/build-music.js -r` or `--reset-db`)
+- Triggered explicitly (`node scripts/build-music.js --import-hvsc`)
+
+To import or update only the HVSC/CSdb tables without re-indexing music files:
+```sh
+node scripts/build-music.js --hvsc-only
+```
 
 ### Local Development Setup
 
