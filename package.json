@@ -52,6 +52,7 @@
     "react": "^16.8.0",
     "react-dom": "^16.8.0",
     "react-dropzone": "7.0.0",
+    "react-ga4": "^3.0.1",
     "react-router-dom": "^5.2.0",
     "react-virtual-list": "git+https://github.com/glebcha/react-virtual-list.git#544bc7",
     "react-virtualized": "^9.22.5",
