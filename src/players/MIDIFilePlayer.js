@@ -291,9 +291,10 @@ MIDIPlayer.prototype.panic = function (timestamp) {
       this.send([(MIDIEvents.EVENT_MIDI_CONTROLLER << 4) + ch, CC_RESET_ALL_CONTROLLERS, 0], timestamp);
     }
   } else {
-    // Release sustain pedal on all channels
+    // Release sustain pedal and reset pitch bend on all channels
     for (let ch = 0; ch < 16; ch++) {
       this.synth.controlChange(ch, CC_SUSTAIN_PEDAL, 0);
+      this.synth.pitchBend(ch, 8192);
     }
     this.synth.panic();
   }
