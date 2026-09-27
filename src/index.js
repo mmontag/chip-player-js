@@ -6,6 +6,9 @@ import { BrowserRouter as Router } from 'react-router-dom';
 import { UserProvider } from './components/UserProvider';
 import { ToastProvider } from './components/ToastProvider';
 import ThemeHandler from './components/ThemeHandler';
+import { initGA } from './analytics';
+
+initGA();
 
 ReactDOM.render((
   <Router basename={process.env.PUBLIC_URL}>
