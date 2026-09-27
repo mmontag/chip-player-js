@@ -247,60 +247,79 @@ export default class PianoRollEngine {
     const stepRatio = (this.config && typeof this.config.PITCH_BEND_CONNECTOR_RATIO === 'number')
       ? this.config.PITCH_BEND_CONNECTOR_RATIO
       : 0.5;
+    const linearThresholdMs = (this.config && typeof this.config.PITCH_BEND_LINEAR_THRESHOLD_MS === 'number')
+      ? this.config.PITCH_BEND_LINEAR_THRESHOLD_MS
+      : 30;
     const stepLineWidth = Math.max(1, Math.round(lineWidth * stepRatio));
     const halfStep = stepLineWidth / 2;
-    const isRounded = !this.config || this.config.NOTE_CORNER_RADIUS !== 0;
+    const halfW = lineWidth / 2;
+    const dTime = (timeEnd >= timeStart) ? 1 : -1;
 
-    // 1. Draw perpendicular pitch transition connector lines at stepLineWidth (half thickness)
-    ctx.lineWidth = stepLineWidth;
-    ctx.lineCap = 'butt';
-    ctx.beginPath();
+    // 1. Draw stairstep connector rectangles and partition points into ribbon runs
+    const runs = [];
+    let currentRun = [{ timeCoord: coords[0].timeCoord, pitchCoord: coords[0].pitchCoord }];
+
     for (let i = 1; i < N; i++) {
       const prev = coords[i - 1];
       const curr = coords[i];
-      if (curr.pitchCoord !== prev.pitchCoord) {
-        const x1 = isVertical ? prev.pitchCoord : curr.timeCoord;
-        const y1 = isVertical ? curr.timeCoord : prev.pitchCoord;
-        const x2 = isVertical ? curr.pitchCoord : curr.timeCoord;
-        const y2 = isVertical ? curr.timeCoord : curr.pitchCoord;
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
+      const dt = bends[i].timeMs - bends[i - 1].timeMs;
+      const isStepJump = dt >= linearThresholdMs && curr.pitchCoord !== prev.pitchCoord;
+
+      if (isStepJump) {
+        const pMin = Math.min(prev.pitchCoord, curr.pitchCoord);
+        const pMax = Math.max(prev.pitchCoord, curr.pitchCoord);
+        const pDim = pMax - pMin;
+        if (isVertical) {
+          ctx.fillRect(pMin, curr.timeCoord - halfStep, pDim, stepLineWidth);
+        } else {
+          ctx.fillRect(curr.timeCoord - halfStep, pMin, stepLineWidth, pDim);
+        }
+
+        // Extend current run into the connector rectangle
+        currentRun.push({ timeCoord: curr.timeCoord + dTime * halfStep, pitchCoord: prev.pitchCoord });
+        runs.push(currentRun);
+        // Start next run overlapping the connector rectangle
+        currentRun = [{ timeCoord: curr.timeCoord - dTime * halfStep, pitchCoord: curr.pitchCoord }];
+      } else {
+        currentRun.push({ timeCoord: curr.timeCoord, pitchCoord: curr.pitchCoord });
       }
     }
-    ctx.stroke();
+    runs.push(currentRun);
 
-    // 2. Draw note body segments along time axis at full lineWidth
-    ctx.lineWidth = lineWidth;
-    ctx.lineCap = 'butt';
-    ctx.beginPath();
-    for (let i = 1; i < N; i++) {
-      const prev = coords[i - 1];
-      const curr = coords[i];
-      if (curr.timeCoord !== prev.timeCoord) {
-        const dTime = curr.timeCoord > prev.timeCoord ? 1 : -1;
-        const tStart = (i === 1) ? prev.timeCoord : prev.timeCoord - dTime * halfStep;
-        const tEnd = (i === N - 1) ? curr.timeCoord : curr.timeCoord + dTime * halfStep;
-        const x1 = isVertical ? prev.pitchCoord : tStart;
-        const y1 = isVertical ? tStart : prev.pitchCoord;
-        const x2 = isVertical ? prev.pitchCoord : tEnd;
-        const y2 = isVertical ? tEnd : prev.pitchCoord;
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
-      }
-    }
-    ctx.stroke();
+    // 2. Draw each ribbon run as a filled polygon (parallelogram strip)
+    for (let r = 0; r < runs.length; r++) {
+      const run = runs[r];
+      if (run.length < 2) continue;
 
-    // 3. Rounded tips at the outer start and end of the note if rounding enabled
-    if (isRounded) {
       ctx.beginPath();
-      const first = coords[0];
-      const last = coords[N - 1];
-      const x0 = isVertical ? first.pitchCoord : first.timeCoord;
-      const y0 = isVertical ? first.timeCoord : first.pitchCoord;
-      const xN = isVertical ? last.pitchCoord : last.timeCoord;
-      const yN = isVertical ? last.timeCoord : last.pitchCoord;
-      ctx.arc(x0, y0, lineWidth / 2, 0, Math.PI * 2);
-      ctx.arc(xN, yN, lineWidth / 2, 0, Math.PI * 2);
+      if (isVertical) {
+        // Vertical mode: pitch is X, time is Y
+        // Lower boundary (X - halfW)
+        ctx.moveTo(run[0].pitchCoord - halfW, run[0].timeCoord);
+        for (let j = 1; j < run.length; j++) {
+          ctx.lineTo(run[j].pitchCoord - halfW, run[j].timeCoord);
+        }
+        // Flat cross-section at run end
+        ctx.lineTo(run[run.length - 1].pitchCoord + halfW, run[run.length - 1].timeCoord);
+        // Upper boundary (X + halfW) back
+        for (let j = run.length - 2; j >= 0; j--) {
+          ctx.lineTo(run[j].pitchCoord + halfW, run[j].timeCoord);
+        }
+      } else {
+        // Horizontal mode: time is X, pitch is Y
+        // Top boundary (Y - halfW)
+        ctx.moveTo(run[0].timeCoord, run[0].pitchCoord - halfW);
+        for (let j = 1; j < run.length; j++) {
+          ctx.lineTo(run[j].timeCoord, run[j].pitchCoord - halfW);
+        }
+        // Flat cross-section at run end
+        ctx.lineTo(run[run.length - 1].timeCoord, run[run.length - 1].pitchCoord + halfW);
+        // Bottom boundary (Y + halfW) back
+        for (let j = run.length - 2; j >= 0; j--) {
+          ctx.lineTo(run[j].timeCoord, run[j].pitchCoord + halfW);
+        }
+      }
+      ctx.closePath();
       ctx.fill();
     }
   }
