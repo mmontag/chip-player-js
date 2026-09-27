@@ -347,6 +347,7 @@ const chipModules = [
       '_sid_load_data',
       '_sid_get_song_md5',
       '_sid_render',
+      '_sid_set_speed',
       '_sid_get_duration_ms',
       '_sid_get_position_ms',
       '_sid_set_position_ms',
