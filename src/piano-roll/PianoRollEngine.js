@@ -219,11 +219,6 @@ export default class PianoRollEngine {
     if (N <= 1) return;
     const duration = Math.max(1, endMs - startMs);
 
-    ctx.lineWidth = lineWidth;
-    ctx.lineCap = (this.config && this.config.NOTE_CORNER_RADIUS === 0) ? 'butt' : 'round';
-    ctx.lineJoin = (this.config && this.config.NOTE_CORNER_RADIUS === 0) ? 'miter' : 'round';
-    ctx.beginPath();
-
     const getCoords = (b) => {
       const ratio = Math.max(0, Math.min(1, (b.timeMs - startMs) / duration));
       const timeCoord = timeStart + ratio * (timeEnd - timeStart);
@@ -244,31 +239,70 @@ export default class PianoRollEngine {
       return { timeCoord, pitchCoord };
     };
 
-    let prev = getCoords(bends[0]);
-    const startX = isVertical ? prev.pitchCoord : prev.timeCoord;
-    const startY = isVertical ? prev.timeCoord : prev.pitchCoord;
-    ctx.moveTo(startX, startY);
+    const coords = new Array(N);
+    for (let i = 0; i < N; i++) {
+      coords[i] = getCoords(bends[i]);
+    }
 
+    const stepRatio = (this.config && typeof this.config.PITCH_BEND_CONNECTOR_RATIO === 'number')
+      ? this.config.PITCH_BEND_CONNECTOR_RATIO
+      : 0.5;
+    const stepLineWidth = Math.max(1, Math.round(lineWidth * stepRatio));
+    const halfStep = stepLineWidth / 2;
+    const isRounded = !this.config || this.config.NOTE_CORNER_RADIUS !== 0;
+
+    // 1. Draw perpendicular pitch transition connector lines at stepLineWidth (half thickness)
+    ctx.lineWidth = stepLineWidth;
+    ctx.lineCap = 'butt';
+    ctx.beginPath();
     for (let i = 1; i < N; i++) {
-      const curr = getCoords(bends[i]);
-
-      // 1. Advance along time axis holding the previous pitch (stairstep hold)
-      if (curr.timeCoord !== prev.timeCoord) {
+      const prev = coords[i - 1];
+      const curr = coords[i];
+      if (curr.pitchCoord !== prev.pitchCoord) {
         const x1 = isVertical ? prev.pitchCoord : curr.timeCoord;
         const y1 = isVertical ? curr.timeCoord : prev.pitchCoord;
-        ctx.lineTo(x1, y1);
-      }
-
-      // 2. Step along pitch axis at the current event time (stairstep step)
-      if (curr.pitchCoord !== prev.pitchCoord) {
         const x2 = isVertical ? curr.pitchCoord : curr.timeCoord;
         const y2 = isVertical ? curr.timeCoord : curr.pitchCoord;
+        ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
       }
-
-      prev = curr;
     }
     ctx.stroke();
+
+    // 2. Draw note body segments along time axis at full lineWidth
+    ctx.lineWidth = lineWidth;
+    ctx.lineCap = 'butt';
+    ctx.beginPath();
+    for (let i = 1; i < N; i++) {
+      const prev = coords[i - 1];
+      const curr = coords[i];
+      if (curr.timeCoord !== prev.timeCoord) {
+        const dTime = curr.timeCoord > prev.timeCoord ? 1 : -1;
+        const tStart = (i === 1) ? prev.timeCoord : prev.timeCoord - dTime * halfStep;
+        const tEnd = (i === N - 1) ? curr.timeCoord : curr.timeCoord + dTime * halfStep;
+        const x1 = isVertical ? prev.pitchCoord : tStart;
+        const y1 = isVertical ? tStart : prev.pitchCoord;
+        const x2 = isVertical ? prev.pitchCoord : tEnd;
+        const y2 = isVertical ? tEnd : prev.pitchCoord;
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+      }
+    }
+    ctx.stroke();
+
+    // 3. Rounded tips at the outer start and end of the note if rounding enabled
+    if (isRounded) {
+      ctx.beginPath();
+      const first = coords[0];
+      const last = coords[N - 1];
+      const x0 = isVertical ? first.pitchCoord : first.timeCoord;
+      const y0 = isVertical ? first.timeCoord : first.pitchCoord;
+      const xN = isVertical ? last.pitchCoord : last.timeCoord;
+      const yN = isVertical ? last.timeCoord : last.pitchCoord;
+      ctx.arc(x0, y0, lineWidth / 2, 0, Math.PI * 2);
+      ctx.arc(xN, yN, lineWidth / 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 
   ensureKeyboardCache(totalPitchDimension, keyboardSize, pitchSlots, unitScale) {
