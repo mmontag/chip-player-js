@@ -101,14 +101,8 @@ function simplifyBends(points) {
   for (let i = 1; i < points.length - 1; i++) {
     const prev = result[result.length - 1];
     const curr = points[i];
-    const next = points[i + 1];
-
-    const dt = next.timeMs - prev.timeMs;
-    if (dt <= 0) continue;
-
-    const tRatio = (curr.timeMs - prev.timeMs) / dt;
-    const expectedBend = prev.semitoneOffset + tRatio * (next.semitoneOffset - prev.semitoneOffset);
-    if (Math.abs(curr.semitoneOffset - expectedBend) > 0.04) {
+    // In zero-order hold (stairstep), drop intermediate points if pitch has not changed
+    if (Math.abs(curr.semitoneOffset - prev.semitoneOffset) > 0.005) {
       result.push(curr);
     }
   }
@@ -138,24 +132,22 @@ function finalizeNoteBends(note) {
 
 /**
  * Evaluates pitch bend offset in semitones at a specific time timestamp.
+ * In MIDI, pitch bend is sample-and-hold (zero-order hold): the value is held from
+ * the latest bend event at or before timeMs until a new event arrives.
  */
 export function getNotePitchOffsetAt(bends, timeMs) {
   if (!bends || bends.length === 0) return 0;
   if (timeMs <= bends[0].timeMs) return bends[0].semitoneOffset;
-  const last = bends[bends.length - 1];
-  if (timeMs >= last.timeMs) return last.semitoneOffset;
+  const len = bends.length;
+  if (timeMs >= bends[len - 1].timeMs) return bends[len - 1].semitoneOffset;
 
-  for (let i = 0; i < bends.length - 1; i++) {
-    const p0 = bends[i];
-    const p1 = bends[i + 1];
-    if (timeMs >= p0.timeMs && timeMs <= p1.timeMs) {
-      const dt = p1.timeMs - p0.timeMs;
-      if (dt <= 0) return p0.semitoneOffset;
-      const ratio = (timeMs - p0.timeMs) / dt;
-      return p0.semitoneOffset + ratio * (p1.semitoneOffset - p0.semitoneOffset);
+  // Zero-order hold: search backwards for the latest bend event at or before timeMs
+  for (let i = len - 2; i >= 0; i--) {
+    if (timeMs >= bends[i].timeMs) {
+      return bends[i].semitoneOffset;
     }
   }
-  return last.semitoneOffset;
+  return bends[0].semitoneOffset;
 }
 
 /**

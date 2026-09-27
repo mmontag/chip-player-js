@@ -221,10 +221,10 @@ export default class PianoRollEngine {
 
     ctx.lineWidth = lineWidth;
     ctx.lineCap = (this.config && this.config.NOTE_CORNER_RADIUS === 0) ? 'butt' : 'round';
-    ctx.lineJoin = 'round';
+    ctx.lineJoin = (this.config && this.config.NOTE_CORNER_RADIUS === 0) ? 'miter' : 'round';
     ctx.beginPath();
-    for (let i = 0; i < N; i++) {
-      const b = bends[i];
+
+    const getCoords = (b) => {
       const ratio = Math.max(0, Math.min(1, (b.timeMs - startMs) / duration));
       const timeCoord = timeStart + ratio * (timeEnd - timeStart);
       const p = Math.max(minPitch, Math.min(maxPitch, rootPitch + b.semitoneOffset));
@@ -241,14 +241,32 @@ export default class PianoRollEngine {
       const pitchCoord = isVertical
         ? pitchOffset + pitchCenter
         : pitchOffset + totalPitchDimension - pitchCenter;
+      return { timeCoord, pitchCoord };
+    };
 
-      const x = isVertical ? pitchCoord : timeCoord;
-      const y = isVertical ? timeCoord : pitchCoord;
-      if (i === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
+    let prev = getCoords(bends[0]);
+    const startX = isVertical ? prev.pitchCoord : prev.timeCoord;
+    const startY = isVertical ? prev.timeCoord : prev.pitchCoord;
+    ctx.moveTo(startX, startY);
+
+    for (let i = 1; i < N; i++) {
+      const curr = getCoords(bends[i]);
+
+      // 1. Advance along time axis holding the previous pitch (stairstep hold)
+      if (curr.timeCoord !== prev.timeCoord) {
+        const x1 = isVertical ? prev.pitchCoord : curr.timeCoord;
+        const y1 = isVertical ? curr.timeCoord : prev.pitchCoord;
+        ctx.lineTo(x1, y1);
       }
+
+      // 2. Step along pitch axis at the current event time (stairstep step)
+      if (curr.pitchCoord !== prev.pitchCoord) {
+        const x2 = isVertical ? curr.pitchCoord : curr.timeCoord;
+        const y2 = isVertical ? curr.timeCoord : curr.pitchCoord;
+        ctx.lineTo(x2, y2);
+      }
+
+      prev = curr;
     }
     ctx.stroke();
   }
@@ -711,8 +729,9 @@ export default class PianoRollEngine {
           };
 
           if (!excludeAtonal || !isAtonalInstrument(noteObj)) {
-            const bendOffset = (config.ENABLE_PITCH_BEND !== false && note.bends && note.bends.length > 1)
-              ? getNotePitchOffsetAt(note.bends, currentTimeMs)
+            const activeBends = isKeySounding ? note.bends : (note.sustainBends || note.bends);
+            const bendOffset = (config.ENABLE_PITCH_BEND !== false && activeBends && activeBends.length > 1)
+              ? getNotePitchOffsetAt(activeBends, currentTimeMs)
               : 0;
             const currentPitch = Math.round(note.pitch + bendOffset);
             noteObj.pitch = currentPitch;
@@ -722,8 +741,9 @@ export default class PianoRollEngine {
 
         // Track sounding notes for piano keyboard illumination
         if (isKeyboardVisible && (isKeySounding || (isSustainSounding && config.KEYBOARD_SUSTAIN_ILLUMINATION !== false))) {
-          const bendOffset = (config.ENABLE_PITCH_BEND !== false && note.bends && note.bends.length > 1)
-            ? getNotePitchOffsetAt(note.bends, currentTimeMs)
+          const activeBends = isKeySounding ? note.bends : (note.sustainBends || note.bends);
+          const bendOffset = (config.ENABLE_PITCH_BEND !== false && activeBends && activeBends.length > 1)
+            ? getNotePitchOffsetAt(activeBends, currentTimeMs)
             : 0;
           const currentPitch = Math.round(note.pitch + bendOffset);
           if (currentPitch >= minPitch && currentPitch <= maxPitch) {
@@ -857,7 +877,7 @@ export default class PianoRollEngine {
           if (config.SHOW_NOTE_NAMES && !isMuted && drawW >= 12 && keyDim >= 10) {
             const bendOffset = keyHasBends ? getNotePitchOffsetAt(note.bends, currentTimeMs) : 0;
             const currentPitch = Math.round(note.pitch + bendOffset);
-            const textPitch = Math.max(minPitch, Math.min(maxPitch, note.pitch + bendOffset));
+            const textPitch = Math.max(minPitch, Math.min(maxPitch, currentPitch));
             const textSlot = pitchSlots[textPitch];
             const textX = pitchOffset + textSlot.start + textSlot.width / 2;
             ctx.fillStyle = '#ffffff';
@@ -923,7 +943,7 @@ export default class PianoRollEngine {
           if (config.SHOW_NOTE_NAMES && !isMuted && keyDim >= 12 && drawH >= 10) {
             const bendOffset = keyHasBends ? getNotePitchOffsetAt(note.bends, currentTimeMs) : 0;
             const currentPitch = Math.round(note.pitch + bendOffset);
-            const textPitch = Math.max(minPitch, Math.min(maxPitch, note.pitch + bendOffset));
+            const textPitch = Math.max(minPitch, Math.min(maxPitch, currentPitch));
             const textSlot = pitchSlots[textPitch];
             const textY = pitchOffset + totalPitchDimension - textSlot.start - textSlot.width / 2;
             ctx.fillStyle = '#ffffff';
