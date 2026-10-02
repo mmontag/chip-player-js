@@ -264,16 +264,71 @@ const insertTextStmt = db.prepare('INSERT INTO texts (hash, content) VALUES (?, 
 
 const updateSortOrderStmt = db.prepare('UPDATE music SET sort_order = ? WHERE path = ?');
 
-// Calculate scan root
-const scanTarget = options.filter ? path.join(CATALOG_DIR, options.filter) : CATALOG_DIR;
-const scanRelativeBase = options.filter || '';
+function findMatchingPrefix(rootDir, relativeFilter) {
+  const exactPath = path.join(rootDir, relativeFilter);
+  if (fs.existsSync(exactPath)) {
+    return [relativeFilter];
+  }
 
-if (!fs.existsSync(scanTarget)) {
-  console.error(chalk.red(`Error: Scan path does not exist: ${scanTarget}`));
-  process.exit(1);
+  const parts = relativeFilter.split(/[/\\]+/).filter(Boolean);
+  let currentDirs = [''];
+
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+    const isLast = (i === parts.length - 1);
+    const nextDirs = [];
+
+    for (const cur of currentDirs) {
+      const dirPath = path.join(rootDir, cur);
+      try {
+        const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+        for (const entry of entries) {
+          if (entry.name.startsWith('.')) continue;
+          if (entry.name === 'node_modules') continue;
+
+          if (isLast) {
+            if (entry.name.startsWith(part)) {
+              nextDirs.push(path.join(cur, entry.name));
+            }
+          } else {
+            if (entry.isDirectory() && (entry.name === part || entry.name.startsWith(part))) {
+              nextDirs.push(path.join(cur, entry.name));
+            }
+          }
+        }
+      } catch (e) {
+        // Ignore unreadable directories
+      }
+    }
+    currentDirs = nextDirs;
+    if (currentDirs.length === 0) break;
+  }
+
+  return currentDirs;
 }
 
-console.log(chalk.green(`Scanning ${scanTarget}...`));
+// Calculate scan root
+const scanRelativeBase = options.filter ? options.filter.replace(/^[/\\]+/, '').replace(/[/\\]+$/, '').split(/[/\\]+/).join(path.sep) : '';
+const scanTarget = scanRelativeBase ? path.join(CATALOG_DIR, scanRelativeBase) : CATALOG_DIR;
+
+let matchingPrefixes = [];
+if (scanRelativeBase) {
+  if (fs.existsSync(scanTarget)) {
+    matchingPrefixes = [scanRelativeBase];
+  } else {
+    matchingPrefixes = findMatchingPrefix(CATALOG_DIR, scanRelativeBase);
+    if (matchingPrefixes.length === 0) {
+      console.error(chalk.red(`Error: Scan path does not exist: ${scanTarget}`));
+      process.exit(1);
+    }
+  }
+}
+
+if (scanRelativeBase && matchingPrefixes.length > 0 && !fs.existsSync(scanTarget)) {
+  console.log(chalk.green(`Scanning catalog matching prefix "${scanRelativeBase}" (${matchingPrefixes.length} match${matchingPrefixes.length === 1 ? '' : 'es'})...`));
+} else {
+  console.log(chalk.green(`Scanning ${scanTarget}...`));
+}
 if (options.dryrun) console.log(chalk.cyan('Dry run mode: Database will not be modified.'));
 
 // Pre-fetch existing files for incremental update and stats
@@ -438,8 +493,7 @@ async function processDirectory(fullPath, relativePath, parentId = null, parentS
     if (!scanRelativeBase) return true;
     const rel = item.relativePath;
     const filter = scanRelativeBase;
-    if (rel === filter) return true;
-    if (rel.startsWith(filter + path.sep)) return true;
+    if (rel.startsWith(filter)) return true;
     if (item.type === 'dir' && filter.startsWith(rel + path.sep)) return true;
     return false;
   });
@@ -689,7 +743,7 @@ processDirectory(CATALOG_DIR, '')
           // Only delete if it falls within the current scan filter
           let inScope = true;
           if (scanRelativeBase) {
-             inScope = p === scanRelativeBase || p.startsWith(scanRelativeBase + path.sep);
+             inScope = p.startsWith(scanRelativeBase);
           }
           
           if (inScope) {
