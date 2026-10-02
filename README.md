@@ -78,7 +78,7 @@ node scripts/build-music.js --hvsc-only
 [!WARNING]
 This is a difficult project to self host. My instructions are probably out of date. You have been warned.
 
-Prerequisites: npm, cmake, emsdk.
+Prerequisites: npm, cmake, emsdk, sqlite-rsync (optional, for catalog deployment).
 
 * Clone the repository. 
 * Run `npm install`.
@@ -262,6 +262,24 @@ Deploy to Github Pages without rebuilding chip-core.wasm:
 ```sh
 npm deploy-lite
 ```
+
+#### Production Deployment (`deploy.js`)
+
+To deploy to production (server, client static build, and/or music catalog):
+
+```sh
+node deploy.js
+# Or specify targets directly:
+node deploy.js --catalog
+node deploy.js --client
+node deploy.js --server
+node deploy.js --dry-run
+```
+
+**Requirement for Catalog Deployment:**
+Deploying the SQLite music catalog (`server/catalog.db`) uses [`sqlite3_rsync`](https://www.sqlite.org/rsync.html) for fast, transactional page-level synchronization. Both the local machine and the remote server must have `sqlite3_rsync` installed and available in `$PATH`:
+- **macOS**: `brew install sqlite-rsync`
+- **Linux**: Download from [SQLite Tools](https://www.sqlite.org/download.html) (packaged in `sqlite-tools-linux-*.zip`) and place the `sqlite3_rsync` binary in `/usr/local/bin/`.
 
 ## Related Projects
 

@@ -92,23 +92,50 @@ const tasks = {
     fn: () => {
       console.log(chalk.blue(`Deploying catalog to ${REMOTE_HOST || REMOTE_SSH_HOST}...`));
 
+      console.log(chalk.blue('Syncing catalog database via sqlite3_rsync...'));
+      const remoteDbPath = `${REMOTE_SERVER_DIR.replace(/\/+$/, '')}/catalog.db`;
       runCommand([
-        'rsync',
-        '-avz',
-        './server/catalog.*',
-        // './server/csdb.*',
-        `"${REMOTE_SSH_HOST}:${REMOTE_SERVER_DIR}/"`
-      ].join(' \\\n  '));
+        'sqlite3_rsync',
+        '-v',
+        './server/catalog.db',
+        `"${REMOTE_SSH_HOST}:${remoteDbPath}"`
+      ].join(' '));
 
       const localMusicPath = '/Users/montag/Music/Chip Archive/';
       const remoteMusicPath = '/var/www/gifx.co/public_html/music/';
+
+      const catalogExcludes = [
+        '.*',
+        'node_modules',
+        'package.json',
+        'package-lock.json',
+        'yarn.lock',
+        'pnpm-lock.yaml',
+        'bun.lockb',
+        'tsconfig.json',
+        '*.json',
+        '*.js',
+        '*.mjs',
+        '*.cjs',
+        '*.ts',
+        '*.tsx',
+        '*.jsx',
+        '*.py',
+        '*.pyc',
+        '__pycache__',
+        '*.sh',
+        '*.bash',
+        '*.zsh',
+        '*.log',
+      ].map(e => `--exclude '${e}'`);
 
       console.log(chalk.blue('Syncing Music Archive...'));
       runCommand([
         'rsync',
         '-auzh',
         '--stats',
-        "--exclude='.*'",
+        ...catalogExcludes,
+        "--filter=':- .rsyncignore'",
         '--perms',
         '--chmod=u=rwX,g=rX,o=rX',
         `"${localMusicPath}"`,
