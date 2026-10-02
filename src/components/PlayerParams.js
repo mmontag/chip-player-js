@@ -281,6 +281,32 @@ export default class PlayerParams extends React.PureComponent {
                   {param.label}
                 </button>
               );
+            case 'files':
+              // An action rather than a setting, so nothing to pin: picked files arrive as
+              // { add: File[] }, the clear button as { clear: true }. The value is a summary.
+              return (
+                <span key={param.id} className='PlayerParams-param'>
+                  <label title={param.hint} className="PlayerParams-label">
+                    {param.label}:{' '}
+                  </label>
+                  <button title={param.hint} className="box-button"
+                          onClick={(e) => e.currentTarget.nextSibling.click()}>
+                    {param.addLabel}
+                  </button>
+                  <input type='file' multiple hidden accept={param.accept}
+                         onChange={(e) => {
+                           const files = [...e.target.files];
+                           e.target.value = ''; // picking the same files again still fires
+                           if (files.length) onParamChange(param.id, { add: files });
+                         }}/>
+                  {param.clearLabel &&
+                    <button className="box-button"
+                            onClick={() => window.confirm(`${param.clearLabel}?`) && onParamChange(param.id, { clear: true })}>
+                      {param.clearLabel}
+                    </button>}
+                  {' '}{typeof value === 'string' ? value : ''}
+                </span>
+              );
             default:
               return null;
           }

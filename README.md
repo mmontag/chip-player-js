@@ -12,7 +12,7 @@ Play online: [Chip Player JS](https://mmontag.github.io/chip-player-js). Feature
 - Simple music management (at least the ability to save favorites) like Winamp/Spotify
 - High-quality MIDI playback with JS wavetable synthesis
     * Bonus: user-selectable soundbanks
-    * Bonus: Sound Canvas hardware emulation ([88emu](#external-project-gearmulator-88emu)), where its ROMs are hosted
+    * Bonus: Sound Canvas hardware emulation ([88emu](#external-project-gearmulator-88emu)), with your own ROM images
 - Track sequencer with player controls and shuffle mode
 - Media key support in Chrome
 - High performance
@@ -223,21 +223,11 @@ Things to know:
 
 ##### Sound Canvas ROMs
 
-The engine needs the ROM images of the device it emulates. They are copyrighted and are **not** part of this repository or of gearmulator. They are hosted the same way as the Soundfonts: the client downloads them from `SC_ROM_URL_PATH` ([src/config/index.js](src/config/index.js)) the first time a model is selected and keeps them in IndexedDB. While `SC_ROM_URL_PATH` is empty, which it is for production builds, the engine is not offered.
+The engine needs the ROM images of the device it emulates. They are copyrighted and are **not** part of this repository or of gearmulator: users add their own. With the engine selected, the player settings show **ROM Images: Add…**, which takes any number of files at once. They are stored in the browser's IndexedDB (the `/sc-roms` mount, like user Soundfonts), so they are added once and survive reloads; **Remove all** deletes them.
 
-For local development, put the images in a folder, point `LOCAL_SC_ROM_ROOT` in **server/.env.local** at it and the Node.js server serves them at `http://localhost:8080/sc-roms`. 88emu identifies an image by its content, not its name; the names only have to match the per-model lists in `SC_DEVICES` ([src/config/index.js](src/config/index.js)):
+88emu recognizes an image by its content, so file names do not matter; files with the same name but different content are kept side by side. The **Sound Canvas Model** list offers the models whose images are all present, in 88emu's order; a model that is missing images is not offered, and the browser console has the list of what each one needs (`emu88_describe_device_roms`).
 
-| Model     | Files |
-|-----------|-------|
-| SC-55     | sc55mk1_internal.bin, sc55mk1_program.bin, sc55mk1_wave0.bin, sc55mk1_wave1.bin, sc55mk1_wave2.bin |
-| SC-55mkII | sc55mk2_internal.bin, sc55mk2_program.bin, sc55mk2_wave0.bin, sc55mk2_wave1.bin |
-| SC-88     | ControlROMSC88.bin, PCM_IC_325.bin, PCM_IC_326.bin, PCM_IC_327.bin, PCM_IC_328.bin |
-| SC-88VL   | ControlROMSC88VL.bin and the same four PCM images |
-| SC-88Pro  | sc88pro.bin, sc88pro_wave_a.bin, sc88pro_wave_b.bin, sc88pro_wave_c.bin |
-| SC-8850   | 8850CPU.bin, 8850.bin, 8850Flash.bin, 8850Wave.bin |
-| CM-64     | cm32l_control.bin, cm32l_wave.bin, cm32l_reverb.bin, cm32p_program.bin, cm32p_wave0.bin, cm32p_wave1.bin, cm32p_wave2.bin |
-
-The CM-64 is a CM-32L (the MT-32 family) and a CM-32P in one case. It is not a General MIDI device: it is for music written for the MT-32 and plays GM files with the wrong instruments.
+The CM-32L, CM-32P and CM-64 are MT-32 family devices, not General MIDI ones: they are for music written for the MT-32 and play GM files with the wrong instruments.
 
 #### WebAssembly build
 

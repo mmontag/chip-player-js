@@ -208,6 +208,16 @@ Synth scSynth = {scNoteOn, scNoteOff, scProgramChange, scPitchBend, scControlCha
 extern int tp_sc_set_rom_path(const char *path) {
   return emu88_set_rom_path(path);
 }
+// The devices this build knows, in presentation order, and their names.
+extern int tp_sc_device_count() {
+  return emu88_get_device_count();
+}
+extern int tp_sc_device_id(int index) {
+  return emu88_get_device_id(index);
+}
+extern const char *tp_sc_device_name(int model) {
+  return emu88_get_device_name(model);
+}
 // Whether every ROM `model` (an emu88_device_id) needs was found.
 extern int tp_sc_available(int model) {
   return emu88_is_device_available(model);

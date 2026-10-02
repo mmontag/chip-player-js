@@ -212,6 +212,9 @@ const chipModules = [
     ],
     exportedFunctions: [
       '_tp_sc_set_rom_path',
+      '_tp_sc_device_count',
+      '_tp_sc_device_id',
+      '_tp_sc_device_name',
       '_tp_sc_available',
       '_tp_sc_describe_roms',
       '_tp_sc_open',
