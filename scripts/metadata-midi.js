@@ -10,6 +10,7 @@
 const fs = require('fs');
 const path = require('path');
 const { cleanString, decodeBuffer } = require('./metadata-utils');
+const { parseMidiVgmusic } = require('./metadata-vgmusic');
 
 /**
  * Strategy Routing Map
@@ -23,6 +24,9 @@ const MIDI_STRATEGY_MAP = [
   { pattern: /^Classical MIDI\//i, strategy: 'filepath' },
   { pattern: /^Battle of the Bits\//i, strategy: 'filepath' },
   { pattern: /^MIDI Datasets\//i, strategy: 'filepath' },
+
+  // Purpose-built strategy for VGMusic (sidecar index.html parsing)
+  { pattern: /^vgmusic\.com MIDI\//i, strategy: 'vgmusic' },
 
   // Purpose-built strategy for Roland SMF (sidecar parsing + filepath fallback)
   { pattern: /^Roland SMF MIDI Disks\//i, strategy: 'rolandSmf' },
@@ -55,6 +59,7 @@ const MIDI_STRATEGIES = {
     return meta;
   },
   filepath: (buf, relPath) => guessMetadataFromPath(relPath),
+  vgmusic: (buf, relPath) => parseMidiVgmusic(buf, relPath),
   rolandSmf: (buf, relPath) => parseMidiRolandSmf(buf, relPath),
   'roland-smf': (buf, relPath) => parseMidiRolandSmf(buf, relPath), // backward compatibility alias
   roland: (buf, relPath) => parseMidiRolandSmf(buf, relPath),
@@ -459,9 +464,8 @@ function guessMetadataFromPath(relPath) {
       if (candidateDirs.length > 1) artist = candidateDirs[0];
     }
   } else if (rootDir === 'vgmusic.com MIDI') {
-    if (parts.length >= 4) {
-      system = parts[3].toUpperCase();
-    }
+    if (parts.length >= 2 && !parts[1].startsWith('-')) system = parts[1];
+    if (parts.length >= 3) game = parts[2];
   } else {
     // Generic fallback for any other collections
     if (candidateDirs.length > 0) {
@@ -849,6 +853,7 @@ module.exports = {
   parseMidiRouted,
   parseMidiInternal,
   parseMidiRolandSmf,
+  parseMidiVgmusic,
   guessMetadataFromPath,
   extractMidiTitleAndArtist,
 };
