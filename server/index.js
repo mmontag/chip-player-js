@@ -531,6 +531,7 @@ router.get('/metadata', cache1Hour, (req, res, next) => {
       imageUrl: imageUrl,
       infoTexts: infoTexts,
       soundfont: soundfont,
+      contributor: meta.contributor,
       md5: meta.md5,
     });
   } else {

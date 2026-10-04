@@ -126,6 +126,7 @@ db.exec(`
     song_id TEXT,                -- Truncated hash
     title TEXT,
     artist TEXT,
+    contributor TEXT,            -- Sequencer / Ripper / Transcriber
     game TEXT,
     system TEXT,
     copyright TEXT,
@@ -172,6 +173,13 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_music_songid ON music(song_id);
   CREATE INDEX IF NOT EXISTS idx_directories_sort ON directories(sort_order);
 `);
+
+// Migration: Ensure contributor column exists in existing database
+const existingMusicCols = db.pragma('table_info(music)').map(c => c.name);
+if (existingMusicCols.length > 0 && !existingMusicCols.includes('contributor')) {
+  console.log(chalk.yellow('Migrating catalog.db: Adding "contributor" column to music table...'));
+  db.exec('ALTER TABLE music ADD COLUMN contributor TEXT');
+}
 
 function importHvscCatalog(targetDb, opts = {}) {
   const hvscSqlPath = path.resolve(__dirname, 'hvsc_files_sqlite.sql');
@@ -234,10 +242,10 @@ if (options.hvscOnly) {
 // Statements
 const insertMusicStmt = db.prepare(`
     INSERT OR REPLACE INTO music (
-      directory_id, filename, path, extension, song_id, title, artist, game, system, 
+      directory_id, filename, path, extension, song_id, title, artist, contributor, game, system, 
       copyright, file_size, mtime, raw_meta, image_id, text_ids, soundfont, md5, sort_order
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 
 const insertDirStmt = db.prepare(`
@@ -586,7 +594,7 @@ function processFile(child, directoryId, dirEntries, dirImagePath, dirTextIds) {
   const stat = fs.statSync(fullPath);
 
   // Check for incremental skip
-  if (options.skipUnmodified && existingFiles.has(relativePath)) {
+  if (!options.force && options.skipUnmodified && existingFiles.has(relativePath)) {
     const cached = existingFiles.get(relativePath);
     if (cached.mtime === stat.mtime.toISOString()) {
       // File hasn't changed.
@@ -689,6 +697,7 @@ function processFile(child, directoryId, dirEntries, dirImagePath, dirTextIds) {
       songId,
       title,
       meta.artist || null,
+      meta.contributor || null,
       meta.game || null,
       system,
       meta.copyright || null,
@@ -698,7 +707,7 @@ function processFile(child, directoryId, dirEntries, dirImagePath, dirTextIds) {
       finalImageId,
       JSON.stringify(finalTextIds),
       soundfont,
-      md5,
+      md5 || meta.md5 || null,
       sortOrder
     );
   }

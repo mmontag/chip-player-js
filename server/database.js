@@ -38,7 +38,7 @@ const dbStatements = {
       ORDER BY type, sort_order, path COLLATE NOCASE
   `),
   getMetadataStmt: db.prepare(`
-      SELECT m.song_id, m.image_id, m.text_ids, m.soundfont, m.md5, i.path as image_path
+      SELECT m.song_id, m.image_id, m.text_ids, m.soundfont, m.md5, m.contributor, i.path as image_path
       FROM music m
                LEFT JOIN images i ON m.image_id = i.id
       WHERE m.path = ?
@@ -51,7 +51,7 @@ const dbStatements = {
       SELECT * FROM hvsc_files WHERE fullname = ? LIMIT 1
   `),
   getSongByPathStmt: db.prepare(`
-      SELECT m.song_id, m.path, m.title, m.artist, m.game, m.system, m.copyright, i.path as image_path
+      SELECT m.song_id, m.path, m.title, m.artist, m.contributor, m.game, m.system, m.copyright, i.path as image_path
       FROM music m
                LEFT JOIN images i ON m.image_id = i.id
       WHERE m.path = ?
@@ -59,7 +59,7 @@ const dbStatements = {
   `),
   // Used to populate meta tags. Favor entries with images
   getSongByIdStmt: db.prepare(`
-      SELECT m.song_id, m.path, m.title, m.artist, m.game, m.system, m.copyright, i.path as image_path
+      SELECT m.song_id, m.path, m.title, m.artist, m.contributor, m.game, m.system, m.copyright, i.path as image_path
       FROM music m
                LEFT JOIN images i ON m.image_id = i.id
       WHERE m.song_id LIKE ?
