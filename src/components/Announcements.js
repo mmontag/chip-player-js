@@ -16,6 +16,10 @@ export default function Announcements() {
 ╚═════════════════╝
 `}
       </p>
+      <h3>2026-10-04</h3>
+      <p>
+        Restructured the <Link to="/browse/vgmusic.com MIDI">vgmusic.com MIDI</Link> catalog for improved browsing.
+      </p>
       <h3>2026-09-20</h3>
       <p>
         Added a piano roll visualizer for MIDI files. Includes harmonic analysis and a "wide screen" mode.
