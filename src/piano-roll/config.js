@@ -97,7 +97,7 @@ export const PIANO_ROLL_CONFIG = {
   // Note appearance:
   SHOW_NOTE_NAMES: false, // Display note names (e.g. C♯4) on notes if box size permits
   NOTE_MIN_LENGTH_PX: 3,  // Minimum length in pixels to ensure very brief notes remain visible
-  NOTE_CORNER_RADIUS: 1,  // Border radius for drawn notes
+  NOTE_CORNER_RADIUS: 3,  // Border radius for drawn notes
   NOTE_GAP_PX: 1,         // Gap between adjacent notes horizontally/vertically
   ACTIVE_NOTE_GLOW: true, // Brightness boost for actively sounding notes at the playhead
   ACTIVE_NOTE_GLOW_OPACITY: 0.8, // Opacity of the brightness boost overlay for actively sounding notes (0.0 to 1.0)
