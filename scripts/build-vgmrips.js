@@ -11,7 +11,7 @@ const fs = require('fs');
 const path = require('path');
 const glob = require('glob');
 const chalk = require('chalk');
-const { Command, Option } = require('commander');
+const { Command } = require('commander');
 const { execFileSync } = require('child_process');
 
 const program = new Command();
@@ -26,7 +26,6 @@ program
   .option('-v, --verbose', 'Verbose logging output', false)
   .option('--clean-legacy', 'Purge legacy flat duplicate folders from target', true)
   .option('--delete-zip', 'Delete source zip files after extraction', true)
-  .addOption(new Option('--no-delete-zip').hideHelp())
   .option('--filter <pattern>', 'Filter to process only specific systems or games matching regex', '')
   .option('-l, --limit <number>', 'Limit processing to first N games', 0)
   .parse(process.argv);
