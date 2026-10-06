@@ -26,6 +26,7 @@ program
   .option('-v, --verbose', 'Verbose logging output', false)
   .option('--clean-legacy', 'Purge legacy flat duplicate folders from target', true)
   .option('--delete-zip', 'Delete source zip files after extraction', true)
+  .option('--no-delete-zip', 'Do not delete source zip files after extraction')
   .option('--filter <pattern>', 'Filter to process only specific systems or games matching regex', '')
   .option('-l, --limit <number>', 'Limit processing to first N games', 0)
   .parse(process.argv);
@@ -131,16 +132,208 @@ const CURATED_SYSTEMS = new Set([
   'Vectrex',
 ]);
 
+// Redundant platform suffixes to strip completely within each destination system
+const TRIVIAL_SYSTEM_SUFFIXES = {
+  'Sega Genesis': [
+    'Mega Drive, Genesis',
+    'Sega Mega Drive',
+    'Mega Drive',
+    'Genesis',
+  ],
+  'Nintendo NES': [
+    'NES',
+    'Family Computer',
+  ],
+  'Nintendo GameBoy': [
+    'Nintendo Game Boy',
+    'Game Boy',
+    'GameBoy',
+  ],
+  'Sharp X68000': [
+    'Sharp X68000',
+  ],
+  'NEC PC-88': [
+    'NEC PC-8801',
+    'NEC PC-88',
+    'PC-88',
+  ],
+  'NEC PC-98': [
+    'NEC PC-9801',
+    'NEC PC-98',
+  ],
+  'NEC TurboGrafx 16': [
+    'TG-16',
+    'TurboGrafx-16',
+    'PC Engine',
+  ],
+  'SNK Neo Geo': [
+    'Neo Geo',
+    'SNK Neo Geo',
+    'SNK Neo-Geo',
+  ],
+  'SNK Neo Geo Pocket': [
+    'Neo Geo Pocket',
+  ],
+  'Atari ST': [
+    'Atari ST',
+  ],
+  'Atari 5200': [
+    'Atari 5200',
+  ],
+  'Atari 7800': [
+    'Atari 7800',
+  ],
+  'Atari Lynx': [
+    'Atari Lynx',
+  ],
+  'Apple II': [
+    'Apple II',
+  ],
+  'Apple IIgs': [
+    'Apple IIgs',
+  ],
+  'Amstrad CPC': [
+    'Amstrad CPC',
+  ],
+  'Bandai WonderSwan': [
+    'Bandai WonderSwan',
+  ],
+  'Fujitsu FM Towns': [
+    'FM Towns',
+  ],
+  'Mattel Intellivision': [
+    'Intellivision',
+  ],
+  'Nintendo Virtual Boy': [
+    'Nintendo Virtual Boy',
+  ],
+  'Sega Pico': [
+    'Sega Pico',
+  ],
+  'Sega SG-1000': [
+    'Sega Game 1000',
+  ],
+  'Sinclair ZX Spectrum': [
+    'ZX Spectrum 128',
+    'ZX Spectrum 128K',
+  ],
+  'Vectrex': [
+    'Vectrex',
+  ],
+  'MSX': [
+    'MSX',
+  ],
+  'Sharp X1': [
+    'Sharp X1',
+  ],
+  'PC DOS': [
+    'IBM PC AT',
+    'IBM PC',
+    'IBM PC XT AT',
+    'PC',
+  ],
+  'Arcade': ['Arcade'],
+  'Arcade/Capcom': ['Arcade'],
+  'Arcade/Konami': ['Arcade'],
+  'Arcade/Namco': ['Arcade'],
+  'Arcade/Sega': ['Arcade'],
+  'Arcade/Taito': ['Arcade'],
+};
+
+// Shorter canonical normalization for preserved platform/hardware suffixes
+const SUFFIX_NORMALIZATION = {
+  // Game Boy
+  'Nintendo Game Boy Color': 'Game Boy Color',
+  'Game Boy, Color': 'Game Boy Color',
+  'Nintendo Game Boy Advance': 'Game Boy Advance',
+  'Game Boy, Super GB': 'Super Game Boy',
+  'Game Boy, Color, Super': 'Game Boy Color, Super Game Boy',
+
+  // Sega Genesis
+  'Sega 32X': '32X',
+  'Sega Mega Drive, 32X': '32X',
+  'Sega Mega CD': 'Sega CD',
+  'Mega CD': 'Sega CD',
+
+  // NES / Famicom
+  'Nintendo Famicom Disk System': 'Famicom Disk System',
+  'FDS': 'Famicom Disk System',
+
+  // TurboGrafx 16
+  'PCE Super CD-ROM2': 'Super CD-ROM2',
+  'PC Engine Super CD-ROM2': 'Super CD-ROM2',
+  'PC Engine SuperGrafx': 'SuperGrafx',
+  'PC Engine CD-ROM2': 'CD-ROM2',
+  'TurboGrafx-CD': 'TG-CD',
+
+  // Neo Geo
+  'SNK Neo Geo CD': 'Neo Geo CD',
+  'Neo Geo Pocket, Color': 'Neo Geo Pocket Color',
+
+  // WonderSwan
+  'Bandai WonderSwan Color': 'WonderSwan Color',
+
+  // Amstrad
+  'Amstrad CPC+': 'CPC+',
+
+  // FM Towns
+  'Fujitsu FM77AV': 'FM77AV',
+
+  // PC-88
+  'NEC PC-8801, OPNA': 'OPNA',
+  'NEC PC-8801, OPN': 'OPN',
+  'NEC PC-88VA': 'PC-88VA',
+  'NEC PC-88mkII SR': 'PC-88mkII SR',
+
+  // PC-98
+  'NEC PC-9801, OPNA': 'OPNA',
+  'NEC PC-9801, OPN': 'OPN',
+  'NEC PC-9801, OPL3': 'OPL3',
+  'NEC PC-9821': 'PC-9821',
+  'NEC PC-9801, PC-9821': 'PC-9821',
+  'NEC PC-9801, OPNA 86': 'OPNA 86',
+  'NEC PC-9801, OPNA SPB': 'OPNA SPB',
+
+  // Capcom
+  'Capcom CP System': 'CP System',
+  'Capcom ZN-2': 'ZN-2',
+};
+
 /**
  * Normalizes game folder name by replacing underscores with spaces,
- * collapsing redundant whitespace, and trimming.
+ * collapsing redundant whitespace, trimming, and stripping/normalizing
+ * redundant platform suffixes.
  */
-function normalizeGameDir(rawName) {
+function normalizeGameDir(rawName, system = '') {
   if (!rawName) return '';
-  return rawName
+  let clean = rawName
     .replace(/_/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+
+  if (!system) return clean;
+
+  const match = clean.match(/\(([^)]+)\)$/);
+  if (!match) return clean;
+
+  const rawTag = match[1].trim();
+
+  // 1. Check if suffix is trivial for this system -> strip completely
+  const trivialList = TRIVIAL_SYSTEM_SUFFIXES[system] || [];
+  for (const t of trivialList) {
+    if (rawTag.toLowerCase() === t.toLowerCase()) {
+      return clean.replace(/\s*\([^)]+\)$/, '').trim();
+    }
+  }
+
+  // 2. Check if suffix should be normalized to shorter canonical form
+  for (const [k, v] of Object.entries(SUFFIX_NORMALIZATION)) {
+    if (rawTag.toLowerCase() === k.toLowerCase()) {
+      return clean.replace(/\s*\([^)]+\)$/, ` (${v})`).trim();
+    }
+  }
+
+  return clean;
 }
 
 /**
@@ -228,7 +421,7 @@ function mergeLocalRips(localSourceDir, targetDir, dryRun, verbose) {
     const rawDirName = entry.name;
     const srcGamePath = path.join(localSourceDir, rawDirName);
     const system = resolveSystem('', rawDirName, '');
-    const cleanGameDir = normalizeGameDir(rawDirName);
+    const cleanGameDir = normalizeGameDir(rawDirName, system);
     const destSystemDir = path.join(targetDir, system);
     const destGamePath = path.join(destSystemDir, cleanGameDir);
 
@@ -344,10 +537,12 @@ async function main() {
   console.log(chalk.green(`Discovered ${allZips.length} archives to process.`));
   console.log('');
 
-  // Step 3: Build planning array
-  const importPlan = [];
+  // Step 3: Build planning array with two-pass collision detection
   const systemCounts = {};
   const unresolved = [];
+
+  // Pass 1: Resolve systems and candidate normalized names, grouping by target
+  const candidateMap = new Map(); // targetKey -> Array of items
 
   for (const relZip of allZips) {
     const zipFullPath = path.join(options.source, relZip);
@@ -361,17 +556,17 @@ async function main() {
       continue;
     }
 
-    const cleanGameDir = normalizeGameDir(baseName);
-    const targetGamePath = path.join(options.target, system, cleanGameDir);
+    const unstrippedCleanName = baseName.replace(/_/g, ' ').replace(/\s+/g, ' ').trim();
+    const candidateCleanName = normalizeGameDir(baseName, system);
+    const targetKey = `${system}/${candidateCleanName.toLowerCase()}`;
 
-    systemCounts[system] = (systemCounts[system] || 0) + 1;
-
-    importPlan.push({
+    if (!candidateMap.has(targetKey)) candidateMap.set(targetKey, []);
+    candidateMap.get(targetKey).push({
       relZip,
       zipFullPath,
       system,
-      cleanGameDir,
-      targetGamePath,
+      unstrippedCleanName,
+      candidateCleanName,
     });
   }
 
@@ -380,6 +575,67 @@ async function main() {
     unresolved.slice(0, 10).forEach((u) => console.error(chalk.red(`  - ${u}`)));
     process.exit(1);
   }
+
+  // Pass 2: Finalize import plan, disambiguating any colliding target names
+  const importPlan = [];
+  let collisionCount = 0;
+  let strippedCount = 0;
+  let normalizedCount = 0;
+
+  for (const [targetKey, items] of candidateMap) {
+    if (items.length === 1) {
+      const item = items[0];
+      const cleanGameDir = item.candidateCleanName;
+      const targetGamePath = path.join(options.target, item.system, cleanGameDir);
+      const oldGamePath = path.join(options.target, item.system, item.unstrippedCleanName);
+
+      if (cleanGameDir !== item.unstrippedCleanName) {
+        if (!cleanGameDir.includes('(') && item.unstrippedCleanName.includes('(')) {
+          strippedCount++;
+        } else {
+          normalizedCount++;
+        }
+      }
+
+      systemCounts[item.system] = (systemCounts[item.system] || 0) + 1;
+      importPlan.push({
+        relZip: item.relZip,
+        zipFullPath: item.zipFullPath,
+        system: item.system,
+        unstrippedCleanName: item.unstrippedCleanName,
+        cleanGameDir,
+        targetGamePath,
+        oldGamePath: cleanGameDir !== item.unstrippedCleanName ? oldGamePath : null,
+      });
+    } else {
+      // Collision detected between multiple zips mapping to same candidate name!
+      // Fall back to original unstripped names to ensure no archive clobbers another
+      collisionCount += items.length;
+      console.log(chalk.yellow(`[Collision Avoidance] Disambiguating colliding archives for: ${targetKey}`));
+      for (const item of items) {
+        const cleanGameDir = item.unstrippedCleanName;
+        const targetGamePath = path.join(options.target, item.system, cleanGameDir);
+        console.log(chalk.gray(`  → Preserving original tag: ${item.system}/${cleanGameDir}`));
+
+        systemCounts[item.system] = (systemCounts[item.system] || 0) + 1;
+        importPlan.push({
+          relZip: item.relZip,
+          zipFullPath: item.zipFullPath,
+          system: item.system,
+          unstrippedCleanName: item.unstrippedCleanName,
+          cleanGameDir,
+          targetGamePath,
+          oldGamePath: null,
+        });
+      }
+    }
+  }
+
+  console.log(chalk.cyan(`Suffix Optimization: ${chalk.bold(strippedCount)} redundant suffixes stripped, ${chalk.bold(normalizedCount)} shortened to canonical tags.`));
+  if (collisionCount > 0) {
+    console.log(chalk.yellow(`Collision Avoidance: Preserved tags for ${chalk.bold(collisionCount)} archives to prevent name collision.`));
+  }
+  console.log('');
 
   console.log(chalk.bold('Planned Distribution across Systems:'));
   Object.entries(systemCounts)
@@ -392,7 +648,7 @@ async function main() {
   if (options.dryRun) {
     console.log(chalk.yellow('----------------------------------------------------'));
     console.log(chalk.yellow('[dry-run] Sample planned extractions:'));
-    importPlan.slice(0, 10).forEach((item) => {
+    importPlan.slice(0, 15).forEach((item) => {
       console.log(chalk.gray(`  ${item.relZip} → ${item.system}/${item.cleanGameDir}/`));
     });
     console.log(chalk.yellow('----------------------------------------------------'));
@@ -404,6 +660,23 @@ async function main() {
   let processedCount = 0;
   const total = importPlan.length;
   const progressStep = Math.max(1, Math.floor(total / 50));
+
+  // Clean up any obsolete suffixed folders from previous runs in target
+  let obsoleteCleaned = 0;
+  for (const item of importPlan) {
+    if (item.oldGamePath && fs.existsSync(item.oldGamePath) && item.oldGamePath !== item.targetGamePath) {
+      obsoleteCleaned++;
+      if (options.verbose) {
+        console.log(chalk.gray(`  Removing obsolete folder: ${item.system}/${item.unstrippedCleanName}`));
+      }
+      if (!options.dryRun) {
+        fs.rmSync(item.oldGamePath, { recursive: true, force: true });
+      }
+    }
+  }
+  if (obsoleteCleaned > 0) {
+    console.log(chalk.yellow(`[Obsolete Cleanup] Removed ${obsoleteCleaned} obsolete suffixed folders in target.`));
+  }
 
   console.log(chalk.blue(`Beginning archive extraction to ${options.target}...`));
 
