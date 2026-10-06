@@ -25,8 +25,8 @@ program
   .option('-d, --dry-run', 'Preview changes without modifying disk', false)
   .option('-v, --verbose', 'Verbose logging output', false)
   .option('--clean-legacy', 'Purge legacy flat duplicate folders from target', true)
-  .option('--no-clean-legacy', 'Skip legacy flat folder cleanup')
-  .option('--keep-zip', 'Do not delete source zip files after extraction', false)
+  .option('--delete-zip', 'Delete source zip files after extraction', true)
+  .option('--no-delete-zip', 'Do not delete source zip files after extraction')
   .option('--filter <pattern>', 'Filter to process only specific systems or games matching regex', '')
   .option('-l, --limit <number>', 'Limit processing to first N games', 0)
   .parse(process.argv);
@@ -300,7 +300,7 @@ async function main() {
   console.log(`Source archive: ${chalk.bold(options.source)}`);
   console.log(`Local source:   ${chalk.bold(options.localSource)}`);
   console.log(`Target catalog: ${chalk.bold(options.target)}`);
-  console.log(`Mode:           ${options.keepZip ? chalk.cyan('Preserve source archives') : chalk.yellow('Destructive (extract & delete source ZIPs)')}`);
+  console.log(`Mode:           ${options.deleteZip ? chalk.yellow('Destructive (extract & delete source ZIPs)') : chalk.cyan('Preserve source archives')}`);
   console.log(`Dry run:        ${options.dryRun ? chalk.yellow('YES') : chalk.green('NO')}`);
   if (options.filter) console.log(`Filter:         ${chalk.magenta(options.filter)}`);
   if (limit > 0) console.log(`Limit:          ${chalk.magenta(limit)}`);
@@ -425,8 +425,8 @@ async function main() {
     // 2. Align game folder timestamp with zip archive timestamp
     fs.utimesSync(targetGamePath, zipStat.atime, zipStat.mtime);
 
-    // 3. Destructive cleanup if not keep-zip
-    if (!options.keepZip) {
+    // 3. Destructive cleanup if delete-zip
+    if (options.deleteZip) {
       fs.unlinkSync(zipFullPath);
     }
 
@@ -445,7 +445,7 @@ async function main() {
   console.log(`Processed: ${chalk.bold(processedCount)} games into ${chalk.bold(options.target)}`);
 
   // Clean up any empty folders left behind in source
-  if (!options.keepZip) {
+  if (options.deleteZip) {
     cleanEmptyDirs(options.source);
   }
 }
