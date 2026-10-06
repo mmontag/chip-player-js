@@ -26,7 +26,6 @@ program
   .option('-v, --verbose', 'Verbose logging output', false)
   .option('--clean-legacy', 'Purge legacy flat duplicate folders from target', true)
   .option('--delete-zip', 'Delete source zip files after extraction', true)
-  .option('--no-delete-zip', 'Do not delete source zip files after extraction')
   .option('--filter <pattern>', 'Filter to process only specific systems or games matching regex', '')
   .option('-l, --limit <number>', 'Limit processing to first N games', 0)
   .parse(process.argv);
