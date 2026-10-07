@@ -2,7 +2,7 @@
 
 ![Screen Shot 2019-11-19 at 1 21 04 PM](https://user-images.githubusercontent.com/946117/69187458-80955600-0acf-11ea-9a1f-e090032dcb00.png)
 
-Play online: [Chip Player JS](https://mmontag.github.io/chip-player-js). Feature requests? [Create an issue](https://github.com/mmontag/chip-player-js/issues/new).
+Play online: [Chip Player JS](https://chiptune.app). Feature requests? [Create an issue](https://github.com/mmontag/chip-player-js/issues/new).
 
 ### Features
 
@@ -15,7 +15,7 @@ Play online: [Chip Player JS](https://mmontag.github.io/chip-player-js). Feature
 - Track sequencer with player controls and shuffle mode
 - Media key support in Chrome
 - High performance
-   - Time-to-audio under 500 ms (i.e. https://mmontag.github.io/chip-player-js/?play=ModArchives/aryx.s3m)
+   - Time-to-audio under 500 ms (i.e. https://chiptune.app/?play=ModArchives/aryx.s3m)
    - Instant search results
    - CPU usage under 25% in most circumstances
 
