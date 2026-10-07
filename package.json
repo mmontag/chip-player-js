@@ -36,7 +36,7 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "events": "^3.3.0",
     "fili": "^2.0.3",
-    "firebase": "^9.13.0",
+    "firebase": "^12.14.0",
     "fs-extra": "3.0.1",
     "immutability-helper": "^2.7.1",
     "ismobilejs": "^0.4.1",
