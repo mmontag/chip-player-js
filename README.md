@@ -12,6 +12,7 @@ Play online: [Chip Player JS](https://chiptune.app). Feature requests? [Create a
 - Simple music management (at least the ability to save favorites) like Winamp/Spotify
 - High-quality MIDI playback with JS wavetable synthesis
     * Bonus: user-selectable soundbanks
+    * Bonus: Sound Canvas hardware emulation ([88emu](#external-project-gearmulator-88emu)), with your own ROM images
 - Track sequencer with player controls and shuffle mode
 - Media key support in Chrome
 - High performance
@@ -226,6 +227,43 @@ source ~/src/emsdk/emsdk_env.sh               # load the emscripten environment 
 emconfigure ./configure --host=wasm32-unknown-emscripten --disable-shared --enable-static --disable-debug --without-exsid --without-gcrypt --with-simd=sse4 XA=$(which xa) OD=$(which od) CXXFLAGS="-Oz -flto -msimd128"   LDFLAGS="-Oz -flto -msimd128" 
 emcmake make
 ```
+
+#### External project: gearmulator 88emu
+
+[88emu](https://github.com/dsp56300/gearmulator) emulates the hardware of the Sound Canvas modules (SC-55, SC-55mkII, SC-88, SC-88VL, SC-88Pro, SC-8850) and of the CM-64 (CM-32L + CM-32P): the original firmware runs on emulated CPUs and sound chips. It is the third MIDI synth engine, next to FluidLite and libADLMIDI.
+
+Our goal is to produce **../gearmulator/build-wasm/source/ronaldo/88emu/88lib/lib88emu.a** (assumes you have cloned **gearmulator** side-by-side with chip-player-js). This is 88lib with everything it depends on in one archive; chip-player-js talks to it through its C interface, `88lib/c_interface.h`, from [src/tinyplayer.c](src/tinyplayer.c).
+
+```sh
+git clone https://github.com/dsp56300/gearmulator
+cd gearmulator
+git submodule update --init --recursive       # this repo uses submodules
+source ~/src/emsdk/emsdk_env.sh               # load the emscripten environment variables
+emcmake cmake -S . -B build-wasm -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF \
+  -Dgearmulator_BUILD_JUCEPLUGIN=OFF -Dgearmulator_SYNTH_88EMU=ON \
+  -Dgearmulator_SYNTH_OSIRUS=OFF -Dgearmulator_SYNTH_OSTIRUS=OFF -Dgearmulator_SYNTH_VAVRA=OFF \
+  -Dgearmulator_SYNTH_XENIA=OFF -Dgearmulator_SYNTH_NODALRED2X=OFF -Dgearmulator_SYNTH_JE8086=OFF
+cmake --build build-wasm --target 88emu_bundle
+```
+
+A gearmulator checkout somewhere else, or another build folder, is named with `EMU88_ROOT` and `EMU88_BUILD` when building chip-core:
+
+```sh
+EMU88_ROOT=~/src/gearmulator EMU88_BUILD=build-wasm npm run build-chip-core
+```
+
+Things to know:
+
+* Because of 88emu, chip-core is linked with a 2 MB stack (the boards overflow the 64 KB default) and with `ALLOW_TABLE_GROWTH`: the emulated DSPs (XP, LSP) recompile their programs to small WebAssembly modules at run time, which roughly doubles the speed. It adds about 1.3 MB to chip-core.wasm.
+* Powering a device on boots its firmware, which blocks for a second or so. A MIDI file is played as written: the silence at its start is not skipped, because that is where a GS song resets the module and sets its parts up over SysEx, and SysEx and the `midi_port` of each track (two ports on the SC-88 family, four on the SC-8850) are passed on.
+
+##### Sound Canvas ROMs
+
+The engine needs the ROM images of the device it emulates. They are copyrighted and are **not** part of this repository or of gearmulator: users add their own. With the engine selected, the player settings show **ROM Images: Add…**, which takes any number of files at once. They are stored in the browser's IndexedDB (the `/sc-roms` mount, like user Soundfonts), so they are added once and survive reloads; **Remove all** deletes them.
+
+88emu recognizes an image by its content, so file names do not matter; files with the same name but different content are kept side by side. The **Sound Canvas Model** list offers the models whose images are all present, in 88emu's order; a model that is missing images is not offered, and the browser console has the list of what each one needs (`emu88_describe_device_roms`).
+
+The CM-32L, CM-32P and CM-64 are MT-32 family devices, not General MIDI ones: they are for music written for the MT-32 and play GM files with the wrong instruments.
 
 #### WebAssembly build
 

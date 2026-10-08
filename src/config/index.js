@@ -8,6 +8,9 @@ if (process.env.NODE_ENV === 'development') {
   SOUNDFONT_URL_PATH = 'http://localhost:8080/soundfonts';
 }
 
+// Sound Canvas (88emu): where the ROM images the user adds are kept (IndexedDB, like user Soundfonts).
+const SC_ROM_MOUNTPOINT = '/sc-roms';
+
 const MAX_SAMPLE_RATE = 48000; // Higher rates are problematic for some players.
 const MAX_VOICES = 64;
 const REPLACE_STATE_ON_SEEK = false;
@@ -109,6 +112,7 @@ module.exports = {
   MAX_SAMPLE_RATE,
   MAX_VOICES,
   REPLACE_STATE_ON_SEEK,
+  SC_ROM_MOUNTPOINT,
   SOUNDFONT_MOUNTPOINT,
   SOUNDFONT_URL_PATH,
   SOUNDFONTS,

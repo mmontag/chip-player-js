@@ -6,7 +6,12 @@ import pathe from 'pathe';
 import MIDIFile from './midi/midi-helpers';
 import MIDIFilePlayer from './MIDIFilePlayer';
 import Player from './Player';
-import { SOUNDFONTS, SOUNDFONT_MOUNTPOINT, SOUNDFONT_URL_PATH } from '../config';
+import {
+  SC_ROM_MOUNTPOINT,
+  SOUNDFONTS,
+  SOUNDFONT_MOUNTPOINT,
+  SOUNDFONT_URL_PATH,
+} from '../config';
 import { GM_DRUM_KITS, GM_INSTRUMENTS } from '../gm-patch-map';
 import {
   ensureEmscFileWithUrl,
@@ -36,6 +41,12 @@ const fileExtensions = [
 const MIDI_ENGINE_LIBFLUIDLITE = 0; // g_Synths[0] = fluidSynth;
 const MIDI_ENGINE_LIBADLMIDI = 1;   // g_Synths[1] = adlSynth;
 const MIDI_ENGINE_WEBMIDI = 2;
+// Sound Canvas hardware emulation (88emu). g_Synths[2] = scSynth: the
+// tinyplayer index is not the param value, which Web MIDI had already taken.
+const MIDI_ENGINE_SOUNDCANVAS = 3;
+const TP_ENGINE_SOUNDCANVAS = 2;
+// The largest image a supported module has (the SC-8850's wave ROM is 32 MiB).
+const MAX_SC_ROM_BYTES = 64 * 1024 * 1024;
 
 export default class MIDIPlayer extends Player {
   paramDefs = [
@@ -49,9 +60,35 @@ export default class MIDIPlayer extends Player {
           { label: 'SoundFont (libFluidLite)', value: MIDI_ENGINE_LIBFLUIDLITE },
           { label: 'Adlib/OPL3 FM (libADLMIDI)', value: MIDI_ENGINE_LIBADLMIDI },
           { label: 'MIDI Device (Web MIDI)', value: MIDI_ENGINE_WEBMIDI },
+          { label: 'Sound Canvas (88emu)', value: MIDI_ENGINE_SOUNDCANVAS },
         ],
       }],
       defaultValue: 0,
+    },
+    {
+      id: 'scmodel',
+      label: 'Sound Canvas Model',
+      hint: 'Which module to emulate, out of those whose ROM images you have added. Switching models boots the emulated device, which takes a moment. The CM-32L, CM-32P and CM-64 are MT-32 family devices: they play General MIDI files with the wrong instruments.',
+      type: 'enum',
+      // Filled in from the ROM images that are present (updateScModelParamDefs).
+      options: [{ label: 'Models', items: [] }],
+      defaultValue: 2, // SC-88Pro
+      dependsOn: {
+        param: 'synthengine',
+        value: MIDI_ENGINE_SOUNDCANVAS,
+      },
+    },
+    {
+      id: 'scroms',
+      label: 'ROM Images',
+      hint: 'Add the ROM images (dumps) of the modules to emulate; select several files at once. They are recognized by their content, whatever their names, and kept in this browser, so you only add them once.',
+      type: 'files',
+      addLabel: 'Add…',
+      clearLabel: 'Remove all',
+      dependsOn: {
+        param: 'synthengine',
+        value: MIDI_ENGINE_SOUNDCANVAS,
+      },
     },
     {
       id: 'soundfont',
@@ -164,6 +201,17 @@ export default class MIDIPlayer extends Player {
     // Initialize Soundfont filesystem
     core.FS.mkdir(SOUNDFONT_MOUNTPOINT);
     core.FS.mount(core.FS.filesystems.IDBFS, {}, SOUNDFONT_MOUNTPOINT);
+    // Sound Canvas ROM images the user added, kept in IndexedDB like the user Soundfonts.
+    core.FS.mkdir(SC_ROM_MOUNTPOINT);
+    core.FS.mount(core.FS.filesystems.IDBFS, {}, SC_ROM_MOUNTPOINT);
+    this.scModel = null;        // model that is powered on
+    this.scPendingModel = null; // model that is booting
+    this.scStatus = null;
+    this.scRomsScanned = false; // the ROM folder has been identified since it last changed
+    this.scModels = [];         // { label, value } of the models whose ROM images are all present
+    this.scRomSummary = '';
+    // The engine in effect - params['synthengine'] can be overridden by a transient value.
+    this.activeEngine = MIDI_ENGINE_LIBFLUIDLITE;
 
     this.playerKey = 'midi';
     this.name = 'MIDI Player';
@@ -195,6 +243,9 @@ export default class MIDIPlayer extends Player {
         render: core._tp_render,
         reset: core._tp_reset,
         getValue: core.getValue,
+        // Hardware synths only (MIDIFilePlayer.setHardwareSynth).
+        setPort: port => core._tp_sc_set_port(port),
+        sysex: this.sendSysex,
       },
     });
 
@@ -232,8 +283,188 @@ export default class MIDIPlayer extends Player {
     this.updateSoundfontParamDefs();
   }
 
+  // Complete SysEx message, 0xF0 ... 0xF7, to the current synth.
+  sendSysex(bytes) {
+    const ptr = core._malloc(bytes.length);
+    core.HEAPU8.set(bytes, ptr);
+    core._tp_sysex(ptr, bytes.length);
+    core._free(ptr);
+  }
+
+  // Identifies the ROM images in SC_ROM_MOUNTPOINT and offers the models they complete. Done on
+  // demand: the first scan reads every image, which is not free, and most sessions never get here.
+  scanScRoms() {
+    if (this.scRomsScanned) return;
+    this.scRomsScanned = true;
+    const romPath = core.stringToNewUTF8(SC_ROM_MOUNTPOINT);
+    core._tp_sc_set_rom_path(romPath);
+    core._free(romPath);
+
+    const models = [];
+    for (let i = 0; i < core._tp_sc_device_count(); i++) {
+      const id = core._tp_sc_device_id(i);
+      if (core._tp_sc_available(id)) {
+        models.push({ label: core.UTF8ToString(core._tp_sc_device_name(id)), value: id });
+      }
+    }
+    this.scModels = models;
+
+    const files = this.listScRoms().length;
+    const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+    this.scRomSummary = files === 0 ? 'none added' : `${plural(files, 'file')}, ${plural(models.length, 'model')}`;
+    this.paramDefs = this.paramDefs.map(paramDef => paramDef.id !== 'scmodel' ? paramDef : {
+      ...paramDef,
+      options: [{
+        label: 'Models with ROM images',
+        items: models.length ? models : [{ label: '(add ROM images)', value: -1 }],
+      }],
+    });
+  }
+
+  listScRoms() {
+    return core.FS.readdir(SC_ROM_MOUNTPOINT).filter(name => name !== '.' && name !== '..');
+  }
+
+  // Copies the files into the ROM folder and persists them. A name already taken by different
+  // content gets a suffix: dumps of different modules are often called the same (rom1.bin), and
+  // the emulator recognizes them by content anyway.
+  async addScRoms(files) {
+    const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+    this.setSoundCanvasStatus(`Adding ${plural(files.length, 'ROM image')}…`);
+    let added = 0;
+    const skipped = [];
+    for (const file of files) {
+      if (file.size === 0 || file.size > MAX_SC_ROM_BYTES) {
+        skipped.push(file.name);
+        continue;
+      }
+      const data = new Uint8Array(await file.arrayBuffer());
+      const name = this.scRomFileName(file.name, data);
+      if (name === null) continue; // the same image is already there
+      core.FS.writeFile(`${SC_ROM_MOUNTPOINT}/${name}`, data);
+      added++;
+    }
+    await new Promise((resolve, reject) => core.FS.syncfs(false, err => err ? reject(err) : resolve()));
+
+    this.scRomsScanned = false;
+    this.scanScRoms();
+    const skippedText = skipped.length ? ` Skipped ${skipped.join(', ')}: not a ROM image size.` : '';
+    this.setSoundCanvasStatus(`Added ${plural(added, 'ROM image')}; ${plural(this.scModels.length, 'model')} available.${skippedText}`);
+    setTimeout(() => this.scStatus?.startsWith('Added ') && this.setSoundCanvasStatus(null), 5000);
+    this.emitParamState();
+    // A model that was waiting for its images can start now.
+    if (this.activeEngine === MIDI_ENGINE_SOUNDCANVAS && this.scModel === null) {
+      this.ensureSoundCanvas(parseInt(this.getParameter('scmodel'), 10));
+    }
+  }
+
+  scRomFileName(fileName, data) {
+    const dot = fileName.lastIndexOf('.');
+    const stem = (dot > 0 ? fileName.slice(0, dot) : fileName).replace(/[\\/]/g, '_');
+    const ext = dot > 0 ? fileName.slice(dot) : '';
+    const existing = new Set(this.listScRoms());
+    for (let n = 1; ; n++) {
+      const name = n === 1 ? `${stem}${ext}` : `${stem}-${n}${ext}`;
+      if (!existing.has(name)) return name;
+      const present = core.FS.readFile(`${SC_ROM_MOUNTPOINT}/${name}`);
+      if (present.length === data.length && present.every((byte, i) => byte === data[i])) return null;
+    }
+  }
+
+  async removeScRoms() {
+    core._tp_sc_close();
+    this.scModel = null;
+    this.scPendingModel = null;
+    for (const name of this.listScRoms()) core.FS.unlink(`${SC_ROM_MOUNTPOINT}/${name}`);
+    await new Promise((resolve, reject) => core.FS.syncfs(false, err => err ? reject(err) : resolve()));
+    this.scRomsScanned = false;
+    this.scanScRoms();
+    this.setSoundCanvasStatus(null);
+    this.emitParamState();
+  }
+
+  // The model list and the ROM summary changed outside setParameter().
+  emitParamState() {
+    if (!this.stopped) {
+      this.emit('playerStateUpdate', {
+        paramDefs: this.getParamDefs(),
+        paramValues: this.getParamValues(),
+        infoTexts: this.getInfoTexts(),
+      });
+    }
+  }
+
+  // Powers on an emulated module from the ROM images the user added. The model is passed
+  // explicitly rather than read back through getParameter(), which still returns the outgoing
+  // value during setParameter().
+  async ensureSoundCanvas(requested) {
+    const firstScan = !this.scRomsScanned;
+    this.scanScRoms();
+    if (firstScan) this.emitParamState();
+
+    // A model whose images are gone, or a pinned one that was never added: the default if it is
+    // there, else the first one that is.
+    let model = requested;
+    if (!this.scModels.some(m => m.value === model)) {
+      const fallback = this.scModels.find(m => m.value === 2) || this.scModels[0];
+      if (!fallback) {
+        core._tp_sc_close();
+        this.scModel = null;
+        this.setSoundCanvasStatus('No ROM images yet: add those of a supported module.');
+        return;
+      }
+      model = fallback.value;
+      this.params['scmodel'] = model;
+      this.emitParamState();
+    }
+    if (this.scModel === model || this.scPendingModel === model) return;
+    const device = this.scModels.find(m => m.value === model);
+    this.scPendingModel = model;
+    try {
+      this.setSoundCanvasStatus(`Booting ${device.label}…`);
+      // Let the status paint: the boot blocks this thread for a second or so.
+      await new Promise(resolve => setTimeout(resolve, 50));
+      if (this.scPendingModel !== model) return;
+
+      const rc = core._tp_sc_open(model);
+      if (rc !== 0) {
+        // -4: EMU88_RC_MISSING_ROMS
+        console.warn(core.UTF8ToString(core._tp_sc_describe_roms(model)));
+        throw new Error(rc === -4 ? 'ROM images are missing or not recognized (see console)' : `error ${rc}`);
+      }
+      this.scModel = model;
+      this.setSoundCanvasStatus(null);
+      // Play the song from the top: the module was not there for its setup SysEx.
+      if (this.activeEngine === MIDI_ENGINE_SOUNDCANVAS && !this.stopped) {
+        this.midiFilePlayer.reset();
+        this.midiFilePlayer.setPosition(0);
+      }
+    } catch (e) {
+      console.error('Sound Canvas:', e);
+      this.scModel = null;
+      this.setSoundCanvasStatus(`${device.label} failed to start: ${e.message}`);
+    } finally {
+      if (this.scPendingModel === model) this.scPendingModel = null;
+    }
+  }
+
+  setSoundCanvasStatus(text) {
+    this.scStatus = text;
+    // Booting can outlive the song that asked for it.
+    if (!this.stopped) {
+      this.emit('playerStateUpdate', { infoTexts: this.getInfoTexts(), paramValues: this.getParamValues() });
+    }
+  }
+
   processAudioInner(channels) {
     const useWebMIDI = this.params['synthengine'] === MIDI_ENGINE_WEBMIDI;
+
+    // Hold the song until the emulated Sound Canvas is powered on; it would
+    // otherwise play inaudibly through the ROM download.
+    if (this.activeEngine === MIDI_ENGINE_SOUNDCANVAS && this.scModel === null) {
+      for (let ch = 0; ch < channels.length; ch++) channels[ch].fill(0);
+      return;
+    }
 
     // No early return or zero-fill during pause.
     // Notes are allowed to ring out, and the MIDI synth behaves more like external hardware.
@@ -586,11 +817,14 @@ export default class MIDIPlayer extends Player {
   }
 
   getInfoTexts() {
-    return [this.midiFilePlayer.textInfo.join('\n')].filter(text => text !== '');
+    // Sound Canvas power-on progress goes first, while there is any.
+    return [this.scStatus, this.midiFilePlayer.textInfo.join('\n')].filter(text => text);
   }
 
   getParameter(id) {
     if (id === 'fluidpoly') return core._tp_get_polyphony();
+    // The ROM picker shows what is stored, and what the engine is doing, where the user is looking.
+    if (id === 'scroms') return [this.scRomSummary, this.scStatus].filter(text => text).join(' — ');
     if (this.transientParams[id] != null) return this.transientParams[id];
     return this.params[id];
   }
@@ -676,13 +910,31 @@ export default class MIDIPlayer extends Player {
       case 'synthengine':
         value = parseInt(value, 10);
         this.midiFilePlayer.panic();
+        this.activeEngine = value;
+        this.midiFilePlayer.setHardwareSynth(value === MIDI_ENGINE_SOUNDCANVAS);
         if (value === MIDI_ENGINE_WEBMIDI) {
           this.midiFilePlayer.setUseWebMIDI(true);
+        } else if (value === MIDI_ENGINE_SOUNDCANVAS) {
+          this.midiFilePlayer.setUseWebMIDI(false);
+          core._tp_set_synth_engine(TP_ENGINE_SOUNDCANVAS);
+          this.ensureSoundCanvas(parseInt(this.getParameter('scmodel'), 10));
         } else {
           this.midiFilePlayer.setUseWebMIDI(false);
           core._tp_set_synth_engine(value);
         }
         break;
+      case 'scmodel':
+        value = parseInt(value, 10);
+        if (this.activeEngine === MIDI_ENGINE_SOUNDCANVAS) {
+          this.midiFilePlayer.panic();
+          this.ensureSoundCanvas(value);
+        }
+        break;
+      case 'scroms':
+        // An action, not a setting: { add: File[] } or { clear: true } from the ROM picker.
+        if (value?.add) this.addScRoms(value.add);
+        else if (value?.clear) this.removeScRoms();
+        return;
       case 'soundfont':
         const url = `${SOUNDFONT_URL_PATH}/${value}`;
         ensureEmscFileWithUrl(core, `${SOUNDFONT_MOUNTPOINT}/${value}`, url)
