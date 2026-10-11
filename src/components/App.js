@@ -55,6 +55,7 @@ import TopCharts from './TopCharts';
 import { UserContext } from './UserProvider';
 import { ToastContext } from './ToastProvider';
 import Announcements from './Announcements';
+import { getDomMetadataText } from '../metadata-inspector';
 
 const BASE_URL = process.env.PUBLIC_URL || document.location.origin;
 
@@ -125,6 +126,7 @@ class App extends React.Component {
       imageUrl: null,
       infoTexts: [],
       showInfo: false,
+      metadataText: null,
       songPath: null,
       songId: null,
       volume: 100,
@@ -326,6 +328,9 @@ class App extends React.Component {
             this.setState({ theaterMode: false });
             e.preventDefault();
           }
+          if (this.state.metadataText) {
+            this.setState({ metadataText: null });
+          }
           this.setState({ showInfo: false });
           e.target.blur();
           break;
@@ -333,6 +338,12 @@ class App extends React.Component {
       }
 
       if (e.target.tagName === 'INPUT' && e.target.type === 'text') return; // text input has focus
+
+      if (e.shiftKey && (e.key === 'M' || e.key === 'm')) {
+        this.setState(s => ({ metadataText: s.metadataText ? null : getDomMetadataText() }));
+        e.preventDefault();
+        return;
+      }
 
       switch (e.key) {
         case ' ':
@@ -878,6 +889,9 @@ class App extends React.Component {
           <MessageBox showInfo={this.state.showInfo}
                       infoTexts={this.state.infoTexts}
                       toggleInfo={this.toggleInfo}/>
+          <MessageBox showInfo={Boolean(this.state.metadataText)}
+                      infoTexts={[this.state.metadataText || '']}
+                      toggleInfo={() => this.setState({ metadataText: null })}/>
           <Toast/>
           <AppHeader/>
           <div className={`App-main ${activeTheaterMode ? 'theater-mode' : ''} ${showPlayerSettings ? 'has-settings' : ''}`}>
