@@ -60,7 +60,9 @@ const purgeCloudflare = async () => {
         'https://chiptune.app/index.html',
         'https://chiptune.app/browse',
         'https://chiptune.app/favorites',
-        'https://chiptune.app/local'
+        'https://chiptune.app/local',
+        'https://chiptune.app/robots.txt',
+        'https://chiptune.app/sitemap.xml'
       ],
       // ...or purge everything by prefix:
       // prefixes: [
