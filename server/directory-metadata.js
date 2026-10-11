@@ -175,8 +175,14 @@ function formatTag(formats) {
 }
 
 /**
- * Formats a simplified path title, replacing middle segments with ellipsis if too long.
- * e.g. "Contemporary / James Paddock / Doom Projects / Complete / Jenesis" -> "Contemporary / James Paddock / … / Jenesis"
+ * Formats a simplified path title according to path depth and length:
+ * 1 segment:
+ *   AAA -> AAA (or A... if too long)
+ * 2 segments:
+ *   AAA / BBB -> AAA / B... (never an ellipsis in the middle)
+ * 3 or more segments:
+ *   Progressively remove middle segments starting from N - 1 and replace with ellipsis:
+ *   AAA / BBB / CCC / DDD -> AAA / BBB / … / DDD -> AAA / … / DDD -> AAA / … / D...
  */
 function formatSimplifiedPathTitle(pathSegments, maxLen = 60, options = {}) {
   const separator = options.separator || ' / ';
@@ -185,62 +191,69 @@ function formatSimplifiedPathTitle(pathSegments, maxLen = 60, options = {}) {
   const targetLen = maxLen - fmtStr.length;
 
   if (!pathSegments || pathSegments.length === 0) return '';
-  if (pathSegments.length === 1) {
+  const N = pathSegments.length;
+
+  // 1 segment: AAA -> AAA (or A... if too long)
+  if (N === 1) {
     const s = pathSegments[0];
     const base = s.length <= targetLen ? s : s.slice(0, targetLen - 1).trim() + '…';
     return base + fmtStr;
   }
 
+  // 2 segments: AAA / BBB -> AAA / B... (no middle ellipsis)
+  if (N === 2) {
+    const first = pathSegments[0];
+    const second = pathSegments[1];
+    const full = `${first}${separator}${second}`;
+    if (full.length <= targetLen) {
+      return full + fmtStr;
+    }
+    const prefix = `${first}${separator}`;
+    const availForLeaf = targetLen - prefix.length;
+    if (availForLeaf > 3) {
+      const shortLeaf = second.slice(0, availForLeaf - 1).trim() + '…';
+      return `${prefix}${shortLeaf}${fmtStr}`;
+    }
+    // If the first segment itself is too long:
+    return full.slice(0, targetLen - 1).trim() + '…' + fmtStr;
+  }
+
+  // 3 or more segments:
+  // AAA / BBB / CCC / DDD -> AAA / BBB / … / DDD -> AAA / … / DDD -> AAA / … / D...
   const full = pathSegments.join(separator);
   if (full.length <= targetLen) {
     return full + fmtStr;
   }
 
-  // Need to shorten by replacing middle segments with ellipsis
   const first = pathSegments[0];
-  const last = pathSegments[pathSegments.length - 1];
+  const last = pathSegments[N - 1];
+  const middle = pathSegments.slice(1, N - 1); // intermediate segments (index 1 to N - 2)
 
-  let currentLeft = 0;
-  let currentRight = pathSegments.length - 1;
-  let best = `${first}${separator}…${separator}${last}`;
-
-  if (best.length <= targetLen) {
-    while (currentRight - currentLeft > 2) {
-      // Try expanding from left
-      const tryLeft =
-        pathSegments.slice(0, currentLeft + 2).join(separator) +
-        `${separator}…${separator}` +
-        pathSegments.slice(currentRight).join(separator);
-      if (tryLeft.length <= targetLen) {
-        currentLeft++;
-        best = tryLeft;
-        continue;
-      }
-      // Try expanding from right
-      const tryRight =
-        pathSegments.slice(0, currentLeft + 1).join(separator) +
-        `${separator}…${separator}` +
-        pathSegments.slice(currentRight - 1).join(separator);
-      if (tryRight.length <= targetLen) {
-        currentRight--;
-        best = tryRight;
-        continue;
-      }
-      break;
+  // Start removing middle segments from N - 1 (the one closest to the leaf)
+  // keptCount goes from middle.length - 1 down to 0
+  for (let keptCount = middle.length - 1; keptCount >= 0; keptCount--) {
+    let candidate;
+    if (keptCount === 0) {
+      candidate = `${first}${separator}…${separator}${last}`;
+    } else {
+      const keptMiddle = middle.slice(0, keptCount).join(separator);
+      candidate = `${first}${separator}${keptMiddle}${separator}…${separator}${last}`;
     }
-    return best + fmtStr;
+
+    if (candidate.length <= targetLen) {
+      return candidate + fmtStr;
+    }
   }
 
-  // If first / … / last itself exceeds targetLen:
-  // Shorten first and last to fit within targetLen
-  const shortFirst = first.length > 20 ? first.slice(0, 18).trim() + '…' : first;
-  const availForLast = targetLen - (shortFirst.length + `${separator}…${separator}`.length);
-  if (availForLast > 10) {
-    const shortLast = last.length <= availForLast ? last : last.slice(0, availForLast - 1).trim() + '…';
-    return `${shortFirst}${separator}…${separator}${shortLast}${fmtStr}`;
+  // If all middle segments are removed and it's still too long: AAA / … / D...
+  const prefix = `${first}${separator}…${separator}`;
+  const availForLeaf = targetLen - prefix.length;
+  if (availForLeaf > 3) {
+    const shortLeaf = last.slice(0, availForLeaf - 1).trim() + '…';
+    return `${prefix}${shortLeaf}${fmtStr}`;
   }
 
-  // Fallback: truncate end
+  // Fallback if first segment + prefix exceeds targetLen
   return full.slice(0, targetLen - 1).trim() + '…' + fmtStr;
 }
 

@@ -172,9 +172,14 @@ const pathTestCases = [
     path: 'High Voltage SID Collection/MUSICIANS/T/Tel_Jeroen',
     containsEllipsis: true,
   },
+  {
+    path: 'Battle of the Bits/FAMICOM GRANDPRIX [BotB 9038] (2024)',
+    // 2 segments: must NOT have middle ellipsis, must start with "Battle of the Bits / "
+    noMiddleEllipsis: true,
+  },
 ];
 
-pathTestCases.forEach(({ path: testPath, expectedTitle, containsEllipsis }) => {
+pathTestCases.forEach(({ path: testPath, expectedTitle, containsEllipsis, noMiddleEllipsis }) => {
   const meta = resolveDirectoryMetadata(testPath);
   assert(meta.title.length <= 60, `Path title exceeds 60 chars: "${meta.title}"`);
   if (expectedTitle) {
@@ -182,6 +187,9 @@ pathTestCases.forEach(({ path: testPath, expectedTitle, containsEllipsis }) => {
   }
   if (containsEllipsis) {
     assert(meta.title.includes('…'), `Path title should contain ellipsis: "${meta.title}"`);
+  }
+  if (noMiddleEllipsis) {
+    assert(!meta.title.includes(' / … / '), `2-segment path should NOT contain middle ellipsis: "${meta.title}"`);
   }
   console.log(`✓ [PATH] ${testPath} -> "${meta.title}" (${meta.title.length} chars)`);
 });
@@ -192,6 +200,23 @@ const truncatedPathTitle = formatSimplifiedPathTitle(longPathSegments, 60, { inc
 assert(truncatedPathTitle.includes('…'), 'Long path should be truncated with middle ellipsis');
 assert(truncatedPathTitle.length <= 60, 'Truncated path title should be <= 60 characters');
 console.log(`✓ Middle ellipsis truncation helper verified: "${truncatedPathTitle}"`);
+
+// Verify 2-segment behavior: AAA / BBB -> AAA / B...
+const twoSeg = formatSimplifiedPathTitle(['AAA_Long_Name', 'BBB_Very_Long_Soundtrack_Title_That_Exceeds_The_Budget'], 40);
+assert(!twoSeg.includes(' / … / '), '2-segment title must not have middle ellipsis');
+assert(twoSeg.startsWith('AAA_Long_Name / '), '2-segment title must start with first segment');
+assert(twoSeg.endsWith('…'), '2-segment title must end with ellipsis on leaf');
+console.log(`✓ 2-segment end-truncation verified: "${twoSeg}"`);
+
+// Verify 4-segment progressive removal from N - 1:
+const fourSeg = ['AAA', 'BBB', 'CCC', 'DDD_Soundtrack_Title'];
+const step1 = formatSimplifiedPathTitle(fourSeg, 37);
+assert.strictEqual(step1, 'AAA / BBB / … / DDD_Soundtrack_Title', 'Should remove CCC first');
+const step2 = formatSimplifiedPathTitle(fourSeg, 30);
+assert.strictEqual(step2, 'AAA / … / DDD_Soundtrack_Title', 'Should remove both BBB and CCC');
+const step3 = formatSimplifiedPathTitle(fourSeg, 20);
+assert.strictEqual(step3, 'AAA / … / DDD_Sound…', 'Should truncate leaf when all middle removed');
+console.log(`✓ 4-segment progressive N-1 removal verified: "${step1}" -> "${step2}" -> "${step3}"`);
 
 // Switch back to default mode
 setStrategyMode('path');
