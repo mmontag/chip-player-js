@@ -182,5 +182,13 @@ const indexSitemapPath = path.join(OUT_DIR, 'sitemap.xml');
 fs.writeFileSync(indexSitemapPath, indexXmlLines.join('\n'), 'utf8');
 console.log('Wrote %s (index pointing to directories and songs)', indexSitemapPath);
 
+const BUILD_DIR = path.resolve(__dirname, '../build');
+if (fs.existsSync(BUILD_DIR)) {
+  fs.copyFileSync(dirSitemapPath, path.join(BUILD_DIR, 'sitemap-directories.xml'));
+  fs.copyFileSync(songSitemapPath, path.join(BUILD_DIR, 'sitemap-songs-top.xml'));
+  fs.copyFileSync(indexSitemapPath, path.join(BUILD_DIR, 'sitemap.xml'));
+  console.log('Synced sitemaps to %s', BUILD_DIR);
+}
+
 console.log('\nSitemap generation complete!');
 console.log('Total URLs indexed: %s', (dirs.length + 3 + topSongs.length).toLocaleString());
