@@ -217,6 +217,40 @@ const dbStatements = {
       )
       LIMIT ?
   `),
+
+  // Directory Metadata for SEO
+  getDirMetadataStmt: db.prepare(`
+      SELECT d.id, d.name, d.path, d.count, d.total_size, i.path as image_path
+      FROM directories d
+      LEFT JOIN images i ON d.image_id = i.id
+      WHERE d.path = ?
+      LIMIT 1
+  `),
+  getDirSampleSongsStmt: db.prepare(`
+      SELECT title, artist, game, system, extension, filename, song_id
+      FROM music
+      WHERE directory_id = ?
+      ORDER BY sort_order, path
+      LIMIT 8
+  `),
+  getDirSampleSubdirsStmt: db.prepare(`
+      SELECT name, count
+      FROM directories
+      WHERE parent_id = ?
+      ORDER BY count DESC
+      LIMIT 6
+  `),
+  getDirDirectExtensionsStmt: db.prepare(`
+      SELECT DISTINCT extension
+      FROM music
+      WHERE directory_id = ?
+  `),
+  getDirSubtreeExtensionsStmt: db.prepare(`
+      SELECT DISTINCT extension
+      FROM music
+      WHERE path >= ? AND path < ?
+      LIMIT 6
+  `),
 }
 
 module.exports = {

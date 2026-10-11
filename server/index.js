@@ -22,6 +22,7 @@ const axiosRetry = require('axios-retry').default;
 const { XMLParser } = require('fast-xml-parser');
 
 const { dbStatements } = require('./database.js');
+const { resolveDirectoryMetadata } = require('./directory-metadata');
 const { requireAuth, optionalAuth } = require('./middleware/auth.js');
 const { validate } = require('./middleware/validate');
 const { SettingsSchema, FavoriteSchema, PlaybackSchema } = require('./schemas');
@@ -758,14 +759,28 @@ app.get(clientRoutes, cache1Hour, async (req, res) => {
     return res.status(404).send(`${indexFilename} not found`);
   }
 
-  const { title, description, url, image, songId, scriptTag } = getHtmlInjectionsForRequest(req);
+  const {
+    title,
+    description,
+    url,
+    image,
+    songId,
+    scriptTag,
+    schemaJsonLd,
+    noscriptContent,
+  } = getHtmlInjectionsForRequest(req);
+
   const previewImage = songId ? `https://chiptune.app/preview?s=${encodeURIComponent(songId)}` : image;
+  const defaultNoscript = 'You need to enable JavaScript to run this app.';
+
   const finalHtml = html
     .replace(/__TITLE__/g, title)
     .replace(/__DESCRIPTION__/g, description)
     .replace(/__URL__/g, url)
     .replace(/__IMAGE__/g, previewImage)
-    .replace(/<chip-config><\/chip-config>/g, scriptTag);
+    .replace(/<chip-config><\/chip-config>/g, scriptTag)
+    .replace(/__SCHEMA_JSON_LD__/g, schemaJsonLd || '')
+    .replace(/__NOSCRIPT_CONTENT__/g, noscriptContent || defaultNoscript);
 
   res.send(finalHtml);
 });
@@ -780,14 +795,45 @@ app.listen(port, hostname, () => {
 });
 
 function getHtmlInjectionsForRequest(req) {
+  // 1. Dedicated isolation for /top (prevent query param title/canonical leakage)
+  if (req.path === '/top') {
+    return {
+      title: 'Top Charts - Most Played & Favorited Chiptunes',
+      description: 'Explore the all-time and monthly most played and most favorited chiptune tracks and video game music on Chip Player JS.',
+      url: 'https://chiptune.app/top',
+      image: 'https://chiptune.app/chip-player-1200x640.png',
+      songId: null,
+      scriptTag: '',
+      schemaJsonLd: '',
+      noscriptContent: '<div class="seo-crawler-content"><h1>Top Charts</h1><p>Most played and most favorited chiptune tracks on Chip Player JS.</p></div>',
+    };
+  }
+
+  // 2. Directory browse pages (/browse and /browse/*)
+  if (req.path === '/browse' || req.path.startsWith('/browse/')) {
+    const dirMeta = resolveDirectoryMetadata(req.path);
+    return {
+      title: dirMeta.title,
+      description: dirMeta.description,
+      url: dirMeta.url,
+      image: dirMeta.image,
+      songId: null,
+      scriptTag: '',
+      schemaJsonLd: dirMeta.schemaJsonLd,
+      noscriptContent: dirMeta.noscriptContent,
+    };
+  }
+
   let url = `https://chiptune.app${req.path}`;
   let song;
-  let image = 'https://chiptune.app/chip-player.png';
+  let image = 'https://chiptune.app/chip-player-1200x640.png';
   let title = 'Chip Player JS';
-  let description = 'An online MIDI and VGM music player with SoundFont support. Over 300,000 songs, focused on performance and nostalgia. Play VGM, SPC, NSF, S3M, XM, MOD and more.';
+  let description = 'An online MIDI and VGM music player with SoundFont support. Over 380,000 songs, focused on performance and nostalgia. Play VGM, SPC, NSF, S3M, XM, MOD and more.';
 
   let songId = null;
   let scriptTag = '';
+  let schemaJsonLd = '';
+  let noscriptContent = '';
 
   // Extract 'play' param from query string
   const play = req.query.play;
@@ -798,8 +844,8 @@ function getHtmlInjectionsForRequest(req) {
       song = getSongByIdStmt.get(`${play}%`);
 
       // more HVSC hacks ···
-      if (song.path.endsWith('.sid')) {
-        const sidMeta = getSidMetadataByPathStmt.get('_'+song.path);
+      if (song && song.path.endsWith('.sid')) {
+        const sidMeta = getSidMetadataByPathStmt.get('_' + song.path);
         if (sidMeta) {
           song.title = sidMeta.name;
           song.artist = sidMeta.author;
@@ -819,7 +865,7 @@ function getHtmlInjectionsForRequest(req) {
       const chipConfig = {
         songId: song.song_id,
         songPath: song.path,
-      }
+      };
       scriptTag = `<script>window.__chipConfig = ${JSON.stringify(chipConfig)};</script>`;
 
       if (song.title) {
@@ -827,7 +873,7 @@ function getHtmlInjectionsForRequest(req) {
         if (song.artist) title += ` - ${song.artist}`;
         else if (song.game) title += ` - ${song.game}`;
       } else {
-        title = path.basename(reqPath);
+        title = path.basename(song.path || play);
       }
 
       const parts = [];
@@ -842,15 +888,23 @@ function getHtmlInjectionsForRequest(req) {
         image = `https://chiptune.app/catalog/${encodedPath}`;
       }
       songId = song.song_id;
-    }
-  } else {
-    if (req.path === '/top') {
-      title = 'Chip Player JS - Top Charts';
-    } else if (req.path.startsWith('/browse/')) {
-      // Use up to last 2 path segments for title
-      const pathSegments = req.path.replace(/^\/browse\/+/, '').split('/').filter(s => s);
-      const pathSegment = pathSegments.slice(-2).join('/');
-      title = `Chip Player JS - ${decodeURIComponent(pathSegment)}`;
+
+      // MusicRecording structured data
+      const songSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'MusicRecording',
+        name: song.title || path.basename(song.path || play),
+        url: url,
+      };
+      if (song.artist) {
+        songSchema.byArtist = { '@type': 'MusicGroup', name: song.artist };
+      }
+      if (song.game) {
+        songSchema.inAlbum = { '@type': 'MusicAlbum', name: song.game };
+      }
+      schemaJsonLd = `<script type="application/ld+json">${JSON.stringify(songSchema)}</script>`;
+
+      noscriptContent = `<div class="seo-crawler-content"><h1>${title}</h1><p>${description}</p><p><a href="${url}">Play track</a></p></div>`;
     }
   }
 
@@ -861,5 +915,7 @@ function getHtmlInjectionsForRequest(req) {
     image,
     songId,
     scriptTag,
+    schemaJsonLd,
+    noscriptContent,
   };
 }
