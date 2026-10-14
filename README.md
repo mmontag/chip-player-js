@@ -168,6 +168,20 @@ emcmake cmake ..                 # Cmake will generate a Makefile
 emmake make
 ```
 
+#### External project: libgsf
+
+Our goal is to produce **../libgsf/build/libviogsf.a** (assumes you have cloned **libgsf** side-by-side with chip-player-js).
+
+```sh
+git clone https://github.com/joshbarrass/viogsf.git libgsf
+cd libgsf/
+source ~/src/emsdk/emsdk_env.sh  # load the emscripten environment variables
+mkdir build                      # create a build folder for Cmake output
+cd build
+emcmake cmake ..                 # Cmake will generate a Makefile
+emmake make
+```
+
 #### External project: libvgm
 
 Our goal is to produce **../libvgm/build/bin/libvgm-emu.a**, **../libvgm/build/bin/libvgm-player.a**, and **../libvgm/build/bin/libvgm-util.a** (assumes you have cloned **libvgm** side-by-side with chip-player-js.

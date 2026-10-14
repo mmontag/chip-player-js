@@ -298,6 +298,35 @@ const chipModules = [
     ],
   },
   {
+    name: 'gsf',
+    enabled: true,
+    sourceFiles: [
+      '../libgsf/build/libviogsf.a',
+      'src/bindings/gsf-wrapper.cpp',
+    ],
+    exportedFunctions: [
+      '_gsf_load_file',
+      '_gsf_get_duration_ms',
+      '_gsf_get_position_ms',
+      '_gsf_seek_ms',
+      '_gsf_render_audio',
+      '_gsf_set_indefinite_playback',
+      '_gsf_get_indefinite_playback',
+      '_gsf_set_channel_mask',
+      '_gsf_get_channel_mask',
+      '_gsf_shutdown',
+    ],
+    flags: [
+      '-Ipsflib',
+      '-I../libgsf',
+      '-DEMU_COMPILE',
+      '-DEMU_LITTLE_ENDIAN',
+      '-DNO_DEBUG_LOGS',
+      '-Wno-pointer-sign',
+      '-fno-strict-aliasing',
+    ],
+  },
+  {
     name: 'mdx',
     enabled: true,
     sourceFiles: [
