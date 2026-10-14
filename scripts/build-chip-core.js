@@ -317,6 +317,11 @@ const chipModules = [
       '_gsf_set_speed',
       '_gsf_get_speed',
       '_gsf_get_driver_type',
+      '_gsf_get_track_count',
+      '_gsf_set_track_mask',
+      '_gsf_get_track_mask',
+      '_gsf_get_track_type',
+      '_gsf_get_track_name',
       '_gsf_shutdown',
     ],
     flags: [

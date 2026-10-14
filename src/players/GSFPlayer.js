@@ -90,7 +90,14 @@ export default class GSFPlayer extends Player {
         this.resolveParamValues(persistedSettings);
         this.setTempo(persistedSettings.tempo || 1);
         this.metadata = { title: pathe.basename(filename) };
-        this.voiceMask = Array(GBA_VOICE_NAMES.length).fill(true);
+
+        const driverType = this.core._gsf_get_driver_type ? this.core._gsf_get_driver_type() : 0;
+        const numTracks = (driverType === 1 && this.core._gsf_get_track_count)
+          ? this.core._gsf_get_track_count()
+          : GBA_VOICE_NAMES.length;
+        this.driverType = driverType;
+        this.numTracks = numTracks;
+        this.voiceMask = Array(numTracks).fill(true);
 
         this.resume();
         this.emit('playerStateUpdate', {
@@ -114,6 +121,19 @@ export default class GSFPlayer extends Player {
     if (samplesWritten <= 0) {
       this.handleSongEnd();
       return;
+    }
+
+    const currentDriverType = this.core._gsf_get_driver_type ? this.core._gsf_get_driver_type() : 0;
+    if (currentDriverType !== this.driverType) {
+      this.driverType = currentDriverType;
+      const numTracks = (currentDriverType === 1 && this.core._gsf_get_track_count)
+        ? this.core._gsf_get_track_count()
+        : GBA_VOICE_NAMES.length;
+      this.numTracks = numTracks;
+      this.voiceMask = Array(numTracks).fill(true);
+      this.emit('playerStateUpdate', {
+        ...this.getBasePlayerState(),
+      });
     }
 
     for (ch = 0; ch < channels.length; ch++) {
@@ -160,7 +180,46 @@ export default class GSFPlayer extends Player {
   }
 
   getVoiceName(index) {
+    if (this.core._gsf_get_track_name) {
+      return this.core.UTF8ToString(this.core._gsf_get_track_name(index));
+    }
     return GBA_VOICE_NAMES[index] || `Channel ${index + 1}`;
+  }
+
+  getVoiceGroups() {
+    const driverType = this.core._gsf_get_driver_type ? this.core._gsf_get_driver_type() : 0;
+    if (driverType === 1) {
+      const numTracks = this.core._gsf_get_track_count ? this.core._gsf_get_track_count() : 0;
+      return [{
+        name: 'Sequencer Tracks',
+        icon: true,
+        voices: Array.from({ length: numTracks }, (_, i) => ({
+          idx: i,
+          name: this.getVoiceName(i),
+        })),
+      }];
+    }
+
+    return [
+      {
+        name: 'Game Boy PSG',
+        icon: true,
+        voices: [
+          { idx: 0, name: 'Square 1' },
+          { idx: 1, name: 'Square 2' },
+          { idx: 2, name: 'Wave' },
+          { idx: 3, name: 'Noise' },
+        ],
+      },
+      {
+        name: 'DirectSound',
+        icon: true,
+        voices: [
+          { idx: 4, name: 'DirectSound A' },
+          { idx: 5, name: 'DirectSound B' },
+        ],
+      },
+    ];
   }
 
   getVoiceMask() {
@@ -169,16 +228,26 @@ export default class GSFPlayer extends Player {
 
   setVoiceMask(voiceMask) {
     if (!voiceMask) return;
-    let bitmask = 0;
-    if (voiceMask[0]) bitmask |= 0x001; // Pulse 1
-    if (voiceMask[1]) bitmask |= 0x002; // Pulse 2
-    if (voiceMask[2]) bitmask |= 0x004; // Wave
-    if (voiceMask[3]) bitmask |= 0x008; // Noise
-    if (voiceMask[4]) bitmask |= 0x100; // DirectSound A
-    if (voiceMask[5]) bitmask |= 0x200; // DirectSound B
-
-    this.core._gsf_set_channel_mask(bitmask);
     this.voiceMask = voiceMask;
+
+    const driverType = this.core._gsf_get_driver_type ? this.core._gsf_get_driver_type() : 0;
+    if (driverType === 1 && this.core._gsf_set_track_mask) {
+      let bitmask = 0;
+      for (let i = 0; i < voiceMask.length; i++) {
+        if (voiceMask[i]) bitmask |= (1 << i);
+      }
+      this.core._gsf_set_track_mask(bitmask);
+    } else {
+      let bitmask = 0;
+      if (voiceMask[0]) bitmask |= 0x001; // Pulse 1
+      if (voiceMask[1]) bitmask |= 0x002; // Pulse 2
+      if (voiceMask[2]) bitmask |= 0x004; // Wave
+      if (voiceMask[3]) bitmask |= 0x008; // Noise
+      if (voiceMask[4]) bitmask |= 0x100; // DirectSound A
+      if (voiceMask[5]) bitmask |= 0x200; // DirectSound B
+      this.core._gsf_set_channel_mask(bitmask);
+    }
+
     this.emit('playerStateUpdate', {
       voiceMask: this.voiceMask,
     });

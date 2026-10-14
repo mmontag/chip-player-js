@@ -227,6 +227,18 @@ class input_gsf {
 
   #define MP2K_ID_NUMBER 0x68736D53 // 'Smsh'
 
+  #define MPT_FLG_VOLSET 0x01
+  #define MPT_FLG_VOLCHG 0x03
+  #define MPT_FLG_PITSET 0x04
+  #define MPT_FLG_PITCHG 0x0C
+  #define MPT_FLG_START  0x40
+  #define MPT_FLG_EXIST  0x80
+
+  #define TONEDATA_TYPE_CGB 0x07
+  #define TONEDATA_TYPE_FIX 0x08
+  #define TONEDATA_TYPE_SPL 0x40
+  #define TONEDATA_TYPE_RHY 0x80
+
   struct MP2K_MusicPlayerInfo {
     uint32_t songHeader;       // 0x00
     uint32_t status;           // 0x04
@@ -251,12 +263,68 @@ class input_gsf {
     uint32_t musicPlayerNext;  // 0x3C
   };
 
+  struct MP2K_MusicPlayerTrack {
+    uint8_t flags;            // 0x00
+    uint8_t wait;             // 0x01
+    uint8_t patternLevel;     // 0x02
+    uint8_t repN;             // 0x03
+    uint8_t gateTime;         // 0x04
+    uint8_t key;              // 0x05
+    uint8_t velocity;         // 0x06
+    uint8_t runningStatus;    // 0x07
+    uint8_t keyM;             // 0x08
+    uint8_t pitM;             // 0x09
+    int8_t  keyShift;         // 0x0A
+    int8_t  keyShiftX;        // 0x0B
+    int8_t  tune;             // 0x0C
+    uint8_t pitX;             // 0x0D
+    int8_t  bend;             // 0x0E
+    uint8_t bendRange;        // 0x0F
+    uint8_t volMR;            // 0x10
+    uint8_t volML;            // 0x11
+    uint8_t vol;              // 0x12
+    uint8_t volX;             // 0x13
+    int8_t  pan;              // 0x14
+    int8_t  panX;             // 0x15
+    int8_t  modM;             // 0x16
+    uint8_t mod;              // 0x17
+    uint8_t modT;             // 0x18
+    uint8_t lfoSpeed;         // 0x19
+    uint8_t lfoSpeedC;        // 0x1A
+    uint8_t lfoDelay;         // 0x1B
+    uint8_t lfoDelayC;        // 0x1C
+    uint8_t priority;         // 0x1D
+    uint8_t pseudoEchoVolume; // 0x1E
+    uint8_t pseudoEchoLength; // 0x1F
+    uint32_t chan;            // 0x20
+    uint8_t tone_type;        // 0x24
+    uint8_t tone_key;         // 0x25
+    uint8_t tone_length;      // 0x26
+    uint8_t tone_pan_sweep;   // 0x27
+    uint32_t tone_wav;        // 0x28
+    uint8_t tone_attack;      // 0x2C
+    uint8_t tone_decay;       // 0x2D
+    uint8_t tone_sustain;     // 0x2E
+    uint8_t tone_release;     // 0x2F
+    uint8_t gap[10];          // 0x30..0x39
+    uint16_t timer;           // 0x3A..0x3B
+    uint32_t unk_3C;          // 0x3C..0x3F
+    uint32_t cmdPtr;          // 0x40..0x43
+    uint32_t patternStack[3]; // 0x44..0x4F
+  };
+
+  static_assert(sizeof(MP2K_MusicPlayerInfo) == 64, "MP2K_MusicPlayerInfo size must be 64 bytes");
+  static_assert(sizeof(MP2K_MusicPlayerTrack) == 80, "MP2K_MusicPlayerTrack size must be 80 bytes");
+  static_assert(offsetof(MP2K_MusicPlayerTrack, volX) == 0x13, "volX offset must be 0x13");
+  static_assert(offsetof(MP2K_MusicPlayerTrack, tone_type) == 0x24, "tone_type offset must be 0x24");
+
   enum GsfDriverType {
     DRIVER_UNKNOWN = 0,
     DRIVER_MP2K = 1,
   };
 
   double m_speed = 1.0;
+  uint32_t m_track_mask = 0xFFFFFFFF;
   GsfDriverType driver_type = DRIVER_UNKNOWN;
   std::vector<MP2K_MusicPlayerInfo*> mp2k_players;
 
@@ -314,6 +382,7 @@ class input_gsf {
       if (!mp2k_players.empty()) {
         driver_type = DRIVER_MP2K;
         apply_speed();
+        apply_track_mask();
         return;
       }
     }
@@ -339,6 +408,48 @@ class input_gsf {
     if (!mp2k_players.empty()) {
       driver_type = DRIVER_MP2K;
       apply_speed();
+      apply_track_mask();
+    }
+  }
+
+  MP2K_MusicPlayerInfo* get_primary_player() const {
+    MP2K_MusicPlayerInfo *best = nullptr;
+    int max_tracks = -1;
+    for (auto *p : mp2k_players) {
+      if (p && p->ident == MP2K_ID_NUMBER) {
+        if ((int)p->trackCount > max_tracks) {
+          max_tracks = p->trackCount;
+          best = p;
+        }
+      }
+    }
+    return best;
+  }
+
+  void apply_track_mask() {
+    if (driver_type != DRIVER_MP2K) return;
+    MP2K_MusicPlayerInfo *player = get_primary_player();
+    if (!player || player->ident != MP2K_ID_NUMBER) return;
+
+    MP2K_MusicPlayerTrack *tracks = (MP2K_MusicPlayerTrack*)gba_map_address(player->tracks);
+    if (!tracks) return;
+
+    for (uint8_t i = 0; i < player->trackCount; i++) {
+      MP2K_MusicPlayerTrack &trk = tracks[i];
+      if (!(trk.flags & MPT_FLG_EXIST)) continue;
+
+      bool enabled = (m_track_mask & (1U << i)) != 0;
+      if (!enabled) {
+        if (trk.volX != 0) {
+          trk.volX = 0;
+          trk.flags |= MPT_FLG_VOLCHG;
+        }
+      } else {
+        if (trk.volX == 0) {
+          trk.volX = 64; // default 0x40
+          trk.flags |= MPT_FLG_VOLCHG;
+        }
+      }
     }
   }
 
@@ -379,6 +490,7 @@ public:
     }
     mp2k_players.clear();
     driver_type = DRIVER_UNKNOWN;
+    m_track_mask = 0xFFFFFFFF;
     eof = false;
     data_written = 0;
     musical_samples_written = 0.0;
@@ -397,6 +509,114 @@ public:
 
   GsfDriverType get_driver_type() const {
     return driver_type;
+  }
+
+  int get_track_count() const {
+    if (driver_type != DRIVER_MP2K) return 6;
+    MP2K_MusicPlayerInfo *player = get_primary_player();
+    if (!player) return 6;
+    MP2K_MusicPlayerTrack *tracks = (MP2K_MusicPlayerTrack*)gba_map_address(player->tracks);
+    if (!tracks) return (int)player->trackCount;
+
+    int count = 0;
+    for (int i = 0; i < (int)player->trackCount; i++) {
+      if (tracks[i].flags & MPT_FLG_EXIST) {
+        count = i + 1;
+      }
+    }
+    return count > 0 ? count : (int)player->trackCount;
+  }
+
+  int get_track_type(int track_index) const {
+    if (driver_type != DRIVER_MP2K) return -1;
+    MP2K_MusicPlayerInfo *player = get_primary_player();
+    if (!player) return -1;
+    if (track_index < 0 || track_index >= (int)player->trackCount) return -1;
+
+    MP2K_MusicPlayerTrack *tracks = (MP2K_MusicPlayerTrack*)gba_map_address(player->tracks);
+    if (!tracks) return -1;
+
+    uint8_t t = tracks[track_index].tone_type;
+    if (t & TONEDATA_TYPE_RHY) {
+      return 5; // Drums
+    }
+    if (t & TONEDATA_TYPE_CGB) {
+      uint8_t cgb_ch = t & 0x07;
+      if (cgb_ch >= 1 && cgb_ch <= 4) return cgb_ch; // 1: SQ1, 2: SQ2, 3: Wave, 4: Noise
+    }
+    return 0; // PCM
+  }
+
+  const char* get_track_name(int track_index) const {
+    static char track_name_buf[64];
+    static const char *const gba_hw_voice_names[] = {
+      "Square 1",
+      "Square 2",
+      "Wave",
+      "Noise",
+      "DirectSound A",
+      "DirectSound B",
+    };
+
+    if (driver_type != DRIVER_MP2K) {
+      if (track_index >= 0 && track_index < 6) {
+        return gba_hw_voice_names[track_index];
+      }
+      snprintf(track_name_buf, sizeof(track_name_buf), "Channel %d", track_index + 1);
+      return track_name_buf;
+    }
+
+    int total_tracks = get_track_count();
+    if (track_index < 0 || track_index >= total_tracks) {
+      snprintf(track_name_buf, sizeof(track_name_buf), "Ch %d", track_index + 1);
+      return track_name_buf;
+    }
+
+    int pcm_count = 0;
+    int drum_count = 0;
+    int sq1_count = 0;
+    int sq2_count = 0;
+    int wave_count = 0;
+    int noise_count = 0;
+
+    for (int i = 0; i <= track_index; i++) {
+      int type = get_track_type(i);
+      if (type == 5) drum_count++;
+      else if (type == 1) sq1_count++;
+      else if (type == 2) sq2_count++;
+      else if (type == 3) wave_count++;
+      else if (type == 4) noise_count++;
+      else pcm_count++;
+    }
+
+    int target_type = get_track_type(track_index);
+    if (target_type == 5) {
+      snprintf(track_name_buf, sizeof(track_name_buf), "Drum %d", drum_count);
+    } else if (target_type == 1) {
+      if (sq1_count > 1) snprintf(track_name_buf, sizeof(track_name_buf), "Square 1 (%d)", sq1_count);
+      else snprintf(track_name_buf, sizeof(track_name_buf), "Square 1");
+    } else if (target_type == 2) {
+      if (sq2_count > 1) snprintf(track_name_buf, sizeof(track_name_buf), "Square 2 (%d)", sq2_count);
+      else snprintf(track_name_buf, sizeof(track_name_buf), "Square 2");
+    } else if (target_type == 3) {
+      if (wave_count > 1) snprintf(track_name_buf, sizeof(track_name_buf), "Wave (%d)", wave_count);
+      else snprintf(track_name_buf, sizeof(track_name_buf), "Wave");
+    } else if (target_type == 4) {
+      if (noise_count > 1) snprintf(track_name_buf, sizeof(track_name_buf), "Noise (%d)", noise_count);
+      else snprintf(track_name_buf, sizeof(track_name_buf), "Noise");
+    } else {
+      snprintf(track_name_buf, sizeof(track_name_buf), "PCM %d", pcm_count);
+    }
+    return track_name_buf;
+  }
+
+  void set_track_mask(uint32_t mask) {
+    m_track_mask = mask;
+    apply_track_mask();
+  }
+
+  uint32_t get_track_mask() const {
+    return m_track_mask;
   }
 
   int open(const char *p_path) {
@@ -425,6 +645,7 @@ public:
     sound_out.reset();
     mp2k_players.clear();
     driver_type = DRIVER_UNKNOWN;
+    m_track_mask = 0xFFFFFFFF;
 
     gba = new GBASystem();
     if (!gba) return -1;
@@ -514,6 +735,7 @@ public:
     while (sound_out.ring_buffer.data_available() < required_samples) {
       CPULoop(gba, 250000);
       apply_speed();
+      apply_track_mask();
       watchdog++;
       if (watchdog > 100) break; // Safeguard against runaway CPU loops
     }
@@ -656,6 +878,26 @@ float gsf_get_speed() {
 
 int32_t gsf_get_driver_type() {
   return (int32_t)g_input_gsf.get_driver_type();
+}
+
+int32_t gsf_get_track_count() {
+  return g_input_gsf.get_track_count();
+}
+
+void gsf_set_track_mask(uint32_t mask) {
+  g_input_gsf.set_track_mask(mask);
+}
+
+uint32_t gsf_get_track_mask() {
+  return g_input_gsf.get_track_mask();
+}
+
+int32_t gsf_get_track_type(int32_t track_index) {
+  return g_input_gsf.get_track_type(track_index);
+}
+
+const char* gsf_get_track_name(int32_t track_index) {
+  return g_input_gsf.get_track_name(track_index);
 }
 
 void gsf_shutdown() {
