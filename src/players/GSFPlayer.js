@@ -124,13 +124,15 @@ export default class GSFPlayer extends Player {
     }
 
     const currentDriverType = this.core._gsf_get_driver_type ? this.core._gsf_get_driver_type() : 0;
-    if (currentDriverType !== this.driverType) {
+    if (currentDriverType !== this.driverType && !(this.driverType === 1 && currentDriverType === 0)) {
       this.driverType = currentDriverType;
       const numTracks = (currentDriverType === 1 && this.core._gsf_get_track_count)
         ? this.core._gsf_get_track_count()
         : GBA_VOICE_NAMES.length;
       this.numTracks = numTracks;
-      this.voiceMask = Array(numTracks).fill(true);
+      if (!this.voiceMask || this.voiceMask.length !== numTracks) {
+        this.voiceMask = Array(numTracks).fill(true);
+      }
       this.emit('playerStateUpdate', {
         ...this.getBasePlayerState(),
       });
@@ -176,7 +178,10 @@ export default class GSFPlayer extends Player {
   }
 
   seekMs(positionMs) {
-    this.muteAudioDuringCall(this.audioNode, () => this.core._gsf_seek_ms(positionMs));
+    this.muteAudioDuringCall(this.audioNode, () => {
+      this.core._gsf_seek_ms(positionMs);
+      this.setVoiceMask(this.voiceMask);
+    });
   }
 
   getVoiceName(index) {
