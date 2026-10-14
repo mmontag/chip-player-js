@@ -43,6 +43,7 @@ export default class GSFPlayer extends Player {
     this.name = 'GSF Player';
     this.fileExtensions = fileExtensions;
     this.voiceMask = Array(GBA_VOICE_NAMES.length).fill(true);
+    this.speed = 1.0;
     this.buffer = this.core._malloc(this.bufferSize * 4); // 2 ch, 16-bit
   }
 
@@ -87,6 +88,7 @@ export default class GSFPlayer extends Player {
         }
 
         this.resolveParamValues(persistedSettings);
+        this.setTempo(persistedSettings.tempo || 1);
         this.metadata = { title: pathe.basename(filename) };
         this.voiceMask = Array(GBA_VOICE_NAMES.length).fill(true);
 
@@ -140,6 +142,17 @@ export default class GSFPlayer extends Player {
 
   isPlaying() {
     return !this.isPaused();
+  }
+
+  getTempo() {
+    return this.speed;
+  }
+
+  setTempo(val) {
+    this.speed = Math.max(0.1, Math.min(2.0, val));
+    if (this.core._gsf_set_speed) {
+      this.core._gsf_set_speed(this.speed);
+    }
   }
 
   seekMs(positionMs) {

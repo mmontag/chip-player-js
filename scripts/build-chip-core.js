@@ -314,6 +314,9 @@ const chipModules = [
       '_gsf_get_indefinite_playback',
       '_gsf_set_channel_mask',
       '_gsf_get_channel_mask',
+      '_gsf_set_speed',
+      '_gsf_get_speed',
+      '_gsf_get_driver_type',
       '_gsf_shutdown',
     ],
     flags: [
