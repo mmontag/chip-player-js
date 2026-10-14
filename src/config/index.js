@@ -14,10 +14,12 @@ const REPLACE_STATE_ON_SEEK = false;
 const FORMATS = [
   'ay',
   'gbs',
+  'gsf',
   'it',
   'mdx',
   'mid',
   'midi',
+  'minigsf',
   'miniusf',
   'mod',
   'mus',

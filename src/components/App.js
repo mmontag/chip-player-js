@@ -36,6 +36,7 @@ import MIDIPlayer from '../players/MIDIPlayer';
 import V2MPlayer from '../players/V2MPlayer';
 import XMPPlayer from '../players/XMPPlayer';
 import N64Player from '../players/N64Player';
+import GSFPlayer from '../players/GSFPlayer';
 import MDXPlayer from '../players/MDXPlayer';
 import VGMPlayer from '../players/VGMPlayer';
 import SIDPlayer from '../players/SIDPlayer';
@@ -171,6 +172,7 @@ class App extends React.Component {
       XMPPlayer,
       V2MPlayer,
       N64Player,
+      GSFPlayer,
       MDXPlayer,
       VGMPlayer,
       SIDPlayer,
