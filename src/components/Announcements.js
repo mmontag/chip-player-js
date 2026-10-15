@@ -16,6 +16,10 @@ export default function Announcements() {
 ╚═════════════════╝
 `}
       </p>
+      <h3>2026-10-15</h3>
+      <p>
+        Added <Link to="/browse/Nintendo Game Boy Advance">Game Boy Advance</Link> support with 22,000 new tunes.
+      </p>
       <h3>2026-10-07</h3>
       <p>
         Imported the full October 2026 <Link to="/browse/VGM Rips">VGM Rips</Link> archive, organized for easy browsing. This brings 70,000 new songs to the catalog.
