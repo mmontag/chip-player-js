@@ -129,9 +129,7 @@ structuralTestCases.forEach(({ path: testPath, expectedStrategy, expectedTitle, 
 
   // Schema.org JSON-LD checks
   assert(meta.schemaJsonLd, `Schema JSON-LD should exist for ${testPath}`);
-  const jsonMatch = meta.schemaJsonLd.match(/<script type="application\/ld\+json">(.*?)<\/script>/);
-  assert(jsonMatch, `Schema should be inside <script> tag: ${meta.schemaJsonLd}`);
-  const parsedSchema = JSON.parse(jsonMatch[1]);
+  const parsedSchema = JSON.parse(meta.schemaJsonLd);
   assert(Array.isArray(parsedSchema), 'Schema should be an array with BreadcrumbList & CollectionPage');
   assert.strictEqual(parsedSchema[0]['@type'], 'BreadcrumbList');
   assert.strictEqual(parsedSchema[1]['@type'], 'CollectionPage');

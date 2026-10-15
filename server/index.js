@@ -903,7 +903,7 @@ function getHtmlInjectionsForRequest(req) {
       if (song.game) {
         songSchema.inAlbum = { '@type': 'MusicAlbum', name: song.game };
       }
-      schemaJsonLd = `<script type="application/ld+json">${JSON.stringify(songSchema)}</script>`;
+      schemaJsonLd = JSON.stringify(songSchema);
 
       noscriptContent = `<div class="seo-crawler-content"><h1>${title}</h1><p>${description}</p><p><a href="${url}">Play track</a></p></div>`;
     }

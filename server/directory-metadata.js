@@ -683,7 +683,7 @@ function resolveDirectoryMetadata(rawBrowsePath, options = {}) {
   const collectionSchema = buildCollectionPageJsonLd(title, description, canonicalUrl, image);
   const combinedSchema = [breadcrumbSchema, collectionSchema];
 
-  const schemaJsonLd = `<script type="application/ld+json">${JSON.stringify(combinedSchema)}</script>`;
+  const schemaJsonLd = JSON.stringify(combinedSchema);
   const noscriptContent = buildNoscriptHtml(
     title,
     description,
