@@ -1,6 +1,7 @@
 import Player from "./Player.js";
 import { ensureEmscFileWithData, ensureEmscFileWithUrl, pathJoin } from '../util';
 import { CATALOG_PREFIX } from '../config';
+import { parsePSF } from '../psf';
 import pathe from 'pathe';
 import autoBind from 'auto-bind';
 
@@ -51,23 +52,14 @@ export default class GSFPlayer extends Player {
     let err;
     this.filepathMeta = Player.metadataFromFilepath(filename);
 
-    const decoder = new TextDecoder('latin1');
-    const gsfStr = decoder.decode(data);
-
-    // Extract all _lib, _lib2, etc. dependencies if present
-    const libMatches = gsfStr.matchAll(/_lib\d*=\s*([^\r\n]+)/gi);
-    const gsflibs = [];
-    for (const match of libMatches) {
-      if (match[1]) {
-        gsflibs.push(match[1].trim());
-      }
-    }
+    const psf = parsePSF(data, { filename, defaultSystem: 'Game Boy Advance' });
+    this.metadata = psf;
 
     const dir = pathe.dirname(filename);
     const fsFilename = pathJoin(MOUNTPOINT, filename);
     const filePromises = [
       ensureEmscFileWithData(this.core, fsFilename, data),
-      ...gsflibs.map(gsflib => {
+      ...psf.libraries.map(gsflib => {
         const fsGsflibFilename = pathJoin(MOUNTPOINT, dir, gsflib);
         const url = pathJoin(CATALOG_PREFIX, dir, gsflib);
         return ensureEmscFileWithUrl(this.core, fsGsflibFilename, url);
@@ -89,7 +81,6 @@ export default class GSFPlayer extends Player {
 
         this.resolveParamValues(persistedSettings);
         this.setTempo(persistedSettings.tempo || 1);
-        this.metadata = { title: pathe.basename(filename) };
 
         const driverType = this.core._gsf_get_driver_type ? this.core._gsf_get_driver_type() : 0;
         const numTracks = (driverType === 1 && this.core._gsf_get_track_count)

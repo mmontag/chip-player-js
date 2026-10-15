@@ -12,6 +12,7 @@ const {
   MIDI_STRATEGIES,
   MIDI_STRATEGY_MAP,
 } = require('./metadata-midi');
+const { parsePSF } = require('../src/psf');
 
 /**
  * Extract metadata from a buffer based on the file extension.
@@ -255,52 +256,8 @@ function parseIT(buf) {
   };
 }
 
-function parsePsfTime(str) {
-  if (!str) return 0;
-  const parts = str.split(':').map(p => parseFloat(p));
-  if (parts.some(isNaN)) return 0;
-  if (parts.length === 3) {
-    return Math.round(parts[0] * 3600 + parts[1] * 60 + parts[2]);
-  } else if (parts.length === 2) {
-    return Math.round(parts[0] * 60 + parts[1]);
-  } else if (parts.length === 1) {
-    return Math.round(parts[0]);
-  }
-  return 0;
-}
-
 function parsePSFTags(buf, defaultSystem = 'Game Boy Advance') {
-  if (!buf || buf.length < 5) return { system: defaultSystem };
-  const tagSignature = Buffer.from('[TAG]');
-  const idx = buf.lastIndexOf(tagSignature);
-  if (idx === -1) return { system: defaultSystem };
-
-  const tagText = buf.subarray(idx + 5).toString('utf8');
-  const lines = tagText.split(/\r?\n/);
-  const tags = {};
-  for (const line of lines) {
-    const eqIdx = line.indexOf('=');
-    if (eqIdx !== -1) {
-      const key = line.slice(0, eqIdx).trim().toLowerCase();
-      const val = line.slice(eqIdx + 1).trim();
-      tags[key] = val;
-    }
-  }
-
-  let duration = 0;
-  if (tags.length) {
-    duration = parsePsfTime(tags.length);
-  }
-
-  return {
-    title: tags.title,
-    artist: tags.artist,
-    game: tags.game,
-    copyright: tags.copyright || tags.year,
-    comment: tags.comment,
-    duration,
-    system: defaultSystem,
-  };
+  return parsePSF(buf, { defaultSystem });
 }
 
 
