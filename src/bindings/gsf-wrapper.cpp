@@ -551,16 +551,64 @@ public:
     if (!player) return -1;
     if (track_index < 0 || track_index >= (int)player->trackCount) return -1;
 
+    // 1. Static sequence analysis: inspect SongHeader and sequence bytecode in ROM
+    if (player->songHeader && gba) {
+      uint8_t *song_hdr = gba_map_address(player->songHeader);
+      if (song_hdr) {
+        uint8_t hdr_track_count = song_hdr[0];
+        uint32_t tone_table_gba = *(uint32_t*)(song_hdr + 4);
+        if (player->tone) tone_table_gba = player->tone;
+
+        if (track_index < (int)hdr_track_count) {
+          uint32_t part_gba = *(uint32_t*)(song_hdr + 8 + track_index * 4);
+          const uint8_t *seq = gba_map_address(part_gba);
+          const uint8_t *tone_table = gba_map_address(tone_table_gba);
+
+          if (seq && tone_table) {
+            int voice_id = -1;
+            for (int i = 0; i < 512; i++) {
+              uint8_t cmd = seq[i];
+              if (cmd == 0xBD) { // VOICE command
+                voice_id = seq[i + 1];
+                break;
+              }
+              if (cmd == 0xB1) break; // FINE (end of track)
+            }
+
+            if (voice_id < 0) voice_id = 0; // Default to voice 0 if no explicit VOICE command
+
+            if (gba_map_address(tone_table_gba + voice_id * 12 + 11)) {
+              const uint8_t *tone_entry = tone_table + voice_id * 12;
+              uint8_t t = tone_entry[0];
+              if (t & TONEDATA_TYPE_RHY) return 5; // Drums
+              uint8_t cgb = t & 0x07;
+              if (cgb >= 1 && cgb <= 4) return (int)cgb; // 1: SQ1, 2: SQ2, 3: Wave, 4: Noise
+              return 0; // PCM
+            }
+          }
+        }
+      }
+    }
+
+    // 2. Runtime fallback: check live track structure
     MP2K_MusicPlayerTrack *tracks = (MP2K_MusicPlayerTrack*)gba_map_address(player->tracks);
     if (!tracks) return -1;
 
     uint8_t t = tracks[track_index].tone_type;
+    uint32_t wav = tracks[track_index].tone_wav;
+
     if (t & TONEDATA_TYPE_RHY) {
       return 5; // Drums
     }
-    if (t & TONEDATA_TYPE_CGB) {
-      uint8_t cgb_ch = t & 0x07;
-      if (cgb_ch >= 1 && cgb_ch <= 4) return cgb_ch; // 1: SQ1, 2: SQ2, 3: Wave, 4: Noise
+
+    uint8_t cgb_ch = t & 0x07;
+    if (cgb_ch >= 1 && cgb_ch <= 4) {
+      // In MP2K, uninitialized tracks default to tone_type = 1 with tone_wav == 0 and ADSR == 0.
+      // Guard against treating uninitialized tracks as Square 1.
+      if (cgb_ch == 1 && wav == 0 && tracks[track_index].tone_attack == 0 && tracks[track_index].tone_sustain == 0) {
+        return 0; // Default to PCM
+      }
+      return (int)cgb_ch;
     }
     return 0; // PCM
   }
@@ -572,8 +620,8 @@ public:
       "Square 2",
       "Wave",
       "Noise",
-      "DirectSound A",
-      "DirectSound B",
+      "Left",
+      "Right",
     };
 
     if (driver_type != DRIVER_MP2K && m_cached_driver_type != DRIVER_MP2K) {
@@ -588,6 +636,23 @@ public:
     if (track_index < 0 || track_index >= total_tracks) {
       snprintf(track_name_buf, sizeof(track_name_buf), "Ch %d", track_index + 1);
       return track_name_buf;
+    }
+
+    int total_pcm = 0;
+    int total_drum = 0;
+    int total_sq1 = 0;
+    int total_sq2 = 0;
+    int total_wave = 0;
+    int total_noise = 0;
+
+    for (int i = 0; i < total_tracks; i++) {
+      int type = get_track_type(i);
+      if (type == 5) total_drum++;
+      else if (type == 1) total_sq1++;
+      else if (type == 2) total_sq2++;
+      else if (type == 3) total_wave++;
+      else if (type == 4) total_noise++;
+      else total_pcm++;
     }
 
     int pcm_count = 0;
@@ -611,21 +676,39 @@ public:
     if (target_type == 5) {
       snprintf(track_name_buf, sizeof(track_name_buf), "Drum %d", drum_count);
     } else if (target_type == 1) {
-      if (sq1_count > 1) snprintf(track_name_buf, sizeof(track_name_buf), "Square 1 (%d)", sq1_count);
+      if (total_sq1 > 1) snprintf(track_name_buf, sizeof(track_name_buf), "Square 1 (%d)", sq1_count);
       else snprintf(track_name_buf, sizeof(track_name_buf), "Square 1");
     } else if (target_type == 2) {
-      if (sq2_count > 1) snprintf(track_name_buf, sizeof(track_name_buf), "Square 2 (%d)", sq2_count);
+      if (total_sq2 > 1) snprintf(track_name_buf, sizeof(track_name_buf), "Square 2 (%d)", sq2_count);
       else snprintf(track_name_buf, sizeof(track_name_buf), "Square 2");
     } else if (target_type == 3) {
-      if (wave_count > 1) snprintf(track_name_buf, sizeof(track_name_buf), "Wave (%d)", wave_count);
+      if (total_wave > 1) snprintf(track_name_buf, sizeof(track_name_buf), "Wave (%d)", wave_count);
       else snprintf(track_name_buf, sizeof(track_name_buf), "Wave");
     } else if (target_type == 4) {
-      if (noise_count > 1) snprintf(track_name_buf, sizeof(track_name_buf), "Noise (%d)", noise_count);
+      if (total_noise > 1) snprintf(track_name_buf, sizeof(track_name_buf), "Noise (%d)", noise_count);
       else snprintf(track_name_buf, sizeof(track_name_buf), "Noise");
     } else {
       snprintf(track_name_buf, sizeof(track_name_buf), "PCM %d", pcm_count);
     }
     return track_name_buf;
+  }
+
+  bool has_dmg_channels() const {
+    if (driver_type == DRIVER_MP2K || m_cached_driver_type == DRIVER_MP2K) {
+      int total_tracks = get_track_count_internal();
+      for (int i = 0; i < total_tracks; i++) {
+        int type = get_track_type(i);
+        if (type >= 1 && type <= 4) return true;
+      }
+      return false;
+    }
+    if (gba && gba->ioMem) {
+      if (gba->ioMem[0x84] & 0x0F) return true;
+      for (int addr = 0x60; addr < 0x82; addr++) {
+        if (gba->ioMem[addr] != 0) return true;
+      }
+    }
+    return false;
   }
 
   const char* get_track_name(int track_index) const {
@@ -967,6 +1050,10 @@ int32_t gsf_get_track_type(int32_t track_index) {
 
 const char* gsf_get_track_name(int32_t track_index) {
   return g_input_gsf.get_track_name(track_index);
+}
+
+bool gsf_has_dmg_channels() {
+  return g_input_gsf.has_dmg_channels();
 }
 
 void gsf_shutdown() {

@@ -322,6 +322,7 @@ const chipModules = [
       '_gsf_get_track_mask',
       '_gsf_get_track_type',
       '_gsf_get_track_name',
+      '_gsf_has_dmg_channels',
       '_gsf_shutdown',
     ],
     flags: [

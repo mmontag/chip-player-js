@@ -16,8 +16,8 @@ const GBA_VOICE_NAMES = [
   'Square 2',
   'Wave',
   'Noise',
-  'DirectSound A',
-  'DirectSound B',
+  'Left',
+  'Right',
 ];
 
 export default class GSFPlayer extends Player {
@@ -195,19 +195,45 @@ export default class GSFPlayer extends Player {
     const driverType = this.core._gsf_get_driver_type ? this.core._gsf_get_driver_type() : 0;
     if (driverType === 1) {
       const numTracks = this.core._gsf_get_track_count ? this.core._gsf_get_track_count() : 0;
-      return [{
-        name: 'Sequencer Tracks',
-        icon: true,
-        voices: Array.from({ length: numTracks }, (_, i) => ({
+      const dmgVoices = [];
+      const directSoundVoices = [];
+
+      for (let i = 0; i < numTracks; i++) {
+        const type = this.core._gsf_get_track_type ? this.core._gsf_get_track_type(i) : 0;
+        const voice = {
           idx: i,
           name: this.getVoiceName(i),
-        })),
-      }];
+        };
+        if (type >= 1 && type <= 4) {
+          dmgVoices.push(voice);
+        } else {
+          directSoundVoices.push(voice);
+        }
+      }
+
+      const groups = [];
+      if (dmgVoices.length > 0) {
+        groups.push({
+          name: 'GameBoy DMG',
+          icon: true,
+          voices: dmgVoices,
+        });
+      }
+      if (directSoundVoices.length > 0) {
+        groups.push({
+          name: 'Direct Sound',
+          icon: true,
+          voices: directSoundVoices,
+        });
+      }
+      return groups;
     }
 
-    return [
-      {
-        name: 'Game Boy PSG',
+    const hasDmg = this.core._gsf_has_dmg_channels ? this.core._gsf_has_dmg_channels() : true;
+    const groups = [];
+    if (hasDmg) {
+      groups.push({
+        name: 'GameBoy DMG',
         icon: true,
         voices: [
           { idx: 0, name: 'Square 1' },
@@ -215,16 +241,19 @@ export default class GSFPlayer extends Player {
           { idx: 2, name: 'Wave' },
           { idx: 3, name: 'Noise' },
         ],
-      },
-      {
-        name: 'DirectSound',
-        icon: true,
-        voices: [
-          { idx: 4, name: 'DirectSound A' },
-          { idx: 5, name: 'DirectSound B' },
-        ],
-      },
-    ];
+      });
+    }
+
+    groups.push({
+      name: 'Direct Sound',
+      icon: true,
+      voices: [
+        { idx: 4, name: 'Left' },
+        { idx: 5, name: 'Right' },
+      ],
+    });
+
+    return groups;
   }
 
   getVoiceMask() {
