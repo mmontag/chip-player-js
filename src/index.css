@@ -18,6 +18,7 @@
     --button:     #66d;
     --selected:   #00f;
     --focus:      #00f;
+    --loop-region: #00f; /* shaded span of a song's looping section */
     --background: #008;
     --shadow:     #005;
     --border:     #ff0;  /* todo: replace instances of clickable with this */
@@ -112,7 +113,10 @@ a {
     cursor: pointer;
 }
 
-a:visited { color: var(--clickable); }
+/* Keep visited links the normal link color, not the browser's default visited
+   color. :where() drops the element's specificity so component classes (e.g.
+   .DirectoryLink-dim) still override this on visited links. */
+:where(a):visited { color: var(--clickable); }
 
 [data-theme="msdos"] {
 
@@ -373,9 +377,6 @@ body,#root {
     }
 }
 
-button.box-button.AppFooter-forward,
-button.box-button.AppFooter-back { padding: 0 var(--charW1); }
-
 .AppFooter-main {
     flex-grow: 1;
     overflow: auto;
@@ -423,6 +424,15 @@ button.box-button.AppFooter-back { padding: 0 var(--charW1); }
     top: calc((var(--charH) - var(--railH)) / 2);
     box-sizing: border-box;
     border: 1px solid var(--clickable);
+}
+
+.Slider-loop {
+    height: var(--charH);
+    top: 0;
+    position: absolute;
+    box-sizing: border-box;
+    background-color: var(--loop-region);
+    pointer-events: none;
 }
 
 .Slider-knob {
@@ -505,6 +515,8 @@ button.box-button.AppFooter-back { padding: 0 var(--charW1); }
 }
 .SongDetails-title { grid-area: title; color: var(--neutral4); display: flex; gap: var(--charW1); }
 .SongDetails-title a { color: var(--neutral4); }
+/* Which tune of a song folder is playing, for the ones with no label of their own. */
+.SongDetails-subtune { color: var(--neutral2); }
 .SongDetails-subtitle { grid-area: subtitle; }
 .SongDetails-filepath { grid-area: path; }
 .SongDetails-subtitle, .SongDetails-subtitle, .SongDetails-filepath {
@@ -543,7 +555,13 @@ button.IconButton {
 .Trash-button {
     cursor: pointer;
     background: initial;
+    margin-left: var(--charW1);
 }
+/* Local Files: the delete icon sits at the far right. Inactive by default,
+   yellow only on hover. */
+.Trash-button .inline-icon { background-color: var(--neutral2); }
+.Trash-button:hover .inline-icon,
+.Trash-button:focus-visible .inline-icon { background-color: var(--clickable); }
 
 .Visualizer {
     position: relative; display: flex; flex-direction: column; align-items: flex-end;
@@ -800,6 +818,18 @@ button.IconButton {
     align-items: center;
     justify-content: center;
     white-space: nowrap;
+}
+
+/* The Local Files panel while its listing is being built: centred, and tall
+   enough to read as the panel's own placeholder rather than a first row. Sized
+   in charH like the rest of the sheet -- the panel has no definite height to
+   centre a full-height box against. */
+.LocalFiles-message {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(20 * var(--charH));
+    text-align: center;
 }
 
 

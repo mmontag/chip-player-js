@@ -5,6 +5,112 @@ import axios from 'redaxios';
 
 const MULTI_SLASH_REGEX = /\/{2,}/g;
 
+/**
+ * A playable song is identified by a file path and an optional sub-tune index.
+ * A file containing multiple sub-tunes (NSF/NSFE/SID) exposes one SongRef per
+ * sub-tune; a single-song file is just a SongRef with subtune 0. This is the
+ * common currency for play contexts, favorites, and share links.
+ *
+ * @typedef {{ path: string, subtune: number }} SongRef
+ */
+
+/**
+ * Normalize anything that names a song into a SongRef.
+ * Accepts a path string, an existing SongRef, or a browse/search item.
+ */
+export function songRef(pathOrRef, subtune = 0) {
+  if (pathOrRef == null) return null;
+  if (typeof pathOrRef === 'object') {
+    return {
+      path: pathOrRef.path,
+      subtune: pathOrRef.subtune || 0,
+    };
+  }
+  return { path: pathOrRef, subtune: subtune || 0 };
+}
+
+/**
+ * Stable identity for a SongRef, usable as an object key or for === comparisons.
+ * NUL is used as the separator because it cannot appear in a path.
+ */
+export function songRefKey(pathOrRef, subtune = 0) {
+  const ref = songRef(pathOrRef, subtune);
+  if (!ref) return null;
+  return `${ref.path}\u0000${ref.subtune}`;
+}
+
+export function songRefsEqual(a, b) {
+  return songRefKey(a) === songRefKey(b);
+}
+
+/**
+ * Browse listing rows -> the play context: one SongRef per playable song.
+ *
+ * A `songfolder` row is one row but `count` songs, and the sequencer advances
+ * one SongRef at a time, so it expands here. The server gives that row the
+ * context index of its FIRST sub-tune and advances its index counter past the
+ * rest (`server/index.js`), so every row's `idx` still names its place in this
+ * list -- which is what a click hands to `playContext`. Directories are not
+ * playable and are dropped.
+ */
+export function listingToContext(items) {
+  const context = [];
+  for (const item of items || []) {
+    if (item.type === 'songfolder') {
+      const count = item.count > 0 ? item.count : 1;
+      for (let i = 0; i < count; i++) context.push(songRef(item.path, i));
+    } else if (item.type === 'file') {
+      context.push(songRef(item.path, item.subtune));
+    }
+  }
+  return context;
+}
+
+/**
+ * Whether two ordered lists of songs are the same, for comparing a live play
+ * context to a stored one. Sequencer copies its context, so identity won't do.
+ */
+export function songRefListsEqual(a, b) {
+  if (a === b) return true;
+  if (!a || !b || a.length !== b.length) return false;
+  return a.every((ref, i) => songRefsEqual(ref, b[i]));
+}
+
+/**
+ * Whether a song's file holds more than one song, i.e. Browse presents it as a
+ * "song folder" whose songs are listed individually.
+ *
+ * This is the only thing to know about a file's sub-tunes. Everything else --
+ * playing, shuffling, favoriting, sharing -- treats a sub-tune exactly like a
+ * single-song file, so the distinction only decides how the songs are *shown*
+ * and linked. Accepts anything the API reports a song in: a metadata response,
+ * a favorite, a chart row, or the `__chipConfig` a share link carries.
+ */
+export function isSongFolder(song) {
+  if (song?.subtuneCount != null) return song.subtuneCount > 1;
+  // /metadata is cached for an hour, so a response from before subtuneCount
+  // existed can still be in flight; those carry a sub-tune title instead.
+  return song?.subtuneTitle != null;
+}
+
+/**
+ * The same question asked of a Browse listing instead of a song: a song
+ * folder's rows are the songs themselves (each with a sub-tune index), while a
+ * directory's rows are files and directories.
+ */
+export function isSongFolderListing(listing) {
+  return (listing || []).some(item => item.subtune != null);
+}
+
+/**
+ * How a sub-tune names itself: the format's own label when it has one, else its
+ * index within the file. Same wording everywhere, so Browse, Favorites, Top
+ * Charts and the player footer call the same song the same thing.
+ */
+export function subtuneLabel(subtune, title) {
+  return title || `Tune ${(subtune ?? 0) + 1}`;
+}
+
 export function updateQueryString(newParams) {
   const searchParams = new URLSearchParams(window.location.search);
   Object.entries(newParams).forEach(([key, value]) => {
@@ -71,13 +177,17 @@ export function getUrlFromFilepath(filepath) {
   if (!filepath) return null;
   // in case it's already encoded
   try { filepath = decodeURIComponent(filepath); } catch {}
-  return pathJoin(CATALOG_PREFIX, encodeURIComponent(filepath));
+  // Encode each path segment so slashes stay separators (browsers name
+  // downloads from the last segment) while spaces/#/% are still escaped.
+  const encoded = filepath.split('/').map(encodeURIComponent).join('/');
+  return pathJoin(CATALOG_PREFIX, encoded);
 }
 
-export function getMetadataUrlForFilepath(filepath) {
+export function getMetadataUrlForFilepath(filepath, subtune = null) {
   // XXX: any time we convert from path to URL, we must encode
-  filepath = filepath.replace('%25', '%').replace('%23', '#');
-  return `${API_BASE}/metadata?path=${encodeURIComponent(filepath)}`;
+  filepath = filepath.replace(/%25/g, '%').replace(/%23/g, '#');
+  const subtuneParam = subtune != null ? `&subtune=${subtune}` : '';
+  return `${API_BASE}/metadata?path=${encodeURIComponent(filepath)}${subtuneParam}`;
 }
 
 export function getMetadataUrlForCatalogUrl(url) {

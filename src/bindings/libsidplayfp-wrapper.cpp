@@ -190,6 +190,14 @@ EMSCRIPTEN_KEEPALIVE
 void sid_set_subtune(int subtune) {
   engine->stop();
   currentTune->selectSong(subtune + 1);
+  // selectSong() only marks the SidTune's current song; the engine keeps
+  // playing the previously loaded one until load() is called again. Without
+  // this, every sub-tune plays song 0 while sid_get_subtune still reports the
+  // requested index.
+  if (!engine->load(currentTune)) {
+    char const *err = engine->error();
+    fprintf(stderr, "Failed to load sub-tune %d: %s\n", subtune, err ? err : "unknown error");
+  }
 }
 
 EMSCRIPTEN_KEEPALIVE

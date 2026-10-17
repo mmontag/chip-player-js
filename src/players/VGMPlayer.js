@@ -44,6 +44,12 @@ export default class VGMPlayer extends Player {
     this.buffer = this.core._malloc(this.bufferSize * 4 * 2);
     this.vgmCtx = this.core._lvgm_init(this.sampleRate);
     this.core._lvgm_set_yrw801_rom_path(this.vgmCtx, this.core.stringToNewUTF8(YRW801_ROM_PATH));
+    // Fade start captured when repeat one / indefinite playback is enabled
+    // while a fade is already running; see syncFadeTailCapture().
+    this.fadeTailStartMs = null;
+    // Set when leaving repeat one after more than the default loop count: the
+    // song now runs past the load-time duration (see applyLoopCount).
+    this.durationExtended = false;
   }
 
   async loadData(data, filepath, persistedSettings) {
@@ -67,6 +73,17 @@ export default class VGMPlayer extends Player {
       comment: this.core.UTF8ToString(this.core.getValue(metaPtr + 20, 'i32')),
     };
 
+    // Loop region, when the file defines one (libvgm reports GetLoopTicks()).
+    // Feature-detect the getters so older chip-core builds still load.
+    if (typeof this.core._lvgm_get_loop_start_ms === 'function') {
+      const loopStartMs = this.core._lvgm_get_loop_start_ms(this.vgmCtx);
+      const loopEndMs = this.core._lvgm_get_loop_end_ms(this.vgmCtx);
+      if (loopEndMs > loopStartMs) {
+        meta.intro_length = loopStartMs;
+        meta.loop_length = loopEndMs - loopStartMs;
+      }
+    }
+
     // Custom title/subtitle formatting, same as GMEPlayer:
     meta.formatted = {
       title: meta.game === meta.title ?
@@ -83,6 +100,10 @@ export default class VGMPlayer extends Player {
       this.core.UTF8ToString(this.core._lvgm_get_voice_chip_name(this.vgmCtx, i)).includes('YMF278'));
     if (hasOpl4) {
       console.debug(`${filepath} uses Yamaha OPL4 chip.`);
+      // The ROM fetch is this load's async window: hold a seek issued in it
+      // until playback is running, so it is not lost to _lvgm_start -- and drop
+      // anything held from a previous load.
+      this.beginAsyncLoad();
       await ensureEmscFileWithUrl(this.core, YRW801_ROM_PATH, `${SOUNDFONT_URL_PATH}/yrw801.rom`);
     }
 
@@ -90,6 +111,13 @@ export default class VGMPlayer extends Player {
 
     this.resolveParamValues(persistedSettings);
     this.setTempo(persistedSettings.tempo || 1);
+    this.fadeTailStartMs = null;
+    this.durationExtended = false;
+    // Sync the engine's indefinite flag here, where the loop count is still 0
+    // (so it cannot latch a fade), in case a mid-play toggle was masked by
+    // Repeat One and skipped the native update.
+    this.core._lvgm_set_indefinite_playback(this.vgmCtx, !!this.params.indefinitePlayback);
+    this.applyLoopCount(false);
     this.resume();
     this.emit('playerStateUpdate', {
       ...this.getBasePlayerState(),
@@ -140,9 +168,56 @@ export default class VGMPlayer extends Player {
       return this.core._lvgm_get_position_ms(this.vgmCtx);
   }
 
+  // The "playlist" position the slider head follows, distinct from the absolute
+  // getPositionMs(). The head's phase in the loop body, (abs - A) mod B, maps
+  // onto the band as bandStart + phase; looping and leaving share that mapping,
+  // so toggling repeat never jumps. Once the fade starts -- or was already
+  // running when repeat was enabled (fadeTailStartMs) -- the head runs the fade
+  // tail from the band end instead of folding again.
+  getDisplayPositionMs() {
+    const abs = this.getPositionMs();
+    const meta = this.metadata;
+    const A = meta ? meta.intro_length : -1;
+    const B = meta ? meta.loop_length : 0;
+    if (!this.vgmCtx || !(A >= 0) || !(B > 0) || abs == null)
+      return abs;
+
+    const band = this.getLoopBandMs();
+    if (!band) return abs;
+    const bandStart = band.startMs;
+    const bandEnd = band.endMs;
+    const looping = this.looping || !!this.params.indefinitePlayback;
+
+    // Before the first loop body is reached, show the real lead-in (the intro
+    // and the first pass through I0).
+    if (abs <= bandStart) return abs;
+
+    if (typeof this.core._lvgm_get_fade_start_ms === 'function') {
+      const fadeStart = this.fadeTailStartMs != null ? this.fadeTailStartMs
+        : (looping ? null : this.core._lvgm_get_fade_start_ms(this.vgmCtx));
+      if (fadeStart != null && abs >= fadeStart) {
+        // Fade tail: run out from the band end.
+        return Math.min(bandEnd + (abs - fadeStart), this.getDurationMs());
+      }
+    }
+
+    // Inside the loop body: fold into the highlighted band. On the very first
+    // pass (abs < bandEnd) play it through live, as the game would.
+    if (abs < bandEnd) return abs;
+    const phase = ((abs - A) % B + B) % B;
+    return bandStart + phase;
+  }
+
   getDurationMs() {
     if (this.vgmCtx)
       return this.core._lvgm_get_duration_ms(this.vgmCtx);
+  }
+
+  // Current native loop index (0 = 1st loop, 1 = 2nd, ...); 0 in the intro.
+  getCurLoop() {
+    if (this.vgmCtx && typeof this.core._lvgm_get_cur_loop === 'function')
+      return this.core._lvgm_get_cur_loop(this.vgmCtx);
+    return 0;
   }
 
   getVoiceGroups() {
@@ -179,8 +254,83 @@ export default class VGMPlayer extends Player {
   }
 
   seekMs(seekMs) {
-    if (this.vgmCtx)
+    if (this.deferSeekUntilPlaying(seekMs)) return;
+    if (this.vgmCtx) {
+      // libvgm cancels a fade when seeking before its start; drop the display
+      // capture so the fold mapping takes over again.
+      this.fadeTailStartMs = null;
       this.core._lvgm_seek_ms(this.vgmCtx, seekMs);
+      // libvgm keeps its loop count across a seek, and the extended count /
+      // durationExtended were for the pass we just abandoned. A seek repositions
+      // into the normal timeline, so restore the default finite count (the
+      // wrapper's two passes at load) and let the end detector re-arm -- unless
+      // Repeat One or Indefinite Playback still has it looping forever. Without
+      // this, leaving a deep repeat and seeking back plays the extended count's
+      // passes from the new position (measured: 7).
+      if (!this.looping && !this.params.indefinitePlayback &&
+          typeof this.core._lvgm_set_loop_count === 'function') {
+        this.durationExtended = false;
+        this.core._lvgm_set_loop_count(this.vgmCtx, 2);
+      }
+    }
+  }
+
+  // Capture the fade start before the loop count changes to 0 (which makes
+  // _lvgm_get_fade_start_ms meaningless). Only meaningful when a fade is
+  // already running: the audio then finishes it and the song ends.
+  syncFadeTailCapture(looping) {
+    if (!looping || this.vgmCtx == null || this.fadeTailStartMs != null ||
+        typeof this.core._lvgm_get_fade_start_ms !== 'function')
+      return;
+    const fadeStart = this.core._lvgm_get_fade_start_ms(this.vgmCtx);
+    if (fadeStart > 0 && this.getPositionMs() >= fadeStart)
+      this.fadeTailStartMs = fadeStart;
+  }
+
+  // Repeat-one loops indefinitely (0) instead of fading after two passes; the
+  // count is re-derived only when actually leaving a looping state
+  // (`wasLooping`). Re-deriving when already not looping would push the fade
+  // start past a fade already running (the engine loops through the fade, so
+  // curLoop has advanced), folding the head back into the band on a no-op
+  // toggle.
+  applyLoopCount(wasLooping) {
+    if (this.vgmCtx && typeof this.core._lvgm_set_loop_count === 'function') {
+      const looping = this.looping || !!this.params.indefinitePlayback;
+      if (looping) {
+        this.core._lvgm_set_loop_count(this.vgmCtx, 0);
+      } else if (wasLooping) {
+        const curLoop = this.getCurLoop();
+        // Some libvgm versions never count past the first pass, so treat
+        // "already past the two-pass end" as deep too.
+        const band = this.getLoopBandMs();
+        const absNow = this.getPositionMs() || 0;
+        const deep = curLoop >= 2 || (band != null && absNow >= band.endMs);
+        const count = deep ? Math.max(2, curLoop + 1) : 2;
+        this.core._lvgm_set_loop_count(this.vgmCtx, count);
+        // Already past the reported duration, so the base end detector
+        // (re-armed now) would cut the song before the re-scheduled fade can
+        // play; `durationExtended` stands it down. The engine still ends the
+        // song after the fade and its trailing silence.
+        if (deep)
+          this.durationExtended = true;
+      }
+    }
+  }
+
+  setLooping(looping) {
+    const wasLooping = this.looping || !!this.params.indefinitePlayback;
+    // Capture before applyLoopCount() reconfigures the loop count.
+    this.syncFadeTailCapture(looping);
+    super.setLooping(looping);
+    this.applyLoopCount(wasLooping);
+  }
+
+  // Repeat One and Indefinite Playback loop forever by themselves, and a
+  // just-left deep repeat is playing out an extended fade tail — in all three
+  // cases the position legitimately runs past the reported duration, so the
+  // base end detector must stay out of the way. The engine ends the song.
+  isPlayingIndefinitely() {
+    return this.looping || !!this.params.indefinitePlayback || !!this.durationExtended;
   }
 
   getVoiceName(index) {
@@ -226,11 +376,28 @@ export default class VGMPlayer extends Player {
         this.params[id] = value;
         if (this.vgmCtx) this.core._lvgm_set_enhanced_stereo(this.vgmCtx, value);
         break;
-      case 'indefinitePlayback':
+      case 'indefinitePlayback': {
+        const wasLooping = this.looping || !!this.params.indefinitePlayback;
         value = !!value;
         this.params[id] = value;
-        if (this.vgmCtx) this.core._lvgm_set_indefinite_playback(this.vgmCtx, value);
+        // Capture before the loop count changes (same as setLooping).
+        this.syncFadeTailCapture(value || this.looping);
+        // While Repeat One owns the loop count, sync the engine's indefinite
+        // flag at load instead (loadData). Updating it here would make libvgm
+        // start a fade that a later SetLoopCount(0) cannot cancel, so the song
+        // would fade even though Repeat One is still on.
+        if (this.vgmCtx && !this.looping)
+          this.core._lvgm_set_indefinite_playback(this.vgmCtx, value);
+        // Turning indefinite playback off starts a fade at the current position
+        // (above). Capture that start *before* applyLoopCount() re-derives the
+        // count: otherwise the fade-start getter reports the new schedule and
+        // the head folds back into the band instead of showing the live tail.
+        if (!value && !this.looping)
+          this.syncFadeTailCapture(true);
+        // Repeat-one owns the loop count while it is active.
+        this.applyLoopCount(wasLooping);
         break;
+      }
       default:
     }
   }

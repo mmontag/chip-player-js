@@ -18,7 +18,7 @@ function DirectoryLink(props) {
   // See https://github.com/ReactTraining/history/issues/505
   // The fix https://github.com/ReactTraining/history/pull/656
   // ...is not released in react-router-dom 5.2.0 which uses history 4.10
-  const to = props.to.replace('%25', '%2525');
+  const to = props.to.replace(/%25/g, '%2525');
   const search = props.search || getSearch();
 
   let toObj = { pathname: to, search: search, state: { prevPathname: window.location.pathname } };

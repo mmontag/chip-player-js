@@ -7,13 +7,18 @@ import { UserContext } from './UserProvider';
 import DirectoryLink from './DirectoryLink';
 import { getUrlFromFilepath, pathJoin } from '../util';
 
-function directoryLinkFromFilepath(filepath) {
+function directoryLinkFromFilepath(filepath, isSongFolder) {
   if (!filepath) return null;
   const sep = '/';
 
-  filepath = filepath
-    .split(sep).slice(0, -1).join(sep);
-  return <DirectoryLink dim to={pathJoin('/browse', encodeURI(filepath))}>{filepath}</DirectoryLink>;
+  // A multi-song file is itself a "song folder" in Browse, so show the whole
+  // path (matching the Browse header) instead of just its parent directory.
+  const browsePath = isSongFolder
+    ? filepath
+    : filepath.split(sep).slice(0, -1).join(sep);
+  // Same escaping as Browse: %/# must be pre-escaped for react-router.
+  const href = browsePath.replace(/%/g, '%25').replace(/#/g, '%23');
+  return <DirectoryLink dim to={pathJoin('/browse', href)}>{browsePath}</DirectoryLink>;
 }
 
 export default memo(AppFooter);
@@ -21,18 +26,19 @@ function AppFooter(props) {
   const {
     // this.state.
     currentSongDurationMs,
-    currentSongNumSubtunes,
-    currentSongSubtune,
     ejected,
     imageUrl,
     infoTexts,
+    isSongFolder,
     md5,
     paused,
     repeat,
     shuffle,
     songId,
+    songRef,
     songPath,
     subtitle,
+    subtuneLabel,
     title,
     volume,
 
@@ -44,9 +50,7 @@ function AppFooter(props) {
     handleTimeSliderChange,
     handleVolumeChange,
     nextSong,
-    nextSubtune,
     prevSong,
-    prevSubtune,
     sequencer,
     toggleInfo,
     togglePause,
@@ -54,11 +58,26 @@ function AppFooter(props) {
 
   const {
     faves,
+    settings,
   } = useContext(UserContext);
 
-  const directoryLink = directoryLinkFromFilepath(songPath);
+  const directoryLink = directoryLinkFromFilepath(songPath, isSongFolder);
   const songUrl = getUrlFromFilepath(songPath);
-  const subtuneText = `Tune ${currentSongSubtune + 1} of ${currentSongNumSubtunes}`;
+
+  // The highlighted loop band is engine policy: the player reports it in ms
+  // (see Player.getLoopBandMs) and the footer only maps it onto the slider.
+  // Visual only: hiding the band never changes playback or the head fold.
+  const showLoopArea = settings?.showLoopArea ?? true;
+  const bandMs = showLoopArea ? sequencer?.getPlayer()?.getLoopBandMs?.() || null : null;
+  // Blind loop is player policy (see Player.isBlindLoop); the footer only
+  // asks, so hiding the band (a visual toggle) can never change it.
+  const isBlindLoopNow = () => !!sequencer?.getPlayer?.()?.isBlindLoop?.();
+  const loopStart = bandMs && currentSongDurationMs > 0
+    ? bandMs.startMs / currentSongDurationMs
+    : null;
+  const loopEnd = bandMs && currentSongDurationMs > 0
+    ? Math.min(bandMs.endMs / currentSongDurationMs, 1)
+    : null;
   const isTracker = Boolean(songPath && /\.(mod|xm|s3m|it)$/i.test(songPath));
 
   const handleToggleInfo = useCallback((e) => {
@@ -66,15 +85,14 @@ function AppFooter(props) {
     toggleInfo();
   }, [toggleInfo]);
 
+  // The shareable link carries the sub-tune; the href and the clipboard
+  // copy must agree so right-click/copy and middle-click keep the sub-tune.
+  const songLink = getCurrentSongLink(/*withSubtune=*/true);
+
   const handleCopySongLink = useCallback((e) => {
     e.preventDefault();
-    handleCopyLink(getCurrentSongLink());
-  }, [getCurrentSongLink, handleCopyLink]);
-
-  const handleCopySubtuneLink = useCallback((e) => {
-    e.preventDefault();
-    handleCopyLink(getCurrentSongLink(/*withSubtune=*/true));
-  }, [getCurrentSongLink, handleCopyLink]);
+    handleCopyLink(songLink);
+  }, [songLink, handleCopyLink]);
 
   const playPauseTitle = paused ? 'Play' : 'Pause';
   const playPauseClass = paused ? 'icon-play' : 'icon-pause';
@@ -101,32 +119,6 @@ function AppFooter(props) {
                   disabled={ejected}>
             <span className="inline-icon icon-next"/>
           </button>
-          {currentSongNumSubtunes > 1 &&
-            <>
-              {songPath ?
-                <a style={{ color: 'var(--neutral4)' }}
-                   href={getCurrentSongLink(/*subtune=*/true)}
-                   title="Copy subtune link to clipboard"
-                   onClick={handleCopySubtuneLink}>
-                  {subtuneText}
-                  <span className="inline-icon icon-copy"/>
-                </a>
-                :
-                subtuneText
-              }
-              <button
-                className="AppFooter-back box-button"
-                disabled={ejected}
-                onClick={prevSubtune}>
-                <span className="inline-icon icon-back"/>
-              </button>
-              <button
-                className="AppFooter-forward box-button"
-                disabled={ejected}
-                onClick={nextSubtune}>
-                <span className="inline-icon icon-forward"/>
-              </button>
-            </>}
           <button title="Cycle Repeat (repeat off, repeat all songs in the context, or repeat one song)"
                   style={{ marginLeft: 'auto' }}
                   className="AppFooter-repeat box-button" onClick={handleCycleRepeat}>
@@ -143,13 +135,11 @@ function AppFooter(props) {
           <TimeSlider
             paused={paused}
             currentSongDurationMs={currentSongDurationMs}
-            getCurrentPositionMs={() => {
-              // TODO: reevaluate this approach
-              if (sequencer && sequencer.getPlayer()) {
-                return sequencer.getPlayer().getPositionMs();
-              }
-              return 0;
-            }}
+            loopStart={loopStart}
+            loopEnd={loopEnd}
+            getIsBlindLoop={isBlindLoopNow}
+            getCurrentPositionMs={() =>
+              sequencer?.getPlayer?.()?.getDisplayPositionMs?.() ?? 0}
             onChange={handleTimeSliderChange}/>
           <VolumeSlider
             onChange={(e) => {
@@ -168,15 +158,18 @@ function AppFooter(props) {
             {faves && songPath &&
               <FavoriteButton item={{
                 path: songPath,
+                subtune: songRef?.subtune ?? 0,
                 songId: songId,
               }}/>}
             <div className="SongDetails-title">
               {songPath ?
                 <>
-                  <a href={getCurrentSongLink()}
+                  <a href={songLink}
                      title="Copy song link to clipboard"
                      onClick={handleCopySongLink}>
                     {title}{' '}
+                    {subtuneLabel &&
+                      <span className="SongDetails-subtune">({subtuneLabel}){' '}</span>}
                     <span className="inline-icon icon-copy"/>
                   </a>
                   <a href={songUrl}

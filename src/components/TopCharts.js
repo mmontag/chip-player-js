@@ -3,7 +3,9 @@ import axios from 'redaxios';
 import FavoriteButton from './FavoriteButton';
 import { UserContext } from './UserProvider';
 import { API_BASE, CATALOG_PREFIX } from '../config';
-import { getWithAuth, pathJoin } from '../util';
+import {
+  getWithAuth, isSongFolder, pathJoin, songRef, songRefKey, subtuneLabel,
+} from '../util';
 
 const NUM_MY_TOP_MONTH = 10;
 const NUM_MY_TOP_ALL_TIME = 50;
@@ -211,17 +213,23 @@ function TopCharts(props) {
   // Compute decorated sections and unified context across all visible sections
   const { decoratedSections, topContext } = useMemo(() => {
     let currentIdx = 0;
-    const contextPaths = [];
+    const contextRefs = [];
 
     const decorated = sections.map(section => {
       const items = (section.items || []).map((item, localIndex) => {
         const path = item.path;
-        contextPaths.push(path);
+        const subtune = item.subtune || 0;
+        contextRefs.push(songRef(path, subtune));
         const trackIdx = currentIdx++;
         const rank = localIndex + 1;
-        const name = path.split('/').pop();
+        const filename = path.split('/').pop();
+        // A song folder's chart row shows the song's own label (or "Tune N").
+        const name = isSongFolder(item)
+          ? `${filename} (${subtuneLabel(subtune, item.subtune_title)})`
+          : filename;
         const href = item.path ? pathJoin(CATALOG_PREFIX, encodeURIComponent(item.path)) : null;
-        const url = item.song_id ? `/?play=${encodeURIComponent(item.song_id)}` : href;
+        const subtuneParam = subtune ? `&subtune=${subtune}` : '';
+        const url = item.song_id ? `/?play=${encodeURIComponent(item.song_id)}${subtuneParam}` : href;
 
         return {
           ...item,
@@ -239,7 +247,7 @@ function TopCharts(props) {
       };
     });
 
-    return { decoratedSections: decorated, topContext: contextPaths };
+    return { decoratedSections: decorated, topContext: contextRefs };
   }, [sections]);
 
   const handlePlayTrack = useCallback((trackIdx) => (e) => {
@@ -303,7 +311,7 @@ function TopCharts(props) {
               {section.items.map((item, index) => {
                 const isPlaying = currContext === topContext
                   ? currIdx === item.idx
-                  : (currContext && currContext[currIdx] === item.path);
+                  : (currContext && songRefKey(currContext[currIdx]) === songRefKey(item));
 
                 const classNames = ['BrowseList-row'];
                 if (isPlaying) classNames.push('Song-now-playing');

@@ -616,7 +616,7 @@ function resolveDirectoryMetadata(rawBrowsePath, options = {}) {
         'Browse over 380,000 video game music and chiptune tracks across 31,000 directories. Listen to SPC, SID, NSF, VGM, MIDI, MOD and more.',
       url: 'https://chiptune.app/browse',
       image: 'https://chiptune.app/chip-player-1200x640.png',
-      schemaJsonLd: JSON.stringify(buildBreadcrumbJsonLd([])),
+      schemaJsonLd: `<script type="application/ld+json">${JSON.stringify(buildBreadcrumbJsonLd([]))}</script>`,
       noscriptContent:
         '<div class="seo-crawler-content"><h1>Browse Music Archives</h1><p>Browse over 380,000 tracks.</p></div>',
     };
@@ -638,7 +638,7 @@ function resolveDirectoryMetadata(rawBrowsePath, options = {}) {
       description: `Browse chiptune and video game music tracks in ${fallbackTitle}.`,
       url: `https://chiptune.app/browse/${normalizedPath.split('/').map(encodeURIComponent).join('/')}`,
       image: 'https://chiptune.app/chip-player-1200x640.png',
-      schemaJsonLd: JSON.stringify(buildBreadcrumbJsonLd(segments)),
+      schemaJsonLd: `<script type="application/ld+json">${JSON.stringify(buildBreadcrumbJsonLd(segments))}</script>`,
       noscriptContent: '',
     };
     directoryMetaCache.set(cacheKey, result);

@@ -5,6 +5,7 @@ import WindowScroller from 'react-virtualized/dist/es/WindowScroller';
 import 'react-virtualized/styles.css';
 import { findDOMNode } from 'react-dom';
 import { useHistory } from 'react-router-dom';
+import { songRefKey } from '../util';
 
 export default VirtualizedList;
 
@@ -96,7 +97,7 @@ function VirtualizedList(props) {
     const item = itemList[index];
     const songIndex = item.idx ?? index;
 
-    if (item.type === 'directory') {
+    if (item.type === 'directory' || item.type === 'songfolder') {
       return (e) => {
         // console.log('Directory clicked', index, e);
         e.preventDefault();
@@ -227,7 +228,12 @@ function VirtualizedList(props) {
                       // Song index may differ from item index if there are directories
                       // const songIndex = item.idx;
                       // const isPlaying = currContext === songContext && currIdx === songIndex;
-                      const isPlaying = currContext && currContext[currIdx] === item.path;
+                      // A song folder row stands for all of its sub-tunes, so it stays
+                      // lit while any of them plays; a file row matches its own SongRef.
+                      const currRef = currContext && currContext[currIdx];
+                      const isPlaying = !!currRef && (item.type === 'songfolder'
+                        ? currRef.path === item.path
+                        : songRefKey(currRef) === songRefKey(item));
                       const isSelected = index === scrollToRow;
                       const classNames = ['BrowseList-row'];
                       if (isPlaying) classNames.push('Song-now-playing');
