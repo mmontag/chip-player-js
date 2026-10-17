@@ -42,18 +42,17 @@ export default class LocalFilesManager {
             type: 'file',
             size: size,
             mtime: Math.floor(Date.parse(mtime) / 1000),
+            // Full-resolution timestamp. The listing shows seconds, but the Local
+            // Files sub-tune cache keys on the file's identity, and whole seconds
+            // would let a same-size replacement inside one second reuse the
+            // previous header (see localFilesSubtunes.js).
+            mtimeMs: Date.parse(mtime),
             path: fullPath,
           };
         });
 
-      // Sort by mtime ascending, then by path ascending
-      filesInfo.sort((a, b) => {
-        if (a.mtime !== b.mtime) {
-          return a.mtime - b.mtime;
-        } else {
-          return a.path.localeCompare(b.path);
-        }
-      });
+      // Sort by path, so the Local Files view is a stable, predictable listing.
+      filesInfo.sort((a, b) => a.path.localeCompare(b.path));
 
       return filesInfo;
     }

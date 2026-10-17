@@ -23,7 +23,13 @@ function cleanString(str) {
   cleaned = cleaned.replace(/[\x00-\x1F\x7F]/g, '');
 
   // 3. Trim whitespace
-  return cleaned.trim();
+  cleaned = cleaned.trim();
+
+  // 4. A field that is only placeholder punctuation is the rippers' way of
+  // saying "unknown" ("?", "<?>", "???"); return it empty so the catalog
+  // stores null. A value that merely contains a question mark ("Continue?",
+  // "Yuzo Koshiro(?)") is left alone.
+  return /^[?<>]+$/.test(cleaned) ? '' : cleaned;
 }
 
 /**
@@ -48,8 +54,11 @@ function decodeBuffer(buf) {
       // Fallback if decode fails
     }
   }
-  // Fallback to Latin1 to preserve binary data 1:1
-  return buf.toString('latin1');
+  // Fallback to Latin1 to preserve binary data 1:1. Byte-at-a-time (not
+  // Buffer.toString) so a plain Uint8Array works too -- the browser passes one.
+  let latin1 = '';
+  for (let i = 0; i < buf.length; i++) latin1 += String.fromCharCode(buf[i]);
+  return latin1;
 }
 
 /**

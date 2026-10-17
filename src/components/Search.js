@@ -5,7 +5,7 @@ import autoBindReact from 'auto-bind/react';
 import debounce from 'lodash/debounce';
 
 import { API_BASE } from '../config';
-import { getUrlFromFilepath, pathJoin } from '../util';
+import { getUrlFromFilepath, pathJoin, songRef, subtuneLabel, isSongFolder } from '../util';
 import DirectoryLink from './DirectoryLink';
 import FavoriteButton from './FavoriteButton';
 import VirtualizedList from './VirtualizedList';
@@ -118,28 +118,41 @@ export default class Search extends PureComponent {
             .sort((a, b) => a.file.localeCompare(b.file))
             .map((item, i) => {
               const path = item.file;
+              const subtune = item.subtune || 0;
+              const folder = isSongFolder(item);
               return {
                 idx: i,
                 path: path,
-                name: path.substring(path.lastIndexOf('/') + 1),
+                subtune: subtune,
+                folder: folder,
+                // A song folder's songs name themselves by label / `Tune N` --
+                // the folder is the heading above them. A plain file shows its
+                // own name.
+                name: folder
+                  ? subtuneLabel(subtune, item.title)
+                  : (item.title || path.substring(path.lastIndexOf('/') + 1)),
                 href: getUrlFromFilepath(path),
                 type: 'file',
                 songId: item.song_id,
               };
             });
-          const resultsContext = resultFiles.map(item => item.path);
-          // Build the results list with interleaved directory headings.
+          const resultsContext = resultFiles.map(item => songRef(item));
+          // Interleave headings. A song folder's songs sit under the file itself
+          // -- the folder replaces the containing directory's heading, the way
+          // browsing into it does -- while a plain file sits under its directory.
           const resultsWithHeadings = [];
           let currHeading = null;
           resultFiles.forEach((item) => {
-            const { path } = item;
-            const heading = path.substring(0, path.lastIndexOf('/') + 1);
+            const { path, folder } = item;
+            const slash = path.lastIndexOf('/');
+            const dir = path.substring(0, slash + 1);
+            const heading = folder ? path : dir;
             if (heading !== currHeading) {
               currHeading = heading;
               resultsWithHeadings.push({
                 type: 'directory',
                 href: pathJoin('/browse', heading),
-                name: heading,
+                name: folder ? path.substring(slash + 1) : heading,
               });
             }
             resultsWithHeadings.push(item);

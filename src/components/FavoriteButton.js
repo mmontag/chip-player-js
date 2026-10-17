@@ -8,7 +8,7 @@ const FavoriteButton = ({ item }) => {
     handleToggleFavorite: toggleFavorite,
   } = useContext(UserContext);
 
-  const { path, songId } = item;
+  const { path, songId, subtune = 0 } = item;
 
   const handleClick = useCallback((e) => {
     if (!user) {
@@ -17,10 +17,10 @@ const FavoriteButton = ({ item }) => {
     }
     e.preventDefault();
     e.stopPropagation();
-    toggleFavorite(path, songId);
-  }, [toggleFavorite, path, songId, user]);
+    toggleFavorite(path, subtune, songId);
+  }, [toggleFavorite, path, subtune, songId, user]);
 
-  const isFavorite = faves.find(fave => fave.path === path);
+  const isFavorite = faves.find(fave => fave.path === path && (fave.subtune || 0) === subtune);
   const className = `FavoriteButton ${isFavorite ? 'isFavorite' : ''}`;
 
   return (

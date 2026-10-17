@@ -1,4 +1,5 @@
 import Player from "./Player.js";
+import EndDetector, { DETECT_SONG_END_HINT } from './EndDetector.js';
 import { ensureEmscFileWithData, ensureEmscFileWithUrl, pathJoin } from '../util';
 import { CATALOG_PREFIX } from '../config';
 import { parsePSF } from '../psf';
@@ -30,6 +31,13 @@ export default class GSFPlayer extends Player {
       hint: 'Ignore track length metadata for looping tracks and loop indefinitely.',
       defaultValue: false,
     },
+    {
+      id: 'detectSongEnd',
+      label: 'Detect Song End While Repeat One',
+      type: 'toggle',
+      hint: DETECT_SONG_END_HINT,
+      defaultValue: true,
+    },
   ];
 
   constructor(...args) {
@@ -46,9 +54,26 @@ export default class GSFPlayer extends Player {
     this.voiceMask = Array(GBA_VOICE_NAMES.length).fill(true);
     this.speed = 1.0;
     this.buffer = this.core._malloc(this.bufferSize * 4); // 2 ch, 16-bit
+    // Same tail detector as SID/N64 (see EndDetector). GSF has no loop region --
+    // the MP2K driver loops internally -- so Repeat One free-runs the engine and
+    // this is what re-runs a one-shot whose content has ended.
+    this.endDetector = new EndDetector({
+      sampleRate: this.sampleRate,
+      bufferSize: this.bufferSize,
+    });
+  }
+
+  resetEndDetector() {
+    this.endDetector.reset();
+  }
+
+  // Start of the end-detection trip window, one window before the expected end.
+  getEndDetectTripAtMs() {
+    return this.endDetector.getTripAtMs(this.getDurationMs());
   }
 
   loadData(data, filename, persistedSettings) {
+    this.resetEndDetector();
     let err;
     this.filepathMeta = Player.metadataFromFilepath(filename);
 
@@ -99,16 +124,14 @@ export default class GSFPlayer extends Player {
   }
 
   processAudioInner(channels) {
-    let i, ch;
-
     if (this.paused) {
-      for (ch = 0; ch < channels.length; ch++) {
-        channels[ch].fill(0);
+      for (const channel of channels) {
+        channel.fill(0);
       }
       return;
     }
 
-    const samplesWritten = this.core._gsf_render_audio(this.buffer, this.bufferSize);
+    let samplesWritten = this.core._gsf_render_audio(this.buffer, this.bufferSize);
     if (samplesWritten <= 0) {
       this.handleSongEnd();
       return;
@@ -129,8 +152,30 @@ export default class GSFPlayer extends Player {
       });
     }
 
-    for (ch = 0; ch < channels.length; ch++) {
-      for (i = 0; i < this.bufferSize; i++) {
+    this.writeChannels(channels);
+
+    // Repeat One tail restart (rule and window in EndDetector). Under indefinite
+    // playback the engine free-runs past durationMs: the MP2K driver loops
+    // internally, so a looping track never goes quiet, but a one-shot whose
+    // content has ended sits silent forever -- re-run it from the top in-buffer
+    // (no refetch, no gap). The position gate runs first, so quiet intros and
+    // mid-song breakdowns stay gated. Repeat-off keeps the end above.
+    if (this.params.detectSongEnd && this.isPlayingIndefinitely() &&
+        this.getPositionMs() >= this.getEndDetectTripAtMs() && this.updateEndDetector(channels)) {
+      this.restartTrack();
+      samplesWritten = this.core._gsf_render_audio(this.buffer, this.bufferSize);
+      if (samplesWritten <= 0) {
+        this.handleSongEnd();
+        return;
+      }
+      this.writeChannels(channels);
+    }
+  }
+
+  // Interleaved stereo i16 -> the float channels the Web Audio graph consumes.
+  writeChannels(channels) {
+    for (let ch = 0; ch < channels.length; ch++) {
+      for (let i = 0; i < this.bufferSize; i++) {
         channels[ch][i] = this.core.getValue(
           this.buffer +           // Interleaved channel format
           i * 2 * 2 +             // frame offset * bytes per sample * num channels +
@@ -139,6 +184,20 @@ export default class GSFPlayer extends Player {
         ) / INT16_MAX;
       }
     }
+  }
+
+  // Fold one rendered buffer into the tail detector, tapping the converted float
+  // channels (GSF's int16 buffer holds no float views, unlike SID).
+  updateEndDetector(channels) {
+    // Masking is applied in-engine, so a muted/soloed part reads as silence in
+    // both gates -- stand down while the mask is not clean, exactly as
+    // SIDPlayer does (the JS echo of GME disabling its own silence detection on
+    // any mute).
+    if (!Array.isArray(this.voiceMask) || !this.voiceMask.every(Boolean)) {
+      this.endDetector.reset();
+      return false;
+    }
+    return this.endDetector.fold(channels[0], channels[1] || channels[0]);
   }
 
   getPositionMs() {
@@ -168,11 +227,43 @@ export default class GSFPlayer extends Player {
     }
   }
 
+  // Repeat One alone not reaching the engine would fade-and-end each cycle and
+  // reload the whole gsflib per loop.
+  syncIndefinitePlayback() {
+    if (this.core._gsf_set_indefinite_playback) {
+      this.core._gsf_set_indefinite_playback(this.looping || !!this.params.indefinitePlayback);
+    }
+  }
+
+  // Repeat One and Indefinite Playback both free-run past durationMs via the
+  // engine flag, so the base end detector must stay out of the way.
+  isPlayingIndefinitely() {
+    return this.looping || !!this.params.indefinitePlayback;
+  }
+
+  setLooping(looping) {
+    super.setLooping(looping);
+    this.syncIndefinitePlayback();
+  }
+
   seekMs(positionMs) {
+    // EndDetector's contract: reset on seek, so pre-seek audio cannot trip the
+    // Repeat One tail restart before the new position has produced a window.
+    this.resetEndDetector();
     this.muteAudioDuringCall(this.audioNode, () => {
       this.core._gsf_seek_ms(positionMs);
       this.setVoiceMask(this.voiceMask);
     });
+  }
+
+  // In-buffer restart for the Repeat One tail detector (like N64's restartTrack):
+  // seek-to-0 re-runs the driver from the top without refetching the gsflib.
+  // Deliberately synchronous -- muteAudioDuringCall() is async, so routing this
+  // through seekMs() would let the re-render below read the old tail position.
+  restartTrack() {
+    this.resetEndDetector();
+    this.core._gsf_seek_ms(0);
+    this.setVoiceMask(this.voiceMask);
   }
 
   getVoiceName(index) {
@@ -283,7 +374,11 @@ export default class GSFPlayer extends Player {
       case 'indefinitePlayback':
         value = !!value;
         this.params[id] = value;
-        this.core._gsf_set_indefinite_playback(value);
+        this.syncIndefinitePlayback();
+        break;
+      case 'detectSongEnd':
+        this.params[id] = !!value;
+        this.resetEndDetector();
         break;
       default:
     }

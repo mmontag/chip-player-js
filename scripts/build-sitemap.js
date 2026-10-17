@@ -6,6 +6,7 @@
  * Generates:
  * 1. public/sitemap-directories.xml - All 31,000+ directories in the catalog
  * 2. public/sitemap-songs-top.xml - Top-N most played & favorited songs
+ *    (a sub-tune is a song of its own: one URL per playable song)
  * 3. public/sitemap.xml - Sitemap index referencing directory and song sitemaps
  */
 
@@ -98,39 +99,68 @@ fs.writeFileSync(dirSitemapPath, dirXmlLines.join('\n'), 'utf8');
 console.log('Wrote %s (%d URLs)', dirSitemapPath, dirs.length + 3);
 
 // 2. Query and Score Top-N Songs
+//
+// Scored per playable song, i.e. per (song_id, subtune): a single-song file is
+// subtune 0, a multi-song file contributes one row per sub-tune. Sub-tunes
+// therefore rank and are submitted individually, exactly like any other song.
 console.log('\nQuerying top songs (plays and favorites)...');
 console.time('Song scoring');
 
+const songKey = (songId, subtune) => `${songId}\u0000${subtune}`;
+
+// playbacks.subtune is added by the server on first start; tolerate a database
+// that has not been migrated yet by treating every play as sub-tune 0.
+const hasPlaybackSubtune = userDb
+  .prepare('PRAGMA table_info(playbacks)')
+  .all()
+  .some((c) => c.name === 'subtune');
+
 const plays = userDb.prepare(`
-  SELECT song_id, COUNT(*) as count
+  SELECT song_id, ${hasPlaybackSubtune ? 'COALESCE(subtune, 0)' : '0'} AS subtune, COUNT(*) as count
   FROM playbacks
   WHERE song_id IS NOT NULL AND song_id != ''
-  GROUP BY song_id
+  GROUP BY song_id, subtune
   ORDER BY count DESC
   LIMIT 60000
 `).all();
 
 const faves = userDb.prepare(`
-  SELECT json_extract(je.value, '$.songId') as song_id, COUNT(DISTINCT pl.user_id) as count
+  SELECT json_extract(je.value, '$.songId') as song_id,
+         COALESCE(json_extract(je.value, '$.subtune'), 0) as subtune,
+         COUNT(DISTINCT pl.user_id) as count
   FROM playlists pl, json_each(pl.items) je
   WHERE pl.type = 'favorites' AND json_extract(je.value, '$.songId') IS NOT NULL
-  GROUP BY song_id
+  GROUP BY song_id, subtune
   ORDER BY count DESC
   LIMIT 60000
 `).all();
 
 const scoreMap = new Map();
-plays.forEach(p => scoreMap.set(p.song_id, (scoreMap.get(p.song_id) || 0) + p.count));
-faves.forEach(f => scoreMap.set(f.song_id, (scoreMap.get(f.song_id) || 0) + f.count * 5));
+const addScore = (songId, subtune, points) => {
+  const key = songKey(songId, subtune || 0);
+  scoreMap.set(key, (scoreMap.get(key) || 0) + points);
+};
+plays.forEach(p => addScore(p.song_id, p.subtune, p.count));
+faves.forEach(f => addScore(f.song_id, f.subtune, f.count * 5));
 
-console.log('Verifying song IDs against catalog database...');
-const validCatalogSongIds = new Set(
-  catalogDb.prepare('SELECT DISTINCT song_id FROM music WHERE song_id IS NOT NULL').pluck().all()
+console.log('Verifying songs against catalog database...');
+// Every playable song in the catalog: LEFT JOIN subtune yields one row for a
+// single-song file (subtune NULL -> 0) and one per sub-tune for a multi-song file.
+const validSongs = new Set(
+  catalogDb.prepare(`
+    SELECT m.song_id AS song_id, COALESCE(st.subtune, 0) AS subtune
+    FROM music m
+    LEFT JOIN subtune st ON st.music_id = m.id
+    WHERE m.song_id IS NOT NULL
+  `).all().map((r) => songKey(r.song_id, r.subtune))
 );
 
 const topSongs = Array.from(scoreMap.entries())
-  .filter(([song_id]) => validCatalogSongIds.has(song_id))
-  .map(([song_id, score]) => ({ song_id, score }))
+  .filter(([key]) => validSongs.has(key))
+  .map(([key, score]) => {
+    const [songId, subtune] = key.split('\u0000');
+    return { song_id: songId, subtune: Number(subtune), score };
+  })
   .sort((a, b) => b.score - a.score)
   .slice(0, TOP_N_SONGS);
 
@@ -148,7 +178,10 @@ const songXmlLines = [
 ];
 
 for (const song of topSongs) {
-  const songUrl = `${BASE_URL}/?play=${encodeURIComponent(song.song_id)}`;
+  // Sub-tune 0 is the file page; a sub-tune > 0 gets its own URL, matching the
+  // server's canonical (see getHtmlInjectionsForRequest).
+  const songUrl = `${BASE_URL}/?play=${encodeURIComponent(song.song_id)}`
+    + (song.subtune > 0 ? `&subtune=${song.subtune}` : '');
   songXmlLines.push('  <url>');
   songXmlLines.push(`    <loc>${escapeXml(songUrl)}</loc>`);
   songXmlLines.push(`    <lastmod>${todayIso}</lastmod>`);

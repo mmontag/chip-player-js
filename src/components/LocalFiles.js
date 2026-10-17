@@ -1,5 +1,6 @@
 import React, { memo, useCallback, useRef } from 'react';
 import { FORMATS } from '../config';
+import { songRefListsEqual } from '../util';
 import bytes from 'bytes';
 
 const formatList = FORMATS.filter(f => f !== 'miniusf' && f !== 'minigsf').map(f => `.${f}`);
@@ -49,10 +50,12 @@ function LocalFiles(props) {
     }
   }
 
+  const isCurrentContext = songRefListsEqual(currContext, playContext);
+
   return (
     <div>
       <h3 className="Browse-topRow">
-        Local Files ({listing.length})
+        Local Files ({new Set(listing.map(item => item.path)).size})
         <div className='button-container'>
           <button className='box-button' onClick={handleAddClick} title='Add files'>
             Add Files...
@@ -74,7 +77,7 @@ function LocalFiles(props) {
         />
       </h3>
       {loading ?
-        "Loading local files..."
+        <div className='LocalFiles-message'>Loading local files...</div>
         :
         listing.length === 0 ?
           <div>
@@ -97,17 +100,52 @@ function LocalFiles(props) {
           :
           <div>
             {
-              listing.map((item, i) => {
+              listing.map((item) => {
                 const href = item.path;
-                const title = decodeURIComponent(href.split('/').pop());
-                const isPlaying = currContext === playContext && currIdx === i;
+                // Match the Favorites layout: a dim folder-header line for a
+                // multi-song file (with the delete button, once per file), then a
+                // playable row per sub-tune beneath it.
+                if (item.type === 'folder') {
+                  return (
+                    <React.Fragment key={href}>
+                      <div className="BrowseList-row LocalFiles-folder">
+                        <div className="BrowseList-colName">
+                          <span className='inline-icon dim-icon icon-folder'/>
+                          <span className='DirectoryLink-dim' title={item.name}>{item.name}</span>
+                        </div>
+                        <button className='Trash-button' title='Delete' onClick={handleDelete} data-href={href}>
+                          <span className='inline-icon icon-trash'/>
+                        </button>
+                      </div>
+                      {item.children.map((child) => {
+                        const childPlaying = isCurrentContext && currIdx === child.ctxIdx;
+                        return (
+                          <div key={`${href}#${child.subtune}`}
+                               className={`BrowseList-row LocalFiles-subtune${childPlaying ? ' Song-now-playing' : ''}`}>
+                            <div className="BrowseList-colName">
+                              <a onClick={onSongClick(href, playContext, child.ctxIdx)} href={href}>{child.name}</a>
+                            </div>
+                            <div className="BrowseList-colMtime">
+                              {item.mtime}
+                            </div>
+                            <div className="BrowseList-colSize">
+                              {bytes(item.size, { unitSeparator: ' ' })}
+                            </div>
+                            {/* Reserve the delete column so the size stays aligned. */}
+                            <button className='Trash-button' tabIndex={-1} aria-hidden='true' style={{ visibility: 'hidden' }}>
+                              <span className='inline-icon icon-trash'/>
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </React.Fragment>
+                  );
+                }
+                const isPlaying = isCurrentContext && currIdx === item.ctxIdx;
                 return (
-                  <div key={title} className={isPlaying ? 'Song-now-playing BrowseList-row' : 'BrowseList-row'}>
-                    <button className='Trash-button' title='Delete' onClick={handleDelete} data-href={href}>
-                      <span className='inline-icon icon-trash'/>
-                    </button>
+                  <div key={`${href}#${item.subtune || 0}`} className={isPlaying ? 'Song-now-playing BrowseList-row' : 'BrowseList-row'}>
                     <div className="BrowseList-colName">
-                      <a onClick={onSongClick(href, playContext, i)} href={href}>{title}</a>
+                      <a onClick={onSongClick(href, playContext, item.ctxIdx)} href={href}>{item.name}</a>
                     </div>
                     <div className="BrowseList-colMtime">
                       {item.mtime}
@@ -115,6 +153,9 @@ function LocalFiles(props) {
                     <div className="BrowseList-colSize">
                       {bytes(item.size, { unitSeparator: ' ' })}
                     </div>
+                    <button className='Trash-button' title='Delete' onClick={handleDelete} data-href={href}>
+                      <span className='inline-icon icon-trash'/>
+                    </button>
                   </div>
                 );
               })

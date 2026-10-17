@@ -22,6 +22,7 @@ const silenceOptions = [
   { value: 5, label: '5 seconds' },
 ];
 
+
 function Settings(props) {
   const {
     ejected,
@@ -42,6 +43,7 @@ function Settings(props) {
   const { settings, updateSettings } = useContext(UserContext);
   const theme = settings?.theme;
   const silenceDuration = settings?.silenceDuration ?? -1;
+  const showLoopArea = settings?.showLoopArea ?? true;
 
   const handleThemeChange = useCallback((e) => {
     updateSettings({ theme: e.target.value });
@@ -49,6 +51,10 @@ function Settings(props) {
 
   const handleSilenceDurationChange = useCallback((e) => {
     updateSettings({ silenceDuration: Number(e.target.value) });
+  }, [updateSettings]);
+
+  const handleShowLoopAreaChange = useCallback((e) => {
+    updateSettings({ showLoopArea: e.target.checked });
   }, [updateSettings]);
 
   return (
@@ -98,6 +104,15 @@ function Settings(props) {
             <option key={option.value} value={option.value}>{option.label}</option>
           )}
         </select>
+      </span>
+      <span className='PlayerParams-param'>
+        <input type='checkbox'
+               id='showLoopArea'
+               onChange={handleShowLoopAreaChange}
+               checked={!!showLoopArea}/>
+        <label htmlFor='showLoopArea' title='For songs with a defined Loop Area, highlight it in the Player bar. The Loop Area will be looped in Repeat One mode.'>
+          Show Loop Area
+        </label>
       </span>
     </div>
   );
