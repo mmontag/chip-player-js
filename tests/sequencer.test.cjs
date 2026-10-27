@@ -4,7 +4,7 @@ const { EventEmitter } = require('node:events');
 const fs = require('node:fs');
 const vm = require('node:vm');
 
-function createSequencer(get) {
+function createSequencer(get, extraPlayers = []) {
   const source = fs.readFileSync('src/Sequencer.js', 'utf8')
     .replace(/^import .*;\n/gm, '')
     .replace(/export const /g, 'const ')
@@ -14,9 +14,9 @@ function createSequencer(get) {
     setTimeout, clearTimeout, console, Uint8Array, fetch };
   vm.runInNewContext(source, sandbox);
   const loads = [];
-  const player = { on() {}, canPlay: ext => ext === 'mid', suspend() {}, setLooping() {},
-    loadData: async (_data, path) => loads.push(path), getVoiceMask: () => [] };
-  const sequencer = new sandbox.Sequencer([player], { read: () => new Uint8Array([1]) }, () => ({}));
+  const player = Object.assign(new EventEmitter(), { canPlay: ext => ext === 'mid', suspend() {}, setLooping() {},
+    loadData: async (_data, path) => loads.push(path), getVoiceMask: () => [] });
+  const sequencer = new sandbox.Sequencer([player, ...extraPlayers], { read: () => new Uint8Array([1]) }, () => ({}));
   return { sequencer, loads };
 }
 
@@ -28,6 +28,25 @@ test('empty context leaves current playback intact and reports the problem', () 
   sequencer.playContext([]);
   assert.equal(message, 'No songs found to play.');
   assert.equal(sequencer.context[0], 'existing.mid');
+});
+
+test('inactive players cannot replace current state or advance the queue', () => {
+  const oldPlayer = new EventEmitter();
+  const { sequencer } = createSequencer(undefined, [oldPlayer]);
+  sequencer.player = sequencer.players[0];
+  sequencer.context = ['current.mid', 'next.mid'];
+  sequencer.currSongPath = 'current.mid';
+  const updates = [];
+  sequencer.on('sequencerStateUpdate', value => updates.push(value));
+  sequencer.on('playerError', error => { throw Error(`unexpected: ${error}`); });
+  oldPlayer.emit('playerStateUpdate', { metadata: { title: 'Old song' } });
+  oldPlayer.emit('playerStateUpdate', { isStopped: true });
+  oldPlayer.emit('playerError', 'Old error');
+  assert.equal(updates.length, 0);
+  assert.equal(sequencer.currSongPath, 'current.mid');
+  assert.equal(sequencer.currIdx, 0);
+  sequencer.player.emit('playerStateUpdate', { metadata: { title: 'Current song' } });
+  assert.equal(updates[0].metadata.title, 'Current song');
 });
 
 test('unsupported extension reports an error rather than dereferencing undefined', () => {

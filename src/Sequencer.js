@@ -40,8 +40,12 @@ export default class Sequencer extends EventEmitter {
     this.loadGeneration = 0;
 
     this.players.forEach(player => {
-      player.on('playerStateUpdate', this.handlePlayerStateUpdate);
-      player.on('playerError', this.handlePlayerError);
+      player.on('playerStateUpdate', state => {
+        if (player === this.player) this.handlePlayerStateUpdate(state);
+      });
+      player.on('playerError', error => {
+        if (player === this.player) this.handlePlayerError(error);
+      });
     });
   }
 

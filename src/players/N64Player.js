@@ -37,7 +37,7 @@ export default class N64Player extends Player {
     this.buffer = this.core._malloc(this.bufferSize * 4); // 2 ch, 16-bit
   }
 
-  loadData(data, filename, persistedSettings) {
+  loadData(data, filename, persistedSettings, subtune, isCurrent = () => true) {
     let err;
     this.filepathMeta = Player.metadataFromFilepath(filename);
 
@@ -57,6 +57,7 @@ export default class N64Player extends Player {
 
     return Promise.all(filePromises)
       .then(() => {
+        if (!isCurrent()) return;
         err = this.core.ccall(
           'n64_load_file', 'number',
           ['string', 'number', 'number', 'number'],
