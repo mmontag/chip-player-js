@@ -48,7 +48,8 @@ export default class GSFPlayer extends Player {
     this.buffer = this.core._malloc(this.bufferSize * 4); // 2 ch, 16-bit
   }
 
-  loadData(data, filename, persistedSettings, subtune, isCurrent = () => true) {
+  loadData(data, filename, persistedSettings, subtune) {
+    const loadSignal = this.beginLoad();
     let err;
     this.filepathMeta = Player.metadataFromFilepath(filename);
 
@@ -68,7 +69,7 @@ export default class GSFPlayer extends Player {
 
     return Promise.all(filePromises)
       .then(() => {
-        if (!isCurrent()) return;
+        if (loadSignal.aborted) return;
         err = this.core.ccall(
           'gsf_load_file', 'number',
           ['string', 'number', 'number', 'number'],

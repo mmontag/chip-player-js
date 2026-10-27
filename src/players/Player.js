@@ -31,6 +31,7 @@ export default class Player extends EventEmitter {
     this.core = core;
     this.paused = true;
     this.stopped = true;
+    this.pendingLoad = null;
     this.fileExtensions = [];
     this.metadata = null;
     this.sampleRate = sampleRate;
@@ -79,6 +80,14 @@ export default class Player extends EventEmitter {
 
   canPlay(fileExtension) {
     return this.fileExtensions.indexOf(fileExtension.toLowerCase()) !== -1;
+  }
+
+  // A new load replaces any pending work from the previous song. Async player
+  // operations must check the signal after each await before changing state.
+  beginLoad() {
+    if (this.pendingLoad) this.pendingLoad.abort();
+    this.pendingLoad = new AbortController();
+    return this.pendingLoad.signal;
   }
 
   /**
@@ -316,6 +325,10 @@ export default class Player extends EventEmitter {
   }
 
   suspend() {
+    if (this.pendingLoad) {
+      this.pendingLoad.abort();
+      this.pendingLoad = null;
+    }
     this.stopped = true;
     this.paused = true;
     this.silenceSamplesRemaining = 0;

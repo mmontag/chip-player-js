@@ -315,7 +315,8 @@ export default class MIDIPlayer extends Player {
     }
   }
 
-  async loadData(data, filepath, persistedSettings, subtune, isCurrent = () => true) {
+  async loadData(data, filepath, persistedSettings, subtune) {
+    const loadSignal = this.beginLoad();
     if (this.midiFilePlayer) {
       this.midiFilePlayer.stop();
       this.midiFilePlayer.position = 0;
@@ -347,10 +348,10 @@ export default class MIDIPlayer extends Player {
         try {
           ({ data: { soundfont: soundfontPath } } = await axios.get(metadataUrl));
         } catch (e) {
-          console.warn('Could not load MIDI metadata; using the selected soundfont.', e);
+          if (!loadSignal.aborted) console.warn('Could not load MIDI metadata; using the selected soundfont.', e);
         }
       }
-      if (!isCurrent()) return;
+      if (loadSignal.aborted) return;
       const soundfontUrl = soundfontPath ? getUrlFromFilepath(soundfontPath) : null;
       if (soundfontUrl) {
         const soundfontBasename = pathe.basename(soundfontPath);
@@ -358,7 +359,7 @@ export default class MIDIPlayer extends Player {
         newTransientParams['soundfont'] = sf2Path;
         if (this.getParameter('soundfont') !== sf2Path) {
           await ensureEmscFileWithUrl(core, `${SOUNDFONT_MOUNTPOINT}/${sf2Path}`, soundfontUrl);
-          if (!isCurrent()) return;
+          if (loadSignal.aborted) return;
           this.updateSoundfontParamDefs();
         }
         // Melodic mode mean CH 10 becomes like any other channel, using SoundFont bank 0 by default.

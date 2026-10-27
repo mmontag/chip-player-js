@@ -34,14 +34,14 @@ export default class SIDPlayer extends Player {
     this.initialized = false;
   }
 
-  getSidMetadata(md5, isCurrent = () => true) {
+  getSidMetadata(md5, loadSignal) {
     console.log("SIDPlayer: Fetching metadata for SID:", md5);
     const metadataUrl = `${API_BASE}/hvsc?sidHash=${md5}`;
 
     axios.get(metadataUrl, {
       validateStatus: status => status === 404 || (status >= 200 && status < 300)
     }).then(response => {
-      if (!isCurrent() || response.status === 404) return;
+      if (loadSignal.aborted || response.status === 404) return;
       console.log('SIDPlayer: Got metadata for SID:', response.data);
       const { lengths, name, author, copyright, image_url } = response.data;
       this.subtuneDurations = lengths.split(' ').map(parseSongLength);
@@ -54,11 +54,12 @@ export default class SIDPlayer extends Player {
       };
       this.emit('playerStateUpdate', this.getBasePlayerState());
     }).catch(e => {
-      if (isCurrent()) console.warn('Could not load SID metadata:', e);
+      if (!loadSignal.aborted) console.warn('Could not load SID metadata:', e);
     });
   }
 
-  loadData(data, filepath, persistedSettings, subtune, isCurrent = () => true) {
+  loadData(data, filepath, persistedSettings, subtune) {
+    const loadSignal = this.beginLoad();
     if (!this.initialized) {
       this.core._sid_init(this.sampleRate);
       this.initialized = true;
@@ -75,7 +76,7 @@ export default class SIDPlayer extends Player {
 
     const ptr = this.core._sid_get_song_md5();
     const md5 = this.core.UTF8ToString(ptr);
-    this.getSidMetadata(md5, isCurrent);
+    this.getSidMetadata(md5, loadSignal);
 
     this.metadata = { title: pathe.basename(filepath) };
 

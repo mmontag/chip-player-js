@@ -14,7 +14,7 @@ function createSequencer(get, extraPlayers = []) {
     setTimeout, clearTimeout, console, Uint8Array, fetch };
   vm.runInNewContext(source, sandbox);
   const loads = [];
-  const player = Object.assign(new EventEmitter(), { canPlay: ext => ext === 'mid', suspend() {}, setLooping() {},
+  const player = Object.assign(new EventEmitter(), { canPlay: ext => ext === 'mid', suspend() { this.loadController?.abort(); }, setLooping() {},
     loadData: async (_data, path) => loads.push(path), getVoiceMask: () => [] });
   const sequencer = new sandbox.Sequencer([player, ...extraPlayers], { read: () => new Uint8Array([1]) }, () => ({}));
   return { sequencer, loads };
@@ -93,9 +93,10 @@ test('superseded asynchronous player loads cannot become current', async () => {
   const player = sequencer.players[0];
   let release;
   const started = [];
-  player.loadData = async (_data, path, _settings, _subtune, isCurrent) => {
+  player.loadData = async (_data, path) => {
+    const controller = player.loadController = new AbortController();
     if (path === 'local/old.mid') await new Promise(resolve => { release = resolve; });
-    if (isCurrent()) started.push(path);
+    if (!controller.signal.aborted) started.push(path);
   };
   sequencer.playSong('local/old.mid');
   sequencer.playSong('local/new.mid');

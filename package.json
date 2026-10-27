@@ -121,7 +121,8 @@
     "deploy-lite": "npm run build-lite; gh-pages -d build",
     "fixvgm": "node $NODE_DEBUG_OPTION scripts/fixvgm.js",
     "build:sitemap": "node scripts/build-sitemap.js",
-    "test:seo": "node scripts/test-seo.js"
+    "test:seo": "node scripts/test-seo.js",
+    "test:player-lifecycle": "node tests/run-player-lifecycle.cjs"
   },
   "eslintConfig": {
     "extends": "react-app",
