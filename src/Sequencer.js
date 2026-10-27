@@ -37,6 +37,7 @@ export default class Sequencer extends EventEmitter {
     this.repeat = REPEAT_OFF;
     this.playerErrorAdvanceTimer = null;
     this.currSongBuffer = null;
+    this.loadGeneration = 0;
 
     this.players.forEach(player => {
       player.on('playerStateUpdate', this.handlePlayerStateUpdate);
@@ -150,6 +151,7 @@ export default class Sequencer extends EventEmitter {
           direction, this.currIdx, this.context.length);
         this.currIdx = 0;
         this.context = null;
+        this.loadGeneration++;
         this.player.stop();
         this.player = null;
         this.emit('sequencerStateUpdate', { isEjected: true });
@@ -208,6 +210,7 @@ export default class Sequencer extends EventEmitter {
   }
 
   playSong(filepath, subtune = 0) {
+    const generation = ++this.loadGeneration;
     // A local selection must cancel an earlier remote request too.
     if (this.songRequest) {
       this.songRequest.abort();
@@ -231,7 +234,7 @@ export default class Sequencer extends EventEmitter {
     if (filepath.startsWith('local/')) {
       const buffer = this.localFilesManager.read(filepath);
       this.currSongPath = filepath;
-      this.playSongBuffer(player, filepath, buffer, subtune);
+      this.playSongBuffer(player, filepath, buffer, subtune, generation);
     } else {
       // Normalize url - paths are assumed to live under CATALOG_PREFIX
       const url = filepath.startsWith('http') ? filepath : getUrlFromFilepath(filepath);
@@ -247,7 +250,7 @@ export default class Sequencer extends EventEmitter {
         .then(res => {
           if (this.songRequest !== request) return;
           this.currSongPath = filepath;
-          this.playSongBuffer(player, filepath, res.data, subtune);
+          this.playSongBuffer(player, filepath, res.data, subtune, generation);
         })
         .catch(e => {
           if (request.signal.aborted || this.songRequest !== request) return;
@@ -259,18 +262,20 @@ export default class Sequencer extends EventEmitter {
     }
   }
 
-  async playSongBuffer(player, filepath, buffer, subtune = 0) {
+  async playSongBuffer(player, filepath, buffer, subtune = 0, generation = this.loadGeneration) {
     this.currSongBuffer = buffer;
     let uint8Array;
     uint8Array = new Uint8Array(buffer);
     const persistedSettings = this.getSettings();
     try {
-      await player.loadData(uint8Array, filepath, persistedSettings, subtune);
+      await player.loadData(uint8Array, filepath, persistedSettings, subtune,
+        () => generation === this.loadGeneration);
     } catch (e) {
+      if (generation !== this.loadGeneration) return;
       console.error(`Unable to play ${filepath}.`, e);
       this.handlePlayerError(`Unable to play ${filepath} (${e.message}).`);
       return;
     }
-    player.getVoiceMask().fill(true);
+    if (generation === this.loadGeneration) player.getVoiceMask().fill(true);
   }
 }

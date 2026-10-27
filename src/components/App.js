@@ -421,6 +421,7 @@ class App extends React.Component {
     console.debug('App.handleSequencerStateUpdate(isEjected=%s)', isEjected);
 
     if (isEjected) {
+      clearTimeout(this.playbackTimer);
       this.setState({
         ejected: true,
         currentSongSubtune: 0,
@@ -431,6 +432,8 @@ class App extends React.Component {
         currentSongBuffer: null,
         imageUrl: null,
         songPath: null,
+        songId: null,
+        md5: null,
       });
       // TODO: Disabled to support scroll restoration.
       // updateQueryString({ play: undefined });
@@ -453,6 +456,11 @@ class App extends React.Component {
       if (!songPath) {
         this.setState({ imageUrl: null });
       } else if (songPath !== this.state.songPath) {
+        const generation = this.sequencer.loadGeneration;
+        const isCurrent = () => this.sequencer.loadGeneration === generation &&
+          this.sequencer.getCurrSongPath() === songPath;
+        clearTimeout(this.playbackTimer);
+        this.setState({ songId: null, md5: null, imageUrl: null });
         const metadataUrl = getMetadataUrlForFilepath(songPath);
         // XXX: fix this later
         // if (url.indexOf("%2") > -1 || url.indexOf("#") > -1) {
@@ -464,6 +472,7 @@ class App extends React.Component {
         // updateQueryString({ play: filepath, t: undefined });
         // TODO: move fetch metadata to Player when it becomes event emitter
         axios.get(metadataUrl).then(response => {
+          if (!isCurrent()) return;
           const { imageUrl: imagePath, infoTexts, md5, songId } = response.data;
           const imageUrl = imagePath ? getUrlFromFilepath(imagePath) : null;
           const newInfoTexts = [...this.state.infoTexts, ...infoTexts ];
@@ -474,8 +483,9 @@ class App extends React.Component {
           clearTimeout(this.playbackTimer);
           this.playbackTimer = setTimeout(() => {
             // If still playing this song after 5 seconds, log a playback.
-            if (this.state.songId === songId) {
-              postWithOptionalAuth(this.props.userContext.user, `${API_BASE}/playback`, { songId, durationMs: 5000 });
+            if (isCurrent() && this.state.songId === songId) {
+              postWithOptionalAuth(this.props.userContext.user, `${API_BASE}/playback`, { songId, durationMs: 5000 })
+                .catch(e => console.warn('Could not log playback:', e));
             }
           }, 5000);
 
@@ -488,7 +498,7 @@ class App extends React.Component {
             this.updateMediaSessionPositionState();
           }
         }).catch(e => {
-          this.setState({ imageUrl: null });
+          if (isCurrent()) this.setState({ imageUrl: null });
         });
       }
 

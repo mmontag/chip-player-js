@@ -1,11 +1,11 @@
-import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react';
-import debounce from 'lodash/debounce';
+import React, { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getAuth, onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider } from 'firebase/auth';
 import { initializeApp as firebaseInitializeApp } from 'firebase/app';
 import firebaseConfig from '../config/firebaseConfig';
 import { API_BASE, CATALOG_PREFIX } from '../config';
 import { pathJoin } from '../util';
 import { getWithAuth, postWithAuth } from '../util';
+import SettingsSync from '../SettingsSync';
 
 const UserContext = createContext({
   user: null,
@@ -33,6 +33,7 @@ const UserProvider = ({ children }) => {
   // Use authState hook for user state
   // const [authUser, userLoading] = useAuthState(firebase.auth());
   const [user, setUser] = useState(null); // Local state for user data
+  const settingsSync = useRef(null);
   const [faves, setFaves] = useState(() => {
     // Restore favorites from localStorage.
     try {
@@ -59,7 +60,7 @@ const UserProvider = ({ children }) => {
     // Initialize Firebase
     const firebaseApp = firebaseInitializeApp(firebaseConfig);
     const auth = getAuth(firebaseApp);
-    onAuthStateChanged(auth, async user => {
+    return onAuthStateChanged(auth, async user => {
       setUser(user);
       console.log('Firebase auth state changed, user:', user);
       setLoadingUser(false);
@@ -86,19 +87,37 @@ const UserProvider = ({ children }) => {
 
   useEffect(() => {
     if (!user) return;
+    let active = true;
+    const sync = new SettingsSync(user.uid, window.localStorage,
+      settings => postWithAuth(user, `${API_BASE}/user/settings`, settings));
+    settingsSync.current = sync;
+    const onOnline = () => sync.schedule(0);
+    window.addEventListener('online', onOnline);
 
-    try {
-      getWithAuth(user, `${API_BASE}/user/favorites`).then(favesRes => {
+    getWithAuth(user, `${API_BASE}/user/favorites`).then(favesRes => {
+      if (active) {
         setFaves(favesRes.favorites);
-      });
+      }
+    }).catch(e => console.error('Error fetching favorites:', e));
 
+    if (sync.pending) {
+      setSettings(prev => ({ ...prev, ...sync.pending }));
+      sync.schedule(0);
+    } else {
+      const revision = sync.revision;
       getWithAuth(user, `${API_BASE}/user/settings`).then(settingsRes => {
-        // Merge server settings with defaults to ensure all keys exist
-        setSettings(prev => ({ ...prev, ...settingsRes }));
-      });
-    } catch (e) {
-      console.error('Error fetching user data:', e);
+        if (active && sync.revision === revision) {
+          setSettings(prev => ({ ...prev, ...settingsRes }));
+        }
+      }).catch(e => console.error('Error fetching settings:', e));
     }
+
+    return () => {
+      active = false;
+      window.removeEventListener('online', onOnline);
+      sync.dispose();
+      if (settingsSync.current === sync) settingsSync.current = null;
+    };
   }, [user]);
 
 
@@ -162,29 +181,16 @@ const UserProvider = ({ children }) => {
     return postWithAuth(user, `${API_BASE}/user/favorites/remove`, fave);
   }, [user]);
 
-  const saveSettings = useMemo(() => {
-    return debounce((user, newSettings) => {
-      if (!user) return;
-      postWithAuth(user, `${API_BASE}/user/settings`, newSettings)
-        .then(res => {
-          console.log('Saved settings to server:', res);
-        })
-        .catch(e => {
-          console.log('Couldn\'t save settings to server.', e);
-        });
-    }, 1000);
-  }, []);
-
   const updateSettings = useCallback((partialSettings) => {
     const newSettings = { ...settings, ...partialSettings };
     setSettings(newSettings);
-    saveSettings(user, newSettings);
-  }, [user, settings, saveSettings]);
+    if (user) settingsSync.current?.enqueue(newSettings);
+  }, [user, settings]);
 
   const replaceSettings = useCallback((newSettings) => {
     setSettings(newSettings);
-    saveSettings(user, newSettings);
-  }, [user, saveSettings]);
+    if (user) settingsSync.current?.enqueue(newSettings);
+  }, [user]);
 
   // We need to derive a list of paths to use as the play context.
   const favesContext = useMemo(() => {

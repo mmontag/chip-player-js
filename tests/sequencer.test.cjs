@@ -68,3 +68,19 @@ test('a server outage does not advance through the queue', async () => {
   assert.equal(sequencer.currIdx, 0);
   assert.equal(sequencer.context.length, 2);
 });
+
+test('superseded asynchronous player loads cannot become current', async () => {
+  const { sequencer } = createSequencer();
+  const player = sequencer.players[0];
+  let release;
+  const started = [];
+  player.loadData = async (_data, path, _settings, _subtune, isCurrent) => {
+    if (path === 'local/old.mid') await new Promise(resolve => { release = resolve; });
+    if (isCurrent()) started.push(path);
+  };
+  sequencer.playSong('local/old.mid');
+  sequencer.playSong('local/new.mid');
+  release();
+  await new Promise(resolve => setImmediate(resolve));
+  assert.deepEqual(started, ['local/new.mid']);
+});
