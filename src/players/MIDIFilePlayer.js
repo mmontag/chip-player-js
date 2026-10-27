@@ -170,8 +170,8 @@ MIDIPlayer.prototype.processPlaySynth = function (buffer, bufferSize) {
     // Fast method: when entire buffer is below threshold, consider it silence.
     let synthStillActive = 0;
     const threshold = 0.001;
-    for (let i = 0; i < bufferSize; i+=8) {
-      if (synth.getValue(bufferStart + i, 'float') > threshold) { // Check left channel only
+    for (let i = 0; i < bufferSize * 2; i++) {
+      if (Math.abs(synth.getValue(bufferStart + i * 4, 'float')) > threshold) {
         synthStillActive = 1;          // Exit early
         break;
       }

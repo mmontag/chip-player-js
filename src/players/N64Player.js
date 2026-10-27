@@ -95,7 +95,7 @@ export default class N64Player extends Player {
     }
 
     for (ch = 0; ch < channels.length; ch++) {
-      for (i = 0; i < this.bufferSize; i++) {
+      for (i = 0; i < samplesWritten; i++) {
         channels[ch][i] = this.core.getValue(
           this.buffer +           // Interleaved channel format
           i * 2 * 2 +             // frame offset   * bytes per sample * num channels +
@@ -103,6 +103,7 @@ export default class N64Player extends Player {
           'i16'                   // the sample values are signed 16-bit integers
         ) / INT16_MAX;
       }
+      channels[ch].fill(0, samplesWritten);
     }
   }
 

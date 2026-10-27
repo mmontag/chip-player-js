@@ -39,6 +39,8 @@
 #include <cstring>
 #include <cstdlib>
 #include <cctype>
+#include <algorithm>
+#include <vector>
 
 #include <psflib.h>
 #include "usf/usf.h"
@@ -206,7 +208,8 @@ class input_usf {
   char* m_path = nullptr;
 
   int data_written = 0;
-  int remainder = 0;
+  std::vector<int16_t> pending_samples;
+  size_t pending_offset = 0; // interleaved samples
   double startsilence = 0;
   int song_len = 0, fade_len = 0;
   int tag_song_ms = 0, tag_fade_ms = 0;
@@ -278,7 +281,8 @@ public:
     startsilence = 0;
     eof = false;
     data_written = 0;
-    remainder = 0;
+    pending_samples.clear();
+    pending_offset = 0;
 
     if (cfg_suppressopeningsilence) {
       double current_silence = 0;
@@ -298,8 +302,7 @@ public:
 
         current_silence += (double)i / (double)sample_rate;
         if (i < (int)skip_howmany) {
-          remainder = (int)skip_howmany - i;
-          memmove(output_buffer, output_buffer + i*2, remainder * sizeof(int16_t) * 2);
+          pending_samples.assign(output_buffer + i * 2, output_buffer + skip_howmany * 2);
           break;
         }
         if (current_silence >= skip_max) {
@@ -319,23 +322,22 @@ public:
     if (eof || !m_state || !m_state->emu_state) return -1;
     if (tag_song_ms && sample_rate && data_written >= (fade_start_pos + fade_len)) return -1;
 
-    uint32_t written = 0;
-    if (remainder) {
-      written = (uint32_t)remainder;
-      if (written > size) {
-        // This shouldn't happen with typical buffer sizes, but safe-guard
-        remainder -= size;
-        written = size;
-      } else {
-        remainder = 0;
+    uint32_t written = (uint32_t)std::min((size_t)size, (pending_samples.size() - pending_offset) / 2);
+    if (written) {
+      std::copy_n(pending_samples.data() + pending_offset, written * 2, output_buffer);
+      pending_offset += written * 2;
+      if (pending_offset == pending_samples.size()) {
+        pending_samples.clear();
+        pending_offset = 0;
       }
-    } else {
-      uint32_t todo = size;
+    }
+    if (written < size) {
+      uint32_t todo = size - written;
       const char *err = cfg_resample ?
-                        usf_render_resampled(m_state->emu_state, output_buffer, todo, sample_rate) :
-                        usf_render(m_state->emu_state, output_buffer, todo, (int32_t*)&sample_rate);
+                        usf_render_resampled(m_state->emu_state, output_buffer + written * 2, todo, sample_rate) :
+                        usf_render(m_state->emu_state, output_buffer + written * 2, todo, (int32_t*)&sample_rate);
       if (err) return -1;
-      written = todo;
+      written += todo;
     }
 
     int d_start = data_written;
@@ -368,26 +370,29 @@ public:
   void decode_seek(double p_seconds) {
     if (!m_state || !m_state->emu_state) return;
     eof = false;
-    double current_pos = (double)data_written / (double)sample_rate;
-
-    if (p_seconds < current_pos) {
+    const int target = (int)(std::max(0.0, p_seconds) * sample_rate);
+    if (target < data_written) {
       usf_restart(m_state->emu_state);
-      data_written = 0;
-      current_pos = -startsilence;
+      pending_samples.clear();
+      pending_offset = 0;
+      data_written = -(int)(startsilence * sample_rate + 0.5);
     }
 
-    double to_skip = p_seconds - current_pos;
+    int to_skip = target - data_written;
+    const int pending_frames = (int)((pending_samples.size() - pending_offset) / 2);
+    const int skip_pending = std::min(to_skip, pending_frames);
+    pending_offset += skip_pending * 2;
+    data_written += skip_pending;
+    to_skip -= skip_pending;
+    if (pending_offset == pending_samples.size()) {
+      pending_samples.clear();
+      pending_offset = 0;
+    }
     while (to_skip > 0) {
-      uint32_t chunk = SEEK_BUF_SIZE;
-      usf_render_resampled(m_state->emu_state, seek_buffer, chunk, sample_rate);
-      double chunk_secs = (double)chunk / (double)sample_rate;
-      if (to_skip < chunk_secs) {
-        remainder = (int)((chunk_secs - to_skip) * sample_rate);
-        data_written += (int)(chunk - (uint32_t)remainder);
-        break;
-      }
+      const uint32_t chunk = (uint32_t)std::min(to_skip, (int)SEEK_BUF_SIZE);
+      if (usf_render_resampled(m_state->emu_state, seek_buffer, chunk, sample_rate)) return;
       data_written += (int)chunk;
-      to_skip -= chunk_secs;
+      to_skip -= (int)chunk;
     }
   }
 
