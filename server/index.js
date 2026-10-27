@@ -683,13 +683,13 @@ router.post(
         .replace('https://gifx.co/music/', '')
         .replace('http://localhost:8080/catalog/', '');
       try { songPath = decodeURIComponent(songPath); } catch (e) {}
-      removeFavoriteByPathStmt.run({
+      const result = removeFavoriteByPathStmt.run({
         userId: req.userId,
         path: songPath,
         now,
       });
       // Get rows affected
-      const rowsAffected = removeFavoriteByPathStmt.changes;
+      const rowsAffected = result.changes;
       if (rowsAffected === 0) {
         return res.status(404).json({ error: 'Favorite not found' });
       }

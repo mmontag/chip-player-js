@@ -82,6 +82,10 @@ export default class Sequencer extends EventEmitter {
   }
 
   playContext(context, index = 0, subtune = 0) {
+    if (!context || context.length === 0) {
+      this.emit('playerError', 'No songs found to play.');
+      return;
+    }
     this.currIdx = index;
     this.context = context;
     if (this.shuffle === SHUFFLE_ON) {
@@ -201,6 +205,11 @@ export default class Sequencer extends EventEmitter {
   }
 
   playSong(filepath, subtune = 0) {
+    // A local selection must cancel an earlier remote request too.
+    if (this.songRequest) {
+      this.songRequest.abort();
+      this.songRequest = null;
+    }
     this.currSongBuffer = null;
     if (this.player !== null) {
       this.player.suspend();
@@ -209,8 +218,8 @@ export default class Sequencer extends EventEmitter {
     // Find a player that can play this filetype
     const ext = filepath.slice(filepath.lastIndexOf('.') + 1).toLowerCase();
     let player = this.players.find(p => p.canPlay(ext));
-    if (player === null) {
-      this.emit('playerError', `The file format ".${ext}" was not recognized.`);
+    if (!player) {
+      this.handlePlayerError(`The file format ".${ext}" was not recognized.`);
       return;
     }
     this.player = player;
@@ -226,18 +235,19 @@ export default class Sequencer extends EventEmitter {
 
       // Fetch the song file (cancelable request)
       // Cancel any outstanding request so that playback doesn't happen out of order
-      if (this.songRequest) this.songRequest.abort();
-      this.songRequest = new AbortController();
+      const request = this.songRequest = new AbortController();
       axios.get(url, {
           responseType: 'arrayBuffer',
-          signal: this.songRequest.signal,
+          // redaxios does not forward the signal option to fetch.
+          fetch: (url, options) => fetch(url, { ...options, signal: request.signal }),
         })
         .then(res => {
+          if (this.songRequest !== request) return;
           this.currSongPath = filepath;
           this.playSongBuffer(player, filepath, res.data, subtune);
         })
         .catch(e => {
-          if (e.name === 'AbortError') return;
+          if (request.signal.aborted || this.songRequest !== request) return;
           console.error(e);
           this.handlePlayerError(`${e.message}: ${filepath}`);
         });

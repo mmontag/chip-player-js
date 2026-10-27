@@ -139,7 +139,9 @@ const dbStatements = {
       SET items = (
           SELECT json_group_array(value)
           FROM json_each(items)
-          WHERE json_extract(value, '$.path') != @path
+          WHERE json_extract(value, '$.path') IS NOT @path
+            AND ((SELECT song_id FROM music WHERE path = @path) IS NULL
+              OR json_extract(value, '$.songId') IS NOT (SELECT song_id FROM music WHERE path = @path))
       ),
       modified_at = @now
       WHERE user_id = @userId AND type = 'favorites'
