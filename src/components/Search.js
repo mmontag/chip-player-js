@@ -26,6 +26,7 @@ export default class Search extends PureComponent {
       totalSongs: 300000,
       query: null,
       searching: false,
+      error: false,
 
       results: [],
       resultsContext: [],
@@ -34,7 +35,8 @@ export default class Search extends PureComponent {
 
     axios.get(`${API_BASE}/total`)
       .then(response => response.data)
-      .then(json => this.setState({ totalSongs: json.total }));
+      .then(json => this.setState({ totalSongs: json.total }))
+      .catch(e => console.warn('Could not load song count:', e));
   }
 
   componentDidMount() {
@@ -43,6 +45,16 @@ export default class Search extends PureComponent {
       this.setState({ query: q });
       this.doSearch(q);
     }
+  }
+
+  componentWillUnmount() {
+    this.debouncedDoSearch.cancel();
+    this.cancelSearch();
+  }
+
+  cancelSearch() {
+    if (this.searchRequest) this.searchRequest.abort();
+    this.searchRequest = null;
   }
 
   // NOTE: This is not fully vetted
@@ -59,7 +71,9 @@ export default class Search extends PureComponent {
         }
       } else if (this.state.query) {
         // param removed -> clear
-        this.setState({ query: null, searching: false, results: [], resultsContext: [], resultsCount: 0 });
+        this.debouncedDoSearch.cancel();
+        this.cancelSearch();
+        this.setState({ query: null, searching: false, error: false, results: [], resultsContext: [], resultsCount: 0 });
       }
     }
   }
@@ -69,7 +83,9 @@ export default class Search extends PureComponent {
   }
 
   onSearchInputChange(val, immediate = false) {
-    this.setState({ query: val });
+    this.cancelSearch();
+    this.debouncedDoSearch.cancel();
+    this.setState({ query: val, error: false });
     // updateQueryString({ q: val ? val.trim() : undefined });
 
     const params = new URLSearchParams(this.props.location?.search || '');
@@ -97,20 +113,22 @@ export default class Search extends PureComponent {
   }
 
   doSearch(val) {
+    this.cancelSearch();
     if (searchResultsCache[val]) {
       this.setState({
         searching: true,
+        error: false,
         ...searchResultsCache[val],
       });
     } else {
       const q = encodeURIComponent(val);
       const url = `${API_BASE}/search?query=${q}&limit=${MAX_RESULTS}`;
-      if (this.searchRequest) this.searchRequest.abort();
-      this.searchRequest = new AbortController();
+      const request = this.searchRequest = new AbortController();
       axios.get(url, {
-          signal: this.searchRequest.signal
+          fetch: (url, options) => fetch(url, { ...options, signal: request.signal })
         })
         .then(response => {
+          if (this.searchRequest !== request) return;
           const { items, total } = response.data;
           // Decorate file items with idx (to match up with song context) and other properties.
           const resultFiles = items
@@ -152,13 +170,21 @@ export default class Search extends PureComponent {
           };
           this.setState({
             searching: true,
+            error: false,
             ...searchResultsCache[val],
           });
+        })
+        .catch(e => {
+          if (this.searchRequest !== request || request.signal.aborted) return;
+          console.warn('Search failed:', e);
+          this.setState({ searching: false, error: true, results: [], resultsContext: [], resultsCount: 0 });
         });
     }
   }
 
   handleClear() {
+    this.debouncedDoSearch.cancel();
+    this.cancelSearch();
     const urlParams = new URLSearchParams(this.props.location?.search || '');
     urlParams.delete('q');
     const search = urlParams.toString();
@@ -169,6 +195,7 @@ export default class Search extends PureComponent {
     this.setState({
       query: null,
       searching: false,
+      error: false,
       results: [],
       resultsContext: [],
       resultsCount: 0,
@@ -234,6 +261,7 @@ export default class Search extends PureComponent {
             }
           </label>
         </h3>
+        {this.state.error && <p>Search is unavailable. Check your connection and try again.</p>}
         <VirtualizedList
           currContext={currContext}
           currIdx={currIdx}

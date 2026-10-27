@@ -44,9 +44,12 @@ export default class Sequencer extends EventEmitter {
     });
   }
 
-  handlePlayerError(e) {
+  handlePlayerError(e, advance = true) {
     this.emit('playerError', e);
-    if (this.context && this.player) {
+    if (!advance) {
+      clearTimeout(this.playerErrorAdvanceTimer);
+      this.playerErrorAdvanceTimer = null;
+    } else if (this.context && this.player) {
       clearTimeout(this.playerErrorAdvanceTimer);
       this.playerErrorAdvanceTimer = setTimeout(this.nextSong, ERROR_DELAY_MS);
     } else {
@@ -249,7 +252,9 @@ export default class Sequencer extends EventEmitter {
         .catch(e => {
           if (request.signal.aborted || this.songRequest !== request) return;
           console.error(e);
-          this.handlePlayerError(`${e.message}: ${filepath}`);
+          // Network failures should not skip every song while the connection is down.
+          const networkFailure = e instanceof TypeError || e.status === 408 || e.status === 429 || e.status >= 500;
+          this.handlePlayerError(`${e.message || `HTTP ${e.status}`}: ${filepath}`, !networkFailure);
         });
     }
   }

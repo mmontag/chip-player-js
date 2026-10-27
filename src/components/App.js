@@ -709,7 +709,10 @@ class App extends React.Component {
   fetchDirectory(path) {
     const slashPath = pathJoin('/', path);
     return fetch(`${API_BASE}/browse?path=${encodeURIComponent(slashPath)}`)
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      })
       .then(items => {
         this.playContexts[path] = this.directoryListingToContext(items);
         items.forEach(item => {

@@ -54,3 +54,17 @@ test('a local selection aborts and ignores an earlier remote response', async ()
   assert.deepEqual(loads, ['local/new.mid']);
   assert.equal(sequencer.currSongPath, 'local/new.mid');
 });
+
+test('a server outage does not advance through the queue', async () => {
+  let requests = 0;
+  const { sequencer } = createSequencer(() => {
+    requests++;
+    return Promise.reject({ status: 503 });
+  });
+  sequencer.on('playerError', () => {});
+  sequencer.playContext(['one.mid', 'two.mid']);
+  await new Promise(resolve => setTimeout(resolve, 1200));
+  assert.equal(requests, 1);
+  assert.equal(sequencer.currIdx, 0);
+  assert.equal(sequencer.context.length, 2);
+});

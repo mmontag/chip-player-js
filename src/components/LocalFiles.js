@@ -99,7 +99,7 @@ function LocalFiles(props) {
             {
               listing.map((item, i) => {
                 const href = item.path;
-                const title = decodeURIComponent(href.split('/').pop());
+                const title = href.split('/').pop();
                 const isPlaying = currContext === playContext && currIdx === i;
                 return (
                   <div key={title} className={isPlaying ? 'Song-now-playing BrowseList-row' : 'BrowseList-row'}>

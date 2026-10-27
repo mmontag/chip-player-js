@@ -11,10 +11,19 @@ export default class Browse extends React.PureComponent {
   constructor(props) {
     super(props);
     autoBindReact(this);
+    this.state = { failedPath: null };
+    this.pendingPaths = new Set();
   }
 
   componentDidMount() {
+    this.mounted = true;
+    window.addEventListener('online', this.retry);
     this.navigate();
+  }
+
+  componentWillUnmount() {
+    this.mounted = false;
+    window.removeEventListener('online', this.retry);
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -25,14 +34,25 @@ export default class Browse extends React.PureComponent {
     this.props.handleShufflePlay(this.props.browsePath);
   }
 
+  retry() {
+    if (this.state.failedPath !== this.props.browsePath) return;
+    this.setState({ failedPath: null }, this.navigate);
+  }
+
   navigate() {
     const {
       browsePath,
       listing,
       fetchDirectory,
     } = this.props;
-    if (!listing) {
-      fetchDirectory(browsePath);
+    if (!listing && !this.pendingPaths.has(browsePath) && this.state.failedPath !== browsePath) {
+      this.pendingPaths.add(browsePath);
+      fetchDirectory(browsePath).catch(e => {
+        console.warn('Could not load directory:', e);
+        if (this.mounted && this.props.browsePath === browsePath) {
+          this.setState({ failedPath: browsePath });
+        }
+      }).finally(() => this.pendingPaths.delete(browsePath));
     }
   }
 
@@ -120,6 +140,10 @@ export default class Browse extends React.PureComponent {
             Shuffle Play
           </button>
         </h3>
+        {this.state.failedPath === browsePath &&
+          <p>Could not load this directory. Check your connection.{' '}
+            <button className="box-button" onClick={this.retry}>Retry</button>
+          </p>}
       </VirtualizedList>
     );
   }

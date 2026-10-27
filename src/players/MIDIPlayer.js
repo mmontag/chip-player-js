@@ -342,7 +342,14 @@ export default class MIDIPlayer extends Player {
       const metadataUrl = getMetadataUrlForFilepath(filepath);
       let useMelodicChannel10 = false;
       // This should be cached by a preceding fetch in App.js.
-      const { data: { soundfont: soundfontPath } } = await axios.get(metadataUrl);
+      let soundfontPath = null;
+      if (!filepath.startsWith('local/')) {
+        try {
+          ({ data: { soundfont: soundfontPath } } = await axios.get(metadataUrl));
+        } catch (e) {
+          console.warn('Could not load MIDI metadata; using the selected soundfont.', e);
+        }
+      }
       const soundfontUrl = soundfontPath ? getUrlFromFilepath(soundfontPath) : null;
       if (soundfontUrl) {
         const soundfontBasename = pathe.basename(soundfontPath);
