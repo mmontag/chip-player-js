@@ -212,6 +212,11 @@ export default class Sequencer extends EventEmitter {
 
   playSong(filepath, subtune = 0) {
     const generation = ++this.loadGeneration;
+    // Cancel any pending song request before starting a new selection.
+    if (this.songRequest) {
+      this.songRequest.abort();
+      this.songRequest = null;
+    }
     this.currSongBuffer = null;
     if (this.player !== null) {
       this.player.suspend();
@@ -236,19 +241,19 @@ export default class Sequencer extends EventEmitter {
       const url = filepath.startsWith('http') ? filepath : getUrlFromFilepath(filepath);
 
       // Fetch the song file (cancelable request)
-      // Cancel any outstanding request so that playback doesn't happen out of order
-      if (this.songRequest) this.songRequest.abort();
-      this.songRequest = new AbortController();
+      const request = this.songRequest = new AbortController();
       axios.get(url, {
           responseType: 'arrayBuffer',
-          signal: this.songRequest.signal,
+          // redaxios does not forward signal to fetch.
+          fetch: (url, options) => fetch(url, { ...options, signal: request.signal }),
         })
         .then(res => {
+          if (generation !== this.loadGeneration) return;
           this.currSongPath = filepath;
           this.playSongBuffer(player, filepath, res.data, subtune, generation);
         })
         .catch(e => {
-          if (e.name === 'AbortError') return;
+          if (request.signal.aborted || generation !== this.loadGeneration) return;
           console.error(e);
           this.handlePlayerError(`${e.message}: ${filepath}`);
         });
