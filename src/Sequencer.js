@@ -87,6 +87,10 @@ export default class Sequencer extends EventEmitter {
   }
 
   playContext(context, index = 0, subtune = 0) {
+    if (!context || context.length === 0) {
+      this.emit('playerError', 'No songs found to play.');
+      return;
+    }
     this.currIdx = index;
     this.context = context;
     if (this.shuffle === SHUFFLE_ON) {
@@ -216,7 +220,7 @@ export default class Sequencer extends EventEmitter {
     // Find a player that can play this filetype
     const ext = filepath.slice(filepath.lastIndexOf('.') + 1).toLowerCase();
     let player = this.players.find(p => p.canPlay(ext));
-    if (player === null) {
+    if (!player) {
       this.emit('playerError', `The file format ".${ext}" was not recognized.`);
       return;
     }
