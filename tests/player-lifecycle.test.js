@@ -155,6 +155,71 @@ test('sequencer ignores events and failed loads from superseded players', async 
   assert.equal(sequencer.currSongPath, 'local/second.new');
 });
 
+test('superseded song requests cannot load after a later selection or ejection', async () => {
+  const { default: Sequencer } = await import('../src/Sequencer');
+  const { EventEmitter } = await import('events');
+  const originalFetch = globalThis.fetch;
+  const requests = [];
+  const loads = [];
+  globalThis.fetch = (url, options) => new Promise((resolve, reject) => requests.push({ url, signal: options.signal, resolve, reject }));
+  const player = (key, extension) => Object.assign(new EventEmitter(), {
+    canPlay: ext => ext === extension,
+    suspend() {}, stop() {}, setLooping() {}, getVoiceMask: () => [],
+    loadData: async (_data, path) => { loads.push({ key, path }); },
+  });
+  const gme = player('gme', 'spc');
+  const midi = player('midi', 'mid');
+  const sequencer = new Sequencer([gme, midi], { read: () => new Uint8Array([1]) }, () => ({}));
+  const respond = request => request.resolve(new Response(new Uint8Array([1]), { status: 200 }));
+  const settle = () => new Promise(resolve => setImmediate(resolve));
+  try {
+    sequencer.playContext(['a.spc']);
+    sequencer.playSong('b.mid');
+    sequencer.playSong('a.spc');
+    assert.equal(requests[0].signal.aborted, true);
+    assert.equal(requests[1].signal.aborted, true);
+    assert.equal(requests[2].signal.aborted, false);
+    respond(requests[2]);
+    await settle();
+    // Resolve canceled fetches anyway to cover a response already in flight.
+    respond(requests[1]);
+    respond(requests[0]);
+    await settle();
+    assert.deepEqual(loads, [{ key: 'gme', path: 'a.spc' }]);
+    assert.equal(sequencer.getPlayer(), gme);
+    assert.equal(sequencer.getCurrSongPath(), 'a.spc');
+
+    sequencer.playSong('b.mid');
+    sequencer.playSong('local/a.spc');
+    assert.equal(requests[3].signal.aborted, true);
+    respond(requests[3]);
+    await settle();
+    assert.deepEqual(loads, [{ key: 'gme', path: 'a.spc' }, { key: 'gme', path: 'local/a.spc' }]);
+    assert.equal(sequencer.getCurrSongPath(), 'local/a.spc');
+
+    sequencer.playContext(['b.mid']);
+    sequencer.nextSong();
+    respond(requests[4]);
+    await settle();
+    assert.equal(sequencer.getPlayer(), null);
+    assert.equal(loads.length, 2);
+
+    const errors = [];
+    sequencer.on('playerError', error => errors.push(error));
+    sequencer.playSong('b.mid');
+    sequencer.playSong('local/a.spc');
+    requests[5].reject(new Error('stale failure'));
+    await settle();
+    assert.deepEqual(errors, []);
+    sequencer.playSong('b.mid');
+    requests[6].reject(new Error('network failure'));
+    await settle();
+    assert.deepEqual(errors, ['network failure: b.mid']);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test('Web MIDI completes in the playback loop only after scheduled output', async () => {
   const { default: MIDIFilePlayer } = await import('../src/players/MIDIFilePlayer');
   const player = new MIDIFilePlayer({ useWebMIDI: true, output: { send() {} }, programChangeCb() {} });
