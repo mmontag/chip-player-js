@@ -360,7 +360,8 @@ router.get('/shuffle', (req, res) => {
   const limit = parseInt(req.query.limit, 10) || 100;
   let reqPath = (req.query.path || '').replace(/^\/+/g, '');
   if (reqPath !== '') reqPath += '/';
-  items = getShuffleStmt.pluck().all(`${reqPath}%`, limit);
+  const escapedPath = reqPath.replace(/[\\%_]/g, '\\$&');
+  const items = getShuffleStmt.pluck().all(`${escapedPath}%`, limit);
 
   res.json({
     items: items,

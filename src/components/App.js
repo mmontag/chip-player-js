@@ -654,7 +654,7 @@ class App extends React.Component {
     } else {
       // This is more like a synthetic recursive shuffle.
       // Response of this API is an array of *paths*.
-      fetch(`${API_BASE}/shuffle?path=${encodeURI(path)}&limit=100`)
+      fetch(`${API_BASE}/shuffle?path=${encodeURIComponent(path)}&limit=100`)
         .then(response => response.json())
         .then(json => json.items) // paths, e.g. "MIDI/Crystal Waters/100% Pure Love.mid"
         .then(items => this.sequencer.playContext(items));
