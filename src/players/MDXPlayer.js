@@ -30,7 +30,8 @@ export default class MDXPlayer extends Player {
     this.buffer = this.core._malloc(this.bufferSize * 4); // 2 ch, 16-bit
   }
 
-  loadData(data, filename, persistedSettings) {
+  loadData(data, filename, persistedSettings, subtune) {
+    const loadSignal = this.beginLoad();
     // MDXPlayer reads song data from the Emscripten filesystem,
     // rather than loading bytes from memory like other players.
     let err;
@@ -40,6 +41,7 @@ export default class MDXPlayer extends Player {
     // First, write PDX sample files into Emscripten filesystem.
     return ensureEmscFileWithData(this.core, mdxFilename, data)
       .then(() => {
+        if (loadSignal.aborted) return;
         const pdx = this.core.ccall(
           'mdx_get_pdx_filename', 'string',
           ['number', 'string'],
@@ -56,7 +58,9 @@ export default class MDXPlayer extends Player {
         }
       })
       .then(() => {
-        this.muteAudioDuringCall(this.audioNode, () => {
+        if (loadSignal.aborted) return;
+        return this.muteAudioDuringCall(this.audioNode, () => {
+          if (loadSignal.aborted) return;
           err = this.core.ccall(
             'mdx_open', 'number',
             ['number', 'string', 'string'],
