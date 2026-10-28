@@ -201,6 +201,11 @@ export default class Sequencer extends EventEmitter {
   }
 
   playSong(filepath, subtune = 0) {
+    // Cancel a previous remote selection even when the new song is local.
+    if (this.songRequest) {
+      this.songRequest.abort();
+      this.songRequest = null;
+    }
     this.currSongBuffer = null;
     if (this.player !== null) {
       this.player.suspend();
@@ -225,19 +230,19 @@ export default class Sequencer extends EventEmitter {
       const url = filepath.startsWith('http') ? filepath : getUrlFromFilepath(filepath);
 
       // Fetch the song file (cancelable request)
-      // Cancel any outstanding request so that playback doesn't happen out of order
-      if (this.songRequest) this.songRequest.abort();
-      this.songRequest = new AbortController();
+      const request = this.songRequest = new AbortController();
       axios.get(url, {
           responseType: 'arrayBuffer',
-          signal: this.songRequest.signal,
+          // redaxios does not forward signal to fetch.
+          fetch: (url, options) => fetch(url, { ...options, signal: request.signal }),
         })
         .then(res => {
+          if (this.songRequest !== request) return;
           this.currSongPath = filepath;
           this.playSongBuffer(player, filepath, res.data, subtune);
         })
         .catch(e => {
-          if (e.name === 'AbortError') return;
+          if (request.signal.aborted || this.songRequest !== request) return;
           console.error(e);
           this.handlePlayerError(`${e.message}: ${filepath}`);
         });
