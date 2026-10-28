@@ -349,6 +349,9 @@ MIDIPlayer.prototype.setPositionSynth = function (eventList) {
         // handleProgramChange() is called in setPosition()
         synth.programChange(event.channel, event.param1);
         break;
+      case MIDIEvents.EVENT_MIDI_PITCH_BEND:
+        synth.pitchBend(event.channel, (event.param2 << 7) + event.param1);
+        break;
       case MIDIEvents.EVENT_MIDI_CONTROLLER:
       default:
         synth.controlChange(event.channel, event.param1, event.param2);
@@ -366,7 +369,8 @@ MIDIPlayer.prototype.setPositionWebMidi = function (ms, eventList) {
     if (event.subtype === MIDIEvents.EVENT_MIDI_PROGRAM_CHANGE) {
       // handleProgramChange() is called in setPosition()
       message = [(event.subtype << 4) + event.channel, event.param1];
-    } else if (event.subtype === MIDIEvents.EVENT_MIDI_CONTROLLER) {
+    } else if (event.subtype === MIDIEvents.EVENT_MIDI_CONTROLLER ||
+               event.subtype === MIDIEvents.EVENT_MIDI_PITCH_BEND) {
       message = [(event.subtype << 4) + event.channel, event.param1, event.param2];
     }
     this.send(message, this.lastSendTimestamp + 20 + i * DELAY_MS_PER_CC_EVENT);
@@ -387,6 +391,12 @@ MIDIPlayer.prototype.setPosition = function (ms) {
   this.panic(this.lastSendTimestamp + 10);
   let eventMap = {};
   let eventList = [];
+  const pitchBends = {};
+  // Panic resets pitch bend, so restore the latest value at the target position.
+  for (const event of this.events) {
+    if (event.playTime >= ms) break;
+    if (event.subtype === MIDIEvents.EVENT_MIDI_PITCH_BEND) pitchBends[event.channel] = event;
+  }
   let pos = this.position;
 
   if (ms < this.elapsedTime) {
@@ -411,7 +421,7 @@ MIDIPlayer.prototype.setPosition = function (ms) {
     pos++;
   }
 
-  eventList = Object.values(eventMap).concat(eventList);
+  eventList = Object.values(eventMap).concat(eventList, Object.values(pitchBends));
 
   if (this.useWebMIDI) {
     this.setPositionWebMidi(ms, eventList);
