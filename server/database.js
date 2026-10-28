@@ -73,7 +73,7 @@ const dbStatements = {
       WHERE m.song_id GLOB ?
   `),
   getTextContentStmt: db.prepare('SELECT content FROM texts WHERE id = ?'),
-  getShuffleStmt: db.prepare('SELECT path FROM music WHERE path LIKE ? ORDER BY RANDOM() LIMIT ?'),
+  getShuffleStmt: db.prepare("SELECT path FROM music WHERE path LIKE ? ESCAPE '\\' ORDER BY RANDOM() LIMIT ?"),
   getTotalStmt: db.prepare('SELECT COUNT(*) as total, COUNT(DISTINCT song_id) as `unique` FROM music'),
 
   // Users
