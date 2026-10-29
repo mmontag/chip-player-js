@@ -58,7 +58,7 @@ export default class SIDPlayer extends Player {
     });
   }
 
-  loadData(data, filepath, persistedSettings, subtune) {
+  loadData(data, filepath, persistedSettings) {
     const loadSignal = this.beginLoad();
     if (!this.initialized) {
       this.core._sid_init(this.sampleRate);

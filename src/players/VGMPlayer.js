@@ -46,7 +46,7 @@ export default class VGMPlayer extends Player {
     this.core._lvgm_set_yrw801_rom_path(this.vgmCtx, this.core.stringToNewUTF8(YRW801_ROM_PATH));
   }
 
-  async loadData(data, filepath, persistedSettings, subtune) {
+  async loadData(data, filepath, persistedSettings) {
     const loadSignal = this.beginLoad();
     const dataPtr = this.copyToHeap(data);
     const err = this.core._lvgm_load_data(this.vgmCtx, dataPtr, data.byteLength);

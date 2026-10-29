@@ -30,7 +30,7 @@ export default class MDXPlayer extends Player {
     this.buffer = this.core._malloc(this.bufferSize * 4); // 2 ch, 16-bit
   }
 
-  loadData(data, filename, persistedSettings, subtune) {
+  loadData(data, filename, persistedSettings) {
     const loadSignal = this.beginLoad();
     // MDXPlayer reads song data from the Emscripten filesystem,
     // rather than loading bytes from memory like other players.

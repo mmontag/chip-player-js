@@ -37,7 +37,7 @@ export default class N64Player extends Player {
     this.buffer = this.core._malloc(this.bufferSize * 4); // 2 ch, 16-bit
   }
 
-  loadData(data, filename, persistedSettings, subtune) {
+  loadData(data, filename, persistedSettings) {
     const loadSignal = this.beginLoad();
     let err;
     this.filepathMeta = Player.metadataFromFilepath(filename);
