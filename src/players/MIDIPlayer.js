@@ -239,7 +239,10 @@ export default class MIDIPlayer extends Player {
     // Notes are allowed to ring out, and the MIDI synth behaves more like external hardware.
 
     if (useWebMIDI) {
-      this.midiFilePlayer.processPlay();
+      if (this.midiFilePlayer.processPlay() === 0) {
+        this.handleSongEnd();
+        return;
+      }
     } else {
       if (this.midiFilePlayer.processPlaySynth(this.buffer, this.bufferSize)) {
         for (let ch = 0; ch < channels.length; ch++) {
@@ -384,7 +387,7 @@ export default class MIDIPlayer extends Player {
     // Checking filepath doesn't work for dragged files. Force to true during development.
     const useTrackLoops = filepath.includes('SoundFont MIDI');
     this.midiFilePlayer.load(midiFile, useTrackLoops);
-    this.midiFilePlayer.play(() => this.handleSongEnd());
+    this.midiFilePlayer.play();
 
     this.resume();
     this.emit('playerStateUpdate', {
