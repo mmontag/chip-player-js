@@ -130,3 +130,26 @@ test('sequencer ignores events and failed loads from superseded players', async 
   assert.equal(updates.length, 0);
   assert.equal(sequencer.currSongPath, 'local/second.new');
 });
+
+test('MIDI device discovery only selects an output when one exists', async () => {
+  const { default: MIDIPlayer } = await import('../src/players/MIDIPlayer');
+  const originalNavigator = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
+  try {
+    for (const count of [0, 1, 2]) {
+      const outputs = new Map(Array.from({ length: count }, (_, i) => [`${i}`, { name: `Device ${i + 1}` }]));
+      Object.defineProperty(globalThis, 'navigator', { configurable: true, value: { requestMIDIAccess: async () => ({ outputs }) } });
+      const player = Object.create(MIDIPlayer.prototype);
+      const calls = [];
+      player.webMidiIsInitialized = false;
+      player.paramDefs = [{ id: 'mididevice', options: [{ items: [] }] }];
+      player.setParameter = (...args) => calls.push(args);
+      player.ensureWebMidiInitialized();
+      await new Promise(resolve => setImmediate(resolve));
+      assert.equal(player.paramDefs[0].options[0].items.length, count);
+      assert.deepEqual(calls, count ? [['mididevice', 1]] : []);
+    }
+  } finally {
+    if (originalNavigator) Object.defineProperty(globalThis, 'navigator', originalNavigator);
+    else delete globalThis.navigator;
+  }
+});
