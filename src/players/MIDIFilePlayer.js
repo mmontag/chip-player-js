@@ -87,9 +87,8 @@ MIDIPlayer.prototype.doSkipSilence = function () {
   }
 };
 
-MIDIPlayer.prototype.play = function (endCallback) {
+MIDIPlayer.prototype.play = function () {
   if (0 === this.position) {
-    this.endCallback = endCallback;
     this.reset();
 
     this.lastProcessPlayTimestamp = performance.now();
@@ -192,7 +191,7 @@ MIDIPlayer.prototype.processPlay = function () {
   const deltaTime = (now - this.lastProcessPlayTimestamp) * this.speed;
   this.lastProcessPlayTimestamp = now;
 
-  if (this.paused) return;
+  if (this.paused) return 1;
 
   let throttleDelayMs = 0;
   let delay = 0;
@@ -236,19 +235,25 @@ MIDIPlayer.prototype.processPlay = function () {
     }
     if (message) {
       const scaledPlayTime = (event.playTime - this.elapsedTime) / this.speed + this.lastProcessPlayTimestamp;
-      this.send(message, scaledPlayTime + throttleDelayMs);
+      const sendTimestamp = scaledPlayTime + throttleDelayMs;
+      this.send(message, sendTimestamp);
       throttleDelayMs += delay;
-      this.lastSendTimestamp = scaledPlayTime;
+      this.lastSendTimestamp = Math.max(this.lastSendTimestamp, sendTimestamp);
     }
     this.position++;
     event = this.events[this.position];
   }
 
-  if (this.position >= this.events.length) {
-    setTimeout(this.endCallback, BUFFER_AHEAD + 100);
+  // MIDI messages are scheduled ahead. Finish after the last event and a short
+  // tail, rather than advancing while queued messages are still in flight.
+  if (this.position >= this.events.length &&
+      this.elapsedTime >= this.getDuration() + 100 * this.speed &&
+      now >= this.lastSendTimestamp + 100) {
     this.position = 0;
     this.paused = true;
+    return 0;
   }
+  return 1;
 };
 
 MIDIPlayer.prototype.handleProgramChange = function (channel, program) {
