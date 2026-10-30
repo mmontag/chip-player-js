@@ -767,40 +767,30 @@ class App extends React.Component {
   }
 
   handleFiles = (files) => {
-    const promises = files.map(file => {
-      return new Promise((resolve, reject) => {
-        // TODO: refactor, avoid creating new reader/handlers for every dropped file.
-        const reader = new FileReader();
-        reader.onerror = (event) => reject(event.target.error);
-        reader.onload = async () => {
-          const ext = pathe.extname(file.name).toLowerCase().substring(1);
-          if (ext === 'sf2') {
-            // Handle dropped Soundfont
-            if (!this.midiPlayer) {
-              reject('MIDIPlayer has not been created - unable to load SoundFont.');
-            } else if (files.length !== 1) {
-              reject('Soundfonts must be added one at a time, separate from other files.');
-            } else {
-              const sf2Path = `user/${file.name}`;
-              await ensureEmscFileWithData(this.chipCore, `${SOUNDFONT_MOUNTPOINT}/${sf2Path}`, new Uint8Array(reader.result), /*forceWrite=*/true);
-              this.midiPlayer.updateSoundfontParamDefs();
-              this.midiPlayer.setParameter('soundfont', sf2Path, /*isTransient=*/false);
-              // TODO: emit "paramDefsChanged" from player.
-              // See https://reactjs.org/docs/integrating-with-other-libraries.html#integrating-with-model-layers
-              this.forceUpdate();
-              resolve(0);
-            }
-          } else if (FORMATS.includes(ext)) {
-            // Handle dropped song file
-            const songData = reader.result;
-            this.localFilesManager.write(pathe.join('local', file.name), songData);
-            resolve(1);
-          } else {
-            reject(`The file format ".${ext}" was not recognized.`);
-          }
-        };
-        reader.readAsArrayBuffer(file);
-      });
+    const promises = files.map(async file => {
+      const data = await file.arrayBuffer();
+      const ext = pathe.extname(file.name).toLowerCase().substring(1);
+      if (ext === 'sf2') {
+        // Handle dropped Soundfont
+        if (!this.midiPlayer) {
+          throw new Error('MIDIPlayer has not been created - unable to load SoundFont.');
+        } else if (files.length !== 1) {
+          throw new Error('Soundfonts must be added one at a time, separate from other files.');
+        }
+        const sf2Path = `user/${file.name}`;
+        await ensureEmscFileWithData(this.chipCore, `${SOUNDFONT_MOUNTPOINT}/${sf2Path}`, new Uint8Array(data), /*forceWrite=*/true);
+        this.midiPlayer.updateSoundfontParamDefs();
+        this.midiPlayer.setParameter('soundfont', sf2Path, /*isTransient=*/false);
+        // TODO: emit "paramDefsChanged" from player.
+        // See https://reactjs.org/docs/integrating-with-other-libraries.html#integrating-with-model-layers
+        this.forceUpdate();
+        return 0;
+      } else if (FORMATS.includes(ext)) {
+        // Handle dropped song file
+        this.localFilesManager.write(pathe.join('local', file.name), data);
+        return 1;
+      }
+      throw new Error(`The file format ".${ext}" was not recognized.`);
     });
 
     Promise.allSettled(promises).then(results => {
@@ -816,6 +806,7 @@ class App extends React.Component {
       }
       // Display all rejection reasons with duplicate reasons removed.
       results.filter(result => result.status === 'rejected')
+        .map(result => ({ ...result, reason: result.reason instanceof Error ? result.reason.message : result.reason }))
         .reduce((acc, result) => acc.includes(result.reason) ? acc : [ ...acc, result.reason ], [])
         .forEach((reason, i) => setTimeout(() => this.props.toastContext.enqueueToast(reason, ToastLevels.ERROR), i * 1500));
     });
