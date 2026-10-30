@@ -130,3 +130,44 @@ test('sequencer ignores events and failed loads from superseded players', async 
   assert.equal(updates.length, 0);
   assert.equal(sequencer.currSongPath, 'local/second.new');
 });
+
+test('Web MIDI completes in the playback loop only after scheduled output', async () => {
+  const { default: MIDIFilePlayer } = await import('../src/players/MIDIFilePlayer');
+  const player = new MIDIFilePlayer({ useWebMIDI: true, output: { send() {} }, programChangeCb() {} });
+  player.events = [{ subtype: 9, channel: 0, param1: 60, param2: 100, playTime: 1000 }];
+  player.channelMask[0] = true;
+  player.position = 0;
+  player.elapsedTime = 980;
+  player.lastProcessPlayTimestamp = performance.now();
+  player.resume();
+  assert.equal(player.processPlay(), 1); // the last note is queued ahead
+  assert.equal(player.position, 1);
+  player.elapsedTime = 1101;
+  player.lastSendTimestamp = performance.now() + 50;
+  assert.equal(player.processPlay(), 1); // queued output has not finished
+  player.lastSendTimestamp = performance.now() - 101;
+  assert.equal(player.processPlay(), 0);
+  assert.equal(player.paused, true);
+  assert.equal(player.processPlay(), 1); // no second completion
+});
+
+test('stopping or seeking Web MIDI before completion does not end the next song', async () => {
+  const { default: MIDIFilePlayer } = await import('../src/players/MIDIFilePlayer');
+  const player = new MIDIFilePlayer({ useWebMIDI: true, output: { send() {} }, programChangeCb() {} });
+  player.events = [{ subtype: 9, channel: 0, param1: 60, param2: 100, playTime: 1000 }];
+  player.channelMask[0] = true;
+  player.position = 1;
+  player.elapsedTime = 990;
+  player.lastProcessPlayTimestamp = performance.now();
+  player.resume();
+  player.stop();
+  assert.equal(player.processPlay(), 1);
+  player.position = 0;
+  player.elapsedTime = 0;
+  player.lastProcessPlayTimestamp = performance.now();
+  player.resume();
+  assert.equal(player.processPlay(), 1);
+  player.setPosition(100);
+  assert.equal(player.position, 0);
+  assert.equal(player.processPlay(), 1);
+});
