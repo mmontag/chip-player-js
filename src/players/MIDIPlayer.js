@@ -294,7 +294,7 @@ export default class MIDIPlayer extends Player {
     console.debug('Requesting MIDI output devices.');
     if (typeof navigator.requestMIDIAccess === 'function') {
       navigator.requestMIDIAccess({ sysex: true }).then((access) => {
-        if (access.outputs.length === 0) {
+        if (access.outputs.size === 0) {
           console.warn('No MIDI output devices found.');
         } else {
           [...access.outputs.values()].forEach(midiOutput => {
