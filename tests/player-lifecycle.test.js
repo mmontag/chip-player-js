@@ -64,6 +64,31 @@ test('stopping an MDX player while filesystem work is pending prevents opening t
   assert.deepEqual(calls, []);
 });
 
+test('muting a MIDI channel silences only the selected output', async () => {
+  const { default: MIDIFilePlayer } = await import('../src/players/MIDIFilePlayer');
+  for (const useWebMIDI of [false, true]) {
+    const sent = [], silenced = [];
+    const player = new MIDIFilePlayer({
+      useWebMIDI,
+      output: { send: (message, time) => sent.push({ message, time }) },
+      synth: { panicChannel: channel => silenced.push(channel) },
+    });
+    player.lastSendTimestamp = 100;
+    player.setChannelMute(3, true);
+    assert.equal(player.channelMask[3], false);
+    assert.deepEqual(silenced, useWebMIDI ? [] : [3]);
+    assert.deepEqual(sent, useWebMIDI ? [
+      { message: [0xb3, 64, 0], time: 110 },
+      { message: [0xb3, 120, 0], time: 110 },
+    ] : []);
+    player.setChannelMute(3, false);
+    assert.equal(player.channelMask[3], true);
+    assert.equal(sent.length, useWebMIDI ? 2 : 0);
+    assert.equal(silenced.length, useWebMIDI ? 0 : 1);
+  }
+});
+
+
 for (const [PlayerClass, shutdown] of [[N64Player, '_n64_shutdown'], [GSFPlayer, '_gsf_shutdown']]) {
   test(`${PlayerClass.name} ignores a superseded filesystem load`, async () => {
     let finishSync;

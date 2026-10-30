@@ -481,11 +481,13 @@ MIDIPlayer.prototype.summarizeMidiEvents = function () {
 MIDIPlayer.prototype.setChannelMute = function (ch, isMuted) {
   this.channelMask[ch] = !isMuted;
   if (isMuted) {
-    // TODO separate synth from webMidi
-    const timestamp = this.lastSendTimestamp + 10;
-    this.send([(MIDIEvents.EVENT_MIDI_CONTROLLER << 4) + ch, CC_SUSTAIN_PEDAL, 0], timestamp);
-    this.send([(MIDIEvents.EVENT_MIDI_CONTROLLER << 4) + ch, CC_ALL_SOUND_OFF, 0], timestamp);
-    this.synth.panicChannel(ch);
+    if (this.useWebMIDI) {
+      const timestamp = this.lastSendTimestamp + 10;
+      this.send([(MIDIEvents.EVENT_MIDI_CONTROLLER << 4) + ch, CC_SUSTAIN_PEDAL, 0], timestamp);
+      this.send([(MIDIEvents.EVENT_MIDI_CONTROLLER << 4) + ch, CC_ALL_SOUND_OFF, 0], timestamp);
+    } else {
+      this.synth.panicChannel(ch);
+    }
   }
 };
 
