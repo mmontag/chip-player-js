@@ -773,9 +773,9 @@ class App extends React.Component {
       if (ext === 'sf2') {
         // Handle dropped Soundfont
         if (!this.midiPlayer) {
-          throw 'MIDIPlayer has not been created - unable to load SoundFont.';
+          throw new Error('MIDIPlayer has not been created - unable to load SoundFont.');
         } else if (files.length !== 1) {
-          throw 'Soundfonts must be added one at a time, separate from other files.';
+          throw new Error('Soundfonts must be added one at a time, separate from other files.');
         }
         const sf2Path = `user/${file.name}`;
         await ensureEmscFileWithData(this.chipCore, `${SOUNDFONT_MOUNTPOINT}/${sf2Path}`, new Uint8Array(data), /*forceWrite=*/true);
@@ -790,7 +790,7 @@ class App extends React.Component {
         this.localFilesManager.write(pathe.join('local', file.name), data);
         return 1;
       }
-      throw `The file format ".${ext}" was not recognized.`;
+      throw new Error(`The file format ".${ext}" was not recognized.`);
     });
 
     Promise.allSettled(promises).then(results => {
