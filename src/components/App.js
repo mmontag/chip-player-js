@@ -421,6 +421,8 @@ class App extends React.Component {
     console.debug('App.handleSequencerStateUpdate(isEjected=%s)', isEjected);
 
     if (isEjected) {
+      this.latestMetadataRequest = null;
+      clearTimeout(this.playbackTimer);
       this.setState({
         ejected: true,
         currentSongSubtune: 0,
@@ -431,6 +433,8 @@ class App extends React.Component {
         currentSongBuffer: null,
         imageUrl: null,
         songPath: null,
+        songId: null,
+        md5: null,
       });
       // TODO: Disabled to support scroll restoration.
       // updateQueryString({ play: undefined });
@@ -451,8 +455,13 @@ class App extends React.Component {
       //       ...but these are also emitted with playerStateUpdate.
       //       It would be better to incorporate imageUrl into playerStateUpdate.
       if (!songPath) {
-        this.setState({ imageUrl: null });
+        this.latestMetadataRequest = null;
+        clearTimeout(this.playbackTimer);
+        this.setState({ imageUrl: null, songId: null, md5: null });
       } else if (songPath !== this.state.songPath) {
+        const request = this.latestMetadataRequest = {};
+        clearTimeout(this.playbackTimer);
+        this.setState({ imageUrl: null, songId: null, md5: null });
         const metadataUrl = getMetadataUrlForFilepath(songPath);
         // XXX: fix this later
         // if (url.indexOf("%2") > -1 || url.indexOf("#") > -1) {
@@ -464,6 +473,7 @@ class App extends React.Component {
         // updateQueryString({ play: filepath, t: undefined });
         // TODO: move fetch metadata to Player when it becomes event emitter
         axios.get(metadataUrl).then(response => {
+          if (this.latestMetadataRequest !== request) return;
           const { imageUrl: imagePath, infoTexts, md5, songId } = response.data;
           const imageUrl = imagePath ? getUrlFromFilepath(imagePath) : null;
           const newInfoTexts = [...this.state.infoTexts, ...infoTexts ];
@@ -488,7 +498,7 @@ class App extends React.Component {
             this.updateMediaSessionPositionState();
           }
         }).catch(e => {
-          this.setState({ imageUrl: null });
+          if (this.latestMetadataRequest === request) this.setState({ imageUrl: null });
         });
       }
 
