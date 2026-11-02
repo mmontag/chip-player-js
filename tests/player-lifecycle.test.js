@@ -129,16 +129,14 @@ test('MDX checks cancellation again after audio context suspension', async () =>
 
 test('sequencer ignores events and failed loads from superseded players', async () => {
   const { default: Sequencer } = await import('../src/Sequencer');
-  const { EventEmitter } = await import('events');
   let failOld;
-  const old = Object.assign(new EventEmitter(), {
-    canPlay: ext => ext === 'old', suspend() {}, setLooping() {},
+  const old = Object.assign(new Player({}, 44100), {
+    canPlay: ext => ext === 'old',
     loadData: () => new Promise((_, reject) => { failOld = reject; }),
-    getVoiceMask: () => [],
   });
-  const current = Object.assign(new EventEmitter(), {
-    canPlay: ext => ext === 'new', suspend() {}, setLooping() {},
-    loadData: async () => {}, getVoiceMask: () => [],
+  const current = Object.assign(new Player({}, 44100), {
+    canPlay: ext => ext === 'new',
+    loadData: async () => {},
   });
   const sequencer = new Sequencer([old, current], { read: () => new Uint8Array([1]) }, () => ({}));
   const errors = [], updates = [];
@@ -157,14 +155,13 @@ test('sequencer ignores events and failed loads from superseded players', async 
 
 test('superseded song requests cannot load after a later selection or ejection', async () => {
   const { default: Sequencer } = await import('../src/Sequencer');
-  const { EventEmitter } = await import('events');
   const originalFetch = globalThis.fetch;
   const requests = [];
   const loads = [];
   globalThis.fetch = (url, options) => new Promise((resolve, reject) => requests.push({ url, signal: options.signal, resolve, reject }));
-  const player = (key, extension) => Object.assign(new EventEmitter(), {
+  const player = (key, extension) => Object.assign(new Player({}, 44100), {
     canPlay: ext => ext === extension,
-    suspend() {}, stop() {}, setLooping() {}, getVoiceMask: () => [],
+    stop() { this.suspend(); },
     loadData: async (_data, path) => { loads.push({ key, path }); },
   });
   const gme = player('gme', 'spc');

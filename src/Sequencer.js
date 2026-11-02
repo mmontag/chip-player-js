@@ -33,11 +33,9 @@ export default class Sequencer extends EventEmitter {
     this.currSongPath = null;
     this.shuffle = SHUFFLE_OFF;
     this.shuffleOrder = [];
-    this.songRequest = null;
     this.repeat = REPEAT_OFF;
     this.playerErrorAdvanceTimer = null;
     this.currSongBuffer = null;
-    this.loadGeneration = 0;
 
     this.players.forEach(player => {
       player.on('playerStateUpdate', state => {
@@ -152,7 +150,6 @@ export default class Sequencer extends EventEmitter {
           direction, this.currIdx, this.context.length);
         this.currIdx = 0;
         this.context = null;
-        this.loadGeneration++;
         this.player.stop();
         this.player = null;
         this.emit('sequencerStateUpdate', { isEjected: true });
@@ -211,12 +208,6 @@ export default class Sequencer extends EventEmitter {
   }
 
   playSong(filepath, subtune = 0) {
-    const generation = ++this.loadGeneration;
-    // Cancel any pending song request before starting a new selection.
-    if (this.songRequest) {
-      this.songRequest.abort();
-      this.songRequest = null;
-    }
     this.currSongBuffer = null;
     if (this.player !== null) {
       this.player.suspend();
@@ -231,48 +222,44 @@ export default class Sequencer extends EventEmitter {
     }
     this.player = player;
     this.player.setLooping(this.repeat === REPEAT_ONE);
+    const loadSignal = player.beginLoad();
 
     if (filepath.startsWith('local/')) {
       const buffer = this.localFilesManager.read(filepath);
       this.currSongPath = filepath;
-      this.playSongBuffer(player, filepath, buffer, subtune, generation);
+      this.playSongBuffer(player, filepath, buffer, subtune, loadSignal);
     } else {
       // Normalize url - paths are assumed to live under CATALOG_PREFIX
       const url = filepath.startsWith('http') ? filepath : getUrlFromFilepath(filepath);
 
       // Fetch the song file (cancelable request)
-      const request = this.songRequest = new AbortController();
       axios.get(url, {
           responseType: 'arrayBuffer',
           // redaxios does not forward signal to fetch.
-          fetch: (url, options) => fetch(url, { ...options, signal: request.signal }),
+          fetch: (url, options) => fetch(url, { ...options, signal: loadSignal }),
         })
         .then(res => {
-          if (generation !== this.loadGeneration) return;
+          if (loadSignal.aborted) return;
           this.currSongPath = filepath;
-          this.playSongBuffer(player, filepath, res.data, subtune, generation);
+          this.playSongBuffer(player, filepath, res.data, subtune, loadSignal);
         })
         .catch(e => {
-          if (request.signal.aborted || generation !== this.loadGeneration) return;
+          if (loadSignal.aborted) return;
           console.error(e);
           this.handlePlayerError(`${e.message}: ${filepath}`);
         });
     }
   }
 
-  async playSongBuffer(player, filepath, buffer, subtune = 0, generation = this.loadGeneration) {
+  playSongBuffer(player, filepath, buffer, subtune = 0, loadSignal = player.beginLoad()) {
     this.currSongBuffer = buffer;
-    let uint8Array;
-    uint8Array = new Uint8Array(buffer);
+    const uint8Array = new Uint8Array(buffer);
     const persistedSettings = this.getSettings();
-    try {
-      await player.loadData(uint8Array, filepath, persistedSettings, subtune);
-    } catch (e) {
-      if (generation !== this.loadGeneration) return;
-      console.error(`Unable to play ${filepath}.`, e);
-      this.handlePlayerError(`Unable to play ${filepath} (${e.message}).`);
-      return;
-    }
-    if (generation === this.loadGeneration) player.getVoiceMask().fill(true);
+    player.loadData(uint8Array, filepath, persistedSettings, subtune)
+      .catch(e => {
+        if (loadSignal.aborted) return;
+        console.error(`Unable to play ${filepath}.`, e);
+        this.handlePlayerError(`Unable to play ${filepath} (${e.message}).`);
+      });
   }
 }

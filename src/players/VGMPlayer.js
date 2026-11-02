@@ -47,7 +47,7 @@ export default class VGMPlayer extends Player {
   }
 
   async loadData(data, filepath, persistedSettings) {
-    const loadSignal = this.beginLoad();
+    const loadSignal = this.pendingLoad?.signal || this.beginLoad();
     const dataPtr = this.copyToHeap(data);
     const err = this.core._lvgm_load_data(this.vgmCtx, dataPtr, data.byteLength);
     this.core._free(dataPtr);

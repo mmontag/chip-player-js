@@ -17,7 +17,7 @@ export default class V2MPlayer extends Player {
     this.buffer = this.core._malloc(this.bufferSize * 8);
   }
 
-  loadData(data, filename, persistedSettings) {
+  async loadData(data, filename, persistedSettings) {
     const dataPtr = this.copyToHeap(data);
     const err = this.core._v2m_open(dataPtr, data.byteLength, this.sampleRate);
     this.core._free(dataPtr);

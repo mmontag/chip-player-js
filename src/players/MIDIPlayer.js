@@ -319,7 +319,7 @@ export default class MIDIPlayer extends Player {
   }
 
   async loadData(data, filepath, persistedSettings) {
-    const loadSignal = this.beginLoad();
+    const loadSignal = this.pendingLoad?.signal || this.beginLoad();
     if (this.midiFilePlayer) {
       this.midiFilePlayer.stop();
       this.midiFilePlayer.position = 0;

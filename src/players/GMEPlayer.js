@@ -202,7 +202,7 @@ export default class GMEPlayer extends Player {
     return res;
   }
 
-  loadData(data, filepath, persistedSettings, subtune = 0) {
+  async loadData(data, filepath, persistedSettings, subtune = 0) {
     this.subtune = subtune;
     this.fadingOut = false;
     this.fadeStartMs = null;

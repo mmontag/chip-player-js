@@ -94,7 +94,7 @@ export default class Player extends EventEmitter {
    * @param {ArrayBuffer} data - File contents
    * @param {string} filename - Filename for metadata fallback
    */
-  loadData(data, filename) {
+  async loadData(data, filename) {
     throw Error('Player.loadData() must be implemented.');
   }
 
