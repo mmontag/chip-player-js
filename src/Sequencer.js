@@ -207,7 +207,19 @@ export default class Sequencer extends EventEmitter {
     return this.player.getSubtune();
   }
 
+  pause() {
+    clearTimeout(this.playerErrorAdvanceTimer);
+    this.playerErrorAdvanceTimer = null;
+    if (this.player.stopped) {
+      this.player.suspend();
+    } else {
+      this.player.togglePause();
+    }
+  }
+
   playSong(filepath, subtune = 0) {
+    clearTimeout(this.playerErrorAdvanceTimer);
+    this.playerErrorAdvanceTimer = null;
     this.currSongBuffer = null;
     if (this.player !== null) {
       this.player.suspend();
@@ -224,6 +236,7 @@ export default class Sequencer extends EventEmitter {
     this.player.setLooping(this.repeat === REPEAT_ONE);
     const loadSignal = player.beginLoad();
     player.fetchCatalogMetadata(filepath, loadSignal);
+    this.emit('songSelected');
 
     if (filepath.startsWith('local/')) {
       const buffer = this.localFilesManager.read(filepath);

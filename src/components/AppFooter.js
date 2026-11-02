@@ -92,7 +92,7 @@ function AppFooter(props) {
           <button onClick={togglePause}
                   title={playPauseTitle}
                   className="box-button"
-                  disabled={ejected}>
+                  disabled={ejected && !sequencer?.getCurrContext()}>
             <span className={`inline-icon ${playPauseClass}`}/>
           </button>
           <button onClick={nextSong}
@@ -141,11 +141,11 @@ function AppFooter(props) {
         </div>
         <div style={{ display: 'flex', gap: 'var(--charW2)' }}>
           <TimeSlider
-            paused={paused}
+            paused={paused || ejected}
             currentSongDurationMs={currentSongDurationMs}
             getCurrentPositionMs={() => {
               // TODO: reevaluate this approach
-              if (sequencer && sequencer.getPlayer()) {
+              if (sequencer && sequencer.getPlayer() && !sequencer.getPlayer().stopped) {
                 return sequencer.getPlayer().getPositionMs();
               }
               return 0;
