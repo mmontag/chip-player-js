@@ -223,6 +223,7 @@ export default class Sequencer extends EventEmitter {
     this.player = player;
     this.player.setLooping(this.repeat === REPEAT_ONE);
     const loadSignal = player.beginLoad();
+    player.fetchCatalogMetadata(filepath, loadSignal);
 
     if (filepath.startsWith('local/')) {
       const buffer = this.localFilesManager.read(filepath);
@@ -255,7 +256,6 @@ export default class Sequencer extends EventEmitter {
     this.currSongBuffer = buffer;
     const uint8Array = new Uint8Array(buffer);
     const persistedSettings = this.getSettings();
-    player.fetchCatalogMetadata(filepath, loadSignal);
     player.loadData(uint8Array, filepath, persistedSettings, subtune)
       .catch(e => {
         if (loadSignal.aborted) return;
