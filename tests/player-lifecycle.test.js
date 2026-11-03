@@ -26,7 +26,6 @@ test('late SID metadata cannot overwrite a newer song or publish after stop', as
     const player = new SIDPlayer(core, 44100);
     const updates = [];
     player.on('playerStateUpdate', state => updates.push(state));
-    player.getBasePlayerState = () => ({ metadata: player.metadata });
     player.getSidMetadata('old', player.beginLoad());
     player.getSidMetadata('new', player.beginLoad());
     pending[1]({ status: 200, data: { lengths: '2:00', name: 'New', author: 'B', copyright: '2' } });

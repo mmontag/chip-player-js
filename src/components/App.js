@@ -124,7 +124,6 @@ class App extends React.Component {
       voiceMask: Array(MAX_VOICES).fill(true),
       voiceNames: Array(MAX_VOICES).fill(''),
       voiceGroups: [],
-      imageUrl: null,
       infoTexts: [],
       showInfo: false,
       metadataText: null,
@@ -398,7 +397,6 @@ class App extends React.Component {
         durationMs: 1,
         numSubtunes: 0,
         songBuffer: null,
-        imageUrl: null,
         songPath: null,
       });
       // TODO: Disabled to support scroll restoration.
@@ -413,31 +411,22 @@ class App extends React.Component {
         }
       }
     } else {
-      const player = this.sequencer.getPlayer();
       const songPath = this.sequencer.getCurrSongPath();
-      // TODO: this is messy. imageUrl comes asynchronously from the /metadata request.
-      //       Title, artist, etc. come synchronously from player.getMetadata().
-      //       ...but these are also emitted with playerStateUpdate.
-      //       It would be better to incorporate imageUrl into playerStateUpdate.
-      if (!songPath) {
-        this.setState({ imageUrl: null });
-      } else if (songPath !== this.state.songPath) {
+      // TODO: move fetch metadata to Player when it becomes event emitter
+      if (songPath && songPath !== this.state.songPath) {
         const metadataUrl = getMetadataUrlForFilepath(songPath);
-        // XXX: fix this later
-        // if (url.indexOf("%2") > -1 || url.indexOf("#") > -1) {
-        //   console.warn("handleSequencerStateUpdate() url:", url);
-        //   console.warn("handleSequencerStateUpdate() metadataUrl:", metadataUrl);
-        // }
-        // TODO: Disabled to support scroll restoration.
-        // const filepath = url.replace(CATALOG_PREFIX, '');
-        // updateQueryString({ play: filepath, t: undefined });
-        // TODO: move fetch metadata to Player when it becomes event emitter
         axios.get(metadataUrl).then(response => {
-          const { imageUrl: imagePath, infoTexts, md5, songId } = response.data;
+          const { imageUrl: imagePath, infoTexts = [], md5, songId } = response.data;
           const imageUrl = imagePath ? getUrlFromFilepath(imagePath) : null;
-          const newInfoTexts = [...this.state.infoTexts, ...infoTexts ];
+          const newInfoTexts = [...this.state.infoTexts, ...infoTexts];
           const newShowInfo = this.state.showInfo && newInfoTexts.length > 0;
-          this.setState({ imageUrl, infoTexts: newInfoTexts, md5, showInfo: newShowInfo, songId });
+          this.setState(prevState => ({
+            metadata: { ...prevState.metadata, imageUrl },
+            infoTexts: newInfoTexts,
+            md5,
+            showInfo: newShowInfo,
+            songId,
+          }));
 
           // Playback logging
           clearTimeout(this.playbackTimer);
@@ -449,7 +438,6 @@ class App extends React.Component {
           }, 5000);
 
           if ('mediaSession' in navigator) {
-            // Clear artwork if imageUrl is null.
             navigator.mediaSession.metadata.artwork = (imageUrl == null) ? [] : [{
               src: imageUrl,
               sizes: '512x512',
@@ -457,22 +445,31 @@ class App extends React.Component {
             this.updateMediaSessionPositionState();
           }
         }).catch(e => {
-          this.setState({ imageUrl: null });
+          console.warn('Could not load metadata:', e);
         });
       }
 
-      const metadata = player.getMetadata();
-
       if ('mediaSession' in navigator) {
-        this.mediaSessionAudio.play();
+        if ('paused' in sequencerState) {
+          if (sequencerState.paused) {
+            this.mediaSessionAudio.pause();
+          } else {
+            this.mediaSessionAudio.play();
+          }
+        }
 
-        if ('MediaMetadata' in window) {
+        if ('MediaMetadata' in window && sequencerState.metadata) {
+          const { metadata } = sequencerState;
           navigator.mediaSession.metadata = new window.MediaMetadata({
             title: metadata.title || metadata.formatted?.title,
             artist: metadata.artist || metadata.formatted?.subtitle,
             album: metadata.game,
-            artwork: []
+            artwork: metadata.imageUrl ? [{ src: metadata.imageUrl, sizes: '512x512' }] : [],
           });
+        }
+
+        if ('durationMs' in sequencerState || 'positionMs' in sequencerState || 'tempo' in sequencerState) {
+          this.updateMediaSessionPositionState();
         }
       }
 
@@ -822,10 +819,9 @@ class App extends React.Component {
   }
 
   render() {
-    // TODO: Consolidate imageUrl under metadata.
     const metadata = this.state.metadata;
     const { title, subtitle } = titlesFromMetadata(metadata);
-    const imageUrl = metadata.imageUrl || this.state.imageUrl;
+    const { imageUrl } = metadata;
     const currContext = this.sequencer?.getCurrContext();
     const currIdx = this.sequencer?.getCurrIdx();
     const search = { search: window.location.search };

@@ -52,7 +52,11 @@ export default class SIDPlayer extends Player {
           subtitle: `${author} - ${copyright}`,
         },
       };
-      this.emit('playerStateUpdate', this.getBasePlayerState());
+      this.durationMs = this.subtuneDurations[this.core._sid_get_subtune?.() || 0];
+      this.emit('playerStateUpdate', {
+        metadata: this.getMetadata(),
+        durationMs: this.durationMs,
+      });
     }).catch(e => {
       if (!loadSignal.aborted) console.warn('Could not load SID metadata:', e);
     });
