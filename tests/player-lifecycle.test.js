@@ -17,6 +17,53 @@ test('a new load and suspension invalidate previous player work', () => {
   assert.equal(second.aborted, true);
 });
 
+test('catalog metadata enriches player state and ignores superseded or stopped requests', async () => {
+  const pending = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (url, options) => new Promise(resolve => pending.push({ url, signal: options.signal, resolve }));
+  try {
+    const player = new Player({}, 44100);
+    player.metadata = { title: 'Song' };
+    player.infoTexts = ['Embedded'];
+    const updates = [];
+    player.on('playerStateUpdate', state => updates.push(state));
+
+    // 1. Superseded before completion
+    const firstSignal = player.beginLoad();
+    player.fetchCatalogMetadata('dir/old.spc', firstSignal);
+    const secondSignal = player.beginLoad();
+    player.resume();
+    player.fetchCatalogMetadata('dir/new.spc', secondSignal);
+    assert.equal(pending[0].signal.aborted, true);
+    assert.equal(pending[1].signal.aborted, false);
+
+    pending[1].resolve(new Response(JSON.stringify({
+      songId: 42,
+      imageUrl: 'dir/cover.png',
+      infoTexts: ['Catalog text'],
+      md5: 'abc',
+    }), { status: 200 }));
+    pending[0].resolve(new Response(JSON.stringify({
+      songId: 1,
+      imageUrl: 'dir/old.png',
+      infoTexts: ['Old text'],
+      md5: 'old',
+    }), { status: 200 }));
+    await new Promise(resolve => setImmediate(resolve));
+
+    assert.equal(updates.length, 1);
+    assert.deepEqual(updates[0], {
+      metadata: { title: 'Song', imageUrl: 'http://localhost:8080/catalog/dir%2Fcover.png' },
+      infoTexts: ['Embedded', 'Catalog text'],
+      md5: 'abc',
+      songId: 42,
+    });
+    assert.deepEqual(player.getBasePlayerState().infoTexts, ['Embedded', 'Catalog text']);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test('late SID metadata cannot overwrite a newer song or publish after stop', async () => {
   const pending = [];
   const originalGet = axios.get;
@@ -161,6 +208,7 @@ test('superseded song requests cannot load after a later selection or ejection',
   const player = (key, extension) => Object.assign(new Player({}, 44100), {
     canPlay: ext => ext === extension,
     stop() { this.suspend(); },
+    fetchCatalogMetadata: async () => ({}),
     loadData: async (_data, path) => { loads.push({ key, path }); },
   });
   const gme = player('gme', 'spc');

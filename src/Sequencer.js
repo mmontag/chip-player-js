@@ -255,6 +255,7 @@ export default class Sequencer extends EventEmitter {
     this.currSongBuffer = buffer;
     const uint8Array = new Uint8Array(buffer);
     const persistedSettings = this.getSettings();
+    player.fetchCatalogMetadata(filepath, loadSignal);
     player.loadData(uint8Array, filepath, persistedSettings, subtune)
       .catch(e => {
         if (loadSignal.aborted) return;

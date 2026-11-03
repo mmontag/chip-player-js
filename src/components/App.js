@@ -1,4 +1,3 @@
-import axios from 'redaxios';
 import React, { useContext } from 'react';
 import autoBindReact from 'auto-bind/react';
 import isMobile from 'ismobilejs';
@@ -21,8 +20,6 @@ import {
 } from '../config';
 import {
   ensureEmscFileWithData,
-  getMetadataUrlForFilepath,
-  getUrlFromFilepath,
   pathJoin,
   postWithOptionalAuth,
   titlesFromMetadata,
@@ -389,6 +386,7 @@ class App extends React.Component {
     console.debug('App.handleSequencerStateUpdate(ejected=%s)', ejected);
 
     if (ejected) {
+      clearTimeout(this.playbackTimer);
       this.setState({
         ejected: true,
         subtune: 0,
@@ -397,6 +395,8 @@ class App extends React.Component {
         durationMs: 1,
         numSubtunes: 0,
         songBuffer: null,
+        md5: null,
+        songId: null,
         songPath: null,
       });
       // TODO: Disabled to support scroll restoration.
@@ -411,42 +411,15 @@ class App extends React.Component {
         }
       }
     } else {
-      const songPath = this.sequencer.getCurrSongPath();
-      // TODO: move fetch metadata to Player when it becomes event emitter
-      if (songPath && songPath !== this.state.songPath) {
-        const metadataUrl = getMetadataUrlForFilepath(songPath);
-        axios.get(metadataUrl).then(response => {
-          const { imageUrl: imagePath, infoTexts = [], md5, songId } = response.data;
-          const imageUrl = imagePath ? getUrlFromFilepath(imagePath) : null;
-          const newInfoTexts = [...this.state.infoTexts, ...infoTexts];
-          const newShowInfo = this.state.showInfo && newInfoTexts.length > 0;
-          this.setState(prevState => ({
-            metadata: { ...prevState.metadata, imageUrl },
-            infoTexts: newInfoTexts,
-            md5,
-            showInfo: newShowInfo,
-            songId,
-          }));
-
-          // Playback logging
-          clearTimeout(this.playbackTimer);
-          this.playbackTimer = setTimeout(() => {
-            // If still playing this song after 5 seconds, log a playback.
-            if (this.state.songId === songId) {
-              postWithOptionalAuth(this.props.userContext.user, `${API_BASE}/playback`, { songId, durationMs: 5000 });
-            }
-          }, 5000);
-
-          if ('mediaSession' in navigator) {
-            navigator.mediaSession.metadata.artwork = (imageUrl == null) ? [] : [{
-              src: imageUrl,
-              sizes: '512x512',
-            }];
-            this.updateMediaSessionPositionState();
+      if (sequencerState.songId && sequencerState.songId !== this.state.songId) {
+        const { songId } = sequencerState;
+        clearTimeout(this.playbackTimer);
+        this.playbackTimer = setTimeout(() => {
+          // If still playing this song after 5 seconds, log a playback.
+          if (this.state.songId === songId) {
+            postWithOptionalAuth(this.props.userContext.user, `${API_BASE}/playback`, { songId, durationMs: 5000 });
           }
-        }).catch(e => {
-          console.warn('Could not load metadata:', e);
-        });
+        }, 5000);
       }
 
       if ('mediaSession' in navigator) {
@@ -473,7 +446,11 @@ class App extends React.Component {
         }
       }
 
-      this.setState(sequencerState);
+      const nextState = { ...sequencerState };
+      if ('infoTexts' in nextState) {
+        nextState.showInfo = this.state.showInfo && nextState.infoTexts.length > 0;
+      }
+      this.setState(nextState);
     }
   }
 

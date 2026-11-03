@@ -1,4 +1,6 @@
 import EventEmitter from 'events';
+import axios from 'redaxios';
+import { getMetadataUrlForFilepath, getUrlFromFilepath } from '../util';
 //
 // Player can be viewed as a state machine with
 // 3 states (playing, paused, stopped) and 5 transitions
@@ -32,6 +34,8 @@ export default class Player extends EventEmitter {
     this.paused = true;
     this.stopped = true;
     this.pendingLoad = null;
+    this.catalogMeta = {};
+    this.catalogMetaPromise = null;
     this.fileExtensions = [];
     this.metadata = null;
     this.sampleRate = sampleRate;
@@ -87,7 +91,42 @@ export default class Player extends EventEmitter {
   beginLoad() {
     if (this.pendingLoad) this.pendingLoad.abort();
     this.pendingLoad = new AbortController();
+    this.catalogMeta = {};
+    this.catalogMetaPromise = null;
     return this.pendingLoad.signal;
+  }
+
+  fetchCatalogMetadata(filepath, loadSignal = this.pendingLoad?.signal) {
+    if (!filepath || filepath.startsWith('local/')) {
+      return Promise.resolve({});
+    }
+    if (this.catalogMetaPromise) {
+      return this.catalogMetaPromise;
+    }
+    const metadataUrl = getMetadataUrlForFilepath(filepath);
+    this.catalogMetaPromise = axios.get(metadataUrl, {
+        fetch: (url, options) => fetch(url, { ...options, signal: loadSignal }),
+      })
+      .then(response => {
+        if (loadSignal?.aborted) return {};
+        const { imageUrl: imagePath, infoTexts = [], md5 = null, songId = null, soundfont = null } = response.data || {};
+        this.catalogMeta = {
+          imageUrl: imagePath ? getUrlFromFilepath(imagePath) : null,
+          infoTexts,
+          md5,
+          songId,
+          soundfont: soundfont ? getUrlFromFilepath(soundfont) : null,
+        };
+        if (!this.stopped) {
+          this.emit('playerStateUpdate', this.getCatalogState());
+        }
+        return this.catalogMeta;
+      })
+      .catch(e => {
+        if (!loadSignal?.aborted) console.warn('Could not load metadata:', e);
+        return {};
+      });
+    return this.catalogMetaPromise;
   }
 
   /**
@@ -205,10 +244,10 @@ export default class Player extends EventEmitter {
   playSubtune() {}
 
   getMetadata() {
-    return {
+    return this.metadata || {
       title: null,
       author: null,
-    }
+    };
   }
 
   getInfoTexts() {
@@ -270,10 +309,23 @@ export default class Player extends EventEmitter {
     return paramValues;
   }
 
+  getCatalogState() {
+    const metadata = this.getMetadata() || {};
+    return {
+      metadata: {
+        ...metadata,
+        imageUrl: metadata.imageUrl || this.catalogMeta?.imageUrl || null,
+      },
+      infoTexts: [...this.getInfoTexts(), ...(this.catalogMeta?.infoTexts || [])],
+      md5: this.catalogMeta?.md5 || null,
+      songId: this.catalogMeta?.songId || null,
+    };
+  }
+
   getBasePlayerState() {
     this.durationMs = this.getDurationMs() || 0;
     return {
-      metadata: this.getMetadata(),
+      ...this.getCatalogState(),
       durationMs: this.durationMs,
       positionMs: this.getPositionMs(),
       numSubtunes: this.getNumSubtunes(),
@@ -284,7 +336,6 @@ export default class Player extends EventEmitter {
       voiceMask: this.getVoiceMask(),
       voiceNames: this.getVoiceNames(),
       voiceGroups: this.getVoiceGroups(),
-      infoTexts: this.getInfoTexts(),
       isStopped: this.stopped,
       paused: this.paused,
     };
@@ -329,6 +380,8 @@ export default class Player extends EventEmitter {
       this.pendingLoad.abort();
       this.pendingLoad = null;
     }
+    this.catalogMeta = {};
+    this.catalogMetaPromise = null;
     this.stopped = true;
     this.paused = true;
     this.silenceSamplesRemaining = 0;
