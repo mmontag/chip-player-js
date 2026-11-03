@@ -1,5 +1,4 @@
 import autoBind from 'auto-bind';
-import axios from 'redaxios';
 import debounce from 'lodash/debounce';
 import range from 'lodash/range';
 import pathe from 'pathe';
@@ -10,7 +9,6 @@ import { SOUNDFONTS, SOUNDFONT_MOUNTPOINT, SOUNDFONT_URL_PATH } from '../config'
 import { GM_DRUM_KITS, GM_INSTRUMENTS } from '../gm-patch-map';
 import {
   ensureEmscFileWithUrl,
-  getMetadataUrlForFilepath,
   getUrlFromFilepath,
   remap01
 } from '../util';
@@ -169,7 +167,6 @@ export default class MIDIPlayer extends Player {
     this.name = 'MIDI Player';
     this.fileExtensions = fileExtensions;
     this.buffer = core._malloc(this.bufferSize * 4 * 2); // f32 * 2 channels
-    this.filepathMeta = {};
     this.midiFilePlayer = new MIDIFilePlayer({
       // playerStateUpdate is debounced to prevent flooding program change events
       programChangeCb: debounce(() => this.emit('playerStateUpdate', {
@@ -326,7 +323,7 @@ export default class MIDIPlayer extends Player {
       this.midiFilePlayer.elapsedTime = 0;
     }
     this.ensureWebMidiInitialized();
-    this.filepathMeta = this.metadataFromFilepath(filepath);
+    this.metadata = this.metadataFromFilepath(filepath);
 
     this.resolveParamValues(persistedSettings);
     this.setTempo(persistedSettings.tempo || 1);
@@ -343,10 +340,8 @@ export default class MIDIPlayer extends Player {
 
     // Load custom Soundfont if present in the metadata response.
     if (this.getParameter('synthengine') === MIDI_ENGINE_LIBFLUIDLITE) {
-      const metadataUrl = getMetadataUrlForFilepath(filepath);
       let useMelodicChannel10 = false;
-      // This should be cached by a preceding fetch in App.js.
-      const { data: { soundfont: soundfontPath } } = await axios.get(metadataUrl);
+      const { soundfont: soundfontPath } = await this.fetchCatalogMetadata(filepath, loadSignal);
       if (loadSignal.aborted) return;
       const soundfontUrl = soundfontPath ? getUrlFromFilepath(soundfontPath) : null;
       if (soundfontUrl) {
@@ -585,10 +580,6 @@ export default class MIDIPlayer extends Player {
     voiceMask.forEach((isEnabled, ch) => {
       this.midiFilePlayer.setChannelMute(ch, !isEnabled);
     });
-  }
-
-  getMetadata() {
-    return this.filepathMeta;
   }
 
   getInfoTexts() {

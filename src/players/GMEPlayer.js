@@ -318,10 +318,6 @@ export default class GMEPlayer extends Player {
     return 0;
   }
 
-  getMetadata() {
-    return this.metadata;
-  }
-
   getParameter(id) {
     return this.params[id];
   }

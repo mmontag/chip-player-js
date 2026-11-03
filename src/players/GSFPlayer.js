@@ -151,10 +151,6 @@ export default class GSFPlayer extends Player {
     return this.core._gsf_get_duration_ms();
   }
 
-  getMetadata() {
-    return this.metadata;
-  }
-
   isPlaying() {
     return !this.isPaused();
   }

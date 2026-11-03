@@ -83,10 +83,6 @@ export default class V2MPlayer extends Player {
     return this.core._v2m_get_duration_ms();
   }
 
-  getMetadata() {
-    return this.metadata;
-  }
-
   isPlaying() {
     return !this.isPaused();
   }

@@ -136,10 +136,6 @@ export default class MDXPlayer extends Player {
     return this.core._mdx_get_length(this.mdxCtx) * 1000;
   }
 
-  getMetadata() {
-    return this.metadata;
-  }
-
   isPlaying() {
     return !this.isPaused();
   }

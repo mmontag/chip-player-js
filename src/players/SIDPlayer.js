@@ -161,10 +161,6 @@ export default class SIDPlayer extends Player {
     return this.subtuneDurations[this.getSubtune()];
   }
 
-  getMetadata() {
-    return this.metadata;
-  }
-
   isPlaying() {
     return !this.isPaused();
   }

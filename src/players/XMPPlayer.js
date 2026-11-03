@@ -209,10 +209,6 @@ export default class XMPPlayer extends Player {
     return this._durationMs;
   }
 
-  getMetadata() {
-    return this.metadata;
-  }
-
   isPlaying() {
     const playingState = this.core._xmp_get_player(this.xmpCtx, XMP_PLAYER_STATE);
     return !this.isPaused() && playingState === XMP_STATE_PLAYING;

@@ -172,10 +172,6 @@ export default class VGMPlayer extends Player {
     return voiceGroups;
   }
 
-  getMetadata() {
-    return this.metadata;
-  }
-
   isPlaying() {
     return !this.isPaused();
   }

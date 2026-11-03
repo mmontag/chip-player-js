@@ -115,7 +115,7 @@ export default class Player extends EventEmitter {
           infoTexts,
           md5,
           songId,
-          soundfont: soundfont ? getUrlFromFilepath(soundfont) : null,
+          soundfont,
         };
         if (!this.stopped) {
           this.emit('playerStateUpdate', this.getCatalogState());
@@ -244,9 +244,10 @@ export default class Player extends EventEmitter {
   playSubtune() {}
 
   getMetadata() {
-    return this.metadata || {
-      title: null,
-      author: null,
+    const metadata = this.metadata || { title: null, author: null };
+    return {
+      ...metadata,
+      imageUrl: metadata.imageUrl || this.catalogMeta?.imageUrl || null,
     };
   }
 
@@ -310,12 +311,8 @@ export default class Player extends EventEmitter {
   }
 
   getCatalogState() {
-    const metadata = this.getMetadata() || {};
     return {
-      metadata: {
-        ...metadata,
-        imageUrl: metadata.imageUrl || this.catalogMeta?.imageUrl || null,
-      },
+      metadata: this.getMetadata(),
       infoTexts: [...this.getInfoTexts(), ...(this.catalogMeta?.infoTexts || [])],
       md5: this.catalogMeta?.md5 || null,
       songId: this.catalogMeta?.songId || null,

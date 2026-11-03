@@ -116,10 +116,6 @@ export default class N64Player extends Player {
     return this.core._n64_get_duration_ms();
   }
 
-  getMetadata() {
-    return this.metadata;
-  }
-
   isPlaying() {
     return !this.isPaused();
   }
