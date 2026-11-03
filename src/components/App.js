@@ -114,12 +114,12 @@ class App extends React.Component {
       loadingLocalFiles: true,
       paused: true,
       ejected: true,
-      currentSongMetadata: {},
-      currentSongNumSubtunes: 0,
-      currentSongSubtune: 0,
-      currentSongDurationMs: 1,
-      currentSongPositionMs: 0,
-      currentSongBuffer: null,
+      metadata: {},
+      numSubtunes: 0,
+      subtune: 0,
+      durationMs: 1,
+      positionMs: 0,
+      songBuffer: null,
       tempo: 1,
       voiceMask: Array(MAX_VOICES).fill(true),
       voiceNames: Array(MAX_VOICES).fill(''),
@@ -266,37 +266,6 @@ class App extends React.Component {
     }
   }
 
-  static mapSequencerStateToAppState(sequencerState) {
-    const map = {
-      ejected: 'isEjected',
-      paused: 'isPaused',
-      currentSongSubtune: 'subtune',
-      currentSongMetadata: 'metadata',
-      currentSongPositionMs: 'positionMs',
-      currentSongDurationMs: 'durationMs',
-      currentSongNumSubtunes: 'numSubtunes',
-      currentSongBuffer: 'songBuffer',
-      tempo: 'tempo',
-      voiceNames: 'voiceNames',
-      voiceMask: 'voiceMask',
-      voiceGroups: 'voiceGroups',
-      songPath: 'songPath',
-      hasPlayer: 'hasPlayer',
-      // TODO: Move to a separate paramStateUpdate?
-      paramDefs: 'paramDefs',
-      paramValues: 'paramValues',
-      infoTexts: 'infoTexts',
-    };
-    const appState = {};
-    for (let prop in map) {
-      const seqProp = map[prop];
-      if (seqProp in sequencerState) {
-        appState[prop] = sequencerState[seqProp];
-      }
-    }
-    return appState;
-  }
-
   attachMediaKeyHandlers() {
     if ('mediaSession' in navigator) {
       console.log('Attaching Media Key event handlers.');
@@ -386,7 +355,7 @@ class App extends React.Component {
   updateMediaSessionPositionState() {
     if (!('mediaSession' in navigator) || !this.sequencer.getPlayer()) return;
 
-    const duration = this.state.currentSongDurationMs || 0;
+    const duration = this.state.durationMs || 0;
     const position = this.sequencer.getPlayer().getPositionMs();
     const positionState = {
       duration: duration / 1000,
@@ -417,18 +386,18 @@ class App extends React.Component {
   }
 
   handleSequencerStateUpdate(sequencerState) {
-    const { isEjected } = sequencerState;
-    console.debug('App.handleSequencerStateUpdate(isEjected=%s)', isEjected);
+    const { ejected } = sequencerState;
+    console.debug('App.handleSequencerStateUpdate(ejected=%s)', ejected);
 
-    if (isEjected) {
+    if (ejected) {
       this.setState({
         ejected: true,
-        currentSongSubtune: 0,
-        currentSongMetadata: {},
-        currentSongPositionMs: 0,
-        currentSongDurationMs: 1,
-        currentSongNumSubtunes: 0,
-        currentSongBuffer: null,
+        subtune: 0,
+        metadata: {},
+        positionMs: 0,
+        durationMs: 1,
+        numSubtunes: 0,
+        songBuffer: null,
         imageUrl: null,
         songPath: null,
       });
@@ -507,9 +476,7 @@ class App extends React.Component {
         }
       }
 
-      this.setState({
-        ...App.mapSequencerStateToAppState(sequencerState),
-      });
+      this.setState(sequencerState);
     }
   }
 
@@ -543,7 +510,7 @@ class App extends React.Component {
     if (!this.sequencer.getPlayer()) return;
 
     const pos = event.target ? event.target.value : event;
-    const seekMs = Math.floor(pos * this.state.currentSongDurationMs);
+    const seekMs = Math.floor(pos * this.state.durationMs);
 
     this.seekRelativeInner(seekMs);
 
@@ -560,7 +527,7 @@ class App extends React.Component {
   seekRelative(ms) {
     if (!this.sequencer.getPlayer()) return;
 
-    const durationMs = this.state.currentSongDurationMs;
+    const durationMs = this.state.durationMs;
     const seekMs = clamp(this.sequencer.getPlayer().getPositionMs() + ms, 0, durationMs);
 
     this.seekRelativeInner(seekMs);
@@ -569,12 +536,12 @@ class App extends React.Component {
   seekRelativeInner(seekMs) {
     this.sequencer.getPlayer().seekMs(seekMs);
     this.setState({
-      currentSongPositionMs: seekMs, // Smooth
+      positionMs: seekMs, // Smooth
     });
     setTimeout(() => {
       if (this.sequencer.getPlayer().isPlaying()) {
         this.setState({
-          currentSongPositionMs: this.sequencer.getPlayer().getPositionMs(), // Accurate
+          positionMs: this.sequencer.getPlayer().getPositionMs(), // Accurate
         });
         this.updateMediaSessionPositionState();
       }
@@ -856,7 +823,7 @@ class App extends React.Component {
 
   render() {
     // TODO: Consolidate imageUrl under metadata.
-    const metadata = this.state.currentSongMetadata;
+    const metadata = this.state.metadata;
     const { title, subtitle } = titlesFromMetadata(metadata);
     const imageUrl = metadata.imageUrl || this.state.imageUrl;
     const currContext = this.sequencer?.getCurrContext();
@@ -868,7 +835,7 @@ class App extends React.Component {
     const midiData = (
       (this.state.songPath && /\.(mid|midi|smf)$/i.test(this.state.songPath)) ||
       this.sequencer?.getPlayer()?.fileExtensions?.includes('mid')
-    ) ? (this.state.currentSongBuffer || this.sequencer?.getCurrSongBuffer()) : null;
+    ) ? (this.state.songBuffer || this.sequencer?.getCurrSongBuffer()) : null;
     const isMidi = Boolean(midiData);
     const activeTheaterMode = Boolean(isMidi && this.state.theaterMode && showVisualizer);
 
@@ -1013,9 +980,9 @@ class App extends React.Component {
                           onAuditionChord={this.handleAuditionChord}/>}
           </div>
           <AppFooter
-            currentSongDurationMs={this.state.currentSongDurationMs}
-            currentSongNumSubtunes={this.state.currentSongNumSubtunes}
-            currentSongSubtune={this.state.currentSongSubtune}
+            currentSongDurationMs={this.state.durationMs}
+            currentSongNumSubtunes={this.state.numSubtunes}
+            currentSongSubtune={this.state.subtune}
             ejected={this.state.ejected}
             getCurrentSongLink={this.getCurrentSongLink}
             handleCopyLink={this.handleCopyLink}

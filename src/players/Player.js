@@ -286,7 +286,7 @@ export default class Player extends EventEmitter {
       voiceGroups: this.getVoiceGroups(),
       infoTexts: this.getInfoTexts(),
       isStopped: this.stopped,
-      isPaused: this.paused,
+      paused: this.paused,
     };
   }
 

@@ -53,12 +53,12 @@ export default class Sequencer extends EventEmitter {
       clearTimeout(this.playerErrorAdvanceTimer);
       this.playerErrorAdvanceTimer = setTimeout(this.nextSong, ERROR_DELAY_MS);
     } else {
-      this.emit('sequencerStateUpdate', { isEjected: true });
+      this.emit('sequencerStateUpdate', { ejected: true });
     }
   }
 
   handlePlayerStateUpdate(playerState) {
-    const { isStopped } = playerState;
+    const { isStopped, ...rest } = playerState;
     console.debug('Sequencer.handlePlayerStateUpdate(isStopped=%s)', isStopped);
     if (this.playerErrorAdvanceTimer) {
       console.debug('Cancelling auto-advance due to playerState update.');
@@ -77,9 +77,9 @@ export default class Sequencer extends EventEmitter {
         songPath: this.currSongPath,
         songBuffer: this.currSongBuffer,
         hasPlayer: true,
-        // TODO: combine isEjected and hasPlayer
-        isEjected: false,
-        ...playerState,
+        // TODO: combine ejected and hasPlayer
+        ejected: false,
+        ...rest,
       });
     }
   }
@@ -152,7 +152,7 @@ export default class Sequencer extends EventEmitter {
         this.context = null;
         this.player.stop();
         this.player = null;
-        this.emit('sequencerStateUpdate', { isEjected: true });
+        this.emit('sequencerStateUpdate', { ejected: true });
       }
     } else {
       this.playCurrentSong();
