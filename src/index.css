@@ -444,6 +444,10 @@ button.box-button.AppFooter-back { padding: 0 var(--charW1); }
 }
 
 .BrowseList-row { display: flex; align-items: center; height: var(--rowHeight); }
+::highlight(typeahead) {
+    background-color: var(--clickable);
+    color: var(--background);
+}
 /* Selected */
 .ReactVirtualized__Grid:focus .BrowseList-row-selected {
     background-color:  var(--selected);

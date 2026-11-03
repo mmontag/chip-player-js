@@ -1,6 +1,7 @@
 import autoBind from 'auto-bind';
 
 const DEFAULT_TIMEOUT_MS = 1000;
+const HIGHLIGHT_NAME = 'typeahead';
 
 const NAVIGATION_KEYS = new Set([
   'ArrowUp',
@@ -25,6 +26,7 @@ export default class TypeAheadManager {
     this.timeoutMs = timeoutMs;
     this.buffer = '';
     this.timer = null;
+    this.rafId = null;
   }
 
   reset() {
@@ -33,6 +35,53 @@ export default class TypeAheadManager {
       this.timer = null;
     }
     this.buffer = '';
+    this.clearHighlight();
+  }
+
+  clearHighlight() {
+    if (this.rafId) {
+      cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+    }
+    window.CSS?.highlights?.delete(HIGHLIGHT_NAME);
+  }
+
+  updateHighlight() {
+    if (!window.CSS?.highlights || !window.Highlight) return;
+    if (this.rafId) cancelAnimationFrame(this.rafId);
+
+    this.rafId = requestAnimationFrame(() => {
+      this.rafId = null;
+      if (!this.buffer) {
+        window.CSS.highlights.delete(HIGHLIGHT_NAME);
+        return;
+      }
+
+      const linkEl = document.querySelector('.BrowseList-row-selected .BrowseList-colName a');
+      const textNode = linkEl?.lastChild;
+      if (!textNode || textNode.nodeType !== Node.TEXT_NODE) {
+        window.CSS.highlights.delete(HIGHLIGHT_NAME);
+        return;
+      }
+
+      const text = textNode.nodeValue.toLowerCase();
+      const query = this.buffer.toLowerCase();
+      let matchLen = 0;
+      const maxLen = Math.min(text.length, query.length);
+      while (matchLen < maxLen && text[matchLen] === query[matchLen]) {
+        matchLen++;
+      }
+
+      if (matchLen === 0) {
+        window.CSS.highlights.delete(HIGHLIGHT_NAME);
+        return;
+      }
+
+      const range = new Range();
+      range.setStart(textNode, 0);
+      range.setEnd(textNode, matchLen);
+      window.CSS.highlights.set(HIGHLIGHT_NAME, new window.Highlight(range));
+    });
   }
 
   handleKeyDown(e, itemList) {
@@ -69,6 +118,7 @@ export default class TypeAheadManager {
     if (matchIdx !== -1 && this.onSelect) {
       this.onSelect(matchIdx);
     }
+    this.updateHighlight();
 
     return true;
   }

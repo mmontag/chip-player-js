@@ -63,6 +63,7 @@
     *:not(input, .info-text) { user-select: none; }
 
     .App { padding: 0; background: var(--background); }
+    ::highlight(typeahead) { color: var(--neutral0); }
     .App-main .App-main-content-area:not(.settings) { background-color: #000; }
     .Browse-topRow { align-items: center; }
     .App-main .App-main-content-area .BrowseList-row.Song-now-playing {
