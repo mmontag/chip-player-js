@@ -283,7 +283,7 @@ class App extends React.Component {
       navigator.mediaSession.setActionHandler('seekforward', () => this.seekRelative(5000));
     }
 
-    document.addEventListener('keydown', (e) => {
+    window.addEventListener('keydown', (e) => {
       // Keyboard shortcuts: tricky to get it just right and keep the browser behavior intact.
       // The order of switch-cases matters. More privileged keys appear at the top.
       // More restricted keys appear at the bottom, after various input focus states are filtered out.
@@ -304,6 +304,7 @@ class App extends React.Component {
         default:
       }
 
+      if (e.defaultPrevented) return; // handled by component (e.g. type-ahead in Browse)
       if (e.target.tagName === 'INPUT' && e.target.type === 'text') return; // text input has focus
 
       if (e.shiftKey && (e.key === 'M' || e.key === 'm')) {
