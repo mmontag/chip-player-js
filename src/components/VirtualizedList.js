@@ -20,6 +20,7 @@ function VirtualizedList(props) {
     isSorted,
     scrollContainerRef,
     listRef,
+    resetScrollOnListChange = false,
   } = props;
 
   const arrowKeyStepperRef = useRef();
@@ -50,8 +51,10 @@ function VirtualizedList(props) {
     prevItemListRef.current = itemList;
     lastScrolledRowRef.current = null;
   } else if (itemList !== prevItemListRef.current) {
-    scrollToIndex = 0;
-    lastScrolledRowRef.current = 0;
+    if (resetScrollOnListChange) {
+      scrollToIndex = 0;
+      lastScrolledRowRef.current = 0;
+    }
     prevItemListRef.current = itemList;
   } else if (selectedRow !== lastScrolledRowRef.current) {
     scrollToIndex = selectedRow;
@@ -62,6 +65,12 @@ function VirtualizedList(props) {
   useEffect(() => {
     selectedRowRef.current = selectedRow;
   }, [selectedRow]);
+
+  useEffect(() => {
+    if (itemList.length > 0 && selectedRow >= itemList.length) {
+      setSelectedRow(itemList.length - 1);
+    }
+  }, [itemList.length, selectedRow]);
 
   useEffect(() => {
     if (!scrollContainerRef.current) return;
@@ -103,6 +112,7 @@ function VirtualizedList(props) {
   const onActivate = useCallback((index) => {
     // Song index may differ from item index if there are directories
     const item = itemList[index];
+    if (!item) return () => {};
     const songIndex = item.idx ?? index;
 
     if (item.type === 'directory') {

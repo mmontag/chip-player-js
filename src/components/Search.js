@@ -244,6 +244,7 @@ export default class Search extends PureComponent {
           isSorted={false}
           scrollContainerRef={scrollContainerRef}
           listRef={listRef}
+          resetScrollOnListChange={true}
         >
         </VirtualizedList>
         {this.state.searching || this.props.children}
