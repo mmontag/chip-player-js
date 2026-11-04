@@ -485,7 +485,7 @@ button.box-button.AppFooter-back { padding: 0 var(--charW1); }
 .PlayerParams h3 { margin-top: 0; }
 .PlayerParams-param { display: flex; align-items: center; }
 .PlayerParams-param input { margin-right: var(--charW1); flex-shrink: 0; }
-.PlayerParams-group-title { width: 100%; }
+.PlayerParams-group-title { width: 100%; cursor: pointer; user-select: none; }
 .PlayerParams-voiceList {
     display: flex;
     flex-wrap: wrap;

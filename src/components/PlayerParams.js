@@ -45,23 +45,29 @@ export default class PlayerParams extends React.PureComponent {
   //   clearInterval(this.timer);
   // }
 
-  handleVoiceToggle(e, index, group) {
-    const { onVoiceMaskChange } = this.props;
+  handleVoiceToggle(e, index) {
+    const { onVoiceMaskChange, voiceGroups } = this.props;
     if (!onVoiceMaskChange) return;
 
     const voiceMask = [...this.props.voiceMask];
-    e = e.nativeEvent || {};
+    e = e.nativeEvent || e || {};
     if (e.altKey || e.shiftKey || e.metaKey) {
-      if (group) {
-        console.log('foo');
-        this.handleVoiceGroupToggle(e, group);
-        return;
-      }
-      if (voiceMask.every((enabled, i) => (i === index) === enabled)) {
-        voiceMask.fill(true);
+      const allActiveVoiceIndices = voiceGroups && voiceGroups.length > 0
+        ? voiceGroups.flatMap(group => group.voices.map(voice => voice.idx))
+        : voiceMask.map((_, i) => i);
+
+      const isCurrentlySoloed = allActiveVoiceIndices.every(idx =>
+        (idx === index) ? Boolean(voiceMask[idx]) : !voiceMask[idx]
+      );
+
+      if (isCurrentlySoloed) {
+        allActiveVoiceIndices.forEach(idx => {
+          voiceMask[idx] = true;
+        });
       } else {
-        voiceMask.fill(false);
-        voiceMask[index] = true;
+        allActiveVoiceIndices.forEach(idx => {
+          voiceMask[idx] = (idx === index);
+        });
       }
     } else {
       voiceMask[index] = !voiceMask[index];
@@ -70,12 +76,42 @@ export default class PlayerParams extends React.PureComponent {
   }
 
   handleVoiceGroupToggle(e, group) {
-    const { onVoiceMaskChange } = this.props;
+    const { onVoiceMaskChange, voiceGroups } = this.props;
+    if (!onVoiceMaskChange) return;
+
     const voiceMask = [...this.props.voiceMask];
-    // New state should be the opposite of current average voice state
-    const numEnabled = group.voices.reduce((acc, cur) => acc + (voiceMask[cur.idx] ? 1 : 0), 0);
-    const newState = numEnabled < (group.voices.length / 2);
-    group.voices.forEach(voice => voiceMask[voice.idx] = newState);
+    const event = e.nativeEvent || e || {};
+
+    if (event.altKey || event.shiftKey || event.metaKey) {
+      const allActiveVoiceIndices = voiceGroups && voiceGroups.length > 0
+        ? voiceGroups.flatMap(g => g.voices.map(v => v.idx))
+        : group.voices.map(v => v.idx);
+      const groupVoiceIndices = new Set(group.voices.map(v => v.idx));
+
+      // Check if this group is already the only active unmuted group (i.e. already soloed)
+      const isCurrentlySoloed = allActiveVoiceIndices.every(idx =>
+        groupVoiceIndices.has(idx) ? Boolean(voiceMask[idx]) : !voiceMask[idx]
+      );
+
+      if (isCurrentlySoloed) {
+        // Unmute all active voices across all groups
+        allActiveVoiceIndices.forEach(idx => {
+          voiceMask[idx] = true;
+        });
+      } else {
+        // Solo this group: enable all voices in this group, mute all voices outside this group
+        allActiveVoiceIndices.forEach(idx => {
+          voiceMask[idx] = groupVoiceIndices.has(idx);
+        });
+      }
+    } else {
+      // New state should be the opposite of current average voice state
+      const numEnabled = group.voices.reduce((acc, cur) => acc + (voiceMask[cur.idx] ? 1 : 0), 0);
+      const newState = numEnabled < (group.voices.length / 2);
+      group.voices.forEach(voice => {
+        voiceMask[voice.idx] = newState;
+      });
+    }
     onVoiceMaskChange(voiceMask);
   }
 
@@ -142,7 +178,7 @@ export default class PlayerParams extends React.PureComponent {
           voiceGroups.map((group, i) => {
             return (
               <span className='PlayerParams-param PlayerParams-group' key={group.name+i}>
-                  <label className="PlayerParams-group-title" title="Sound chip" onClick={(e) => this.handleVoiceGroupToggle(e, group)}>
+                  <label className="PlayerParams-group-title" title="Click to toggle group. Alt+click to solo." onClick={(e) => this.handleVoiceGroupToggle(e, group)}>
                     {group.icon && <span className='inline-icon dim-icon icon-chip'/>}{' '}
                     {group.name}:
                   </label>
@@ -152,7 +188,7 @@ export default class PlayerParams extends React.PureComponent {
                         title='Alt+click to solo. Alt+click again to unmute all.'
                         type='checkbox'
                         id={'v_'+i+j}
-                        onChange={(e) => this.handleVoiceToggle(e, voice.idx, group)}
+                        onChange={(e) => this.handleVoiceToggle(e, voice.idx)}
                         checked={!!voiceMask[voice.idx]}/>
                       <label htmlFor={'v_'+i+j}>
                         {voice.name}
