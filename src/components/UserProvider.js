@@ -124,15 +124,17 @@ const UserProvider = ({ children }) => {
     }
   };
 
-  const handleToggleFavorite = async (path, songId) => {
-    if (user) {
+  const handleToggleFavorite = async (item) => {
+    if (user && item?.path) {
+      const { path, songId, size } = item;
       const oldFaves = faves;
       const isFavorite = faves.find(fave => fave.path === path);
 
       const fave = {
         path,
         songId,
-        href: pathJoin(CATALOG_PREFIX, encodeURIComponent(path)),
+        size,
+        href: item.href || pathJoin(CATALOG_PREFIX, encodeURIComponent(path)),
         mtime: Math.floor(Date.now() / 1000),
       };
 
@@ -145,7 +147,8 @@ const UserProvider = ({ children }) => {
         if (isFavorite) {
           await removeFavorite(fave);
         } else {
-          await addFavorite(fave);
+          const res = await addFavorite(fave);
+          setFaves(prev => prev.map(f => (f.path === path ? res.favorite : f)));
         }
       } catch (e) {
         setFaves(oldFaves);

@@ -51,7 +51,7 @@ const dbStatements = {
       SELECT * FROM hvsc_files WHERE fullname = ? LIMIT 1
   `),
   getSongByPathStmt: db.prepare(`
-      SELECT m.song_id, m.path, m.title, m.artist, m.contributor, m.game, m.system, m.copyright, i.path as image_path
+      SELECT m.song_id, m.path, m.file_size, m.title, m.artist, m.contributor, m.game, m.system, m.copyright, i.path as image_path
       FROM music m
                LEFT JOIN images i ON m.image_id = i.id
       WHERE m.path = ?

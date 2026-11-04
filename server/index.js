@@ -662,7 +662,16 @@ router.post(
         path: songPath,
         now: mtime,
       });
-      res.json({ success: true });
+      res.json({
+        success: true,
+        favorite: {
+          songId: song.song_id,
+          path: song.path,
+          size: song.file_size,
+          mtime,
+          href: `https://gifx.co/music/${song.path}`,
+        },
+      });
     } catch (e) {
       console.error('Error adding favorite:', e);
       res.status(500).json({ error: 'Failed to add favorite' });
