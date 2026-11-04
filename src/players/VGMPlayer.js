@@ -181,11 +181,6 @@ export default class VGMPlayer extends Player {
       this.core._lvgm_seek_ms(this.vgmCtx, seekMs);
   }
 
-  getVoiceName(index) {
-    // TODO: Add voice chip map like github.com/mmontag/chip-player-js/commit/a698e9b
-    if (this.vgmCtx) return this.core.UTF8ToString(this.core._lvgm_get_voice_name(this.vgmCtx, index));
-  }
-
   getVoiceMask() {
     if (this.vgmCtx) {
       const bitmask = this.core._lvgm_get_voice_mask(this.vgmCtx);

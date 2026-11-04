@@ -1,6 +1,5 @@
 import autoBind from 'auto-bind';
 import debounce from 'lodash/debounce';
-import range from 'lodash/range';
 import pathe from 'pathe';
 import MIDIFile from './midi/midi-helpers';
 import MIDIFilePlayer from './MIDIFilePlayer';
@@ -171,7 +170,6 @@ export default class MIDIPlayer extends Player {
     this.midiFilePlayer = new MIDIFilePlayer({
       // playerStateUpdate is debounced to prevent flooding program change events
       programChangeCb: debounce(() => this.emit('playerStateUpdate', {
-        voiceNames: range(16).map(ch => this.getVoiceName(ch)),
         voiceGroups: this.getVoiceGroups(),
       }), 200),
       output: dummyMidiOutput,
@@ -568,7 +566,7 @@ export default class MIDIPlayer extends Player {
     this.midiFilePlayer.setSpeed(tempo);
   }
 
-  getVoiceName(ch) {
+  _getChannelName(ch) {
     if (!this.midiFilePlayer.getChannelInUse(ch)) return '--';
     const pgm = this.midiFilePlayer.channelProgramNums[ch];
     return ch === 9 ? (GM_DRUM_KITS[pgm] || GM_DRUM_KITS[0]) : GM_INSTRUMENTS[pgm];
@@ -578,7 +576,7 @@ export default class MIDIPlayer extends Player {
     if (!this.midiFilePlayer) return [];
     const voices = [];
     for (let ch = 0; ch < 16; ch++) {
-      const name = this.getVoiceName(ch);
+      const name = this._getChannelName(ch);
       if (name && name.trim() !== '--') {
         voices.push({
           idx: ch,

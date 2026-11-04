@@ -173,13 +173,6 @@ export default class GSFPlayer extends Player {
     });
   }
 
-  getVoiceName(index) {
-    if (this.core._gsf_get_track_name) {
-      return this.core.UTF8ToString(this.core._gsf_get_track_name(index));
-    }
-    return GBA_VOICE_NAMES[index] || `Channel ${index + 1}`;
-  }
-
   getVoiceGroups() {
     const driverType = this.core._gsf_get_driver_type ? this.core._gsf_get_driver_type() : 0;
     if (driverType === 1) {
@@ -189,9 +182,12 @@ export default class GSFPlayer extends Player {
 
       for (let i = 0; i < numTracks; i++) {
         const type = this.core._gsf_get_track_type ? this.core._gsf_get_track_type(i) : 0;
+        const name = this.core._gsf_get_track_name
+          ? this.core.UTF8ToString(this.core._gsf_get_track_name(i))
+          : (GBA_VOICE_NAMES[i] || `Channel ${i + 1}`);
         const voice = {
           idx: i,
-          name: this.getVoiceName(i),
+          name,
         };
         if (type >= 1 && type <= 4) {
           dmgVoices.push(voice);

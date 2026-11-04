@@ -119,7 +119,6 @@ class App extends React.Component {
       songBuffer: null,
       tempo: 1,
       voiceMask: Array(MAX_VOICES).fill(true),
-      voiceNames: Array(MAX_VOICES).fill(''),
       voiceGroups: [],
       infoTexts: [],
       showInfo: false,
@@ -921,7 +920,6 @@ class App extends React.Component {
                     ejected={this.state.ejected}
                     tempo={this.state.tempo}
                     voiceMask={this.state.voiceMask}
-                    voiceNames={this.state.voiceNames}
                     voiceGroups={this.state.voiceGroups}
                     onVoiceMaskChange={this.handleSetVoiceMask}
                     onTempoChange={this.handleTempoChange}
@@ -962,7 +960,6 @@ class App extends React.Component {
             handleCopyLink={this.handleCopyLink}
             handleCycleRepeat={this.handleCycleRepeat}
             handleCycleShuffle={this.handleCycleShuffle}
-            handleSetVoiceMask={this.handleSetVoiceMask}
             handleTempoChange={this.handleTempoChange}
             handleTimeSliderChange={this.handleTimeSliderChange}
             handleVolumeChange={this.handleVolumeChange}
@@ -984,8 +981,6 @@ class App extends React.Component {
             title={title}
             toggleInfo={this.toggleInfo}
             togglePause={this.togglePause}
-            voiceNames={this.state.voiceNames}
-            voiceMask={this.state.voiceMask}
             volume={this.state.volume}
           />
         </div>

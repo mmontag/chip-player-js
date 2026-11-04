@@ -197,17 +197,13 @@ export default class XMPPlayer extends Player {
     this.tempoScale = val;
   }
 
-  getVoiceName(index) {
-    return `Ch ${index + 1}`;
-  }
-
   getVoiceGroups() {
     if (!this.xmpCtx || !this.metadata) return [];
     const voices = [];
     for (let i = 0; i < this.metadata.numChannels; i++) {
       voices.push({
         idx: i,
-        name: this.getVoiceName(i),
+        name: `Ch ${i + 1}`,
       });
     }
     return [{

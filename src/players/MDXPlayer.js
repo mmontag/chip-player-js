@@ -140,10 +140,6 @@ export default class MDXPlayer extends Player {
     return !this.isPaused();
   }
 
-  getVoiceName(index) {
-    if (this.mdxCtx) return this.core.UTF8ToString(this.core._mdx_get_track_name(this.mdxCtx, index));
-  }
-
   getVoiceGroups() {
     if (!this.mdxCtx) return [];
     const voiceGroups = [];
