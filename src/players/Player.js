@@ -230,7 +230,15 @@ export default class Player extends EventEmitter {
    */
   // a nice replacement for getNumVoices and getVoiceName.
   getVoiceGroups() {
-    return [];
+    const mask = this.getVoiceMask();
+    if (!mask || mask.length === 0) return [];
+    return [{
+      name: 'Voices',
+      voices: mask.map((_, i) => ({
+        idx: i,
+        name: this.getVoiceName(i),
+      })),
+    }];
   }
 
   getNumSubtunes() {

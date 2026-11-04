@@ -300,6 +300,23 @@ export default class GMEPlayer extends Player {
     if (this.gmeCtx) return core.UTF8ToString(core._gme_voice_name(this.gmeCtx, index));
   }
 
+  getVoiceGroups() {
+    if (!this.gmeCtx) return [];
+    const numVoices = core._gme_voice_count(this.gmeCtx);
+    const voices = [];
+    for (let i = 0; i < numVoices; i++) {
+      voices.push({
+        idx: i,
+        name: this.getVoiceName(i) || `Voice ${i + 1}`,
+      });
+    }
+    return [{
+      name: this.metadata?.system || 'Voices',
+      icon: !!this.metadata?.system,
+      voices,
+    }];
+  }
+
   getNumSubtunes() {
     if (this.gmeCtx) return core._gme_track_count(this.gmeCtx);
   }

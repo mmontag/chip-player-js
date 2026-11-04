@@ -7,6 +7,7 @@ import MIDIFilePlayer from './MIDIFilePlayer';
 import Player from './Player';
 import { SOUNDFONTS, SOUNDFONT_MOUNTPOINT, SOUNDFONT_URL_PATH } from '../config';
 import { GM_DRUM_KITS, GM_INSTRUMENTS } from '../gm-patch-map';
+import { CHANNEL_COLORS } from '../piano-roll/config';
 import {
   ensureEmscFileWithUrl,
   getUrlFromFilepath,
@@ -170,7 +171,8 @@ export default class MIDIPlayer extends Player {
     this.midiFilePlayer = new MIDIFilePlayer({
       // playerStateUpdate is debounced to prevent flooding program change events
       programChangeCb: debounce(() => this.emit('playerStateUpdate', {
-        voiceNames: range(16).map(ch => this.getVoiceName(ch))
+        voiceNames: range(16).map(ch => this.getVoiceName(ch)),
+        voiceGroups: this.getVoiceGroups(),
       }), 200),
       output: dummyMidiOutput,
       skipSilence: true,
@@ -570,6 +572,25 @@ export default class MIDIPlayer extends Player {
     if (!this.midiFilePlayer.getChannelInUse(ch)) return '--';
     const pgm = this.midiFilePlayer.channelProgramNums[ch];
     return ch === 9 ? (GM_DRUM_KITS[pgm] || GM_DRUM_KITS[0]) : GM_INSTRUMENTS[pgm];
+  }
+
+  getVoiceGroups() {
+    if (!this.midiFilePlayer) return [];
+    const voices = [];
+    for (let ch = 0; ch < 16; ch++) {
+      const name = this.getVoiceName(ch);
+      if (name && name.trim() !== '--') {
+        voices.push({
+          idx: ch,
+          name: name.trim(),
+          color: CHANNEL_COLORS[ch % CHANNEL_COLORS.length],
+        });
+      }
+    }
+    return [{
+      name: 'Channels',
+      voices,
+    }];
   }
 
   getVoiceMask() {

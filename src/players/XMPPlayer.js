@@ -201,6 +201,21 @@ export default class XMPPlayer extends Player {
     return `Ch ${index + 1}`;
   }
 
+  getVoiceGroups() {
+    if (!this.xmpCtx || !this.metadata) return [];
+    const voices = [];
+    for (let i = 0; i < this.metadata.numChannels; i++) {
+      voices.push({
+        idx: i,
+        name: this.getVoiceName(i),
+      });
+    }
+    return [{
+      name: 'Channels',
+      voices,
+    }];
+  }
+
   getPositionMs() {
     return this._positionMs;
   }
