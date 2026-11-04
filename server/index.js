@@ -412,6 +412,7 @@ router.get('/browse', cache1Hour, async (req, res) => {
         mtime: typeof child.mtime === 'string' ? new Date(child.mtime).getTime() / 1000 : 0,
         idx: child.type === 'directory' ? null : (idx++),
         count: child.count || 0,
+        songId: child.song_id,
         url: child.type === 'directory' ? null : `/?play=${encodeURIComponent(child.song_id)}`,
       }));
 
@@ -563,8 +564,14 @@ const topCache = new LRUCache({
   ttl: 1000 * 60 * 60, // 60 minutes
 });
 
+const formatTopItem = ({ song_id, file_size, ...rest }) => ({
+  ...rest,
+  songId: song_id,
+  size: file_size,
+});
+
 /**
- * Returns: { items: [ { song_id, plays, title, artist, game, system, path, file_size, mtime }, ... ], total }
+ * Returns: { items: [ { songId, plays, title, artist, game, system, path, size, mtime }, ... ], total }
  */
 router.get('/top', optionalAuth, (req, res) => {
   const metric = req.query.metric || 'plays';
@@ -583,7 +590,7 @@ router.get('/top', optionalAuth, (req, res) => {
       return res.json(cached);
     }
 
-    const items = getTopFavoritesStmt.all(overFetch, limit);
+    const items = getTopFavoritesStmt.all(overFetch, limit).map(formatTopItem);
     const responseData = {
       items,
       total: items.length,
@@ -596,7 +603,7 @@ router.get('/top', optionalAuth, (req, res) => {
     if (!req.userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
-    const items = getUserTopStmt.all(req.userId, sinceTimestamp, overFetch, limit);
+    const items = getUserTopStmt.all(req.userId, sinceTimestamp, overFetch, limit).map(formatTopItem);
     return res.json({
       items,
       total: items.length,
@@ -609,7 +616,7 @@ router.get('/top', optionalAuth, (req, res) => {
     return res.json(cached);
   }
 
-  const items = getGlobalTopStmt.all(sinceTimestamp, overFetch, limit);
+  const items = getGlobalTopStmt.all(sinceTimestamp, overFetch, limit).map(formatTopItem);
   const responseData = {
     items,
     total: items.length,
