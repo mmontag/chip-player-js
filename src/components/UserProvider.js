@@ -147,6 +147,9 @@ const UserProvider = ({ children }) => {
         if (isFavorite) {
           await removeFavorite(fave);
         } else {
+          // We might not have a complete favorite, e.g. if it was added
+          // with the footer button from a "Shuffle Play" context.
+          // Hydrate the favorite with full backend response.
           const res = await addFavorite(fave);
           setFaves(prev => prev.map(f => (f.path === path ? res.favorite : f)));
         }
