@@ -149,6 +149,19 @@ export default class PlayerParams extends React.PureComponent {
     const { isPinned } = this;
     const isMidi = playerKey === 'midi';
 
+    const groups = (voiceGroups && voiceGroups.length > 0)
+      ? voiceGroups
+      : (voiceMask && voiceMask.length > 0
+          ? [{
+              name: isMidi ? 'Channels' : 'Voices',
+              voices: voiceMask.map((_, i) => ({
+                idx: i,
+                name: voiceNames?.[i] || `Voice ${i + 1}`,
+                color: isMidi ? CHANNEL_COLORS[i % CHANNEL_COLORS.length] : undefined,
+              })).filter(v => !isMidi || (v.name && v.name.trim() !== '--'))
+            }]
+          : []);
+
     return (
       <div className='PlayerParams'>
         <span className='PlayerParams-param PlayerParams-group'>
@@ -174,66 +187,41 @@ export default class PlayerParams extends React.PureComponent {
           {' '}
           {tempo.toFixed(2)}
         </span>
-        {voiceGroups.length > 0 ?
-          voiceGroups.map((group, i) => {
-            return (
-              <span className='PlayerParams-param PlayerParams-group' key={group.name+i}>
-                  <label className="PlayerParams-group-title" title="Click to toggle group. Alt+click to solo." onClick={(e) => this.handleVoiceGroupToggle(e, group)}>
-                    {group.icon && <span className='inline-icon dim-icon icon-chip'/>}{' '}
-                    {group.name}:
-                  </label>
-                  <div className="PlayerParams-voiceList">
-                    {group.voices.map((voice, j) => (
-                      <div key={voice.idx} className='App-voice-label'><input
+        {groups.map((group, i) => {
+          return (
+            <span className='PlayerParams-param PlayerParams-group' key={group.name + i}>
+              <label
+                className="PlayerParams-group-title"
+                title="Click to toggle group. Alt+click to solo."
+                onClick={(e) => this.handleVoiceGroupToggle(e, group)}
+              >
+                {group.icon && <span className='inline-icon dim-icon icon-chip'/>}{' '}
+                {group.name}:
+              </label>
+              <div className="PlayerParams-voiceList">
+                {group.voices.map((voice) => {
+                  const color = voice.color || (isMidi ? CHANNEL_COLORS[voice.idx % CHANNEL_COLORS.length] : null);
+                  const displayName = voice.name ? voice.name.trim() : '';
+                  return (
+                    <div key={voice.idx} className='App-voice-label' title={displayName}>
+                      <input
                         title='Alt+click to solo. Alt+click again to unmute all.'
                         type='checkbox'
-                        id={'v_'+i+j}
+                        id={'v_' + voice.idx}
                         onChange={(e) => this.handleVoiceToggle(e, voice.idx)}
-                        checked={!!voiceMask[voice.idx]}/>
-                      <label htmlFor={'v_'+i+j}>
-                        {voice.name}
-                      </label></div>
-                    ))}
-                  </div>
-              </span>
-            )
-          })
-          :
-          voiceMask.length > 0 &&
-          <span className='PlayerParams-param PlayerParams-group'>
-            <label className="PlayerParams-group-title">
-              { isMidi ? 'Channels' : 'Voices' }:
-            </label>
-            <div className="PlayerParams-voiceList">
-              {voiceMask.map((val, i) => {
-                const name = voiceNames[i];
-                if (isMidi && (!name || name.trim() === '--')) {
-                  return null;
-                }
-                const color = CHANNEL_COLORS[i % CHANNEL_COLORS.length];
-                const displayName = name ? name.trim() : '';
-                return (
-                  <div key={i} className='App-voice-label' title={displayName}><input
-                    title='Alt+click to solo. Alt+click again to unmute all.'
-                    type='checkbox'
-                    id={'v_'+i}
-                    onChange={(e) => this.handleVoiceToggle(e, i)}
-                    checked={!!val}/>
-                  <label htmlFor={'v_'+i}>
-                    {isMidi ? (
-                      <>
-                        <span className="PlayerParams-color-chip" style={{ color }}>■</span>
+                        checked={!!voiceMask[voice.idx]}
+                      />
+                      <label htmlFor={'v_' + voice.idx}>
+                        {color && <span className="PlayerParams-color-chip" style={{ color }}>■</span>}
                         {displayName}
-                      </>
-                    ) : (
-                      name
-                    )}
-                  </label></div>
-                )
-              })}
-            </div>
-          </span>
-        }
+                      </label>
+                    </div>
+                  );
+                })}
+              </div>
+            </span>
+          );
+        })}
 
         {paramDefs && paramValues && paramDefs.map(param => {
           const value = paramValues[param.id];
