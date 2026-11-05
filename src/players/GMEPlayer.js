@@ -191,10 +191,7 @@ export default class GMEPlayer extends Player {
     this.subtune = subtune;
     this.metadata = this._parseMetadata(subtune);
     console.debug('GMEPlayer.playSubtune(subtune=%s)', subtune);
-    this.emit('playerStateUpdate', {
-      ...this.getBasePlayerState(),
-      isStopped: false,
-    });
+    this.emit('playerStateUpdate', this.getBasePlayerState());
     const res = core._gme_start_track(this.gmeCtx, subtune);
     if (this.gmeCtx) {
       core._gme_set_fade(this.gmeCtx, 200000000);
@@ -449,11 +446,10 @@ export default class GMEPlayer extends Player {
   }
 
   stop() {
-    this.suspend();
+    super.stop();
     if (this.gmeCtx) core._gme_delete(this.gmeCtx);
     this.gmeCtx = null;
     console.debug('GMEPlayer.stop()');
-    this.emit('playerStateUpdate', { isStopped: true });
   }
 
 }

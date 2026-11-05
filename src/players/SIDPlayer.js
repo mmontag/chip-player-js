@@ -89,10 +89,7 @@ export default class SIDPlayer extends Player {
     this.resolveParamValues(persistedSettings);
     this.setTempo(persistedSettings.tempo || 1);
     this.resume();
-    this.emit('playerStateUpdate', {
-      ...this.getBasePlayerState(),
-      isStopped: false
-    });
+    this.emit('playerStateUpdate', this.getBasePlayerState());
   }
 
   processAudioInner(channels) {
@@ -138,10 +135,7 @@ export default class SIDPlayer extends Player {
     this.silenceSamplesRemaining = 0;
     this.onSilenceEnd = null;
     this.core._sid_set_subtune(subtune);
-    this.emit('playerStateUpdate', {
-      ...this.getBasePlayerState(),
-      isStopped: false,
-    });
+    this.emit('playerStateUpdate', this.getBasePlayerState());
   }
 
   getTempo() {
@@ -193,9 +187,8 @@ export default class SIDPlayer extends Player {
   }
 
   stop() {
-    this.suspend();
+    super.stop();
     this.core._sid_stop();
     console.debug('SIDPlayer.stop()');
-    this.emit('playerStateUpdate', { isStopped: true });
   }
 }

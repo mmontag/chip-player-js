@@ -83,10 +83,7 @@ export default class MDXPlayer extends Player {
           this.resolveParamValues(persistedSettings);
           this.setTempo(persistedSettings.tempo || 1);
           this.resume();
-          this.emit('playerStateUpdate', {
-            ...this.getBasePlayerState(),
-            isStopped: false,
-          });
+          this.emit('playerStateUpdate', this.getBasePlayerState());
         });
       });
   }
@@ -197,9 +194,8 @@ export default class MDXPlayer extends Player {
   }
 
   stop() {
-    this.suspend();
+    super.stop();
     this.core._mdx_close(this.mdxCtx);
     console.debug('MDXPlayer.stop()');
-    this.emit('playerStateUpdate', { isStopped: true });
   }
 }

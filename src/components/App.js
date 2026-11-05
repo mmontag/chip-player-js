@@ -129,7 +129,6 @@ class App extends React.Component {
       repeat: REPEAT_OFF,
       shuffle: SHUFFLE_OFF,
       directories: {},
-      hasPlayer: false,
       paramDefs: [],
       paramValues: {},
       // Special playable contexts

@@ -93,10 +93,7 @@ export default class VGMPlayer extends Player {
     this.resolveParamValues(persistedSettings);
     this.setTempo(persistedSettings.tempo || 1);
     this.resume();
-    this.emit('playerStateUpdate', {
-      ...this.getBasePlayerState(),
-      isStopped: false
-    });
+    this.emit('playerStateUpdate', this.getBasePlayerState());
   }
 
   processAudioInner(channels) {
@@ -206,10 +203,9 @@ export default class VGMPlayer extends Player {
   }
 
   stop() {
-    this.suspend();
+    super.stop();
     if (this.vgmCtx) this.core._lvgm_stop(this.vgmCtx);
     console.debug('VGMPlayer.stop()');
-    this.emit('playerStateUpdate', { isStopped: true });
   }
 
   setParameter(id, value) {

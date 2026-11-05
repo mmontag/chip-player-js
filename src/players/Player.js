@@ -137,8 +137,22 @@ export default class Player extends EventEmitter {
     throw Error('Player.loadData() must be implemented.');
   }
 
+  /**
+   * Stops audio rendering and resets playback state.
+   * Cancels in-flight loads and silences audio output.
+   */
   stop() {
-    throw Error('Player.stop() must be implemented.');
+    if (this.pendingLoad) {
+      this.pendingLoad.abort();
+      this.pendingLoad = null;
+    }
+    this.catalogMeta = {};
+    this.catalogMetaPromise = null;
+    this.stopped = true;
+    this.paused = true;
+    this.silenceSamplesRemaining = 0;
+    this.onSilenceEnd = null;
+    this.trailingSilenceSamples = 0;
   }
 
   isPlaying() {
@@ -325,7 +339,6 @@ export default class Player extends EventEmitter {
       tempo: this.getTempo(),
       voiceMask: this.getVoiceMask(),
       voiceGroups: this.getVoiceGroups(),
-      isStopped: this.stopped,
       paused: this.paused,
     };
   }
@@ -344,7 +357,10 @@ export default class Player extends EventEmitter {
     if (this.getSubtune() + 1 < this.getNumSubtunes()) {
       defaultCallback = () => this.playSubtune(this.getSubtune() + 1);
     }
-    const endAction = onSilenceEnd || defaultCallback || (() => this.stop());
+    const endAction = onSilenceEnd || defaultCallback || (() => {
+      this.stop();
+      this.emit('playerSongEnd');
+    });
 
     if (this.silenceDuration >= 0) {
       const trailingSilenceSec = this.trailingSilenceSamples / this.sampleRate;
@@ -364,19 +380,6 @@ export default class Player extends EventEmitter {
     }
   }
 
-  suspend() {
-    if (this.pendingLoad) {
-      this.pendingLoad.abort();
-      this.pendingLoad = null;
-    }
-    this.catalogMeta = {};
-    this.catalogMetaPromise = null;
-    this.stopped = true;
-    this.paused = true;
-    this.silenceSamplesRemaining = 0;
-    this.onSilenceEnd = null;
-    this.trailingSilenceSamples = 0;
-  }
 
   processAudio(output) {
     if (this.silenceSamplesRemaining > 0) {
@@ -393,6 +396,7 @@ export default class Player extends EventEmitter {
             cb();
           } else {
             this.stop();
+            this.emit('playerSongEnd');
           }
         }
       }

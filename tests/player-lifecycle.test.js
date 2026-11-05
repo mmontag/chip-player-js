@@ -7,13 +7,13 @@ import MDXPlayer from '../src/players/MDXPlayer';
 import N64Player from '../src/players/N64Player';
 import GSFPlayer from '../src/players/GSFPlayer';
 
-test('a new load and suspension invalidate previous player work', () => {
+test('a new load and stopping invalidate previous player work', () => {
   const player = new Player({}, 44100);
   const first = player.beginLoad();
   const second = player.beginLoad();
   assert.equal(first.aborted, true);
   assert.equal(second.aborted, false);
-  player.suspend();
+  player.stop();
   assert.equal(second.aborted, true);
 });
 
@@ -87,7 +87,7 @@ test('late SID metadata cannot overwrite a newer song or publish after stop', as
     pending[2]({ status: 200, data: { lengths: '3:00', name: 'Stopped' } });
     await new Promise(resolve => setImmediate(resolve));
     assert.equal(player.metadata.formatted.title, 'New');
-    assert.equal(updates.length, 2); // the second event is stop, not metadata
+    assert.equal(updates.length, 1); // stop does not emit an update, and late metadata is ignored
   } finally {
     axios.get = originalGet;
   }
@@ -207,7 +207,6 @@ test('superseded song requests cannot load after a later selection or ejection',
   globalThis.fetch = (url, options) => new Promise((resolve, reject) => requests.push({ url, signal: options.signal, resolve, reject }));
   const player = (key, extension) => Object.assign(new Player({}, 44100), {
     canPlay: ext => ext === extension,
-    stop() { this.suspend(); },
     fetchCatalogMetadata: async () => ({}),
     loadData: async (_data, path) => { loads.push({ key, path }); },
   });
@@ -326,4 +325,45 @@ test('MIDI device discovery only selects an output when one exists', async () =>
     if (originalNavigator) Object.defineProperty(globalThis, 'navigator', originalNavigator);
     else delete globalThis.navigator;
   }
+});
+
+test('sequencer advances on playerSongEnd and ejects cleanly without redundant hasPlayer', async () => {
+  const { default: Sequencer } = await import('../src/Sequencer');
+  const dummyPlayer = Object.assign(new Player({}, 44100), {
+    canPlay: ext => ext === 'vgm',
+    loadData: async () => {},
+  });
+  const sequencer = new Sequencer([dummyPlayer], { read: () => new Uint8Array([1]) }, () => ({}));
+  const updates = [];
+  sequencer.on('sequencerStateUpdate', state => updates.push(state));
+
+  assert.equal(sequencer.isEjected(), true);
+
+  sequencer.playContext(['local/1.vgm', 'local/2.vgm']);
+  dummyPlayer.emit('playerStateUpdate', { metadata: { title: 'Song 1' } });
+
+  assert.equal(updates.length, 1);
+  assert.equal(updates[0].ejected, false);
+  assert.equal('hasPlayer' in updates[0], false);
+  assert.equal(sequencer.getCurrSongPath(), 'local/1.vgm');
+
+  // Calling stop() directly does NOT advance
+  dummyPlayer.stop();
+  assert.equal(sequencer.getCurrSongPath(), 'local/1.vgm');
+
+  // Emitting playerSongEnd advances to next track
+  dummyPlayer.emit('playerSongEnd');
+  assert.equal(sequencer.getCurrSongPath(), 'local/2.vgm');
+
+  // Ejecting cleans up sequencer state and emits ejected: true
+  sequencer.eject();
+  assert.equal(sequencer.isEjected(), true);
+  assert.equal(sequencer.getPlayer(), null);
+  assert.equal(sequencer.getCurrSongPath(), null);
+  assert.equal(sequencer.getCurrContext(), null);
+
+  const lastUpdate = updates[updates.length - 1];
+  assert.equal(lastUpdate.ejected, true);
+  assert.equal(lastUpdate.songPath, null);
+  assert.equal('hasPlayer' in lastUpdate, false);
 });

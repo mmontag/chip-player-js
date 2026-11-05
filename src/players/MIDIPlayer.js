@@ -385,10 +385,7 @@ export default class MIDIPlayer extends Player {
     this.midiFilePlayer.play();
 
     this.resume();
-    this.emit('playerStateUpdate', {
-      ...this.getBasePlayerState(),
-      isStopped: false,
-    });
+    this.emit('playerStateUpdate', this.getBasePlayerState());
   }
 
   getSynthengineBasedOnFilename(filepath) {
@@ -448,11 +445,6 @@ export default class MIDIPlayer extends Player {
     return !this.midiFilePlayer.paused;
   }
 
-  suspend() {
-    super.suspend();
-    this.midiFilePlayer.stop();
-  }
-
   stop() {
     if (this.auditionTailTimeout) {
       clearTimeout(this.auditionTailTimeout);
@@ -462,10 +454,10 @@ export default class MIDIPlayer extends Player {
     this._wasStoppedBeforeAudition = false;
     if (this.midiFilePlayer) {
       this.midiFilePlayer.isAuditioning = false;
+      this.midiFilePlayer.stop();
     }
-    this.suspend();
+    super.stop();
     console.debug('MIDIPlayer.stop()');
-    this.emit('playerStateUpdate', { isStopped: true });
   }
 
   getAuditionChannel() {

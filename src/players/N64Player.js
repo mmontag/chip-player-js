@@ -73,10 +73,7 @@ export default class N64Player extends Player {
         this.resolveParamValues(persistedSettings);
 
         this.resume();
-        this.emit('playerStateUpdate', {
-          ...this.getBasePlayerState(),
-          isStopped: false,
-        });
+        this.emit('playerStateUpdate', this.getBasePlayerState());
       });
   }
 
@@ -136,9 +133,8 @@ export default class N64Player extends Player {
   }
 
   stop() {
-    this.suspend();
+    super.stop();
     this.core._n64_shutdown();
     console.debug('N64Player.stop()');
-    this.emit('playerStateUpdate', { isStopped: true });
   }
 }

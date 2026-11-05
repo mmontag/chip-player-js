@@ -93,10 +93,7 @@ export default class GSFPlayer extends Player {
         this.voiceMask = Array(numTracks).fill(true);
 
         this.resume();
-        this.emit('playerStateUpdate', {
-          ...this.getBasePlayerState(),
-          isStopped: false,
-        });
+        this.emit('playerStateUpdate', this.getBasePlayerState());
       });
   }
 
@@ -284,9 +281,8 @@ export default class GSFPlayer extends Player {
   }
 
   stop() {
-    this.suspend();
+    super.stop();
     this.core._gsf_shutdown();
     console.debug('GSFPlayer.stop()');
-    this.emit('playerStateUpdate', { isStopped: true });
   }
 }

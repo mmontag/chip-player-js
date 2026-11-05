@@ -70,7 +70,7 @@ export default class XMPPlayer extends Player {
       this.handleSongEnd();
       return;
     } else if (err !== 0) {
-      this.suspend();
+      this.stop();
       console.error("xmp_play_buffer failed. error code: %d", err);
       throw Error('xmp_play_buffer failed');
     }
@@ -167,10 +167,7 @@ export default class XMPPlayer extends Player {
     this.resolveParamValues(persistedSettings);
     this.setTempo(persistedSettings.tempo || 1);
     this.resume();
-    this.emit('playerStateUpdate', {
-      ...this.getBasePlayerState(),
-      isStopped: false
-    });
+    this.emit('playerStateUpdate', this.getBasePlayerState());
   }
 
   getVoiceMask() {
@@ -230,10 +227,9 @@ export default class XMPPlayer extends Player {
   }
 
   stop() {
-    this.suspend();
+    super.stop();
     this.core._xmp_stop_module(this.xmpCtx);
     console.debug('XMPPlayer.stop()');
-    this.emit('playerStateUpdate', { isStopped: true });
   }
 
   getParameter(id) {

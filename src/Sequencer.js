@@ -44,7 +44,38 @@ export default class Sequencer extends EventEmitter {
       player.on('playerError', error => {
         if (player === this.player) this.handlePlayerError(error);
       });
+      player.on('playerSongEnd', () => {
+        if (player === this.player) this.handlePlayerSongEnd();
+      });
     });
+  }
+
+  eject() {
+    this.currIdx = 0;
+    this.context = null;
+    this.currSongPath = null;
+    this.currSongBuffer = null;
+    if (this.player) {
+      this.player.stop();
+      this.player = null;
+    }
+    this.emit('sequencerStateUpdate', {
+      songPath: null,
+      songBuffer: null,
+      ejected: true,
+    });
+  }
+
+  isEjected() {
+    return this.player === null;
+  }
+
+  handlePlayerSongEnd() {
+    this.currSongPath = null;
+    this.currSongBuffer = null;
+    if (this.context) {
+      this.nextSong();
+    }
   }
 
   handlePlayerError(e) {
@@ -53,35 +84,23 @@ export default class Sequencer extends EventEmitter {
       clearTimeout(this.playerErrorAdvanceTimer);
       this.playerErrorAdvanceTimer = setTimeout(this.nextSong, ERROR_DELAY_MS);
     } else {
-      this.emit('sequencerStateUpdate', { ejected: true });
+      this.eject();
     }
   }
 
   handlePlayerStateUpdate(playerState) {
-    const { isStopped, ...rest } = playerState;
-    console.debug('Sequencer.handlePlayerStateUpdate(isStopped=%s)', isStopped);
     if (this.playerErrorAdvanceTimer) {
       console.debug('Cancelling auto-advance due to playerState update.');
       clearTimeout(this.playerErrorAdvanceTimer);
       this.playerErrorAdvanceTimer = null;
     }
 
-    if (isStopped) {
-      this.currSongPath = null;
-      this.currSongBuffer = null;
-      if (this.context) {
-        this.nextSong();
-      }
-    } else {
-      this.emit('sequencerStateUpdate', {
-        songPath: this.currSongPath,
-        songBuffer: this.currSongBuffer,
-        hasPlayer: true,
-        // TODO: combine ejected and hasPlayer
-        ejected: false,
-        ...rest,
-      });
-    }
+    this.emit('sequencerStateUpdate', {
+      songPath: this.currSongPath,
+      songBuffer: this.currSongBuffer,
+      ejected: false,
+      ...playerState,
+    });
   }
 
   playContext(context, index = 0, subtune = 0) {
@@ -148,11 +167,7 @@ export default class Sequencer extends EventEmitter {
       } else {
         console.debug('Sequencer.advanceSong(direction=%s) %s passed end of context length %s',
           direction, this.currIdx, this.context.length);
-        this.currIdx = 0;
-        this.context = null;
-        this.player.stop();
-        this.player = null;
-        this.emit('sequencerStateUpdate', { ejected: true });
+        this.eject();
       }
     } else {
       this.playCurrentSong();
@@ -210,7 +225,7 @@ export default class Sequencer extends EventEmitter {
   playSong(filepath, subtune = 0) {
     this.currSongBuffer = null;
     if (this.player !== null) {
-      this.player.suspend();
+      this.player.stop();
     }
 
     // Find a player that can play this filetype

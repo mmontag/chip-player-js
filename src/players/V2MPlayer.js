@@ -32,10 +32,7 @@ export default class V2MPlayer extends Player {
     this.resolveParamValues(persistedSettings);
     this.setTempo(persistedSettings.tempo || 1);
     this.resume();
-    this.emit('playerStateUpdate', {
-      ...this.getBasePlayerState(),
-      isStopped: false
-    });
+    this.emit('playerStateUpdate', this.getBasePlayerState());
   }
 
   processAudioInner(channels) {
@@ -92,9 +89,8 @@ export default class V2MPlayer extends Player {
   }
 
   stop() {
-    this.suspend();
+    super.stop();
     this.core._v2m_close();
     console.debug('V2MPlayer.stop()');
-    this.emit('playerStateUpdate', { isStopped: true });
   }
 }
