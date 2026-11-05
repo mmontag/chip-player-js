@@ -183,6 +183,7 @@ export default class GMEPlayer extends Player {
   }
 
   playSubtune(subtune) {
+    this.cancelIncrementalSeek();
     this.silenceSamplesRemaining = 0;
     this.onSilenceEnd = null;
     this.fadingOut = false;
@@ -200,12 +201,11 @@ export default class GMEPlayer extends Player {
   }
 
   async loadData(data, filepath, persistedSettings, subtune = 0) {
+    this.cancelIncrementalSeek();
     this.subtune = subtune;
     this.fadingOut = false;
     this.fadeStartMs = null;
     this.fadeFinished = false;
-    this.seekTargetMs = null;
-    this.seekRequestId = null;
     this.currentFileExt = pathe.extname(filepath);
     this.filepathMeta = Player.metadataFromFilepath(filepath);
 
@@ -407,6 +407,15 @@ export default class GMEPlayer extends Player {
     }
   }
 
+  cancelIncrementalSeek() {
+    if (this.seekRequestId !== null) {
+      cancelIdleCallback(this.seekRequestId);
+      if (this.gmeCtx) core._gme_set_tempo(this.gmeCtx, this.tempo);
+    }
+    this.seekRequestId = null;
+    this.seekTargetMs = null;
+  }
+
   doIncrementalSeek(seekMsIncrement) {
     // console.log('Scheduling incremental seek of %s ms...', seekMsIncrement);
     this.seekRequestId = requestIdleCallback(() => {
@@ -446,6 +455,7 @@ export default class GMEPlayer extends Player {
   }
 
   stop() {
+    this.cancelIncrementalSeek();
     super.stop();
     if (this.gmeCtx) core._gme_delete(this.gmeCtx);
     this.gmeCtx = null;
