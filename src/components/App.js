@@ -785,7 +785,7 @@ class App extends React.Component {
     const midiData = (
       (this.state.songPath && /\.(mid|midi|smf)$/i.test(this.state.songPath)) ||
       this.sequencer?.getPlayer()?.fileExtensions?.includes('mid')
-    ) ? (this.state.songBuffer || this.sequencer?.getCurrSongBuffer()) : null;
+    ) ? this.state.songBuffer : null;
     const isMidi = Boolean(midiData);
     const activeTheaterMode = Boolean(isMidi && this.state.theaterMode && showVisualizer);
 

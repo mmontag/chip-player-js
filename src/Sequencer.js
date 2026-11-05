@@ -199,10 +199,6 @@ export default class Sequencer extends EventEmitter {
     return this.currSongPath;
   }
 
-  getCurrSongBuffer() {
-    return this.currSongBuffer;
-  }
-
   getSubtune() {
     return this.player.getSubtune();
   }
