@@ -367,3 +367,52 @@ test('sequencer advances on playerSongEnd and ejects cleanly without redundant h
   assert.equal(lastUpdate.songPath, null);
   assert.equal('hasPlayer' in lastUpdate, false);
 });
+
+test('GME cancels pending SPC seeks when stopping or restarting a track', async () => {
+  const { default: GMEPlayer } = await import('../src/players/GMEPlayer');
+  const originalRequest = globalThis.requestIdleCallback;
+  const originalCancel = globalThis.cancelIdleCallback;
+  const queue = new Map();
+  let id = 0, position = 0;
+  const seeks = [], tempos = [];
+  globalThis.requestIdleCallback = callback => { queue.set(++id, callback); return id; };
+  globalThis.cancelIdleCallback = handle => queue.delete(handle);
+  const core = {
+    _malloc: () => 1, _gme_tell_scaled: () => position,
+    _gme_seek_scaled: (_ctx, ms) => { seeks.push(ms); position = ms; },
+    _gme_set_tempo: (_ctx, tempo) => tempos.push(tempo),
+    _gme_delete() {}, _gme_start_track: () => 0, _gme_set_fade() {}, _gme_track_count: () => 1, _gme_voice_count: () => 0,
+  };
+  try {
+    const player = new GMEPlayer(core, 44100);
+    player.gmeCtx = 1;
+    player.currentFileExt = '.spc';
+    player.tempo = 1.25;
+    player._parseMetadata = () => ({});
+    player.seekMs(40000);
+    assert.equal(queue.size, 1);
+    player.playSubtune(0);
+    assert.equal(queue.size, 0);
+    assert.equal(player.seekTargetMs, null);
+    assert.equal(tempos.at(-1), 1.25);
+    player.seekMs(40000);
+    player.seekMs(22000);
+    assert.equal(queue.size, 1);
+    while (queue.size) {
+      const [key, callback] = queue.entries().next().value;
+      queue.delete(key);
+      callback();
+    }
+    assert.equal(position, 22000);
+    assert.equal(tempos.at(-1), 1.25);
+    player.seekMs(40000);
+    player.stop();
+    assert.equal(queue.size, 0);
+    assert.equal(player.seekTargetMs, null);
+    assert.equal(player.gmeCtx, null);
+    assert.deepEqual(seeks, [10000, 20000, 22000]);
+  } finally {
+    globalThis.requestIdleCallback = originalRequest;
+    globalThis.cancelIdleCallback = originalCancel;
+  }
+});
