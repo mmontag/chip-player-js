@@ -25,8 +25,6 @@ export default class Sequencer extends EventEmitter {
     this.players = players;
     this.localFilesManager = localFilesManager;
     this.getSettings = getSettings;
-    // this.onSequencerStateUpdate = onSequencerStateUpdate;
-    // this.onPlayerError = onError;
 
     this.currIdx = 0;
     this.context = null;
@@ -117,20 +115,7 @@ export default class Sequencer extends EventEmitter {
   }
 
   playCurrentSong(subtune = 0) {
-    let idx = this.currIdx;
-    if (this.shuffle === SHUFFLE_ON) {
-      idx = this.shuffleOrder[idx];
-      console.log('Shuffle (%s): %s', this.currIdx, idx);
-    }
-    this.playSong(this.context[idx], subtune);
-  }
-
-  playSonglist(urls) {
-    this.playContext(urls, 0);
-  }
-
-  toggleShuffle() {
-    this.setShuffle(!this.shuffle);
+    this.playSong(this.context[this.getCurrIdx()], subtune);
   }
 
   setShuffle(shuff) {

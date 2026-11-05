@@ -598,7 +598,7 @@ class App extends React.Component {
       if (context) {
         this.playContext(context, index);
       } else {
-        this.sequencer.playSonglist([url]);
+        this.sequencer.playContext([url]);
       }
     }
   }
