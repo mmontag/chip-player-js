@@ -16,7 +16,6 @@
 extern "C" {
 #endif
 
-//TODO: Remove debug logging (EM_ASM_)
 fluid_synth_t *g_FluidSynth; // instance of FluidSynth
 struct ADL_MIDIPlayer *g_adlSynth;
 struct ADLMIDI_AudioFormat adl_AudioFormat = {
