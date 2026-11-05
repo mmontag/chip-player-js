@@ -307,13 +307,15 @@ app.get('/preview', cache1Hour, async (req, res) => {
  * Returns: { items: [ { file, title, artist, game, system }, ... ], total }
  */
 router.get('/search', cache1Hour, (req, res) => {
-  const { limit = 100, query } = req.query;
+  const { query } = req.query;
+  const limit = Math.max(1, parseInt(req.query.limit, 10) || 100);
   const start = performance.now();
 
   let items = [];
   const sanitizedQuery = query.replace(/"/g, '""');
-  if (searchMap.has(sanitizedQuery)) {
-    items = searchMap.get(sanitizedQuery);
+  const cached = searchMap.get(sanitizedQuery);
+  if (cached && (limit <= cached.length || cached.length < 50)) {
+    items = cached.slice(0, limit);
   } else {
     const ftsQuery = sanitizedQuery.trim().split(/\s+/).map(term => `${term}*`).join(' ');
 
