@@ -213,6 +213,7 @@ class App extends React.Component {
     this.sequencer = new Sequencer(players, this.localFilesManager, () => this.props.userContext.settings);
     this.sequencer.on('sequencerStateUpdate', this.handleSequencerStateUpdate);
     this.sequencer.on('playerError', (message) => this.props.toastContext.enqueueToast(message, ToastLevels.ERROR));
+    this.sequencer.on('songSelected', () => this.setState({ paused: false }));
 
     // TODO: Move to separate processUrlParams method.
     const urlParams = new URLSearchParams(window.location.search);
@@ -432,9 +433,17 @@ class App extends React.Component {
   }
 
   togglePause() {
-    if (this.state.ejected || !this.sequencer.getPlayer()) return;
+    const player = this.sequencer.getPlayer();
+    if (!player || (this.state.ejected && !this.sequencer.getCurrContext())) return;
 
-    const paused = this.sequencer.getPlayer().togglePause();
+    const paused = !this.state.paused;
+    if (paused) {
+      this.sequencer.pause();
+    } else if (player.stopped && this.sequencer.getCurrContext()) {
+      this.sequencer.playCurrentSong();
+    } else {
+      player.togglePause();
+    }
     if ('mediaSession' in navigator) {
       if (paused) {
         this.mediaSessionAudio.pause();

@@ -263,6 +263,96 @@ test('superseded song requests cannot load after a later selection or ejection',
   }
 });
 
+test('pause stops error-driven skipping and retry can advance naturally', async () => {
+  const { default: Sequencer } = await import('../src/Sequencer');
+  const originalFetch = globalThis.fetch;
+  const requests = [], loads = [];
+  globalThis.fetch = async url => {
+    requests.push(url);
+    return url.endsWith('missing.spc')
+      ? new Response('missing', { status: 404 })
+      : new Response(new Uint8Array([1]), { status: 200 });
+  };
+  const player = Object.assign(new Player({}, 44100), {
+    stopped: true, paused: true,
+    canPlay: ext => ext === 'spc', setLooping() {}, getVoiceMask: () => [],
+    fetchCatalogMetadata() { return Promise.resolve({}); },
+    async loadData(_data, path) { loads.push(path); this.stopped = false; this.paused = false; },
+  });
+  const sequencer = new Sequencer([player], { read() {} }, () => ({}));
+  const settle = () => new Promise(resolve => setImmediate(resolve));
+  try {
+    sequencer.playContext(['missing.spc', 'next.spc']);
+    await settle();
+    sequencer.pause();
+    await new Promise(resolve => setTimeout(resolve, 1100));
+    assert.equal(requests.length, 1);
+    assert.equal(sequencer.getCurrIdx(), 0);
+
+    sequencer.playCurrentSong();
+    await settle();
+    assert.equal(requests.length, 2);
+    assert.ok(requests[1].endsWith('missing.spc'));
+    await new Promise(resolve => setTimeout(resolve, 1100));
+    assert.equal(requests.length, 3);
+    assert.ok(requests[2].endsWith('next.spc'));
+    assert.deepEqual(loads, ['next.spc']);
+  } finally {
+    clearTimeout(sequencer.playerErrorAdvanceTimer);
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('pausing a pending player load prevents it from starting later', async () => {
+  const { default: Sequencer } = await import('../src/Sequencer');
+  let finish;
+  const player = new Player({}, 44100);
+  player.fileExtensions = ['spc'];
+  player.setLooping = () => {};
+  player.getVoiceMask = () => [];
+  player.loadData = async function () {
+    const signal = this.pendingLoad.signal;
+    await new Promise(resolve => { finish = resolve; });
+    if (!signal.aborted) this.resume();
+  };
+  const sequencer = new Sequencer([player], { read: () => new Uint8Array([1]) }, () => ({}));
+  sequencer.playContext(['local/a.spc']);
+  sequencer.pause();
+  finish();
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(player.stopped, true);
+  assert.equal(player.isPaused(), true);
+});
+
+test('a response arriving after pause cannot start playback or restart skipping', async () => {
+  const { default: Sequencer } = await import('../src/Sequencer');
+  const originalFetch = globalThis.fetch;
+  let respond;
+  let loads = 0;
+  let requestSignal;
+  globalThis.fetch = (_url, options) => new Promise(resolve => {
+    requestSignal = options.signal;
+    respond = resolve;
+  });
+  const player = new Player({}, 44100);
+  player.fileExtensions = ['spc'];
+  player.fetchCatalogMetadata = () => Promise.resolve({});
+  player.loadData = async () => { loads++; };
+  const sequencer = new Sequencer([player], { read() {} }, () => ({}));
+  try {
+    sequencer.playContext(['slow.spc', 'next.spc']);
+    sequencer.pause();
+    assert.equal(requestSignal.aborted, true);
+    respond(new Response(new Uint8Array([1]), { status: 200 }));
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(loads, 0);
+    assert.equal(sequencer.playerErrorAdvanceTimer, null);
+    assert.equal(sequencer.getCurrIdx(), 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test('Web MIDI completes in the playback loop only after scheduled output', async () => {
   const { default: MIDIFilePlayer } = await import('../src/players/MIDIFilePlayer');
   const player = new MIDIFilePlayer({ useWebMIDI: true, output: { send() {} }, programChangeCb() {} });
