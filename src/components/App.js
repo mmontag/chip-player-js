@@ -275,8 +275,8 @@ class App extends React.Component {
 
       navigator.mediaSession.setActionHandler('play', () => this.togglePause());
       navigator.mediaSession.setActionHandler('pause', () => this.togglePause());
-      navigator.mediaSession.setActionHandler('previoustrack', () => this.prevSong());
-      navigator.mediaSession.setActionHandler('nexttrack', () => this.nextSong());
+      navigator.mediaSession.setActionHandler('previoustrack', () => this.sequencer.prevSong());
+      navigator.mediaSession.setActionHandler('nexttrack', () => this.sequencer.nextSong());
       navigator.mediaSession.setActionHandler('seekbackward', () => this.seekRelative(-5000));
       navigator.mediaSession.setActionHandler('seekforward', () => this.seekRelative(5000));
     }
@@ -364,21 +364,6 @@ class App extends React.Component {
     this.sequencer.playContext(context, index, subtune);
   }
 
-  prevSong() {
-    this.sequencer.prevSong();
-  }
-
-  nextSong() {
-    this.sequencer.nextSong();
-  }
-
-  prevSubtune() {
-    this.sequencer.prevSubtune();
-  }
-
-  nextSubtune() {
-    this.sequencer.nextSubtune();
-  }
 
   handleSequencerStateUpdate(sequencerState) {
     const { ejected } = sequencerState;
@@ -965,11 +950,7 @@ class App extends React.Component {
             imageUrl={imageUrl}
             infoTexts={this.state.infoTexts}
             md5={this.state.md5}
-            nextSong={this.nextSong}
-            nextSubtune={this.nextSubtune}
             paused={this.state.paused}
-            prevSong={this.prevSong}
-            prevSubtune={this.prevSubtune}
             repeat={this.state.repeat}
             shuffle={this.state.shuffle}
             sequencer={this.sequencer}
