@@ -48,6 +48,7 @@ function MIDIPlayer(options) {
   this.skipSilence = options.skipSilence || false; // skip silence at beginning of file
   this.lastProcessPlayTimestamp = 0;
   this.lastSendTimestamp = 0;
+  this.resumeAfterTimestamp = 0;
   this.events = [];
   this.paused = true;
   this.useWebMIDI = options.useWebMIDI || false;
@@ -191,7 +192,7 @@ MIDIPlayer.prototype.processPlay = function () {
   const deltaTime = (now - this.lastProcessPlayTimestamp) * this.speed;
   this.lastProcessPlayTimestamp = now;
 
-  if (this.paused) return 1;
+  if (this.paused || now < this.resumeAfterTimestamp) return 1;
 
   let throttleDelayMs = 0;
   let delay = 0;
@@ -264,7 +265,28 @@ MIDIPlayer.prototype.handleProgramChange = function (channel, program) {
 MIDIPlayer.prototype.togglePause = function () {
   this.paused = !this.paused;
   if (this.paused === true) {
-    this.panic(this.lastSendTimestamp + 10);
+    this.panic(this.lastSendTimestamp + 10, true);
+  } else {
+    // Pause releases sustain, so restore its latest sequenced value.
+    const sustain = {};
+    for (let i = 0; i < this.position; i++) {
+      const event = this.events[i];
+      if (event.subtype === MIDIEvents.EVENT_MIDI_CONTROLLER && event.param1 === CC_SUSTAIN_PEDAL) {
+        sustain[event.channel] = event.param2;
+      }
+    }
+    if (this.useWebMIDI) {
+      // The pause messages may still be queued on the device.
+      this.resumeAfterTimestamp = Math.max(performance.now(), this.lastSendTimestamp + 11);
+      for (const [channel, value] of Object.entries(sustain)) {
+        this.send([0xB0 + Number(channel), CC_SUSTAIN_PEDAL, value], this.resumeAfterTimestamp);
+      }
+      this.lastSendTimestamp = this.resumeAfterTimestamp;
+    } else {
+      for (const [channel, value] of Object.entries(sustain)) {
+        this.synth.controlChange(Number(channel), CC_SUSTAIN_PEDAL, value);
+      }
+    }
   }
   return this.paused;
 };
@@ -288,18 +310,18 @@ MIDIPlayer.prototype.send = function (message, timestamp) {
 };
 
 // TODO: fix confusion between reset and panic
-MIDIPlayer.prototype.panic = function (timestamp) {
+MIDIPlayer.prototype.panic = function (timestamp, preserveControllers = false) {
   if (this.useWebMIDI) {
     for (let ch = 0; ch < 16; ch++) {
       this.send([(MIDIEvents.EVENT_MIDI_CONTROLLER << 4) + ch, CC_SUSTAIN_PEDAL, 0], timestamp);
       this.send([(MIDIEvents.EVENT_MIDI_CONTROLLER << 4) + ch, CC_ALL_SOUND_OFF, 0], timestamp);
-      this.send([(MIDIEvents.EVENT_MIDI_CONTROLLER << 4) + ch, CC_RESET_ALL_CONTROLLERS, 0], timestamp);
+      if (!preserveControllers) this.send([(MIDIEvents.EVENT_MIDI_CONTROLLER << 4) + ch, CC_RESET_ALL_CONTROLLERS, 0], timestamp);
     }
   } else {
-    // Release sustain pedal and reset pitch bend on all channels
+    // Release sustain on all channels; reset pitch bend only for full panic.
     for (let ch = 0; ch < 16; ch++) {
       this.synth.controlChange(ch, CC_SUSTAIN_PEDAL, 0);
-      this.synth.pitchBend(ch, 8192);
+      if (!preserveControllers) this.synth.pitchBend(ch, 8192);
     }
     this.synth.panic();
   }
