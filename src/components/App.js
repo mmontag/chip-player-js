@@ -57,6 +57,26 @@ import { getDomMetadataText } from '../metadata-inspector';
 
 const BASE_URL = process.env.PUBLIC_URL || document.location.origin;
 
+const INITIAL_PLAYBACK_STATE = {
+  paused: true,
+  ejected: true,
+  metadata: {},
+  numSubtunes: 0,
+  subtune: 0,
+  durationMs: 1,
+  positionMs: 0,
+  songBuffer: null,
+  tempo: 1,
+  voiceMask: Array(MAX_VOICES).fill(true),
+  voiceGroups: [],
+  infoTexts: [],
+  songPath: null,
+  songId: null,
+  md5: null,
+  paramDefs: [],
+  paramValues: {},
+};
+
 class App extends React.Component {
   constructor(props) {
     super(props);
@@ -107,31 +127,15 @@ class App extends React.Component {
       audioCtx.sampleRate, audioCtx.baseLatency * audioCtx.sampleRate, bufferSize);
 
     this.state = {
+      ...INITIAL_PLAYBACK_STATE,
       loading: true,
       loadingLocalFiles: true,
-      paused: true,
-      ejected: true,
-      metadata: {},
-      numSubtunes: 0,
-      subtune: 0,
-      durationMs: 1,
-      positionMs: 0,
-      songBuffer: null,
-      tempo: 1,
-      voiceMask: Array(MAX_VOICES).fill(true),
-      voiceGroups: [],
-      infoTexts: [],
       showInfo: false,
       metadataText: null,
-      songPath: null,
-      songId: null,
       volume: 100,
       repeat: REPEAT_OFF,
       shuffle: SHUFFLE_OFF,
       directories: {},
-      paramDefs: [],
-      paramValues: {},
-      // Special playable contexts
       localFiles: [],
       theaterMode: false,
     };
@@ -371,18 +375,7 @@ class App extends React.Component {
 
     if (ejected) {
       clearTimeout(this.playbackTimer);
-      this.setState({
-        ejected: true,
-        subtune: 0,
-        metadata: {},
-        positionMs: 0,
-        durationMs: 1,
-        numSubtunes: 0,
-        songBuffer: null,
-        md5: null,
-        songId: null,
-        songPath: null,
-      });
+      this.setState(INITIAL_PLAYBACK_STATE);
       // TODO: Disabled to support scroll restoration.
       // updateQueryString({ play: undefined });
 
@@ -922,7 +915,7 @@ class App extends React.Component {
               <Visualizer audioCtx={this.audioCtx}
                           sourceNode={this.playerNode}
                           chipCore={this.chipCore}
-                          paused={this.state.ejected || this.state.paused}
+                          paused={this.state.paused}
                           songPath={this.state.songPath}
                           midiData={midiData}
                           getCurrentPositionMs={() => this.sequencer?.getPlayer()?.getPositionMs() || 0}
