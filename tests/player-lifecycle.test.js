@@ -367,3 +367,61 @@ test('sequencer advances on playerSongEnd and ejects cleanly without redundant h
   assert.equal(lastUpdate.songPath, null);
   assert.equal('hasPlayer' in lastUpdate, false);
 });
+
+test('MIDI pause preserves pitch and restores sustain for the next notes', async () => {
+  const { default: MIDIFilePlayer } = await import('../src/players/MIDIFilePlayer');
+  const { default: MIDIFile } = await import('../src/players/midi/midi-helpers');
+  // A real MIDI track: pitch bend, sustain on, note on, then a later note off.
+  const bytes = Uint8Array.from([
+    0x4d,0x54,0x68,0x64,0,0,0,6,0,0,0,1,1,0xe0,
+    0x4d,0x54,0x72,0x6b,0,0,0,21,
+    0,0xe0,0,96, 0,0xb0,64,127, 0,0x90,60,100,
+    0x83,0x60,0x80,60,0, 0,0xff,0x2f,0,
+  ]);
+  const bends = [], controllers = [], notes = [];
+  const synth = {
+    pitchBend: (channel, value) => bends.push([channel, value]),
+    controlChange: (channel, cc, value) => controllers.push([channel, cc, value]),
+    noteOn: (...args) => notes.push(args), noteOff() {}, programChange() {},
+    panic() {}, reset() {}, render() {}, getValue: () => 0.1,
+  };
+  const p = new MIDIFilePlayer({ synth, sampleRate: 44100, programChangeCb() {} });
+  p.load(new MIDIFile(bytes));
+  p.play();
+  p.processPlaySynth(0, 64);
+  assert.deepEqual(bends.at(-1), [0, 12288]);
+  assert.deepEqual(notes[0], [0, 60, 100]);
+  p.togglePause();
+  assert.deepEqual(bends.at(-1), [0, 12288]);
+  assert.ok(controllers.some(([ch, cc, value]) => ch === 0 && cc === 64 && value === 0));
+  p.togglePause();
+  assert.deepEqual(controllers.at(-1), [0, 64, 127]);
+  p.stop();
+  assert.deepEqual(bends.at(-1), [15, 8192]); // full stop still resets bend
+});
+
+test('Web MIDI pause preserves controllers and queues sustain restoration after silencing', async () => {
+  const { default: MIDIFilePlayer } = await import('../src/players/MIDIFilePlayer');
+  const sent = [];
+  const p = new MIDIFilePlayer({ useWebMIDI: true, output: { send: (message, time) => sent.push({ message, time }) } });
+  p.events = [{ subtype: 11, channel: 0, param1: 64, param2: 127, playTime: 0 },
+    { subtype: 9, channel: 0, param1: 60, param2: 100, playTime: 200 }];
+  p.position = 1;
+  p.elapsedTime = 0;
+  p.channelMask[0] = true;
+  p.resume();
+  p.lastSendTimestamp = performance.now() + 100;
+  p.togglePause();
+  assert.equal(sent.filter(({ message }) => message[1] === 121).length, 0);
+  const silencedAt = sent[0].time;
+  p.togglePause();
+  const restored = sent.at(-1);
+  assert.deepEqual(restored.message, [0xb0, 64, 127]);
+  assert.ok(restored.time > silencedAt);
+  const count = sent.length;
+  p.lastProcessPlayTimestamp = performance.now();
+  p.processPlay();
+  assert.equal(sent.length, count); // no newly queued note before the pause messages
+  p.stop();
+  assert.equal(sent.filter(({ message }) => message[1] === 121).length, 16);
+});
