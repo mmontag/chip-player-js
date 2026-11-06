@@ -98,12 +98,10 @@ const dbStatements = {
   replaceUserSettingsStmt: db.prepare(`UPDATE users SET settings = ? WHERE id = ?`),
 
   // Favorites
-  // TODO: remove hardcoded prefix
   getFavoritesStmt: db.prepare(`
       SELECT json_group_array(
           json_set(
               je.value,
-              '$.href', CONCAT('https://gifx.co/music/', m.path),
               '$.path', m.path,
               '$.size', m.file_size
           )

@@ -3,12 +3,15 @@ import FavoriteButton from './FavoriteButton';
 import { UserContext } from './UserProvider';
 import VirtualizedList from './VirtualizedList';
 import bytes from 'bytes';
+import { CATALOG_PREFIX } from '../config';
+import { pathJoin } from '../util';
 
 const FavoriteRow = (props) => {
   const {
     item, onPlay
   } = props;
-  const { href, path, mtime, size } = item;
+  const { path, mtime, size } = item;
+  const href = pathJoin(CATALOG_PREFIX, encodeURIComponent(path));
   const date = new Date(mtime * 1000).toISOString().split('T')[0];
   const name = path.split('/').pop();
 
