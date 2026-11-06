@@ -204,8 +204,8 @@ async function getLogoImage() {
 }
 
 app.get('/preview', cache1Hour, async (req, res) => {
-  const { s: songId } = req.query;
-  if (!songId) {
+  const songId = Array.isArray(req.query.s) ? req.query.s[0] : req.query.s;
+  if (!songId || typeof songId !== 'string') {
     return res.status(400).send('Missing song ID');
   }
 
@@ -214,13 +214,15 @@ app.get('/preview', cache1Hour, async (req, res) => {
     let imageUrl = null;
 
     // getting crazy here ···
-    if (song.image_path) {
-      imageUrl = path.join(LOCAL_CATALOG_ROOT, song.image_path);
-    }
-    else if (song.path.endsWith('.sid')) {
-      const sidMeta = getSidMetadataByPathStmt.get('_'+song.path);
-      if (sidMeta) {
-        imageUrl = await getCsdbImageUrl(sidMeta.csdbid);
+    if (song) {
+      if (song.image_path) {
+        imageUrl = path.join(LOCAL_CATALOG_ROOT, song.image_path);
+      }
+      else if (song.path && song.path.endsWith('.sid')) {
+        const sidMeta = getSidMetadataByPathStmt.get('_'+song.path);
+        if (sidMeta) {
+          imageUrl = await getCsdbImageUrl(sidMeta.csdbid);
+        }
       }
     }
 
@@ -307,13 +309,19 @@ app.get('/preview', cache1Hour, async (req, res) => {
  * Returns: { items: [ { file, title, artist, game, system }, ... ], total }
  */
 router.get('/search', cache1Hour, (req, res) => {
-  const { limit = 100, query } = req.query;
+  const rawQuery = Array.isArray(req.query.query) ? req.query.query[0] : (req.query.query || '');
+  const parsedLimit = parseInt(req.query.limit, 10);
+  const limit = Math.min(Math.max(isNaN(parsedLimit) ? 100 : parsedLimit, 1), 500);
   const start = performance.now();
 
   let items = [];
-  const sanitizedQuery = query.replace(/"/g, '""');
+  const sanitizedQuery = rawQuery.replace(/"/g, '""');
+  if (!sanitizedQuery.trim()) {
+    return res.json({ items: [], total: 0 });
+  }
+
   if (searchMap.has(sanitizedQuery)) {
-    items = searchMap.get(sanitizedQuery);
+    items = searchMap.get(sanitizedQuery).slice(0, limit);
   } else {
     const ftsQuery = sanitizedQuery.trim().split(/\s+/).map(term => `${term}*`).join(' ');
 
@@ -325,7 +333,7 @@ router.get('/search', cache1Hour, (req, res) => {
   }
 
   const time = (performance.now() - start).toFixed(1);
-  console.log('Returned %s results for "%s" in %s ms.', items.length, query, time);
+  console.log('Returned %s results for "%s" in %s ms.', items.length, rawQuery, time);
 
   res.json({
     items: items,
@@ -345,7 +353,8 @@ router.get('/total', cache1Hour, (req, res) => {
  * Returns: { items: [ path, ... ], total }
  */
 router.get('/random', (req, res) => {
-  const limit = parseInt(req.query.limit, 10) || 1;
+  const parsedLimit = parseInt(req.query.limit, 10);
+  const limit = Math.min(Math.max(isNaN(parsedLimit) ? 1 : parsedLimit, 1), 100);
   const items = getShuffleStmt.all('/%', limit);
   res.json({
     items: items,
@@ -357,8 +366,10 @@ router.get('/random', (req, res) => {
  * Returns: { items: [ path, ... ], total }
  */
 router.get('/shuffle', (req, res) => {
-  const limit = parseInt(req.query.limit, 10) || 100;
-  let reqPath = (req.query.path || '').replace(/^\/+/g, '');
+  const parsedLimit = parseInt(req.query.limit, 10);
+  const limit = Math.min(Math.max(isNaN(parsedLimit) ? 100 : parsedLimit, 1), 500);
+  const rawPath = Array.isArray(req.query.path) ? req.query.path[0] : (req.query.path || '');
+  let reqPath = rawPath.replace(/\\/g, '/').replace(/^\/+/g, '');
   if (reqPath !== '') reqPath += '/';
   const escapedPath = reqPath.replace(/[\\%_]/g, '\\$&');
   const items = getShuffleStmt.pluck().all(`${escapedPath}%`, limit);
@@ -373,12 +384,20 @@ router.get('/shuffle', (req, res) => {
  * Returns: [ { path, type, size, mtime, idx, count }, ... ]
  */
 router.get('/browse', cache1Hour, async (req, res) => {
-  const { path: reqPath } = req.query;
+  const rawPath = Array.isArray(req.query.path) ? req.query.path[0] : (req.query.path || '');
 
   let idx = 0;
   if (browseLocalFilesystem) {
     try {
-      const files = await fs.readdir(path.join(LOCAL_CATALOG_ROOT, reqPath), { withFileTypes: true });
+      const cleanPath = rawPath.replace(/\\/g, '/').replace(/^\/+/, '');
+      const rootResolved = path.resolve(LOCAL_CATALOG_ROOT);
+      const targetPath = path.resolve(rootResolved, cleanPath);
+
+      if (targetPath !== rootResolved && !targetPath.startsWith(rootResolved + path.sep)) {
+        return res.status(403).json([]);
+      }
+
+      const files = await fs.readdir(targetPath, { withFileTypes: true });
       const result = files
         .filter(file => {
           const ext = path.extname(file.name).toLowerCase().slice(1);
@@ -386,7 +405,7 @@ router.get('/browse', cache1Hour, async (req, res) => {
         })
         .map((file, i) => {
           return {
-            path: path.join(reqPath, file.name),
+            path: path.join(cleanPath, file.name),
             size: 0,
             mtime: 0,
             type: file.isDirectory() ? 'directory' : 'file',
@@ -399,7 +418,7 @@ router.get('/browse', cache1Hour, async (req, res) => {
       res.status(404).json([]);
     }
   } else {
-    const normalizedPath = reqPath ? reqPath.replace(/^\/+|\/+$/g, '') : '';
+    const normalizedPath = rawPath.replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
 
     const dirRow = getDirIdStmt.get(normalizedPath);
     if (dirRow) {
@@ -486,7 +505,15 @@ async function getCsdbImageUrl(csdbid) {
   const screenshotUrl = releases.sort((a, b) => {
     return releaseDate(a) - releaseDate(b);
   }).find(r => r.ScreenShot)?.ScreenShot;
-  if (screenshotUrl && screenshotUrl.includes('csdb.dk')) return screenshotUrl;
+  if (screenshotUrl) {
+    try {
+      const parsed = new URL(screenshotUrl);
+      if (parsed.protocol === 'https:' && (parsed.hostname === 'csdb.dk' || parsed.hostname.endsWith('.csdb.dk'))) {
+        return screenshotUrl;
+      }
+    } catch (e) {}
+  }
+  return null;
 }
 
 /**
@@ -498,10 +525,10 @@ async function getCsdbImageUrl(csdbid) {
  * }
  */
 router.get('/metadata', cache1Hour, (req, res, next) => {
-  const { path: reqPath } = req.query;
-  if (!reqPath) return res.json({});
+  const rawPath = Array.isArray(req.query.path) ? req.query.path[0] : (req.query.path || '');
+  if (!rawPath) return res.json({});
 
-  const normalizedPath = reqPath.replace(/^\/+/, '');
+  const normalizedPath = rawPath.replace(/\\/g, '/').replace(/^\/+/, '');
   const meta = getMetadataStmt.get(normalizedPath);
 
   if (meta) {
