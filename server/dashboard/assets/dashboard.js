@@ -51,6 +51,11 @@
       responsive: true,
       maintainAspectRatio: false,
       animation: { duration: 300 },
+      elements: {
+        line: {
+          tension: 0, // Avoid spline smoothing on line graphs; linear is fine
+        },
+      },
       interaction: {
         mode: 'index',
         intersect: false,
@@ -198,64 +203,56 @@
     }
   }
 
-  // Chart 1: Playbacks Over Time
+  // Chart 1: Playbacks Over Time (Stacked Bar Chart)
   function renderPlaybacksChart(series) {
     const ctx = document.getElementById('chartPlaybacks').getContext('2d');
     const labels = series.map(s => s.bucket);
 
-    const totalPlays = series.map(s => s.totalPlays);
     const loggedInPlays = series.map(s => s.loggedInPlays);
     const anonPlays = series.map(s => s.anonPlays);
 
     if (charts.playbacks) {
       charts.playbacks.data.labels = labels;
-      charts.playbacks.data.datasets[0].data = totalPlays;
-      charts.playbacks.data.datasets[1].data = loggedInPlays;
-      charts.playbacks.data.datasets[2].data = anonPlays;
+      charts.playbacks.data.datasets[0].data = loggedInPlays;
+      charts.playbacks.data.datasets[1].data = anonPlays;
       charts.playbacks.update();
       return;
     }
 
+    const options = getCommonChartOptions();
+    options.scales.x.stacked = true;
+    options.scales.y.stacked = true;
+    options.plugins.tooltip.callbacks = {
+      footer: (tooltipItems) => {
+        let total = 0;
+        tooltipItems.forEach(item => {
+          total += item.raw;
+        });
+        return 'Total Plays: ' + fmtNumber(total);
+      },
+    };
+
     charts.playbacks = new Chart(ctx, {
-      type: 'line',
+      type: 'bar',
       data: {
         labels,
         datasets: [
           {
-            label: 'Total Plays',
-            data: totalPlays,
-            borderColor: COLORS.primary,
-            backgroundColor: COLORS.primaryLight,
-            borderWidth: 2,
-            pointRadius: series.length > 60 ? 0 : 2,
-            pointHoverRadius: 4,
-            fill: true,
-            tension: 0.15,
-          },
-          {
             label: 'Registered Users',
             data: loggedInPlays,
-            borderColor: COLORS.success,
-            backgroundColor: 'transparent',
-            borderWidth: 1.5,
-            pointRadius: 0,
-            pointHoverRadius: 3,
-            tension: 0.15,
+            backgroundColor: '#2563eb', // blue-600
+            stack: 'playbacks',
           },
           {
             label: 'Anonymous Listeners',
             data: anonPlays,
-            borderColor: COLORS.slate,
-            backgroundColor: 'transparent',
-            borderWidth: 1.5,
-            borderDash: [3, 3],
-            pointRadius: 0,
-            pointHoverRadius: 3,
-            tension: 0.15,
+            backgroundColor: '#93c5fd', // blue-300
+            borderRadius: { topLeft: 3, topRight: 3 },
+            stack: 'playbacks',
           },
         ],
       },
-      options: getCommonChartOptions(),
+      options,
     });
   }
 
@@ -323,6 +320,7 @@
             yAxisID: 'y1',
             borderColor: COLORS.indigo,
             borderWidth: 2,
+            tension: 0,
             pointRadius: 0,
             pointHoverRadius: 3,
             order: 1,
@@ -379,6 +377,7 @@
             yAxisID: 'y1',
             borderColor: COLORS.amber,
             borderWidth: 2,
+            tension: 0,
             pointRadius: 0,
             pointHoverRadius: 3,
             order: 1,
