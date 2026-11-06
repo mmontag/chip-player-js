@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>chiptune.app // Analytics Dashboard</title>
+  <meta name="description" content="Public aggregated analytics and listening statistics for chiptune.app.">
+  <link rel="icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/dashboard/assets/dashboard.css">
+  <!-- Chart.js 4.4.x UMD -->
+  <script src="/dashboard/assets/chart.umd.min.js"></script>
+</head>
+<body>
+  <!-- Header Bar -->
+  <header class="dash-header">
+    <div class="header-inner">
+      <div class="brand-section">
+        <a href="/" class="brand-title">
+          <span>chiptune.app</span>
+          <span class="slash">/</span>
+          <span>Analytics</span>
+        </a>
+        <div class="badge-live">
+          <span class="live-dot"></span>
+          <span>Live</span>
+        </div>
+        <div class="spinner-container" id="loadingIndicator">
+          <div class="spinner"></div>
+          <span>Loading...</span>
+        </div>
+      </div>
+
+      <!-- Controls: Range Presets, Custom Range, Refresh -->
+      <div class="controls-section">
+        <div class="btn-group">
+          <button class="btn-range" data-range="24h">24h</button>
+          <button class="btn-range" data-range="7d">7d</button>
+          <button class="btn-range active" data-range="30d">30d</button>
+          <button class="btn-range" data-range="90d">90d</button>
+          <button class="btn-range" data-range="1y">1y</button>
+          <button class="btn-range" data-range="all">All</button>
+        </div>
+
+        <form class="custom-range-form" id="customRangeForm">
+          <input type="date" class="input-date" id="startDate" title="Start Date">
+          <span style="color:var(--text-muted);">→</span>
+          <input type="date" class="input-date" id="endDate" title="End Date">
+          <button type="submit" class="btn-ui">Apply</button>
+        </form>
+
+        <button type="button" class="btn-ui" id="btnRefresh" title="Refresh Now">↻</button>
+        <button type="button" class="btn-ui" id="btnAutoRefresh">↻ Auto: Off</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Grid -->
+  <main class="dash-content">
+    <!-- Row 1: KPI Cards -->
+    <section class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-label">Total Playbacks</span>
+          <span class="kpi-badge neutral" id="kpiPlaysDelta">--</span>
+        </div>
+        <div class="kpi-value" id="kpiTotalPlays">--</div>
+        <div class="kpi-footer">
+          <span id="kpiPlaysSub">--</span>
+          <span>vs prev period</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-label">Unique Listeners</span>
+          <span class="kpi-badge neutral" id="kpiListenersDelta">--</span>
+        </div>
+        <div class="kpi-value" id="kpiUniqueListeners">--</div>
+        <div class="kpi-footer">
+          <span id="kpiListenersSub">--</span>
+          <span>vs prev period</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-label">Estimated Listen Time</span>
+        </div>
+        <div class="kpi-value" id="kpiListenHours">--</div>
+        <div class="kpi-footer">
+          <span id="kpiListenHoursSub">Based on ≥5s listen logs</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-label">New Accounts</span>
+          <span class="kpi-badge neutral" id="kpiNewUsersDelta">--</span>
+        </div>
+        <div class="kpi-value" id="kpiNewUsers">--</div>
+        <div class="kpi-footer">
+          <span id="kpiTotalAccounts">--</span>
+          <span>vs prev period</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-label">Favorites Added</span>
+          <span class="kpi-badge neutral" id="kpiFavoritesDelta">--</span>
+        </div>
+        <div class="kpi-value" id="kpiFavoritesAdded">--</div>
+        <div class="kpi-footer">
+          <span id="kpiTotalFavorites">--</span>
+          <span>vs prev period</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Row 2: Playbacks Over Time (Full Width) -->
+    <section class="charts-grid-full">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Playbacks Over Time</div>
+          <span class="card-subtitle">Discrete listening sessions (≥5s duration)</span>
+        </div>
+        <div class="chart-wrapper chart-wrapper-tall">
+          <canvas id="chartPlaybacks"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Row 3: Users Growth & Favorites Growth -->
+    <section class="charts-grid-2col">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Active Listeners & User Growth</div>
+          <span class="card-subtitle">Unique listeners vs new registrations</span>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="chartUsers"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Favorites Over Time</div>
+          <span class="card-subtitle">Tracks added to user playlists</span>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="chartFavorites"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Row 4: Systems & Formats -->
+    <section class="charts-grid-2col">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Top Music Systems</div>
+          <span class="card-subtitle">Playback share by platform</span>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="chartSystems"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Top Audio Formats</div>
+          <span class="card-subtitle">Playback share by file extension</span>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="chartFormats"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Row 5: Top Tracks & Top Favorites Tables -->
+    <section class="tables-grid">
+      <!-- Top Tracks Table -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Top Played Tracks in Period</div>
+          <input type="text" class="input-filter" id="filterTracks" placeholder="Search tracks...">
+        </div>
+        <div class="table-responsive">
+          <table class="ui-table">
+            <thead>
+              <tr>
+                <th style="width:36px;">#</th>
+                <th>Track Title / Artist</th>
+                <th>System</th>
+                <th>Format</th>
+                <th style="text-align:right;">Plays</th>
+                <th style="text-align:right;width:70px;">Listen</th>
+              </tr>
+            </thead>
+            <tbody id="topTracksBody">
+              <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:24px;">Loading tracks...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Top Favorites Table -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Top Favorited Tracks</div>
+          <input type="text" class="input-filter" id="filterFavorites" placeholder="Search favorites...">
+        </div>
+        <div class="table-responsive">
+          <table class="ui-table">
+            <thead>
+              <tr>
+                <th style="width:36px;">#</th>
+                <th>Track Title / Artist</th>
+                <th>System</th>
+                <th>Format</th>
+                <th style="text-align:right;">Favs</th>
+                <th style="text-align:right;width:70px;">Listen</th>
+              </tr>
+            </thead>
+            <tbody id="topFavoritesBody">
+              <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:24px;">Loading favorites...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="dash-footer">
+    <div class="footer-inner">
+      <span>Public aggregated analytics for <a href="/" target="_blank">chiptune.app</a>. Privacy-first: zero tracking cookies or personal data.</span>
+      <span>Cache refresh: 15 minutes (<span id="cachedTimestamp">--</span>)</span>
+    </div>
+  </footer>
+
+  <script src="/dashboard/assets/dashboard.js"></script>
+</body>
+</html>
