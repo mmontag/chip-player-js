@@ -22,7 +22,7 @@ const axiosRetry = require('axios-retry').default;
 const { XMLParser } = require('fast-xml-parser');
 
 const { dbStatements } = require('./database.js');
-const { resolveDirectoryMetadata } = require('./directory-metadata');
+const { resolveDirectoryMetadata, escapeHtml, safeJsonLd } = require('./directory-metadata');
 const { requireAuth, optionalAuth } = require('./middleware/auth.js');
 const { validate } = require('./middleware/validate');
 const { SettingsSchema, FavoriteSchema, PlaybackSchema } = require('./schemas');
@@ -791,13 +791,13 @@ app.get(clientRoutes, cache1Hour, async (req, res) => {
   const defaultNoscript = 'You need to enable JavaScript to run this app.';
 
   const finalHtml = html
-    .replace(/__TITLE__/g, title)
-    .replace(/__DESCRIPTION__/g, description)
-    .replace(/__URL__/g, url)
-    .replace(/__IMAGE__/g, previewImage)
-    .replace(/<chip-config><\/chip-config>/g, scriptTag)
-    .replace(/__SCHEMA_JSON_LD__/g, schemaJsonLd || '')
-    .replace(/__NOSCRIPT_CONTENT__/g, noscriptContent || defaultNoscript);
+    .replace(/__TITLE__/g, () => escapeHtml(title))
+    .replace(/__DESCRIPTION__/g, () => escapeHtml(description))
+    .replace(/__URL__/g, () => escapeHtml(url))
+    .replace(/__IMAGE__/g, () => escapeHtml(previewImage))
+    .replace(/<chip-config><\/chip-config>/g, () => scriptTag)
+    .replace(/__SCHEMA_JSON_LD__/g, () => safeJsonLd(schemaJsonLd))
+    .replace(/__NOSCRIPT_CONTENT__/g, () => noscriptContent || defaultNoscript);
 
   res.send(finalHtml);
 });
@@ -883,7 +883,7 @@ function getHtmlInjectionsForRequest(req) {
         songId: song.song_id,
         songPath: song.path,
       };
-      scriptTag = `<script>window.__chipConfig = ${JSON.stringify(chipConfig)};</script>`;
+      scriptTag = `<script>window.__chipConfig = ${JSON.stringify(chipConfig).replace(/</g, '\\u003c')};</script>`;
 
       if (song.title) {
         title = song.title;
@@ -921,7 +921,7 @@ function getHtmlInjectionsForRequest(req) {
       }
       schemaJsonLd = JSON.stringify(songSchema);
 
-      noscriptContent = `<div class="seo-crawler-content"><h1>${title}</h1><p>${description}</p><p><a href="${url}">Play track</a></p></div>`;
+      noscriptContent = `<div class="seo-crawler-content"><h1>${escapeHtml(title)}</h1><p>${escapeHtml(description)}</p><p><a href="${escapeHtml(url)}">Play track</a></p></div>`;
     }
   }
 
