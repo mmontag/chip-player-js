@@ -25,6 +25,7 @@ import {
   titlesFromMetadata,
   unlockAudioContext
 } from '../util';
+import { logPlaySong } from '../analytics';
 import LocalFilesManager from '../LocalFilesManager';
 import Sequencer, { NUM_REPEAT_MODES, NUM_SHUFFLE_MODES, REPEAT_OFF, SHUFFLE_OFF } from '../Sequencer';
 
@@ -395,6 +396,19 @@ class App extends React.Component {
           // If still playing this song after 5 seconds, log a playback.
           if (this.state.songId === songId) {
             postWithOptionalAuth(this.props.userContext.user, `${API_BASE}/playback`, { songId, durationMs: 5000 });
+            const { metadata, subtune, durationMs, songPath } = this.state;
+            const { title } = titlesFromMetadata(metadata || {});
+            logPlaySong({
+              songId,
+              songPath,
+              title: title || metadata?.title,
+              artist: metadata?.artist,
+              game: metadata?.game,
+              system: metadata?.system,
+              subtune,
+              durationMs,
+              playbackSource: songPath?.startsWith('local/') ? 'local' : 'catalog',
+            });
           }
         }, 5000);
       }

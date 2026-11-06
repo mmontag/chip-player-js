@@ -6,6 +6,7 @@ import firebaseConfig from '../config/firebaseConfig';
 import { API_BASE, CATALOG_PREFIX } from '../config';
 import { pathJoin } from '../util';
 import { getWithAuth, postWithAuth } from '../util';
+import { logAddFavorite } from '../analytics';
 
 const UserContext = createContext({
   user: null,
@@ -147,6 +148,11 @@ const UserProvider = ({ children }) => {
         if (isFavorite) {
           await removeFavorite(fave);
         } else {
+          logAddFavorite({
+            songId: fave.songId,
+            path: fave.path,
+            title: item.name || item.title,
+          });
           // We might not have a complete favorite, e.g. if it was added
           // with the footer button from a "Shuffle Play" context.
           // Hydrate the favorite with full backend response.

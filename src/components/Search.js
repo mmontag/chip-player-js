@@ -9,6 +9,7 @@ import { getUrlFromFilepath, pathJoin } from '../util';
 import DirectoryLink from './DirectoryLink';
 import FavoriteButton from './FavoriteButton';
 import VirtualizedList from './VirtualizedList';
+import { debouncedLogSearch, resetSearchHistory } from '../analytics';
 
 const MAX_RESULTS = 400;
 const searchResultsCache = {};
@@ -45,6 +46,10 @@ export default class Search extends PureComponent {
     }
   }
 
+  componentWillUnmount() {
+    debouncedLogSearch.cancel();
+  }
+
   // NOTE: This is not fully vetted
   componentDidUpdate(prevProps) {
     // If the route's query string changed (back/forward navigation), sync the input and trigger search.
@@ -59,6 +64,7 @@ export default class Search extends PureComponent {
         }
       } else if (this.state.query) {
         // param removed -> clear
+        resetSearchHistory();
         this.setState({ query: null, searching: false, results: [], resultsContext: [], resultsCount: 0 });
       }
     }
@@ -98,6 +104,7 @@ export default class Search extends PureComponent {
 
   doSearch(val) {
     if (searchResultsCache[val]) {
+      debouncedLogSearch(val, searchResultsCache[val].resultsCount);
       this.setState({
         searching: true,
         ...searchResultsCache[val],
@@ -112,6 +119,7 @@ export default class Search extends PureComponent {
         })
         .then(response => {
           const { items, total } = response.data;
+          debouncedLogSearch(val, total);
           // Decorate file items with idx (to match up with song context) and other properties.
           const resultFiles = items
             // Sort by full file path to group directories together
@@ -159,6 +167,7 @@ export default class Search extends PureComponent {
   }
 
   handleClear() {
+    resetSearchHistory();
     const urlParams = new URLSearchParams(this.props.location?.search || '');
     urlParams.delete('q');
     const search = urlParams.toString();
@@ -177,6 +186,7 @@ export default class Search extends PureComponent {
   }
 
   showEmptyState() {
+    resetSearchHistory();
     this.setState({ searching: false, results: [] })
   }
 
