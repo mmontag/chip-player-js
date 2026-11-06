@@ -175,9 +175,6 @@
     renderDelta('kpiListenersDelta', sum.listenersDeltaPercent);
     document.getElementById('kpiListenersSub').textContent = `Avg ${fmtNumber(sum.avgDailyPlays)} plays / day`;
 
-    document.getElementById('kpiListenHours').textContent = sum.totalListenHours + ' hrs';
-    document.getElementById('kpiListenHoursSub').textContent = 'Based on ≥5s listen logs';
-
     document.getElementById('kpiNewUsers').textContent = '+' + fmtNumber(sum.newUsers);
     renderDelta('kpiNewUsersDelta', sum.newUsersDeltaPercent);
     document.getElementById('kpiTotalAccounts').textContent = `${fmtNumber(sum.totalAccounts)} total accounts`;
