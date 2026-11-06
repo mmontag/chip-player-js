@@ -135,6 +135,12 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
+function safeJsonLd(json) {
+  if (!json) return '';
+  const str = typeof json === 'string' ? json : JSON.stringify(json);
+  return str.replace(/</g, '\\u003c');
+}
+
 function truncateString(str, maxLen = 60) {
   if (!str || str.length <= maxLen) return str;
   return str.slice(0, maxLen - 1).trim() + '…';
@@ -632,16 +638,20 @@ function resolveDirectoryMetadata(rawBrowsePath, options = {}) {
   const dir = getDirMetadataStmt.get(normalizedPath);
   if (!dir) {
     const segments = normalizedPath.split('/').filter(Boolean);
-    const fallbackTitle = truncateString(decodeURIComponent(segments[segments.length - 1] || 'Directory'), 60);
+    const lastSeg = segments[segments.length - 1] || 'Directory';
+    let decodedLastSeg = lastSeg;
+    try {
+      decodedLastSeg = decodeURIComponent(lastSeg);
+    } catch (e) {}
+    const fallbackTitle = truncateString(decodedLastSeg, 60);
     const result = {
       title: fallbackTitle,
       description: `Browse chiptune and video game music tracks in ${fallbackTitle}.`,
-      url: `https://chiptune.app/browse/${normalizedPath.split('/').map(encodeURIComponent).join('/')}`,
+      url: `https://chiptune.app/browse/${segments.map(s => encodeURIComponent(s)).join('/')}`,
       image: 'https://chiptune.app/chip-player-1200x640.png',
       schemaJsonLd: JSON.stringify(buildBreadcrumbJsonLd(segments)),
       noscriptContent: '',
     };
-    directoryMetaCache.set(cacheKey, result);
     return result;
   }
 
@@ -720,4 +730,6 @@ module.exports = {
   resolveDirectoryMetadata,
   buildBreadcrumbJsonLd,
   directoryMetaCache,
+  escapeHtml,
+  safeJsonLd,
 };
