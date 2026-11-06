@@ -792,7 +792,7 @@ router.get('/dashboard/stats', cache15Min, (req, res) => {
 });
 
 // Standalone Analytics Dashboard Web App
-app.use('/dashboard/assets', cache15Min, express.static(path.join(__dirname, 'dashboard/assets')));
+app.use('/dashboard/assets', express.static(path.join(__dirname, 'dashboard/assets')));
 app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'dashboard/index.html'));
 });
