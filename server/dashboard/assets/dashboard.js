@@ -527,7 +527,7 @@
       : tracks;
 
     if (filtered.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:24px;">No tracks found matching filter</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:24px;">No tracks found matching filter</td></tr>';
       return;
     }
 
@@ -540,7 +540,6 @@
             <span class="track-meta">${escapeHtml(t.artist)}</span>
           </div>
         </td>
-        <td><span class="tag tag-system">${escapeHtml(t.system)}</span></td>
         <td><span class="tag tag-format">${escapeHtml(t.extension)}</span></td>
         <td class="col-num">${fmtNumber(t.plays)}</td>
         <td style="text-align:right;">
@@ -561,7 +560,7 @@
       : favorites;
 
     if (filtered.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:24px;">No favorites found matching filter</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:24px;">No favorites found matching filter</td></tr>';
       return;
     }
 
@@ -574,7 +573,6 @@
             <span class="track-meta">${escapeHtml(t.artist)}</span>
           </div>
         </td>
-        <td><span class="tag tag-system">${escapeHtml(t.system)}</span></td>
         <td><span class="tag tag-format">${escapeHtml(t.extension)}</span></td>
         <td class="col-num" style="color:#e11d48;">♥ ${fmtNumber(t.favoritesCount)}</td>
         <td style="text-align:right;">
