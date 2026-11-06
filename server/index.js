@@ -107,7 +107,14 @@ if (isDev) {
         pathname.startsWith('/sockjs-node') ||
         /\.hot-update\.(json|js)(\.map)?$/.test(pathname)
       );
-    }
+    },
+    on: {
+      proxyRes: (proxyRes, req) => {
+        if (req.url.match(/\.(ttf|woff|woff2|eot|mp3)$/)) {
+          proxyRes.headers['cache-control'] = 'public, max-age=31536000, immutable';
+        }
+      },
+    },
   });
 
   app.use(devProxy);
