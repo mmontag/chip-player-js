@@ -595,24 +595,61 @@
       .replace(/'/g, '&#39;');
   }
 
+  // Sync UI and variables from URL search params
+  function applyRangeFromUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const rangeParam = urlParams.get('range');
+    const startParam = urlParams.get('start');
+    const endParam = urlParams.get('end');
+
+    const rangeButtons = document.querySelectorAll('.btn-range');
+
+    if (rangeParam === 'custom' && startParam && endParam) {
+      currentRange = 'custom';
+      customStart = startParam;
+      customEnd = endParam;
+      const startInput = document.getElementById('startDate');
+      const endInput = document.getElementById('endDate');
+      if (startInput) startInput.value = startParam;
+      if (endInput) endInput.value = endParam;
+      rangeButtons.forEach(b => b.classList.remove('active'));
+    } else {
+      currentRange = rangeParam || '30d';
+      customStart = null;
+      customEnd = null;
+      rangeButtons.forEach(b => {
+        if (b.getAttribute('data-range') === currentRange) {
+          b.classList.add('active');
+        } else {
+          b.classList.remove('active');
+        }
+      });
+    }
+  }
+
   // Event Listeners Setup
   function initEvents() {
     // Range Buttons
     const rangeButtons = document.querySelectorAll('.btn-range');
     rangeButtons.forEach(btn => {
       btn.addEventListener('click', () => {
+        const newRange = btn.getAttribute('data-range');
+        if (currentRange === newRange && !customStart && !customEnd) {
+          return; // No-op if clicking already active range
+        }
+
         rangeButtons.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        currentRange = btn.getAttribute('data-range');
+        currentRange = newRange;
         customStart = null;
         customEnd = null;
 
-        // Sync URL query
+        // Push range change to browser history stack
         const url = new URL(window.location);
         url.searchParams.set('range', currentRange);
         url.searchParams.delete('start');
         url.searchParams.delete('end');
-        window.history.replaceState({}, '', url);
+        window.history.pushState({ range: currentRange, start: null, end: null }, '', url);
 
         fetchStats();
       });
@@ -627,20 +664,31 @@
         const endVal = document.getElementById('endDate').value;
         if (!startVal || !endVal) return;
 
+        if (currentRange === 'custom' && customStart === startVal && customEnd === endVal) {
+          return; // No-op if same dates
+        }
+
         rangeButtons.forEach(b => b.classList.remove('active'));
         currentRange = 'custom';
         customStart = startVal;
         customEnd = endVal;
 
+        // Push custom range to browser history stack
         const url = new URL(window.location);
         url.searchParams.set('range', 'custom');
         url.searchParams.set('start', customStart);
         url.searchParams.set('end', customEnd);
-        window.history.replaceState({}, '', url);
+        window.history.pushState({ range: 'custom', start: customStart, end: customEnd }, '', url);
 
         fetchStats();
       });
     }
+
+    // Handle browser Back / Forward navigation
+    window.addEventListener('popstate', () => {
+      applyRangeFromUrl();
+      fetchStats();
+    });
 
     // Refresh Button
     const refreshBtn = document.getElementById('btnRefresh');
@@ -684,32 +732,14 @@
         }
       });
     }
-
-    // Read initial range from URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const rangeParam = urlParams.get('range');
-    const startParam = urlParams.get('start');
-    const endParam = urlParams.get('end');
-
-    if (rangeParam === 'custom' && startParam && endParam) {
-      currentRange = 'custom';
-      customStart = startParam;
-      customEnd = endParam;
-      document.getElementById('startDate').value = startParam;
-      document.getElementById('endDate').value = endParam;
-      rangeButtons.forEach(b => b.classList.remove('active'));
-    } else if (rangeParam) {
-      const matchBtn = document.querySelector(`.btn-range[data-range="${rangeParam}"]`);
-      if (matchBtn) {
-        rangeButtons.forEach(b => b.classList.remove('active'));
-        matchBtn.classList.add('active');
-        currentRange = rangeParam;
-      }
-    }
   }
 
   // Initialization
   document.addEventListener('DOMContentLoaded', () => {
+    applyRangeFromUrl();
+    // Replace initial state in history with current params for clean back navigation
+    const initialUrl = new URL(window.location);
+    window.history.replaceState({ range: currentRange, start: customStart, end: customEnd }, '', initialUrl);
     initEvents();
     fetchStats();
   });
