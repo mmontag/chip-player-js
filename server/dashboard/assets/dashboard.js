@@ -47,12 +47,17 @@
     return Number(n).toLocaleString();
   };
 
+  // Disable all animations globally for instant, non-misleading updates
+  if (typeof Chart !== 'undefined' && Chart.defaults) {
+    Chart.defaults.animation = false;
+  }
+
   // Default Chart.js Config Helpers (Clean Tailwind style)
   function getCommonChartOptions(extra = {}) {
     return {
       responsive: true,
       maintainAspectRatio: false,
-      animation: { duration: 300 },
+      animation: false,
       elements: {
         line: {
           tension: 0, // Avoid spline smoothing on line graphs; linear is fine
@@ -227,7 +232,7 @@
       charts.playbacks.data.labels = labels;
       charts.playbacks.data.datasets[0].data = loggedInPlays;
       charts.playbacks.data.datasets[1].data = anonPlays;
-      charts.playbacks.update();
+      charts.playbacks.update('none');
       return;
     }
 
@@ -284,7 +289,7 @@
       charts.users.data.datasets[1].data = activeUsers;
       charts.users.data.datasets[2].data = newUsers;
       charts.users.data.datasets[3].data = cumulativeUsers;
-      charts.users.update();
+      charts.users.update('none');
       return;
     }
 
@@ -355,7 +360,7 @@
       charts.favorites.data.labels = labels;
       charts.favorites.data.datasets[0].data = favsAdded;
       charts.favorites.data.datasets[1].data = cumulativeFavs;
-      charts.favorites.update();
+      charts.favorites.update('none');
       return;
     }
 
@@ -409,7 +414,7 @@
     if (charts.sessionPlays) {
       charts.sessionPlays.data.labels = labels;
       charts.sessionPlays.data.datasets[0].data = data;
-      charts.sessionPlays.update();
+      charts.sessionPlays.update('none');
       return;
     }
 
@@ -427,6 +432,7 @@
         ],
       },
       options: {
+        animation: false,
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
@@ -472,7 +478,7 @@
     if (charts.sessionDuration) {
       charts.sessionDuration.data.labels = labels;
       charts.sessionDuration.data.datasets[0].data = data;
-      charts.sessionDuration.update();
+      charts.sessionDuration.update('none');
       return;
     }
 
@@ -490,6 +496,7 @@
         ],
       },
       options: {
+        animation: false,
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
@@ -535,7 +542,7 @@
     if (charts.systems) {
       charts.systems.data.labels = labels;
       charts.systems.data.datasets[0].data = data;
-      charts.systems.update();
+      charts.systems.update('none');
       return;
     }
 
@@ -553,6 +560,7 @@
         ],
       },
       options: {
+        animation: false,
         indexAxis: 'y',
         responsive: true,
         maintainAspectRatio: false,
@@ -599,7 +607,7 @@
     if (charts.formats) {
       charts.formats.data.labels = labels;
       charts.formats.data.datasets[0].data = data;
-      charts.formats.update();
+      charts.formats.update('none');
       return;
     }
 
@@ -617,6 +625,7 @@
         ],
       },
       options: {
+        animation: false,
         indexAxis: 'y',
         responsive: true,
         maintainAspectRatio: false,
