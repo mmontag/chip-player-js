@@ -6,7 +6,7 @@
   <title>chiptune.app // Analytics Dashboard</title>
   <meta name="description" content="Public aggregated analytics and listening statistics for chiptune.app.">
   <link rel="icon" href="/favicon.ico">
-  <link rel="stylesheet" href="/dashboard/assets/dashboard.css?v=1.2">
+  <link rel="stylesheet" href="/dashboard/assets/dashboard.css?v=1.3">
   <!-- Chart.js 4.4.x UMD -->
   <script src="/dashboard/assets/chart.umd.min.js"></script>
 </head>
@@ -84,6 +84,18 @@
 
       <div class="kpi-card">
         <div class="kpi-header">
+          <span class="kpi-label">Avg Session Duration</span>
+          <span class="kpi-badge neutral" id="kpiSessionBounce">--</span>
+        </div>
+        <div class="kpi-value" id="kpiAvgSessionDuration">--</div>
+        <div class="kpi-footer">
+          <span id="kpiTotalSessions">--</span>
+          <span>1h timeout</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
           <span class="kpi-label">New Accounts</span>
           <span class="kpi-badge neutral" id="kpiNewUsersDelta">--</span>
         </div>
@@ -143,7 +155,30 @@
       </div>
     </section>
 
-    <!-- Row 4: Systems & Formats -->
+    <!-- Row 4: Session Engagement Histograms -->
+    <section class="charts-grid-2col">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Playcount per Session</div>
+          <span class="card-subtitle">Distribution of songs played per session (1h timeout)</span>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="chartSessionPlays"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Session Duration Distribution</div>
+          <span class="card-subtitle">Active span from first to last song (1h timeout)</span>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="chartSessionDuration"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Row 5: Systems & Formats -->
     <section class="charts-grid-2col">
       <div class="card">
         <div class="card-header">
@@ -226,6 +261,6 @@
     </div>
   </footer>
 
-  <script src="/dashboard/assets/dashboard.js?v=1.2"></script>
+  <script src="/dashboard/assets/dashboard.js?v=1.3"></script>
 </body>
 </html>

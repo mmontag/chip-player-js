@@ -478,6 +478,133 @@ function getDashboardStats(params = {}) {
     .sort((a, b) => b.plays - a.plays)
     .slice(0, 10);
 
+  // 11. Session Analytics (Clustering with 1-hour timeout)
+  const sessionTimeoutSec = 3600;
+  const sessionRows = db.prepare(`
+    WITH ordered_plays AS (
+      SELECT 
+        COALESCE(user_id, ip_address) AS listener_id,
+        played_at,
+        LAG(played_at) OVER (
+          PARTITION BY COALESCE(user_id, ip_address) 
+          ORDER BY played_at
+        ) AS prev_played_at
+      FROM user_db.playbacks
+      WHERE played_at >= ? AND played_at < ?
+    ),
+    session_markers AS (
+      SELECT 
+        listener_id,
+        played_at,
+        CASE 
+          WHEN prev_played_at IS NULL OR (played_at - prev_played_at) > ? THEN 1 
+          ELSE 0 
+        END AS is_new_session
+      FROM ordered_plays
+    ),
+    session_groups AS (
+      SELECT 
+        listener_id,
+        played_at,
+        SUM(is_new_session) OVER (
+          PARTITION BY listener_id 
+          ORDER BY played_at
+        ) AS session_num
+      FROM session_markers
+    )
+    SELECT 
+      COUNT(*) AS playCount,
+      MAX(played_at) - MIN(played_at) AS durationSeconds
+    FROM session_groups
+    GROUP BY listener_id, session_num
+  `).all(start, end, sessionTimeoutSec);
+
+  const totalSessions = sessionRows.length;
+  let totalSessionPlays = 0;
+  let totalSessionDurationSec = 0;
+  const playCounts = [];
+  const sessionDurations = [];
+
+  const playBins = {
+    '1 play': 0,
+    '2–5': 0,
+    '6–10': 0,
+    '11–25': 0,
+    '26–50': 0,
+    '51–100': 0,
+    '100+': 0,
+  };
+
+  const durationBins = {
+    '< 1 min': 0,
+    '1–5 min': 0,
+    '5–15 min': 0,
+    '15–30 min': 0,
+    '30–60 min': 0,
+    '1–2 hrs': 0,
+    '2+ hrs': 0,
+  };
+
+  for (const row of sessionRows) {
+    const p = row.playCount;
+    const d = row.durationSeconds;
+    totalSessionPlays += p;
+    totalSessionDurationSec += d;
+    playCounts.push(p);
+    sessionDurations.push(d);
+
+    if (p === 1) playBins['1 play']++;
+    else if (p <= 5) playBins['2–5']++;
+    else if (p <= 10) playBins['6–10']++;
+    else if (p <= 25) playBins['11–25']++;
+    else if (p <= 50) playBins['26–50']++;
+    else if (p <= 100) playBins['51–100']++;
+    else playBins['100+']++;
+
+    const dm = d / 60.0;
+    if (dm < 1) durationBins['< 1 min']++;
+    else if (dm < 5) durationBins['1–5 min']++;
+    else if (dm < 15) durationBins['5–15 min']++;
+    else if (dm < 30) durationBins['15–30 min']++;
+    else if (dm < 60) durationBins['30–60 min']++;
+    else if (dm < 120) durationBins['1–2 hrs']++;
+    else durationBins['2+ hrs']++;
+  }
+
+  playCounts.sort((a, b) => a - b);
+  sessionDurations.sort((a, b) => a - b);
+
+  const medianPlaysPerSession = totalSessions > 0 ? playCounts[Math.floor(totalSessions / 2)] : 0;
+  const medianDurationMins = totalSessions > 0 ? Number((sessionDurations[Math.floor(totalSessions / 2)] / 60.0).toFixed(1)) : 0;
+  const avgPlaysPerSession = totalSessions > 0 ? Number((totalSessionPlays / totalSessions).toFixed(1)) : 0;
+  const avgDurationMins = totalSessions > 0 ? Number(((totalSessionDurationSec / totalSessions) / 60.0).toFixed(1)) : 0;
+  const bounceCount = playBins['1 play'];
+  const bounceRatePercent = totalSessions > 0 ? Number(((bounceCount / totalSessions) * 100).toFixed(1)) : 0;
+
+  const playBuckets = Object.entries(playBins).map(([bucket, count]) => ({
+    bucket,
+    count,
+    sharePercent: totalSessions > 0 ? Number(((count / totalSessions) * 100).toFixed(1)) : 0,
+  }));
+
+  const durationBuckets = Object.entries(durationBins).map(([bucket, count]) => ({
+    bucket,
+    count,
+    sharePercent: totalSessions > 0 ? Number(((count / totalSessions) * 100).toFixed(1)) : 0,
+  }));
+
+  const sessionAnalytics = {
+    timeoutMinutes: 60,
+    totalSessions,
+    avgDurationMins,
+    medianDurationMins,
+    avgPlaysPerSession,
+    medianPlaysPerSession,
+    bounceRatePercent,
+    playBuckets,
+    durationBuckets,
+  };
+
   const result = {
     range,
     resolution,
@@ -487,6 +614,7 @@ function getDashboardStats(params = {}) {
     ttlSeconds: 900,
     summary,
     timeSeries,
+    sessionAnalytics,
     topSystems,
     topFormats,
     topTracks,

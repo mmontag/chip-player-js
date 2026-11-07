@@ -18,6 +18,8 @@
     playbacks: null,
     users: null,
     favorites: null,
+    sessionPlays: null,
+    sessionDuration: null,
     systems: null,
     formats: null,
   };
@@ -148,10 +150,14 @@
 
   // Render Dashboard
   function renderDashboard(data) {
-    updateKPIs(data.summary, data.range);
+    updateKPIs(data.summary, data.sessionAnalytics, data.range);
     renderPlaybacksChart(data.timeSeries);
     renderUsersChart(data.timeSeries);
     renderFavoritesChart(data.timeSeries);
+    if (data.sessionAnalytics) {
+      renderSessionPlaysChart(data.sessionAnalytics.playBuckets);
+      renderSessionDurationChart(data.sessionAnalytics.durationBuckets);
+    }
     renderSystemsChart(data.topSystems);
     renderFormatsChart(data.topFormats);
     renderTopTracksTable(data.topTracks);
@@ -164,7 +170,7 @@
   }
 
   // Update KPI Cards
-  function updateKPIs(sum, range) {
+  function updateKPIs(sum, session, range) {
     if (!sum) return;
 
     document.getElementById('kpiTotalPlays').textContent = fmtNumber(sum.totalPlays);
@@ -174,6 +180,15 @@
     document.getElementById('kpiUniqueListeners').textContent = fmtNumber(sum.uniqueListeners);
     renderDelta('kpiListenersDelta', sum.listenersDeltaPercent);
     document.getElementById('kpiListenersSub').textContent = `Avg ${fmtNumber(sum.avgDailyPlays)} plays / day`;
+
+    if (session) {
+      const durEl = document.getElementById('kpiAvgSessionDuration');
+      const totEl = document.getElementById('kpiTotalSessions');
+      const bncEl = document.getElementById('kpiSessionBounce');
+      if (durEl) durEl.textContent = session.avgDurationMins + ' min';
+      if (totEl) totEl.textContent = `${fmtNumber(session.totalSessions)} sessions`;
+      if (bncEl) bncEl.textContent = `${session.bounceRatePercent}% bounce`;
+    }
 
     document.getElementById('kpiNewUsers').textContent = '+' + fmtNumber(sum.newUsers);
     renderDelta('kpiNewUsersDelta', sum.newUsersDeltaPercent);
@@ -382,6 +397,132 @@
         ],
       },
       options,
+    });
+  }
+
+  // Chart: Playcount per Session Histogram
+  function renderSessionPlaysChart(buckets) {
+    const ctx = document.getElementById('chartSessionPlays').getContext('2d');
+    const labels = buckets.map(b => b.bucket);
+    const data = buckets.map(b => b.count);
+
+    if (charts.sessionPlays) {
+      charts.sessionPlays.data.labels = labels;
+      charts.sessionPlays.data.datasets[0].data = data;
+      charts.sessionPlays.update();
+      return;
+    }
+
+    charts.sessionPlays = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Sessions',
+            data,
+            backgroundColor: '#4f46e5', // indigo-600
+            borderRadius: 3,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#ffffff',
+            borderColor: '#e2e8f0',
+            borderWidth: 1,
+            titleColor: '#0f172a',
+            bodyColor: '#334155',
+            callbacks: {
+              label: (ctx) => `${fmtNumber(ctx.raw)} sessions (${buckets[ctx.dataIndex].sharePercent}%)`,
+            },
+          },
+        },
+        scales: {
+          x: {
+            grid: { color: COLORS.grid },
+            ticks: {
+              color: COLORS.text,
+              font: { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', size: 11 },
+            },
+          },
+          y: {
+            grid: { color: COLORS.grid },
+            ticks: {
+              color: COLORS.text,
+              font: { family: 'ui-monospace, SFMono-Regular, Menlo, monospace', size: 10 },
+              callback: (v) => fmtCompact(v),
+            },
+          },
+        },
+      },
+    });
+  }
+
+  // Chart: Session Duration Distribution
+  function renderSessionDurationChart(buckets) {
+    const ctx = document.getElementById('chartSessionDuration').getContext('2d');
+    const labels = buckets.map(b => b.bucket);
+    const data = buckets.map(b => b.count);
+
+    if (charts.sessionDuration) {
+      charts.sessionDuration.data.labels = labels;
+      charts.sessionDuration.data.datasets[0].data = data;
+      charts.sessionDuration.update();
+      return;
+    }
+
+    charts.sessionDuration = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Sessions',
+            data,
+            backgroundColor: '#059669', // emerald-600
+            borderRadius: 3,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#ffffff',
+            borderColor: '#e2e8f0',
+            borderWidth: 1,
+            titleColor: '#0f172a',
+            bodyColor: '#334155',
+            callbacks: {
+              label: (ctx) => `${fmtNumber(ctx.raw)} sessions (${buckets[ctx.dataIndex].sharePercent}%)`,
+            },
+          },
+        },
+        scales: {
+          x: {
+            grid: { color: COLORS.grid },
+            ticks: {
+              color: COLORS.text,
+              font: { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', size: 11 },
+            },
+          },
+          y: {
+            grid: { color: COLORS.grid },
+            ticks: {
+              color: COLORS.text,
+              font: { family: 'ui-monospace, SFMono-Regular, Menlo, monospace', size: 10 },
+              callback: (v) => fmtCompact(v),
+            },
+          },
+        },
+      },
     });
   }
 
