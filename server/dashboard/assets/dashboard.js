@@ -48,8 +48,14 @@
   };
 
   // Disable all animations globally for instant, non-misleading updates
+  // and set clean sans-serif typography for all tooltips
   if (typeof Chart !== 'undefined' && Chart.defaults) {
     Chart.defaults.animation = false;
+    if (Chart.defaults.plugins && Chart.defaults.plugins.tooltip) {
+      Chart.defaults.plugins.tooltip.titleFont = { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', size: 12, weight: '600' };
+      Chart.defaults.plugins.tooltip.bodyFont = { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', size: 12 };
+      Chart.defaults.plugins.tooltip.footerFont = { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', size: 12, weight: '600' };
+    }
   }
 
   // Default Chart.js Config Helpers (Clean Tailwind style)
@@ -87,9 +93,11 @@
           borderWidth: 1,
           padding: 10,
           titleFont: { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', size: 12, weight: '600' },
-          bodyFont: { family: 'ui-monospace, SFMono-Regular, Menlo, monospace', size: 11 },
+          bodyFont: { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', size: 12 },
+          footerFont: { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', size: 12, weight: '600' },
           titleColor: '#0f172a',
           bodyColor: '#334155',
+          footerColor: '#0f172a',
           boxPadding: 4,
           usePointStyle: true,
           displayColors: true,

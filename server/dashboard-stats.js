@@ -1,10 +1,10 @@
 const { LRUCache } = require('lru-cache');
 const { db } = require('./database');
 
-// 15-minute in-memory cache for aggregate dashboard stats
+// 1-hour in-memory cache for aggregate dashboard stats
 const statsCache = new LRUCache({
   max: 50,
-  ttl: 1000 * 60 * 15, // 15 minutes
+  ttl: 1000 * 60 * 60, // 1 hour
 });
 
 /**
@@ -82,10 +82,10 @@ function generateBuckets(startSec, endSec, resolution) {
  * Resolve start, end, resolution from query parameters
  */
 function parseTimeRange(params) {
-  // Quantize relative "now" to 15-minute intervals (900 seconds) so that relative
+  // Quantize relative "now" to 1-hour intervals (3600 seconds) so that relative
   // presets (24h, 7d, 30d, 90d, 1y) produce identical start/end timestamps and hit
   // the server-side LRU cache across all concurrent users during that window.
-  const CACHE_WINDOW_SEC = 900;
+  const CACHE_WINDOW_SEC = 3600;
   const now = Math.floor(Date.now() / 1000 / CACHE_WINDOW_SEC) * CACHE_WINDOW_SEC;
   let range = params.range || '30d';
   let start;
@@ -617,7 +617,7 @@ function getDashboardStats(params = {}) {
     start,
     end,
     cachedAt: Math.floor(Date.now() / 1000),
-    ttlSeconds: 900,
+    ttlSeconds: 3600,
     summary,
     timeSeries,
     sessionAnalytics,

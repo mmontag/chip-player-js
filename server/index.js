@@ -786,7 +786,7 @@ router.post(
 app.get('/.well-known/appspecific/com.chrome.devtools.json', (req, res) => res.sendStatus(404));
 
 // Analytics Dashboard Stats API
-router.get('/dashboard/stats', cache15Min, (req, res) => {
+router.get('/dashboard/stats', cache1Hour, (req, res) => {
   const stats = getDashboardStats(req.query);
   res.json(stats);
 });
