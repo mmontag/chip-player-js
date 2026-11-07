@@ -124,7 +124,7 @@
   }
 
   // Fetch Stats from Express API
-  async function fetchStats() {
+  async function fetchStats(forceRefresh = false) {
     const spinner = document.getElementById('loadingIndicator');
     if (spinner) spinner.style.display = 'inline-flex';
 
@@ -139,8 +139,12 @@
         params.set('range', currentRange);
       }
 
+      if (forceRefresh) {
+        params.set('refresh', '1');
+      }
+
       url += '?' + params.toString();
-      const res = await fetch(url);
+      const res = await fetch(url, forceRefresh ? { cache: 'reload' } : undefined);
       if (!res.ok) throw new Error('API returned ' + res.status);
 
       const data = await res.json();
@@ -837,7 +841,7 @@
     // Refresh Button
     const refreshBtn = document.getElementById('btnRefresh');
     if (refreshBtn) {
-      refreshBtn.addEventListener('click', () => fetchStats());
+      refreshBtn.addEventListener('click', () => fetchStats(true));
     }
 
     // Auto-Refresh Button
@@ -848,7 +852,7 @@
         if (autoRefreshEnabled) {
           autoRefreshBtn.classList.add('active');
           autoRefreshBtn.innerHTML = '↻ Auto: 60s';
-          autoRefreshTimer = setInterval(fetchStats, 60000);
+          autoRefreshTimer = setInterval(() => fetchStats(true), 60000);
         } else {
           autoRefreshBtn.classList.remove('active');
           autoRefreshBtn.innerHTML = '↻ Auto: Off';

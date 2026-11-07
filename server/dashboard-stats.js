@@ -82,7 +82,11 @@ function generateBuckets(startSec, endSec, resolution) {
  * Resolve start, end, resolution from query parameters
  */
 function parseTimeRange(params) {
-  const now = Math.floor(Date.now() / 1000);
+  // Quantize relative "now" to 15-minute intervals (900 seconds) so that relative
+  // presets (24h, 7d, 30d, 90d, 1y) produce identical start/end timestamps and hit
+  // the server-side LRU cache across all concurrent users during that window.
+  const CACHE_WINDOW_SEC = 900;
+  const now = Math.floor(Date.now() / 1000 / CACHE_WINDOW_SEC) * CACHE_WINDOW_SEC;
   let range = params.range || '30d';
   let start;
   let end = now;
@@ -170,9 +174,11 @@ function getDashboardStats(params = {}) {
   const { range, start, end, resolution } = parseTimeRange(params);
   const cacheKey = `${range}_${start}_${end}_${resolution}`;
 
-  const cached = statsCache.get(cacheKey);
-  if (cached) {
-    return cached;
+  if (!params.refresh) {
+    const cached = statsCache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
   }
 
   const sqlDatePattern = getSqlDatePattern(resolution);
