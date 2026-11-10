@@ -34,7 +34,7 @@ const Toast = () => {
     <div hidden={!currentToast} className="toast-box-outer">
       <div className={className}>
         <div className="message">
-          {level?.label}: {message}
+          <span>{level?.label}: {message}</span>
         </div>
         <button className="box-button message-box-button" onClick={clearCurrentToast}>Dismiss{countLabel}</button>
       </div>
