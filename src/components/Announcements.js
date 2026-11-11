@@ -16,6 +16,10 @@ export default function Announcements() {
 ╚═════════════════╝
 `}
       </p>
+      <h3>2026-11-11</h3>
+      <p>
+        Added <Link to="/browse/Famitracker Forum Archive (NSF)">Famitracker Forum Archives</Link> with 20k new NSF songs.
+      </p>
       <h3>2026-10-15</h3>
       <p>
         Added <Link to="/browse/Nintendo Game Boy Advance">Game Boy Advance</Link> support with 22,000 new tunes.
