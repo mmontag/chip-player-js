@@ -88,12 +88,7 @@ export default class GMEPlayer extends Player {
     this.emuPtr = core._malloc(4); // i32
 
     this.subBass = new SubBass(this.sampleRate);
-
-    // JS-based fade state
-    this.fadingOut = false;
-    this.fadeStartMs = null;
-    this.fadeFinished = false;
-    this.fadeDurationMs = 5000;
+    this.hostFade = true;
   }
 
   processAudioInner(channels) {
@@ -105,89 +100,38 @@ export default class GMEPlayer extends Player {
       return;
     }
 
-    const playIndefinitely = !!this.params.indefinitePlayback;
-
-    if (!playIndefinitely && this.getDurationMs() > 0 && this.getPositionMs() >= this.getDurationMs() && this.fadingOut === false) {
-      console.log('[GMEPlayer] Starting JS fadeout at %d ms.', this.getPositionMs());
-      this.fadeStartMs = this.getPositionMs();
-      this.fadingOut = true;
+    if (!this.params.indefinitePlayback && core._gme_track_ended(this.gmeCtx) === 1) {
+      this.handleSongEnd();
+      for (ch = 0; ch < channels.length; ch++) {
+        channels[ch].fill(0);
+      }
+      return;
     }
 
-    const trackEnded = core._gme_track_ended(this.gmeCtx) === 1 || this.fadeFinished;
+    core._gme_play(this.gmeCtx, this.bufferSize * 2, this.buffer);
 
-    if (!trackEnded) {
-      core._gme_play(this.gmeCtx, this.bufferSize * 2, this.buffer);
-
-      let fadeFactor = 1.0;
-      if (this.fadingOut && this.fadeStartMs !== null) {
-        const elapsed = this.getPositionMs() - this.fadeStartMs;
-        const threshold = 0.025;
-        fadeFactor = Math.pow(threshold, elapsed / this.fadeDurationMs);
-        if (fadeFactor > 1.0) fadeFactor = 1.0;
-        if (fadeFactor <= threshold) {
-          fadeFactor = 0;
-          this.fadeFinished = true;
-        }
+    for (ch = 0; ch < channels.length; ch++) {
+      for (i = 0; i < this.bufferSize; i++) {
+        channels[ch][i] = core.getValue(
+          this.buffer +
+          i * 2 * 2 +
+          ch * 2,
+          'i16') / INT16_MAX;
       }
+    }
 
-      for (ch = 0; ch < channels.length; ch++) {
-        for (i = 0; i < this.bufferSize; i++) {
-          channels[ch][i] = (core.getValue(this.buffer +
-            // Interleaved channel format
-            i * 2 * 2 +             // frame offset   * bytes per sample * num channels +
-            ch * 2,                 // chhannel offset * bytes per sample
-            'i16') / INT16_MAX) * fadeFactor;     // convert int16 to float and apply fadeFactor
+    if (this.params.subbass > 0) {
+      for (i = 0; i < this.bufferSize; i++) {
+        const sub = this.subBass.process(channels[0][i]) * this.params.subbass;
+        for (ch = 0; ch < channels.length; ch++) {
+          channels[ch][i] += sub;
         }
-      }
-
-      // A hacky fade to prevent pops during timeslice seeking
-      if (this.seekTargetMs) {
-        const fadeLength = Math.min(256, this.bufferSize / 2);
-        for (i = 0; i < fadeLength; i++) {
-          const fade = i/fadeLength;
-          channels[0][i] *= fade;
-          channels[1][i] *= fade;
-          channels[0][this.bufferSize - (i + 1)] *= fade;
-          channels[1][this.bufferSize - (i + 1)] *= fade;
-        }
-        const attenuate = 0.2; // attenuate during seeking
-        for (i = 0; i < this.bufferSize; i++) {
-          channels[0][i] *= attenuate;
-          channels[1][i] *= attenuate;
-        }
-      }
-
-      if (this.params.subbass > 0) {
-        for (i = 0; i < this.bufferSize; i++) {
-          const sub = this.subBass.process(channels[0][i]) * this.params.subbass;
-          for (ch = 0; ch < channels.length; ch++) {
-            channels[ch][i] += sub;
-          }
-        }
-      }
-    } else {
-      const nextSubtune = this.subtune + 1;
-
-      if (nextSubtune >= core._gme_track_count(this.gmeCtx)) {
-        this.handleSongEnd();
-        return;
-      } else {
-        this.handleSongEnd(() => {
-          if (this.playSubtune(nextSubtune) !== 0) {
-            this.stop();
-          }
-        });
-        return;
       }
     }
   }
 
   playSubtune(subtune) {
-    this.silenceSamplesRemaining = 0;
-    this.onSilenceEnd = null;
-    this.fadingOut = false;
-    this.fadeStartMs = null;
-    this.fadeFinished = false;
+    super.playSubtune(subtune);
     this.subtune = subtune;
     this.metadata = this._parseMetadata(subtune);
     console.debug('GMEPlayer.playSubtune(subtune=%s)', subtune);
@@ -201,11 +145,6 @@ export default class GMEPlayer extends Player {
 
   async loadData(data, filepath, persistedSettings, subtune = 0) {
     this.subtune = subtune;
-    this.fadingOut = false;
-    this.fadeStartMs = null;
-    this.fadeFinished = false;
-    this.seekTargetMs = null;
-    this.seekRequestId = null;
     this.currentFileExt = pathe.extname(filepath);
     this.filepathMeta = Player.metadataFromFilepath(filepath);
 
@@ -351,19 +290,7 @@ export default class GMEPlayer extends Player {
         if (this.gmeCtx) core._gme_enable_accuracy(this.gmeCtx, value ? 1 : 0);
         break;
       case 'indefinitePlayback':
-        value = !!value;
-        this.params[id] = value;
-        if (value) {
-          this.fadingOut = false;
-          this.fadeStartMs = null;
-          this.fadeFinished = false;
-        } else {
-          if (this.getDurationMs() > 0 && this.getPositionMs() >= this.getDurationMs() && this.fadingOut === false) {
-            console.log('[GMEPlayer] Starting JS fadeout via setParameter at', this.getPositionMs());
-            this.fadeStartMs = this.getPositionMs();
-            this.fadingOut = true;
-          }
-        }
+        super.setParameter(id, !!value);
         break;
       default:
         console.warn('GMEPlayer has no parameter with id "%s".', id);
@@ -381,10 +308,6 @@ export default class GMEPlayer extends Player {
   setTempo(val) {
     this.tempo = val;
     if (this.gmeCtx) core._gme_set_tempo(this.gmeCtx, val);
-  }
-
-  setFadeout(startMs) {
-    // JS-based fade is used in processAudioInner instead
   }
 
   getVoiceMask() {
@@ -424,10 +347,8 @@ export default class GMEPlayer extends Player {
   }
 
   seekMs(positionMs) {
+    super.seekMs(positionMs);
     if (this.gmeCtx) {
-      this.fadingOut = false;
-      this.fadeStartMs = null;
-      this.fadeFinished = false;
       if (TIMESLICED_SEEK_MS_MAP[this.currentFileExt]) {
         cancelIdleCallback(this.seekRequestId);
         this.seekTargetMs = positionMs;
