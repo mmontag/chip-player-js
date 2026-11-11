@@ -367,3 +367,251 @@ test('sequencer advances on playerSongEnd and ejects cleanly without redundant h
   assert.equal(lastUpdate.songPath, null);
   assert.equal('hasPlayer' in lastUpdate, false);
 });
+
+test('multi-subtune sequencing advances through subtunes and ends at the last track', () => {
+  const player = new Player({}, 44100);
+  player.subtune = 0;
+  player.numSubtunes = 3;
+  player.getNumSubtunes = () => player.numSubtunes;
+  player.getSubtune = () => player.subtune;
+  player.playSubtune = (idx) => {
+    player.subtune = idx;
+    return 0;
+  };
+
+  let songEndFired = 0;
+  player.on('playerSongEnd', () => songEndFired++);
+
+  // Subtune 0 -> 1
+  player.handleSongEnd();
+  assert.equal(player.subtune, 1);
+  assert.equal(songEndFired, 0);
+
+  // Subtune 1 -> 2
+  player.handleSongEnd();
+  assert.equal(player.subtune, 2);
+  assert.equal(songEndFired, 0);
+
+  // Subtune 2 is the last one -> stops and emits playerSongEnd
+  player.handleSongEnd();
+  assert.equal(songEndFired, 1);
+  assert.equal(player.stopped, true);
+});
+
+test('subtune auto-advance stops and emits playerSongEnd when playSubtune fails', () => {
+  const player = new Player({}, 44100);
+  player.subtune = 0;
+  player.numSubtunes = 2;
+  player.getNumSubtunes = () => player.numSubtunes;
+  player.getSubtune = () => player.subtune;
+  player.playSubtune = () => 1; // Return non-zero error code
+
+  let songEndFired = 0;
+  player.on('playerSongEnd', () => songEndFired++);
+
+  player.handleSongEnd();
+  assert.equal(songEndFired, 1);
+  assert.equal(player.stopped, true);
+});
+
+test('Host Fade smoothly attenuates audio and triggers handleSongEnd when completed', () => {
+  const player = new Player({}, 44100, 256);
+  player.hostFade = true;
+  player.durationMs = 1000;
+  player.posMs = 500;
+  player.stopped = false;
+  player.paused = false;
+  player.getPositionMs = () => player.posMs;
+  player.getDurationMs = () => player.durationMs;
+  player.processAudioInner = (output) => {
+    output[0].fill(1.0);
+    output[1].fill(1.0);
+  };
+
+  const output = [new Float32Array(256), new Float32Array(256)];
+
+  // Before duration: no fade
+  player.processAudio(output);
+  assert.equal(player.fading, false);
+  assert.equal(output[0][0], 1.0);
+
+  // At duration: Host Fade starts
+  player.posMs = 1000;
+  player.processAudio(output);
+  assert.equal(player.fading, true);
+  assert.ok(output[0][0] <= 1.0 && output[0][0] > 0.9);
+
+  // Halfway through 5s fade (elapsed 2500ms): attenuated
+  player.posMs = 3500;
+  player.processAudio(output);
+  assert.equal(player.fading, true);
+  assert.ok(output[0][0] < 0.5 && output[0][0] > 0.05);
+
+  // Fade completed (elapsed 5000ms): ends song and zeroes output
+  let songEndFired = 0;
+  player.on('playerSongEnd', () => songEndFired++);
+  player.posMs = 6000;
+  player.processAudio(output);
+  assert.equal(player.fading, false);
+  assert.equal(songEndFired, 1);
+  assert.equal(output[0][0], 0);
+  assert.equal(player.stopped, true);
+});
+
+test('Host Fade respects setFadeDuration and immediately ends if duration is 0', () => {
+  const player = new Player({}, 44100, 256);
+  player.hostFade = true;
+  player.durationMs = 1000;
+  player.posMs = 1000;
+  player.stopped = false;
+  player.paused = false;
+  player.getPositionMs = () => player.posMs;
+  player.getDurationMs = () => player.durationMs;
+  player.processAudioInner = (output) => {
+    output[0].fill(1.0);
+    output[1].fill(1.0);
+  };
+
+  player.setFadeDuration(0);
+  assert.equal(player.fadeDurationMs, 0);
+
+  let songEndFired = 0;
+  player.on('playerSongEnd', () => songEndFired++);
+
+  const output = [new Float32Array(256), new Float32Array(256)];
+  player.processAudio(output);
+
+  assert.equal(songEndFired, 1);
+  assert.equal(player.stopped, true);
+  assert.equal(output[0][0], 0);
+});
+
+test('Host Fade is suppressed when looping or indefinitePlayback is enabled', () => {
+  const player = new Player({}, 44100, 256);
+  player.hostFade = true;
+  player.durationMs = 1000;
+  player.posMs = 2000; // Past duration
+  player.stopped = false;
+  player.paused = false;
+  player.getPositionMs = () => player.posMs;
+  player.getDurationMs = () => player.durationMs;
+  player.processAudioInner = (output) => {
+    output[0].fill(1.0);
+    output[1].fill(1.0);
+  };
+
+  const output = [new Float32Array(256), new Float32Array(256)];
+
+  // Looping mode
+  player.setLooping(true);
+  player.processAudio(output);
+  assert.equal(player.fading, false);
+  assert.equal(output[0][0], 1.0);
+
+  // Indefinite playback parameter
+  player.setLooping(false);
+  player.setParameter('indefinitePlayback', true);
+  player.processAudio(output);
+  assert.equal(player.fading, false);
+  assert.equal(output[0][0], 1.0);
+});
+
+test('toggling indefinite playback during active fadeout immediately restores full volume and continues playing', () => {
+  const player = new Player({}, 44100, 256);
+  player.hostFade = true;
+  player.durationMs = 2000;
+  player.posMs = 2500; // In fadeout range
+  player.stopped = false;
+  player.paused = false;
+  player.getPositionMs = () => player.posMs;
+  player.getDurationMs = () => player.durationMs;
+  player.processAudioInner = (output) => {
+    output[0].fill(1.0);
+    output[1].fill(1.0);
+  };
+
+  const output = [new Float32Array(256), new Float32Array(256)];
+
+  // Start fade
+  player.processAudio(output);
+  assert.equal(player.fading, true);
+
+  // Advance time into fadeout: volume attenuated
+  player.posMs = 3500; // 1000ms elapsed of 5000ms
+  player.processAudio(output);
+  assert.equal(player.fading, true);
+  assert.ok(output[0][0] < 0.6 && output[0][0] > 0.4);
+
+  // Toggle indefinite playback ON during fadeout
+  player.setParameter('indefinitePlayback', true);
+  assert.equal(player.fading, false);
+
+  // Next render: immediately full volume (1.0), not stopped
+  player.posMs = 4000;
+  let songEndFired = 0;
+  player.on('playerSongEnd', () => songEndFired++);
+  player.processAudio(output);
+  assert.equal(player.fading, false);
+  assert.equal(output[0][0], 1.0);
+  assert.equal(player.stopped, false);
+  assert.equal(songEndFired, 0);
+
+  // Continue rendering indefinitely past original duration
+  player.posMs = 15000;
+  player.processAudio(output);
+  assert.equal(output[0][0], 1.0);
+  assert.equal(player.stopped, false);
+  assert.equal(songEndFired, 0);
+
+  // Toggle indefinite playback OFF: should start fade anew from current position
+  player.setParameter('indefinitePlayback', false);
+  assert.equal(player.fading, true);
+  assert.equal(player.fadeStartMs, 15000);
+
+  // 2500ms into new fade: volume is attenuated
+  player.posMs = 17500;
+  player.processAudio(output);
+  assert.ok(output[0][0] < 0.3 && output[0][0] > 0.1);
+  assert.equal(player.stopped, false);
+
+  // Fade finishes
+  player.posMs = 20000;
+  player.processAudio(output);
+  assert.equal(player.fading, false);
+  assert.equal(player.stopped, true);
+  assert.equal(songEndFired, 1);
+});
+
+test('trailing silence scanner triggers early cutoff and compensates gapless silence', () => {
+  const sampleRate = 44100;
+  const bufferSize = 256;
+  const player = new Player({}, sampleRate, bufferSize);
+  player.durationMs = 10000;
+  player.posMs = 9600; // Inside final 5 seconds
+  player.silenceDuration = 1.0;
+  player.stopped = false;
+  player.paused = false;
+  player.getPositionMs = () => player.posMs;
+  player.getDurationMs = () => player.durationMs;
+
+  let silentFrames = 0;
+  player.processAudioInner = (output) => {
+    silentFrames++;
+    output[0].fill(0);
+    output[1].fill(0);
+  };
+
+  const output = [new Float32Array(bufferSize), new Float32Array(bufferSize)];
+
+  // Feed silent frames until early silence cutoff threshold (0.4 * sampleRate = 17640 samples)
+  const framesNeeded = Math.ceil((0.4 * sampleRate) / bufferSize);
+  for (let i = 0; i < framesNeeded; i++) {
+    player.processAudio(output);
+    if (player.silenceSamplesRemaining > 0) break;
+  }
+
+  // Early cutoff triggered: compensated silence remaining is ~0.6 seconds (1.0 - 0.4)
+  assert.ok(player.silenceSamplesRemaining > 0);
+  const remainingSec = player.silenceSamplesRemaining / sampleRate;
+  assert.ok(Math.abs(remainingSec - 0.6) < 0.05);
+});
