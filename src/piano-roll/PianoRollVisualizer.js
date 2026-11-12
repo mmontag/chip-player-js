@@ -47,7 +47,7 @@ export default class PianoRollVisualizer extends PureComponent {
       }
 
       if (this.props.midiData) {
-        this.loadMidi(this.props.midiData);
+        this.loadMidi(this.props.midiData, this.props.useTrackLoops);
       }
 
       if (!this.props.paused) {
@@ -101,8 +101,12 @@ export default class PianoRollVisualizer extends PureComponent {
       this.engine.getIsPlaying = this.props.getIsPlaying;
     }
 
-    if (prevProps.midiData !== this.props.midiData) {
-      this.loadMidi(this.props.midiData);
+    // The pass count belongs to the gate, not to the buffer, so re-parse when
+    // either changes: a gate that arrives a render after its data must still
+    // expand the timeline rather than latch the single pass.
+    if (prevProps.midiData !== this.props.midiData ||
+        prevProps.useTrackLoops !== this.props.useTrackLoops) {
+      this.loadMidi(this.props.midiData, this.props.useTrackLoops);
     }
 
     if (prevProps.paused !== this.props.paused) {
@@ -225,7 +229,7 @@ export default class PianoRollVisualizer extends PureComponent {
     }
   }
 
-  loadMidi(buffer) {
+  loadMidi(buffer, useTrackLoops) {
     if (!buffer) {
       this.currentBuffer = null;
       if (this.engine) this.engine.setMidiData(null);
@@ -233,7 +237,7 @@ export default class PianoRollVisualizer extends PureComponent {
     }
 
     this.currentBuffer = buffer;
-    const parsedMidi = parseMidiData(buffer);
+    const parsedMidi = parseMidiData(buffer, useTrackLoops);
     if (!parsedMidi) {
       if (this.engine) this.engine.setMidiData(null);
       return;
