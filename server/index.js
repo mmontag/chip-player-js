@@ -27,6 +27,9 @@ const { resolveDirectoryMetadata, escapeHtml, safeJsonLd } = require('./director
 const { requireAuth, optionalAuth } = require('./middleware/auth.js');
 const { validate } = require('./middleware/validate');
 const { SettingsSchema, FavoriteSchema, PlaybackSchema } = require('./schemas');
+const { CATALOG_PREFIX } = require('../src/config');
+
+const catalogHref = path => `${CATALOG_PREFIX}/${encodeURIComponent(path)}`;
 
 const {
   searchStmt,
@@ -673,7 +676,9 @@ router.get('/user/favorites', requireAuth, (req, res) => {
   let favorites = [];
   if (row && row.items) {
     try {
-      favorites = JSON.parse(row.items);
+      favorites = JSON.parse(row.items).map(favorite => ({
+        ...favorite, href: catalogHref(favorite.path),
+      }));
     } catch (e) {
       console.error('Error parsing favorites JSON:', e);
     }
@@ -693,10 +698,12 @@ router.post(
     const { href, path, mtime } = req.body;
 
     try {
-      let songPath = path || href
-        .replace('https://gifx.co/music/', '')
-        .replace('http://localhost:8080/catalog/', '');
-      try { songPath = decodeURIComponent(songPath); } catch (e) {}
+      let songPath = path;
+      if (!songPath && href) {
+        songPath = href.replace('https://gifx.co/music/', '')
+          .replace('http://localhost:8080/catalog/', '');
+        try { songPath = decodeURIComponent(songPath); } catch (e) {}
+      }
 
       const song = getSongByPathStmt.get(songPath);
       if (!song) {
@@ -716,7 +723,7 @@ router.post(
           path: song.path,
           size: song.file_size,
           mtime,
-          href: `https://gifx.co/music/${song.path}`,
+          href: catalogHref(song.path),
         },
       });
     } catch (e) {
@@ -736,10 +743,12 @@ router.post(
 
     try {
       const now = Math.floor(Date.now() / 1000);
-      let songPath = path || href
-        .replace('https://gifx.co/music/', '')
-        .replace('http://localhost:8080/catalog/', '');
-      try { songPath = decodeURIComponent(songPath); } catch (e) {}
+      let songPath = path;
+      if (!songPath && href) {
+        songPath = href.replace('https://gifx.co/music/', '')
+          .replace('http://localhost:8080/catalog/', '');
+        try { songPath = decodeURIComponent(songPath); } catch (e) {}
+      }
       const result = removeFavoriteByPathStmt.run({
         userId: req.userId,
         path: songPath,
