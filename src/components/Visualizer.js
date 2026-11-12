@@ -2,6 +2,7 @@ import pianoKeys from '../images/piano-keys.png';
 import Spectrogram from '../Spectrogram';
 import PianoRollVisualizer from '../piano-roll/PianoRollVisualizer';
 import { isMidiData } from '../piano-roll/midi-parser';
+import { usesTrackLoops } from '../players/midi/midi-helpers';
 import React, { Fragment, PureComponent } from 'react';
 
 const SPECTROGRAM_MODES = [
@@ -197,6 +198,10 @@ export default class Visualizer extends PureComponent {
           <PianoRollVisualizer
             width={this.props.theaterMode ? '100%' : VIS_WIDTH}
             midiData={this.props.midiData}
+            // Take the path from the sequencer, the same live source App reads
+            // the buffer from, so the gate and the data it describes arrive in
+            // the same render (App's songPath state lags one behind).
+            useTrackLoops={usesTrackLoops(this.props.sequencer?.getCurrSongPath() ?? this.props.songPath)}
             getCurrentPositionMs={this.props.getCurrentPositionMs}
             getPlaybackRate={this.props.getPlaybackRate}
             getAudioLatencyMs={this.getAudioLatencyMs}

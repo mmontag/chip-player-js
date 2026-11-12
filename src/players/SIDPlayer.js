@@ -1,8 +1,10 @@
 import axios from 'redaxios';
 import autoBind from 'auto-bind';
 import pathe from 'pathe';
+import React from 'react'; // For the icon in the detectSongEnd label
 
 import Player from "./Player.js";
+import EndDetector, { DETECT_SONG_END_HINT } from './EndDetector.js';
 import { vectorToArray } from '../util';
 import { API_BASE } from '../config';
 
@@ -11,6 +13,10 @@ const fileExtensions = [
 ];
 
 const DEFAULT_SONG_LENGTH_MS = 2.5 * 60 * 1000;
+// The /hvsc request supplies lengths and titles and is optional; cap the wait
+// so a stalled request cannot leave the tune silent. Defaults are already in
+// place and late metadata still applies (see getSidMetadata).
+const METADATA_TIMEOUT_MS = 2500;
 
 // Convert song length to milliseconds. Each song length is of format:
 // mm:ss[.SSS]
@@ -20,6 +26,19 @@ function parseSongLength(length) {
 }
 
 export default class SIDPlayer extends Player {
+  paramDefs = [
+    {
+      id: 'detectSongEnd',
+      label: React.createElement('span', null,
+        'Detect Song End While ',
+        React.createElement('span', { className: 'inline-icon icon-repeat' }),
+        'One'),
+      type: 'toggle',
+      hint: DETECT_SONG_END_HINT,
+      defaultValue: true,
+    },
+  ];
+
   constructor(...args) {
     super(...args);
     autoBind(this);
@@ -32,17 +51,44 @@ export default class SIDPlayer extends Player {
     this.bufferR = this.core._malloc(this.bufferSize * 4);
     this.subtuneDurations = [];
     this.initialized = false;
+    this.endDetector = new EndDetector({
+      sampleRate: this.sampleRate,
+      bufferSize: this.bufferSize,
+    });
     this.hostFade = true;
+  }
+
+  resetEndDetector() {
+    this.endDetector.reset();
+  }
+
+  // Start of the end-detection trip window, one window before the expected
+  // end. Cached per sub-tune: the duration only changes on load/sub-tune
+  // switches, which both reset the detector.
+  getEndDetectTripAtMs() {
+    return this.endDetector.getTripAtMs(this.getDurationMs());
+  }
+
+  setParameter(id, value) {
+    if (id === 'detectSongEnd') {
+      this.params[id] = !!value;
+      this.resetEndDetector();
+      return;
+    }
+    super.setParameter(id, value);
   }
 
   getSidMetadata(md5, loadSignal) {
     console.log("SIDPlayer: Fetching metadata for SID:", md5);
     const metadataUrl = `${API_BASE}/hvsc?sidHash=${md5}`;
 
-    axios.get(metadataUrl, {
+    // Resolves with real durations/names, or with defaults on 404/failure.
+    // Never rejects: metadata must not break playback (playSongBuffer treats
+    // a loadData rejection as an unplayable song).
+    return axios.get(metadataUrl, {
       validateStatus: status => status === 404 || (status >= 200 && status < 300)
     }).then(response => {
-      if (loadSignal.aborted || response.status === 404) return;
+      if (loadSignal?.aborted || response.status === 404) return;
       console.log('SIDPlayer: Got metadata for SID:', response.data);
       const { lengths, name, author, copyright, image_url } = response.data;
       this.subtuneDurations = lengths.split(' ').map(parseSongLength);
@@ -53,18 +99,30 @@ export default class SIDPlayer extends Player {
           subtitle: `${author} - ${copyright}`,
         },
       };
-      this.durationMs = this.subtuneDurations[this.core._sid_get_subtune?.() || 0];
-      this.emit('playerStateUpdate', {
-        metadata: this.getMetadata(),
-        durationMs: this.durationMs,
-      });
+      // If this response outran loadData's timeout, playback already started on
+      // the default length. Redraw, and let the end detector recompute its trip
+      // gate from the real length -- otherwise Repeat One would restart near the
+      // default end. `stopped` stays set until loadData resumes, so the usual
+      // in-time path does not emit a second state here.
+      if (!this.stopped) {
+        this.resetEndDetector();
+        this.durationMs = this.subtuneDurations[this.core._sid_get_subtune?.() || 0];
+        this.emit('playerStateUpdate', {
+          metadata: this.getMetadata(),
+          durationMs: this.durationMs,
+        });
+      }
     }).catch(e => {
-      if (!loadSignal.aborted) console.warn('Could not load SID metadata:', e);
+      if (!loadSignal?.aborted) console.warn('SIDPlayer: HVSC metadata unavailable, using defaults.', e?.message);
     });
   }
 
-  async loadData(data, filepath, persistedSettings) {
+  async loadData(data, filepath, persistedSettings, subtune = 0) {
     const loadSignal = this.pendingLoad?.signal || this.beginLoad();
+    // Hold any seek asked for while the metadata fetch below is in flight: this
+    // load re-selects the sub-tune when it resumes, which would discard it --
+    // and anything still held from an earlier load is dropped with it.
+    this.beginAsyncLoad();
     if (!this.initialized) {
       this.core._sid_init(this.sampleRate);
       this.initialized = true;
@@ -74,19 +132,35 @@ export default class SIDPlayer extends Player {
     const err = this.core._sid_load_data(dataPtr, data.byteLength);
     this.core._free(dataPtr);
     this.subtuneDurations = Array(this.getNumSubtunes()).fill(DEFAULT_SONG_LENGTH_MS);
+    // Set the mask synchronously, before the metadata await below: a superseded
+    // load returns early, and it must still leave `getVoiceMask()` an array or
+    // Sequencer.playSongBuffer crashes on `.fill(true)`.
+    this.mask = Array(18).fill(true);
+    this.resetEndDetector();
 
     if (err !== 0) {
       throw Error('Unable to load this file!');
     }
 
-    const ptr = this.core._sid_get_song_md5();
-    const md5 = this.core.UTF8ToString(ptr);
-    this.getSidMetadata(md5, loadSignal);
-
     this.metadata = { title: pathe.basename(filepath) };
 
-    this.mask = Array(18).fill(true);
+    // Resolve HVSC lengths/names before the first state emit, so duration
+    // and titles arrive together (no default-then-real flicker). Audio starts
+    // right after, delayed only by this fetch, capped so a stalled request
+    // cannot hold playback silent.
+    const ptr = this.core._sid_get_song_md5();
+    const md5 = this.core.UTF8ToString(ptr);
+    await Promise.race([
+      this.getSidMetadata(md5, loadSignal),
+      new Promise(resolve => setTimeout(resolve, METADATA_TIMEOUT_MS)),
+    ]);
+    // A newer load took over while we fetched; it owns the core and the state
+    // emit now, so stop here rather than resuming this song over the top of it.
+    if (loadSignal.aborted) return;
+
     this.core._sid_set_voice_mask(0);
+    // Start on the requested sub-tune (each sub-tune is its own SongRef).
+    this.playSubtune(subtune);
     this.resolveParamValues(persistedSettings);
     this.setTempo(persistedSettings.tempo || 1);
     this.resume();
@@ -97,6 +171,7 @@ export default class SIDPlayer extends Player {
     if (this.paused) {
       channels[0].fill(0);
       channels[1].fill(0);
+      this.resetEndDetector();
       return;
     }
 
@@ -107,7 +182,7 @@ export default class SIDPlayer extends Player {
       this.lastHeapBuffer = this.core.HEAPU8.buffer;
     }
 
-    const samplesWritten = this.core._sid_render(this.bufferL, this.bufferR, this.bufferSize);
+    let samplesWritten = this.core._sid_render(this.bufferL, this.bufferR, this.bufferSize);
     if (samplesWritten === 0) {
       this.handleSongEnd();
       channels[0].fill(0);
@@ -115,8 +190,36 @@ export default class SIDPlayer extends Player {
       return;
     }
 
+    // Repeat One tail restart (rule and window in EndDetector). Re-running the
+    // sub-tune is a stop + load, which re-runs the init routine. The position
+    // gate runs first, so quiet intros and mid-song breakdowns stay gated; the
+    // listed length is approximate, so the detector may trip slightly early
+    // (fade-outs). Repeat-off leaves the end to the Host Fade in Player.
+    if (this.params.detectSongEnd && this.isPlayingIndefinitely() &&
+        this.getPositionMs() >= this.getEndDetectTripAtMs() && this.updateEndDetector()) {
+      this.playSubtune(this.getSubtune());
+      samplesWritten = this.core._sid_render(this.bufferL, this.bufferR, this.bufferSize);
+      if (samplesWritten === 0) {
+        this.handleSongEnd();
+        channels[0].fill(0);
+        channels[1].fill(0);
+        return;
+      }
+    }
+
     channels[0].set(this.wasmViewL);
     channels[1].set(this.wasmViewR);
+  }
+
+  // Fold one rendered buffer into the tail detector. Muted voices fake both
+  // gates, so stand down while the mask is not clean -- the JS echo of GME
+  // disabling its own silence detection on any mute.
+  updateEndDetector() {
+    if (!Array.isArray(this.mask) || !this.mask.every(Boolean)) {
+      this.endDetector.reset();
+      return false;
+    }
+    return this.endDetector.fold(this.wasmViewL, this.wasmViewR);
   }
 
   getNumSubtunes() {
@@ -129,8 +232,8 @@ export default class SIDPlayer extends Player {
 
   playSubtune(subtune) {
     super.playSubtune(subtune);
+    this.resetEndDetector();
     this.core._sid_set_subtune(subtune);
-    this.emit('playerStateUpdate', this.getBasePlayerState());
   }
 
   getTempo() {
@@ -178,6 +281,11 @@ export default class SIDPlayer extends Player {
   }
 
   seekMs(seekMs) {
+    if (this.deferSeekUntilPlaying(seekMs)) return;
+    // Drop quiet time accumulated before the seek, so pre-seek audio cannot
+    // trip the Repeat One tail restart before the new position has produced a
+    // full window (EndDetector's contract: reset on load / seek / sub-tune).
+    this.resetEndDetector();
     this.muteAudioDuringCall(this.audioNode, () => this.core._sid_set_position_ms(seekMs));
   }
 

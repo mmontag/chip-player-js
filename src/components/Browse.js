@@ -5,6 +5,7 @@ import DirectoryLink from './DirectoryLink';
 import bytes from 'bytes';
 import FavoriteButton from './FavoriteButton';
 import trimEnd from 'lodash/trimEnd';
+import { isSongFolderListing } from '../util';
 
 
 export default class Browse extends React.PureComponent {
@@ -47,6 +48,8 @@ export default class Browse extends React.PureComponent {
     const urlParams = new URLSearchParams(window.location.search);
     urlParams.delete('q');
     const search = urlParams.toString();
+    // Rows of a song folder are its songs; a directory's rows are not.
+    const songFolder = isSongFolderListing(listing);
     // Check if previous page url is the parent directory of current page url.
     const prevPath = trimEnd(history.location.state?.prevPathname, '/');
     const currPath = trimEnd(window.location.pathname, '/');
@@ -56,7 +59,8 @@ export default class Browse extends React.PureComponent {
       const { item, onPlay } = props;
       item.isBackLink = item.name === '..' && prevPageIsParentDir;
 
-      if (item.type === 'directory') {
+      const isSongFolder = item.type === 'songfolder';
+      if (item.type === 'directory' || isSongFolder) {
         return (
           <>
             <div className="BrowseList-colName">
@@ -64,15 +68,17 @@ export default class Browse extends React.PureComponent {
                              isBackLink={item.isBackLink}>{item.name}</DirectoryLink>
             </div>
             <div className="BrowseList-colDir">
-              &lt;DIR&gt;
+              {isSongFolder ? <>&lt;TUNES&gt;</> : <>&lt;DIR&gt;</>}
             </div>
-            <div className="BrowseList-colCount" title={`Contains ${item.count} direct child items`}>
+            <div className="BrowseList-colCount"
+                 title={isSongFolder ? `Contains ${item.count} sub-tunes` : `Contains ${item.count} direct child items`}>
               {item.count}
             </div>
             <div className="BrowseList-colMtime">
               {item.mtime}
             </div>
-            <div className="BrowseList-colSize" title={`Directory size is ${item.size} bytes (recursive)`}>
+            <div className="BrowseList-colSize"
+                 title={isSongFolder ? `File size is ${item.size} bytes` : `Directory size is ${item.size} bytes (recursive)`}>
               {item.size != null && bytes(item.size, { unitSeparator: ' ' })}
             </div>
           </>
@@ -115,7 +121,9 @@ export default class Browse extends React.PureComponent {
           /{browsePath}{' '}
           <button
             className="box-button"
-            title="Shuffle this directory (and all subdirectories)"
+            title={songFolder
+              ? 'Shuffle this song folder'
+              : 'Shuffle this directory (and all subdirectories)'}
             onClick={this.handleShufflePlay}>
             Shuffle Play
           </button>

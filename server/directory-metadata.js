@@ -8,6 +8,8 @@ const {
   getDirSampleSubdirsStmt,
   getDirDirectExtensionsStmt,
   getDirSubtreeExtensionsStmt,
+  getSongByPathStmt,
+  getSubtunesStmt,
 } = dbStatements;
 
 /**
@@ -637,6 +639,67 @@ function resolveDirectoryMetadata(rawBrowsePath, options = {}) {
 
   const dir = getDirMetadataStmt.get(normalizedPath);
   if (!dir) {
+    // A multi-song file browses as a virtual "song folder" at the same path.
+    // It has no directory row, so give it the collection metadata a directory
+    // gets: a breadcrumb, a collection page, and a crawler-readable song list.
+    const song = getSongByPathStmt.get(normalizedPath);
+    if (song && (song.subtune_count || 1) > 1) {
+      const segments = normalizedPath.split('/').filter(Boolean);
+      const title = truncateString(song.title || path.basename(normalizedPath), 60);
+      const subtunes = getSubtunesStmt.all(normalizedPath);
+      const sample = subtunes.slice(0, 3)
+        .map(sub => sub.title || `Tune ${sub.subtune + 1}`)
+        .join(', ');
+      const description = `Browse ${song.subtune_count} songs in ${title}.`
+        + (sample ? ` Songs include ${sample}, and more.` : '')
+        + ' Online chiptune player.';
+      const canonicalUrl = `https://chiptune.app/browse/${segments.map(encodeURIComponent).join('/')}`;
+      let image = 'https://chiptune.app/chip-player-1200x640.png';
+      if (song.image_path) {
+        image = `https://chiptune.app/catalog/${song.image_path.split('/').map(encodeURIComponent).join('/')}`;
+      }
+      const schemaJsonLd = JSON.stringify([
+        buildBreadcrumbJsonLd(segments),
+        buildCollectionPageJsonLd(title, description, canonicalUrl, image),
+      ]);
+      const breadcrumbLinks = ['<a href="/">Home</a>', '<a href="/browse">Browse</a>'];
+      let cur = '';
+      segments.forEach((seg, idx) => {
+        cur += (cur ? '/' : '') + seg;
+        const href = `/browse/${cur.split('/').map(encodeURIComponent).join('/')}`;
+        if (idx === segments.length - 1) {
+          breadcrumbLinks.push(`<span>${escapeHtml(seg)}</span>`);
+        } else {
+          breadcrumbLinks.push(`<a href="${href}">${escapeHtml(seg)}</a>`);
+        }
+      });
+      const tracks = subtunes.map(sub => {
+        const label = sub.title || `Tune ${sub.subtune + 1}`;
+        const href = `/?play=${encodeURIComponent(song.song_id)}&subtune=${sub.subtune}`;
+        return `<li><a href="${href}">${escapeHtml(label)}</a></li>`;
+      }).join('\n      ');
+      const result = {
+        title,
+        description,
+        url: canonicalUrl,
+        image,
+        schemaJsonLd,
+        noscriptContent: `
+  <div class="seo-crawler-content">
+    <nav aria-label="Breadcrumb" class="seo-breadcrumb">
+      ${breadcrumbLinks.join(' / ')}
+    </nav>
+    <h1>${escapeHtml(title)}</h1>
+    <p>${escapeHtml(description)}</p>
+    <h2>Songs</h2>
+    <ul>
+      ${tracks}
+    </ul>
+  </div>`,
+      };
+      directoryMetaCache.set(cacheKey, result);
+      return result;
+    }
     const segments = normalizedPath.split('/').filter(Boolean);
     const lastSeg = segments[segments.length - 1] || 'Directory';
     let decodedLastSeg = lastSeg;

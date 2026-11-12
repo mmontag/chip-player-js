@@ -15,21 +15,37 @@ export default class TimeSlider extends React.Component {
     this.state = {
       draggedSongPositionMs: -1,
       currentSongPositionMs: 0,
+      isBlindLoop: false,
     };
     this.timer = null;
   }
 
   componentDidUpdate(prevProps) {
     if (prevProps.paused === true && this.props.paused === false) {
-      this.timer = setInterval(() => {
-        const {getCurrentPositionMs, currentSongDurationMs} = this.props;
-        this.setState({
-          currentSongPositionMs: Math.min(getCurrentPositionMs(), currentSongDurationMs),
-        });
-      }, UPDATE_INTERVAL_MS);
+      this.timer = setInterval(this.syncFromPlayer, UPDATE_INTERVAL_MS);
     } else if (prevProps.paused === false && this.props.paused === true) {
       clearInterval(this.timer);
+    } else if (this.props.paused) {
+      // The interval is off while paused, so nothing else refreshes the label.
+      // Re-read the live position on any other update -- a seek out of the blind
+      // loop then clears "Looping" immediately, while a no-op change (enabling
+      // Repeat One after disabling it) leaves the state alone.
+      this.syncFromPlayer();
     }
+  }
+
+  // Read the live position/blind-loop state into the component. Skips the update
+  // when nothing changed, so the paused path above cannot loop.
+  syncFromPlayer() {
+    const {getCurrentPositionMs, getIsBlindLoop, currentSongDurationMs} = this.props;
+    const blind = typeof getIsBlindLoop === 'function' ? getIsBlindLoop() : !!getIsBlindLoop;
+    const pos = getCurrentPositionMs();
+    const next = blind ? pos : Math.min(pos, currentSongDurationMs);
+    if (next === this.state.currentSongPositionMs && blind === this.state.isBlindLoop) return;
+    this.setState({
+      currentSongPositionMs: next,
+      isBlindLoop: blind,
+    });
   }
 
   componentWillUnmount() {
@@ -37,6 +53,12 @@ export default class TimeSlider extends React.Component {
   }
 
   getSongPos() {
+    // Blind loop rides the first pass, then parks at the end: with no known
+    // loop point, wrapping to 0 would imply an intro/loop shape we can't
+    // know, so the head just stops. The elapsed label keeps climbing.
+    if (this.state.isBlindLoop) {
+      return Math.min(this.state.currentSongPositionMs / this.props.currentSongDurationMs, 1);
+    }
     return this.state.currentSongPositionMs / this.props.currentSongDurationMs;
   }
 
@@ -76,11 +98,15 @@ export default class TimeSlider extends React.Component {
       <div className='TimeSlider'>
         <Slider
           pos={this.getSongPos()}
+          loopStart={this.props.loopStart}
+          loopEnd={this.props.loopEnd}
           onDrag={this.handlePositionDrag}
           onChange={this.handlePositionDrop}/>
         <div className='TimeSlider-labels'>
           <div>{this.getTimeLabel()}</div>
-          <div>{this.getTime(this.props.currentSongDurationMs)}</div>
+          <div>{this.state.isBlindLoop
+            ? <><span className='inline-icon icon-repeat'/> Looping</>
+            : this.getTime(this.props.currentSongDurationMs)}</div>
         </div>
       </div>
     );

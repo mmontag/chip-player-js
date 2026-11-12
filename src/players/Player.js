@@ -52,6 +52,15 @@ export default class Player extends EventEmitter {
     this.silenceSamplesRemaining = 0;
     this.trailingSilenceSamples = 0;
     this.durationMs = 0;
+    // A seek asked for while an async load is still starting (SID waits for
+    // HVSC metadata, VGM for an OPL4 ROM). It is held until the first rendered
+    // block: some cores block inside a seek until their own clock advances and
+    // there is no clock yet, and a load that finishes afterwards re-selects the
+    // sub-tune and resets the position, which would discard it. App's ?t= timer
+    // fires ~100ms after starting a song, inside this window when the fetch is
+    // slow -- the case that used to lose the link's position.
+    this.loadingAsync = false;
+    this.deferredSeekMs = null;
     this.hostFade = false;
     this.fading = false;
     this.fadeStartMs = null;
@@ -67,6 +76,9 @@ export default class Player extends EventEmitter {
    * @return {number} - A pointer to the allocated memory.
    */
   copyToHeap(data) {
+    // TODO: the JSDoc promises an ArrayBuffer, but HEAPU8.set() only accepts a
+    // TypedArray/array-like, so an ArrayBuffer silently copies nothing. Callers
+    // pass a Uint8Array today; normalize `data` here.
     const dataPtr = this.core._malloc(data.byteLength);
     this.core.HEAPU8.set(data, dataPtr);
     return dataPtr;
@@ -97,30 +109,40 @@ export default class Player extends EventEmitter {
     this.pendingLoad = new AbortController();
     this.catalogMeta = {};
     this.catalogMetaPromise = null;
+    // A held seek belongs to the load that issued it. Clear it here as well as
+    // in stop(): a replaced load may not have been stopped first, and the next
+    // player's first block must not replay a seek from the previous song.
+    this.loadingAsync = false;
+    this.deferredSeekMs = null;
     this.resetFade();
     return this.pendingLoad.signal;
   }
 
-  fetchCatalogMetadata(filepath, loadSignal = this.pendingLoad?.signal) {
+  fetchCatalogMetadata(filepath, loadSignal = this.pendingLoad?.signal, subtune = 0) {
     if (!filepath || filepath.startsWith('local/')) {
       return Promise.resolve({});
     }
     if (this.catalogMetaPromise) {
       return this.catalogMetaPromise;
     }
-    const metadataUrl = getMetadataUrlForFilepath(filepath);
+    const metadataUrl = getMetadataUrlForFilepath(filepath, subtune);
     this.catalogMetaPromise = axios.get(metadataUrl, {
         fetch: (url, options) => fetch(url, { ...options, signal: loadSignal }),
       })
       .then(response => {
         if (loadSignal?.aborted) return {};
-        const { imageUrl: imagePath, infoTexts = [], md5 = null, songId = null, soundfont = null } = response.data || {};
+        const {
+          imageUrl: imagePath, infoTexts = [], md5 = null, songId = null, soundfont = null,
+          subtuneCount = null, subtuneTitle = null,
+        } = response.data || {};
         this.catalogMeta = {
           imageUrl: imagePath ? getUrlFromFilepath(imagePath) : null,
           infoTexts,
           md5,
           songId,
           soundfont,
+          subtuneCount,
+          subtuneTitle,
         };
         if (!this.stopped) {
           this.emit('playerStateUpdate', this.getCatalogState());
@@ -153,6 +175,11 @@ export default class Player extends EventEmitter {
     }
     this.catalogMeta = {};
     this.catalogMetaPromise = null;
+    // An async load can leave a seek held for its first rendered block. If the
+    // song is stopped or replaced before that block, the seek belongs to the
+    // old load and must not be applied to the next song.
+    this.loadingAsync = false;
+    this.deferredSeekMs = null;
     this.stopped = true;
     this.paused = true;
     this.silenceSamplesRemaining = 0;
@@ -197,6 +224,14 @@ export default class Player extends EventEmitter {
   getPositionMs() {
     console.debug(`Player.getPositionMs() not implemented for ${this.constructor.name}.`);
     return 0;
+  }
+
+  // Position for the slider head and time label. getPositionMs() is the
+  // absolute "time playing" (it keeps counting across loops); players that can
+  // loop a region override this to fold the loop phase into the displayed
+  // "playlist" position so the head repeats the region instead of running on.
+  getDisplayPositionMs() {
+    return this.getPositionMs();
   }
 
   seekMs(ms) {
@@ -266,6 +301,9 @@ export default class Player extends EventEmitter {
     return 0;
   }
 
+  // A player can select a tune in the file it has loaded, but it never walks
+  // to the next tune on its own. Sub-tune sequencing belongs to the Sequencer:
+  // every sub-tune is its own SongRef/context entry.
   playSubtune(subtune) {
     this.silenceSamplesRemaining = 0;
     this.trailingSilenceSamples = 0;
@@ -357,6 +395,8 @@ export default class Player extends EventEmitter {
       infoTexts: [...this.getInfoTexts(), ...(this.catalogMeta?.infoTexts || [])],
       md5: this.catalogMeta?.md5 || null,
       songId: this.catalogMeta?.songId || null,
+      subtuneCount: this.catalogMeta?.subtuneCount ?? null,
+      subtuneTitle: this.catalogMeta?.subtuneTitle ?? null,
     };
   }
 
@@ -382,6 +422,70 @@ export default class Player extends EventEmitter {
     if (looping) this.resetFade();
   }
 
+  // End of the loop region in ms, or null when the track defines no loop.
+  getLoopEndMs() {
+    const meta = this.metadata;
+    return meta && meta.loop_length > 0 && meta.intro_length >= 0
+      ? meta.intro_length + meta.loop_length
+      : null;
+  }
+
+  // Highlight band for the time slider, in ms, or null when the track defines
+  // no loop region. The band is the LAST loop instance before the fade
+  // (default playback is intro + two passes + fade): that gives the user as
+  // long as possible to decide to stay, and toggling repeat never shifts the
+  // band. Reads the shared intro_length/loop_length vocabulary; engines whose
+  // loop semantics differ override this.
+  getLoopBandMs() {
+    const meta = this.metadata;
+    if (!meta || !Number.isFinite(meta.intro_length) || meta.intro_length < 0 ||
+        !Number.isFinite(meta.loop_length) || meta.loop_length <= 0)
+      return null;
+    const startMs = meta.intro_length + meta.loop_length;
+    let endMs = meta.intro_length + 2 * meta.loop_length;
+    const durationMs = this.getDurationMs();
+    if (durationMs > 0) {
+      // A song can be shorter than its region claims: tracks that run out of
+      // loops before the second pass completes leave the band reaching past the
+      // end of the song. Clamping there left a sliver the song never plays,
+      // drawn while it was already ending. No band is the honest answer, and the
+      // blind-loop UI covers it. The second of slack absorbs the whole-second
+      // length.
+      if (endMs > durationMs + 1000) return null;
+      endMs = Math.min(endMs, durationMs);
+    }
+    return endMs > startMs ? { startMs, endMs } : null;
+  }
+
+  // True when playback legitimately runs past durationMs and the engine (not
+  // the base end detector) owns the end. The base returns Repeat One only;
+  // subclasses OR in their own indefinite-playback setting and any extended
+  // tail left over from leaving a deep repeat.
+  isPlayingIndefinitely() {
+    return this.looping;
+  }
+
+  // True when the fallback loop UI applies: the song runs past its length with
+  // no known loop region, so no honest position exists -- the transport parks
+  // the head while the elapsed time climbs. Engines land here by free-running
+  // past a listed length (an NSF driver looping internally; SID/N64 under
+  // indefinite playback); a bounded clock -- a loop region, a native loop
+  // (XMP), a JS wrap (MIDI with a region), or a stop + reload (V2M) -- never
+  // does. The past-the-end term scopes it.
+  isBlindLoop() {
+    if (!this.isPlayingIndefinitely()) return false;
+    if (this.getLoopBandMs()) return false;
+    const duration = this.getDurationMs();
+    if (!(duration > 0)) return false;
+    // Not merely "not playing": a paused song is still in its indefinite loop,
+    // and only the transport is held. Pausing must keep the Loop label and the
+    // climbing elapsed time, so the term is for a player that really stopped
+    // (the engine reported the end) -- never for the paused state, which every
+    // player reports as not playing.
+    if (!this.isPlaying() && !this.isPaused()) return false;
+    return this.getPositionMs() >= duration;
+  }
+
   setSilenceDuration(seconds) {
     const val = Number(seconds);
     this.silenceDuration = isNaN(val) ? -1 : val;
@@ -396,25 +500,49 @@ export default class Player extends EventEmitter {
 
       if (this.silenceSamplesRemaining <= 0) {
         this.silenceSamplesRemaining = 0;
-        this.advanceOrEnd();
+        this.finishSong();
       }
     } else {
       this.trailingSilenceSamples = 0;
-      this.advanceOrEnd();
+      this.finishSong();
     }
   }
 
-  advanceOrEnd() {
-    if (this.getSubtune() + 1 < this.getNumSubtunes()) {
-      const res = this.playSubtune(this.getSubtune() + 1);
-      if (res !== undefined && res !== 0) {
-        this.stop();
-        this.emit('playerSongEnd');
-      }
-    } else {
-      this.stop();
-      this.emit('playerSongEnd');
-    }
+  // A player plays exactly one song. The Sequencer owns sub-tune navigation:
+  // every sub-tune is its own SongRef/context entry, so walking to the next
+  // tune here would be a second sequencer and would desynchronise the playing
+  // audio from the selected song identity.
+  finishSong() {
+    this.stop();
+    this.emit('playerSongEnd');
+  }
+
+  // Called at the top of a load that waits on something before playback starts
+  // (SID's HVSC metadata, VGM's OPL4 ROM). Any seek still held from an earlier
+  // load is dropped here: it belongs to the song it was asked for, and carrying
+  // it into this one would skip the new song to the old link's time.
+  beginAsyncLoad() {
+    this.loadingAsync = true;
+    this.deferredSeekMs = null;
+  }
+
+  // Holds a seek issued while an async load is still starting (see the fields
+  // in the constructor). True means the caller must not touch the engine yet.
+  deferSeekUntilPlaying(ms) {
+    if (!this.loadingAsync) return false;
+    this.deferredSeekMs = ms;
+    return true;
+  }
+
+  // Runs after each rendered block: the load's first render means the engine's
+  // clock is advancing, so a held seek is safe to hand to the platform now --
+  // and it lands after whatever the load did to the transport, not before it.
+  flushDeferredSeek() {
+    if (!this.loadingAsync) return;
+    this.loadingAsync = false;
+    const ms = this.deferredSeekMs;
+    this.deferredSeekMs = null;
+    if (ms != null) this.seekMs(ms);
   }
 
   checkTrailingSilence(output) {
@@ -453,7 +581,7 @@ export default class Player extends EventEmitter {
         this.silenceSamplesRemaining -= this.bufferSize;
         if (this.silenceSamplesRemaining <= 0) {
           this.silenceSamplesRemaining = 0;
-          this.advanceOrEnd();
+          this.finishSong();
         }
       }
       return;
@@ -461,6 +589,7 @@ export default class Player extends EventEmitter {
 
     const start = performance.now();
     this.processAudioInner(output);
+    this.flushDeferredSeek();
     const end = performance.now();
 
     if (this.stopped || this.paused) return;
@@ -481,8 +610,13 @@ export default class Player extends EventEmitter {
       }
     }
 
+    // The shared end checks must stand down for every indefinite mode, not
+    // only the two base flags: VGM/MDX set `durationExtended` when leaving a
+    // deep repeat, and their fade tail legitimately runs past the duration.
+    const indefinitely = this.isPlayingIndefinitely() || !!this.params.indefinitePlayback;
+
     // Early silence cutoff (for gapless transitions and dead-air trimming)
-    if (!this.fading && !this.looping && !this.params.indefinitePlayback) {
+    if (!this.fading && !indefinitely) {
       if (this.checkTrailingSilence(output)) {
         this.handleSongEnd();
         for (let ch = 0; ch < output.length; ch++) output[ch].fill(0);
@@ -491,7 +625,7 @@ export default class Player extends EventEmitter {
     }
 
     // Host Fade (for engines without native fadeout, e.g. GME and SID)
-    if (this.hostFade && !this.looping && !this.params.indefinitePlayback) {
+    if (this.hostFade && !indefinitely) {
       const duration = this.durationMs || this.getDurationMs();
       const pos = this.getPositionMs();
 
