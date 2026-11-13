@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+process.env.TZ = process.env.TZ || 'America/Los_Angeles';
 
 /**
  *

@@ -2,6 +2,9 @@ module.exports = {
   apps: [{
     name: 'chip-player-api',
     script: 'index.js',
+    env: {
+      TZ: 'America/Los_Angeles',
+    },
     env_production: {
       NODE_ENV: 'production',
       BROWSE_LOCAL_FILESYSTEM: 'false',

@@ -6,7 +6,7 @@
   <title>chiptune.app // Analytics Dashboard</title>
   <meta name="description" content="Public aggregated analytics and listening statistics for chiptune.app.">
   <link rel="icon" href="/favicon.ico">
-  <link rel="stylesheet" href="/dashboard/assets/dashboard.css?v=1.4">
+  <link rel="stylesheet" href="/dashboard/assets/dashboard.css?v=1.5">
   <!-- Chart.js 4.4.x UMD -->
   <script src="/dashboard/assets/chart.umd.min.js"></script>
 </head>
@@ -23,6 +23,9 @@
         <div class="badge-live">
           <span class="live-dot"></span>
           <span>Live</span>
+        </div>
+        <div class="badge-tz" title="All analytics and date ranges are oriented on US Pacific Time (PT)">
+          <span>Pacific Time (PT)</span>
         </div>
         <div class="spinner-container" id="loadingIndicator">
           <div class="spinner"></div>
@@ -42,9 +45,9 @@
         </div>
 
         <form class="custom-range-form" id="customRangeForm">
-          <input type="date" class="input-date" id="startDate" title="Start Date">
+          <input type="date" class="input-date" id="startDate" title="Start Date (Pacific Time)">
           <span style="color:var(--text-muted);">→</span>
-          <input type="date" class="input-date" id="endDate" title="End Date">
+          <input type="date" class="input-date" id="endDate" title="End Date (Pacific Time)">
           <button type="submit" class="btn-ui">Apply</button>
         </form>
 
@@ -261,6 +264,6 @@
     </div>
   </footer>
 
-  <script src="/dashboard/assets/dashboard.js?v=1.6"></script>
+  <script src="/dashboard/assets/dashboard.js?v=1.7"></script>
 </body>
 </html>

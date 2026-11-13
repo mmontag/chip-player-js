@@ -105,6 +105,13 @@
           shadowOffsetY: 4,
           shadowBlur: 6,
           shadowColor: 'rgba(0, 0, 0, 0.08)',
+          callbacks: {
+            title: (items) => {
+              if (!items || !items.length) return '';
+              const label = items[0].label;
+              return (label && label.includes(':')) ? `${label} PT` : label;
+            },
+          },
         },
       },
       scales: {
@@ -182,7 +189,9 @@
 
     const cachedTimeEl = document.getElementById('cachedTimestamp');
     if (cachedTimeEl && data.cachedAt) {
-      cachedTimeEl.textContent = new Date(data.cachedAt * 1000).toLocaleTimeString();
+      cachedTimeEl.textContent = new Date(data.cachedAt * 1000).toLocaleTimeString('en-US', {
+        timeZone: 'America/Los_Angeles',
+      }) + ' PT';
     }
   }
 
