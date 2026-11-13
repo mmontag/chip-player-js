@@ -190,6 +190,7 @@ test('sequencer ignores events and failed loads from superseded players', async 
   sequencer.on('sequencerStateUpdate', state => updates.push(state));
   sequencer.playSong('local/first.old');
   sequencer.playSong('local/second.new');
+  updates.length = 0; // Ignore the two intentional selection updates.
   old.emit('playerStateUpdate', { metadata: { title: 'Old' } });
   old.emit('playerError', 'Old error');
   failOld(new Error('Old load failed'));
@@ -342,7 +343,7 @@ test('sequencer advances on playerSongEnd and ejects cleanly without redundant h
   sequencer.playContext(['local/1.vgm', 'local/2.vgm']);
   dummyPlayer.emit('playerStateUpdate', { metadata: { title: 'Song 1' } });
 
-  assert.equal(updates.length, 1);
+  assert.equal(updates.length, 2); // Selection, then decoder metadata.
   assert.equal(updates[0].ejected, false);
   assert.equal('hasPlayer' in updates[0], false);
   assert.equal(sequencer.getCurrSongPath(), 'local/1.vgm');
@@ -614,4 +615,151 @@ test('trailing silence scanner triggers early cutoff and compensates gapless sil
   assert.ok(player.silenceSamplesRemaining > 0);
   const remainingSec = player.silenceSamplesRemaining / sampleRate;
   assert.ok(Math.abs(remainingSec - 0.6) < 0.05);
+});
+
+// Exercise the real sequencer and Player lifecycle; only network and decoding
+// are controlled here. Real decoder coverage is also run in the browser.
+test('queue pause stops failed-load advance, retries the same subtune, and resumes loaded audio', async t => {
+  const { default: Sequencer } = await import('../src/Sequencer');
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const loads = [], updates = [];
+  let fail = true;
+  const player = Object.assign(new Player({}, 44100), {
+    canPlay: () => true,
+    fetchCatalogMetadata() {},
+    async loadData(_data, path, _settings, subtune) {
+      loads.push({ path, subtune });
+      if (fail) {
+        throw Error('bad file');
+      }
+      this.resume();
+      this.emit('playerStateUpdate', { paused: false, subtune });
+    },
+    getPositionMs: () => 1234,
+  });
+  const queue = new Sequencer([player], { read: () => new Uint8Array([1]) }, () => ({}));
+  queue.on('sequencerStateUpdate', state => updates.push(state));
+  queue.playContext(['local/a.spc', 'local/b.spc'], 0, 2);
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(updates[0].ejected, false);
+  assert.equal(updates[0].paused, false);
+  assert.ok(queue.playerErrorAdvanceTimer);
+  queue.setPaused(true);
+  t.mock.timers.tick(2000);
+  assert.equal(loads.length, 1);
+  assert.equal(queue.getCurrIdx(), 0);
+  assert.equal(updates.at(-1).paused, true);
+  assert.equal(queue.getPositionMs(), 0);
+
+  queue.setPaused(false);
+  await new Promise(resolve => setImmediate(resolve));
+  assert.deepEqual(loads[1], { path: 'local/a.spc', subtune: 2 });
+  t.mock.timers.tick(1000);
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(loads[2].path, 'local/b.spc');
+  queue.setPaused(true);
+  fail = false;
+  queue.setPaused(false);
+  await new Promise(resolve => setImmediate(resolve));
+  const loaded = loads.length;
+  queue.setPaused(true);
+  queue.setPaused(true); // Media-session pause is idempotent.
+  assert.equal(player.isPaused(), true);
+  assert.equal(queue.getPositionMs(), 1234);
+  queue.setPaused(false);
+  queue.setPaused(false);
+  assert.equal(player.isPaused(), false);
+  assert.equal(loads.length, loaded);
+  queue.eject();
+  t.mock.timers.tick(2000);
+  assert.equal(queue.isEjected(), true);
+  assert.equal(updates.at(-1).paused, true);
+});
+
+test('pause cancels a download and a late response cannot start playback; Play retries', async t => {
+  const { default: Sequencer } = await import('../src/Sequencer');
+  const requests = [], loads = [];
+  t.mock.method(globalThis, 'fetch', (url, options) => new Promise(resolve => requests.push({ url, signal: options.signal, resolve })));
+  const player = Object.assign(new Player({}, 44100), {
+    canPlay: () => true,
+    fetchCatalogMetadata() {},
+    async loadData(_data, path) { loads.push(path); this.resume(); },
+  });
+  const queue = new Sequencer([player], {}, () => ({}));
+  queue.playContext(['a.spc']);
+  queue.setPaused(true);
+  assert.equal(requests[0].signal.aborted, true);
+  requests[0].resolve(new Response(new Uint8Array([1])));
+  await new Promise(resolve => setImmediate(resolve));
+  assert.deepEqual(loads, []);
+  assert.equal(queue.playerErrorAdvanceTimer, null);
+  queue.setPaused(false);
+  assert.equal(requests[1].url, requests[0].url);
+  requests[1].resolve(new Response(new Uint8Array([1])));
+  await new Promise(resolve => setImmediate(resolve));
+  assert.deepEqual(loads, ['a.spc']);
+  queue.eject();
+});
+
+test('pause cancels asynchronous decoder work and manual selection replaces failed-song timers', async t => {
+  const { default: Sequencer } = await import('../src/Sequencer');
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const pending = [], errors = [];
+  const player = Object.assign(new Player({}, 44100), {
+    canPlay: () => true,
+    fetchCatalogMetadata() {},
+    loadData() {
+      const signal = this.pendingLoad.signal;
+      return new Promise((resolve, reject) => pending.push({ signal, reject, finish: () => {
+        if (!signal.aborted) this.resume();
+        resolve();
+      } }));
+    },
+  });
+  const queue = new Sequencer([player], { read: () => new Uint8Array([1]) }, () => ({}));
+  queue.on('playerError', error => errors.push(error));
+  queue.playContext(['local/a.mdx', 'local/b.mdx', 'local/c.mdx']);
+  queue.setPaused(true);
+  pending[0].finish();
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(player.stopped, true);
+  queue.setPaused(false);
+  pending[1].reject(Error('current failure'));
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(errors.length, 1);
+  queue.nextSong();
+  t.mock.timers.tick(2000);
+  assert.equal(queue.getCurrSongPath(), 'local/b.mdx');
+  queue.setPaused(true);
+  queue.setPaused(false);
+  pending[2].reject(Error('superseded failure in the same player'));
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(errors.length, 1);
+  pending[3].finish();
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(player.stopped, false);
+  queue.eject();
+});
+
+
+test('a GME decode failure reaches the sequencer before cleanup aborts its load signal', async t => {
+  const { default: Sequencer } = await import('../src/Sequencer');
+  const { default: GMEPlayer } = await import('../src/players/GMEPlayer');
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const core = {
+    _malloc: () => 0, _free() {}, HEAPU8: new Uint8Array(32),
+    _gme_open_data: () => 1, // Native decoder rejects the supplied data.
+  };
+  const player = new GMEPlayer(core, 44100);
+  player.fetchCatalogMetadata = () => {};
+  const queue = new Sequencer([player], { read: () => new Uint8Array([1]) }, () => ({}));
+  const errors = [];
+  queue.on('playerError', error => errors.push(error));
+  queue.playContext(['local/bad.spc']);
+  await new Promise(resolve => setImmediate(resolve));
+  assert.match(errors[0], /gme_open_data failed/);
+  assert.equal(player.stopped, true);
+  assert.ok(queue.playerErrorAdvanceTimer);
+  t.mock.timers.tick(1000);
+  assert.equal(queue.isEjected(), true);
 });
