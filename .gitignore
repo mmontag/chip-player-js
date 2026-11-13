@@ -8,6 +8,8 @@ cmake-build-debug/
 *.wasm
 *.wasm.map
 *.db
+*-wal
+*-shm
 lib*.js
 libxmp/libxmp-lite-stagedir/
 public/soundfonts/
