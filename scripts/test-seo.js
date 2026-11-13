@@ -5,6 +5,7 @@ const {
   setStrategyMode,
   getStrategyMode,
   formatSimplifiedPathTitle,
+  endsWithFormatSuffix,
 } = require('../server/directory-metadata');
 
 console.log('Running SEO Structural Directory Metadata & Path Strategy Test Suite...\n');
@@ -96,12 +97,34 @@ const structuralTestCases = [
     expectedTitle: 'NeuralGear · FillInCafe (MDX)',
     expectedFormat: 'MDX',
   },
+  // Directories that already end in a file format suffix (no redundant suffix appended)
+  {
+    path: 'Nintendo (NSFE)',
+    expectedStrategy: 'flat_game_collection',
+    expectedTitle: 'Nintendo (NSFE) Soundtracks',
+    expectedFormat: 'NSFE',
+    noDuplicateFormat: true,
+  },
+  {
+    path: 'Famitracker Forum Archive (NSF)',
+    expectedStrategy: 'default',
+    expectedTitle: 'Famitracker Forum Archive (NSF) Music Collection',
+    expectedFormat: 'NSF',
+    noDuplicateFormat: true,
+  },
+  {
+    path: 'Contemporary/SNES Romhacks (SPC)',
+    expectedStrategy: 'artist_discography',
+    expectedTitle: 'SNES Romhacks (SPC) · Contemporary',
+    expectedFormat: 'SPC',
+    noDuplicateFormat: true,
+  },
 ];
 
 let passed = 0;
 let total = 0;
 
-structuralTestCases.forEach(({ path: testPath, expectedStrategy, expectedTitle, expectedFormat }) => {
+structuralTestCases.forEach(({ path: testPath, expectedStrategy, expectedTitle, expectedFormat, noDuplicateFormat }) => {
   total++;
   const topPrefix = testPath.split('/')[0];
   const strategy = PREFIX_STRUCTURE_MAP[topPrefix] || 'default';
@@ -121,6 +144,10 @@ structuralTestCases.forEach(({ path: testPath, expectedStrategy, expectedTitle, 
   if (expectedFormat) {
     assert(meta.formats.includes(expectedFormat), `Formats for ${testPath} should include ${expectedFormat}: [${meta.formats}]`);
     assert(meta.title.includes(`(${expectedFormat}`) || meta.title.includes(expectedFormat), `Title should include format: "${meta.title}"`);
+  }
+  if (noDuplicateFormat) {
+    assert(!meta.title.includes(`(${expectedFormat}) (${expectedFormat})`), `Title should not duplicate format: "${meta.title}"`);
+    assert(!meta.title.endsWith(`(${expectedFormat}) (${expectedFormat})`), `Title should not end in double format: "${meta.title}"`);
   }
 
   // Description checks
@@ -175,6 +202,19 @@ const pathTestCases = [
     // 2 segments: must NOT have middle ellipsis, must start with "Battle of the Bits / "
     noMiddleEllipsis: true,
   },
+  // Directories that already end in a format suffix (no redundant suffix appended in path mode)
+  {
+    path: 'Nintendo (NSFE)',
+    expectedTitle: 'Nintendo (NSFE)',
+  },
+  {
+    path: 'Famitracker Forum Archive (NSF)',
+    expectedTitle: 'Famitracker Forum Archive (NSF)',
+  },
+  {
+    path: 'Contemporary/SNES Romhacks (SPC)',
+    expectedTitle: 'Contemporary / SNES Romhacks (SPC)',
+  },
 ];
 
 pathTestCases.forEach(({ path: testPath, expectedTitle, containsEllipsis, noMiddleEllipsis }) => {
@@ -215,6 +255,26 @@ assert.strictEqual(step2, 'AAA / … / DDD_Soundtrack_Title', 'Should remove bot
 const step3 = formatSimplifiedPathTitle(fourSeg, 20);
 assert.strictEqual(step3, 'AAA / … / DDD_Sound…', 'Should truncate leaf when all middle removed');
 console.log(`✓ 4-segment progressive N-1 removal verified: "${step1}" -> "${step2}" -> "${step3}"`);
+
+// Test endsWithFormatSuffix helper directly
+assert.strictEqual(endsWithFormatSuffix('Nintendo (NSFE)'), true);
+assert.strictEqual(endsWithFormatSuffix('Famitracker Forum Archive (NSF)'), true);
+assert.strictEqual(endsWithFormatSuffix('SNES Romhacks (SPC)'), true);
+assert.strictEqual(endsWithFormatSuffix('Nintendo 64 (SoundFont MIDI)'), true);
+assert.strictEqual(endsWithFormatSuffix('Home (MIDI source files)'), true);
+assert.strictEqual(endsWithFormatSuffix('Famicompo/mini5/Cover'), false);
+assert.strictEqual(endsWithFormatSuffix('MOON8 (Pink Floyd)'), false);
+assert.strictEqual(endsWithFormatSuffix('FAMICOM GRANDPRIX [BotB 9038] (2024)'), false);
+assert.strictEqual(endsWithFormatSuffix('1941 - Counter Attack (CP System)'), false);
+assert.strictEqual(endsWithFormatSuffix('2A03 Puritans'), false);
+console.log('✓ endsWithFormatSuffix format detection verified');
+
+// Test formatSimplifiedPathTitle does not add duplicate suffix when last segment already has it
+const suffixedSingleSeg = formatSimplifiedPathTitle(['Nintendo (NSFE)'], 60, { includeFormat: true, formats: ['NSFE'] });
+assert.strictEqual(suffixedSingleSeg, 'Nintendo (NSFE)');
+const suffixedTwoSeg = formatSimplifiedPathTitle(['Contemporary', 'SNES Romhacks (SPC)'], 60, { includeFormat: true, formats: ['SPC'] });
+assert.strictEqual(suffixedTwoSeg, 'Contemporary / SNES Romhacks (SPC)');
+console.log(`✓ formatSimplifiedPathTitle suffix suppression verified: "${suffixedSingleSeg}", "${suffixedTwoSeg}"`);
 
 // Switch back to default mode
 setStrategyMode('path');

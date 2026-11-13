@@ -121,6 +121,34 @@ const EXTENSION_MAP = {
   sap: 'SAP',
 };
 
+const FORMAT_SUFFIX_TOKENS = new Set([
+  ...Object.keys(EXTENSION_MAP).map(k => k.toUpperCase()),
+  ...Object.values(EXTENSION_MAP).map(v => v.toUpperCase()),
+  'SMF',
+  'SF2',
+  'SOUNDFONT',
+]);
+
+/**
+ * Checks if a string (such as a directory name, path segment, or title) ends in an audio file format suffix in parentheses,
+ * e.g. "(NSF)", "(NSFE)", "(SPC)", "(SoundFont MIDI)".
+ */
+function endsWithFormatSuffix(str) {
+  if (!str) return false;
+  const cleaned = String(str).trim().replace(/\/+$/, '').trim();
+  const match = cleaned.match(/\(([^)]+)\)$/);
+  if (!match) return false;
+  const inner = match[1].trim();
+  const tokens = inner.toUpperCase().split(/[\s,+/&|_-]+/);
+  return tokens.some(t => FORMAT_SUFFIX_TOKENS.has(t));
+}
+
+function appendFormatTag(baseTitle, fmtStr) {
+  if (!fmtStr) return baseTitle;
+  if (endsWithFormatSuffix(baseTitle)) return baseTitle;
+  return `${baseTitle}${fmtStr}`;
+}
+
 const directoryMetaCache = new LRUCache({
   max: 1500,
 });
@@ -196,7 +224,9 @@ function formatTag(formats) {
 function formatSimplifiedPathTitle(pathSegments, maxLen = 60, options = {}) {
   const separator = options.separator || ' / ';
   const formats = options.formats || [];
-  const fmtStr = options.includeFormat !== false ? formatTag(formats) : '';
+  const lastSegment = pathSegments && pathSegments.length > 0 ? pathSegments[pathSegments.length - 1] : '';
+  const alreadyHasSuffix = endsWithFormatSuffix(lastSegment);
+  const fmtStr = options.includeFormat !== false && !alreadyHasSuffix ? formatTag(formats) : '';
   const targetLen = maxLen - fmtStr.length;
 
   if (!pathSegments || pathSegments.length === 0) return '';
@@ -275,19 +305,19 @@ const STRATEGIES = {
     let title = '';
 
     if (depth === 1) {
-      title = `${dir.name} Compo Archive${fmtStr}`;
+      title = appendFormatTag(`${dir.name} Compo Archive`, fmtStr);
     } else if (root.startsWith('Famicompo')) {
       // Combines event name + edition + category: e.g. "Famicompo mini5 Cover (NSF)"
       const compoPrefix = root.startsWith('Famicompo (NSFE)') ? 'Famicompo' : root;
       const relevantSegments = pathSegments.slice(1).join(' ');
-      title = `${compoPrefix} ${relevantSegments}${fmtStr}`;
+      title = appendFormatTag(`${compoPrefix} ${relevantSegments}`, fmtStr);
     } else if (root === 'Battle of the Bits') {
-      title = `${dir.name} · BotB${fmtStr}`;
+      title = appendFormatTag(`${dir.name} · BotB`, fmtStr);
     } else if (root.startsWith('Piano E-Competition')) {
       const relevant = pathSegments.slice(1).join(' · ');
-      title = `Piano E-Competition ${relevant}${fmtStr}`;
+      title = appendFormatTag(`Piano E-Competition ${relevant}`, fmtStr);
     } else {
-      title = `${dir.name} · ${pathSegments[depth - 2]}${fmtStr}`;
+      title = appendFormatTag(`${dir.name} · ${pathSegments[depth - 2]}`, fmtStr);
     }
     title = truncateString(title, 60);
 
@@ -304,9 +334,9 @@ const STRATEGIES = {
     let title = '';
 
     if (depth === 1) {
-      title = `${dir.name} Music Archive${fmtStr}`;
+      title = appendFormatTag(`${dir.name} Music Archive`, fmtStr);
     } else if (depth === 2) {
-      title = `${dir.name} · ${root}${fmtStr}`;
+      title = appendFormatTag(`${dir.name} · ${root}`, fmtStr);
     } else {
       // Depth >= 3: e.g. Contemporary/Brad Smith/MOON8 -> "MOON8 · Brad Smith (NSFE)"
       // e.g. Contemporary/James Paddock/Doom Projects/Complete/Jenesis -> "Jenesis · James Paddock (Doom Projects) (MIDI)"
@@ -314,7 +344,7 @@ const STRATEGIES = {
       const leaf = dir.name;
       const midSegments = pathSegments.slice(2, depth - 1).filter(s => !/^(Complete|others|Ports|Arrange)$/i.test(s));
       const extraContext = midSegments.length > 0 ? ` (${midSegments[midSegments.length - 1]})` : '';
-      title = `${leaf} · ${artist}${extraContext}${fmtStr}`;
+      title = appendFormatTag(`${leaf} · ${artist}${extraContext}`, fmtStr);
     }
     title = truncateString(title, 60);
 
@@ -332,7 +362,7 @@ const STRATEGIES = {
     let title = '';
 
     if (depth === 1) {
-      title = `${dir.name}${fmtStr}`;
+      title = appendFormatTag(`${dir.name}`, fmtStr);
     } else if (root === 'High Voltage SID Collection') {
       // Filter navigational partition letters like "T", "0-9", "A-F"
       const nonPartitions = pathSegments.filter(s => !/^[A-Z0-9]$|^[0-9]-[0-9]$|^[A-Z]-[A-Z]$/.test(s));
@@ -344,20 +374,20 @@ const STRATEGIES = {
       }
 
       if (leafName === 'MUSICIANS' || leafName === 'DEMOS' || leafName === 'GAMES') {
-        title = `HVSC ${leafName}${fmtStr}`;
+        title = appendFormatTag(`HVSC ${leafName}`, fmtStr);
       } else if (nonPartitions.length === 1) {
-        title = `HVSC ${pathSegments[depth - 1]}${fmtStr}`;
+        title = appendFormatTag(`HVSC ${pathSegments[depth - 1]}`, fmtStr);
       } else {
-        title = `${artistName} · HVSC${fmtStr}`;
+        title = appendFormatTag(`${artistName} · HVSC`, fmtStr);
       }
     } else if (root === 'The Module Collection') {
       if (dir.name.startsWith('ARTIST-')) {
-        title = `The Module Collection: ${dir.name}${fmtStr}`;
+        title = appendFormatTag(`The Module Collection: ${dir.name}`, fmtStr);
       } else {
-        title = `${dir.name} · The Module Collection${fmtStr}`;
+        title = appendFormatTag(`${dir.name} · The Module Collection`, fmtStr);
       }
     } else {
-      title = `${dir.name} · ${root}${fmtStr}`;
+      title = appendFormatTag(`${dir.name} · ${root}`, fmtStr);
     }
     title = truncateString(title, 60);
 
@@ -374,17 +404,17 @@ const STRATEGIES = {
     let title = '';
 
     if (depth === 1) {
-      title = `${dir.name} Archive${fmtStr}`;
+      title = appendFormatTag(`${dir.name} Archive`, fmtStr);
     } else if (depth === 2) {
-      title = `${dir.name} · ${root}${fmtStr}`;
+      title = appendFormatTag(`${dir.name} · ${root}`, fmtStr);
     } else {
       const platform = pathSegments[1];
       const leaf = dir.name;
       const publisher = depth > 3 ? pathSegments[2] : null;
       if (publisher && !/^(Games|Demos)$/i.test(publisher)) {
-        title = `${leaf} · ${publisher} ${platform}${fmtStr}`;
+        title = appendFormatTag(`${leaf} · ${publisher} ${platform}`, fmtStr);
       } else {
-        title = `${leaf} · ${platform}${fmtStr}`;
+        title = appendFormatTag(`${leaf} · ${platform}`, fmtStr);
       }
     }
     title = truncateString(title, 60);
@@ -401,14 +431,14 @@ const STRATEGIES = {
     let title = '';
 
     if (depth === 1) {
-      title = `${dir.name} Soundtracks${fmtStr}`;
+      title = appendFormatTag(`${dir.name} Soundtracks`, fmtStr);
     } else if (depth === 2) {
       const composer = sampleSongs.find(s => s.artist)?.artist;
-      let candidate = `${dir.name} OST${composer ? ` - ${composer}` : ''}${fmtStr}`;
-      if (candidate.length > 60) candidate = `${dir.name} OST${fmtStr}`;
+      let candidate = appendFormatTag(`${dir.name} OST${composer ? ` - ${composer}` : ''}`, fmtStr);
+      if (candidate.length > 60) candidate = appendFormatTag(`${dir.name} OST`, fmtStr);
       title = candidate;
     } else {
-      title = `${dir.name} · ${pathSegments[depth - 2]}${fmtStr}`;
+      title = appendFormatTag(`${dir.name} · ${pathSegments[depth - 2]}`, fmtStr);
     }
     title = truncateString(title, 60);
 
@@ -426,9 +456,9 @@ const STRATEGIES = {
     let title = '';
 
     if (depth === 1) {
-      title = `${dir.name} Archive${fmtStr}`;
+      title = appendFormatTag(`${dir.name} Archive`, fmtStr);
     } else {
-      title = `${dir.name}${fmtStr}`;
+      title = appendFormatTag(`${dir.name}`, fmtStr);
     }
     title = truncateString(title, 60);
 
@@ -444,12 +474,12 @@ const STRATEGIES = {
     let title = '';
 
     if (depth === 1) {
-      title = `${dir.name} Music Collection${fmtStr}`;
+      title = appendFormatTag(`${dir.name} Music Collection`, fmtStr);
     } else {
       // Find nearest non-generic ancestor
       const candidates = pathSegments.slice(1, depth - 1).filter(s => !/^(- Arranged -|- Soundtrack -|Game|Original)$/i.test(s));
       const nearest = candidates.length > 0 ? candidates[candidates.length - 1] : pathSegments[depth - 2];
-      title = `${dir.name} · ${nearest}${fmtStr}`;
+      title = appendFormatTag(`${dir.name} · ${nearest}`, fmtStr);
     }
     title = truncateString(title, 60);
 
@@ -462,7 +492,7 @@ const STRATEGIES = {
   // 8. Simplified Path Strategy (Literal directory path with middle ellipsis)
   simplified_path({ dir, sampleSongs, sampleSubdirs, pathSegments, formats, fmtStr }) {
     const title = formatSimplifiedPathTitle(pathSegments, 60, {
-      includeFormat: true,
+      includeFormat: fmtStr !== '',
       formats,
       separator: ' / ',
     });
@@ -478,10 +508,10 @@ const STRATEGIES = {
     const depth = pathSegments.length;
     let title = '';
     if (depth === 1) {
-      title = `${dir.name} Music Collection${fmtStr}`;
+      title = appendFormatTag(`${dir.name} Music Collection`, fmtStr);
     } else {
       const parent = pathSegments[depth - 2];
-      title = `${dir.name} · ${parent}${fmtStr}`;
+      title = appendFormatTag(`${dir.name} · ${parent}`, fmtStr);
     }
     title = truncateString(title, 60);
 
@@ -659,9 +689,11 @@ function resolveDirectoryMetadata(rawBrowsePath, options = {}) {
   const sampleSubdirs = getDirSampleSubdirsStmt.all(dir.id);
   const pathSegments = normalizedPath.split('/').filter(Boolean);
   const topPrefix = pathSegments[0];
+  const leafName = pathSegments[pathSegments.length - 1] || dir.name;
 
+  const hasFormatSuffix = endsWithFormatSuffix(leafName);
   const formats = resolveFormats(dir.id, dir.path);
-  const fmtStr = formatTag(formats);
+  const fmtStr = hasFormatSuffix ? '' : formatTag(formats);
 
   let strategyKey;
   if (activeMode === 'path') {
@@ -726,6 +758,7 @@ module.exports = {
   STRATEGIES,
   resolveFormats,
   formatTag,
+  endsWithFormatSuffix,
   formatSimplifiedPathTitle,
   resolveDirectoryMetadata,
   buildBreadcrumbJsonLd,
