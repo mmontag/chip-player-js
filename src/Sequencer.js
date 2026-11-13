@@ -22,6 +22,8 @@ export default class Sequencer extends EventEmitter {
     autoBind(this);
 
     this.player = null;
+    // Queue intent is independent of whether a decoder has loaded successfully.
+    this.paused = true;
     this.players = players;
     this.localFilesManager = localFilesManager;
     this.getSettings = getSettings;
@@ -29,6 +31,7 @@ export default class Sequencer extends EventEmitter {
     this.currIdx = 0;
     this.context = null;
     this.currSongPath = null;
+    this.currSubtune = 0;
     this.shuffle = SHUFFLE_OFF;
     this.shuffleOrder = [];
     this.repeat = REPEAT_OFF;
@@ -49,6 +52,8 @@ export default class Sequencer extends EventEmitter {
   }
 
   eject() {
+    this.clearErrorAdvance();
+    this.paused = true;
     this.currIdx = 0;
     this.context = null;
     this.currSongPath = null;
@@ -57,11 +62,7 @@ export default class Sequencer extends EventEmitter {
       this.player.stop();
       this.player = null;
     }
-    this.emit('sequencerStateUpdate', {
-      songPath: null,
-      songBuffer: null,
-      ejected: true,
-    });
+    this.emitState();
   }
 
   isEjected() {
@@ -69,6 +70,7 @@ export default class Sequencer extends EventEmitter {
   }
 
   handlePlayerSongEnd() {
+    if (this.paused) return;
     this.currSongPath = null;
     this.currSongBuffer = null;
     if (this.context) {
@@ -78,27 +80,55 @@ export default class Sequencer extends EventEmitter {
 
   handlePlayerError(e) {
     this.emit('playerError', e);
-    if (this.context && this.player) {
-      clearTimeout(this.playerErrorAdvanceTimer);
-      this.playerErrorAdvanceTimer = setTimeout(this.nextSong, ERROR_DELAY_MS);
-    } else {
+    this.player?.stop();
+    this.clearErrorAdvance();
+    if (!this.context) {
       this.eject();
+    } else if (!this.paused) {
+      this.playerErrorAdvanceTimer = setTimeout(this.nextSong, ERROR_DELAY_MS);
     }
   }
 
-  handlePlayerStateUpdate(playerState) {
-    if (this.playerErrorAdvanceTimer) {
-      console.debug('Cancelling auto-advance due to playerState update.');
-      clearTimeout(this.playerErrorAdvanceTimer);
-      this.playerErrorAdvanceTimer = null;
-    }
+  clearErrorAdvance() {
+    clearTimeout(this.playerErrorAdvanceTimer);
+    this.playerErrorAdvanceTimer = null;
+  }
 
+  handlePlayerStateUpdate(playerState) {
+    this.clearErrorAdvance();
+    if (playerState.subtune !== undefined) this.currSubtune = playerState.subtune;
+    this.emitState(playerState);
+  }
+
+  emitState(playerState = {}) {
     this.emit('sequencerStateUpdate', {
+      ...playerState,
       songPath: this.currSongPath,
       songBuffer: this.currSongBuffer,
-      ejected: false,
-      ...playerState,
+      ejected: this.isEjected(),
+      paused: this.paused,
     });
+  }
+
+  setPaused(paused) {
+    if (!this.player || this.paused === paused) return;
+    this.paused = paused;
+    this.clearErrorAdvance();
+    if (this.player.stopped) {
+      if (paused) this.player.stop(); // Cancels an unfinished load.
+      else return this.playSong(this.currSongPath, this.currSubtune);
+    } else {
+      this.player.togglePause();
+    }
+    this.emitState();
+  }
+
+  togglePause() {
+    this.setPaused(!this.paused);
+  }
+
+  getPositionMs() {
+    return this.player && !this.player.stopped ? this.player.getPositionMs() : 0;
   }
 
   playContext(context, index = 0, subtune = 0) {
@@ -204,6 +234,7 @@ export default class Sequencer extends EventEmitter {
   }
 
   playSong(filepath, subtune = 0) {
+    this.clearErrorAdvance();
     this.currSongBuffer = null;
     if (this.player !== null) {
       this.player.stop();
@@ -217,13 +248,20 @@ export default class Sequencer extends EventEmitter {
       return;
     }
     this.player = player;
+    this.paused = false;
+    this.currSongPath = filepath;
+    this.currSubtune = subtune;
     this.player.setLooping(this.repeat === REPEAT_ONE);
     const loadSignal = player.beginLoad();
+    this.emitState({
+      metadata: {}, infoTexts: [], songId: null,
+      durationMs: 0, positionMs: 0, numSubtunes: 0, subtune,
+      voiceMask: [], voiceGroups: [],
+    });
     player.fetchCatalogMetadata(filepath, loadSignal);
 
     if (filepath.startsWith('local/')) {
       const buffer = this.localFilesManager.read(filepath);
-      this.currSongPath = filepath;
       this.playSongBuffer(player, filepath, buffer, subtune, loadSignal);
     } else {
       // Normalize url - paths are assumed to live under CATALOG_PREFIX
@@ -237,7 +275,6 @@ export default class Sequencer extends EventEmitter {
         })
         .then(res => {
           if (loadSignal.aborted) return;
-          this.currSongPath = filepath;
           this.playSongBuffer(player, filepath, res.data, subtune, loadSignal);
         })
         .catch(e => {

@@ -278,8 +278,8 @@ class App extends React.Component {
       this.mediaSessionAudio.loop = true;
       this.mediaSessionAudio.volume = 0.01;
 
-      navigator.mediaSession.setActionHandler('play', () => this.togglePause());
-      navigator.mediaSession.setActionHandler('pause', () => this.togglePause());
+      navigator.mediaSession.setActionHandler('play', () => this.sequencer?.setPaused(false));
+      navigator.mediaSession.setActionHandler('pause', () => this.sequencer?.setPaused(true));
       navigator.mediaSession.setActionHandler('previoustrack', () => this.sequencer.prevSong());
       navigator.mediaSession.setActionHandler('nexttrack', () => this.sequencer.nextSong());
       navigator.mediaSession.setActionHandler('seekbackward', () => this.seekRelative(-5000));
@@ -356,7 +356,7 @@ class App extends React.Component {
     if (!('mediaSession' in navigator) || !this.sequencer.getPlayer()) return;
 
     const duration = this.state.durationMs || 0;
-    const position = this.sequencer.getPlayer().getPositionMs();
+    const position = this.sequencer.getPositionMs();
     const positionState = {
       duration: duration / 1000,
       position: Math.min(position, duration) / 1000,
@@ -446,17 +446,7 @@ class App extends React.Component {
   }
 
   togglePause() {
-    if (this.state.ejected || !this.sequencer.getPlayer()) return;
-
-    const paused = this.sequencer.getPlayer().togglePause();
-    if ('mediaSession' in navigator) {
-      if (paused) {
-        this.mediaSessionAudio.pause();
-      } else {
-        this.mediaSessionAudio.play();
-      }
-    }
-    this.setState({ paused: paused });
+    this.sequencer?.togglePause();
   }
 
   handleAuditionChord(pitches, isNoteOn) {
@@ -493,20 +483,21 @@ class App extends React.Component {
     if (!this.sequencer.getPlayer()) return;
 
     const durationMs = this.state.durationMs;
-    const seekMs = clamp(this.sequencer.getPlayer().getPositionMs() + ms, 0, durationMs);
+    const seekMs = clamp(this.sequencer.getPositionMs() + ms, 0, durationMs);
 
     this.seekRelativeInner(seekMs);
   }
 
   seekRelativeInner(seekMs) {
+    if (!this.sequencer.getPlayer() || this.sequencer.getPlayer().stopped) return;
     this.sequencer.getPlayer().seekMs(seekMs);
     this.setState({
       positionMs: seekMs, // Smooth
     });
     setTimeout(() => {
-      if (this.sequencer.getPlayer().isPlaying()) {
+      if (this.sequencer.getPlayer()?.isPlaying()) {
         this.setState({
-          positionMs: this.sequencer.getPlayer().getPositionMs(), // Accurate
+          positionMs: this.sequencer.getPositionMs(), // Accurate
         });
         this.updateMediaSessionPositionState();
       }
@@ -932,7 +923,7 @@ class App extends React.Component {
                           paused={this.state.paused}
                           songPath={this.state.songPath}
                           midiData={midiData}
-                          getCurrentPositionMs={() => this.sequencer?.getPlayer()?.getPositionMs() || 0}
+                          getCurrentPositionMs={() => this.sequencer?.getPositionMs() || 0}
                           getPlaybackRate={() => this.sequencer?.getPlayer()?.getTempo?.() || 1.0}
                           getIsPlaying={() => this.sequencer?.getPlayer()?.isPlaying() ?? false}
                           voiceMask={this.state.voiceMask}

@@ -139,13 +139,7 @@ function AppFooter(props) {
           <TimeSlider
             paused={paused}
             currentSongDurationMs={currentSongDurationMs}
-            getCurrentPositionMs={() => {
-              // TODO: reevaluate this approach
-              if (sequencer && sequencer.getPlayer()) {
-                return sequencer.getPlayer().getPositionMs();
-              }
-              return 0;
-            }}
+            getCurrentPositionMs={() => sequencer?.getPositionMs() || 0}
             onChange={handleTimeSliderChange}/>
           <VolumeSlider
             onChange={(e) => {

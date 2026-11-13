@@ -153,7 +153,6 @@ export default class GMEPlayer extends Player {
     core._free(dataPtr);
 
     if (err !== 0) {
-      this.stop();
       throw Error('gme_open_data failed');
     }
     this.gmeCtx = core.getValue(this.emuPtr, "i32");
@@ -164,7 +163,6 @@ export default class GMEPlayer extends Player {
     this.setTempo(persistedSettings.tempo || 1);
     this.resume();
     if (this.playSubtune(this.subtune) !== 0) {
-      this.stop();
       throw Error('gme_start_track failed');
     }
   }
