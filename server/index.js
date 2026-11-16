@@ -184,6 +184,7 @@ app.use('/api', router);
 const previewCache = new LRUCache({
   max: 25,
 });
+let defaultPreviewBuffer = null;
 
 let bgImage = null;
 async function getBgImage() {
@@ -247,16 +248,22 @@ app.get('/preview', cache1Hour, async (req, res) => {
         res.header('Content-Type', 'image/png');
         return res.send(cachedBuffer);
       }
+    } else if (defaultPreviewBuffer) {
+      res.header('Content-Type', 'image/png');
+      return res.send(defaultPreviewBuffer);
     }
 
     const bg = await getBgImage();
     const logo = await getLogoImage();
     const canvas = new Canvas(bg.width, bg.height);
+    // Avoid Skia GPU backend on headless Linux servers, which leaks memfd shared memory allocations.
+    canvas.gpu = false;
     const ctx = canvas.getContext('2d');
     
     // Draw background
     ctx.drawImage(bg, 0, 0);
 
+    let hasSongImage = false;
     if (song && imageUrl) {
       try {
         const songImage = await loadImage(imageUrl);
@@ -299,6 +306,7 @@ app.get('/preview', cache1Hour, async (req, res) => {
 
         ctx.drawImage(songImage, x + offset, y, drawWidth, drawHeight);
         ctx.drawImage(logo, x, 180, 280, 280);
+        hasSongImage = true;
       } catch (e) {
         console.error('Error loading song image:', e);
       }
@@ -306,9 +314,11 @@ app.get('/preview', cache1Hour, async (req, res) => {
 
     const buffer = await canvas.toBuffer('png');
     
-    // Cache the result if we have a song image path
-    if (song && imageUrl) {
+    // Cache the result
+    if (hasSongImage) {
       previewCache.set(imageUrl, buffer);
+    } else if (!song || !imageUrl) {
+      defaultPreviewBuffer = buffer;
     }
 
     res.header('Content-Type', 'image/png');
