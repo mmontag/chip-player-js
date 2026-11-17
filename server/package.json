@@ -8,21 +8,21 @@
     "start": "NODE_ENV=development node --watch index.js"
   },
   "dependencies": {
+    "@napi-rs/canvas": "^1.1.1",
     "axios": "1.14.0",
     "axios-retry": "^4.5.0",
     "better-sqlite3": "^12.5.0",
+    "chalk": "^4.1.2",
+    "commander": "^14.0.2",
     "dotenv-flow": "^4.1.0",
     "express": "^5.1.0",
     "fast-xml-parser": "^5.5.9",
     "firebase-admin": "^13.6.0",
+    "glob": "^7.1.2",
     "googleapis": "^171.4.0",
     "http-proxy-middleware": "^3.0.0",
     "lru-cache": "^10.0.0",
-    "skia-canvas": "^1.0.1",
-    "zod": "^4.3.6",
     "table": "^6.9.0",
-    "glob": "^7.1.2",
-    "commander": "^14.0.2",
-    "chalk": "^4.1.2"
+    "zod": "^4.3.6"
   }
 }
