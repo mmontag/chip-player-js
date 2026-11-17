@@ -17,10 +17,11 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 const { LRUCache } = require('lru-cache');
 const path = require('path');
 const { performance } = require('perf_hooks');
-const { Canvas, loadImage } = require('skia-canvas');
 const axios = require('axios');
 const axiosRetry = require('axios-retry').default;
 const { XMLParser } = require('fast-xml-parser');
+
+const { createPreviewRenderer } = require('./preview-renderer');
 
 const { dbStatements } = require('./database.js');
 const { getDashboardStats } = require('./dashboard-stats');
@@ -180,43 +181,16 @@ const fixSidMimeType = (req, res, next) => {
 
 app.use('/api', router);
 
-// --- Preview Image Cache ---
+// --- Preview Image Cache & Renderer ---
 const previewCache = new LRUCache({
   max: 25,
 });
-let defaultPreviewBuffer = null;
-
-let bgImage = null;
-async function getBgImage() {
-  if (bgImage) return bgImage;
-  
-  let bgPath = path.join(LOCAL_CLIENT_BUILD_ROOT, chipPlayerPng);
-  try {
-    await fs.access(bgPath);
-  } catch (e) {
-    // Fallback for development or if build is missing
-    bgPath = path.join(__dirname, `../public/${chipPlayerPng}`);
-  }
-  
-  bgImage = await loadImage(bgPath);
-  return bgImage;
-}
-
-let logoImage = null;
-async function getLogoImage() {
-  if (logoImage) return logoImage;
-
-  let logoPath = path.join(LOCAL_CLIENT_BUILD_ROOT, logoPng);
-  try {
-    await fs.access(logoPath);
-  } catch (e) {
-    // Fallback for development or if build is missing
-    logoPath = path.join(__dirname, `../public/${logoPng}`);
-  }
-
-  logoImage = await loadImage(logoPath);
-  return logoImage;
-}
+const { renderPreview } = createPreviewRenderer({
+  clientBuildRoot: LOCAL_CLIENT_BUILD_ROOT,
+  publicDir: path.join(__dirname, '../public'),
+  chipPlayerPng,
+  logoPng,
+});
 
 app.get('/preview', cache1Hour, async (req, res) => {
   const songId = Array.isArray(req.query.s) ? req.query.s[0] : req.query.s;
@@ -228,100 +202,31 @@ app.get('/preview', cache1Hour, async (req, res) => {
     const song = getSongImageByIdStmt.get(`${songId}*`);
     let imageUrl = null;
 
-    // getting crazy here ···
     if (song) {
       if (song.image_path) {
         imageUrl = path.join(LOCAL_CATALOG_ROOT, song.image_path);
-      }
-      else if (song.path && song.path.endsWith('.sid')) {
-        const sidMeta = getSidMetadataByPathStmt.get('_'+song.path);
+      } else if (song.path && song.path.endsWith('.sid')) {
+        const sidMeta = getSidMetadataByPathStmt.get('_' + song.path);
         if (sidMeta) {
           imageUrl = await getCsdbImageUrl(sidMeta.csdbid);
         }
       }
     }
 
-    // Check cache if we have a song image path
-    if (song && imageUrl) {
+    if (imageUrl) {
       const cachedBuffer = previewCache.get(imageUrl);
       if (cachedBuffer) {
-        res.header('Content-Type', 'image/png');
+        res.header('Content-Type', 'image/jpeg');
         return res.send(cachedBuffer);
       }
-    } else if (defaultPreviewBuffer) {
-      res.header('Content-Type', 'image/png');
-      return res.send(defaultPreviewBuffer);
     }
 
-    const bg = await getBgImage();
-    const logo = await getLogoImage();
-    const canvas = new Canvas(bg.width, bg.height);
-    // Avoid Skia GPU backend on headless Linux servers, which leaks memfd shared memory allocations.
-    canvas.gpu = false;
-    const ctx = canvas.getContext('2d');
-    
-    // Draw background
-    ctx.drawImage(bg, 0, 0);
-
-    let hasSongImage = false;
-    if (song && imageUrl) {
-      try {
-        const songImage = await loadImage(imageUrl);
-        
-        // Calculate dimensions to fit 80% of width or height
-        const maxWidth = canvas.width * 0.8;
-        const maxHeight = canvas.height * 0.8;
-        
-        let drawWidth = songImage.width;
-        let drawHeight = songImage.height;
-        
-        const scaleX = maxWidth / drawWidth;
-        const scaleY = maxHeight / drawHeight;
-        const scale = Math.min(scaleX, scaleY);
-        
-        drawWidth *= scale;
-        drawHeight *= scale;
-
-        const logoWidth = 280;
-        const logoOverlap = 36; // Amount of logo overlapping the song image
-        const offset = logoWidth - logoOverlap;
-
-        // Center the image + logo horizontally
-        const x = (canvas.width - drawWidth - offset) / 2;
-        const y = (canvas.height - drawHeight) / 2;
-
-        // Draw semi-transparent overlay
-        ctx.fillStyle = '#00008080';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // Draw yellow outline with dropshadow
-        ctx.fillStyle = '#ffffff';
-        ctx.shadowColor = '#000040';
-        ctx.shadowBlur = 60;
-        ctx.shadowOffsetY = 15;
-        const lw = 5;
-        ctx.fillRect(x - lw + offset, y - lw, drawWidth + lw * 2, drawHeight + lw * 2);
-        ctx.fillRect(x - lw + offset, y - lw, drawWidth + lw * 2, drawHeight + lw * 2);
-        ctx.shadowColor = 'transparent';
-
-        ctx.drawImage(songImage, x + offset, y, drawWidth, drawHeight);
-        ctx.drawImage(logo, x, 180, 280, 280);
-        hasSongImage = true;
-      } catch (e) {
-        console.error('Error loading song image:', e);
-      }
-    }
-
-    const buffer = await canvas.toBuffer('png');
-    
-    // Cache the result
-    if (hasSongImage) {
+    const { buffer, isDefault } = await renderPreview(imageUrl);
+    if (imageUrl && !isDefault) {
       previewCache.set(imageUrl, buffer);
-    } else if (!song || !imageUrl) {
-      defaultPreviewBuffer = buffer;
     }
 
-    res.header('Content-Type', 'image/png');
+    res.header('Content-Type', 'image/jpeg');
     res.send(buffer);
   } catch (e) {
     console.error('Preview generation error:', e);
