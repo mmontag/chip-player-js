@@ -2,7 +2,7 @@ import axios from 'redaxios';
 import autoBind from 'auto-bind';
 import EventEmitter from 'events';
 import shuffle from 'lodash/shuffle';
-import { getUrlFromFilepath } from './util';
+import { getUrlFromFilepath, songRef } from './util';
 
 export const REPEAT_OFF = 0;
 export const REPEAT_ALL = 1;
@@ -29,6 +29,7 @@ export default class Sequencer extends EventEmitter {
     this.currIdx = 0;
     this.context = null;
     this.currSongPath = null;
+    this.currSongRef = null;
     this.shuffle = SHUFFLE_OFF;
     this.shuffleOrder = [];
     this.repeat = REPEAT_OFF;
@@ -52,6 +53,7 @@ export default class Sequencer extends EventEmitter {
     this.currIdx = 0;
     this.context = null;
     this.currSongPath = null;
+    this.currSongRef = null;
     this.currSongBuffer = null;
     if (this.player) {
       this.player.stop();
@@ -70,8 +72,15 @@ export default class Sequencer extends EventEmitter {
 
   handlePlayerSongEnd() {
     this.currSongPath = null;
+    this.currSongRef = null;
     this.currSongBuffer = null;
-    if (this.context) {
+    if (!this.context) return;
+    // Repeat One is a transport mode for an *automatic* end: stay on this
+    // entry and reload it (the stop-and-reload engines). Manual Next/Previous
+    // must still navigate; advanceSong() no longer special-cases the mode.
+    if (this.repeat === REPEAT_ONE) {
+      this.playCurrentSong();
+    } else {
       this.nextSong();
     }
   }
@@ -93,29 +102,63 @@ export default class Sequencer extends EventEmitter {
       this.playerErrorAdvanceTimer = null;
     }
 
+    // Keep the transient SongRef in sync for metadata/share/favorites if a
+    // player ever reports a different sub-tune than the one we asked for
+    // (a tail restart, or an engine that advances internally), but never
+    // mutate the context: its entries are the navigation list.
+    const { subtune } = playerState;
+    if (this.currSongRef && subtune != null && this.currSongRef.subtune !== subtune) {
+      this.currSongRef = { ...this.currSongRef, subtune };
+    }
     this.emit('sequencerStateUpdate', {
       songPath: this.currSongPath,
+      songRef: this.currSongRef,
       songBuffer: this.currSongBuffer,
       ejected: false,
       ...playerState,
     });
   }
 
-  playContext(context, index = 0, subtune = 0) {
+  /**
+   * Begin playing a context (an ordered list of SongRefs).
+   * `subtune` is an optional override for the first entry, used by share links
+   * (?play=...&subtune=N); normally the sub-tune comes from the SongRef.
+   */
+  playContext(context, index = 0, subtune = null) {
     if (!context || context.length === 0) {
       this.emit('playerError', 'No songs found to play.');
       return;
     }
     this.currIdx = index;
-    this.context = context;
+    this.context = context.map(item => songRef(item));
     if (this.shuffle === SHUFFLE_ON) {
       this.setShuffle(this.shuffle);
     }
-    this.playCurrentSong(subtune);
+    const ref = this.currContextRef();
+    if (ref && subtune != null) {
+      ref.subtune = subtune;
+    }
+    this.playCurrentSong();
   }
 
-  playCurrentSong(subtune = 0) {
-    this.playSong(this.context[this.getCurrIdx()], subtune);
+  currContextRef() {
+    let idx = this.currIdx;
+    if (this.shuffle === SHUFFLE_ON) {
+      idx = this.shuffleOrder[idx];
+    }
+    return this.context ? this.context[idx] : null;
+  }
+
+  playCurrentSong() {
+    this.playSong(this.currContextRef());
+  }
+
+  playSonglist(urls) {
+    this.playContext(urls, 0);
+  }
+
+  toggleShuffle() {
+    this.setShuffle(!this.shuffle);
   }
 
   setShuffle(shuff) {
@@ -140,13 +183,13 @@ export default class Sequencer extends EventEmitter {
 
   advanceSong(direction) {
     if (this.context == null) return;
-
-    if (this.repeat !== REPEAT_ONE) {
-      this.currIdx += direction;
-    }
+    this.currIdx += direction;
 
     if (this.currIdx < 0 || this.currIdx >= this.context.length) {
-      if (this.repeat === REPEAT_ALL) {
+      // An empty context has nothing to wrap to: REPEAT_ALL's modulo would be
+      // NaN, and playSong(undefined) returns without stopping the player, so a
+      // deleted song would keep playing against an empty list. Eject instead.
+      if (this.repeat === REPEAT_ALL && this.context.length > 0) {
         this.currIdx = (this.currIdx + this.context.length) % this.context.length;
         this.playCurrentSong();
       } else {
@@ -164,23 +207,21 @@ export default class Sequencer extends EventEmitter {
   }
 
   prevSong() {
+    if (this.context == null) return;
+    // At the first entry there is nothing before the current song to play.
+    // advanceSong(-1) would walk off the context and eject it (except under
+    // Repeat All, which wraps), tearing down the player for a control that
+    // should restart what is already loaded. Keep the context and replay the
+    // first entry; Repeat All retains its wrap to the last entry.
+    if (this.currIdx <= 0 && this.repeat !== REPEAT_ALL) {
+      if (this.context.length === 0) {
+        this.eject();
+      } else {
+        this.playCurrentSong();
+      }
+      return;
+    }
     this.advanceSong(-1);
-  }
-
-  playSubtune(subtune) {
-    this.player.playSubtune(subtune);
-  }
-
-  prevSubtune() {
-    const subtune = this.player.getSubtune() - 1;
-    if (subtune < 0) return;
-    this.playSubtune(subtune);
-  }
-
-  nextSubtune() {
-    const subtune = this.player.getSubtune() + 1;
-    if (subtune >= this.player.getNumSubtunes()) return;
-    this.playSubtune(subtune);
   }
 
   getPlayer() {
@@ -199,11 +240,23 @@ export default class Sequencer extends EventEmitter {
     return this.currSongPath;
   }
 
-  getSubtune() {
-    return this.player.getSubtune();
+  getCurrSongRef() {
+    return this.currSongRef;
   }
 
-  playSong(filepath, subtune = 0) {
+  getCurrSongBuffer() {
+    return this.currSongBuffer;
+  }
+
+  /**
+   * Play a single song. Accepts a SongRef (preferred) or a bare path string.
+   */
+  playSong(songRefOrPath) {
+    const ref = songRef(songRefOrPath);
+    if (!ref) return;
+    const { path: filepath, subtune } = ref;
+
+    this.currSongRef = ref;
     this.currSongBuffer = null;
     if (this.player !== null) {
       this.player.stop();
@@ -219,7 +272,7 @@ export default class Sequencer extends EventEmitter {
     this.player = player;
     this.player.setLooping(this.repeat === REPEAT_ONE);
     const loadSignal = player.beginLoad();
-    player.fetchCatalogMetadata(filepath, loadSignal);
+    player.fetchCatalogMetadata(filepath, loadSignal, subtune);
 
     if (filepath.startsWith('local/')) {
       const buffer = this.localFilesManager.read(filepath);
@@ -248,15 +301,22 @@ export default class Sequencer extends EventEmitter {
     }
   }
 
-  playSongBuffer(player, filepath, buffer, subtune = 0, loadSignal = player.beginLoad()) {
+  async playSongBuffer(player, filepath, buffer, subtune = 0, loadSignal = player.beginLoad()) {
     this.currSongBuffer = buffer;
     const uint8Array = new Uint8Array(buffer);
     const persistedSettings = this.getSettings();
-    player.loadData(uint8Array, filepath, persistedSettings, subtune)
-      .catch(e => {
-        if (loadSignal.aborted) return;
-        console.error(`Unable to play ${filepath}.`, e);
-        this.handlePlayerError(`Unable to play ${filepath} (${e.message}).`);
-      });
+    try {
+      await player.loadData(uint8Array, filepath, persistedSettings, subtune);
+    } catch (e) {
+      if (loadSignal.aborted) return;
+      console.error(`Unable to play ${filepath}.`, e);
+      this.handlePlayerError(`Unable to play ${filepath} (${e.message}).`);
+      return;
+    }
+    if (loadSignal.aborted) return;
+    // A superseded load can resolve without initialising a voice mask; never
+    // let that crash the load path.
+    const voiceMask = player.getVoiceMask();
+    if (voiceMask) voiceMask.fill(true);
   }
 }

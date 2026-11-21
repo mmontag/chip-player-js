@@ -1,7 +1,7 @@
 import autoBind from 'auto-bind';
 import debounce from 'lodash/debounce';
 import pathe from 'pathe';
-import MIDIFile from './midi/midi-helpers';
+import MIDIFile, { usesTrackLoops } from './midi/midi-helpers';
 import MIDIFilePlayer from './MIDIFilePlayer';
 import Player from './Player';
 import { SOUNDFONTS, SOUNDFONT_MOUNTPOINT, SOUNDFONT_URL_PATH } from '../config';
@@ -195,18 +195,20 @@ export default class MIDIPlayer extends Player {
       },
     });
 
-    // Populate OPL3 banks
-    const numBanks = core._adl_getBanksCount();
-    const ptr = core._adl_getBankNames();
-    const oplBanks = [];
-    for (let i = 0; i < numBanks; i++) {
-      oplBanks.push({
-        label: core.UTF8ToString(core.getValue(ptr + i * 4, '*')),
-        value: i,
-      });
+    // Populate OPL3 banks (only when the core was built with libADLMIDI).
+    if (core._adl_getBanksCount && core._adl_getBankNames) {
+      const numBanks = core._adl_getBanksCount();
+      const ptr = core._adl_getBankNames();
+      const oplBanks = [];
+      for (let i = 0; i < numBanks; i++) {
+        oplBanks.push({
+          label: core.UTF8ToString(core.getValue(ptr + i * 4, '*')),
+          value: i,
+        });
+      }
+      const oplDef = this.paramDefs.find(def => def.id === 'opl3bank');
+      if (oplDef) oplDef.options = [{ label: 'OPL3 Bank', items: oplBanks }];
     }
-    this.paramDefs.find(def => def.id === 'opl3bank').options =
-      [{ label: 'OPL3 Bank', items: oplBanks }];
 
     this.webMidiIsInitialized = false;
     // this.midiFilePlayer = new MIDIFilePlayer({ output: dummyMidiOutput });
@@ -216,6 +218,12 @@ export default class MIDIPlayer extends Player {
     // Transient parameters hold a parameter that is valid only for the current song.
     // They are reset when another song is loaded.
     this.transientParams = {};
+    // The SoundFont path in params is just the request; this records the file
+    // tp_load_soundfont actually accepted, so a missing/failed download cannot
+    // masquerade as the file's own SoundFont.
+    this.loadedSoundfont = null;
+    this.soundfontLoadError = null;
+    this._soundfontRequest = 0;
     this.paramDefs.filter(p => p.id !== 'soundfont').forEach(p => this.setParameter(p.id, p.defaultValue));
     this.activeAuditionPitches = [];
     this.auditionTailTimeout = null;
@@ -260,7 +268,15 @@ export default class MIDIPlayer extends Player {
   }
 
   metadataFromFilepath(filepath) {
-    filepath = decodeURIComponent(filepath); // unescape, %25 -> %
+    // Some callers pass an escaped path (unescape, %25 -> %), but a local file
+    // path is stored raw and may contain a bare '%' (e.g. "..._100% Pure Love.mid"),
+    // for which decodeURIComponent throws. Decode defensively and fall back to
+    // the path as-is.
+    try {
+      filepath = decodeURIComponent(filepath);
+    } catch (e) {
+      // Not valid percent-encoding; use the raw path.
+    }
     const parts = filepath.split('/');
     const len = parts.length;
     const meta = {};
@@ -323,7 +339,8 @@ export default class MIDIPlayer extends Player {
       this.midiFilePlayer.elapsedTime = 0;
     }
     this.ensureWebMidiInitialized();
-    this.metadata = this.metadataFromFilepath(filepath);
+    const filepathMeta = this.metadataFromFilepath(filepath);
+    this.metadata = filepathMeta;
 
     this.resolveParamValues(persistedSettings);
     this.setTempo(persistedSettings.tempo || 1);
@@ -379,9 +396,21 @@ export default class MIDIPlayer extends Player {
       });
 
     const midiFile = new MIDIFile(data);
-    // Checking filepath doesn't work for dragged files. Force to true during development.
-    const useTrackLoops = filepath.includes('SoundFont MIDI');
+    // Which files loop over their markers: the SoundFont MIDI sets (master's
+    // gate). Checking filepath doesn't work for dragged files.
+    const useTrackLoops = usesTrackLoops(filepath);
     this.midiFilePlayer.load(midiFile, useTrackLoops);
+    // Loop region in the shared intro_length/loop_length vocabulary, for the head
+    // fold in getDisplayPositionMs (the band itself is getLoopBandMs, which reads
+    // the player's wrap span). Parsed here at load time from the file's own loop
+    // points — N64 CC102/103 or HMI CC110/111 — no catalog work needed.
+    const loop = this.midiFilePlayer.getLoopRegion();
+    this.metadata = {
+      ...filepathMeta,
+      ...(loop && loop.lengthMs > 0
+        ? { intro_length: loop.startMs, loop_length: loop.lengthMs }
+        : {}),
+    };
     this.midiFilePlayer.play();
 
     this.resume();
@@ -401,7 +430,9 @@ export default class MIDIPlayer extends Player {
     // Crude bank matching for a few specific games. :D
     const fp = filepath.toLowerCase().replace('_', ' ');
     const opl3def = this.paramDefs.find(def => def.id === 'opl3bank');
-    if (opl3def) {
+    // No bank options when the core lacks libADLMIDI: options stays the empty
+    // array it was declared with (truthy), so test its length, not the array.
+    if (opl3def && opl3def.options.length > 0) {
       const opl3banks = opl3def.options[0].items;
       const findBank = (str) => opl3banks.findIndex(bank => bank.label.indexOf(str) > -1);
       let bankId = null;
@@ -544,6 +575,46 @@ export default class MIDIPlayer extends Player {
 
   getPositionMs() {
     return this.midiFilePlayer.getPosition();
+  }
+
+  // Playlist position: cycle the head inside the highlighted band while
+  // repeating (same model as VGMPlayer). MIDI has no fade: past the band the
+  // song simply ends, so with repeat off the head always runs live and
+  // toggling repeat never moves it.
+  getDisplayPositionMs() {
+    const abs = this.getPositionMs();
+    const meta = this.metadata;
+    if (!meta || !(meta.intro_length >= 0) || !(meta.loop_length > 0) || abs == null)
+      return abs;
+    const band = this.getLoopBandMs();
+    if (!band) return abs;
+    if (abs <= band.endMs) return abs;
+    // Folding past the band is only for a live wrap. Once the region has been
+    // left (Repeat One enabled in the outro, see MIDIFilePlayer.loopRegionLeft)
+    // the audio plays the ending, so the head must follow it there rather than
+    // fold into a band the transport is no longer in.
+    if (!this.looping || (this.midiFilePlayer && this.midiFilePlayer.loopRegionLeft)) return abs;
+    const phase = (((abs - meta.intro_length) % meta.loop_length) + meta.loop_length) % meta.loop_length;
+    return band.startMs + phase;
+  }
+
+  // The band the transport wraps over and the slider marks: the wrap span
+  // (jumpMs..endMs) -- the second pass when the file is expanded, the loop
+  // region itself when it is not. Overrides the base, whose band is always the
+  // second instance of intro_length/loop_length, which is only right for the
+  // expanded case. (The file player is the nested MIDIFilePlayer; this class is
+  // the one the sequencer holds.)
+  getLoopBandMs() {
+    const loop = this.midiFilePlayer && this.midiFilePlayer.getLoopRegion();
+    if (!loop || !(loop.endMs > loop.jumpMs)) return null;
+    return { startMs: loop.jumpMs, endMs: loop.endMs };
+  }
+
+  // Repeat One wraps the JS event loop back to the wrap target at the end of the
+  // loop. Files without a loop region keep the stop-and-reload fallback.
+  setLooping(looping) {
+    super.setLooping(looping);
+    if (this.midiFilePlayer) this.midiFilePlayer.setLooping(looping);
   }
 
   seekMs(ms) {
@@ -691,11 +762,21 @@ export default class MIDIPlayer extends Player {
           core._tp_set_synth_engine(value);
         }
         break;
-      case 'soundfont':
+      case 'soundfont': {
         const url = `${SOUNDFONT_URL_PATH}/${value}`;
+        const request = ++this._soundfontRequest;
+        this.loadedSoundfont = null;
+        this.soundfontLoadError = null;
         ensureEmscFileWithUrl(core, `${SOUNDFONT_MOUNTPOINT}/${value}`, url)
-          .then(filename => this._loadSoundfont(filename));
+          .then(filename => this._loadSoundfont(filename, request))
+          .catch(err => {
+            if (request !== this._soundfontRequest) return;
+            this.loadedSoundfont = null;
+            this.soundfontLoadError = String(err && err.message || err);
+            console.error('Could not load SoundFont %s: %s', value, this.soundfontLoadError);
+          });
         break;
+      }
       case 'reverb':
         // TODO: call fluidsynth directly from JS, similar to chorus
         value = parseFloat(value);
@@ -738,11 +819,21 @@ export default class MIDIPlayer extends Player {
     }
   }
 
-  _loadSoundfont(filename) {
+  _loadSoundfont(filename, request) {
+    if (request != null && request !== this._soundfontRequest) return;
     console.log('Loading soundfont %s...', filename);
     this.muteAudioDuringCall(this.audioNode, () => {
+      if (request != null && request !== this._soundfontRequest) return;
       const err = core.ccall('tp_load_soundfont', 'number', ['string'], [filename]);
-      if (err !== -1) console.log('Loaded soundfont.');
+      if (err !== -1) {
+        this.loadedSoundfont = filename;
+        this.soundfontLoadError = null;
+        console.log('Loaded soundfont.');
+      } else {
+        this.loadedSoundfont = null;
+        this.soundfontLoadError = `tp_load_soundfont returned ${err}`;
+        console.error('SoundFont failed to load: %s', filename);
+      }
     });
   }
 }

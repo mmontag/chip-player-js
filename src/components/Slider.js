@@ -47,10 +47,18 @@ export default class Slider extends PureComponent {
 
   render() {
     const pos = Math.max(Math.min((this.state.dragging ? this.state.draggedPos : this.props.pos), 1), 0) * 100 + '%';
+    const { loopStart, loopEnd } = this.props;
+    const showLoop = loopStart != null && loopEnd != null && loopEnd > loopStart;
     return (
       <div ref={this.node}
            className="Slider"
            onMouseDown={this.onMouseDown}>
+        {showLoop &&
+          <div className="Slider-loop"
+               style={{
+                 left: (loopStart * 100) + '%',
+                 width: ((loopEnd - loopStart) * 100) + '%',
+               }}/>}
         <div className="Slider-rail"/>
         <div className="Slider-knob"
              ref={this.knob}

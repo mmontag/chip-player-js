@@ -53,10 +53,14 @@ test('catalog metadata enriches player state and ignores superseded or stopped r
 
     assert.equal(updates.length, 1);
     assert.deepEqual(updates[0], {
-      metadata: { title: 'Song', imageUrl: 'http://localhost:8080/catalog/dir%2Fcover.png' },
+      // getUrlFromFilepath encodes per path segment (downloads keep their names).
+      metadata: { title: 'Song', imageUrl: 'http://localhost:8080/catalog/dir/cover.png' },
       infoTexts: ['Embedded', 'Catalog text'],
       md5: 'abc',
       songId: 42,
+      // The sub-tune fields ride the same state update (a sub-tune is a song).
+      subtuneCount: null,
+      subtuneTitle: null,
     });
     assert.deepEqual(player.getBasePlayerState().infoTexts, ['Embedded', 'Catalog text']);
   } finally {
@@ -75,6 +79,9 @@ test('late SID metadata cannot overwrite a newer song or publish after stop', as
     player.on('playerStateUpdate', state => updates.push(state));
     player.getSidMetadata('old', player.beginLoad());
     player.getSidMetadata('new', player.beginLoad());
+    // loadData resumes only once its metadata race is done, so a late response
+    // publishes only while the player is not stopped.
+    player.resume();
     pending[1]({ status: 200, data: { lengths: '2:00', name: 'New', author: 'B', copyright: '2' } });
     await new Promise(resolve => setImmediate(resolve));
     pending[0]({ status: 200, data: { lengths: '1:00', name: 'Old', author: 'A', copyright: '1' } });
@@ -368,7 +375,7 @@ test('sequencer advances on playerSongEnd and ejects cleanly without redundant h
   assert.equal('hasPlayer' in lastUpdate, false);
 });
 
-test('multi-subtune sequencing advances through subtunes and ends at the last track', () => {
+test('player ends the loaded song and leaves sub-tune sequencing to the sequencer', () => {
   const player = new Player({}, 44100);
   player.subtune = 0;
   player.numSubtunes = 3;
@@ -382,36 +389,43 @@ test('multi-subtune sequencing advances through subtunes and ends at the last tr
   let songEndFired = 0;
   player.on('playerSongEnd', () => songEndFired++);
 
-  // Subtune 0 -> 1
   player.handleSongEnd();
-  assert.equal(player.subtune, 1);
-  assert.equal(songEndFired, 0);
 
-  // Subtune 1 -> 2
-  player.handleSongEnd();
-  assert.equal(player.subtune, 2);
-  assert.equal(songEndFired, 0);
-
-  // Subtune 2 is the last one -> stops and emits playerSongEnd
-  player.handleSongEnd();
+  // The player never walks to a sibling sub-tune. One SongRef is one song;
+  // the sequencer decides what comes next.
+  assert.equal(player.subtune, 0);
   assert.equal(songEndFired, 1);
   assert.equal(player.stopped, true);
 });
 
-test('subtune auto-advance stops and emits playerSongEnd when playSubtune fails', () => {
-  const player = new Player({}, 44100);
-  player.subtune = 0;
-  player.numSubtunes = 2;
-  player.getNumSubtunes = () => player.numSubtunes;
-  player.getSubtune = () => player.subtune;
-  player.playSubtune = () => 1; // Return non-zero error code
+test('a held seek runs before Host Fade chooses a start', () => {
+  const player = new Player({}, 44100, 256);
+  player.hostFade = true;
+  player.durationMs = 1000;
+  player.posMs = 1000;
+  player.stopped = false;
+  player.paused = false;
+  player.getPositionMs = () => player.posMs;
+  player.getDurationMs = () => player.durationMs;
+  player.processAudioInner = (output) => {
+    output[0].fill(1.0);
+    output[1].fill(1.0);
+  };
+  player.seekMs = (ms) => {
+    player.posMs = ms;
+    player.resetFade();
+  };
 
-  let songEndFired = 0;
-  player.on('playerSongEnd', () => songEndFired++);
+  player.beginAsyncLoad();
+  assert.equal(player.deferSeekUntilPlaying(100), true);
+  const output = [new Float32Array(256), new Float32Array(256)];
+  player.processAudio(output);
 
-  player.handleSongEnd();
-  assert.equal(songEndFired, 1);
-  assert.equal(player.stopped, true);
+  // The held seek is applied before the Host Fade decision. At the old
+  // position the fade would have started; after the seek it must not.
+  assert.equal(player.posMs, 100);
+  assert.equal(player.fading, false);
+  assert.equal(player.stopped, false);
 });
 
 test('Host Fade smoothly attenuates audio and triggers handleSongEnd when completed', () => {

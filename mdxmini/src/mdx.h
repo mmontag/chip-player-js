@@ -8,6 +8,8 @@
 
  */
 
+#include <stdint.h>
+
 #include "mdxmini.h"
 
 #ifndef _MDX_H_
@@ -146,7 +148,7 @@ typedef struct _MDX_DATA {
 
   int  tempo;             /* Timer B's value */
   long total_count;       /* total steps */
-  long elapsed_time;      /* mili-second */
+  long elapsed_time;      /* microseconds */
 
   TRACK_WORK track[MDX_MAX_TRACK_NUMBER];
 
@@ -221,6 +223,8 @@ extern void* mdx_parse_mml_ym2151_async_initialize(MDX_DATA* in_mdx, PDX_DATA* i
 extern int mdx_parse_mml_ym2151_async(songdata *data, int track_mute_mask);
 extern int mdx_parse_mml_ym2151_make_samples(short *buffer,int buffer_size, songdata *);
 extern int mdx_parse_mml_get_tempo(void* in_self);
+extern int64_t mdx_parse_mml_get_loop_first_us(void* in_self);
+extern int64_t mdx_parse_mml_get_loop_second_us(void* in_self);
 
 extern int mdx_parse_mml_ym2151_async_get_length(songdata *data);
 

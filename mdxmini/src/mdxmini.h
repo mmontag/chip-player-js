@@ -35,6 +35,11 @@ typedef struct
     int seek_to_ms;
     float playback_speed;
     int track_mute_mask;
+	// Accumulates frame durations in microseconds so position_ms does not lose
+	// the truncated fraction of each frame (which would make seeks overshoot).
+	// Must be 64-bit: on wasm32 `long` is 32 bits, which wraps at ~2147s
+	// (35.8 min) and leaves position_ms negative.
+	int64_t position_us;
 
 } t_mdxmini;
 
@@ -126,7 +131,20 @@ int   mdx_get_length(t_mdxmini *data);
  * \param loop the number of loops to play; default is 3.
  */
 void  mdx_set_max_loop(t_mdxmini *data, int loop);
-
+/**
+ * \brief Returns the start of the song's built-in loop region, in milliseconds.
+ *        Valid only immediately after mdx_get_length(), which is what records
+ *        the loop points; returns 0 when the song does not loop.
+ * \param data a t_mdxmini struct representing an open song.
+ */
+int   mdx_get_loop_start_ms(t_mdxmini *data);
+/**
+ * \brief Returns the length of the song's built-in loop region, in milliseconds.
+ *        Valid only immediately after mdx_get_length(); returns 0 when the
+ *        song does not loop.
+ * \param data a t_mdxmini struct representing an open song.
+ */
+int   mdx_get_loop_length_ms(t_mdxmini *data);
 /**
  * \brief Returns the number of tracks in the song.
  *

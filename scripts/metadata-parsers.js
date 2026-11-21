@@ -12,11 +12,19 @@ const {
   MIDI_STRATEGIES,
   MIDI_STRATEGY_MAP,
 } = require('./metadata-midi');
+const {
+  parseNSF,
+  parseNSFe,
+  parseGBS,
+  parseAY,
+  parseSID,
+  extractDate,
+} = require('./subtune-headers');
 const { parsePSF } = require('../src/psf');
 
 /**
  * Extract metadata from a buffer based on the file extension.
- * Returns: { title, artist, game, system, copyright, comment, duration }
+ * Returns: { title, artist, game, system, copyright, comment, date, duration }
  */
 function parseMetadata(buffer, ext, relPath = null, strategy = null) {
   const extLower = ext.toLowerCase();
@@ -48,6 +56,7 @@ const PARSERS = {
   nsf: parseNSF,
   nsfe: parseNSFe,
   gbs: parseGBS,
+  ay: parseAY,
   spc: parseSPC,
   mod: parseMOD,
   xm: parseXM,
@@ -59,6 +68,8 @@ const PARSERS = {
   gsf: (buf) => parsePSFTags(buf, 'Game Boy Advance'),
   minigsf: (buf) => parsePSFTags(buf, 'Game Boy Advance'),
   miniusf: (buf) => parsePSFTags(buf, 'Nintendo 64'),
+  sid: parseSID,
+  mus: parseSID, // The single-tune C64 Sidplayer format has no PSID header; parseSID only supplies its C64 label.
 };
 
 function parseVGM(buf) {
@@ -96,102 +107,29 @@ function parseVGM(buf) {
         return '';
       };
 
-      meta.title = readString();      // Track Name (English)
-      readString();                   // Track Name (Japanese)
-      meta.game = readString();       // Game Name (English)
-      readString();                   // Game Name (Japanese)
-      meta.system = readString();     // System Name (English)
-      readString();                   // System Name (Japanese)
-      meta.artist = readString();     // Author (English)
-      readString();                   // Author (Japanese)
-      meta.date = readString();       // Release Date
+      meta.title = readString();             // Track Name (English)
+      readString();                          // Track Name (Japanese)
+      meta.game = readString();              // Game Name (English)
+      readString();                          // Game Name (Japanese)
+      meta.system = readString();            // System Name (English)
+      readString();                          // System Name (Japanese)
+      meta.artist = readString();            // Author (English)
+      readString();                          // Author (Japanese)
+      meta.date = extractDate(readString()); // Release Date
       meta.ripper = readString();     // Ripper
       meta.comment = readString();    // Notes
+    } else {
+      console.warn(`[VGM] GD3 pointer exists (0x${gd3Offset.toString(16)}) but 'Gd3 ' magic missing.`);
     }
   }
 
   return meta;
-}
-
-function parseNSF(buf) {
-  // Spec: https://wiki.nesdev.org/w/index.php/NSF
-  if (buf.length < 128 || buf.toString('ascii', 0, 5) !== 'NESM\x1A') {
-    return {};
-  }
-
-  return {
-    title: readStr(buf, 0x0E, 0x2E),
-    artist: readStr(buf, 0x2E, 0x4E),
-    copyright: readStr(buf, 0x4E, 0x6E),
-    system: 'NES'
-  };
-}
-
-function parseNSFe(buf) {
-  // Spec: https://wiki.nesdev.org/w/index.php/NSFe
-  if (buf.length < 4 || buf.toString('ascii', 0, 4) !== 'NSFE') {
-    return {};
-  }
-
-  const meta = { system: 'NES' };
-  let offset = 4;
-
-  while (offset + 8 <= buf.length) {
-    const chunkLen = buf.readUInt32LE(offset);
-    const chunkId = buf.toString('ascii', offset + 4, offset + 8);
-    const chunkDataStart = offset + 8;
-    const chunkDataEnd = chunkDataStart + chunkLen;
-
-    if (chunkDataEnd > buf.length) break;
-
-    if (chunkId === 'auth') {
-      // Structure: 4 null-terminated strings: Game, Artist, Copyright, Ripper
-      const strings = [];
-      let strStart = chunkDataStart;
-
-      for (let i = chunkDataStart; i < chunkDataEnd; i++) {
-        if (buf[i] === 0) {
-          strings.push(decodeBuffer(buf.subarray(strStart, i)));
-          strStart = i + 1;
-        }
-      }
-
-      if (strings[0]) meta.game = strings[0];
-      if (strings[1]) meta.artist = strings[1];
-      if (strings[2]) meta.copyright = strings[2];
-      if (strings[3]) meta.ripper = strings[3];
-
-    } else if (chunkId === 'tlbl') {
-      // Track labels (First string is Track 1 title)
-      const firstNull = buf.indexOf(0, chunkDataData = chunkDataStart);
-      if (firstNull !== -1 && firstNull < chunkDataEnd) {
-        meta.title = decodeBuffer(buf.subarray(chunkDataStart, firstNull));
-      }
-    }
-
-    offset += 8 + chunkLen;
-  }
-
-  return meta;
-}
-
-function parseGBS(buf) {
-  // Spec: https://gbdev.gg8.se/wiki/articles/GBS_Music_Format
-  if (buf.length < 112 || buf.toString('ascii', 0, 3) !== 'GBS') {
-    return {};
-  }
-
-  return {
-    title: readStr(buf, 0x10, 0x30),
-    artist: readStr(buf, 0x30, 0x50),
-    copyright: readStr(buf, 0x50, 0x70),
-    system: 'Game Boy'
-  };
 }
 
 function parseSPC(buf) {
   // Spec: https://wiki.superfamicom.org/spc700-reference#spc-file-format-header
   if (buf.length < 0x100 || buf.toString('ascii', 0, 27) !== 'SNES-SPC700 Sound File Data') {
+    console.warn('[SPC] Missing SPC700 signature.');
     return {};
   }
 

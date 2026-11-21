@@ -12,6 +12,8 @@ const FavoriteButton = ({ item }) => {
   } = useContext(UserContext);
   const { enqueueToast, clearCurrentToast } = useContext(ToastContext);
 
+  const { path, songId, subtune = 0, title } = item;
+
   const handleClick = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -34,10 +36,10 @@ const FavoriteButton = ({ item }) => {
       );
       return;
     }
-    toggleFavorite(item);
-  }, [clearCurrentToast, enqueueToast, handleLogin, toggleFavorite, item, user]);
+    toggleFavorite(path, subtune, songId, title);
+  }, [clearCurrentToast, enqueueToast, handleLogin, toggleFavorite, path, subtune, songId, title, user]);
 
-  const isFavorite = faves.find(fave => fave.path === item?.path);
+  const isFavorite = faves.find(fave => fave.path === path && (fave.subtune || 0) === subtune);
   const className = `FavoriteButton ${isFavorite ? 'isFavorite' : ''}`;
 
   return (

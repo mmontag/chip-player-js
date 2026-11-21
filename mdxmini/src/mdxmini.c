@@ -94,6 +94,7 @@ int mdx_open( t_mdxmini *data, char *filename , char *pcmdir )
 {
   data->nlg_tempo = -1;
   data->position_ms = 0;
+  data->position_us = 0;
   data->playback_speed = 1.f;
   data->seek_to_ms = -1;
   data->track_mute_mask = 0;
@@ -279,6 +280,7 @@ int mdx_calc_sample(t_mdxmini *data, short *buf, int buffer_size) {
         if (data->seek_to_ms < data->position_ms) {
           // reset song state to 0
           data->position_ms = 0;
+          data->position_us = 0;
           data->self = mdx_parse_mml_ym2151_async_initialize(data->mdx, data->pdx, data->songdata);
         }
         while (data->position_ms < data->seek_to_ms) {
@@ -287,7 +289,8 @@ int mdx_calc_sample(t_mdxmini *data, short *buf, int buffer_size) {
           frame_microsec = mdx_frame_length(data);
           // prevent lock
           if (frame_microsec <= 0) frame_microsec = 1000;
-          data->position_ms += frame_microsec / 1000;
+          data->position_us += frame_microsec;
+          data->position_ms = data->position_us / 1000;
         }
         data->seek_to_ms = -1;
       } else {
@@ -296,7 +299,8 @@ int mdx_calc_sample(t_mdxmini *data, short *buf, int buffer_size) {
         // prevent lock
         if (frame_microsec <= 0) frame_microsec = 1000;
       }
-      data->position_ms += frame_microsec / 1000;
+      data->position_us += frame_microsec;
+      data->position_ms = data->position_us / 1000;
       data->samples = data->mdx->dsp_speed * (int)((float)frame_microsec / data->playback_speed) / 1000000;
     }
 
@@ -377,6 +381,30 @@ int  mdx_get_length( t_mdxmini *data )
     ym2151_set_logging(1, data->songdata);
 
     return len;
+}
+
+/* Loop region of the song's built-in infinite loop, as measured by the last
+   mdx_get_length() parse (which resets playback state afterward, so only read
+   this right after get_length). 0 when the song does not loop. */
+int  mdx_get_loop_start_ms( t_mdxmini *data )
+{
+    int64_t first  = mdx_parse_mml_get_loop_first_us(data->self);
+    int64_t second = mdx_parse_mml_get_loop_second_us(data->self);
+    int64_t loop_us, intro_us;
+    if (first <= 0 || second <= first)
+        return 0;
+    loop_us = second - first;
+    intro_us = first - loop_us;
+    return intro_us > 0 ? (int)(intro_us / 1000) : 0;
+}
+
+int  mdx_get_loop_length_ms( t_mdxmini *data )
+{
+    int64_t first  = mdx_parse_mml_get_loop_first_us(data->self);
+    int64_t second = mdx_parse_mml_get_loop_second_us(data->self);
+    if (first <= 0 || second <= first)
+        return 0;
+    return (int)((second - first) / 1000);
 }
 
 int  mdx_get_tracks ( t_mdxmini *data )

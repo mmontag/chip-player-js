@@ -31,7 +31,10 @@ module.exports = {
       // To fix this, we prevent you from importing files out of src/ -- if you'd like to,
       // please link the files into your node_modules/ and let module-resolution kick in.
       // Make sure your source files are compiled, as they will not be processed in any way.
-      new ModuleScopePlugin(paths.appSrc, [paths.appPackageJson]),
+      // scripts/ is allowed because the client lazy-loads
+      // scripts/subtune-headers.js (a dependency-free module) to read sub-tune
+      // headers from a dropped local file. See src/localFilesSubtunes.js.
+      new ModuleScopePlugin([paths.appSrc, path.resolve(__dirname, '../scripts')], [paths.appPackageJson]),
     ],
   },
   module: {

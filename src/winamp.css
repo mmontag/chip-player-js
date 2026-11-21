@@ -25,6 +25,7 @@
     --background:      linear-gradient(45deg, var(--darkerPurple) 0%, var(--darkPurple) 35%, var(--darkerPurple) 100%);
     --selected:        #0000c6;
     --focus:           #0000c6;
+    --loop-region:     #0000c6; /* shaded span of a song's looping section */
     --focusOutline:    1px dotted var(--whiteAlpha75);
     --shadow:          #005;
     --button:          var(--buttonLight);

@@ -154,11 +154,14 @@ export function getNotePitchOffsetAt(bends, timeMs) {
  * Parses a raw MIDI file ArrayBuffer or Uint8Array into structured notes, channels, and metadata.
  * Completely decoupled from synthesizers and audio players.
  */
-export function parseMidiData(buffer) {
+export function parseMidiData(buffer, useTrackLoops = false) {
   if (!isMidiData(buffer)) return null;
 
   const midiFile = new MIDIFile(buffer);
-  const events = midiFile.getEvents();
+  // The same list the audio engine plays: expanded (intro + two passes) only
+  // for the folders that opt in, so the roll stays populated through the second
+  // pass and across Repeat-One wraps there, and matches the audio everywhere.
+  const { events } = midiFile.getPlaybackEvents(useTrackLoops);
 
   const notes = [];
   const openNotes = new Map(); // key: `${track}_${channel}_${pitch}` -> note
